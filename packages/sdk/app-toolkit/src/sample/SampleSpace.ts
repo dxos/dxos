@@ -412,8 +412,12 @@ export const applyTo = <Phases extends PhaseMap, A>(
     yield* Database.flush();
     return result;
   }).pipe(
-    Effect.provide(layer({ properties: space.properties, reference: definition.reference })),
-    Effect.provide(Database.layer(space.db)),
+    Effect.provide(
+      Layer.provideMerge(
+        layer({ properties: space.properties, reference: definition.reference }),
+        Database.layer(space.db),
+      ),
+    ),
   );
 };
 

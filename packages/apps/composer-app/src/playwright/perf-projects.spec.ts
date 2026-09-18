@@ -15,6 +15,7 @@ import {
   attachAll,
   installProbes,
   launchInstrumentedBrowser,
+  publishPosthogBatch,
   startProfiling,
   startScreencast,
   startTracing,
@@ -25,6 +26,7 @@ import {
 
 import { INITIAL_URL } from './app-manager.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
+import { describeReplication, waitForReplication } from './perf/replication.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -76,7 +78,29 @@ const documentEditor = (page: Page): Locator => page.getByTestId('composer.markd
  */
 const SETTLE_MS = 20_000;
 
+/**
+ * Ceiling on the wait for the fixture to reach EDGE.
+ *
+ * Generous on purpose: overshooting costs a slower nightly, while undershooting publishes the
+ * measured stages with setup's replication still running through them — which is the spread this
+ * stage exists to remove. Overridable for a run against a slow or local backend.
+ */
+const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_TIMEOUT_MS ?? '', 10) || 180_000;
+
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
+
+/**
+ * Iterations of the whole flow per mode, each a fresh browser and a fresh fixture.
+ *
+ * One run per night cannot separate a regression from noise: the run-to-run spread on a stage is
+ * ~20%, so a single sample moves more than anything worth alerting on. `iteration` is already a
+ * row field and part of the PostHog dedup key, so repeats land as distinct rows the tiles can take
+ * a median over rather than overwriting each other.
+ *
+ * Defaults to 1, because a local run is usually somebody reading one flow; the nightly asks for
+ * more explicitly.
+ */
+const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
 
 /**
  * Drops the screencast from a `diagnose` run, which is how its cost was isolated from the
@@ -108,7 +132,8 @@ const FIXTURE_MS_PER_TASK = 700;
 /** Boot, settle and the stages, generously — `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
-const testBudget = (scale: Scale): number => scale.tasks * FIXTURE_MS_PER_TASK + STAGE_BUDGET_MS;
+const testBudget = (scale: Scale): number =>
+  scale.tasks * FIXTURE_MS_PER_TASK + REPLICATION_TIMEOUT_MS + STAGE_BUDGET_MS;
 
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
@@ -245,6 +270,25 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       ...(screencast ? { screencast: await startScreencast(pageTarget.cdp, artifactDir) } : {}),
     });
 
+    // FIRST after the fixture, because the fixture's writes keep replicating long after the last
+    // `tasks.create` resolves and whichever stage ran next absorbed their SQLite writes and socket
+    // traffic — the spread the stages' own disk and network columns were reporting. A stage rather
+    // than a silent wait in setup, so the cost it soaks up shows as its own row.
+    await runner.stage('await-replication', async () => {
+      const result = await waitForReplication(page, fixture.spaceId, { timeoutMs: REPLICATION_TIMEOUT_MS });
+      const described = describeReplication(result);
+      if (result.outcome === 'timeout') {
+        // The trail at `warn`, the summary in the throw: a row's `error` is one line, and the
+        // question a timeout has to answer — was replication moving at all — is only in the trail.
+        log.warn('replication did not settle', { ...result.final, transitions: result.transitions });
+        // Thrown, so the stage records `ok: false` and is never trended. The flow continues and the
+        // remaining stages still publish, but their I/O columns carry setup's replication and the
+        // run says so rather than presenting them as a measurement.
+        throw new Error(described);
+      }
+      log.info('replication settled', { ...result.final, outcome: result.outcome, summary: described });
+    });
+
     await runner.stage('open-space', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', {
         subject: `root/${fixture.spaceId}`,
@@ -336,7 +380,22 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     appendRows(WORKSPACE_ROOT, name, rows);
     writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
     if (mode === 'measure') {
-      writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
+      // Published HERE, at the end of each iteration, rather than once for the whole run: the
+      // workflow's trending step cannot run if the job dies partway, so a ten-iteration run that
+      // lost its runner on iteration eight used to publish nothing at all — including the seven
+      // that had completed and were sitting on disk. Each iteration now stands on its own.
+      //
+      // The batch file carries the iteration in its name, so this publishes exactly what this
+      // iteration measured. There is no end-of-run backstop on purpose — see `publishPosthogBatch`.
+      const batch = writePosthogBatch(WORKSPACE_ROOT, `${name}-${iteration}`, rows, capturedAt);
+      const published = publishPosthogBatch(WORKSPACE_ROOT, batch);
+      // Logged at `warn` when it did not publish, because that row reached disk and the artifact
+      // but not the trend, and nothing on the dashboard can show a point that was never sent.
+      if (published) {
+        log.info('published perf batch', { batch, iteration });
+      } else {
+        log.warn('perf batch NOT published', { batch, iteration, keyPresent: !!process.env.DX_POSTHOG_API_KEY });
+      }
     }
 
     runner.dispose();
@@ -364,14 +423,24 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   }
 };
 
-test.describe.serial('Projects + Tasks performance', () => {
-  // Derived, not flat: the config's `timeout` is only the outer bound, and a `setTimeout` here
-  // silently overrides it — a flat value below the fixture's cost expires before any stage runs.
+// Not `describe.serial`, although the runs must not overlap: `workers: 1` and
+// `fullyParallel: false` in the config are what serialize them, and serial mode would additionally
+// SKIP every later iteration once one fails — discarding nine good samples over one flaky stage,
+// which is the opposite of why there are ten. Each iteration is independent: its own browser, its
+// own profile, its own fixture.
+test.describe('Projects + Tasks performance', () => {
+  // Derived, not flat, and PER TEST: the config's `timeout` is only the outer bound, and a
+  // `setTimeout` here silently overrides it — a flat value below the fixture's cost expires before
+  // any stage runs. One iteration is one test, so this budget is not multiplied by ITERATIONS.
   test.setTimeout(testBudget(SCALE));
 
   for (const mode of modes) {
-    test(mode, async () => {
-      await runFlow(mode, SCALE, 0);
-    });
+    for (let iteration = 0; iteration < ITERATIONS; ++iteration) {
+      // The iteration is in the title only when there is more than one, so a single-iteration run
+      // keeps the test name it has always had.
+      test(ITERATIONS > 1 ? `${mode} ${iteration + 1}/${ITERATIONS}` : mode, async () => {
+        await runFlow(mode, SCALE, iteration);
+      });
+    }
   }
 });

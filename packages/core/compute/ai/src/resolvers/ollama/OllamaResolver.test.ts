@@ -73,8 +73,7 @@ describe('OllamaResolver', () => {
 
           expect(response.toolCalls.length).toBeGreaterThan(0);
         },
-        Effect.provide(CalculatorLayer),
-        Effect.provide(ModelLayer),
+        Effect.provide(Layer.provideMerge(CalculatorLayer, ModelLayer)),
       ),
       { timeout: 120_000, tags: ['manual'] },
     );
@@ -96,8 +95,7 @@ describe('OllamaResolver', () => {
 
           expect(toolCalls.length).toBeGreaterThan(0);
         },
-        Effect.provide(CalculatorLayer),
-        Effect.provide(ModelLayer),
+        Effect.provide(Layer.provideMerge(CalculatorLayer, ModelLayer)),
       ),
       { timeout: 120_000, tags: ['manual'] },
     );

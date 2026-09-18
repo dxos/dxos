@@ -26,6 +26,7 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
 
+import { CommandError } from '../../errors.ts';
 import { printIdentity, waitForState } from '../../halo/util.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
@@ -170,17 +171,18 @@ const loginWithPasskey = (client: Client) =>
 
       const { token } = yield* server.waitForResult();
       if (!token) {
-        return yield* Effect.fail(new Error('The sign-in completed without returning a token.'));
+        return yield* Effect.fail(new CommandError({ message: 'The sign-in completed without returning a token.' }));
       }
 
       return yield* Effect.tryPromise({
         try: () => client.halo.recoverIdentity({ token }),
         catch: (cause) =>
-          new Error(
-            `Passkey login failed (${cause instanceof Error ? cause.message : String(cause)}). ` +
-              'EDGE admits a passkey only when it is registered as a recovery credential; add one from Composer ' +
-              'before logging in here.',
-          ),
+          new CommandError({
+            message:
+              'Passkey login failed. EDGE admits a passkey only when it is registered as a recovery credential; ' +
+              'add one from Composer before logging in here.',
+            cause,
+          }),
       });
     }).pipe(Effect.ensuring(server.stop()));
   });
@@ -204,7 +206,7 @@ const awaitLoginToken = (server: LocalCallbackServer) =>
     .waitForResult(LOGIN_TIMEOUT_MS)
     .pipe(
       Effect.flatMap(({ token }) =>
-        token ? Effect.succeed(token) : Effect.fail(new Error('The login link carried no token.')),
+        token ? Effect.succeed(token) : Effect.fail(new CommandError({ message: 'The login link carried no token.' })),
       ),
     );
 
@@ -253,17 +255,16 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
               identityKey: requirePublicKey(identity.identityKey).toHex(),
             }),
           catch: (cause) =>
-            new Error(
-              `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
-            ),
+            new CommandError({ message: `Login request failed. ${recovery}`, context: { email }, cause }),
         });
         if (!retry.admitted) {
           return yield* Effect.fail(
-            new Error(
-              `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+            new CommandError({
+              message:
+                `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
                 'run `dx account signup <ACCESS-CODE>` to create one. ' +
                 recovery,
-            ),
+            }),
           );
         }
         yield* invoke(ClientOperation.CreateAgent);
@@ -275,10 +276,11 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
       // redirect, so the link lands on the web app and this command has nothing to wait for.
       if (!server) {
         return yield* Effect.fail(
-          new Error(
-            'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
+          new CommandError({
+            message:
+              'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
               'Free a loopback port and run the command again.',
-          ),
+          }),
         );
       }
       yield* Console.log('Open it on this machine to finish signing in.');

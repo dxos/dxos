@@ -18,6 +18,10 @@ on:
         type: string
         description: 'DX_PERF_MODES to run (measure, diagnose)'
         default: 'measure'
+      iterations:
+        type: string
+        description: 'Repeats of the whole flow per mode (DX_PERF_ITERATIONS)'
+        default: '10'
 
 permissions:
   contents: read
@@ -86,7 +90,20 @@ jobs:
         continue-on-error: true
         env:
           MODES: ${{ inputs.modes || 'measure' }}
+          # Ten, because one sample per night cannot separate a regression from the ~20% run-to-run
+          # spread on a stage. Each repeat is a fresh browser and a fresh fixture, ~1.5 min, so ten
+          # is ~18 min against this job's 180-minute bound. Every row carries its `iteration`, so
+          # the repeats are distinct rows to take a median over, not overwrites of each other.
+          ITERATIONS: ${{ inputs.iterations || '10' }}
           DX_PWA: 'false'
+          # The key lives on THIS step because publishing now happens inside the flow, once per
+          # iteration, rather than in a step afterwards. A step afterwards cannot run when the job
+          # dies partway, so a ten-iteration run that lost its runner on iteration eight published
+          # nothing — including the seven that had completed and were already on disk.
+          #
+          # Empty on a pull_request event, where no secret is exposed; the harness then measures,
+          # writes its artifacts and skips publishing, which is what a PR run should do.
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           set -o pipefail
           # Cleared first so a re-run cannot inherit the previous attempt's rows and trend them
@@ -94,7 +111,7 @@ jobs:
           rm -rf test-results/perf
           # The modes run serially inside one invocation — two flows measured at once contend for
           # the same cores and measure each other.
-          DX_PERF_MODES="$MODES" moon run composer-app:e2e-perf
+          DX_PERF_MODES="$MODES" DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf
 
       - name: Summarize
         if: always()
@@ -126,31 +143,16 @@ jobs:
             '
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Only `measure` rows from a COMPLETE run reach PostHog. `writePosthogBatch` drops the
-      # diagnose rows (whose CPU carries the profiler's overhead) and the failed stages (whose
-      # durations are the budgets they exhausted), but the flow step is `continue-on-error`, so a
-      # run that died partway would otherwise publish whatever it had managed to write — a trend
-      # built from a truncated run reads as a regression nobody caused.
+      # NO end-of-run publish step. Rows are published per iteration by the flow above, and the
+      # obvious backstop here would be a second publish path whose safety rests on PostHog's dedup
+      # collapsing re-sent rows — a dedup miss would put duplicates into the distributions, which
+      # tightens a box with nothing on the dashboard to show it. `publishPosthogBatch` records the
+      # reasoning and retries once instead.
       #
-      # A manual dispatch publishes too, from any branch. Recording is not what protects the trend:
-      # every row carries `ciBranch`, and each dashboard tile filters `ciBranch = 'main'`, so a
-      # branch run is stored and simply not charted. Refusing to record it instead made the numbers
-      # from a dispatch unreachable, which is the opposite of why the run exists.
-      - name: Trend the measured rows
-        if: steps.flows.outcome == 'success' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-        continue-on-error: true
-        env:
-          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
-        run: |
-          shopt -s nullglob
-          batches=(test-results/perf/*.events.ndjson)
-          if [ ${#batches[@]} -eq 0 ]; then
-            echo "::warning::No measure-mode events to trend."
-            exit 0
-          fi
-          for batch in "${batches[@]}"; do
-            node scripts/ci-event.mjs --batch "$batch"
-          done
+      # What still holds from the old step: only `measure` rows and only completed stages are ever
+      # sent, enforced per row by `writePosthogBatch` rather than by a job-level gate. Branch is
+      # not filtered — every row carries `ciBranch`, so a branch run is stored and filtered at read
+      # time, and refusing to record it made the numbers from a dispatch unreachable.
 
       # The artifacts — a `.cpuprofile` per stage per realm, one screenshot per stage, and the
       # screencast's first/last frames in `diagnose` — are what a regression is read with. Not

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
 import { describe, expect, test } from 'vitest';
 
 import { bindDataChannel } from './rtc-data-channel.ts';
@@ -18,7 +17,7 @@ describe('bindDataChannel', () => {
     const { channel, stream, received } = setup({ readyState: 'connecting' });
     const dispose = bindDataChannel(channel as any, stream, handlers());
 
-    channel.onmessage!({ data: Buffer.from('first frame') } as any);
+    channel.onmessage!({ data: new TextEncoder().encode('first frame') } as any);
     channel.readyState = 'open';
     channel.onopen!({} as any);
 
@@ -31,7 +30,7 @@ describe('bindDataChannel', () => {
     const dispose = bindDataChannel(channel as any, stream, handlers());
 
     // No `onopen` ever fires for a channel transferred after it opened.
-    channel.onmessage!({ data: Buffer.from('late handover') } as any);
+    channel.onmessage!({ data: new TextEncoder().encode('late handover') } as any);
 
     expect(await received).toBe('late handover');
     dispose();
@@ -46,13 +45,13 @@ describe('bindDataChannel', () => {
       readyState: 'connecting',
       onSend: (chunk) => {
         expect(channel.readyState, 'sent while the channel was not open').toBe('open');
-        sent.push(chunk.toString());
+        sent.push(new TextDecoder().decode(chunk));
       },
     });
     const dispose = bindDataChannel(channel as any, stream, handlers());
 
-    channel.onmessage!({ data: Buffer.from('inbound first') } as any);
-    stream.push(Buffer.from('outbound while connecting'));
+    channel.onmessage!({ data: new TextEncoder().encode('inbound first') } as any);
+    stream.push('outbound while connecting');
 
     // The inbound frame still lands; nothing goes out yet.
     expect(await received).toBe('inbound first');
@@ -69,7 +68,7 @@ describe('bindDataChannel', () => {
     let opened = 0;
     const dispose = bindDataChannel(channel as any, stream, { ...handlers(), onOpen: () => void opened++ });
 
-    channel.onmessage!({ data: Buffer.from('x') } as any);
+    channel.onmessage!({ data: new TextEncoder().encode('x') } as any);
     channel.readyState = 'open';
     channel.onopen!({} as any);
     channel.onopen!({} as any);
@@ -96,10 +95,13 @@ describe('bindDataChannel', () => {
 
   test('sends what the wire-protocol stream writes', async () => {
     const sent: string[] = [];
-    const { channel, stream } = setup({ readyState: 'open', onSend: (chunk) => sent.push(chunk.toString()) });
+    const { channel, stream } = setup({
+      readyState: 'open',
+      onSend: (chunk) => sent.push(new TextDecoder().decode(chunk)),
+    });
     const dispose = bindDataChannel(channel as any, stream, handlers());
 
-    stream.push(Buffer.from('outbound'));
+    stream.push('outbound');
     await expect.poll(() => sent).toEqual(['outbound']);
     dispose();
   });
@@ -108,22 +110,31 @@ describe('bindDataChannel', () => {
 const handlers = () => ({ onOpen: () => {}, onClose: () => {}, onError: (error: Error) => expect.fail(error.message) });
 
 /** A duplex standing in for the wire protocol, plus the minimum of `RTCDataChannel` the binding uses. */
-const setup = ({ readyState, onSend }: { readyState: string; onSend?: (chunk: Buffer) => void }) => {
+const setup = ({ readyState, onSend }: { readyState: string; onSend?: (chunk: Uint8Array) => void }) => {
   let resolveReceived: (value: string) => void;
   const received = new Promise<string>((resolve) => (resolveReceived = resolve));
 
-  const stream = new Duplex({
-    read: () => {},
-    write: (chunk, _encoding, callback) => {
-      resolveReceived(Buffer.from(chunk).toString());
-      callback();
-    },
-  });
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = {
+    readable: new ReadableStream<Uint8Array>({
+      start: (ctrl) => {
+        controller = ctrl;
+      },
+    }),
+    writable: new WritableStream<Uint8Array>({
+      write: (chunk) => {
+        resolveReceived(decoder.decode(chunk));
+      },
+    }),
+    push: (data: string) => controller.enqueue(encoder.encode(data)),
+  };
 
   const channel = {
     readyState,
     bufferedAmount: 0,
-    send: (chunk: Buffer) => onSend?.(chunk),
+    send: (chunk: Uint8Array) => onSend?.(chunk),
     close: () => {},
     onopen: undefined as ((event: Event) => void) | undefined,
     onclose: undefined as ((event: Event) => void) | undefined,

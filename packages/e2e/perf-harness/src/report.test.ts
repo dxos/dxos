@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { describe, test } from 'vitest';
 
-import { EVENT_NAME, toPosthogEvent } from './report.ts';
+import { EVENT_NAME, toPosthogEvent, writePosthogBatch } from './report.ts';
 import { type Comparability, type StageRow } from './types.ts';
 
 /** Zeroed so a row fixture states only the fields its assertion is about. */
@@ -124,7 +127,19 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
   domNodes: 24_000,
   domListeners: 3_100,
   domDocuments: 2,
-  network: { codeBytes: 1_000, apiBytes: 2_000, otherBytes: 3, requests: 9, apiRequests: 4 },
+  network: {
+    codeBytes: 1_000,
+    apiBytes: 2_000,
+    otherBytes: 3,
+    requests: 9,
+    apiRequests: 4,
+    edgeApiBytes: 1_500,
+    edgeApiRequests: 3,
+    edgeSocketBytes: 640_000,
+    edgeSocketFrames: 210,
+    analyticsBytes: 500,
+  },
+  disk: { readBytes: 2_400_000, writeBytes: 900_000, reads: 600, writes: 210, syncs: 18, realms: 1 },
   responsiveness: {
     longTaskCount: 5,
     longTaskMaxMs: 400,
@@ -138,4 +153,49 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
   },
   comparability,
   ...overrides,
+});
+
+describe('writePosthogBatch', () => {
+  test('accumulates across iterations rather than truncating', ({ expect }) => {
+    // The regression this exists for: the batch name carries the flow and mode but NOT the
+    // iteration, so a truncating write made each of the nightly's ten iterations overwrite the
+    // last. A run that measured 100 stages published 10 — the iteration that happened to finish
+    // last — and the loss was invisible, because the log still read "captured 10 event(s)".
+    const workspaceRoot = mkdtempSync(path.join(tmpdir(), 'perf-batch-'));
+
+    const file = writePosthogBatch(workspaceRoot, 'flow-measure', [row({ stage: 'boot', iteration: 0 })]);
+    writePosthogBatch(workspaceRoot, 'flow-measure', [row({ stage: 'boot', iteration: 1 })]);
+
+    const lines = readFileSync(file, 'utf8').split('\n').filter(Boolean);
+    expect(lines).toHaveLength(2);
+    expect(lines.map((line) => JSON.parse(line).properties.iteration)).toEqual([0, 1]);
+  });
+
+  test('a diagnose or failed row still writes nothing', ({ expect }) => {
+    // Appending must not weaken the two guards: an empty batch appends only its newline.
+    const workspaceRoot = mkdtempSync(path.join(tmpdir(), 'perf-batch-'));
+
+    const file = writePosthogBatch(workspaceRoot, 'flow-measure', [row({ mode: 'diagnose' }), row({ ok: false })]);
+
+    expect(readFileSync(file, 'utf8').split('\n').filter(Boolean)).toHaveLength(0);
+  });
+});
+
+describe('disk columns', () => {
+  test('an uninstrumented run is distinguishable from one that did no I/O', ({ expect }) => {
+    // Both report zero bytes, and they are different facts: the first means the VFS wrapper never
+    // published its counters (a broken harness), the second means SQLite genuinely touched
+    // nothing (a real, interesting result). `sqliteRealms` is the only thing that separates them.
+    const uninstrumented = toPosthogEvent(
+      row({ disk: { readBytes: 0, writeBytes: 0, reads: 0, writes: 0, syncs: 0, realms: 0 } }),
+    );
+    const idle = toPosthogEvent(
+      row({ disk: { readBytes: 0, writeBytes: 0, reads: 0, writes: 0, syncs: 0, realms: 1 } }),
+    );
+
+    expect(uninstrumented.properties.sqliteReadBytes).toBe(0);
+    expect(idle.properties.sqliteReadBytes).toBe(0);
+    expect(uninstrumented.properties.sqliteRealms).toBe(0);
+    expect(idle.properties.sqliteRealms).toBe(1);
+  });
 });
