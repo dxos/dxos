@@ -33,6 +33,7 @@ import {
   assertFullyReplicated,
   cleanupRun,
   isDevLikeTarget,
+  peerCall,
 } from './system.ts';
 
 /**
@@ -343,7 +344,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const refused: string[] = [];
     for (const [index, replicant] of spawned.entries()) {
       try {
-        const result = await replicant.brain.deleteOwnData({ spaceIds: [] });
+        const result = await peerCall(index, 'deleteOwnData', replicant.brain.deleteOwnData({ spaceIds: [] }));
         refused.push(...result.refused);
       } catch (err) {
         log.warn('partial-fleet cleanup threw', { index, err });
@@ -374,7 +375,11 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const replicants = spawned;
     for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
-      await replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions });
+      await peerCall(
+        index,
+        'init',
+        replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions }),
+      );
       replicants.push(replicant);
     }
 
@@ -384,19 +389,25 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const deviceDids: { client: ClientIndex; identityDid: string }[] = [];
     for (const [identity, { devices }] of model.identities.entries()) {
       const [owner, ...rest] = devices;
-      const { identityDid } = await replicants[owner].brain.createIdentity({
-        displayName: `edge-stress-identity-${identity}`,
-      });
+      const { identityDid } = await peerCall(
+        owner,
+        'createIdentity',
+        replicants[owner].brain.createIdentity({ displayName: `edge-stress-identity-${identity}` }),
+      );
       identityDids.push(identityDid);
       deviceDids.push({ client: owner, identityDid });
       // Wherever the hatch is open, because the self-serve cleanup routes 403 an identity with no
       // Hub account. One fixed alias per identity slot — the hatch rebinds, so every run reuses the
       // same rows. On preview the hatch is closed and cleanup falls back to the admin key.
       if (isDevLikeTarget(spec.edge)) {
-        await replicants[owner].brain.bindTestAccount({
-          hubUrl: urls.hubUrl,
-          email: `test+bladerunner-${identity}@dxos.org`,
-        });
+        await peerCall(
+          owner,
+          'bindTestAccount',
+          replicants[owner].brain.bindTestAccount({
+            hubUrl: urls.hubUrl,
+            email: `test+bladerunner-${identity}@dxos.org`,
+          }),
+        );
       }
       // One agent per identity — the agent belongs to the identity, so a second device of the same
       // identity adds nothing. Fatal, not best-effort: without agents a DELEGATED invitation is
@@ -404,11 +415,15 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       // the one the spec asked for, and a run that quietly measures the fallback is worse than a
       // red one.
       if (spec.agents) {
-        await replicants[owner].brain.createAgent();
+        await peerCall(owner, 'createAgent', replicants[owner].brain.createAgent());
       }
       for (const device of rest) {
-        const { invitationCode } = await replicants[owner].brain.inviteDevice();
-        const joined = await replicants[device].brain.joinAsDevice({ invitationCode });
+        const { invitationCode } = await peerCall(owner, 'inviteDevice', replicants[owner].brain.inviteDevice());
+        const joined = await peerCall(
+          device,
+          'joinAsDevice',
+          replicants[device].brain.joinAsDevice({ invitationCode }),
+        );
         // The model treats these clients as one identity — `knownBy`, `onlineMemberDevices` and
         // every membership precondition depend on it. A device that silently landed on an identity
         // of its own would make the fleet a different shape than the plan was simulated against,

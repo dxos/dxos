@@ -105,7 +105,11 @@ jobs:
       - name: Build
         run: moon run blade-runner:build
 
+      # Strictly under the job's own timeout: a job cancelled for exceeding it skips every
+      # `always()` step, so the artifacts and the summary — the whole output of a red run — are
+      # lost. Failing the step instead keeps them.
       - name: Measure join latency
+        timeout-minutes: 30
         working-directory: packages/e2e/blade-runner
         env:
           EDGE: ${{ inputs.edge || 'preview' }}
@@ -189,7 +193,10 @@ jobs:
 
       # A fresh seed each night, printed into the summary: the sequence is a pure function of it, so
       # a failure is replayable from the seed alone, and from the trace even if the generator changes.
+      # Same reason as the join-latency step, and the same margin: the run's own `maxRuntimeMs` plus
+      # the final assertion over every space has to fit under this, and this under the job timeout.
       - name: Soak
+        timeout-minutes: 80
         working-directory: packages/e2e/blade-runner
         env:
           EDGE: ${{ inputs.edge || 'preview' }}

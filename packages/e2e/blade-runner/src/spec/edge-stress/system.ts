@@ -120,6 +120,12 @@ export type EdgeStressResult = {
 /** A read from a healthy peer answers in milliseconds; this is a hang detector, not a wait. */
 const CALL_BUDGET_MS = 30_000;
 
+/**
+ * The same detector for a call that writes rather than reads, and so is legitimately slower: a
+ * healthy command costs ~3s against preview, and setting up the whole fleet costs ~30s.
+ */
+const COMMAND_BUDGET_MS = 120_000;
+
 //
 // The live fleet.
 //
@@ -154,6 +160,17 @@ export type Real = {
  */
 const withDeadline = <T>(label: string, budgetMs: number, call: Promise<T>): Promise<T> =>
   asyncTimeout(call, budgetMs, new Error(`replicant call did not return within ${budgetMs}ms: ${label}`));
+
+/**
+ * The same deadline for a call a command makes, which until now had none at all.
+ *
+ * The command path had no hang detector whatsoever: the scheduler rescues only a replicant that
+ * *dies*, and `maxRuntimeMs` is checked between commands, so a peer stuck inside one call hung the
+ * orchestrator until the CI job timeout cancelled the job — and a cancelled job skips its
+ * `always()` steps, so the run left no summary, no trace and no replicant logs to diagnose it with.
+ */
+export const peerCall = <T>(client: ClientIndex, label: string, call: Promise<T>): Promise<T> =>
+  withDeadline(`${label}(client ${client})`, COMMAND_BUDGET_MS, call);
 
 /** Sentinel: the time budget ran out, which ends the sequence normally rather than failing it. */
 export class BudgetExhausted extends Error {}
@@ -199,7 +216,11 @@ export const awaitSpaceOnAllDevices = async (real: Real, spaceSlot: number, clie
 export const joinSpace = async (model: Model, real: Real, client: ClientIndex, spaceSlot: number): Promise<void> => {
   const identity = identityOf(model, client);
   const space = model.spaces[spaceSlot];
-  await real.replicants[client].brain.joinSpace({ invitationCode: real.invitationCodes[spaceSlot] });
+  await peerCall(
+    client,
+    `joinSpace(space ${spaceSlot})`,
+    real.replicants[client].brain.joinSpace({ invitationCode: real.invitationCodes[spaceSlot] }),
+  );
   space.pending.delete(identity);
   space.members.add(identity);
 };
@@ -293,7 +314,11 @@ export const cleanupRun = async (model: Model, real: Real): Promise<void> => {
   for (const [identity, { devices }] of model.identities.entries()) {
     const spaceIds = spacesByIdentity.get(identity) ?? [];
     try {
-      const result = await real.replicants[devices[0]].brain.deleteOwnData({ spaceIds });
+      const result = await peerCall(
+        devices[0],
+        'deleteOwnData',
+        real.replicants[devices[0]].brain.deleteOwnData({ spaceIds }),
+      );
       accepted += result.accepted.length;
       refused.push(...result.refused);
     } catch (err) {
@@ -441,10 +466,10 @@ export const runCheckpoint = async (model: Model, real: Real): Promise<void> => 
 export const assertFullyReplicated = async (model: Model, real: Real): Promise<void> => {
   for (let client = 0; client < model.clients.length; client++) {
     if (model.clients[client].state === 'offline') {
-      await real.replicants[client].brain.goOnline();
+      await peerCall(client, 'goOnline', real.replicants[client].brain.goOnline());
       model.clients[client].state = 'online';
     } else if (model.clients[client].state === 'down') {
-      await real.replicants[client].brain.restart();
+      await peerCall(client, 'restart', real.replicants[client].brain.restart());
       model.clients[client].state = 'online';
     }
   }

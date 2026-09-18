@@ -22,7 +22,7 @@ import {
   resolvablePendingSpaces,
   token,
 } from './model.ts';
-import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system.ts';
+import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, peerCall, runCheckpoint } from './system.ts';
 
 //
 // What the system can do. Each command below is one declaration: its arguments (the schema, which
@@ -132,7 +132,7 @@ export const GoOffline = command(
       return {};
     },
     run: async (real, { client }) => {
-      await brainOf(real, client).goOffline();
+      await peerCall(client, 'goOffline', brainOf(real, client).goOffline());
     },
   },
 );
@@ -149,7 +149,7 @@ export const GoOnline = command(
       return catchUp(model, client, ops);
     },
     run: async (real, { client }) => {
-      await brainOf(real, client).goOnline();
+      await peerCall(client, 'goOnline', brainOf(real, client).goOnline());
     },
   },
 );
@@ -166,7 +166,7 @@ export const Restart = command(
       return catchUp(model, client, ops);
     },
     run: async (real, { client }) => {
-      await brainOf(real, client).restart();
+      await peerCall(client, 'restart', brainOf(real, client).restart());
     },
   },
 );
@@ -204,8 +204,12 @@ export const CreateSpace = command(
     run: async (real, { client }, transition) => {
       const slot = decided(transition.spaceSlot, 'space slot');
       const brain = brainOf(real, client);
-      const { spaceId } = await brain.createSpace({ label: `edge-stress-space-${slot}` });
-      const { invitationCode } = await brain.shareSpace({ spaceId });
+      const { spaceId } = await peerCall(
+        client,
+        'createSpace',
+        brain.createSpace({ label: `edge-stress-space-${slot}` }),
+      );
+      const { invitationCode } = await peerCall(client, 'shareSpace', brain.shareSpace({ spaceId }));
       real.spaceIds[slot] = spaceId;
       real.invitationCodes[slot] = invitationCode;
       real.spaceOwners[slot] = client;
@@ -255,11 +259,15 @@ export const CreateDocument = command(
     },
     run: async (real, { client, space }, transition) => {
       real.counters.documents++;
-      await brainOf(real, client).createDocument({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, decided(transition.documentSlot, 'document slot')),
-        counterSlots: real.replicants.length,
-      });
+      await peerCall(
+        client,
+        'createDocument',
+        brainOf(real, client).createDocument({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, decided(transition.documentSlot, 'document slot')),
+          counterSlots: real.replicants.length,
+        }),
+      );
     },
   },
 );
@@ -280,12 +288,16 @@ export const EditText = command(
     run: async (real, { client, space, document, position }, transition) => {
       const value = decided(transition.token, 'token');
       real.trace({ seq: real.counters.commands, detail: 'token', token: value });
-      await brainOf(real, client).editDocumentText({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, document),
-        token: value,
-        positionRatio: position,
-      });
+      await peerCall(
+        client,
+        'editDocumentText',
+        brainOf(real, client).editDocumentText({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, document),
+          token: value,
+          positionRatio: position,
+        }),
+      );
     },
   },
 );
@@ -304,11 +316,15 @@ export const EditCounter = command(
       return {};
     },
     run: async (real, { client, space, document }) => {
-      await brainOf(real, client).editDocumentCounter({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, document),
-        slot: client,
-      });
+      await peerCall(
+        client,
+        'editDocumentCounter',
+        brainOf(real, client).editDocumentCounter({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, document),
+          slot: client,
+        }),
+      );
     },
   },
 );
@@ -328,10 +344,14 @@ export const DeleteDocument = command(
       return {};
     },
     run: async (real, { client, space, document }) => {
-      await brainOf(real, client).deleteDocument({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, document),
-      });
+      await peerCall(
+        client,
+        'deleteDocument',
+        brainOf(real, client).deleteDocument({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, document),
+        }),
+      );
     },
   },
 );
@@ -490,7 +510,11 @@ export const execute = async <T extends Tag>(command: CommandOf<T>, model: Model
   await specOf(command._tag).run(real, command, transition, model);
   // Joins and HALO propagation are consequences of the transition, not of any one command.
   for (const { client, space } of transition.joins) {
-    await brainOf(real, client).joinSpace({ invitationCode: real.invitationCodes[space] });
+    await peerCall(
+      client,
+      `joinSpace(space ${space})`,
+      brainOf(real, client).joinSpace({ invitationCode: real.invitationCodes[space] }),
+    );
   }
   await settleLearned(real, transition.learned);
 };
