@@ -31,7 +31,7 @@ export const runSyncPosts = (
   publication: Blog.Publication,
   connection: Ref.Ref<Connection.Connection>,
   onProgress?: SyncProgress,
-): Effect.Effect<Blog.Publication, Publisher.PublisherError> =>
+): Effect.Effect<Blog.Publication, Publisher.Failure> =>
   Effect.gen(function* () {
     const source = service.source;
     const posts = (publication.posts ?? []).map((ref) => ref.target).filter(isNonNullable);

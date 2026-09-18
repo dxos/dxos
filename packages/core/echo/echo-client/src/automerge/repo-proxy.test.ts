@@ -23,6 +23,7 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
+import { EchoClientError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
 import { RepoProxy } from './repo-proxy.ts';
@@ -616,7 +617,7 @@ class RefusingDataService extends DataServiceImpl {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     this.requests++;
     return this.refuse
-      ? Effect.fail(new Error('document creation refused'))
+      ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
       : super['DataService.createDocument'](request);
   }
 }
@@ -659,7 +660,7 @@ const setup = async (
       documents: 0,
       feeds: 0,
       feedBlocks: 0,
-      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0 },
+      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0, leases: 0 },
     }),
     runGarbageCollection: async () => ({
       unlinkedObjects: 0,

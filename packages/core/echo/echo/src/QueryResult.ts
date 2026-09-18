@@ -36,7 +36,7 @@ export type Entry<T> = {
   // TODO(dmaretskyi): Rename to meta?
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local' | 'index';
+    source: Source;
 
     /**
      * Query resolution time in milliseconds.
@@ -44,6 +44,11 @@ export type Entry<T> = {
     time: number;
   };
 };
+
+/**
+ * Where query results come from.
+ */
+export type Source = 'remote' | 'local' | 'index' | 'registry';
 
 /**
  * Invidual query result entry for a database Entity.

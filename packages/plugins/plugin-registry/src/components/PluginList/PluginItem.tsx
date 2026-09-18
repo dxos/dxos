@@ -63,6 +63,7 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
+  readOnly?: boolean;
 };
 
 export const PluginItem = ({
@@ -81,6 +82,7 @@ export const PluginItem = ({
   hasSettings: hasSettingsProp,
   onSettings,
   failure,
+  readOnly,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
@@ -220,7 +222,7 @@ export const PluginItem = ({
               </Button>
             ) : (
               <Field.Root id={inputId}>
-                <Field.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
+                <Field.Switch classNames='self-center' checked={isEnabled} disabled={readOnly} onClick={handleChange} />
               </Field.Root>
             )}
           </div>

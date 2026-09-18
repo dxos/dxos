@@ -28,8 +28,9 @@ const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
     const label = yield* CloudflareApi.fetchUser().pipe(
       Effect.map((user) => user.email ?? user.username ?? undefined),
       Effect.catch(() => Effect.map(CloudflareApi.fetchAccounts(), (accounts) => accounts[0]?.name)),
-      Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token })),
-      Effect.provide(CloudflareHttpClientLayer),
+      Effect.provide(
+        Layer.provideMerge(Layer.succeed(CloudflareApi.CloudflareCredentials, { token }), CloudflareHttpClientLayer),
+      ),
     );
     if (!label) {
       return;
@@ -45,8 +46,9 @@ const isCredentialRejection = (error: CloudflareApi.CloudflareError): boolean =>
 const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     CloudflareApi.fetchAccounts().pipe(
-      Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token })),
-      Effect.provide(CloudflareHttpClientLayer),
+      Effect.provide(
+        Layer.provideMerge(Layer.succeed(CloudflareApi.CloudflareCredentials, { token }), CloudflareHttpClientLayer),
+      ),
     ),
   ).pipe(
     Effect.asVoid,

@@ -85,6 +85,47 @@ describe('EchoNetworkAdapter', () => {
     expect(disconnectedPeer.peerId).to.eq(ANOTHER_PEER_ID);
   });
 
+  test('transport reset re-announces the peer without closing the connection', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const entry = (adapter as any)._connections.get(ANOTHER_PEER_ID);
+    invariant(entry);
+
+    // The mark is how the collection synchronizer tells a rebound transport from a real rejoin.
+    const events: string[] = [];
+    let markedThroughout = true;
+    adapter.on('peer-disconnected', ({ peerId }) => {
+      events.push('peer-disconnected');
+      markedThroughout &&= adapter.isTransportResetting(peerId);
+    });
+    adapter.on('peer-candidate', ({ peerId }) => {
+      events.push('peer-candidate');
+      markedThroughout &&= adapter.isTransportResetting(peerId);
+    });
+
+    expect((adapter as any)._onConnectionTransportReset(entry.connection)).to.be.true;
+    expect(events).to.deep.eq(['peer-disconnected', 'peer-candidate']);
+    expect(markedThroughout).to.be.true;
+
+    // The connection itself is untouched — same entry, still open, and no longer marked.
+    expect((adapter as any)._connections.get(ANOTHER_PEER_ID)).to.eq(entry);
+    expect(entry.isOpen).to.be.true;
+    expect(adapter.isTransportResetting(ANOTHER_PEER_ID)).to.be.false;
+  });
+
+  test('transport reset reports failure for a peer with no open connection', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator);
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const { connection } = (adapter as any)._connections.get(ANOTHER_PEER_ID);
+
+    await adapter.removeReplicator(controller.replicator);
+
+    // Caller falls back to a full restart rather than silently losing the recovery.
+    expect((adapter as any)._onConnectionTransportReset(connection)).to.be.false;
+  });
+
   test('message sending is queued', async () => {
     let sentTotal = 0;
     let sendInProgress = false;
@@ -104,13 +145,46 @@ describe('EchoNetworkAdapter', () => {
     await waitForCondition({ condition: () => sentTotal === totalMessages });
   });
 
-  const createConnectedAdapter = async (replicator: MeshEchoReplicator) => {
+  test('an auth scope change re-offers the peer when asked to', async () => {
+    const controller = createReplicatorController();
+    const adapter = await createConnectedAdapter(controller.replicator, {
+      onConnectionAuthScopeChanged: 'reannounce-peer',
+    });
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const events: string[] = [];
+    adapter.on('peer-disconnected', () => events.push('disconnected'));
+    adapter.on('peer-candidate', () => events.push('candidate'));
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    expect(events).toEqual(['disconnected', 'candidate']);
+  });
+
+  test('an auth scope change goes to the handler instead of re-offering the peer', async () => {
+    const controller = createReplicatorController();
+    const changed: PeerId[] = [];
+    const adapter = await createConnectedAdapter(controller.replicator, {
+      onConnectionAuthScopeChanged: (peerId) => changed.push(peerId),
+    });
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    const events: string[] = [];
+    adapter.on('peer-disconnected', () => events.push('disconnected'));
+    adapter.on('peer-candidate', () => events.push('candidate'));
+    await controller.connectPeer(ANOTHER_PEER_ID);
+    expect(changed).toEqual([ANOTHER_PEER_ID]);
+    expect(events).toEqual([]);
+  });
+
+  const createConnectedAdapter = async (
+    replicator: MeshEchoReplicator,
+    props: Partial<ConstructorParameters<typeof EchoNetworkAdapter>[0]> = {},
+  ) => {
     const adapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: async () => null,
       getContainingSpaceIdForDocument: async () => null,
       isDocumentInRemoteCollection: async () => true,
       onCollectionStateQueried: () => {},
       onCollectionStateReceived: () => {},
+      onConnectionAuthScopeChanged: 'reannounce-peer',
+      ...props,
     });
     adapter.connect(PEER_ID);
     await adapter.open();
