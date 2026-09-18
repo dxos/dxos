@@ -12,7 +12,7 @@ import { writeFileSync } from 'node:fs';
 import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
-import { adminDownload, adminRequest, formatAdminError } from '../util.ts';
+import { AdminApiError, adminDownload, adminRequest, formatAdminError } from '../util.ts';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 
@@ -32,14 +32,14 @@ export const exportSpace = Command.make(
   },
   Effect.fn(function* ({ spaceId, download, output }) {
     const result = yield* adminRequest<ExportTriggerResponse>('POST', `/admin/spaces/${spaceId}/export`).pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (download) {
       const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;
 
       const response = yield* adminDownload(result.downloadPath).pipe(
-        Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
+        Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
       );
 
       const body = yield* response.text;

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -153,8 +154,12 @@ describe('applyTo', () => {
 
     const root = await EffectEx.runPromise(
       Effect.flatMap(SampleSpace.Root, ({ get }) => get).pipe(
-        Effect.provide(SampleSpace.layer({ properties: space.properties, reference: definition.reference })),
-        Effect.provide(Database.layer(space.db)),
+        Effect.provide(
+          Layer.provideMerge(
+            SampleSpace.layer({ properties: space.properties, reference: definition.reference }),
+            Database.layer(space.db),
+          ),
+        ),
       ),
     );
     expect(root.objects.map((ref) => ref.target?.id)).toContain(result.collection.id);

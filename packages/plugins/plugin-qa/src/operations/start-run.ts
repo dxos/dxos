@@ -9,6 +9,7 @@ import { Database, Feed, Ref } from '@dxos/echo';
 
 import { QaOperation, TestRun } from '#types';
 
+import { QaError } from '../errors.ts';
 import { loadCases, loadFeed } from './util.ts';
 
 /**
@@ -28,7 +29,7 @@ const handler: Operation.WithHandler<typeof QaOperation.StartRun> = QaOperation.
       const duplicate = requestedKeys.find((key, index) => requestedKeys.indexOf(key) !== index);
       if (duplicate !== undefined) {
         // A repeated key would be counted twice by the rollup.
-        return yield* Effect.fail(new Error(`Duplicate case key: ${duplicate}.`));
+        return yield* Effect.fail(new QaError({ message: `Duplicate case key: ${duplicate}.` }));
       }
 
       // Capture identity, not just the key: pushResult resolves the case from here, so a
@@ -37,7 +38,7 @@ const handler: Operation.WithHandler<typeof QaOperation.StartRun> = QaOperation.
       for (const key of requestedKeys) {
         const testCase = byKey.get(key);
         if (!testCase) {
-          return yield* Effect.fail(new Error(`Not in the plan: ${key}.`));
+          return yield* Effect.fail(new QaError({ message: `Not in the plan: ${key}.` }));
         }
         captured.push({ key, case: Ref.make(testCase) });
       }

@@ -19,8 +19,9 @@ describe('RemoteProcessManager', () => {
     });
     const result = await EffectEx.runPromise(
       program.pipe(
-        Effect.provide(RemoteProcessManager.layerNoop),
-        Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+        Effect.provide(
+          Layer.provideMerge(RemoteProcessManager.layerNoop, Layer.succeed(Registry.AtomRegistry, Registry.make())),
+        ),
       ),
     );
     expect(result).toEqual([]);

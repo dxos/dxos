@@ -50,7 +50,10 @@ describe('Operation.withHandler service requirements', () => {
           yield* UndeclaredService;
         }),
       ),
-    ).type.toRaiseError("Type 'UndeclaredService' is not assignable to type 'DeclaredService | Service'");
+    ).type.toRaiseError(
+      'This Effect requires a service that is missing from the expected Effect context: `UndeclaredService`.',
+      "Type 'UndeclaredService' is not assignable to type 'DeclaredService | Service'",
+    );
   });
 
   it('accepts Operation.Service without declaring it', () => {

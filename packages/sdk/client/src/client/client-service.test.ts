@@ -27,10 +27,7 @@ describe('ClientService', () => {
   it('can create identity', async () => {
     const program = Effect.gen(function* () {
       const client = yield* ClientService;
-      const identity = yield* Effect.tryPromise({
-        try: () => client.halo.createIdentity(),
-        catch: (error) => error as Error,
-      });
+      const identity = yield* Effect.tryPromise(() => client.halo.createIdentity());
       return identity;
     }).pipe(Effect.provide(TestLayer));
     const identity = await EffectEx.runAndForwardErrors(program);
