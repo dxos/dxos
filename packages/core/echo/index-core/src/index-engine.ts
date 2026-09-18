@@ -125,18 +125,11 @@ export interface IndexDataSource {
   beginPass?(): void;
   endPass?(): void;
 
-  /**
-   * Reads the next batch of changed objects.
-   *
-   * `done` reports that the source had nothing left beyond this batch: the engine schedules a
-   * follow-up pass only when it is false, so a source that reported `done: false` for every
-   * productive read would make each pass cost a second, empty one.
-   */
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; done: boolean }>;
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
 }
 
 export interface IndexEngineParams {
@@ -429,11 +422,7 @@ export class IndexEngine {
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
       // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
-      const {
-        objects,
-        cursors: updatedCursors,
-        done: sourceDone,
-      } = yield* source.getChangedObjects(ctx, opts.cursors, {
+      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
       });
 
@@ -478,7 +467,7 @@ export class IndexEngine {
               cursor: _.cursor,
             })),
           );
-          return { updated: objects.length, done: sourceDone, objects };
+          return { updated: objects.length, done: false, objects };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));

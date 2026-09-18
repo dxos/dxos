@@ -21,9 +21,6 @@ import type { Index, IndexerObject } from './interface.ts';
 // Use 500 as a safe chunk size for IN (...) clauses.
 const SQL_CHUNK_SIZE = 500;
 
-/** Upsert probe row: `snapshot` is null when the caller does not need the prior value. */
-type SnapshotProbe = { snapshot: string | null };
-
 /**
  * The space and queue constrains are combined together using a logical OR.
  */
@@ -275,6 +272,12 @@ export class FtsIndex implements Index {
                 return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
               }
 
+              // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
+              const existing = yield* sql<{
+                rowid: number;
+                snapshot: string;
+              }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
+
               // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
               // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
               // partial onto the prior snapshot to retain the body and type while layering the new
@@ -284,17 +287,10 @@ export class FtsIndex implements Index {
               // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
               // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
               const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-
-              // FTS5 has no UPDATE, so an upsert is DELETE + INSERT and the row must be probed
-              // either way. Only the merge path projects `snapshot`: a full block discards the
-              // prior one, and a snapshot is the object's whole JSON — 110KB for the perf fixture's
-              // markdown document, re-read on every keystroke.
-              const existing = isPartialBlock
-                ? yield* sql<SnapshotProbe>`SELECT snapshot FROM ftsIndex WHERE rowid = ${recordId}`
-                : yield* sql<SnapshotProbe>`SELECT NULL AS snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
-              const prior = existing.length > 0 ? existing[0].snapshot : null;
-
-              const merged = prior !== null ? { ...(JSON.parse(prior) as Record<string, unknown>), ...data } : data;
+              const merged =
+                isPartialBlock && existing.length > 0
+                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
+                  : data;
               // Document objects carry `@meta` only so the entity-meta index can extract the
               // convergence key — full-text search must not match on foreign keys or identity
               // strings the visible content never contains. Queue blocks always carried meta in

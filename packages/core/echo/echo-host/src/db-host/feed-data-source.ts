@@ -59,7 +59,7 @@ export class FeedDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; done: boolean }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
     // For queue, the cursor is assumed to have:
     // spaceId = set
     // resourceId = null
@@ -161,7 +161,7 @@ export class FeedDataSource implements IndexDataSource {
         }
       }
 
-      return { objects, cursors: updatedCursors, done: remainingLimit > 0 };
+      return { objects, cursors: updatedCursors };
     }).pipe(RuntimeProvider.provide(this._runtime), Effect.withSpan('FeedDataSource.getChangedObjects'), Effect.orDie);
   }
 }
