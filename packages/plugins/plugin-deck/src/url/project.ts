@@ -180,7 +180,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
   yield* switchWorkspace(workspacePath);
 
   // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
-  // and the caller's intent rides on it; the resolved pass below only lands the chain end.
+  // and carries the caller's intent.
   yield* applyActive(initialPlanks(pairs, idsBySegment()), options?.intent);
 
   const loaders = navigationTargetLoaders;

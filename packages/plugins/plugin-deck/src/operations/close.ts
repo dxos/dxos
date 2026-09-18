@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const { workspace } = yield* currentNavigation();
 
       const active = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
-      // No intent: the write focuses whichever plank attention falls to, which is what closing means.
+      // No intent: the write focuses whichever plank attention falls to.
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
     }),
   ),

@@ -59,8 +59,7 @@ const STORY_ITEMS: StoryItem[] = [
   { id: 'story-item-4', title: 'Tasks', icon: 'ph--check-square--regular' },
   { id: 'story-item-5', title: 'References', icon: 'ph--bookmarks--regular' },
   { id: 'story-item-6', title: 'Archive', icon: 'ph--archive--regular' },
-  // A 7th item, past every seeded `count` this file uses, so "open next" always has an unopened target
-  // even once the deck already overflows the viewport.
+  // Past every seeded `count` in this file, so "open next" always has an unopened target.
   { id: 'story-item-7', title: 'Backlog', icon: 'ph--tray--regular' },
 ];
 
@@ -87,10 +86,8 @@ const STORY_CONTENT: Record<string, string> = Object.fromEntries(
 const contentFor = (title: string): string => STORY_CONTENT[title] ?? `# ${title}`;
 
 /**
- * The graph's single workspace level: every story node hangs off `root/<workspace>` rather than
- * directly off root, matching the `root/<workspace>/<id>` shape `PathResolution.representNode`
- * requires to round-trip `LayoutOperation.Open` through the URL (a bare `root/<id>` node has no
- * workspace segment and so has no URL binding).
+ * Story nodes hang off a workspace node rather than off root, since `PathResolution.representNode` binds
+ * a node to a URL only in the `root/<workspace>/<id>` shape.
  */
 const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
 
@@ -198,7 +195,7 @@ const TestRevealControls = () => {
   );
 };
 
-/** Opens one more plank beside the seeded ones (`disposition: 'add'`), the path the test below drives. */
+/** Opens one more plank beside the seeded ones. */
 const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
   const { invokePromise } = useOperationInvoker();
   const handleClick = useCallback(() => {
@@ -363,9 +360,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         const extensions = yield* Effect.all([
           AppGraphBuilder.createExtension({
             id: 'storyWorkspace',
-            // A node id may not itself contain '/' (`GraphNode.qualifyId`'s invariant), so the workspace
-            // segment `PathResolution.representNode` requires has to come from a real intermediate node
-            // rather than being folded into each item's raw id.
+            // A node id may not contain '/' (`GraphNode.qualifyId`'s invariant), so the workspace segment
+            // has to come from a real intermediate node rather than be folded into each item's id.
             match: GraphNodeMatcher.whenRoot,
             connector: () =>
               Effect.succeed([
@@ -379,9 +375,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           AppGraphBuilder.createExtension({
             id: 'storyItems',
-            // A URL binding, so `LayoutOperation.Open` can round-trip a story item through the deck's
-            // real navigate-then-project path (as opposed to the other stories, which seed `active`
-            // directly) — the exact path the flash-of-unattended regression test below exercises.
+            // A URL binding, so `LayoutOperation.Open` round-trips a story item through the deck's real
+            // navigate-then-project path rather than seeding `active` directly.
             url: { key: 'item', kind: 'item', path: [] },
             match: GraphNodeMatcher.whenNodeType('story-workspace'),
             connector: () =>
@@ -456,7 +451,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 type StoryArgs = {
   /** Renders controls that reveal a plank from outside the deck. */
   revealControls?: boolean;
-  /** Renders a control that opens the third story item as a new plank via `LayoutOperation.Open`. */
+  /** Renders a control that opens the first unseeded story item as a new plank. */
   openNextControl?: boolean;
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
@@ -465,9 +460,8 @@ type StoryArgs = {
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
   /**
-   * Seed the deck with no `companionPlanks` entry at all, rather than the (possibly empty) array
-   * `companionPlanks` above writes — the "reader has never opened or closed one" state. Takes
-   * precedence over `companionPlanks` when set.
+   * Seed no `companionPlanks` entry at all — the "reader has never opened or closed one" state. Takes
+   * precedence over `companionPlanks`.
    */
   uninitializedCompanions?: boolean;
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
@@ -478,10 +472,9 @@ type StoryArgs = {
    */
   settings?: Partial<Pick<Settings.Settings, 'flatten' | 'overscroll'>>;
   /**
-   * Stored width (rem) seeded for every plank opened on mount. Narrower than `DEFAULT_PLANK_SIZE` lets a
-   * story fit several unfolded planks inside the (fixed, narrow) test viewport at once — the geometry the
-   * fold hysteresis's "nearest to centre" pick actually has to choose between, rather than the trivial
-   * single-visible-plank case a full-width deck reduces to once scrolled to its end.
+   * Stored width (rem) seeded for every plank opened on mount. Narrower than `DEFAULT_PLANK_SIZE` fits
+   * several unfolded planks in the test viewport at once, which is what gives the fold hysteresis's
+   * "nearest to centre" pick anything to choose between.
    */
   plankSizeRem?: number;
 };
@@ -513,12 +506,10 @@ const DefaultStory = ({
   const { graph } = useAppGraph();
   const { state, deck, updateState, updateEphemeral } = useDeckState();
 
-  // Root expands once, automatically, at graph-capability startup; the workspace node this story added
-  // is not root, so nothing expands it on its own — this story owns expanding that one extra level, the
-  // way `useLoadDescendents` does for a navtree branch. Without it each plank's `useNode` never resolves
-  // and the deck stays in the loading state. The graph qualifies connector node ids with their parent
-  // path (e.g. `root/default/story-item-1`), so the seeded `active` list holds the materialized ids
-  // rather than the bare `STORY_ITEMS` ids.
+  // Only root expands automatically at graph-capability startup, so this story owns expanding the
+  // workspace level the way `useLoadDescendents` does for a navtree branch, or no plank's `useNode` ever
+  // resolves. The graph qualifies connector node ids with their parent path (e.g.
+  // `root/default/story-item-1`), so the seeded `active` list holds the materialized ids.
   useState(() => AppGraph.expandSync(graph, STORY_WORKSPACE_ID, 'child'));
   const workspaceChildren = useConnections(graph, STORY_WORKSPACE_ID, 'child');
   const items = useMemo(() => workspaceChildren.filter((node) => node.type === 'story-item'), [workspaceChildren]);
@@ -550,8 +541,8 @@ const DefaultStory = ({
         ...current.decks,
         [current.activeDeck]: {
           ...current.decks[current.activeDeck],
-          // Omitting the key altogether (rather than writing `[]`) is what exercises the "reader has
-          // never decided" state `isCompanionOpen` special-cases.
+          // Omitting the key rather than writing `[]` is what exercises the "reader has never decided"
+          // state `isCompanionOpen` special-cases.
           ...(uninitializedCompanions ? {} : { companionPlanks: open }),
           ...(plankSizing && { plankSizing: { ...current.decks[current.activeDeck].plankSizing, ...plankSizing } }),
         },
@@ -579,9 +570,6 @@ const DefaultStory = ({
   return (
     <>
       {revealControls && <TestRevealControls />}
-      {/* The first item past the seeded `count` — the one plank still unopened whatever `count` a story
-          picks — so "open next" keeps working once a story seeds more planks than `OpenFocusesBeforePaint`
-          did. */}
       {openNextControl && <TestOpenNextControls targetId={items[count]?.id} />}
       <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
         <Deck.Content>
@@ -755,13 +743,10 @@ export const CompanionPerPlank: Story = {
   },
 };
 
-// Regression: a stacked deck (`flatten` unset here) that has never had its companion touched must start
-// with every plank's companion closed — the old `isCompanionOpen` returned `true` for every plank when
-// `companionPlanks` was `undefined`, opening a companion beside each one before the reader ever asked.
 /**
  * Runs `interaction` with a workspace URL the deck can parse, restoring whatever Storybook had there.
- * These stories seed their planks directly, so nothing has written a URL, and the deck's operations read
- * one to resolve which workspace to navigate within.
+ * These stories seed their planks directly, so nothing has written a URL for the deck's operations to
+ * resolve a workspace from.
  */
 const withWorkspaceUrl = async (interaction: () => Promise<void>) => {
   const previous = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -780,12 +765,11 @@ export const CompanionsClosedUntilOpened: Story = {
     const canvas = within(canvasElement);
     await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
 
-    // Nothing shows a companion yet, though the deck has never recorded a decision either way.
+    // A stacked deck that has recorded no decision either way shows no companion.
     await expect(showingCompanionsFor(canvasElement)).toEqual([]);
 
-    // Opening one plank's companion through the real toolbar affordance still works from this
-    // uninitialized state, and opens only the plank asked for. The control only appears once the
-    // plank's companion edges have loaded (an async graph expansion on mount), so wait for it.
+    // The control appears only once the plank's companion edges have loaded (an async graph expansion
+    // on mount).
     const firstPlankId = `${STORY_WORKSPACE_ID}/story-item-1`;
     const findCompanionButton = () =>
       canvasElement.querySelector<HTMLElement>(
@@ -794,8 +778,7 @@ export const CompanionsClosedUntilOpened: Story = {
     await waitFor(() => expect(findCompanionButton(), 'no companion control for the first plank').not.toBeNull());
 
     await withWorkspaceUrl(async () => {
-      // The companion anchors to the attended plank, so the one whose control is clicked has to hold
-      // attention, else it opens beside whichever plank attention falls back to.
+      // The companion anchors to the attended plank, so the clicked plank has to hold attention first.
       await attendPlank(canvasElement, 1);
       findCompanionButton()?.click();
       await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview']));
@@ -846,17 +829,16 @@ const plankTitle = (canvasElement: HTMLElement, id: string) =>
   canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"] h1[data-attention]`);
 
 /**
- * Opening a plank lands attention on it and on nothing else: its heading never paints unattended, and no
- * other plank takes focus on the way while the new one is still off screen.
+ * Opening a plank lands attention on it and on nothing else.
  *
- * Both are asserted over the whole interaction rather than its outcome, since each fault corrects itself
- * a moment later. A `MutationObserver` batch is what the browser would have painted after one task, and
+ * Asserted over the whole interaction rather than its outcome, since either fault corrects itself a
+ * moment later: a `MutationObserver` batch is what the browser would have painted after one task, and
  * `focusin` catches a focus move that reverts within a commit, which the attention attribute never shows.
  */
 export const OpenAttendsTheNewPlank: Story = {
   tags: ['test'],
-  // Enough narrow planks that the deck overflows with several unfolded: with one plank on screen there is
-  // nothing for the fold hysteresis to mis-pick, and the bug hides.
+  // Enough narrow planks that several are unfolded at once; with one on screen the fold hysteresis has
+  // nothing to mis-pick.
   args: { count: 6, openNextControl: true, plankSizeRem: 20 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

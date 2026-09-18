@@ -85,12 +85,9 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [invokePromise, active],
   );
 
-  // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
-  // `scrollIntoView`; unless the reveal leaves focus where it is, focus the pane so it gains attention, then
-  // clear the one-shot flag. Scrolling is owned by the deck viewport, which positions the plank past the
-  // pile of spines, so this focus must not scroll on its own. A layout effect, not a passive one: attention
-  // is derived from focus, so focus has to move in the same task that inserted this plank or the first
-  // painted frame reads it as unattended.
+  // A layout effect, since attention is derived from focus and focus has to move in the task that
+  // inserted this plank or its first painted frame reads as unattended. Scrolling is owned by the deck
+  // viewport, which positions the plank past the pile of spines, so this focus must not scroll.
   useLayoutEffect(() => {
     if (scrollIntoView?.id === id) {
       if (scrollIntoView.focus !== false) {

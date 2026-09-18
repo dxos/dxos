@@ -28,15 +28,11 @@ import * as Navigation from './navigation.ts';
 import { computeActiveUpdates } from './set-active.ts';
 
 /**
- * How a navigation lands. Carried from the operation down to the single write that mounts the planks,
- * because a plank focuses itself in the commit that mounts it: an intent arriving in a later write is
- * a frame of the wrong plank attended.
+ * How a navigation lands, carried down to the single write that mounts the planks because a plank
+ * focuses itself in the commit that mounts it.
  */
 export type NavigationIntent = {
-  /**
-   * The plank this write focuses. Defaults to the one attention is displaced onto, since attention has
-   * to end on a plank that is open.
-   */
+  /** The plank this write focuses; defaults to the plank attention is displaced onto. */
   scrollIntoView?: string;
   /** Run the write as the update step of a view transition, so the content region crossfades. */
   transition?: boolean;
@@ -79,10 +75,9 @@ export const applyActive = Effect.fnUntraced(function* (
     !sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments);
 
   const write = Effect.sync(() => {
-    // The projection applies the same URL twice and re-applies it on any navigation, so writing
-    // unconditionally would hand every reader new arrays each time and re-render every plank for a
-    // deck that did not change. A `scrollIntoView` forces the write, since the intent has to land in
-    // the commit that mounts its plank.
+    // The projection re-applies the same URL, so writing unconditionally would re-render every plank of
+    // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
+    // mounts its plank.
     if (changed || scrollIntoView !== undefined) {
       registry.set(ephemeralAtom, {
         ...ephemeral,
@@ -96,8 +91,8 @@ export const applyActive = Effect.fnUntraced(function* (
     }
   });
 
-  // Only a write that changes what is open is worth animating: rendering is frozen for the whole
-  // update step, and the projection's other passes leave the deck looking the same.
+  // Only a write that changes what is open is worth animating, since rendering is frozen for the whole
+  // update step.
   yield* intent?.transition && changed ? withViewTransition(write) : write;
 
   return toAttend;

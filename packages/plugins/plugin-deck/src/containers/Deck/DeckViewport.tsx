@@ -973,7 +973,7 @@ const useScrollIntoView = ({
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
-  /** The rendered plank ids, so the intent can be recorded without waiting on the DOM (see below). */
+  /** Rendered plank ids, so the intent can be recorded without waiting on the DOM. */
   planks: readonly string[];
   scrollIntoViewId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
@@ -985,13 +985,13 @@ const useScrollIntoView = ({
 
   useEffect(() => () => cancelAnimationFrame(watchdogRef.current ?? 0), []);
 
-  // Recorded during render, since every effect is too late: `useFoldedPlanks` is declared first and runs
-  // its `update()` from a layout effect, by which point the plank has already focused itself and that
-  // pass would hand attention to whichever plank is on screen. Membership in `planks` rather than a DOM
-  // lookup, so this holds before the tile mounts.
-  if (scrollIntoViewId && planks.includes(scrollIntoViewId)) {
-    scrollIntentRef.current = scrollIntoViewId;
-  }
+  // Ahead of the fold pass, which would otherwise hand attention to whichever plank is already on screen
+  // while this one is still off it. `planks` rather than the DOM, since the tile has not mounted yet.
+  useLayoutEffect(() => {
+    if (scrollIntoViewId && planks.includes(scrollIntoViewId)) {
+      scrollIntentRef.current = scrollIntoViewId;
+    }
+  }, [scrollIntoViewId, planks, scrollIntentRef]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -1412,6 +1412,14 @@ export const DeckPlanks = () => {
   // declaration order, and measuring at the exposé's zeroed scroll reads every trailing plank as
   // off-screen — enough for the attention hysteresis to hand attention to whatever sits near the start.
   useExposeScroll({ viewportRef, stackRef, getPlankTiles, selectRef: exposeSelectRef, expose });
+  useScrollIntoView({
+    viewportRef,
+    stackRef,
+    getPlankTiles,
+    planks,
+    scrollIntoViewId: state.scrollIntoView?.id,
+    scrollIntentRef,
+  });
   useFoldedPlanks({
     viewportRef,
     getPlankTiles,
@@ -1419,14 +1427,6 @@ export const DeckPlanks = () => {
     expose,
     plankCount: planks.length,
     maxPlankWidthPx,
-    scrollIntentRef,
-  });
-  useScrollIntoView({
-    viewportRef,
-    stackRef,
-    getPlankTiles,
-    planks,
-    scrollIntoViewId: state.scrollIntoView?.id,
     scrollIntentRef,
   });
   useExposeInert({ getPlankTiles, expose });

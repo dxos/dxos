@@ -26,21 +26,27 @@ export const getRenderedPlanks = (active: readonly string[], flatten: boolean | 
  * the globally-selected variant. Stacked mode keeps the flag per plank — several planks are visible at
  * once, so each carries its own.
  *
- * A deck whose reader has never opened or closed one holds no flag at all, and what that should mean
- * follows the same split: flat mode opens the single pane it lays out, while a stacked deck would
- * otherwise hang one off every plank at once, which is a deck of companions nobody asked for.
+ * A deck holding no flag at all follows the same split: flat opens its single pane, while stacked stays
+ * closed rather than hanging a companion off every plank at once.
  */
 export const isCompanionOpen = (
   companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string | undefined,
-): boolean => {
-  if (companionPlanks === undefined) {
-    return !!flatten;
-  }
+): boolean =>
+  flatten || companionPlanks === undefined
+    ? isAnyCompanionOpen(companionPlanks, flatten)
+    : !!plankId && companionPlanks.includes(plankId);
 
-  return flatten ? companionPlanks.length > 0 : !!plankId && companionPlanks.includes(plankId);
-};
+/**
+ * Whether the deck shows a companion at all, which is the most a consumer outside the layout can ask:
+ * a stacked deck answers per plank. Flat mode's own answer, and what an untouched flag means, live here
+ * so {@link isCompanionOpen} and its callers cannot drift apart.
+ */
+export const isAnyCompanionOpen = (
+  companionPlanks: readonly string[] | undefined,
+  flatten: boolean | undefined,
+): boolean => (companionPlanks === undefined ? !!flatten : companionPlanks.length > 0);
 
 /**
  * `companionPlanks` with `plankId` marked open. Flat mode holds a single entry (the flag is deck-wide),

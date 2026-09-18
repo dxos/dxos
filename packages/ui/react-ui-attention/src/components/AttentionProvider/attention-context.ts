@@ -24,16 +24,15 @@ export const [AttentionContextProvider, useAttentionContext] = createContext<Att
 
 export const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
-/** Stable snapshot for `useAttended` when there is nothing to subscribe to. */
+/** Stable, so `useSyncExternalStore` does not see a new value on every read. */
 const NO_ATTENDED: readonly string[] = [];
 
-/** Stable no-op unsubscribe for when there is no id/manager to subscribe to. */
+/** Stable for the same reason as `NO_ATTENDED`. */
 const noopUnsubscribe = () => {};
 
 /**
  * Subscribe to the attention state for a qualified graph ID.
- * Reads synchronously via `useSyncExternalStore` so the first render (and any update fired during
- * a layout effect, before paint) already reflects the manager's current state.
+ * Reads synchronously, so the first render and any update fired from a layout effect land before paint.
  */
 // TODO(burdon): Unify with selection state and change to contextId?
 export const useAttention = (attendableId?: string): Attention => {

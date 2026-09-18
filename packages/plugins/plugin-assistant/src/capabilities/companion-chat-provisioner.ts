@@ -48,8 +48,8 @@ export default Capability.makeModule(
       return [];
     }
     const deckEphemeralAtom = deckEphemeralOption.value;
-    // Whether a deck lays out one plank or several decides what an untouched companion flag means, so
-    // provisioning cannot read that flag without it.
+    // An untouched companion flag means different things flat and stacked, so it cannot be read without
+    // the layout setting.
     const deckSettingsAtom = Option.getOrUndefined(yield* Capability.getOption(DeckCapabilities.Settings));
     // The mobile drawer and the desktop companion plank record "which companion is on screen" in
     // different fields, so the host has to be known before that state can be read.

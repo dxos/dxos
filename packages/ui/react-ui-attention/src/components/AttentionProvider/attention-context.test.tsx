@@ -25,9 +25,9 @@ const AttendedProbe = ({ values }: { values: (readonly string[])[] }) => {
 };
 
 /**
- * Focuses the element matching `selector` during the layout phase, as a plank does on mount. A DOM
- * query rather than a forwarded ref: React attaches a host element's ref after its descendants' layout
- * effects have run, so a ref from the enclosing container would still be null here.
+ * Focuses the element matching `selector` during the layout phase, as a plank does on mount. A DOM query
+ * rather than a ref, since React attaches a host element's ref only after its descendants' layout
+ * effects have run.
  */
 const FocusOnMount = ({ selector }: { selector: string }) => {
   useLayoutEffect(() => {
@@ -113,8 +113,8 @@ describe('focus-before-paint regression guard', () => {
       </RootAttentionProvider>,
     );
 
-    // Asserted synchronously, with no `waitFor`: the manager, the DOM attribute and `activeElement`
-    // must agree before the task that mounted the tree ends, or the first painted frame is wrong.
+    // Synchronous, with no `waitFor`: they have to agree before the task that mounted the tree ends, or
+    // the first painted frame is wrong.
     expect(attention.getCurrent()).to.deep.equal(['b']);
     expect(screen.getByTestId('b').getAttribute('data-w-attention-source')).toBe('true');
     expect(screen.getByTestId('a').getAttribute('data-w-attention-source')).toBeNull();
@@ -145,7 +145,7 @@ describe('switching attendableId', () => {
     expect(values.at(-1)).to.deep.equal(attention.get('b'));
     expect(values.at(-1)).to.deep.equal({ hasAttention: true, isAncestor: false, isRelated: false });
 
-    // No UNKNOWN placeholder should ever appear: both ids are always resolvable from a live manager.
+    // Both ids are resolvable from a live manager, so the placeholder should never appear.
     expect(values.every((value) => value !== UNKNOWN_ATTENDABLE)).toBe(true);
   });
 });

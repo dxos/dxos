@@ -12,6 +12,8 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
+import { isAnyCompanionOpen } from '../util/companion-anchor.ts';
+
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
@@ -160,9 +162,7 @@ export const getCompanionSelection = (
     return { open, variant: open ? state.complementarySidebarPanel : undefined };
   }
 
-  const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
-  // A deck holding no flag reads as `isCompanionOpen` does: open only where one plank is laid out.
-  const open = companionPlanks === undefined ? !!flatten : companionPlanks.length > 0;
+  const open = isAnyCompanionOpen(state.decks[state.activeDeck]?.companionPlanks, flatten);
   return { open, variant: open ? viewStateVariant : undefined };
 };
 
