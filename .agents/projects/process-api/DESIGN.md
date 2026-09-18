@@ -336,126 +336,300 @@ marker. `Operation.lazyHandler` composes with each of them.
 
 ### 5.1 Defining each kind
 
-**Code** — the baseline, as today (§3.1): `Op.pipe(Operation.withHandler((input) => …))`.
+Each example is a complete module as a consumer would write it: the definition, the
+handler, and how it is reached. The definition half is identical across kinds — only the
+combinator and the body differ.
 
-**Durable.** `Process.make`, `MakeProcessOpts`, `Process.Callbacks`, `ProcessContext` and
-`Process.fromOperation` are removed; their semantics become a handler attached to an
-ordinary definition. Today's `AgentProcess`
-(`agent-runtime/src/agent-service/agent-process.ts:106`) re-declares `key`, `input`,
-`output`, `types` and `services` beside the operation that spawns it; after, it declares
-them once:
+**Code** — the baseline, unchanged from today (§3.1):
+`Op.pipe(Operation.withHandler((input) => …))`.
+
+#### Durable
+
+`Process.make`, `MakeProcessOpts`, `Process.Callbacks`, `ProcessContext` and
+`Process.fromOperation` are removed; their semantics become a handler on an ordinary
+definition. Today's `AgentProcess` (`agent-runtime/src/agent-service/agent-process.ts:106`)
+re-declares `key`, `input`, `output`, `types` and `services` beside the operation that
+spawns it; after, it declares them once.
+
+A digest process — accumulates inputs, wakes on an alarm, delegates each item to a child
+operation, and exposes a control surface — exercising every callback:
 
 ```ts
-export const RunAgent = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.agent.run'), name: 'Run Agent' },
-  input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
-  output: Schema.Void,
-  types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm],
-  services: [Database.Service, AiService.AiService, StorageService.StorageService],
-  rpcs: HarnessControl, // the one field moving onto `make`.
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+
+import * as Operation from '@dxos/compute/Operation';
+import * as StorageService from '@dxos/compute/StorageService';
+import { Database, DXN, Ref } from '@dxos/echo';
+
+import { Digest } from './types.ts';
+import { SummarizeItem } from './SummarizeItem.ts';
+
+const FLUSH_INTERVAL_MS = 60_000;
+
+/** Control surface, callable on a live process via `process.rpc`. */
+const DigestControl = RpcGroup.make(
+  Rpc.make('flushNow', { success: Schema.Void }),
+  Rpc.make('pending', { success: Schema.Number }),
+);
+
+/**
+ * Durable state. Survives suspend/resume: the runtime persists cells between turns, so a
+ * process hibernating on an alarm keeps its buffer without holding a fiber.
+ */
+const PendingCell = StorageService.cell(Schema.fromJsonString(Schema.Array(Schema.String)), 'digest/pending').pipe(
+  StorageService.withDefault(() => [] as readonly string[]),
+);
+
+export const RunDigest = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.digest.run'),
+    name: 'Run Digest',
+    description: 'Batches incoming items and emits a periodic digest.',
+  },
+  input: Schema.String,
+  output: Ref.Ref(Digest),
+  types: [Digest],
+  services: [Database.Service],
+  rpcs: DigestControl, // the one field moving onto `make`.
 });
 
-export default RunAgent.pipe(
+export default RunDigest.pipe(
   Operation.durableHandler((ctx) =>
     Effect.gen(function* () {
       // Runtime state lives in this scope, exactly as `Process.make`'s `create` does today.
-      const chat = yield* Database.resolve(/* … */).pipe(Effect.orDie);
+      const db = yield* Database.Service;
+
+      const flush = Effect.gen(function* () {
+        const pending = yield* PendingCell.get;
+        if (pending.length === 0) {
+          return;
+        }
+        const digest = db.add(Digest.make({ items: pending }));
+        yield* PendingCell.set([]);
+        ctx.submitOutput(Ref.make(digest)); // one output per flush; the process stays alive.
+      });
 
       return {
-        onSpawn: () => Effect.void,
-        onInput: (prompt) =>
+        // Not called on resume from a suspended state — only on first spawn.
+        onSpawn: () => ctx.setAlarm(FLUSH_INTERVAL_MS),
+
+        onInput: (item: string) =>
           Effect.gen(function* () {
-            yield* runTurn(chat, prompt);
-            yield* ctx.setAlarm(UNSEEN_WRITE_RETRY_MS); // suspend, resume later
+            const pending = yield* PendingCell.get;
+            yield* PendingCell.set([...pending, item]);
+            // Delegate the slow part to a child; the parent hibernates while it runs.
+            yield* Operation.spawnChild(SummarizeItem, { item });
           }),
-        onAlarm: () => drainPendingWrites(chat),
-        onChildEvent: (event) => handleSubAgent(event),
-        rpcHandlers: HarnessControl.toLayer({/* … */}),
+
+        onAlarm: () =>
+          Effect.gen(function* () {
+            yield* flush;
+            yield* ctx.setAlarm(FLUSH_INTERVAL_MS); // re-arm; alarms are one-shot.
+          }),
+
+        onChildEvent: (event) => (event._tag === 'exited' ? flush : Effect.void),
+
+        rpcHandlers: DigestControl.toLayer({
+          flushNow: () => flush,
+          pending: () => Effect.map(PendingCell.get, (items) => items.length),
+        }),
       };
     }),
   ),
 );
 ```
 
-- `DurableCallbacks` is today's `Process.Callbacks` verbatim — `onSpawn`, `onInput`,
-  `onAlarm`, `onChildEvent`, `rpcHandlers`, all defaulted to no-ops by the combinator.
-- `DurableContext` is today's `ProcessContext` with `ctx.process` (the live `Process`)
-  replacing `ctx.id` / `ctx.params`, so a handler can hand its own URI to what it spawns.
-
-**Script.** `Script` stops being a separate object joined to an operation record by a
-deploy step. Today `deployScript` (`plugin-script/src/util/deploy.ts`) bundles the source,
-uploads it to EDGE, and then creates or updates a **second** object — a
-`PersistentOperation` whose meta carries the deployed function id and whose `source` field
-points back at the script. After, there is one entity: an operation whose handler kind is
-`script`.
+Reaching it:
 
 ```ts
-// Authored in the app — the definition and its body are one object in the space.
-const op = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.user.fetchSales'), name: 'Fetch Sales' },
-  input: Schema.Struct({ quarter: Schema.String }),
-  output: Schema.Struct({ rows: Schema.Array(Row) }),
-}).pipe(Operation.scriptHandler({ source: Ref.make(Text.make({ content: sourceText })) }));
-
-yield * db.addOperation(op);
-yield * Operation.deploy(op); // bundles, uploads, stamps the deployed id on the same entity
+const process = yield * manager.spawn(RunDigest, 'first item', { parent: chat });
+yield * process.submitInput('second item');
+yield * process.rpc.flushNow();
+const digests = yield * process.subscribeOutputs().pipe(Stream.take(1), Stream.runCollect);
 ```
 
-- The handler payload is `{ source: Ref<Text.Text>, changed?: boolean }`; the deployed
-  function id and `binding` stay where they already are — the entity's meta and
-  `binding` field (`Operation.ts:452`).
-- `changed` (source edited since last deploy) moves from `Script.changed` onto the script
-  handler, where it describes exactly one thing: this body is ahead of its deployment.
-- **Invocation requires an explicit deployment.** Today `makeOperationServiceLayer`
-  asserts `op.meta.deployedId` before calling `FunctionsService`
-  (`compute-runtime/src/protocol.ts:386`), and `schedule` drops an undeployed followup
-  with a warning rather than failing its caller. The redesign keeps that invariant and
-  states it: an absent local handler is _not_ on its own a licence to dispatch remotely.
-  A definition stored but never deployed — the normal state between `db.addOperation` and
-  `Operation.deploy` — fails invocation with `OperationNotDeployedError` naming the key,
-  and `changed` (below) tells a caller the deployment is stale rather than missing. The
-  omission-based behavior `deserialize` encodes today is thus narrowed to "no local
-  handler **and** a deployed id".
-- `Script` the type is deleted. Its `source`/`description`/`name` fold into the operation;
-  the `source: Ref.Ref(Obj.Unknown)` field on today's record (`Operation.ts:439`) becomes
-  the typed `Ref<Text.Text>` on the handler.
+- `DurableCallbacks` is today's `Process.Callbacks` verbatim — `onSpawn`, `onInput`,
+  `onAlarm`, `onChildEvent`, `rpcHandlers`, all defaulted to no-ops by the combinator, so
+  a handler declares only the ones it uses.
+- `DurableContext` is today's `ProcessContext` with `ctx.process` (the live `Process`)
+  replacing `ctx.id` / `ctx.params`, so a handler can hand its own URI to what it spawns.
+- A durable handler is the only kind that calls `ctx.succeed()` / `ctx.fail()` itself; the
+  others are completed by the adapter when their body returns (§5.2).
 
-**Instructions.** The body is prose plus the tools the agent may use; the runtime runs an
-agent turn against the definition's `output` schema and completes when it is satisfied.
-The same thing a `Skill` expresses today, addressable as an operation:
+#### Instructions
+
+The body is prose plus the tools the agent may use. The runtime runs an agent turn against
+the definition's `output` schema and completes when it is satisfied — the same thing a
+`Skill` expresses today, addressable as an operation:
 
 ```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import * as Operation from '@dxos/compute/Operation';
+import * as Template from '@dxos/compute/Template';
+import { Database, DXN, Ref } from '@dxos/echo';
+
+import { Contact, Issue, Severity } from './types.ts';
+import { ListContacts, SearchIssues } from './operations.ts';
+
 export const TriageIssue = Operation.make({
-  meta: { key: DXN.make('org.dxos.operation.issue.triage'), name: 'Triage Issue' },
+  meta: {
+    key: DXN.make('org.dxos.operation.issue.triage'),
+    name: 'Triage Issue',
+    description: 'Assigns a severity and, where clear, an owner.',
+    icon: 'ph--first-aid-kit--regular',
+  },
   input: Schema.Struct({ issue: Ref.Ref(Issue) }),
-  output: Schema.Struct({ severity: Severity, assignee: Schema.optional(Ref.Ref(Contact)) }),
+  output: Schema.Struct({
+    severity: Severity,
+    assignee: Schema.optional(Ref.Ref(Contact)),
+    rationale: Schema.String,
+  }),
+  types: [Issue, Contact],
   services: [Database.Service],
 });
 
 export default TriageIssue.pipe(
   Operation.instructionsHandler({
     instructions: Template.make(`
-      Read {{issue}} and any linked discussion. Decide a severity from the rubric in the
-      team's triage doc. Suggest an assignee only when one contact clearly owns the area.
+      Read {{issue}} and any discussion it links to.
+
+      Assign a severity from the rubric: 'critical' only when users lose data or the app
+      cannot start; 'major' when a documented flow is broken with no workaround.
+
+      Search for issues describing the same failure before deciding — a recurrence is at
+      least 'major'. Suggest an assignee only when exactly one contact owns that area;
+      leave it unset rather than guessing, and say why in the rationale.
     `),
-    tools: [SearchOperation, ListContacts],
+    // Tools are operations. The agent sees their input/output schemas, so nothing has to
+    // be described twice.
+    tools: [SearchIssues, ListContacts],
   }),
 );
 ```
 
-**Prompt.** One model call — a template rendered from the input, its reply parsed into
-`output`. No tools, no turn loop:
+Invoked exactly like any other operation — the caller cannot tell which kind backs it:
 
 ```ts
+const { severity, assignee } = yield * Operation.invoke(TriageIssue, { issue: Ref.make(issue) });
+```
+
+#### Script
+
+`Script` stops being a separate object joined to an operation record by a deploy step.
+Today `deployScript` (`plugin-script/src/util/deploy.ts`) bundles the source, uploads it to
+EDGE, and then creates or updates a **second** object — a `PersistentOperation` whose meta
+carries the deployed function id and whose `source` field points back at the script. After,
+there is one entity whose handler kind is `script`.
+
+Authored in the app, where the source is data the user edits:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Database, DXN, Ref } from '@dxos/echo';
+import { Text } from '@dxos/schema';
+
+const SOURCE = `
+  export default async ({ quarter }) => {
+    const res = await fetch(\`https://api.example.com/sales?q=\${quarter}\`);
+    return { rows: await res.json() };
+  };
+`;
+
+export const createFetchSales = Effect.gen(function* () {
+  const db = yield* Database.Service;
+
+  const op = Operation.make({
+    meta: {
+      key: DXN.make('org.dxos.operation.user.fetchSales'),
+      name: 'Fetch Sales',
+      description: 'Pulls quarterly sales rows from the reporting API.',
+    },
+    input: Schema.Struct({ quarter: Schema.String }),
+    output: Schema.Struct({ rows: Schema.Array(Schema.Any) }),
+  }).pipe(
+    // The body is a ref to editable text — the same `Text` object the editor binds to.
+    Operation.scriptHandler({ source: Ref.make(Text.make({ content: SOURCE })) }),
+  );
+
+  // One entity, not two: the definition and its body are added together…
+  yield* db.addOperation(op);
+  // …and deploying bundles, uploads, and stamps the deployed id onto that same entity.
+  yield* Operation.deploy(op);
+
+  return op;
+});
+```
+
+Editing the source later marks the deployment stale rather than breaking it:
+
+```ts
+Obj.update(op, (op) => {
+  op.source.target!.content = nextSource;
+});
+Operation.isChanged(op); // true — body ahead of deployment, still invocable at the old one.
+yield * Operation.deploy(op); // clears it.
+```
+
+- The handler payload is `{ source: Ref<Text.Text>, changed?: boolean }`; the deployed
+  function id and `binding` stay where they already are — the entity's meta and its
+  `binding` field (`Operation.ts:452`).
+- `changed` moves from `Script.changed` onto the script handler, where it describes exactly
+  one thing: this body is ahead of its deployment.
+- **Invocation requires an explicit deployment.** Today `makeOperationServiceLayer` asserts
+  `op.meta.deployedId` before calling `FunctionsService`
+  (`compute-runtime/src/protocol.ts:386`), and `schedule` drops an undeployed followup with
+  a warning rather than failing its caller. The redesign keeps that invariant and states
+  it: an absent local handler is _not_ on its own a licence to dispatch remotely. A
+  definition stored but never deployed — the normal state between `db.addOperation` and
+  `Operation.deploy` — fails invocation with `OperationNotDeployedError` naming the key.
+  The omission-based behavior `deserialize` encodes today is thus narrowed to "no local
+  handler **and** a deployed id".
+- `Script` the type is deleted. Its `source`/`description`/`name` fold into the operation;
+  the `source: Ref.Ref(Obj.Unknown)` field on today's record (`Operation.ts:439`) becomes
+  the typed `Ref<Text.Text>` on the handler.
+
+#### Prompt
+
+One model call — a template rendered from the input, its reply parsed into `output`. No
+tools, no turn loop:
+
+```ts
+export const Summarize = Operation.make({
+  meta: { key: DXN.make('org.dxos.operation.text.summarize'), name: 'Summarize' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.Struct({ summary: Schema.String }),
+});
+
 export default Summarize.pipe(
-  Operation.promptHandler({ prompt: Template.make('Summarize in one sentence:\n\n{{text}}') }),
+  Operation.promptHandler({
+    prompt: Template.make('Summarize in one sentence:\n\n{{text}}'),
+  }),
 );
 ```
 
-Both `instructions` and `prompt` bodies are _data_ (a `Template.Template`), which is what
-makes §9.8 — whether they belong in the persisted projection — a real question rather than
-a detail: if they do, such an operation can be authored entirely in a space with no code
-deployed.
+Script, prompt and instructions bodies are all _data_ — a `Ref<Text>` or a
+`Template.Template` — which is what makes §9.8 a real question rather than a detail: script
+bodies already persist, and if prompt and instructions follow, such an operation is
+authored entirely in a space with no code deployed.
 
 ### 5.2 One execution model
 
