@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useDeferredValue, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { Collection, Type } from '@dxos/echo';
@@ -44,9 +44,8 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
 
   const dailyQuery = useMemo(() => dailyActivityQuery(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
-  // Deferred so a burst of index passes (a freshly opened space) never competes with input.
-  const counts = useDeferredValue(useQuery(space?.db, SPACE_STATS_QUERY));
-  const days = useDeferredValue(useQuery(space?.db, dailyQuery));
+  const counts = useQuery(space?.db, SPACE_STATS_QUERY);
+  const days = useQuery(space?.db, dailyQuery);
   const activity = useMemo(() => toActivity(days), [days]);
 
   const values: Record<SpaceStatId, number> = {
