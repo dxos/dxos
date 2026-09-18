@@ -19,8 +19,8 @@ import { createTestSqliteRuntime } from '../testing/index.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 
 /** A client-side replica fed by `sendUpdates`, the way `RepoProxy` integrates host batches. */
-class TestClient {
-  readonly #docs = new Map<string, A.Doc<any>>();
+class TestClient<T = Record<string, unknown>> {
+  readonly #docs = new Map<string, A.Doc<T>>();
   readonly #ready = new Map<string, Trigger>();
 
   readonly receive = (batch: { updates?: Array<{ documentId: string; mutation?: Uint8Array }> }) => {
@@ -28,7 +28,7 @@ class TestClient {
       if (!mutation) {
         continue;
       }
-      this.#docs.set(documentId, A.loadIncremental(this.#docs.get(documentId) ?? A.init(), mutation));
+      this.#docs.set(documentId, A.loadIncremental<T>(this.#docs.get(documentId) ?? A.init<T>(), mutation));
       this.#trigger(documentId).wake();
     }
   };
@@ -37,13 +37,22 @@ class TestClient {
     return this.#trigger(documentId).wait();
   }
 
-  doc(documentId: string): any {
+  /** The replica of a document this client has received, which the caller knows has arrived. */
+  doc(documentId: string): A.Doc<T> {
+    const doc = this.#docs.get(documentId);
+    invariant(doc, 'Document not received');
+    return doc;
+  }
+
+  /** The replica as it stands, which a condition may be waiting to arrive. */
+  peek(documentId: string): A.Doc<T> | undefined {
     return this.#docs.get(documentId);
   }
 
   /** Applies a change locally and returns the bytes a client would send with `DataService.update`. */
-  change(documentId: string, fn: (doc: any) => void): Uint8Array {
-    const before = this.#docs.get(documentId)!;
+  change(documentId: string, fn: A.ChangeFn<T>): Uint8Array {
+    const before = this.#docs.get(documentId);
+    invariant(before, 'Document not received');
     const after = A.change(before, fn);
     this.#docs.set(documentId, after);
     return A.saveSince(after, A.getHeads(before));
@@ -103,8 +112,8 @@ describe('DocumentsSynchronizer', () => {
     await host.flush(Context.default());
     created[Symbol.dispose]();
 
-    const client1 = new TestClient();
-    const client2 = new TestClient();
+    const client1 = new TestClient<{ text: string }>();
+    const client2 = new TestClient<{ text: string }>();
     const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
     const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
     await openAndClose(synchronizer1, synchronizer2);
@@ -121,7 +130,7 @@ describe('DocumentsSynchronizer', () => {
       { documentId, mutation: client1.change(documentId, (doc) => (doc.text = 'modified by client 1')) },
     ]);
     await asyncTimeout(
-      waitForCondition({ condition: () => client2.doc(documentId).text === 'modified by client 1' }),
+      waitForCondition({ condition: () => client2.peek(documentId)?.text === 'modified by client 1' }),
       1_000,
     );
     // The host stored the write and recorded its heads where the indexer scans, without keeping the

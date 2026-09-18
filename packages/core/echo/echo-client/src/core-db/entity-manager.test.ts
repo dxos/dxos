@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -100,7 +101,8 @@ describe('DatabaseImpl', () => {
         const db = await peer.createDatabase(spaceKey);
         objectIds = range(5).map((index) => db.add(Obj.make(TestSchema.Expando, { name: `object-${index}` })).id);
         await db.flush({ indexes: true });
-        rootUrl = db.rootUrl!;
+        invariant(db.rootUrl);
+        rootUrl = db.rootUrl;
         await peer.close();
       }
 

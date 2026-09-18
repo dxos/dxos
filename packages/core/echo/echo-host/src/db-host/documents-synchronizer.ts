@@ -193,7 +193,7 @@ export class DocumentsSynchronizer extends Resource {
         return;
       }
       this._pendingUpdates.add(documentId);
-      this._sendUpdatesJob!.trigger();
+      this._sendUpdatesJob?.trigger();
     });
   }
 
