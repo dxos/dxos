@@ -186,13 +186,15 @@ From `Memory.getDOMCounters`, for the renderer.
 
 ## Network
 
-`network.*`, from Playwright `response` events. Content-length where the header is present, body
-length otherwise — the resource-timing buffer caps out on a graph this size.
+`network.*`, from two sources. Everything but the socket fields comes from Playwright `response`
+events — content-length where the header is present, body length otherwise, since the
+resource-timing buffer caps out on a graph this size. `edgeSocketBytes` and `edgeSocketFrames` come
+from `page.on('websocket')` frame callbacks instead, because a socket emits no further responses.
 
 | Field                     | Meaning                                                                                          |
 | ------------------------- | ------------------------------------------------------------------------------------------------ |
 | `codeBytes`               | JS/CSS/wasm module loads. Boot pulls 27 MB over 871 requests on a cold profile.                  |
-| `apiBytes`                | Application traffic — the ECHO/edge calls.                                                       |
+| `apiBytes`                | The whole API bucket — analytics and third parties included, not the edge alone.                 |
 | `otherBytes`              | Everything else (images, fonts).                                                                 |
 | `requests`, `apiRequests` | Counts, so a stage making many small calls is distinguishable from one making a few large ones.  |
 | `edgeApiBytes`            | `fetch`/`xhr` bytes to the EDGE hosts alone — `apiBytes` counts analytics and third parties too. |

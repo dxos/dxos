@@ -217,16 +217,15 @@ it is also how a point that looks wrong gets traced back to a commit and a Depot
 
 Its `stages` column is the integrity check, and worth reading before any other number on the page.
 The flow has **ten** stages and `writePosthogBatch` drops failed ones, so a row showing fewer than
-ten is a partial iteration whose totals are not comparable to a complete one — it still feeds the
-charts above, where nothing marks it as short.
+ten is a partial iteration whose totals are not comparable to a complete one. The aggregate tiles
+exclude it (`HAVING count() = 10`), so this table and the stored rows are the only place it shows.
 
 ## Two things to know before reading a tile
 
 - **Tiles are dated by run, not by commit.** A nightly can run hours after the commit it measures,
   the same caveat the EDGE join-latency dashboard carries.
-- **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
-  sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
-  the timing tiles as trends.
+- **The timing tiles are trends, not absolutes.** Across a CI runner and a local sandbox wall time
+  differs 1.7x and TBT 3x, so a number is comparable only to numbers from the same runner.
 - **The box measures WITHIN-night noise, which is much smaller than night-to-night, so it is not
   the error bar the trend needs.** Measured on the first ten-iteration run (`0cb927f5`, 100 rows):
   the coefficient of variation across ten iterations of one run is **1.6%** on total wall time,
