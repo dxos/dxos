@@ -192,7 +192,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
 // Request pipeline
 //
 
-type GitHubEffect<T> = Effect.Effect<
+export type GitHubEffect<T> = Effect.Effect<
   T,
   HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
@@ -222,6 +222,15 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError
   const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
+
+/**
+ * The status a failed GitHub request answered with, or `undefined` for a transport, timeout or
+ * decode failure. Callers branch on it to tell a dead credential (401) from an absent resource.
+ */
+export const responseStatus = (error: unknown): number | undefined =>
+  HttpClientError.isHttpClientError(error) && error.reason._tag === 'StatusCodeError'
+    ? error.reason.response.status
+    : undefined;
 
 /** Anonymous when the token is empty: a bare `Bearer` header is rejected where no header is rate-limited. */
 const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue, accept = ACCEPT) =>
