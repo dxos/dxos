@@ -607,7 +607,7 @@ import { Text } from '@dxos/schema';
 
 const SOURCE = `
   export default async ({ quarter }) => {
-    const res = await fetch(\`https://api.example.com/sales?q=\${quarter}\`);
+    const res = await fetch(\`https://api.example.com/sales?q=\${encodeURIComponent(quarter)}\`);
     return { rows: await res.json() };
   };
 `;
@@ -647,6 +647,12 @@ Operation.isChanged(op); // true — body ahead of deployment, still invocable a
 yield * Operation.deploy(op); // clears it.
 ```
 
+- **`addOperation` persists the body with it.** `Text.make` only constructs the object, but
+  `db.add` already saves unsaved ref targets recursively — `saveRefs` → `createRef` calls
+  `database.add(otherEchoObj)` for a target with no database
+  (`echo-handler/echo-handler.ts:710-713`). `addOperation` keeps that contract, so the
+  script body is persisted by the same call and resolves through the ref after reload; no
+  separate `db.add(text)` is needed.
 - The handler payload is `{ source: Ref<Text.Text>, changed?: boolean }`; the deployed
   function id and `binding` stay where they already are — the entity's meta and its
   `binding` field (`Operation.ts:452`).
