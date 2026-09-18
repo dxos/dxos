@@ -49,10 +49,15 @@ const isSupportedFile = (name: string): boolean => {
   return isMarkdownFile(name);
 };
 
+const FILE_ID_PREFIX = 'fs:';
+
 // Deterministic id derived from the absolute path.
 const createFileId = (path: string): string => {
-  return `fs:${path.replace(/[^a-zA-Z0-9]/g, '-')}`;
+  return `${FILE_ID_PREFIX}${path.replace(/[^a-zA-Z0-9]/g, '-')}`;
 };
+
+/** Whether an id is a file-system workspace or entry id. */
+export const isFileId = (id: string): boolean => id.startsWith(FILE_ID_PREFIX);
 
 /** Check if Tauri filesystem APIs are available. */
 export const isTauriAvailable = (): boolean => {

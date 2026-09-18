@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -68,9 +69,9 @@ describe('createTypeSectionExtension', () => {
       });
     });
 
-    test('resolves /library forward to the section node via static segments', ({ expect }) => {
-      const { path } = bindingsByKey('library').library;
-      expect(path).toEqual([GraphPath.GroupSegments.content, TYPENAME]);
+    test('resolves /library forward to the section node', ({ expect }) => {
+      const { library } = bindingsByKey('library');
+      expect(Option.getOrUndefined(AppGraphBuilder.urlCandidate(library, 'SPACE1', undefined))).toBe(SECTION_NODE_ID);
     });
 
     test('stamps /library on the section node and /book/<id> on its objects', ({ expect }) => {

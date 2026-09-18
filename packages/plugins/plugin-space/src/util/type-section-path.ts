@@ -23,7 +23,7 @@ export const findTypeSectionPath = (
     const url = extension.meta;
     // Only item bindings with a static path locate objects at a fixed depth; dynamic resolvers
     // (nested collections) and singletons (settings pages) address other shapes.
-    if (url?.kind === 'item' && Array.isArray(url.path) && url.path.at(-1) === typename) {
+    if (url?.kind === 'item' && !url.resolve && url.path.at(-1) === typename) {
       return GraphPath.getSpacePath(spaceId, ...url.path, objectId);
     }
   }

@@ -75,10 +75,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
-      log.error('node has no URL binding, so it cannot be opened', {
-        nodeId,
-        extension: builder.getNodeExtensionId(nodeId),
-      });
+      log.error('node has no URL binding, so it cannot be opened', { nodeId });
       continue;
     }
     pairs.push(represented.value);

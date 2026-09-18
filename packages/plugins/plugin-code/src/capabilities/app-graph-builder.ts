@@ -49,7 +49,7 @@ export default Capability.makeModule(
       // the node is absent and the button stays hidden.
       AppGraphBuilder.createExtension({
         id: 'pluginSpec',
-        url: { key: 'spec', kind: 'item', path: [] },
+        url: { key: 'spec', kind: 'item', path: [], depth: 2, accepts: ([, segment]) => segment === 'spec' },
         match: GraphNodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
@@ -105,7 +105,7 @@ export default Capability.makeModule(
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       AppGraphBuilder.createExtension({
         id: 'codeProjectListing',
-        url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()] },
+        url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()], depth: { min: 1 } },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();

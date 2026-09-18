@@ -31,7 +31,7 @@ describe('findTypeSectionPath', () => {
   test('ignores dynamic resolvers, singletons, and unrelated static paths', ({ expect }) => {
     const extensions: Array<Pick<AppGraphBuilder.BuilderExtension, 'meta'>> = [
       // Dynamic path (nested collections) — locates by runtime data, not a fixed section.
-      { meta: { key: 'object', kind: 'item', path: () => Effect.succeed(null) } },
+      { meta: { key: 'object', kind: 'item', path: ['dxos.org.type.Chat'], resolve: () => Effect.succeed(null) } },
       // Singleton (settings page) — the trailing segment is the node itself, not a typename.
       staticBinding(['dxos.org.type.Chat'], 'singleton'),
       // Static but not this type's section.

@@ -97,7 +97,7 @@ export type Edge = { source: string; target: string; relation: string };
 
 /**
  * The graph operations the expansion engine needs. Implemented by whatever store the builder drives —
- * the engine owns expansion, ordering and provenance, the store owns representation and reactivity.
+ * the engine owns expansion and ordering, the store owns representation and reactivity.
  *
  * {@link Store.node} must cut off at the node's own value: connectors read it, so a view that notifies
  * on writes to unrelated nodes puts the builder in a flush-invalidate-flush loop.
@@ -154,11 +154,6 @@ export type Inline<Arg extends NodeArgLike> = {
   children: (node: Arg) => readonly Arg[];
   /** Rewrite every inline descendant array through `fn`, one level deep (`fn` recurses). */
   map: (node: Arg, fn: (child: Arg) => Arg) => Arg;
-  /**
-   * The inline descendants that inherit the producing extension's provenance; defaults to
-   * {@link Inline.children}. Narrower when some inline kinds are not addressable in their own right.
-   */
-  owned?: (node: Arg) => readonly Arg[];
 };
 
 const defaultInline: Inline<any> = {
@@ -264,12 +259,6 @@ export class GraphBuilder<
     Atom.keepAlive,
     withLabel('graph-builder:extensions'),
   );
-  /**
-   * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly as
-   * connectors materialize/remove nodes, so a reverse mapping from a node back to its producer does not
-   * need a reactive read.
-   */
-  readonly _nodeExtensions = new Map<string, string>();
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -305,14 +294,6 @@ export class GraphBuilder<
     return this._registry.get(this._extensions);
   }
 
-  /**
-   * The id of the extension whose connector produced the given node, if known. Populated as connectors
-   * materialize nodes and cleared on removal.
-   */
-  getNodeExtensionId(nodeId: string): string | undefined {
-    return this._nodeExtensions.get(nodeId);
-  }
-
   /** Every inline descendant of `node`, at every depth. */
   _allInline(node: Arg): Arg[] {
     return this._inline.children(node).flatMap((child) => [child, ...this._allInline(child)]);
@@ -323,15 +304,6 @@ export class GraphBuilder<
     GraphNode.validateSegmentId(node.id);
     const id = GraphNode.qualifyId(parentId, node.id);
     return this._inline.map({ ...node, id }, (child) => this._qualify(id, child));
-  }
-
-  /** Record `extensionId` as the producer of a node and of the inline descendants that inherit it. */
-  _recordProvenance(node: Arg, extensionId: string): void {
-    this._nodeExtensions.set(node.id, extensionId);
-    const owned = this._inline.owned ?? this._inline.children;
-    for (const child of owned(node)) {
-      this._recordProvenance(child, extensionId);
-    }
   }
 
   /** Apply a set of node changes for a single connector key. */
@@ -445,7 +417,7 @@ export class GraphBuilder<
     return Promise.resolve();
   }
 
-  /** A connector-produced node, tagged with the id of the extension that produced it (provenance). */
+  /** A connector-produced node, tagged with the id of the extension that produced it. */
   readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Arg }[]>>((key) => {
     return Atom.make((get) => {
       const { id, relation } = relationFromConnectorKey(key);
@@ -496,9 +468,6 @@ export class GraphBuilder<
         const nodes = entries.map((entry) =>
           this._decorateNode(this._qualify(id, entry.node), extensions[entry.extensionId]),
         );
-        // Inline descendants are produced by the same extension, so they carry the same provenance;
-        // without this they would have no reverse mapping back to their producer.
-        entries.forEach((entry, index) => this._recordProvenance(nodes[index], entry.extensionId));
 
         const previous = this._connectorPrevious.get(key) ?? [];
         const ids = nodes.map((node) => node.id);
@@ -543,7 +512,6 @@ export class GraphBuilder<
 
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
-      this._nodeExtensions.delete(id);
       const forNode = this._subscriptions.get(id);
       if (forNode) {
         this._subscriptions.delete(id);
@@ -786,9 +754,8 @@ export const flush = async (builder: Any): Promise<void> => {
 };
 
 /**
- * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
- * per-connector diff state, and provenance. The nodes leave the store outright rather than being
- * tombstoned, so reading a released relation again re-expands it from its connectors.
+ * Unloads the nodes and everything the builder remembers about them: expansion subscriptions and the
+ * per-connector diff state. The nodes leave the store outright rather than being tombstoned, so reading a released relation again re-expands it from its connectors.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.

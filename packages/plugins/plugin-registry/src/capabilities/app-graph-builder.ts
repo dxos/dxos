@@ -20,7 +20,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
-import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds, isCategoryId } from '../categories.ts';
 import { REGISTRY_ID } from '../paths.ts';
 
 /**
@@ -93,7 +93,13 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'categories',
-        url: { key: 'category', kind: 'item', path: [] },
+        url: {
+          key: 'category',
+          kind: 'item',
+          path: [],
+          workspace: (workspace) => workspace === REGISTRY_ID,
+          accepts: ([id]) => isCategoryId(id),
+        },
         match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
@@ -157,7 +163,7 @@ export default Capability.makeModule(
         : []),
       AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'registry', kind: 'item', path: [] },
+        url: { key: 'registry', kind: 'item', path: [], workspace: (workspace) => workspace === REGISTRY_ID },
         match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);

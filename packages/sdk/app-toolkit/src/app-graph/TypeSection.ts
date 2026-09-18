@@ -165,7 +165,9 @@ export const createTypeSectionExtension = (
   // container and only its objects get a URL.
   const sectionExtension = AppGraphBuilder.createExtension({
     id: typename,
-    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments } : undefined,
+    url: options.sectionUrlKey
+      ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments.slice(0, -1), segment: typename }
+      : undefined,
     match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       if (queryOrderedObjects(space, get).length === 0) {

@@ -123,8 +123,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   );
 
   // A section connector that returns its objects as inline children (like TypeSection), rather than as
-  // top-level connector nodes. Provenance must still be recorded for the inline children so they carry
-  // the extension's urlKey — otherwise they have no URL representation.
+  // top-level connector nodes.
   const inlineDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'inlineDocs',
@@ -137,16 +136,19 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
-  // A data-dependent shape that declares no static `urlPath`; forward resolution runs its `resolve`
-  // Effect, which computes the candidate node id (here a fixed shape, but in production e.g. a nested
-  // collection walked via the database). path-resolution then materializes and verifies the candidate.
+  // A data-dependent shape: forward resolution runs its `resolve` Effect, which computes the candidate
+  // node id (here a fixed shape, but in production e.g. a nested collection walked via the database).
+  // path-resolution then materializes and verifies the candidate. It shares the group with `sectioned`,
+  // so `accepts` carves its ids out of that binding's shape.
   const dynamicDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'dynamicDocs',
       url: {
         key: 'dyn',
         kind: 'item',
-        path: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
+        path: [GROUP_ID],
+        accepts: (tail) => tail[tail.length - 1].startsWith('dyn'),
+        resolve: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
       },
       match: GraphNodeMatcher.whenNodeType(GROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'dynDocA', type: SECTIONED_TYPE }]),
@@ -154,8 +156,8 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   );
 
   // A fixed-depth nested shape (a subgroup under the group, docs under that). The `nested` key declares
-  // `urlPath: [GROUP_ID]`, so the remaining segments (`subgroup`, `<id>`) are `+`-encoded into the pair
-  // id — a static path with no resolver, exercising the multi-segment tail.
+  // path `[GROUP_ID]` and depth 2, so the remaining segments (`subgroup`, `<id>`) are `+`-encoded into the
+  // pair id — a static path with no resolver, exercising the multi-segment tail.
   const subGroup = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'subGroup',
@@ -167,7 +169,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
   const nestedDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'nestedDocs',
-      url: { key: 'nested', kind: 'item', path: [GROUP_ID] },
+      url: { key: 'nested', kind: 'item', path: [GROUP_ID], depth: 2 },
       match: GraphNodeMatcher.whenNodeType(SUBGROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'nestedDocA', type: NESTED_TYPE }]),
     }),
@@ -621,6 +623,24 @@ describe('path-resolution', () => {
       expect(Option.isNone(represented)).toBe(true);
     });
 
+    test.for([
+      ['a root-level item', `${WORKSPACE_A}/docA`],
+      ['an item from a second extension sharing the key', `${WORKSPACE_A}/sharedDoc`],
+      ['an item under a static path', `${WORKSPACE_A}/${GROUP_ID}/secDocA`],
+      ['an inline child', `${WORKSPACE_A}/${INLINE_SECTION_ID}/inlineDocA`],
+      ['a resolver item carved out of a shared path', `${WORKSPACE_A}/${GROUP_ID}/dynDocA`],
+      ['a fixed-depth tail', `${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`],
+      ['a singleton', `${WORKSPACE_A}/${HOME_SEGMENT}`],
+    ])('%s round-trips without being loaded first', async ([, path], { expect }) => {
+      const builder = buildTestBuilder();
+      const nodeId = `${GraphNode.RootId}/${path}`;
+      const { workspace, ...pair } = Option.getOrThrow(PathResolution.representNode(builder, nodeId));
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, { workspace, pairs: [{ ...pair, workspace }] }),
+      );
+      expect(resolved?.nodeId).toBe(nodeId);
+    });
+
     test('encodes a fixed-depth tail back into one `+`-joined id', async ({ expect }) => {
       const builder = buildTestBuilder();
       const id = `${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`;
@@ -635,6 +655,84 @@ describe('path-resolution', () => {
         `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`,
       );
       expect(Option.getOrThrow(represented)).toEqual({ key: 'nested', id, workspace: WORKSPACE_A });
+    });
+  });
+  describe('binding shapes', () => {
+    const url = (binding: GraphBuilder.UrlBinding) =>
+      Effect.runSync(
+        GraphBuilder.createExtension({ id: `${binding.key}Binding`, url: binding, match: () => Option.none() }),
+      );
+
+    const shapesBuilder = () => {
+      const builder = GraphBuilder.make({ registry: Registry.make() });
+      GraphBuilder.addExtension(builder, [
+        url({ key: 'entry', kind: 'item', path: [], workspace: (workspace) => workspace === 'fixed' }),
+        url({
+          key: 'category',
+          kind: 'item',
+          path: [],
+          accepts: ([id]) => id === 'labs',
+          workspace: (w) => w === 'fixed',
+        }),
+        url({ key: 'library', kind: 'singleton', path: ['content'], segment: 'books' }),
+        url({ key: 'thread', kind: 'item', path: ['threads'], depth: { min: 1 } }),
+        url({ key: 'type', kind: 'item', path: ['database'] }),
+        url({ key: 'db', kind: 'item', path: ['database'], depth: { min: 2 } }),
+      ]);
+      return builder;
+    };
+
+    const represent = (nodeId: string) =>
+      Option.getOrUndefined(PathResolution.representNode(shapesBuilder(), `${GraphNode.RootId}/${nodeId}`));
+
+    test('a workspace-scoped binding claims only its workspace', ({ expect }) => {
+      expect(represent('fixed/org.dxos.plugin.deck')).toEqual({
+        key: 'entry',
+        id: 'org.dxos.plugin.deck',
+        workspace: 'fixed',
+      });
+      expect(represent('space/org.dxos.plugin.deck')).toBeUndefined();
+    });
+
+    test('an accepting binding carves its ids out of a wider one', ({ expect }) => {
+      expect(represent('fixed/labs')).toEqual({ key: 'category', id: 'labs', workspace: 'fixed' });
+    });
+
+    test('a singleton is addressed by its declared segment', ({ expect }) => {
+      expect(represent('space/content/books')).toEqual({ key: 'library', workspace: 'space' });
+      expect(represent('space/content/library')).toBeUndefined();
+    });
+
+    test('depth separates keys that share a path, and a minimum admits deeper tails', ({ expect }) => {
+      expect(represent('space/database/org.dxos.type.document')).toEqual({
+        key: 'type',
+        id: 'org.dxos.type.document',
+        workspace: 'space',
+      });
+      expect(represent('space/database/org.dxos.type.mailbox/mbx/msg')).toEqual({
+        key: 'db',
+        id: 'org.dxos.type.mailbox+mbx+msg',
+        workspace: 'space',
+      });
+      expect(represent('space/threads/t1/replies/r1')).toEqual({
+        key: 'thread',
+        id: 't1+replies+r1',
+        workspace: 'space',
+      });
+    });
+
+    test('a node its bindings do not shape has no URL', ({ expect }) => {
+      expect(represent('space/database')).toBeUndefined();
+      expect(represent('space/elsewhere/x')).toBeUndefined();
+    });
+
+    test('forward resolution only proposes ids the binding would give back', ({ expect }) => {
+      const [category] = Object.values(shapesBuilder().getExtensions()).flatMap((extension) =>
+        extension.meta?.key === 'category' ? [extension.meta] : [],
+      );
+      expect(Option.getOrUndefined(GraphBuilder.urlCandidate(category, 'fixed', 'labs'))).toBe('root/fixed/labs');
+      expect(Option.isNone(GraphBuilder.urlCandidate(category, 'fixed', 'org.dxos.plugin.deck'))).toBe(true);
+      expect(Option.isNone(GraphBuilder.urlCandidate(category, 'space', 'labs'))).toBe(true);
     });
   });
 });

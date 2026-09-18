@@ -130,6 +130,7 @@ const PROJECT_URL: AppGraphBuilder.UrlBinding = {
   key: 'project',
   kind: 'item',
   path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
+  depth: { min: 1 },
 };
 
 /**

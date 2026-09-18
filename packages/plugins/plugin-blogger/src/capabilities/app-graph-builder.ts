@@ -80,7 +80,12 @@ export default Capability.makeModule(
       // "+ Publication" action on the section.
       AppGraphBuilder.createExtension({
         id: 'publicationNodes',
-        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, getPublicationsSectionId()] },
+        url: {
+          key: 'publication',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.content, getPublicationsSectionId()],
+          depth: { min: 1 },
+        },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

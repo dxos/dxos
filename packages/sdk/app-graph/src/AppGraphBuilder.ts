@@ -57,29 +57,40 @@ export type BuilderExtension = Builder.Extension<Node.Node, Node.NodeArg<any>, N
 export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
 
 /**
- * How an extension's nodes map to (and from) the URL pair chain — one binding per extension, holding
- * the whole URL contract for the nodes it produces. The `kind` is the *resolution tier*: what a pair
- * with this key resolves against.
+ * How an extension's nodes map to (and from) the URL pair chain. The `kind` is the resolution tier:
  *
- * - `'item'`      — Resolves against the current anchor (workspace) base, addressed by a variable id.
- *                   The default addressable node; may itself have children (e.g. a mailbox). (`doc/<id>`).
- * - `'singleton'` — Resolves against the current anchor base, but is a single fixed node per anchor, so
- *                   it carries no id — its terminal node-id segment is the key itself. (`settings`).
+ * - `'item'`      — Addressed by an id under the workspace (`doc/<id>`). May itself have children.
+ * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`).
+ *
+ * The binding's shape (`workspace`, `path`, `depth`, `accepts`) decides which node ids it addresses, and
+ * a node's URL comes from the one binding its id fits. A node therefore has a URL whether or not it is
+ * loaded, and bindings of different keys must not claim the same ids.
  *
  * The anchor and linked tiers are not declared per extension: they are fixed keys of the URL grammar,
  * configured once on the builder as {@link UrlGrammar}.
- *
- * `path` is how the node is located, in one of two forms:
- * - `string[]` — fixed ancestor node-id segments between the workspace base and the node (the common,
- *   deterministic case): the node is `${GraphNode.RootId}/<workspace>/<...segments>/<id>`. Fixed-depth
- *   dynamic tails beyond the segments are `+`-encoded into the id.
- * - {@link PathResolver} — a dynamic resolver, for data-dependent shapes (e.g. nested collections at
- *   arbitrary depth) that cannot declare static segments.
- *
- * Read by `path-resolution.ts` (which derives the parse table's `hasId`/`anchor` from `kind`) and
- * consumed by `UrlPath.parse`.
  */
-export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string[] | PathResolver };
+export type UrlBinding = {
+  key: string;
+  kind: 'item' | 'singleton';
+  /** Node-id segments between the workspace and the node's own. */
+  path: readonly string[];
+  /** A singleton's own segment; defaults to the key. */
+  segment?: string;
+  /**
+   * How many segments an item's id spans after `path`, joined by the grammar's tail separator: exactly
+   * `n`, or at least `min`. Defaults to exactly one; ignored with `resolve`.
+   */
+  depth?: number | { min: number };
+  /** Narrows the tails an item claims, where its shape alone would overlap another binding's. */
+  accepts?: (tail: readonly string[]) => boolean;
+  /** Narrows the workspaces the binding applies to; defaults to every workspace. */
+  workspace?: (workspace: string) => boolean;
+  /**
+   * Forward resolution for a data-dependent shape (nested collections, say): the id is the node's last
+   * segment, at any depth below `path`, and this locates the rest.
+   */
+  resolve?: PathResolver;
+};
 
 /**
  * The URL grammar the builder resolves and stamps against, configured once at construction.
@@ -120,53 +131,90 @@ export type PathResolveParams = {
 };
 
 /**
- * Dynamic forward URL resolver for an extension whose node-id shape is data-dependent and so cannot
- * declare a static {@link UrlBinding.path}. Returns the candidate qualified node id —
- * `path-resolution.ts` then materializes its ancestors and verifies it — or `null` if the id can't be
- * located. Must be self-contained (the declaring plugin closes over any services it needs), so
+ * Forward resolution for a {@link UrlBinding} whose ids are data-dependent. Returns the candidate qualified
+ * node id — `path-resolution.ts` then materializes its ancestors and verifies it — or `null` if the id
+ * can't be located. Must be self-contained (the declaring plugin closes over any services it needs), so
  * `@dxos/app-graph` stays free of service dependencies.
  */
 export type PathResolver = (params: PathResolveParams) => Effect.Effect<string | null>;
 
+/** Whether a binding's `depth` admits a tail of `length` segments. */
+const fitsDepth = (length: number, depth: UrlBinding['depth'] = 1): boolean =>
+  typeof depth === 'number' ? length === depth : length >= depth.min;
+
+const startsWith = (segments: readonly string[], prefix: readonly string[]): boolean =>
+  prefix.length <= segments.length && prefix.every((segment, index) => segments[index] === segment);
+
 /**
- * The `(key, id?)` URL representation of a node under a given {@link UrlBinding} — the reverse of forward
- * resolution, minus the workspace (always the node id's second segment). A singleton has no id; a
- * resolver-backed key keeps just the object id; a static path encodes the segments between the path and
- * the id, `+`-joined (empty when the node sits at the path — a container whose children are the items).
+ * The `(key, id?)` a binding gives the node `nodeId`, if its shape addresses that node: the reverse of
+ * forward resolution, minus the workspace. A singleton has no id; a resolver-backed item keeps its last
+ * segment; any other item joins the segments after `path` with the tail separator.
  */
 export const urlRepresentation = (
   nodeId: string,
   url: UrlBinding,
   tailSeparator: string = DEFAULT_TAIL_SEPARATOR,
-): { key: string; id?: string } => {
-  // A singleton carries no path-based id: its terminal node-id segment is the key itself.
-  if (url.kind === 'singleton') {
-    return { key: url.key };
+): Option.Option<{ key: string; id?: string }> => {
+  const [, workspace, ...segments] = nodeId.split(GraphNode.PathSeparator);
+  if (!workspace || !(url.workspace?.(workspace) ?? true) || !startsWith(segments, url.path)) {
+    return Option.none();
   }
-  const segments = nodeId.split(GraphNode.PathSeparator);
-  const id =
-    typeof url.path === 'function'
-      ? segments[segments.length - 1]
-      : segments.slice(2 + url.path.length).join(tailSeparator);
-  return { key: url.key, id };
+  const tail = segments.slice(url.path.length);
+  if (url.kind === 'singleton') {
+    return tail.length === 1 && tail[0] === (url.segment ?? url.key) ? Option.some({ key: url.key }) : Option.none();
+  }
+  if (tail.length === 0) {
+    return Option.none();
+  }
+  if (!(url.accepts?.(tail) ?? true)) {
+    return Option.none();
+  }
+  if (url.resolve) {
+    return Option.some({ key: url.key, id: tail[tail.length - 1] });
+  }
+  return fitsDepth(tail.length, url.depth)
+    ? Option.some({ key: url.key, id: tail.join(tailSeparator) })
+    : Option.none();
+};
+
+/**
+ * The node a binding without a resolver addresses by `id` under `workspace`, if its shape admits that id:
+ * the inverse of {@link urlRepresentation}. A singleton takes no id.
+ */
+export const urlCandidate = (
+  url: UrlBinding,
+  workspace: string,
+  id: string | undefined,
+  tailSeparator: string = DEFAULT_TAIL_SEPARATOR,
+): Option.Option<string> => {
+  if (url.resolve || !(url.workspace?.(workspace) ?? true)) {
+    return Option.none();
+  }
+  const base = [GraphNode.RootId, workspace, ...url.path];
+  if (url.kind === 'singleton') {
+    return id === undefined
+      ? Option.some([...base, url.segment ?? url.key].join(GraphNode.PathSeparator))
+      : Option.none();
+  }
+  const tail = id?.split(tailSeparator) ?? [];
+  return tail.length > 0 && fitsDepth(tail.length, url.depth) && (url.accepts?.(tail) ?? true)
+    ? Option.some([...base, ...tail].join(GraphNode.PathSeparator))
+    : Option.none();
 };
 
 /**
  * A node's own URL pair segment — `/<key>[/<id>]`, with no workspace/anchor prefix — or `undefined` when
- * the node is not addressable in its own right (a container node sitting at the binding's `path`, whose
- * children are the addressable items). A full URL is composed by prefixing `/w/<workspace>`.
+ * the binding does not address it. A full URL is composed by prefixing `/w/<workspace>`.
  */
 export const nodeUrlSegment = (
   nodeId: string,
   url: UrlBinding,
   tailSeparator: string = DEFAULT_TAIL_SEPARATOR,
-): string | undefined => {
-  const { key, id } = urlRepresentation(nodeId, url, tailSeparator);
-  if (id === undefined) {
-    return `/${key}`; // singleton
-  }
-  return id === '' ? undefined : `/${key}/${id}`; // empty id: container at the path, not addressable
-};
+): string | undefined =>
+  Option.match(urlRepresentation(nodeId, url, tailSeparator), {
+    onNone: () => undefined,
+    onSome: ({ key, id }) => (id === undefined ? `/${key}` : `/${key}/${id}`),
+  });
 
 //
 // Builder
@@ -244,15 +292,10 @@ export class GraphBuilder extends Builder.GraphBuilder<
 
 const CHILD_RELATION = Graph.relationKey('child');
 
-/**
- * How an app node argument's inline descendants are traversed. Actions are qualified and tracked like
- * any other inline node but do not inherit provenance: they are not addressable in their own right, so
- * attributing them to the producing extension would give them a URL representation they cannot have.
- */
+/** How an app node argument's inline descendants are traversed: its child nodes and its actions. */
 const inline: Builder.Inline<Node.NodeArg<any>> = {
   children: (node) => [...(node.nodes ?? []), ...(node.actions ?? [])],
   map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn), actions: node.actions?.map(fn) }),
-  owned: (node) => node.nodes ?? [],
 };
 
 /** Adapt the app graph to the engine's store port, translating between relation keys and relations. */

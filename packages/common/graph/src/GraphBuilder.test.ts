@@ -225,21 +225,6 @@ describe('GraphBuilder', () => {
     expect(model.findNode('root/a/y/deep')?.id).to.equal('root/a/y/deep');
   });
 
-  test('nodes are attributed to the extension that produced them, inline descendants included', async () => {
-    const { builder, children } = setup();
-    GraphBuilder.addExtension(builder, {
-      id: 'children',
-      connector: connector([{ id: 'a', nodes: [{ id: 'inline' }] }]),
-    });
-
-    children(GraphNode.RootId);
-    await GraphBuilder.flush(builder);
-
-    expect(builder.getNodeExtensionId('root/a')).to.equal('children');
-    expect(builder.getNodeExtensionId('root/a/inline')).to.equal('children');
-    expect(builder.getNodeExtensionId(GraphNode.RootId)).to.be.undefined;
-  });
-
   test('every produced node passes through the decorator with its producing extension', async () => {
     const { builder, model, children } = setup({
       decorateNode: (node, extension) => ({ ...node, properties: { ...node.properties, tag: extension?.meta } }),

@@ -84,6 +84,9 @@ export const REGISTRY_CATEGORIES: readonly RegistryCategory[] = [
   },
 ];
 
+/** Whether an id names a registry category rather than a plugin. */
+export const isCategoryId = (id: string): boolean => REGISTRY_CATEGORIES.some((category) => category.id === id);
+
 export const getPopulatedCategories = (
   count: (category: string) => number,
 ): readonly (RegistryCategory & { count: number })[] =>
