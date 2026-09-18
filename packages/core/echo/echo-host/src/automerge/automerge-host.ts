@@ -407,14 +407,19 @@ export class AutomergeHost extends Resource {
       });
     }
 
+    // Two emitters re-announce a peer without it having left: an auth-scope change and a transport
+    // reset (DX-1275). Both must leave the collection synchronizer's per-peer state alone —
+    // dropping it costs a full re-query and a diff over every document in the collection.
     let updatingAuthScope = false;
+    const peerLifecycleSuppressed = (peerId: PeerId): boolean =>
+      updatingAuthScope || this._echoNetworkAdapter.isTransportResetting(peerId);
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
       this._ctx,
-      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
+      ((e: PeerCandidatePayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerConnected(e.peerId)) as any,
     );
     Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
       this._ctx,
-      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
+      ((e: PeerDisconnectedPayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerDisconnected(e.peerId)) as any,
     );
 
     this._collectionSynchronizer.peerCollectionStateUpdated.on(

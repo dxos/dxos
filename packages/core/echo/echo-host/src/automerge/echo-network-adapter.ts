@@ -69,6 +69,12 @@ export class EchoNetworkAdapter extends NetworkAdapter {
    * Remote peer id -> connection.
    */
   private readonly _connections = new Map<PeerId, ConnectionEntry>();
+  /**
+   * Peers whose subduction transport is mid-reset. Their `peer-disconnected`/`peer-candidate` pair
+   * re-runs a handshake on a connection that stays open, so it must not read as a peer leaving and
+   * rejoining — see {@link _onConnectionTransportReset}.
+   */
+  private readonly _resettingTransports = new Set<PeerId>();
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
@@ -129,6 +135,11 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     await this._connected.wait({ timeout: 10_000 });
   }
 
+  /** True while {@link _onConnectionTransportReset} is emitting for `peerId`; see that method. */
+  public isTransportResetting(peerId: PeerId): boolean {
+    return this._resettingTransports.has(peerId);
+  }
+
   public onConnectionAuthScopeChanged(peer: PeerId): void {
     const entry = this._connections.get(peer);
     if (entry) {
@@ -148,6 +159,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
       onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
+      onConnectionTransportReset: this._onConnectionTransportReset.bind(this),
       isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
       getContainingSpaceIdForDocument: this._params.getContainingSpaceIdForDocument,
@@ -318,6 +330,33 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     invariant(entry);
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
     this._emitPeerCandidate(connection);
+  }
+
+  /**
+   * Re-run the peer's transport handshake without closing the connection (DX-1275). The
+   * `peer-disconnected`/`peer-candidate` pair is what drives `AdapterConnections` to tear down the
+   * stale subduction transport and start a fresh one; the connection entry, its streams and its
+   * peer id are untouched, and {@link _resettingTransports} marks the pair so listeners keyed on
+   * peer lifecycle (the collection synchronizer) leave their per-peer state alone. Both emissions
+   * are synchronous, so the mark covers exactly this pair.
+   */
+  private _onConnectionTransportReset(connection: AutomergeReplicatorConnection): boolean {
+    const peerId = connection.peerId as PeerId;
+    const entry = this._connections.get(peerId);
+    if (!entry?.isOpen) {
+      log('no open connection to reset', { peerId });
+      return false;
+    }
+
+    log('resetting connection transport', { peerId });
+    this._resettingTransports.add(peerId);
+    try {
+      this.emit('peer-disconnected', { peerId });
+      this._emitPeerCandidate(connection);
+    } finally {
+      this._resettingTransports.delete(peerId);
+    }
+    return true;
   }
 
   private _emitPeerCandidate(connection: AutomergeReplicatorConnection): void {
