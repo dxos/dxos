@@ -48,6 +48,10 @@ const make = () =>
       `,
     }),
     agentCanEnable: true,
+    // Projects the skill, and with it the three operations above, onto an MCP host. Without it
+    // `createUpload` mints URLs whose bytes nothing can then claim: `createFromUpload` is reachable
+    // only through the skill that names it.
+    mcpPrompt: true,
   });
 
 const skill: Skill.Definition = {
