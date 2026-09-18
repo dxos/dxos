@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './AwaitingObject/index.ts';
 export * from './CreateObjectPanel/index.ts';
 export * from './ForeignKeys/index.ts';
 export * from './RelatedObjectCard/index.ts';

@@ -161,8 +161,9 @@ export default Capability.makeModule(
               id: FileSystemOperation.OpenDirectory.meta.key,
               data: Effect.fnUntraced(function* () {
                 const result = yield* Operation.invoke(FileSystemOperation.OpenDirectory);
-                if (result?.subject) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
+                const [workspace] = result?.subject ?? [];
+                if (workspace) {
+                  yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
                 }
               }),
               properties: {

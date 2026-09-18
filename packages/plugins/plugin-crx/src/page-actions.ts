@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Database } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -116,7 +117,7 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
 export const installPageActionListeners = (
   capabilities: CapabilityManager.CapabilityManager,
   invoker: Capabilities.OperationInvoker,
-  onResult?: (ack: PageAction.InvokeAck, label?: string) => void,
+  onResult?: (ack: PageAction.InvokeAck, label?: string, spaceId?: SpaceId) => void,
 ): (() => void) => {
   const getActions = () => capabilities.getAll(CrxCapabilities.PageAction).flat();
 
@@ -127,12 +128,15 @@ export const installPageActionListeners = (
 
   const onInvoke = (event: Event) => {
     const detail = (event as CustomEvent).detail;
+    // Resolved once so the ack's object is looked up in the space it was created in.
+    let target: Database.Database | undefined;
     const deps: InvokeDeps = {
       getActions,
       getSettings: () => capabilities.get(Capabilities.AtomRegistry).get(capabilities.get(CrxCapabilities.Settings)),
       getTarget: () => {
         const client = capabilities.get(ClientCapabilities.Client);
-        return AppSpace.getActiveSpace(client, capabilities)?.db;
+        target = AppSpace.getActiveSpace(client, capabilities)?.db;
+        return target;
       },
       invoke: (operation, input) => invoker.invokePromise(operation, input),
     };
@@ -145,7 +149,7 @@ export const installPageActionListeners = (
         window.dispatchEvent(new CustomEvent(PageAction.INVOKE_ACK_EVENT, { detail: ack }));
         try {
           const actionId = (detail as { actionId?: string } | null)?.actionId;
-          onResult?.(ack, getActions().find((candidate) => candidate.id === actionId)?.label);
+          onResult?.(ack, getActions().find((candidate) => candidate.id === actionId)?.label, target?.spaceId);
         } catch (err) {
           log.catch(err);
         }

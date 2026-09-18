@@ -22,6 +22,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
+    'org.dxos.plugin.debug.surface.page',
     'org.dxos.plugin.debug.surface.stats',
     'org.dxos.role.article',
     'org.dxos.role.deckCompanion.spaceObjects',
