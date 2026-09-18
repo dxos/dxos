@@ -15,6 +15,15 @@ const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
   // writes to, or they never see its version bumps.
   const registry = props.registry ?? Registry.make();
   const builder = new GraphBuilder.ModelGraphBuilder<string>({ registry, ...props });
+  // App-graph schedules on macrotasks; on microtasks a collection a flush triggers drains before `await`
+  // returns, which hides ordering bugs.
+  builder._schedule = (callback) =>
+    new Promise((resolve) =>
+      setTimeout(() => {
+        callback();
+        resolve();
+      }),
+    );
   const children = (id: string, relation?: string) => registry.get(builder.children(id, relation)).map(({ id }) => id);
   return { registry, builder, model: builder.graph, children };
 };
@@ -338,16 +347,6 @@ describe('GraphBuilder', () => {
   });
 });
 
-const scheduleOnMacrotasks = (builder: GraphBuilder.Any) => {
-  builder._schedule = (callback) =>
-    new Promise((resolve) =>
-      setTimeout(() => {
-        callback();
-        resolve();
-      }),
-    );
-};
-
 describe('retention', () => {
   const ATTACHED = ['action', 'companion'];
 
@@ -539,7 +538,6 @@ describe('retention', () => {
   test('flush waits for a collection the flush itself triggers', async () => {
     const harness = setup();
     const { builder, registry, children } = harness;
-    scheduleOnMacrotasks(builder);
     const ids = Atom.make(['w0', 'w1']).pipe(Atom.keepAlive);
     GraphBuilder.addExtension(builder, {
       id: 'children',
