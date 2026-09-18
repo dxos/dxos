@@ -213,7 +213,14 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           newlyOpen: deckUpdates.active.filter((id) => !previouslyOpenIds.has(id)),
           scrollIntoView: input.scrollIntoView,
         });
-        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks, scrollIntoView });
+        // The content region crossfades from the old deck to the new one instead of cutting.
+        yield* navigateDeck({
+          workspace,
+          active: deckUpdates.active,
+          companionPlanks,
+          scrollIntoView,
+          transition: true,
+        });
       }
 
       // Schedule side-effects for the newly opened items: expose in the navigation sidebar and emit

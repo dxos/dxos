@@ -45,6 +45,8 @@ export const navigate = Effect.fnUntraced(function* (
     scrollIntoView?: string;
     /** Fold the plank displaced from attention into this write's scroll/focus intent. */
     attendDisplaced?: boolean;
+    /** Run the write that mounts the planks as the update step of a view transition. */
+    transition?: boolean;
   },
 ) {
   if (!next.workspace) {
@@ -57,6 +59,7 @@ export const navigate = Effect.fnUntraced(function* (
         navigatedIds: options?.navigatedIds,
         scrollIntoView: options?.scrollIntoView,
         attendDisplaced: options?.attendDisplaced,
+        transition: options?.transition,
       })
     : undefined;
 });
@@ -112,11 +115,14 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   scrollIntoView?: string;
   /** Fold the plank displaced from attention into this write's scroll/focus intent. */
   attendDisplaced?: boolean;
+  /** Run the write that mounts the planks as the update step of a view transition. */
+  transition?: boolean;
 }) {
   const { navigation, navigatedIds } = yield* deckNavigation(params);
   return yield* navigate(navigation, {
     navigatedIds,
     scrollIntoView: params.scrollIntoView,
     attendDisplaced: params.attendDisplaced,
+    transition: params.transition,
   });
 });
