@@ -125,6 +125,9 @@ export class IndexQuerySource implements QuerySource {
   /** True while {@link _hydrateLoop} is running, so concurrent triggers coalesce instead of racing. */
   private _hydrating = false;
 
+  /** Whether the reactive stream has answered: its first response hydrated, or the stream failed. */
+  private _answered = false;
+
   /** Set when a new trigger arrives mid-pass, causing {@link _hydrateLoop} to run one more iteration. */
   private _hydratePending = false;
 
@@ -140,6 +143,7 @@ export class IndexQuerySource implements QuerySource {
 
   close(): void {
     this._open = false;
+    this._answered = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -158,6 +162,14 @@ export class IndexQuerySource implements QuerySource {
   /** Index results are produced asynchronously from the host query stream. */
   isSynchronous(): boolean {
     return false;
+  }
+
+  isPending(): boolean {
+    // A query the index does not serve has nothing outstanding here.
+    if (this._query === undefined || !queryTargetsSpacesOrFeeds(this._query)) {
+      return false;
+    }
+    return !this._answered;
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
@@ -185,6 +197,7 @@ export class IndexQuerySource implements QuerySource {
     void this._hydrationCtx?.dispose().catch(() => {});
     this._hydrationCtx = undefined;
     this._results = [];
+    this._answered = false;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -258,6 +271,18 @@ export class IndexQuerySource implements QuerySource {
     );
   }
 
+  /**
+   * Reports the current query as answered-with-nothing, so a subscriber waiting on this source stops
+   * waiting. Ignored once the query has been replaced or closed.
+   */
+  private _fail(queryId: number | undefined): void {
+    if (queryId === undefined || this._reactiveQueryId !== queryId) {
+      return;
+    }
+    this._answered = true;
+    this.changed.emit();
+  }
+
   /** Reactive query: pushes results on every host response and remembers the raw records. */
   private _startReactive(query: QueryAST.Query): void {
     const queryId = nextQueryId++;
@@ -285,12 +310,16 @@ export class IndexQuerySource implements QuerySource {
             this._scheduleHydrate();
           } catch (err: any) {
             log.catch(err);
+            this._fail(queryId);
           }
         },
         onError: (err) => {
           if (err != null && !(err instanceof RpcClosedError)) {
             log.catch(err);
           }
+          // Nothing more is coming on this stream; a subscriber waiting for the index must not wait
+          // for it forever.
+          this._fail(queryId);
         },
       },
     );
@@ -338,12 +367,15 @@ export class IndexQuerySource implements QuerySource {
   /** Hydrate the latest remembered records, set `_results`, and emit — repeating while triggers arrive. */
   private async _hydrateLoop(): Promise<void> {
     this._hydrating = true;
+    // The query the pass that throws was hydrating, which a replacement installed meanwhile is not.
+    let passQueryId: number | undefined;
     try {
       do {
         this._hydratePending = false;
 
         const query = this._query;
         const queryId = this._reactiveQueryId;
+        passQueryId = queryId;
         if (!this._open || query == null || queryId == null) {
           break;
         }
@@ -360,12 +392,18 @@ export class IndexQuerySource implements QuerySource {
         }
 
         this._results = results;
+        this._answered = true;
         this.changed.emit();
       } while (this._hydratePending);
     } catch (err: any) {
       log.catch(err);
+      this._fail(passQueryId);
     } finally {
       this._hydrating = false;
+      // A trigger that arrived while the failed pass was running, which nothing else would serve.
+      if (this._hydratePending && this._open) {
+        this._scheduleHydrate();
+      }
     }
   }
 
