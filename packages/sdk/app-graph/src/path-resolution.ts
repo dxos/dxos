@@ -393,10 +393,7 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
 
 /**
  * How narrowly a binding's shape pins its nodes: literal segments count most (a singleton's own segment
- * included), then an `accepts`, then a declared `depth`, so a binding carving ids out of another's shape
- * wins.
+ * included), then a declared `depth`, so the deeper of two bindings sharing a path claims its tails.
  */
 const specificity = (binding: GraphBuilder.UrlBinding): number =>
-  4 * (binding.path.length + (binding.kind === 'singleton' ? 1 : 0)) +
-  (binding.accepts ? 2 : 0) +
-  (binding.depth === undefined ? 0 : 1);
+  2 * (binding.path.length + (binding.kind === 'singleton' ? 1 : 0)) + (binding.depth === undefined ? 0 : 1);

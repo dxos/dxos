@@ -27,12 +27,8 @@ export default Capability.makeModule(
       // Show Provider.Provider objects as nodes under each space.
       AppGraphBuilder.createExtension({
         id: 'commerceProviders',
-        url: {
-          key: 'commerce',
-          kind: 'item',
-          path: [],
-          accepts: ([section]) => section === getProvidersSectionId(),
-        },
+        // The section is only a folder; its providers are the addressable items.
+        url: { key: 'commerce', kind: 'item', path: [getProvidersSectionId()] },
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const providers = get(space.db.query(Filter.type(Provider.Provider)).atom);

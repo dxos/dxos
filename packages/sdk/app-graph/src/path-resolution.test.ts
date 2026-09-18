@@ -22,6 +22,8 @@ const OTHER_DOC_TYPE = 'test.other-document';
 const COMMENTS_TYPE = 'test.comments';
 const GROUP_TYPE = 'test.group';
 const GROUP_ID = 'group';
+const DYN_GROUP_TYPE = 'test.dyn-group';
+const DYN_GROUP_ID = 'dynGroup';
 const SECTIONED_TYPE = 'test.sectioned';
 const INLINE_SECTION_TYPE = 'test.inline-section';
 const INLINE_SECTION_ID = 'inlineSection';
@@ -109,7 +111,11 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     GraphBuilder.createExtension({
       id: 'group',
       match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
-      connector: () => Effect.succeed([{ id: GROUP_ID, type: GROUP_TYPE }]),
+      connector: () =>
+        Effect.succeed([
+          { id: GROUP_ID, type: GROUP_TYPE },
+          { id: DYN_GROUP_ID, type: DYN_GROUP_TYPE },
+        ]),
     }),
   );
 
@@ -138,19 +144,17 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
 
   // A data-dependent shape: forward resolution runs its `resolve` Effect, which computes the candidate
   // node id (here a fixed shape, but in production e.g. a nested collection walked via the database).
-  // path-resolution then materializes and verifies the candidate. It shares the group with `sectioned`,
-  // so `accepts` carves its ids out of that binding's shape.
+  // path-resolution then materializes and verifies the candidate.
   const dynamicDocs = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'dynamicDocs',
       url: {
         key: 'dyn',
         kind: 'item',
-        path: [GROUP_ID],
-        accepts: (tail) => tail[tail.length - 1].startsWith('dyn'),
-        resolve: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${GROUP_ID}/${id}`),
+        path: [DYN_GROUP_ID],
+        resolve: ({ id, workspaceBaseId }) => Effect.succeed(`${workspaceBaseId}/${DYN_GROUP_ID}/${id}`),
       },
-      match: GraphNodeMatcher.whenNodeType(GROUP_TYPE),
+      match: GraphNodeMatcher.whenNodeType(DYN_GROUP_TYPE),
       connector: () => Effect.succeed([{ id: 'dynDocA', type: SECTIONED_TYPE }]),
     }),
   );
@@ -400,7 +404,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'dyn', id: 'dynDocA', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/dynDocA` }]);
+      expect(results).toEqual([{ pairIndex: 0, nodeId: `${GraphNode.RootId}/${WORKSPACE_A}/${DYN_GROUP_ID}/dynDocA` }]);
     });
 
     test('a resolver candidate that does not exist does not resolve', async ({ expect }) => {
@@ -412,7 +416,7 @@ describe('path-resolution', () => {
         }),
       );
       expect(results).toEqual([
-        { pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` },
+        { pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/${DYN_GROUP_ID}/missing` },
       ]);
     });
 
@@ -458,7 +462,7 @@ describe('path-resolution', () => {
         ),
       );
       expect(results).toEqual([
-        { pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` },
+        { pairIndex: 0, candidateId: `${GraphNode.RootId}/${WORKSPACE_A}/${DYN_GROUP_ID}/missing` },
       ]);
       expect(Date.now() - started).toBeGreaterThanOrEqual(150);
     });
@@ -628,7 +632,7 @@ describe('path-resolution', () => {
       ['an item from a second extension sharing the key', `${WORKSPACE_A}/sharedDoc`],
       ['an item under a static path', `${WORKSPACE_A}/${GROUP_ID}/secDocA`],
       ['an inline child', `${WORKSPACE_A}/${INLINE_SECTION_ID}/inlineDocA`],
-      ['a resolver item carved out of a shared path', `${WORKSPACE_A}/${GROUP_ID}/dynDocA`],
+      ['a resolver item', `${WORKSPACE_A}/${DYN_GROUP_ID}/dynDocA`],
       ['a fixed-depth tail', `${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`],
       ['a singleton', `${WORKSPACE_A}/${HOME_SEGMENT}`],
     ])('%s round-trips without being loaded first', async ([, path], { expect }) => {
@@ -667,13 +671,6 @@ describe('path-resolution', () => {
       const builder = GraphBuilder.make({ registry: Registry.make() });
       GraphBuilder.addExtension(builder, [
         url({ key: 'entry', kind: 'item', path: [], workspace: (workspace) => workspace === 'fixed' }),
-        url({
-          key: 'category',
-          kind: 'item',
-          path: [],
-          accepts: ([id]) => id === 'labs',
-          workspace: (w) => w === 'fixed',
-        }),
         url({ key: 'library', kind: 'singleton', path: ['content'], segment: 'books' }),
         url({ key: 'thread', kind: 'item', path: ['threads'], depth: { min: 1 } }),
         url({ key: 'type', kind: 'item', path: ['database'] }),
@@ -692,10 +689,6 @@ describe('path-resolution', () => {
         workspace: 'fixed',
       });
       expect(represent('space/org.dxos.plugin.deck')).toBeUndefined();
-    });
-
-    test('an accepting binding carves its ids out of a wider one', ({ expect }) => {
-      expect(represent('fixed/labs')).toEqual({ key: 'category', id: 'labs', workspace: 'fixed' });
     });
 
     test('a singleton is addressed by its declared segment', ({ expect }) => {
@@ -727,12 +720,14 @@ describe('path-resolution', () => {
     });
 
     test('forward resolution only proposes ids the binding would give back', ({ expect }) => {
-      const [category] = Object.values(shapesBuilder().getExtensions()).flatMap((extension) =>
-        extension.meta?.key === 'category' ? [extension.meta] : [],
+      const binding = (key: string) =>
+        Object.values(shapesBuilder().getExtensions()).flatMap((extension) =>
+          extension.meta?.key === key ? [extension.meta] : [],
+        )[0];
+      expect(Option.getOrUndefined(GraphBuilder.urlCandidate(binding('type'), 'space', 'org.dxos.type.document'))).toBe(
+        'root/space/database/org.dxos.type.document',
       );
-      expect(Option.getOrUndefined(GraphBuilder.urlCandidate(category, 'fixed', 'labs'))).toBe('root/fixed/labs');
-      expect(Option.isNone(GraphBuilder.urlCandidate(category, 'fixed', 'org.dxos.plugin.deck'))).toBe(true);
-      expect(Option.isNone(GraphBuilder.urlCandidate(category, 'space', 'labs'))).toBe(true);
+      expect(Option.isNone(GraphBuilder.urlCandidate(binding('entry'), 'space', 'org.dxos.plugin.deck'))).toBe(true);
     });
   });
 });

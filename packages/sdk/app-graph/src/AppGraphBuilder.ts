@@ -62,7 +62,7 @@ export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
  * - `'item'`      — Addressed by an id under the workspace (`doc/<id>`). May itself have children.
  * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`).
  *
- * The binding's shape (`workspace`, `path`, `depth`, `accepts`) decides which node ids it addresses, and
+ * The binding's shape (`workspace`, `path`, `depth`) decides which node ids it addresses, and
  * a node's URL comes from the one binding its id fits. A node therefore has a URL whether or not it is
  * loaded, and bindings of different keys must not claim the same ids.
  *
@@ -82,8 +82,6 @@ export type UrlBinding = {
    * declares the depth that sets it apart. Ignored with `resolve`.
    */
   depth?: number | { min: number };
-  /** Narrows the tails an item claims, where its shape alone would overlap another binding's. */
-  accepts?: (tail: readonly string[]) => boolean;
   /** Narrows the workspaces the binding applies to; defaults to every workspace. */
   workspace?: (workspace: string) => boolean;
   /**
@@ -167,9 +165,6 @@ export const urlRepresentation = (
   if (tail.length === 0) {
     return Option.none();
   }
-  if (!(url.accepts?.(tail) ?? true)) {
-    return Option.none();
-  }
   if (url.resolve) {
     return Option.some({ key: url.key, id: tail[tail.length - 1] });
   }
@@ -198,7 +193,7 @@ export const urlCandidate = (
       : Option.none();
   }
   const tail = id?.split(tailSeparator) ?? [];
-  return tail.length > 0 && fitsDepth(tail.length, url.depth) && (url.accepts?.(tail) ?? true)
+  return tail.length > 0 && fitsDepth(tail.length, url.depth)
     ? Option.some([...base, ...tail].join(GraphNode.PathSeparator))
     : Option.none();
 };
