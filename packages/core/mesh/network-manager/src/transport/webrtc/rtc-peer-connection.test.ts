@@ -4,7 +4,6 @@
 
 import { create } from '@bufbuild/protobuf';
 import { type JsonObject } from '@bufbuild/protobuf';
-import { Duplex } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
@@ -121,7 +120,7 @@ const createAnswerer = (topic: string) => {
     remotePeerKey,
     topic,
     initiator: false,
-    stream: new Duplex({ read: () => {}, write: (_chunk, _encoding, callback) => callback() }),
+    stream: { readable: new ReadableStream<Uint8Array>(), writable: new WritableStream<Uint8Array>() },
     sendSignal,
   };
   return { connection, peer, options };

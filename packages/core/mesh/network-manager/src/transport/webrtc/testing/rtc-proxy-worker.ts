@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import { Duplex } from 'node:stream';
 
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
@@ -28,14 +27,22 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 /** Reports what the remote peer wrote, and lets the test push outbound payloads. */
-const createStream = (peer: 'a' | 'b') =>
-  new Duplex({
-    read: () => {},
-    write: (chunk, _encoding, callback) => {
-      post({ type: 'received', peer, data: decoder.decode(new Uint8Array(chunk)) });
-      callback();
-    },
-  });
+const createStream = (peer: 'a' | 'b') => {
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  return {
+    readable: new ReadableStream<Uint8Array>({
+      start: (ctrl) => {
+        controller = ctrl;
+      },
+    }),
+    writable: new WritableStream<Uint8Array>({
+      write: (chunk) => {
+        post({ type: 'received', peer, data: decoder.decode(chunk) });
+      },
+    }),
+    push: (data: Uint8Array) => controller.enqueue(data),
+  };
+};
 
 const makeClient = async (port: MessagePort): Promise<RTCService.Client> => {
   // The client outlives this call, so the scope is held rather than closed around it; the worker is
