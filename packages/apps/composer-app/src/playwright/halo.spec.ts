@@ -35,7 +35,7 @@ const probing = async (peers: Record<string, AppManager>, assertion: () => Promi
       const stack = 'org.dxos.plugin.stack';
       // eslint-disable-next-line no-console
       console.log(
-        `SETTINGS-PROBE ${name} id=${probe.settingsId} sharedStack=${probe.shared?.['org.dxos.app-framework.plugins']?.[stack]} enabled=${probe.enabled?.includes(stack)} pins=${JSON.stringify(probe.local)}`,
+        `SETTINGS-PROBE ${name} id=${probe.settingsId} sharedStack=${probe.shared?.['org.dxos.app-framework.plugins']?.[stack]} enabled=${probe.enabled?.includes(stack)} pins=${JSON.stringify(probe.local)} failed=${JSON.stringify(probe.failed)}`,
       );
       for (const entry of probe.trace ?? []) {
         // eslint-disable-next-line no-console

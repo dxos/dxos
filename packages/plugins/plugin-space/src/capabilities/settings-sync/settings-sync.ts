@@ -168,6 +168,9 @@ export default Capability.makeModule(
       trace: diagSink.slice(-60),
       local: registry.get(device),
       enabled: manager.getEnabled(),
+      failed: manager
+        .getFailed()
+        .map((failure) => `${failure.id}:${failure.phase}:${failure.reason}:${failure.error?.message}`),
     });
 
     const onSettingsChange = () => {
