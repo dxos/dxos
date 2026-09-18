@@ -471,12 +471,6 @@ type StoryArgs = {
    * seeds them into the settings atom the deck actually reads.
    */
   settings?: Partial<Pick<Settings.Settings, 'flatten' | 'overscroll'>>;
-  /**
-   * Stored width (rem) seeded for every plank opened on mount. Narrower than `DEFAULT_PLANK_SIZE` fits
-   * several unfolded planks in the test viewport at once, which is what gives the fold hysteresis's
-   * "nearest to centre" pick anything to choose between.
-   */
-  plankSizeRem?: number;
 };
 
 /** Stable identity, for the same reason as `NO_COMPANIONS`. */
@@ -494,7 +488,6 @@ const DefaultStory = ({
   revealControls = false,
   openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
-  plankSizeRem,
 }: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
 
@@ -532,8 +525,6 @@ const DefaultStory = ({
       ...items.slice(0, count).map((item) => item.id),
     ];
     const open = companionPlanks.map((position) => active[position - 1]).filter((id): id is string => !!id);
-    const plankSizing =
-      plankSizeRem === undefined ? undefined : Object.fromEntries(active.map((id) => [id, plankSizeRem]));
     updateState((current) => ({
       ...current,
       sidebarState,
@@ -544,7 +535,6 @@ const DefaultStory = ({
           // Omitting the key rather than writing `[]` is what exercises the "reader has never decided"
           // state `isCompanionOpen` special-cases.
           ...(uninitializedCompanions ? {} : { companionPlanks: open }),
-          ...(plankSizing && { plankSizing: { ...current.decks[current.activeDeck].plankSizing, ...plankSizing } }),
         },
       },
     }));
@@ -562,7 +552,6 @@ const DefaultStory = ({
     uninitializedCompanions,
     launcher,
     launcherNode,
-    plankSizeRem,
     updateState,
     updateEphemeral,
   ]);
@@ -837,9 +826,8 @@ const plankTitle = (canvasElement: HTMLElement, id: string) =>
  */
 export const OpenAttendsTheNewPlank: Story = {
   tags: ['test'],
-  // Enough narrow planks that several are unfolded at once; with one on screen the fold hysteresis has
-  // nothing to mis-pick.
-  args: { count: 6, openNextControl: true, plankSizeRem: 20 },
+  // Enough planks that the deck overflows; with nothing off screen the hysteresis never runs.
+  args: { count: 6, openNextControl: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });

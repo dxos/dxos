@@ -11,31 +11,6 @@ import { type Attention, AttentionManager } from '../../types/Attention.ts';
 import { AttentionContextProvider, UNKNOWN_ATTENDABLE, useAttended, useAttention } from './attention-context.ts';
 import { AttendableContainer, RootAttentionProvider } from './AttentionProvider.tsx';
 
-/** Records every value the hook returns across renders, including the very first one. */
-const AttentionProbe = ({ id, values }: { id: string; values: Attention[] }) => {
-  const state = useAttention(id);
-  values.push(state);
-  return null;
-};
-
-const AttendedProbe = ({ values }: { values: (readonly string[])[] }) => {
-  const current = useAttended();
-  values.push(current);
-  return null;
-};
-
-/**
- * Focuses the element matching `selector` during the layout phase, as a plank does on mount. A DOM query
- * rather than a ref, since React attaches a host element's ref only after its descendants' layout
- * effects have run.
- */
-const FocusOnMount = ({ selector }: { selector: string }) => {
-  useLayoutEffect(() => {
-    document.querySelector<HTMLElement>(selector)?.focus();
-  }, [selector]);
-  return null;
-};
-
 describe('useAttention', () => {
   test('reads the manager current state on the first render, not the UNKNOWN placeholder', ({ expect }) => {
     const registry = Registry.make();
@@ -149,3 +124,28 @@ describe('switching attendableId', () => {
     expect(values.every((value) => value !== UNKNOWN_ATTENDABLE)).toBe(true);
   });
 });
+
+/** Records every value the hook returns across renders, including the very first one. */
+const AttentionProbe = ({ id, values }: { id: string; values: Attention[] }) => {
+  const state = useAttention(id);
+  values.push(state);
+  return null;
+};
+
+const AttendedProbe = ({ values }: { values: (readonly string[])[] }) => {
+  const current = useAttended();
+  values.push(current);
+  return null;
+};
+
+/**
+ * Focuses the element matching `selector` during the layout phase, as a plank does on mount. A DOM query
+ * rather than a ref, since React attaches a host element's ref only after its descendants' layout
+ * effects have run.
+ */
+const FocusOnMount = ({ selector }: { selector: string }) => {
+  useLayoutEffect(() => {
+    document.querySelector<HTMLElement>(selector)?.focus();
+  }, [selector]);
+  return null;
+};

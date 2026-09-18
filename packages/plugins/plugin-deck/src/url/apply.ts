@@ -32,7 +32,7 @@ import { computeActiveUpdates } from './set-active.ts';
  * focuses itself in the commit that mounts it.
  */
 export type NavigationIntent = {
-  /** The plank this write focuses; defaults to the plank attention is displaced onto. */
+  /** The plank this write focuses; an intent that names none declines the focus outright. */
   scrollIntoView?: string;
   /** Run the write as the update step of a view transition, so the content region crossfades. */
   transition?: boolean;
@@ -70,7 +70,10 @@ export const applyActive = Effect.fnUntraced(function* (
   const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
   const plankNames = updatePlankNames(deck.plankNames, activeSegments);
   const { active, inactive, companionPlanks } = deckUpdates;
-  const scrollIntoView = intent?.scrollIntoView ?? toAttend;
+  // A caller with no intent at all (a close, a set) has no opinion, so the write falls back to the plank
+  // attention is displaced onto, which has to be one that is open. A caller that passed an intent has
+  // already decided, including when it names no plank.
+  const scrollIntoView = intent ? intent.scrollIntoView : toAttend;
   const changed =
     !sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments);
 

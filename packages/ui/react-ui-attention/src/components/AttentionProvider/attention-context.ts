@@ -50,6 +50,7 @@ export const useAttention = (attendableId?: string): Attention => {
   return useSyncExternalStore(subscribe, getSnapshot);
 };
 
+/** The attended ids, outermost last, as {@link Attention.getAttendables} collected them from the DOM. */
 export const useAttended = (): readonly string[] => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
   const subscribe = useCallback(
