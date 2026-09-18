@@ -33,7 +33,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { DeferredTask, Event, asyncTimeout, sleep } from '@dxos/async';
+import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -284,11 +284,20 @@ export class AutomergeHost extends Resource {
    * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
    * advanced, or we committed again) re-opens the retry.
+   *
+   * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
+   * unambiguous, and cleanup compares the ids stored on each entry instead.
    */
-  private _divergedResyncHeads = new Map<string, string>();
+  private _divergedResyncHeads = new Map<
+    string,
+    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
+  >();
 
   /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
   private _sharePolicyKickNextAllowedAt = 0;
+
+  /** Whether a trailing share-policy kick is parked at {@link _sharePolicyKickNextAllowedAt}. */
+  private _sharePolicyKickParked = false;
 
   /**
    * Documents requested by remote peers.
@@ -494,17 +503,27 @@ export class AutomergeHost extends Resource {
     });
 
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
-      // Throttled rather than gated: `DeferredTask` already collapses concurrent `schedule()`
-      // calls into one run, so waiting out the remainder of the interval here coalesces a burst of
-      // kicks into a single fan-out instead of dropping any. Leading edge is immediate — a kick
-      // after a quiet period pays nothing, which keeps the deny→allow recovery path prompt.
+      // Throttled by parking one trailing run at the deadline rather than waiting in here:
+      // `DeferredTask` clears its scheduled flag before running this callback, so a `schedule()`
+      // landing during a wait here queues a second run, which would fan out again for requests the
+      // first run already covered. While the trailing run is parked every schedule returns through
+      // this branch, so a burst costs one fan-out. Leading edge is immediate — a kick after a quiet
+      // period pays nothing, which keeps the deny→allow recovery path prompt.
       const waitMs = this._sharePolicyKickNextAllowedAt - Date.now();
       if (waitMs > 0) {
-        log('share policy kick throttled', { waitMs, loadedDocs: this.loadedDocsCount });
-        await sleep(waitMs);
-        if (this._ctx.disposed) {
-          return;
+        if (!this._sharePolicyKickParked) {
+          this._sharePolicyKickParked = true;
+          log('share policy kick throttled', { waitMs, loadedDocs: this.loadedDocsCount });
+          scheduleTask(
+            this._ctx,
+            () => {
+              this._sharePolicyKickParked = false;
+              this._sharePolicyChangedTask?.schedule();
+            },
+            waitMs,
+          );
         }
+        return;
       }
       this._sharePolicyKickNextAllowedAt =
         Date.now() +
@@ -904,10 +923,9 @@ export class AutomergeHost extends Resource {
       requested.delete(documentId);
     }
     // A removed document never converges, so neither of the other cleanups (convergence of its
-    // collection, or its peer disconnecting) is guaranteed to reach its entry. The document id is
-    // the last key segment and contains no `:`, so the suffix match cannot catch a sibling.
-    for (const resyncKey of this._divergedResyncHeads.keys()) {
-      if (resyncKey.endsWith(`:${documentId}`)) {
+    // collection, or its peer disconnecting) is guaranteed to reach its entry.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.documentId === documentId) {
         this._divergedResyncHeads.delete(resyncKey);
       }
     }
@@ -1410,8 +1428,8 @@ export class AutomergeHost extends Resource {
     // With no local state `_handleCollectionSync` returns before its convergence cleanup, so a
     // cleared collection's entries would otherwise outlive it and suppress the first resync if it
     // is registered again.
-    for (const resyncKey of this._divergedResyncHeads.keys()) {
-      if (resyncKey.startsWith(`${collectionId}:`)) {
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.collectionId === collectionId) {
         this._divergedResyncHeads.delete(resyncKey);
       }
     }
@@ -1445,9 +1463,9 @@ export class AutomergeHost extends Resource {
       }
     }
     // A reconnect is a fresh chance for the push that did not land, so the resync budget resets
-    // with the connection. The key carries the peer in the middle, not at the end.
-    for (const resyncKey of this._divergedResyncHeads.keys()) {
-      if (resyncKey.includes(`:${peerId}:`)) {
+    // with the connection.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.peerId === peerId) {
         this._divergedResyncHeads.delete(resyncKey);
       }
     }
@@ -1474,8 +1492,8 @@ export class AutomergeHost extends Resource {
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
-      for (const resyncKey of this._divergedResyncHeads.keys()) {
-        if (resyncKey.startsWith(`${syncKey}:`)) {
+      for (const [resyncKey, entry] of this._divergedResyncHeads) {
+        if (entry.collectionId === collectionId && entry.peerId === peerId) {
           this._divergedResyncHeads.delete(resyncKey);
         }
       }
@@ -1552,12 +1570,17 @@ export class AutomergeHost extends Resource {
       // (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) — which is what
       // delivers a local commit the peer never received.
       if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && differentSet.has(documentId)) {
-        const resyncKey = `${syncKey}:${documentId}`;
+        const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
         // Both sides' heads: a round already spent against this exact pair cannot do better, but
         // either side advancing means the situation changed and is worth another.
         const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
-        if (this._divergedResyncHeads.get(resyncKey) !== heads) {
-          this._divergedResyncHeads.set(resyncKey, heads);
+        if (this._divergedResyncHeads.get(resyncKey)?.heads !== heads) {
+          this._divergedResyncHeads.set(resyncKey, {
+            collectionId,
+            peerId,
+            documentId: documentId as DocumentId,
+            heads,
+          });
           log('resyncing diverged document', {
             collectionId,
             peerId,

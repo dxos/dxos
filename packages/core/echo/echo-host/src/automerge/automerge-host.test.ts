@@ -360,10 +360,47 @@ describe('AutomergeHost', () => {
     await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
 
     // A removed document never converges, so its retry budget has to go with it.
-    const resyncHeads: Map<string, string> = (host as any)._divergedResyncHeads;
-    expect([...resyncHeads.keys()].some((key) => key.endsWith(`:${documentId}`))).toBe(true);
+    const resyncHeads: Map<string, { documentId: string }> = (host as any)._divergedResyncHeads;
+    expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(true);
     await host.removeDocument(documentId);
-    expect([...resyncHeads.keys()].some((key) => key.endsWith(`:${documentId}`))).toBe(false);
+    expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
+  });
+
+  // `DeferredTask` clears its scheduled flag before running the callback, so a throttle that waited
+  // inside the callback queued a second run for kicks it had already covered — and that run fanned
+  // out again a full interval later.
+  test('a burst of share-policy kicks inside the throttle window fans out once', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+    // Let any kick scheduled by `open` land before counting.
+    await sleep(100);
+
+    const repo = (host as any)._repo;
+    const shareConfigChanged = repo.shareConfigChanged.bind(repo);
+    let kicks = 0;
+    repo.shareConfigChanged = () => {
+      kicks++;
+      shareConfigChanged();
+    };
+
+    // Inside a throttle window, as right after a previous kick.
+    (host as any)._sharePolicyKickNextAllowedAt = Date.now() + 300;
+    const task = (host as any)._sharePolicyChangedTask;
+    task.schedule();
+    await sleep(50);
+    task.schedule();
+    task.schedule();
+
+    // Past the parked run and a full minimum interval after it, where a second fan-out would land.
+    await sleep(1_600);
+    expect(kicks).toBe(1);
   });
 });
 
