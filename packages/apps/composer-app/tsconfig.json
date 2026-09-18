@@ -94,6 +94,9 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../e2e/perf-harness"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -230,6 +233,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-labeler"
     },
     {
       "path": "../../plugins/plugin-lametric"
@@ -395,6 +401,9 @@
     },
     {
       "path": "../../plugins/plugin-typefully"
+    },
+    {
+      "path": "../../plugins/plugin-typesafe"
     },
     {
       "path": "../../plugins/plugin-video"

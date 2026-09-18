@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldToEventLoop } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -29,8 +29,7 @@ import {
   queryTargetsSpacesOrFeeds,
 } from '../query/index.ts';
 
-/** Records hydrated between turns of the event loop in {@link IndexQuerySource._mapRecords}. */
-const HYDRATE_CHUNK_SIZE = 64;
+const HYDRATE_RECORDS_PER_YIELD_CHECK = 64;
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -390,10 +389,8 @@ export class IndexQuerySource implements QuerySource {
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null)[] = [];
-    for (const chunk of chunkArray([...records], HYDRATE_CHUNK_SIZE)) {
-      if (processedResults.length > 0) {
-        await yieldToEventLoop();
-      }
+    for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
+      await yieldOrContinue('smooth');
       processedResults.push(
         ...(await Promise.all(
           chunk.map((result) => this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle)),

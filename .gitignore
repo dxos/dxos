@@ -230,6 +230,9 @@ typedoc
 # aider assistant temp files
 .aider*
 
+# Per-machine Claude Code settings (permission grants, env) — never shared.
+.claude/settings.local.json
+
 # codex agent local state
 .codex/
 

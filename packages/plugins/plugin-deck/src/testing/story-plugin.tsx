@@ -24,7 +24,7 @@ import { useConnections } from '@dxos/plugin-graph/hooks';
 import { random } from '@dxos/random';
 import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
 import { Position } from '@dxos/util';
 
@@ -97,7 +97,7 @@ const storyDeckState = Capability.makeModule(
         workspace: state.activeDeck,
         active: open.active,
         inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
@@ -201,18 +201,12 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           return (
             // Stamped so a host's play test can assert the companion body resolved, not just its tab.
             <div className='contents' data-testid='story.companion' data-companion-variant={variant}>
-              <Syntax.Root
+              <JsonHighlighter
                 data={{
                   primaryItem: companionTo,
                   companion: { data: subject, properties, variant },
                 }}
-              >
-                <Syntax.Content>
-                  <Syntax.Viewport>
-                    <Syntax.Code />
-                  </Syntax.Viewport>
-                </Syntax.Content>
-              </Syntax.Root>
+              />
             </div>
           );
         },

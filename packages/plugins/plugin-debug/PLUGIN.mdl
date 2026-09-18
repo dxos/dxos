@@ -146,7 +146,11 @@ feat Wireframe
 
 ```mdl
 feat StatsPanel
-  desc: A transient-stats panel rendering the shared telemetry store.
+  desc: |
+    The shared telemetry store (`AppCapabilities.StatsPanel`) as one `StatCard` per plugin
+    compartment. Rendered on the plugin's own `org.dxos.plugin.debug.surface.stats` role (with an
+    empty-state card) and contributed to `AppSurface.DevtoolsOverview` at position 20 (no card when
+    the store is empty), so it stacks under the devtools cards in the Stats companion.
 ```
 
 ## QA

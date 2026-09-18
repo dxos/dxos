@@ -170,3 +170,24 @@ export const System: Story = {
     label: 'System',
   },
 };
+
+const hues = ['neutral', 'red', 'amber', 'green', 'blue', 'purple', 'info', 'success', 'warning', 'error'] as const;
+
+const TagStory = () => (
+  <Tooltip.Provider>
+    <div className='flex flex-wrap gap-2 items-center'>
+      {hues.map((hue) => (
+        <IconButton key={hue} variant='tag' hue={hue} density='sm' icon='ph--copy--regular' iconEnd label={hue} />
+      ))}
+      <IconButton variant='tag' density='sm' iconOnly icon='ph--x--regular' label='Remove' />
+    </div>
+  </Tooltip.Provider>
+);
+
+/** The `tag` variant: a clickable `dx-tag`, coloured by `hue`. */
+export const Tag: Story = {
+  render: TagStory,
+  args: {
+    label: 'Tag',
+  },
+};

@@ -216,7 +216,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/plugin-script > @octokit/core',
   '@dxos/plugin-script > @valtown/codemirror-continue',
   '@dxos/plugin-script > @valtown/codemirror-ts',
-  '@dxos/plugin-search > main-thread-scheduling',
   '@dxos/plugin-sequencer > @dxos/react-ui-canvas > bind-event-listener',
   '@dxos/plugin-sequencer > @dxos/react-ui-canvas > transformation-matrix',
   '@dxos/plugin-sequencer > tone',

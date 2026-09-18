@@ -196,6 +196,10 @@ export const HarnessHostAnnotation = Annotation.make({
   schema: Schema.Boolean,
 });
 
+/** Whether `info` is a conversation's agent process (stamped {@link HarnessHostAnnotation} at spawn). */
+export const isHarnessHost = (info: Pick<Info, 'params'>): boolean =>
+  Option.getOrElse(Annotation.getDictionary(info.params.annotations, HarnessHostAnnotation), () => false);
+
 //
 // Executable.
 //
