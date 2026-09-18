@@ -173,7 +173,11 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
   try {
     const videoDir = path.join(artifactDir, 'video');
-    const context = await browser.newContext(videoEnabled ? { recordVideo: { dir: videoDir } } : {});
+    const context = await browser.newContext(
+      // Sized to the viewport, because the default caps the frame at 800px and downscales the
+      // recording — a task list and a markdown editor are unreadable at that size.
+      videoEnabled ? { recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } } : {},
+    );
     // Taken here because recording starts with the context: a stage's `wallMs` says how long it
     // took but not WHERE it is in the file, and a whole flow is minutes of footage in which the
     // interesting part is seconds long.
