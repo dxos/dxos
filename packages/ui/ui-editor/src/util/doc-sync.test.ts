@@ -6,48 +6,6 @@ import { describe, test } from 'vitest';
 
 import { type DocChange, computeDocChanges } from './doc-sync.ts';
 
-/** Changes come back ascending and non-overlapping, so one pass applies them. */
-const apply = (current: string, changes: DocChange[]): string => {
-  let result = '';
-  let position = 0;
-  for (const change of changes) {
-    result += current.slice(position, change.from) + change.insert;
-    position = change.to;
-  }
-
-  return result + current.slice(position);
-};
-
-// Deterministic PRNG so a failure is reproducible from its seed alone.
-const makeRandom = (seed: number) => () => {
-  seed = (seed * 1664525 + 1013904223) >>> 0;
-  return seed / 0x100000000;
-};
-
-const makeDocument = (random: () => number, lineCount: number): string =>
-  Array.from({ length: lineCount }, () => `line ${Math.floor(random() * 1000)}`).join('\n');
-
-const mutate = (document: string, random: () => number): string => {
-  const lines = document.split('\n');
-  const edits = 1 + Math.floor(random() * 4);
-  for (let edit = 0; edit < edits; edit++) {
-    if (lines.length === 0) {
-      break;
-    }
-    const index = Math.floor(random() * lines.length);
-    const kind = random();
-    if (kind < 0.4) {
-      lines[index] = `line ${Math.floor(random() * 1000)}`;
-    } else if (kind < 0.7) {
-      lines.splice(index, 1);
-    } else {
-      lines.splice(index, 0, `line ${Math.floor(random() * 1000)}`);
-    }
-  }
-
-  return lines.join('\n');
-};
-
 describe('computeDocChanges', () => {
   test('no changes when the documents match', ({ expect }) => {
     expect(computeDocChanges('one\ntwo', 'one\ntwo')).toEqual([]);
@@ -97,3 +55,45 @@ describe('computeDocChanges', () => {
     }
   });
 });
+
+/** Changes come back ascending and non-overlapping, so one pass applies them. */
+const apply = (current: string, changes: DocChange[]): string => {
+  let result = '';
+  let position = 0;
+  for (const change of changes) {
+    result += current.slice(position, change.from) + change.insert;
+    position = change.to;
+  }
+
+  return result + current.slice(position);
+};
+
+// Deterministic PRNG so a failure is reproducible from its seed alone.
+const makeRandom = (seed: number) => () => {
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return seed / 0x100000000;
+};
+
+const makeDocument = (random: () => number, lineCount: number): string =>
+  Array.from({ length: lineCount }, () => `line ${Math.floor(random() * 1000)}`).join('\n');
+
+const mutate = (document: string, random: () => number): string => {
+  const lines = document.split('\n');
+  const edits = 1 + Math.floor(random() * 4);
+  for (let edit = 0; edit < edits; edit++) {
+    if (lines.length === 0) {
+      break;
+    }
+    const index = Math.floor(random() * lines.length);
+    const kind = random();
+    if (kind < 0.4) {
+      lines[index] = `line ${Math.floor(random() * 1000)}`;
+    } else if (kind < 0.7) {
+      lines.splice(index, 1);
+    } else {
+      lines.splice(index, 0, `line ${Math.floor(random() * 1000)}`);
+    }
+  }
+
+  return lines.join('\n');
+};

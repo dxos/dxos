@@ -11,17 +11,6 @@ import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.
 import { type TimelineLayout, layoutTimeline } from './timeline-layout.ts';
 import { type Commit } from './Timeline.tsx';
 
-/** One line per row (`lane message`), then the lanes and spans the pass assigned. */
-const format = (layout: TimelineLayout): string => {
-  const rows = layout.rows.map(({ commit, index }) => {
-    const lane = layout.branchLane.get(commit.branch) ?? -1;
-    return `${index}: lane ${lane}  ${commit.message}`;
-  });
-  const lanes = [...layout.branchLane.entries()].map(([branch, lane]) => `${branch} -> ${lane}`);
-  const spans = [...layout.spans.entries()].map(([branch, span]) => `${branch}: ${span.start}..${span.end}`);
-  return [...rows, `lanes (${layout.laneCount}): ${lanes.join(', ')}`, `spans: ${spans.join(', ')}`].join('\n');
-};
-
 describe('layoutTimeline', () => {
   test('linear history keeps every commit in lane 0', ({ expect }) => {
     const commits: Commit[] = [
@@ -175,3 +164,14 @@ describe('layoutTimeline', () => {
       `);
   });
 });
+
+/** One line per row (`lane message`), then the lanes and spans the pass assigned. */
+const format = (layout: TimelineLayout): string => {
+  const rows = layout.rows.map(({ commit, index }) => {
+    const lane = layout.branchLane.get(commit.branch) ?? -1;
+    return `${index}: lane ${lane}  ${commit.message}`;
+  });
+  const lanes = [...layout.branchLane.entries()].map(([branch, lane]) => `${branch} -> ${lane}`);
+  const spans = [...layout.spans.entries()].map(([branch, span]) => `${branch}: ${span.start}..${span.end}`);
+  return [...rows, `lanes (${layout.laneCount}): ${lanes.join(', ')}`, `spans: ${spans.join(', ')}`].join('\n');
+};
