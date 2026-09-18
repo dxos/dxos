@@ -11,9 +11,10 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
+import { AtomEx } from '@dxos/effect';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, shallowEqual } from '@dxos/util';
 
@@ -92,10 +93,6 @@ export interface BaseGraph extends Pipeable.Pipeable {
    * Get the atom key for the node with the given id.
    */
   node(id: string): Atom.Atom<Option.Option<Node.Node>>;
-  /**
-   * Get the atom key for the node with the given id.
-   */
-  nodeOrThrow(id: string): Atom.Atom<Node.Node>;
   /**
    * Get the atom key for the connections of the node with the given id.
    */
@@ -320,14 +317,6 @@ export class GraphImpl implements WritableGraph {
     return edges;
   }
 
-  readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
-    return Atom.make((get) => {
-      const node = get(this._node(id));
-      invariant(Option.isSome(node), `Node not available: ${id}`);
-      return node.value;
-    });
-  });
-
   readonly _edges = Atom.family<string, Atom.Atom<Edges>>((id) => {
     return Atom.make((get) => {
       get(this._model.version);
@@ -376,7 +365,10 @@ export class GraphImpl implements WritableGraph {
       return this._model.toTree(
         id,
         (node, children: any[]) => {
-          const data = node.data ?? failedInvariant(`Node not available: ${node.id}`);
+          const data = node.data;
+          if (!data) {
+            return undefined;
+          }
           return {
             id: data.id,
             type: data.type,
@@ -390,7 +382,7 @@ export class GraphImpl implements WritableGraph {
   });
 
   constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
-    this._registry = registry ?? Registry.make();
+    this._registry = registry ?? AtomEx.makeRegistry();
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
@@ -412,10 +404,6 @@ export class GraphImpl implements WritableGraph {
 
   node(id: string): Atom.Atom<Option.Option<Node.Node>> {
     return this._node(id);
-  }
-
-  nodeOrThrow(id: string): Atom.Atom<Node.Node> {
-    return this._nodeOrThrow(id);
   }
 
   connections(id: string, relation: Node.RelationInput): Atom.Atom<Node.Node[]> {
@@ -512,11 +500,11 @@ export const getNode = (graph: BaseGraph, id: string): Option.Option<Node.Node> 
 /**
  * Get the node with the given id from the graph's registry.
  *
- * @throws If the node is Option.none().
+ * @throws {GraphNode.NotFoundError} If the graph has no node with the id.
  */
 export const getNodeOrThrow = (graph: BaseGraph, id: string): Node.Node => {
   const internal = getInternal(graph);
-  return internal._registry.get(internal._nodeOrThrow(id));
+  return Option.getOrThrowWith(internal._registry.get(internal._node(id)), () => new GraphNode.NotFoundError(id));
 };
 
 /**

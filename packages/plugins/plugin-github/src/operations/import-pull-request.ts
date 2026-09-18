@@ -13,11 +13,56 @@ import { PullRequest } from '@dxos/types';
 
 import { GitHubOperation } from '#types';
 
-import { GitHubPullRequestReferenceError } from '../errors.ts';
-import { parsePullRequestReference } from '../github-link.ts';
+import { GitHubPullRequestReferenceError, GitHubRepoInaccessibleError } from '../errors.ts';
+import { type PullRequestReference, parsePullRequestReference } from '../github-link.ts';
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 import { githubToken } from './pull-request.ts';
+
+/**
+ * The pull request as the space's GitHub connection, falling back to an anonymous read when GitHub
+ * rejects the stored token.
+ *
+ * A connection whose token has expired or been revoked answers 401 for every repository, public
+ * ones included, so without the fallback one dead credential makes every import fail. The retry is
+ * the same request a space with no connection would make.
+ *
+ * `fetch` is injected so the fallback can be exercised without an HTTP client.
+ */
+export const fetchPullRequestWithFallback = (
+  { owner, repo, number }: PullRequestReference,
+  token: string,
+  fetch: (
+    owner: string,
+    repo: string,
+    number: number,
+  ) => GitHubApi.GitHubEffect<GitHubApi.GitHubPull> = GitHubApi.fetchPullRequest,
+) => {
+  const fetchAs = (token: string) =>
+    fetch(owner, repo, number).pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })));
+
+  return fetchAs(token).pipe(
+    Effect.catchIf(
+      (error) => token !== '' && GitHubApi.responseStatus(error) === 401,
+      () => fetchAs(''),
+    ),
+    // Out of reach anonymously too (GitHub answers 404 for a private repository seen without
+    // credentials): a typed failure lets the dialog name the connection rather than the reference.
+    Effect.catchIf(
+      (error) => {
+        const status = GitHubApi.responseStatus(error);
+        return status === 401 || status === 403 || status === 404;
+      },
+      (error) =>
+        Effect.die(
+          new GitHubRepoInaccessibleError({
+            context: { owner, repo, number, status: GitHubApi.responseStatus(error) },
+          }),
+        ),
+    ),
+    Effect.orDie,
+  );
+};
 
 /**
  * Import a pull request the user named, as the space's GitHub connection or anonymously.
@@ -41,11 +86,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         return { pullRequest: Ref.make(existing), imported: false };
       }
 
-      const credentials = Layer.succeed(GitHubApi.GitHubCredentials, { token: yield* githubToken() });
-      const pull = yield* GitHubApi.fetchPullRequest(owner, repo, number).pipe(
-        Effect.provide(credentials),
-        Effect.orDie,
-      );
+      const pull = yield* fetchPullRequestWithFallback(parsed, yield* githubToken());
 
       const { object } = yield* Operation.invoke(SpaceOperation.AddObject, {
         object: PullRequest.make(toPullRequestProps(parsed, pull)),

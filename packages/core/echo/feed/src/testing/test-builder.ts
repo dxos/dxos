@@ -30,22 +30,30 @@ export class TestBuilder extends Resource {
   readonly #spaceId: SpaceId;
   readonly #feedNamespace: string;
   readonly #logSql: boolean;
+  readonly #mapServerReply: (message: ProtocolMessage) => ProtocolMessage;
 
   constructor({
     numPeers,
     spaceId,
     feedNamespace = WellKnownNamespaces.data,
     logSql = false,
+    mapServerReply = (message) => message,
   }: {
     numPeers: number;
     spaceId: SpaceId;
     feedNamespace?: string;
     logSql?: boolean;
+    /**
+     * Rewrites every reply the server sends before a client sees it, e.g. to strip a field a
+     * deployed server does not report yet.
+     */
+    mapServerReply?: (message: ProtocolMessage) => ProtocolMessage;
   }) {
     super();
     this.#spaceId = spaceId;
     this.#feedNamespace = feedNamespace;
     this.#logSql = logSql;
+    this.#mapServerReply = mapServerReply;
     this.#peers = Array.makeBy(
       numPeers,
       (i) =>
@@ -111,7 +119,7 @@ export class TestBuilder extends Resource {
       peer.syncServer != null
         ? peer.syncServer.handleMessage(ctx, msg)
         : peer.syncClient != null
-          ? peer.syncClient.handleMessage(msg)
+          ? peer.syncClient.handleMessage(this.#mapServerReply(msg))
           : null;
     if (handleEffect == null) {
       return Effect.die(new Error(`TestPeer has no handler: ${msg.recipientPeerId}`));
@@ -219,6 +227,31 @@ export class TestPeer extends Resource {
 
   setSyncState(opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number; serverToken?: string }) {
     return this.#feedStore.setSyncState(opts).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  /**
+   * Deletes every block of a space/namespace at or above `position`, so the store hands those
+   * positions out again to whatever is appended next. Reproduces a server whose storage was rolled
+   * back after it had acknowledged appends; no production path writes this shape.
+   */
+  dropBlocksFromPosition({
+    spaceId,
+    feedNamespace,
+    position,
+  }: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    position: number;
+  }) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        DELETE FROM blocks
+        WHERE position >= ${position} AND feedPrivateId IN (
+          SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+        )
+      `;
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   /**

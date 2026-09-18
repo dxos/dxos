@@ -251,6 +251,24 @@ tasks:
       - target: bundle
         env:
           DX_PWA: 'false'
+  # Performance flows — `perf-*.spec.ts` against `vite preview`, driven by `@dxos/perf-harness`.
+  # Outside the `e2e` pool for the same reason as `e2e-startup`: it records measurements rather than
+  # asserting behaviour, so a number must never gate a merge. Scale tier and modes come from the
+  # environment (`DX_PERF_SCALE`, `DX_PERF_MODES`) so the nightly can sweep them without a task per
+  # combination. Not cacheable — the point is to measure this commit on this machine.
+  e2e-perf:
+    command: pnpm exec playwright test --config=src/playwright/playwright-perf.config.ts
+    env:
+      DX_PWA: 'false'
+    options:
+      cache: false
+    deps:
+      - ~:#prebuild
+      # PWA is a build-time decision, so the flag rides the dep too — otherwise a service worker
+      # precaches ~30 MB mid-run and lands in the network split as app code.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
   # Dev-server harness — `dev-*.spec.ts` under `vite serve`. Separate because dev is a materially
   # different runtime, not just a slower one: each plugin definition is its own request, so plugin
   # registration streams in over a window the bundled build never exposes.

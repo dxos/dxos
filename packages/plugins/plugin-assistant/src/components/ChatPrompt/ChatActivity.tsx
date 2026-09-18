@@ -4,7 +4,6 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { type RequestPhase, type RequestPhaseName } from '@dxos/assistant';
 import type * as Trace from '@dxos/compute/Trace';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
@@ -17,16 +16,16 @@ const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 
-const activityLabelKey = (phase: RequestPhaseName): string => `activity.${phase}.label`;
+const activityLabelKey = (phase: Trace.RequestPhaseName): string => `activity.${phase}.label`;
 
 /**
  * Phases whose `detail` reads as part of the sentence ("Calling tool search") rather than as a
  * separate field, so the label interpolates it and the detail chip is suppressed.
  */
-const INLINE_DETAIL_PHASES: ReadonlySet<RequestPhaseName> = new Set<RequestPhaseName>(['calling-tool']);
+const INLINE_DETAIL_PHASES: ReadonlySet<Trace.RequestPhaseName> = new Set<Trace.RequestPhaseName>(['calling-tool']);
 
 export type ChatActivityProps = ThemedClassName<{
-  activity?: Trace.PayloadType<typeof RequestPhase>;
+  activity?: Trace.PayloadType<typeof Trace.RequestPhase>;
   /**
    * Epoch milliseconds the agent is scheduled to wake at, when an alarm is pending. Rendered as a
    * counting-down line while the agent is idle or reports `sleeping`; any other live phase
