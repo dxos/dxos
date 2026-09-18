@@ -39,6 +39,8 @@ export const bindDataChannel = (
   // Held while the channel's send buffer is above the watermark, released by `onbufferedamountlow`.
   let flushed: (() => void) | null = null;
   let disposed = false;
+  // Frames convert one after another, so a blob's asynchronous read cannot let a later frame land first.
+  let frameOrder = Promise.resolve();
   // Detach each direction without ending the wire-protocol stream, which outlives this channel.
   const inboundAbort = new AbortController();
   const outboundAbort = new AbortController();
@@ -114,12 +116,13 @@ export const bindDataChannel = (
     onOpen();
   };
 
+  channel.binaryType = 'arraybuffer';
   Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
     onopen: () => attachOutbound(),
 
     onclose: () => (disposed ? undefined : onClose()),
 
-    onmessage: async (event: MessageEvent) => {
+    onmessage: (event: MessageEvent) => {
       attachInbound();
       if (!inbound) {
         log.warn('ignoring message on a closed channel');
@@ -127,17 +130,17 @@ export const bindDataChannel = (
       }
 
       const data = event.data;
-      if (data instanceof Blob) {
-        // The only await on this path, so re-read the binding after it: disposal in the meantime
-        // leaves nothing to push to.
-        const bytes = new Uint8Array(await data.arrayBuffer());
-        if (!inbound) {
-          return;
-        }
-        inbound.enqueue(bytes);
-      } else {
-        inbound.enqueue(data instanceof ArrayBuffer ? new Uint8Array(data) : data);
-      }
+      frameOrder = frameOrder.then(async () => {
+        const frame =
+          data instanceof ArrayBuffer
+            ? new Uint8Array(data)
+            : data instanceof Blob
+              ? new Uint8Array(await data.arrayBuffer())
+              : data;
+        // Re-read after the read: disposal in the meantime leaves nothing to push to.
+        inbound?.enqueue(frame);
+      });
+      return frameOrder;
     },
 
     onerror: (event: Event & any) => {
