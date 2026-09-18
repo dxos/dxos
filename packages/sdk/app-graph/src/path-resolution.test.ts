@@ -671,7 +671,7 @@ describe('path-resolution', () => {
       const builder = GraphBuilder.make({ registry: Registry.make() });
       GraphBuilder.addExtension(builder, [
         url({ key: 'entry', kind: 'item', path: [], workspace: (workspace) => workspace === 'fixed' }),
-        url({ key: 'library', kind: 'singleton', path: ['content'], segment: 'books' }),
+        url({ key: 'library', kind: 'singleton', path: ['content'] }),
         url({ key: 'thread', kind: 'item', path: ['threads'], depth: { min: 1 } }),
         url({ key: 'type', kind: 'item', path: ['database'] }),
         url({ key: 'db', kind: 'item', path: ['database'], depth: { min: 2 } }),
@@ -691,9 +691,9 @@ describe('path-resolution', () => {
       expect(represent('space/org.dxos.plugin.deck')).toBeUndefined();
     });
 
-    test('a singleton is addressed by its declared segment', ({ expect }) => {
-      expect(represent('space/content/books')).toEqual({ key: 'library', workspace: 'space' });
-      expect(represent('space/content/library')).toBeUndefined();
+    test('a singleton is its key below its path', ({ expect }) => {
+      expect(represent('space/content/library')).toEqual({ key: 'library', workspace: 'space' });
+      expect(represent('space/content/books')).toBeUndefined();
     });
 
     test('depth separates keys that share a path, and a minimum admits deeper tails', ({ expect }) => {

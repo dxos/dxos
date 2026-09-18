@@ -60,7 +60,8 @@ export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
  * How an extension's nodes map to (and from) the URL pair chain. The `kind` is the resolution tier:
  *
  * - `'item'`      — Addressed by an id under the workspace (`doc/<id>`). May itself have children.
- * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`).
+ * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`); its own
+ *                   segment is the key, below `path`.
  *
  * The binding's shape (`workspace`, `path`, `depth`) decides which node ids it addresses, and
  * a node's URL comes from the one binding its id fits. A node therefore has a URL whether or not it is
@@ -74,8 +75,6 @@ export type UrlBinding = {
   kind: 'item' | 'singleton';
   /** Node-id segments between the workspace and the node's own. */
   path: readonly string[];
-  /** A singleton's own segment; defaults to the key. */
-  segment?: string;
   /**
    * How many segments an item's id spans after `path`, joined by the grammar's tail separator: exactly
    * `n`, or at least `min`. Defaults to any number; a binding sharing its path with a shallower one
@@ -160,7 +159,7 @@ export const urlRepresentation = (
   }
   const tail = segments.slice(url.path.length);
   if (url.kind === 'singleton') {
-    return tail.length === 1 && tail[0] === (url.segment ?? url.key) ? Option.some({ key: url.key }) : Option.none();
+    return tail.length === 1 && tail[0] === url.key ? Option.some({ key: url.key }) : Option.none();
   }
   if (tail.length === 0) {
     return Option.none();
@@ -188,9 +187,7 @@ export const urlCandidate = (
   }
   const base = [GraphNode.RootId, workspace, ...url.path];
   if (url.kind === 'singleton') {
-    return id === undefined
-      ? Option.some([...base, url.segment ?? url.key].join(GraphNode.PathSeparator))
-      : Option.none();
+    return id === undefined ? Option.some([...base, url.key].join(GraphNode.PathSeparator)) : Option.none();
   }
   const tail = id?.split(tailSeparator) ?? [];
   return tail.length > 0 && fitsDepth(tail.length, url.depth)

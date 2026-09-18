@@ -94,13 +94,12 @@ export const createTypeSectionExtension = (
     urlKey: string;
     /**
      * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
-     * for a section that is worth linking to in its own right. Omit and the section stays a bare container:
-     * only its objects are addressable, which is the default because `urlKey` alone cannot describe the
-     * node sitting *at* its own path.
+     * for a section that is worth linking to in its own right; it also names the section node. Omit and the
+     * section stays a bare container named by its typename: only its objects are addressable.
      *
      * Opting in splits the section into two extensions — one owning the section node, one owning its
-     * objects — since a node is stamped from its producing extension's binding, and the two need different
-     * ones. The objects are then materialized on expand rather than inline.
+     * objects — since each extension carries one binding and the two need different ones. The objects are
+     * then materialized on expand rather than inline.
      */
     sectionUrlKey?: string;
   },
@@ -121,8 +120,11 @@ export const createTypeSectionExtension = (
     Obj.isObject(source.item.data) &&
     Obj.getTypename(source.item.data) === typename;
 
+  /** The section node's own segment: its URL key when it has one, so the key addresses it directly. */
+  const sectionSegment = options.sectionUrlKey ?? typename;
+  const groupSegments = options.groupSegment ? [options.groupSegment] : [];
   /** Node-id segments from the space down to the section node — the section's own path. */
-  const sectionSegments = options.groupSegment ? [options.groupSegment, typename] : [typename];
+  const sectionSegments = [...groupSegments, sectionSegment];
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
   const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
@@ -165,9 +167,7 @@ export const createTypeSectionExtension = (
   // container and only its objects get a URL.
   const sectionExtension = AppGraphBuilder.createExtension({
     id: typename,
-    url: options.sectionUrlKey
-      ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments.slice(0, -1), segment: typename }
-      : undefined,
+    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: groupSegments } : undefined,
     match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       if (queryOrderedObjects(space, get).length === 0) {
@@ -190,7 +190,7 @@ export const createTypeSectionExtension = (
 
       return Effect.succeed([
         AppGraphNode.make({
-          id: typename,
+          id: sectionSegment,
           type: typename,
           data: options.sectionUrlKey ? (typeEntity ?? null) : null,
           properties: {
