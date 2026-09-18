@@ -4262,9 +4262,6 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -4314,6 +4311,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/link':
         specifier: workspace:*
         version: link:../link
@@ -5087,9 +5087,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -5100,6 +5097,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@4.1.10)
@@ -5112,9 +5112,6 @@ importers:
 
   packages/core/compute/pipeline:
     dependencies:
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5128,6 +5125,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       effect:
         specifier: 4.0.0-rc.115
         version: 4.0.0-rc.115
@@ -13237,9 +13237,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -13259,6 +13256,9 @@ importers:
         specifier: 4.0.0-rc.115
         version: 4.0.0-rc.115
     devDependencies:
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -18995,9 +18995,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -19092,6 +19089,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../client-services
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager

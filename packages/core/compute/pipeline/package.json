@@ -1,7 +1,7 @@
 {
   "name": "@dxos/pipeline",
   "version": "0.11.1",
-  "description": "Generic back-pressured streaming pipeline (source → stages → sink).",
+  "description": "Generic back-pressured streaming pipeline (source \u2192 stages \u2192 sink).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -31,13 +31,13 @@
   ],
   "scripts": {},
   "dependencies": {
-    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/progress": "workspace:*"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },
