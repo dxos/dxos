@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -35,8 +35,6 @@ export type LoadObjectProps = {
   spaceId: SpaceId;
   objectId: string;
   documentId: string | undefined;
-  /** How long the loader may spend, so what it waits on is bounded by the caller's own budget. */
-  timeout: number;
 };
 
 /**
@@ -66,9 +64,6 @@ export type IndexQueryProviderProps = {
 };
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
-
-/** Per-index-hit object hydration budget (parallel across hits). */
-const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -489,6 +484,16 @@ export class IndexQuerySource implements QuerySource {
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle?: Set<string>,
   ): Promise<SourceEntry | null> {
+    // A collapsed group carries no object, so there is nothing to load: pass its values through.
+    if (result.aggregates !== undefined) {
+      return {
+        id: result.id,
+        match: { rank: result.rank },
+        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+        group: _groupFromRemoteResult(result),
+      };
+    }
+
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
       spaceId: result.spaceId,
@@ -623,27 +628,18 @@ export class IndexQuerySource implements QuerySource {
   /**
    * Hydrate an index hit via disk-only load; skip objects whose strong deps
    * are permanently unavailable.
+   *
+   * The load is awaited to completion rather than time-boxed: every path through it settles, so a
+   * budget here could only convert a slow load into a dropped object the caller is never told about.
    */
   private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
     const spaceId = SpaceId.make(result.spaceId);
 
-    try {
-      return await asyncTimeout(
-        this._params.objectLoader.loadObject({
-          spaceId,
-          objectId: result.id,
-          documentId: result.documentId,
-          timeout: INDEX_OBJECT_LOAD_TIMEOUT,
-        }),
-        INDEX_OBJECT_LOAD_TIMEOUT,
-      );
-    } catch (err) {
-      if (err instanceof TimeoutError) {
-        log.warn('index hit dropped: object load timed out', { objectId: result.id, spaceId });
-        return undefined;
-      }
-      throw err;
-    }
+    return this._params.objectLoader.loadObject({
+      spaceId,
+      objectId: result.id,
+      documentId: result.documentId,
+    });
   }
 
   private _closeStream(): void {
@@ -668,4 +664,10 @@ const emittedSchemaValidationWarnings = new Set<string>();
  * implies at least one member) is defensive and matches the working-set source's fallback.
  */
 const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['group'] =>
-  result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 1 } : undefined;
+  result.groupKey !== undefined
+    ? {
+        key: JSON.parse(result.groupKey),
+        count: result.groupCount ?? 1,
+        ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
+      }
+    : undefined;

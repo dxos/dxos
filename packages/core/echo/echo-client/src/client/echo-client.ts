@@ -17,6 +17,9 @@ import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
 
+/** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
+const ROOT_LINK_WAIT_TIMEOUT = 2_000;
+
 export type EchoClientProps = {};
 
 export type ConnectToServiceProps = {
@@ -238,7 +241,6 @@ export class EchoClient extends Resource {
     spaceId,
     objectId,
     documentId,
-    timeout,
   }: LoadObjectProps): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
@@ -256,7 +258,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId, timeout));
+    const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
     if (objectDocId !== documentId) {
       // Dropping the hit makes the result short, which reads to a caller as "no such object".
       log.warn('index hit dropped: the space root does not route the object to the indexed document', {
@@ -279,7 +281,7 @@ export class EchoClient extends Resource {
    * The document the space root routes `objectId` to, once this client's replica of the root links it.
    * The index can learn of an object from the host's replica one sync batch before this one does.
    */
-  private _waitForObjectLink(db: DatabaseImpl, objectId: string, timeout: number): Promise<string | undefined> {
+  private _waitForObjectLink(db: DatabaseImpl, objectId: string): Promise<string | undefined> {
     return new Promise((resolve) => {
       const settle = () => {
         clearTimeout(timer);
@@ -293,7 +295,7 @@ export class EchoClient extends Resource {
         }
       };
       const unsubscribe = () => rootHandle.off('change', onChange);
-      const timer = setTimeout(settle, timeout);
+      const timer = setTimeout(settle, ROOT_LINK_WAIT_TIMEOUT);
       rootHandle.on('change', onChange);
     });
   }

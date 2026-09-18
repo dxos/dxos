@@ -16,6 +16,7 @@ import { describe, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
@@ -23,7 +24,9 @@ import { range } from '@dxos/util';
 
 import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing/index.ts';
 import { AutomergeHost } from './automerge-host.ts';
+import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
+import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite
@@ -129,6 +132,58 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       await host1.flush(Context.default());
 
       await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('second');
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
+  });
+
+  test('sync works both ways after the stored remote heads are deleted', { timeout: 30_000 }, async ({ expect }) => {
+    // The recovery page's Repair action deletes these records. They only cache what a peer last reported, so a
+    // host restarted without them must still pull and push, and record the peer's heads again.
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+    const network = await new TestReplicationNetwork().open();
+    const connectHost1 = async () => {
+      const host = await setupAutomergeHost({ runtime: rt1.runtime });
+      await host.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      return host;
+    };
+
+    let host1 = await connectHost1();
+    try {
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      const created = await host1.createDoc<any>({ text: 'first' });
+      const documentId = created.documentId;
+      await host1.flush(Context.default());
+      using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
+      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('first');
+      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: 10_000 }).toBeGreaterThan(0);
+
+      created[Symbol.dispose]();
+      await host1.close();
+      const { deleted } = await RuntimeProvider.runPromise(rt1.runtime)(deleteSubductionRemoteHeads());
+      expect(deleted).toBeGreaterThan(0);
+      expect(await countStoredRemoteHeads(rt1.runtime)).toBe(0);
+
+      host1 = await connectHost1();
+      using reopened = (await host1.loadDoc<any>(Context.default(), documentId))!;
+      await reopened.waitUntilReady();
+      expect(reopened.doc()!.text).toEqual('first');
+
+      mirrored.change((doc: any) => {
+        doc.pulled = true;
+      });
+      await expect.poll(() => reopened.doc()?.pulled, { timeout: 10_000 }).toBe(true);
+      reopened.change((doc: any) => {
+        doc.pushed = true;
+      });
+      await expect.poll(() => mirrored.doc()?.pushed, { timeout: 10_000 }).toBe(true);
+      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: 10_000 }).toBeGreaterThan(0);
     } finally {
       await host1.close();
       await host2.close();
@@ -863,6 +918,12 @@ type RuntimeArg = RuntimeHandle['runtime'];
 
 const createRuntime = (tmpPath?: string): RuntimeHandle => {
   return createTestSqliteRuntime(tmpPath ? tmpPath + '.db' : ':memory:');
+};
+
+const countStoredRemoteHeads = async (runtime: RuntimeArg): Promise<number> => {
+  const adapter = new SqliteStorageAdapter({ runtime });
+  await adapter.open();
+  return (await adapter.loadRange(['subduction', 'remote-heads'])).length;
 };
 
 const waitForSubductionSave = async () => {

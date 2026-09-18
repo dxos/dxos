@@ -10,7 +10,9 @@ import * as EffectStream from 'effect/Stream';
 import { SubscriptionList } from '@dxos/async';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
+import { toServiceError } from '@dxos/protocols';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Device,
@@ -30,10 +32,10 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
-  ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, Error> {
+  ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, BaseError> {
     return Effect.tryPromise({
       try: async () => await this._identityManager.updateDeviceProfile(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

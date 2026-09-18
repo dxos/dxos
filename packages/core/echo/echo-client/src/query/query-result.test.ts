@@ -143,6 +143,24 @@ describe('QueryResultImpl', () => {
       await builder.close();
     }
   });
+
+  test('a collapsed group record is presented from the source values, with nothing to hydrate', async ({ expect }) => {
+    // What the index source emits for a host-collapsed group: a key, a size, the host's aggregates,
+    // and no object.
+    const entries: SourceEntry[] = [
+      { id: '{"kind":"a"}', group: { key: { kind: 'a' }, count: 3, aggregates: { count: 3 } } },
+      { id: '{"kind":"b"}', group: { key: { kind: 'b' }, count: 1, aggregates: { count: 1 } } },
+    ];
+    const query: Query.Any = Query.select(Filter.everything()).aggregate({
+      kind: Aggregate.group('kind'),
+      count: Aggregate.count(),
+    });
+    const rows = new QueryResultImpl(makeQueryContext(entries), query).runSync();
+    expect(rows).toEqual([
+      { kind: 'a', count: 3 },
+      { kind: 'b', count: 1 },
+    ]);
+  });
 });
 
 const makeQueryContext = (results: SourceEntry[] = []): QueryContext => ({

@@ -46,6 +46,7 @@ import {
   type SaveStateChangedEvent,
   toDocumentId,
 } from '../automerge/index.ts';
+import { EchoClientError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -905,7 +906,7 @@ export class EntityManager implements IDatabaseBinding {
       this._runtime,
       this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }).pipe(
         Stream.runHead,
-        Effect.map(Option.getOrElse(() => raise(new Error('Failed to get sync state')))),
+        Effect.map(Option.getOrElse(() => raise(new EchoClientError({ message: 'Failed to get sync state.' })))),
       ),
       { timeout: RPC_TIMEOUT },
     );

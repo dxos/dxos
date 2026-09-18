@@ -394,6 +394,18 @@ const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
   'packages/core/compute/mcp-server': ['sharp'],
 };
 
+/**
+ * Dependencies whose types reach the emitted `.d.ts` from a path knip reads as dev-only. A class in
+ * `src/testing/` that extends one still publishes its base type, and TypeScript refuses to name a
+ * devDependency in a declaration file -- it emits `any`, which strips the class's constructor and
+ * statics from every file that then consumes the declaration, including others in the same package.
+ */
+const DECLARED_IN_TYPES: Record<string, string[]> = {
+  // `src/testing/errors.ts` declares `SqliteTestError`; `opfs-in-worker-test-worker.ts` is compiled
+  // by the package build and constructs it, so the base type has to survive declaration emit.
+  'packages/common/sql-sqlite': ['@dxos/errors'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
   // edge-compute generates a function entrypoint containing
@@ -499,6 +511,7 @@ for (const manifest of globSync(
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
+      ...(DECLARED_IN_TYPES[dir] ?? []),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
       ...(SCRIPT_STORE_RESOLVED[dir] ?? []),

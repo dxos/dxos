@@ -19,6 +19,8 @@ export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 export type EntryGroup = {
   key: Record<string, string | number | boolean | null>;
   count: number;
+  /** Scalar aggregates the source computed itself; present on a collapsed group record, which carries no members. */
+  aggregates?: Record<string, string | number | boolean | null>;
 };
 
 /**
