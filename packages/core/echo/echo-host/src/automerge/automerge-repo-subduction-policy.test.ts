@@ -452,7 +452,9 @@ describe('SubductionPolicy', () => {
         subductionPolicies: { client: clientPolicy },
       });
       const [client, server1, server2] = repos;
-      await connectAdapters(adapters);
+      // `server1` is denied and never binds, but the barrier waits for the FIRST binding, so the
+      // permissive `client`↔`server2` handshake still gates the docs created below.
+      await connectAdapters(adapters, { repos });
 
       const doc1 = server1.create<{ text?: string }>({ text: 'from-server1' });
       const doc2 = server2.create<{ text?: string }>({ text: 'from-server2' });
