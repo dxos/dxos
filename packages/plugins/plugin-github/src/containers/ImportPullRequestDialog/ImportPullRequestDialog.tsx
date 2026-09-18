@@ -15,6 +15,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
+import { GitHubRepoInaccessibleError } from '../../errors.ts';
 import { parsePullRequestReference } from '../../extensions/index.ts';
 import { useOpenObject } from '../../hooks/index.ts';
 
@@ -75,7 +76,11 @@ export const ImportPullRequestDialog = () => {
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.profile.key}.import-pull-request`,
           icon: 'ph--warning--regular',
-          title: ['import-pull-request-failed.title', { ns: meta.profile.key }],
+          // A repository no credential reaches is answered by naming the connection: the reference
+          // is fine and retyping it is the one thing that cannot help.
+          title: GitHubRepoInaccessibleError.is(error)
+            ? ['import-pull-request-inaccessible.title', { ns: meta.profile.key }]
+            : ['import-pull-request-failed.title', { ns: meta.profile.key }],
           description: reference,
         });
         return;

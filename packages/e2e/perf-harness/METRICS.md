@@ -18,7 +18,7 @@ Field names below match the JSON in `test-results/perf/<flow>-<mode>.rows.ndjson
 | `mode`                | `measure` or `diagnose`. **Never compare across these** — see [Modes](#modes-and-why-timings-do-not-cross-them).                                                                                                                                                                                                                                                                                                                                                                      |
 | `scale`               | The fixture shape, e.g. `tasks=200,depth=2,projects=1,docs=3x400`. The join key for a trend: if the fixture changes shape, the label changes and the trend visibly breaks rather than silently shifting.                                                                                                                                                                                                                                                                              |
 | `fixtureSize`         | Tasks actually created. Deliberately outside the `scale` join key, because a fixture that produces 199 of 200 tasks is still the same tier.                                                                                                                                                                                                                                                                                                                                           |
-| `iteration`           | Which repeat of the flow this row is. Present for multi-sample runs; the nightly currently writes one iteration per mode.                                                                                                                                                                                                                                                                                                                                                             |
+| `iteration`           | Which repeat of the flow this row is, zero-based. The nightly runs 10 per mode (`DX_PERF_ITERATIONS`), each a fresh browser and fixture, so a stage's tiles have a distribution to take a median over rather than one sample.                                                                                                                                                                                                                                                         |
 | `ok`, `error`         | Whether the stage body completed. **A failed stage's `wallMs` is its timeout, not a measurement** — `writePosthogBatch` drops `ok: false` rows so a timeout can never enter a trend as a regression.                                                                                                                                                                                                                                                                                  |
 | `comparability`       | Five things that change what every other number means: `servingMode` (`preview` over a production bundle vs `serve`, which costs ~2.5× on the main thread), `pluginSet`, `profileState` (`first-run` performs onboarding and loads a different module set), `settleMs`, and `instruments` (`profiler` or `profiler+screencast` — neither mode is bare). Two rows that differ here are not comparable, whatever their stage ids say. Per `scripts/memory/README.md` §"Comparing runs". |
 
@@ -186,18 +186,32 @@ From `Memory.getDOMCounters`, for the renderer.
 
 ## Network
 
-`network.*`, from Playwright `response` events. Content-length where the header is present, body
-length otherwise — the resource-timing buffer caps out on a graph this size.
+`network.*`, from two sources. Everything but the socket fields comes from Playwright `response`
+events — content-length where the header is present, body length otherwise, since the
+resource-timing buffer caps out on a graph this size. `edgeSocketBytes` and `edgeSocketFrames` come
+from `page.on('websocket')` frame callbacks instead, because a socket emits no further responses.
 
-| Field                     | Meaning                                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------- |
-| `codeBytes`               | JS/CSS/wasm module loads. Boot pulls 27 MB over 871 requests on a cold profile.                 |
-| `apiBytes`                | Application traffic — the ECHO/edge calls.                                                      |
-| `otherBytes`              | Everything else (images, fonts).                                                                |
-| `requests`, `apiRequests` | Counts, so a stage making many small calls is distinguishable from one making a few large ones. |
+| Field                     | Meaning                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `codeBytes`               | JS/CSS/wasm module loads. Boot pulls 27 MB over 871 requests on a cold profile.                  |
+| `apiBytes`                | The whole API bucket — analytics and third parties included, not the edge alone.                 |
+| `otherBytes`              | Everything else (images, fonts).                                                                 |
+| `requests`, `apiRequests` | Counts, so a stage making many small calls is distinguishable from one making a few large ones.  |
+| `edgeApiBytes`            | `fetch`/`xhr` bytes to the EDGE hosts alone — `apiBytes` counts analytics and third parties too. |
+| `edgeApiRequests`         | Same population as `edgeApiBytes`: `fetch`/`xhr` only, so a socket handshake is not a call.      |
+| `edgeSocketBytes`         | WebSocket FRAME bytes to the edge, both directions. Most of the backend traffic lives here.      |
+| `edgeSocketFrames`        | Frame count, so a chatty sync is distinguishable from a bulky one.                               |
+| `edgeBytes`               | `edgeApiBytes + edgeSocketBytes` — what the app costs its own backend. The trended figure.       |
+| `analyticsBytes`          | Telemetry, recorded separately so the edge columns are auditable rather than merely asserted.    |
 
 Classified by URL and resource type in `collectors/network.ts`. The split exists because "the stage
 got slower" has very different answers depending on whether it moved code or data.
+
+`apiBytes` and `apiRequests` are kept for continuity and are the WIDER measure: any host, analytics
+included, and a socket handshake counted as a request. The `edge*` fields are the narrow ones, and
+they are what the dashboard trends. The socket half exists at all because a WebSocket emits exactly
+one `response` — the 101, with an empty body — so before `page.on('websocket')` the four
+data-syncing stages of the flow recorded zero bytes and zero requests.
 
 ## Responsiveness
 
@@ -346,32 +360,71 @@ Recorded here so nobody rediscovers them as bugs.
    `'Performance.enable' wasn't found` on every worker target, which is why `threadByRealm` covers
    only realms that have the domain (the page, today). What remains: `boot` has no profile in
    either mode, since there is no target to attach to before the page exists.
-2. **No disk I/O.** Nothing in CDP reports read/write bytes; `Storage.getUsageAndQuota` gives a
-   stored-bytes _level_, not operations. `/proc/<pid>/io` exists on Linux but counts the browser's
-   own traffic alongside ours, so an attributable measurement has to come from the storage layer.
-   The OPFS VFS is `AccessHandlePoolVFS` from `@dxos/wa-sqlite` — vendored, not ours — but it is
-   registered in one place we own (`sql-sqlite/src/internal/opfs-client.ts`, `AccessHandlePoolVFS.create`
-   then `vfs_register`), and its `jRead`/`jWrite`/`jTruncate`/`jSync` carry the byte count and
-   offset, so a wrapper there would give bytes and ops attributable to SQLite rather than to Chrome.
-   It runs in the DEDICATED worker (`worker-runtime.ts`'s `LocalSqliteOpfsLayer`), not the shared
-   one, and node uses native SQLite with no JS VFS, so the instrument is browser-only. Nothing
-   counts VFS operations today — the existing instrumentation there is per-SQL-statement
-   (`recordSqliteQueryMetrics`, plus a slow-query log above 20 ms), a different granularity.
-3. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
+2. **Analytics used to contaminate the API column, and socket traffic was missing entirely.**
+   Fixed: `edgeApiBytes`/`edgeSocketBytes` count the app's own backend alone, and
+   `analyticsBytes` is recorded separately so the split is auditable rather than assumed. The
+   socket half was the serious one — a WebSocket emits exactly ONE `response` (the 101, empty
+   body), so before frame accounting every data-syncing stage recorded 0 API bytes and 0 requests:
+   `edit-document`, `toggle-task`, `scroll-tasks` and `reopen-project` all read as zero network on
+   a real CI run, which is impossible for a flow that replicates through ECHO. Frames are counted
+   in both directions, since an upload regression is as real as a download one.
+3. ~~No disk I/O.~~ Done, and it needed a change outside this package. Nothing in CDP reports
+   read/write bytes, `Storage.getUsageAndQuota` gives a stored LEVEL rather than operations, and
+   `/proc/<pid>/io` counts Chrome's own traffic alongside ours — so the only layer where a byte
+   count is attributable to SQLite is its VFS. `instrumentVfs` in
+   `sql-sqlite/src/internal/vfs-metrics.ts` wraps `jRead`/`jWrite`/`jTruncate`/`jSync` on the
+   `AccessHandlePoolVFS` before `vfs_register` hands it to wasm, and the harness reads the counters
+   per realm over CDP (`collectors/disk.ts`).
+
+   Three things worth knowing about the numbers:
+
+   - **`sqliteRealms` is the integrity column.** A zero byte count means either that SQLite did no
+     I/O or that nothing was instrumented, and those are different facts the byte columns cannot
+     separate. `0` realms is a broken harness; `1` realm and zero bytes is a real result.
+   - **Read bytes are REQUESTED, not delivered.** SQLite asks for a whole page past end-of-file
+     during recovery and the VFS zero-fills the remainder, so `readBytes` is the I/O SQLite asked
+     storage for and `shortReads` counts how often that differed. A rejected write contributes no
+     bytes, since a short write is an error rather than a partial success.
+   - **Browser only.** Node uses native SQLite with no JS VFS, so a node run reports zeroes with
+     `realms: 0` — correctly indistinguishable from an uninstrumented run, because that is what it
+     is. The database also lives in the DEDICATED worker, not the shared one.
+
+   The counters are unconditional rather than flag-gated. Two integer increments beside a
+   synchronous `FileSystemSyncAccessHandle` call are not measurable, and a build-time flag would
+   mean the measured bundle is not the shipped one — the comparability problem this harness exists
+   to avoid.
+
+4. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
-4. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
+5. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
    would be visible per realm.
-5. **One iteration per mode, and this is the gap that limits every other number.** `open-tasks` has
-   moved 9,172 → 6,803 → 7,833 → 10,195 ms across runs, and `boot` moved +20.9% between two runs
-   whose `boot` stage was instrumented identically (not at all). So the floor for detecting a
-   regression is currently ~20-30% per stage, and any effect smaller than that — including the
-   instruments' own cost — cannot be measured with one sample. `iteration` is on every row; the
-   nightly does not yet use it.
-6. **`boot` carries no profile** in either mode: there is no target to attach to until the page
+6. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
+   first ten-iteration run corrected the premise. WITHIN a run the spread is tiny (CV 1.6% on total
+   wall time, 0.11% on DOM nodes); the ~20% figure below came from comparing separate RUNS, which
+   also differ by machine cell and cache state. Ten iterations therefore pin down one job very
+   precisely and say nothing about the night-to-night term, which is the larger one and is still
+   unmeasured. The remaining variance — `open-tasks` moved
+   9,172 → 6,803 → 7,833 → 10,195 ms across single runs, and `boot` moved +20.9% between two runs
+   instrumented identically (not at all) — but those are BETWEEN-run figures. Measured within one
+   run: `edit-document` 1.2%, `boot` 9.2%, `open-space` 41.6%. The read side is settled too: each tile
+   is a box over the ten run totals — mean +/- one sample sd, with the median drawn — so the
+   spread is now measured rather than asserted. Both statistics are shown because they answer
+   different questions: one slow but SUCCESSFUL iteration moves the mean and not the median. A
+   failed stage is not that case and never was — `writePosthogBatch` filters on `row.ok`, so an
+   expired stage lowers the sample count instead of dragging anything.
+7. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
 
 ## Where the numbers go
 
+- **Publishing happens per ITERATION, from inside the flow, and there is no end-of-run step.**
+  `publishPosthogBatch` shells out to `scripts/ci-event.mjs` after each iteration writes its batch,
+  so a run that loses its runner partway has already published what it measured. A step afterwards
+  cannot do that — it does not run when the job dies, which is exactly when the rows matter. The
+  obvious backstop is deliberately absent: it would be a second publish path relying on PostHog's
+  dedup to collapse re-sent rows, and a dedup miss puts duplicates into the distributions, which
+  tightens a box with nothing on the page to reveal it. A failed publish retries once and is then
+  logged at `warn` — the loss is made visible rather than papered over.
 - `test-results/perf/<flow>-<mode>.rows.ndjson` — every row, one JSON object per line.
 - `test-results/perf/<flow>-<mode>-<runId>.json` — the per-run report.
 - `test-results/perf/<flow>-<mode>.events.ndjson` — PostHog batch, `measure` and `ok` rows only.
