@@ -85,10 +85,10 @@ export namespace QueryPlan {
     feedScan?: FeedScan;
 
     /**
-     * Build items from index rows without loading documents. Set by the planner only when no later
+     * Build bare items from index rows, carrying no document. Set by the planner only when no later
      * step reads anything but index fields: type, timestamps, deletion, parent and relation endpoints.
      */
-    indexOnly?: boolean;
+    bare?: boolean;
   };
 
   /**
