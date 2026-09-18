@@ -1407,6 +1407,14 @@ export class AutomergeHost extends Resource {
 
   async clearLocalCollectionState(collectionId: string): Promise<void> {
     this._collectionSynchronizer.clearLocalCollectionState(collectionId);
+    // With no local state `_handleCollectionSync` returns before its convergence cleanup, so a
+    // cleared collection's entries would otherwise outlive it and suppress the first resync if it
+    // is registered again.
+    for (const resyncKey of this._divergedResyncHeads.keys()) {
+      if (resyncKey.startsWith(`${collectionId}:`)) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1500,6 +1508,7 @@ export class AutomergeHost extends Resource {
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
+    const differentSet = new Set(different);
 
     if (toReplicate.length === 0) {
       return;
@@ -1542,7 +1551,7 @@ export class AutomergeHost extends Resource {
       // and marks the entry never-synced, so Subduction opens a fresh bidirectional round
       // (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) — which is what
       // delivers a local commit the peer never received.
-      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
+      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && differentSet.has(documentId)) {
         const resyncKey = `${syncKey}:${documentId}`;
         // Both sides' heads: a round already spent against this exact pair cannot do better, but
         // either side advancing means the situation changed and is worth another.

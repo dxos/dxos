@@ -352,6 +352,13 @@ describe('AutomergeHost', () => {
     await sleep(500);
     expect(resynced).toEqual([documentId]);
 
+    // Clearing the collection drops its budget, so registering it again earns a fresh resync rather
+    // than being suppressed by the stale entry.
+    await host.clearLocalCollectionState(collectionId);
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
+
     // A removed document never converges, so its retry budget has to go with it.
     const resyncHeads: Map<string, string> = (host as any)._divergedResyncHeads;
     expect([...resyncHeads.keys()].some((key) => key.endsWith(`:${documentId}`))).toBe(true);
