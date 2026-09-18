@@ -7,7 +7,7 @@ import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, Feed, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
+import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -35,6 +35,8 @@ export type LoadObjectProps = {
   spaceId: SpaceId;
   objectId: string;
   documentId: string | undefined;
+  /** How long the loader may spend, so what it waits on is bounded by the caller's own budget. */
+  timeout: number;
 };
 
 /**
@@ -66,7 +68,7 @@ export type IndexQueryProviderProps = {
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
 /** Per-index-hit object hydration budget (parallel across hits). */
-export const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
+const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -631,6 +633,7 @@ export class IndexQuerySource implements QuerySource {
           spaceId,
           objectId: result.id,
           documentId: result.documentId,
+          timeout: INDEX_OBJECT_LOAD_TIMEOUT,
         }),
         INDEX_OBJECT_LOAD_TIMEOUT,
       );

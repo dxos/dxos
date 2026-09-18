@@ -10,7 +10,6 @@ import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
