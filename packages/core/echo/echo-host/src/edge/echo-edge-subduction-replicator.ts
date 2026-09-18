@@ -591,14 +591,21 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           log.warn('dropping subduction-batch with missing frames', { payload });
           return;
         }
-        this.#onInboundFrame();
         log.verbose('received subduction batch', { frames: payload.frames.length, remoteId: this._remotePeerId });
+        let enqueued = 0;
         for (const inner of payload.frames) {
           if (inner === null || typeof inner !== 'object') {
             continue;
           }
           inner.senderId = this._remotePeerId as PeerId;
           this._readableStreamController.enqueue(inner);
+          enqueued++;
+        }
+        // Counted, not assumed: an empty or wholly malformed batch delivers nothing to the
+        // transport, and crediting it would refill the re-handshake budget that exists to escape
+        // exactly such a session.
+        if (enqueued > 0) {
+          this.#onInboundFrame();
         }
         return;
       }
