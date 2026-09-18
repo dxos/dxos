@@ -83,6 +83,12 @@ export namespace QueryPlan {
      * steps that would otherwise slice candidates out of an already-capped page.
      */
     feedScan?: FeedScan;
+
+    /**
+     * Build bare items from index rows, carrying no document. Set by the planner only when no later
+     * step reads anything but index fields: type, timestamps, deletion, parent and relation endpoints.
+     */
+    bare?: boolean;
   };
 
   /**
