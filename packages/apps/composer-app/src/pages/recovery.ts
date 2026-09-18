@@ -46,9 +46,9 @@ print('');
 print('Footer actions (left → right):');
 print('  Boot    — try opening full Composer at /');
 print('  Reset   — wipe all data for this origin (export first!)');
+print('  Clear Heads — delete stored sync heads (fixes a profile that freezes on load)');
 print('  Export  — download .dxprofile backup (SQLite + origin metadata)');
 print('  Import  — restore .dxprofile or raw .sqlite into this origin');
-print('  Clear Heads — delete stored sync heads (fixes a profile that freezes on load)');
 print('  Logs    — download NDJSON logs for debugging');
 print('  Debug Port — let an agent run commands via composer-recovery.js');
 print('');
@@ -231,6 +231,20 @@ const actions: Record<RecoveryAction, () => void> = {
     void runAction('Reset', () => recoveryHelpers.reset());
   },
 
+  'clear-heads': () => {
+    if (
+      !confirm(
+        'Delete the sync heads this profile stored for remote peers?\n\nThey are bookkeeping only: no documents are touched, and Composer re-learns them on the next sync. A profile that freezes on load is usually full of them.\n\nContinue?',
+      )
+    ) {
+      print('Clear heads aborted.');
+      return;
+    }
+    void runAction('Clear heads', async () => {
+      await recoveryHelpers.deleteRemoteHeads();
+    });
+  },
+
   'export': () =>
     void runAction('Export', async () => {
       print('Exporting profile archive (.dxprofile with SQLite entry)…');
@@ -258,20 +272,6 @@ const actions: Record<RecoveryAction, () => void> = {
       const { byteLength } = await recoveryHelpers.importSqlite();
       attachRecoveryHelpers(recoveryHelpers);
       print(`Imported ${byteLength.toLocaleString()} bytes — run Diagnostics to verify.`);
-    });
-  },
-
-  'clear-heads': () => {
-    if (
-      !confirm(
-        'Delete the sync heads this profile stored for remote peers?\n\nThey are bookkeeping only: no documents are touched, and Composer re-learns them on the next sync. A profile that freezes on load is usually full of them.\n\nContinue?',
-      )
-    ) {
-      print('Clear heads aborted.');
-      return;
-    }
-    void runAction('Clear heads', async () => {
-      await recoveryHelpers.deleteRemoteHeads();
     });
   },
 

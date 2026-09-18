@@ -8,9 +8,9 @@ export type RecoveryAction =
   | 'diagnostics'
   | 'boot'
   | 'reset'
+  | 'clear-heads'
   | 'export'
   | 'import'
-  | 'clear-heads'
   | 'logs'
   | 'debug-port';
 
@@ -51,6 +51,11 @@ const FOOTER_ACTIONS: ActionSpec[] = [
     className: 'danger',
   },
   {
+    action: 'clear-heads',
+    label: 'Clear Heads',
+    title: 'Delete sync heads stored for remote peers (re-learned on next sync); fixes profiles that freeze on load',
+  },
+  {
     action: 'export',
     label: 'Export',
     title: 'Export .dxprofile archive with OPFS SQLite database',
@@ -59,11 +64,6 @@ const FOOTER_ACTIONS: ActionSpec[] = [
     action: 'import',
     label: 'Import',
     title: 'Import .dxprofile or raw .sqlite into OPFS DXOS database',
-  },
-  {
-    action: 'clear-heads',
-    label: 'Clear Heads',
-    title: 'Delete sync heads stored for remote peers (re-learned on next sync); fixes profiles that freeze on load',
   },
   {
     action: 'logs',
