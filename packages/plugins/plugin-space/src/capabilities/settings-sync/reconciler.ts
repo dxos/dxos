@@ -82,20 +82,28 @@ export class Reconciler {
     });
   }
 
-  /** Local value changed: route each changed key to the layer that owns it. */
+  /**
+   * Local value changed: route each changed key to the layer that owns it, then put the newly
+   * resolved values back into effect.
+   *
+   * Writing back matters as much as publishing. Resolution lets the account win for a key this
+   * device does not pin, so a local edit to one key can leave another resolving to a shared value
+   * this device has not applied. Recording that value as agreed without applying it would suppress
+   * the pull that would have applied it, and leave the next push reporting the unapplied local
+   * value as an edit — publishing it over the account's.
+   */
   push(): void {
     this.#guard(() => {
       const local = this._binding.read();
       const before = this.#baseline(local);
       if (AppSettings.changedKeys(before, local).length === 0) {
-        return;
+        return undefined;
       }
 
       this._store.update((draft) => {
         AppSettings.applyResolved(draft, this._binding.namespace, before, local);
       });
-      this.#agreed = this.#resolved();
-      return undefined;
+      return this.#write(this.#resolved());
     });
   }
 
