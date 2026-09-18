@@ -4,15 +4,7 @@
 
 import { Domino } from '@dxos/ui';
 
-export type RecoveryAction =
-  | 'diagnostics'
-  | 'boot'
-  | 'reset'
-  | 'clear-heads'
-  | 'export'
-  | 'import'
-  | 'logs'
-  | 'debug-port';
+export type RecoveryAction = 'diagnostics' | 'boot' | 'reset' | 'repair' | 'export' | 'import' | 'logs' | 'debug-port';
 
 export type RecoveryUi = {
   print: (message: string) => void;
@@ -51,9 +43,11 @@ const FOOTER_ACTIONS: ActionSpec[] = [
     className: 'danger',
   },
   {
-    action: 'clear-heads',
-    label: 'Clear Heads',
+    action: 'repair',
+    label: 'Repair',
     title: 'Delete sync heads stored for remote peers (re-learned on next sync); fixes profiles that freeze on load',
+    // Amber: the one variant Boot (primary) and Reset (danger) have not taken.
+    className: 'running',
   },
   {
     action: 'export',

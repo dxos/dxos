@@ -46,7 +46,7 @@ print('');
 print('Footer actions (left → right):');
 print('  Boot    — try opening full Composer at /');
 print('  Reset   — wipe all data for this origin (export first!)');
-print('  Clear Heads — delete stored sync heads (fixes a profile that freezes on load)');
+print('  Repair  — delete stored sync heads (fixes a profile that freezes on load)');
 print('  Export  — download .dxprofile backup (SQLite + origin metadata)');
 print('  Import  — restore .dxprofile or raw .sqlite into this origin');
 print('  Logs    — download NDJSON logs for debugging');
@@ -56,7 +56,7 @@ print('Header: Diagnostics — OPFS storage first, then client identity and spac
 print('');
 print('Typical flows:');
 print("  App won't boot → Export → offline forensics → Import");
-print('  Freezes while loading → Clear Heads → Boot');
+print('  Freezes while loading → Repair → Boot');
 print('  Need agent help → Debug Port → copy session id from log when it appears');
 print('');
 print(`Debug port server: ${debugOrigin}`);
@@ -234,16 +234,16 @@ const actions: Record<RecoveryAction, () => void> = {
     void runAction('Reset', () => recoveryHelpers.reset());
   },
 
-  'clear-heads': () => {
+  'repair': () => {
     if (
       !confirm(
         'Delete the sync heads this profile stored for remote peers?\n\nThey are bookkeeping only: no documents are touched, and Composer re-learns them on the next sync. A profile that freezes on load is usually full of them.\n\nContinue?',
       )
     ) {
-      print('Clear heads aborted.');
+      print('Repair aborted.');
       return;
     }
-    void runAction('Clear heads', async () => {
+    void runAction('Repair', async () => {
       await recoveryHelpers.deleteRemoteHeads();
     });
   },

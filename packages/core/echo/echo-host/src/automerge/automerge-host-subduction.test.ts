@@ -139,7 +139,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   });
 
   test('sync works both ways after the stored remote heads are deleted', { timeout: 30_000 }, async ({ expect }) => {
-    // The recovery page's Clear Heads deletes these records. They only cache what a peer last reported, so a
+    // The recovery page's Repair action deletes these records. They only cache what a peer last reported, so a
     // host restarted without them must still pull and push, and record the peer's heads again.
     const rt1 = createRuntime();
     onTestFinished(() => rt1.dispose());
