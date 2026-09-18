@@ -17,6 +17,7 @@ import { type QueryContext, type SourceEntry } from './query-context.ts';
 import {
   getTargetSpacesForQuery,
   isSimpleSelectionQuery,
+  queryAggregateNeedsIndex,
   queryHasWindowing,
   queryTargetsSpacesOrFeeds,
 } from './util.ts';
@@ -291,10 +292,15 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   isSynchronous(): boolean {
-    // The working set serves space-scoped selections synchronously. Feed-only queries and queries
-    // with order/skip/limit clauses contribute nothing here (see `queryHasWindowing`), so they are
-    // not synchronous from this source's perspective.
-    return this._query !== undefined && this._servesSpaceScope(this._query) && !queryHasWindowing(this._query);
+    // The working set serves space-scoped selections synchronously. Feed-only queries, queries
+    // with order/skip/limit clauses (see `queryHasWindowing`) and aggregates the executor declines
+    // contribute nothing here, so they are not synchronous from this source's perspective.
+    return (
+      this._query !== undefined &&
+      this._servesSpaceScope(this._query) &&
+      !queryHasWindowing(this._query) &&
+      !queryAggregateNeedsIndex(this._query)
+    );
   }
 
   getResults(): SourceEntry<Obj.Unknown>[] {

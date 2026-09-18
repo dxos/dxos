@@ -48,7 +48,7 @@ import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
   SelectedObjectsSurface,
-  // SpaceHomeDashboardSurface,
+  SpaceHomeDashboardSurface,
   SpaceHomeRecentSurface,
   SpaceMembersSurface,
   SpaceSchemaSurface,
@@ -82,14 +82,12 @@ export default Capability.makeModule(
         component: SpaceHomeRecentSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
-      // TODO(perf): Disabled because its unbounded Filter.everything() query plus a per-object updatedAt decode
-      //  stalls the main thread. Restore once aggregate queries run host-side.
-      // Surface.create({
-      //   id: 'spaceHomeDashboard',
-      //   filter: Surface.makeFilter(SpaceHomeContent),
-      //   component: SpaceHomeDashboardSurface,
-      //   props: ({ data: { space } }) => ({ space }),
-      // }),
+      Surface.create({
+        id: 'spaceHomeDashboard',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: SpaceHomeDashboardSurface,
+        props: ({ data: { space } }) => ({ space }),
+      }),
       Surface.create({
         id: 'collectionFallback',
         position: Position.last,
