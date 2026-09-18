@@ -23262,6 +23262,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../react-ui-components
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
@@ -23271,9 +23274,15 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/react-ui-virtual':
+        specifier: workspace:*
+        version: link:../react-ui-virtual
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

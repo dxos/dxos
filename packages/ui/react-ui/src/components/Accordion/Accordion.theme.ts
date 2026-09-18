@@ -6,15 +6,18 @@ import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction } from '@dxos/ui-types';
 
 export type AccordionStyleProps = {
+  /** Whether to show a border around the item. */
+  border?: boolean;
   /** Whether to round the item's corners. */
   rounded?: boolean;
   /** Apply `dx-hover` row styling on the trigger (off by default; mirrors `Listbox.Item`). */
   hover?: boolean;
 };
 
-const root: ComponentFunction<AccordionStyleProps> = ({ rounded }, ...etc) =>
+const root: ComponentFunction<AccordionStyleProps> = ({ border, rounded }, ...etc) =>
   mx(
-    'flex flex-col w-full border-y border-separator divide-y divide-subdued-separator',
+    'flex flex-col w-full',
+    border && 'border-y border-separator divide-y divide-subdued-separator',
     rounded && 'rounded-md',
     ...etc,
   );
@@ -23,15 +26,20 @@ const root: ComponentFunction<AccordionStyleProps> = ({ rounded }, ...etc) =>
 // would cut the top and bottom edges off the trigger's inset focus ring. The end items instead carry
 // the frame's own rounding, which the header and trigger inherit so a focus ring at either end
 // follows the corner rather than cutting across it.
-const item: ComponentFunction<AccordionStyleProps> = ({ rounded }, ...etc) =>
-  mx('border-x border-separator overflow-hidden', rounded && 'first:rounded-t-md last:rounded-b-md', ...etc);
+const item: ComponentFunction<AccordionStyleProps> = ({ border, rounded }, ...etc) =>
+  mx(
+    'overflow-hidden',
+    border && 'border-x border-separator',
+    rounded && 'first:rounded-t-md last:rounded-b-md',
+    ...etc,
+  );
 
 const header: ComponentFunction<AccordionStyleProps> = (_props, ...etc) => mx('flex items-start', ...etc);
 
 /** Row trigger: spans the full width and pins the trailing caret to the inline-end edge. */
 const trigger: ComponentFunction<AccordionStyleProps> = ({ rounded, hover }, ...etc) =>
   mx(
-    'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start',
+    'group flex items-center justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start',
     // A disabled item is a plain row: no pointer affordance and no hover lift.
     'data-[disabled]:cursor-default data-[disabled]:hover:bg-transparent!',
     rounded && 'rounded-[inherit]',

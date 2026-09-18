@@ -3,17 +3,19 @@
 //
 
 import { format } from 'date-fns';
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Shimmer } from '@dxos/react-ui-components';
+import { type WindowController, useListModel, useWindow } from '@dxos/react-ui-virtual';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
+import { type TimelineLayout, type TimelineRow, type TimelineSpan, layoutTimeline } from './timeline-layout.ts';
 import { type TimelineOptions, compactOptions, defaultOptions } from './timeline-options.ts';
 
 /**
@@ -55,6 +57,11 @@ export type TimelineProps = ThemedClassName<{
   compact?: boolean;
   options?: TimelineOptions;
   debug?: boolean;
+  /**
+   * The element the rows are windowed against, which the host owns: a `ScrollArea.Viewport` or a
+   * `ScrollContainer.Viewport`, as `MessageList` binds to. Rows mount once it exists.
+   */
+  scroller: HTMLElement | null;
   onChange?: (props: { current?: number; commit?: Commit }) => void;
   /**
    * Callback when a commit with a link is clicked.
@@ -65,8 +72,10 @@ export type TimelineProps = ThemedClassName<{
 
 /**
  * GitGraph-style timeline.
+ *
+ * Rows are windowed by `useWindow`, so rendering costs the viewport rather than the history. The
+ * layout is still computed over the whole history, so a windowed row draws every lane crossing it.
  */
-// TODO(burdon): Virtualize.
 export const Timeline = memo(
   composable<HTMLDivElement, TimelineProps>(
     (
@@ -79,6 +88,7 @@ export const Timeline = memo(
         compact = false,
         options = compact ? compactOptions : defaultOptions,
         debug = false,
+        scroller,
         onChange,
         onSelect,
         ...props
@@ -103,100 +113,7 @@ export const Timeline = memo(
         }, [] as string[]);
       }, [branchesProp, commits]);
 
-      // NOTE: Assumes commits are in topological order.
-      const getCommitIndex = (id: string) => commits.findIndex((c) => c.id === id);
-      const getBranch = (id: string) => commits.find((c) => c.id === id)?.branch;
-
-      /**
-       * Assign branches to lanes, reusing lanes once a branch has been merged.
-       * Unmerged branches keep their lane active (they may still be in progress).
-       */
-      const { branchLane, laneCount } = useMemo(() => {
-        const visibleBranches = new Set(branches);
-
-        const commitBranch = new Map<string, string>();
-        for (const commit of commits) {
-          commitBranch.set(commit.id, commit.branch);
-        }
-
-        // Find the row at which each branch is merged by another branch.
-        const mergeRow = new Map<string, number>();
-        for (let row = 0; row < commits.length; row++) {
-          const commit = commits[row]!;
-          for (const parentId of commit.parents ?? []) {
-            const parentBranch = commitBranch.get(parentId);
-            if (parentBranch && parentBranch !== commit.branch && visibleBranches.has(parentBranch)) {
-              mergeRow.set(parentBranch, Math.max(mergeRow.get(parentBranch) ?? row, row));
-            }
-          }
-        }
-
-        const branchLane = new Map<string, number>();
-        if (branches.length > 0) {
-          branchLane.set(branches[0]!, 0);
-        }
-
-        const activeLanes = new Set<number>([0]);
-        let maxLane = 0;
-
-        for (let row = 0; row < commits.length; row++) {
-          const commit = commits[row]!;
-          if (visibleBranches.has(commit.branch) && !branchLane.has(commit.branch)) {
-            let lane = 1;
-            while (activeLanes.has(lane)) {
-              lane++;
-            }
-            branchLane.set(commit.branch, lane);
-            activeLanes.add(lane);
-            maxLane = Math.max(maxLane, lane);
-          }
-
-          // Release lanes for branches that have been merged at this row.
-          for (const [branch, endRow] of mergeRow) {
-            if (endRow === row && branch !== branches[0] && branchLane.has(branch)) {
-              activeLanes.delete(branchLane.get(branch)!);
-            }
-          }
-        }
-
-        return { branchLane, laneCount: maxLane + 1 };
-      }, [commits, branches]);
-
-      const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
-
-      /**
-       * Create spans for each branch.
-       */
-      const spans = useMemo(() => {
-        const spans = new Map<string, Span>();
-        commits.forEach((commit, index) => {
-          let span = spans.get(commit.branch);
-          if (!span) {
-            span = { start: index, end: index };
-            spans.set(commit.branch, span);
-          } else {
-            span.end = index;
-          }
-
-          const parents = commit.parents ?? [];
-          for (const parent of parents) {
-            const branch = getBranch(parent);
-            if (branch && branch !== commit.branch) {
-              span.start = Math.min(span.start, getCommitIndex(parent));
-
-              // Detect merge.
-              if (parents.length > 1) {
-                const parentSpan = spans.get(branch);
-                if (parentSpan) {
-                  parentSpan.end = Math.max(parentSpan.end, index);
-                }
-              }
-            }
-          }
-        });
-
-        return spans;
-      }, [commits, branches]);
+      const layout = useMemo(() => layoutTimeline(commits, branches), [commits, branches]);
 
       // Navigation.
       const [current, setCurrent] = useState<number | undefined>(undefined);
@@ -207,10 +124,10 @@ export const Timeline = memo(
       // Controlled `branch` takes precedence over the branch derived from the selected commit.
       const highlightedBranch = branch ?? currentCommit?.branch;
 
+      const currentRow = current === undefined ? undefined : layout.rowByCommitIndex.get(current);
+
       useEffect(() => {
         onChange?.({ current, commit: current === undefined ? undefined : commits[current] });
-        const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
-        el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
       }, [onChange, current]);
 
       // When the controlled `branch` changes, jump to the first commit on that branch — but
@@ -293,83 +210,55 @@ export const Timeline = memo(
         });
       }, [commits, containerRef.current]);
 
+      // Clicking the current commit clears the selection, as Enter does.
+      const handleRowClick = useCallback(
+        (index: number) => {
+          if (selectedRef.current === index) {
+            selectedRef.current = undefined;
+            setCurrent(undefined);
+            onSelect?.(undefined);
+            return;
+          }
+          setCurrent(index);
+          selectedRef.current = index;
+          onSelect?.(commits[index]);
+        },
+        [commits, onSelect],
+      );
+
+      // Positioned rows cannot share one subgrid, so every row carries the template the subgrid
+      // used to provide. The columns still line up: a layout pass gives every row the same lane
+      // width, and the icon and timestamp columns are fixed.
+      const gridTemplateColumns = useMemo(
+        () => ['min-content', showIcon && '1.25rem', '1fr', showTimestamp && 'max-content'].filter(Boolean).join(' '),
+        [showIcon, showTimestamp],
+      );
+
       return (
         <div
-          {...composableProps(props, { classNames: 'grid auto-rows-min outline-none' })}
+          {...composableProps(props, { classNames: 'relative outline-none' })}
+          role='list'
           tabIndex={0}
-          style={{
-            gridTemplateColumns: ['min-content', showIcon && '1.25rem', '1fr', showTimestamp && 'max-content']
-              .filter(Boolean)
-              .join(' '),
-          }}
           ref={containerRef}
         >
-          {commits.length < 1 ? (
-            <p className='col-span-full text-description p-trim-md'>{t('no-commits.message')}</p>
+          {layout.rows.length < 1 ? (
+            <p className='text-description p-trim-md'>{t('no-commits.message')}</p>
           ) : (
-            commits.map((commit, index) => {
-              // Skip branches that are not whitelisted.
-              const idx = getBranchIndex(commit.branch);
-              if (idx === -1) {
-                return null;
-              }
-
-              const hasLink = !!commit.link && !!onSelect;
-              // Clicking the selected commit clears the selection, as Enter does.
-              const handleClick = () => {
-                if (selectedRef.current === index) {
-                  selectedRef.current = undefined;
-                  setCurrent(undefined);
-                  onSelect?.(undefined);
-                  return;
-                }
-                setCurrent(index);
-                selectedRef.current = index;
-                onSelect?.(commit);
-              };
-
-              const message = debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message;
-
-              return (
-                <div
-                  key={commit.id}
-                  data-index={index}
-                  aria-current={current === index}
-                  className={mx(
-                    'group/row col-span-full grid grid-cols-subgrid gap-1 px-[2px] overflow-hidden items-center cursor-pointer pe-2',
-                    'aria-current:bg-current-surface! hover:bg-hover-surface-subtle',
-                  )}
-                  style={{ height: `${options.lineHeight}px` }}
-                  onClick={handleClick}
-                >
-                  <div className='px-2'>
-                    <LineVector
-                      branchLane={branchLane}
-                      laneCount={laneCount}
-                      spans={spans}
-                      index={index}
-                      commit={commit}
-                      highlightedBranch={highlightedBranch}
-                      options={options}
-                    />
-                  </div>
-                  {showIcon && <CommitIcon commit={commit} />}
-                  <div
-                    className={mx(
-                      'text-sm truncate cursor-pointer text-description font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
-                      hasLink && 'underline decoration-dotted underline-offset-2',
-                    )}
-                  >
-                    {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
-                  </div>
-                  {showTimestamp && (
-                    <div className='text-xs tabular-nums items-center text-description font-thin'>
-                      {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
-                    </div>
-                  )}
-                </div>
-              );
-            })
+            scroller && (
+              <TimelineWindow
+                scroller={scroller}
+                layout={layout}
+                options={options}
+                currentRow={currentRow}
+                showIcon={showIcon}
+                showTimestamp={showTimestamp}
+                debug={debug}
+                highlightedBranch={highlightedBranch}
+                linkable={!!onSelect}
+                gridTemplateColumns={gridTemplateColumns}
+                onRowClick={handleRowClick}
+              />
+            )
           )}
         </div>
       );
@@ -378,6 +267,178 @@ export const Timeline = memo(
 );
 
 Timeline.displayName = 'Timeline';
+
+//
+// TimelineWindow
+//
+
+type TimelineRowContext = {
+  layout: TimelineLayout;
+  options: TimelineOptions;
+  showIcon: boolean;
+  showTimestamp: boolean;
+  debug: boolean;
+  highlightedBranch: string | undefined;
+  /** Whether a commit's link is navigable, i.e. the host passed `onSelect`. */
+  linkable: boolean;
+  gridTemplateColumns: string;
+  onRowClick: (commitIndex: number) => void;
+};
+
+type TimelineWindowProps = TimelineRowContext & {
+  scroller: HTMLElement;
+  currentRow: number | undefined;
+};
+
+const getRowId = (row: TimelineRow) => row.commit.id;
+
+/**
+ * The mounted rows: a sizer that gives the scrollbar the whole history's extent, and a window
+ * holding the rows in view, translated to where they belong. Rendered only once the host's
+ * scroller exists, because the placement binds to the element on mount.
+ */
+const TimelineWindow = ({ scroller, layout, options, currentRow, ...context }: TimelineWindowProps) => {
+  const scrollerRef = useRef<HTMLElement | null>(scroller);
+  scrollerRef.current = scroller;
+
+  const model = useListModel(layout.rows, getRowId);
+  // Exact: every row is `lineHeight` tall, so offsets are a prefix sum and nothing is ever corrected.
+  const extents = useMemo(() => ({ of: () => options.lineHeight, exact: true }), [options.lineHeight]);
+  const controllerRef = useRef<WindowController>(null);
+  const {
+    layout: { visible },
+    windowRef,
+    offset,
+    sizerExtent,
+    first,
+    last,
+  } = useWindow({ scrollerRef, model, extents, controllerRef });
+
+  // Nearest edge, as the `scrollIntoView({ block: 'nearest' })` this replaces did: a row already in
+  // view is left alone, so an arrow press moves the view only when the current row would leave it.
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
+  useEffect(() => {
+    if (currentRow === undefined) {
+      return;
+    }
+
+    const { first, last } = visibleRef.current;
+    if (currentRow < first) {
+      controllerRef.current?.scrollToIndex(currentRow, 'start');
+    } else if (currentRow > last) {
+      controllerRef.current?.scrollToIndex(currentRow, 'end');
+    }
+  }, [currentRow]);
+
+  const rows = [];
+  for (let index = first; index <= last; index++) {
+    // From the layout rather than the model: the model folds a new layout in one effect later, and
+    // a row read from it in between would be drawn against spans it was not laid out with.
+    const row = layout.rows[index];
+    if (!row) {
+      continue;
+    }
+
+    rows.push(
+      <TimelineRowView
+        key={row.commit.id}
+        index={index}
+        row={row}
+        current={index === currentRow}
+        layout={layout}
+        options={options}
+        {...context}
+      />,
+    );
+  }
+
+  return (
+    <>
+      <div style={{ height: sizerExtent }} />
+      <div
+        ref={windowRef}
+        className='absolute top-0 left-0 flex flex-col w-full'
+        style={{ transform: `translateY(${offset}px)` }}
+      >
+        {rows}
+      </div>
+    </>
+  );
+};
+
+//
+// TimelineRow
+//
+
+type TimelineRowViewProps = TimelineRowContext & {
+  /** Row index in the window, which the placement measures rows by. */
+  index: number;
+  row: TimelineRow;
+  current: boolean;
+};
+
+const TimelineRowView = memo(
+  ({
+    index,
+    row,
+    current,
+    layout,
+    options,
+    showIcon,
+    showTimestamp,
+    debug,
+    highlightedBranch,
+    linkable,
+    gridTemplateColumns,
+    onRowClick,
+  }: TimelineRowViewProps) => {
+    const { commit } = row;
+    const handleClick = useCallback(() => onRowClick(row.index), [onRowClick, row.index]);
+
+    const hasLink = !!commit.link && linkable;
+    const message = debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message;
+
+    return (
+      <div
+        role='listitem'
+        data-index={index}
+        data-object-id={commit.id}
+        data-commit-index={row.index}
+        aria-current={current ? 'true' : undefined}
+        className='group/row grid gap-1 px-[2px] overflow-hidden items-center pe-2 dx-hover dx-current'
+        style={{ gridTemplateColumns, height: `${options.lineHeight}px` }}
+        onClick={handleClick}
+      >
+        <div className='px-2'>
+          <LineVector
+            layout={layout}
+            index={row.index}
+            commit={commit}
+            highlightedBranch={highlightedBranch}
+            options={options}
+          />
+        </div>
+        {showIcon && <CommitIcon commit={commit} />}
+        <div
+          className={mx(
+            'text-sm truncate cursor-pointer text-description font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
+            hasLink && 'underline decoration-dotted underline-offset-2',
+          )}
+        >
+          {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
+        </div>
+        {showTimestamp && (
+          <div className='text-xs tabular-nums items-center text-description font-thin'>
+            {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
+TimelineRowView.displayName = 'TimelineRowView';
 
 const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   if (!commit.icon) {
@@ -397,17 +458,10 @@ const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   );
 });
 
-type Span = {
-  start: number;
-  end: number;
-};
-
 type Color = {
   stroke: string;
   fill: string;
 };
-
-const defaultColor: Color = { stroke: 'stroke-neutral-surface', fill: 'fill-neutral-surface' };
 
 const colors: Color[] = [
   { stroke: 'stroke-orange-500', fill: 'group-aria-[current=true]:fill-orange-500' },
@@ -430,9 +484,7 @@ const levelColors: Record<LogLevel, string> = {
 };
 
 type LineVectorProps = {
-  branchLane: Map<string, number>;
-  laneCount: number;
-  spans: Map<string, Span>;
+  layout: TimelineLayout;
   index: number;
   commit: Commit;
   highlightedBranch: string | undefined;
@@ -442,92 +494,91 @@ type LineVectorProps = {
 /**
  * SVG for node and connector paths.
  */
-const LineVector = memo(
-  ({ branchLane, laneCount, spans, index, commit, highlightedBranch, options }: LineVectorProps) => {
-    const halfHeight = options.lineHeight / 2;
-    const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
-    const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
+const LineVector = memo(({ layout, index, commit, highlightedBranch, options }: LineVectorProps) => {
+  const { branchLane, laneCount, spans } = layout;
+  const halfHeight = options.lineHeight / 2;
+  const cx = (column: number) => column * options.columnWidth + options.columnWidth / 2;
+  const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
 
-    // Create connector path.
-    const createPath = (index: number, commit: Commit, branch: string, span: Span): string | undefined => {
-      const parents = commit.parents ?? [];
-      const commitIndex = getBranchIndex(commit.branch);
-      const branchIndex = getBranchIndex(branch);
+  // Create connector path.
+  const createPath = (index: number, commit: Commit, branch: string, span: TimelineSpan): string | undefined => {
+    const parents = commit.parents ?? [];
+    const commitIndex = getBranchIndex(commit.branch);
+    const branchIndex = getBranchIndex(branch);
 
-      // Vertical connectors.
-      if (span.start < index && index < span.end) {
-        return `M ${cx(branchIndex)} 0 l 0 ${options.lineHeight}`;
-      } else if (commit.branch === branch && parents.length > 0) {
-        return `M ${cx(branchIndex)} 0 l 0 ${halfHeight}`;
-      } else if (commit.branch === branch && index < span.end) {
-        return `M ${cx(branchIndex)} ${halfHeight} l 0 ${options.lineHeight}`;
-      }
+    // Vertical connectors.
+    if (span.start < index && index < span.end) {
+      return `M ${cx(branchIndex)} 0 l 0 ${options.lineHeight}`;
+    } else if (commit.branch === branch && parents.length > 0) {
+      return `M ${cx(branchIndex)} 0 l 0 ${halfHeight}`;
+    } else if (commit.branch === branch && index < span.end) {
+      return `M ${cx(branchIndex)} ${halfHeight} l 0 ${options.lineHeight}`;
+    }
 
-      // Branch.
-      // TODO(burdon): Assumes can only branch to the right.
-      if (commit.branch !== branch && index === span.start) {
-        return trim`
+    // Branch.
+    // TODO(burdon): Assumes can only branch to the right.
+    if (commit.branch !== branch && index === span.start) {
+      return trim`
         M ${cx(commitIndex)} ${halfHeight}
         L ${cx(branchIndex) - halfHeight} ${halfHeight}
         a ${halfHeight} ${halfHeight} 0 0 1 ${halfHeight} ${halfHeight}
       `;
-      }
+    }
 
-      // Merge.
-      if (commit.branch !== branch && index === span.end) {
-        return trim`
+    // Merge.
+    if (commit.branch !== branch && index === span.end) {
+      return trim`
         M ${cx(commitIndex)} ${halfHeight}
         L ${cx(branchIndex) - halfHeight} ${halfHeight}
         a ${halfHeight} ${halfHeight} -90 0 0 ${halfHeight} ${-halfHeight}
       `;
-      }
-    };
+    }
+  };
 
-    const col = getBranchIndex(commit.branch);
-    const color = colors[col % colors.length];
-    const opacity = (branch: string | undefined) => [
-      'duration-500 transition-opacity',
-      highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
-    ];
+  const col = getBranchIndex(commit.branch);
+  const color = colors[col % colors.length];
+  const opacity = (branch: string | undefined) => [
+    'duration-500 transition-opacity',
+    highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-40',
+  ];
 
-    return (
-      <svg width={laneCount * options.columnWidth} height={options.lineHeight}>
-        {/* Connectors */}
-        {[...spans.entries()].map(([branch, span]) => {
-          const lane = getBranchIndex(branch);
-          if (lane < 0) {
-            return null;
-          }
+  return (
+    <svg width={laneCount * options.columnWidth} height={options.lineHeight}>
+      {/* Connectors */}
+      {[...spans.entries()].map(([branch, span]) => {
+        const lane = getBranchIndex(branch);
+        if (lane < 0) {
+          return null;
+        }
 
-          const color = colors[lane % colors.length];
-          const path = createPath(index, commit, branch, span);
-          if (!path) {
-            return null;
-          }
+        const color = colors[lane % colors.length];
+        const path = createPath(index, commit, branch, span);
+        if (!path) {
+          return null;
+        }
 
-          return (
-            <path
-              key={branch}
-              d={path}
-              fill='none'
-              className={mx(options.lineStyle, color.stroke, color.fill, opacity(branch))}
-            />
-          );
-        })}
+        return (
+          <path
+            key={branch}
+            d={path}
+            fill='none'
+            className={mx(options.lineStyle, color.stroke, color.fill, opacity(branch))}
+          />
+        );
+      })}
 
-        <circle
-          cx={cx(col)}
-          cy={halfHeight}
-          r={options.nodeRadius}
-          className={mx('fill-base-surface stroke-base-surface')}
-        />
-        <circle
-          cx={cx(col)}
-          cy={halfHeight}
-          r={options.nodeRadius}
-          className={mx('fill-base-surface', options.lineStyle, color?.stroke, color?.fill, opacity(commit.branch))}
-        />
-      </svg>
-    );
-  },
-);
+      <circle
+        cx={cx(col)}
+        cy={halfHeight}
+        r={options.nodeRadius}
+        className={mx('fill-base-surface stroke-base-surface')}
+      />
+      <circle
+        cx={cx(col)}
+        cy={halfHeight}
+        r={options.nodeRadius}
+        className={mx('fill-base-surface', options.lineStyle, color?.stroke, color?.fill, opacity(commit.branch))}
+      />
+    </svg>
+  );
+});
