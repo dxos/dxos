@@ -22,6 +22,10 @@ describe('GroupBy.truncateTimestamp', () => {
     expect(GroupBy.truncateTimestamp(at('2026-03-08T20:00:00Z'), 'day', 'America/Los_Angeles')).toBe(
       at('2026-03-08T08:00:00Z'),
     );
+    // Santiago's clocks go forward at midnight on 6 September, so that day starts at 01:00 local.
+    expect(GroupBy.truncateTimestamp(at('2026-09-06T12:00:00Z'), 'day', 'America/Santiago')).toBe(
+      at('2026-09-06T04:00:00Z'),
+    );
     expect(GroupBy.truncateTimestamp(at('2026-01-05T18:45:00Z'), 'day')).toBe(at('2026-01-05T00:00:00Z'));
   });
 });

@@ -874,10 +874,8 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = step.indexOnly
-          ? metas.map(QueryItem.fromIndexRow)
-          : await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += step.indexOnly ? 0 : results.length;
+        const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.bare ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -946,10 +944,8 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = step.indexOnly
-          ? metas.map(QueryItem.fromIndexRow)
-          : await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += step.indexOnly ? 0 : results.length;
+        const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.bare ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));
@@ -980,10 +976,8 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = step.indexOnly
-          ? metas.map(QueryItem.fromIndexRow)
-          : await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += step.indexOnly ? 0 : results.length;
+        const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += step.bare ? 0 : results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
         workingSet.push(...results.filter(isNonNullable));

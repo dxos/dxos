@@ -77,8 +77,14 @@ export const GroupBy = Object.freeze({
     }
     const { year, month, day } = wallClock(timestamp, timeZone);
     const midnightAsUtc = Date.UTC(year, month - 1, day);
-    // The offset at local midnight can differ from the offset at `timestamp` across a DST change.
-    return midnightAsUtc - zoneOffset(midnightAsUtc - zoneOffset(midnightAsUtc, timeZone), timeZone);
+    // The offset at local midnight can differ from the offset at `timestamp` across a DST change, so
+    // correct again unless the first candidate already falls on the day asked for. A zone that skips
+    // midnight (Santiago in September) has no 00:00, and its first candidate is the day's first instant.
+    const candidate = midnightAsUtc - zoneOffset(midnightAsUtc, timeZone);
+    const onDay = wallClock(candidate, timeZone);
+    return onDay.year === year && onDay.month === month && onDay.day === day
+      ? candidate
+      : midnightAsUtc - zoneOffset(candidate, timeZone);
   },
 
   /**

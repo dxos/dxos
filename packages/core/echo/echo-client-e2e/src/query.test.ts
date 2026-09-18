@@ -481,6 +481,7 @@ describe('Query', () => {
     });
 
     test('a count by type and hour is answered without members and agrees with the loaded rows', async () => {
+      const startedAt = Math.floor(Date.now() / 3_600_000) * 3_600_000;
       const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
       db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
@@ -502,12 +503,13 @@ describe('Query', () => {
         )
         .run();
 
-      const thisHour = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+      // The hour may turn between the edits and this assertion, so accept either side of a boundary.
+      const hours = new Set([startedAt, Math.floor(Date.now() / 3_600_000) * 3_600_000]);
       const countOf = (typename: string) => rows.find((row) => String(row.type).includes(typename))?.count;
       expect(rows).to.have.length(2);
       expect(countOf(Type.getTypename(TestSchema.Person))).to.equal(2);
       expect(countOf(Type.getTypename(TestSchema.Task))).to.equal(1);
-      expect(rows.every((row) => row.hour === thisHour)).to.be.true;
+      expect(rows.every((row) => hours.has(Number(row.hour)))).to.be.true;
       expect(rows.every((row) => !('items' in row))).to.be.true;
       expect(rows.reduce((total, row) => total + row.count, 0)).to.equal(loaded.length);
     });
