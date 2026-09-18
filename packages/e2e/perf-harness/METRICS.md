@@ -384,11 +384,15 @@ Recorded here so nobody rediscovers them as bugs.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
 5. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
    would be visible per realm.
-6. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode. The
-   variance that motivated it is real and does not go away — `open-tasks` moved
+6. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
+   first ten-iteration run corrected the premise. WITHIN a run the spread is tiny (CV 1.6% on total
+   wall time, 0.11% on DOM nodes); the ~20% figure below came from comparing separate RUNS, which
+   also differ by machine cell and cache state. Ten iterations therefore pin down one job very
+   precisely and say nothing about the night-to-night term, which is the larger one and is still
+   unmeasured. The remaining variance — `open-tasks` moved
    9,172 → 6,803 → 7,833 → 10,195 ms across single runs, and `boot` moved +20.9% between two runs
-   instrumented identically (not at all) — so a single sample could not resolve anything below
-   ~20-30% per stage, the instruments' own cost included. The read side is settled too: each tile
+   instrumented identically (not at all) — but those are BETWEEN-run figures. Measured within one
+   run: `edit-document` 1.2%, `boot` 9.2%, `open-space` 41.6%. The read side is settled too: each tile
    is a box over the ten run totals — mean +/- one sample sd, with the median drawn — so the
    spread is now measured rather than asserted. Both statistics are shown because they answer
    different questions: one slow but SUCCESSFUL iteration moves the mean and not the median. A

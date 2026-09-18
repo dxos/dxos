@@ -110,6 +110,14 @@ elsewhere. See "The two stacked tiles" below.
 | 12  | Total SQLite read bytes per run       | `ciSqliteReadBytes`  | sum     |
 | 13  | Total SQLite write bytes per run      | `ciSqliteWriteBytes` | sum     |
 
+### `open-space` is not yet trustworthy
+
+Worth knowing before reading any tile that includes it. Across four runs its wall time is 254,
+378, 648 and 1,638 ms — a **6.4x** span — and its within-run CV is **41.6%**, against 1-3% for
+most phases. Every other phase is stable both within and across runs, so this is the stage and not
+the harness. Until it is understood, a movement in a run total is more likely to be `open-space`
+than anything else in the flow, and the phase-stacked tile is where to check.
+
 ### The SQLite tiles filter on `ciSqliteRealms > 0`
 
 Alone among the tiles, these two carry a `WHERE` that is not about comparability. Zero bytes means
@@ -201,9 +209,21 @@ charts above, where nothing marks it as short.
 - **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
   sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
   the timing tiles as trends.
-- **The box measures the noise floor, so read it before reading the trend.** The run-to-run spread
-  on a stage is ~20%, and the nightly's ten iterations measure that directly rather than leaving it
-  asserted — which one sample per night could never support.
+- **The box measures WITHIN-night noise, which is much smaller than night-to-night, so it is not
+  the error bar the trend needs.** Measured on the first ten-iteration run (`0cb927f5`, 100 rows):
+  the coefficient of variation across ten iterations of one run is **1.6%** on total wall time,
+  2.9% CPU, 1.9% TBT, 3.1% peak RSS and **0.11%** DOM nodes. The same phases compared ACROSS runs
+  move far more — `edit-document` spans 1,438-1,589 ms over four runs (~10%) against 1.2% inside
+  one, and `boot` spans 3,720-4,219 ms (~13%) against 9.2% inside one.
+
+  So a box being narrow says the harness is repeatable on one machine in one job; it does NOT say a
+  night-to-night move of that size is meaningful. The between-night component — a different runner
+  cell, a different bundle, a cold cache — is the larger term and no tile currently measures it.
+  Two nights whose boxes do not overlap can still differ by less than the machine does.
+
+  This corrects the figure this file carried before any of it was measured, "~20% run-to-run spread
+  per stage". That number came from comparing separate runs and was then used to describe
+  iterations, which are an order of magnitude tighter.
 
   What the box is NOT: mean +/- one sd is a description of the samples, not a confidence interval
   and not a hypothesis test. Overlapping boxes are not evidence that nothing regressed, and
