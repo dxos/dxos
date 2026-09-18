@@ -25,8 +25,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      // Only the flip is the transition's update step: navigating below waits on URL resolution, and
-      // rendering stays frozen for as long as the step takes.
       yield* withViewTransition(applyWorkspace(input.subject));
 
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);

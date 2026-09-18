@@ -14,16 +14,10 @@ import { withViewTransition } from './view-transition.ts';
 type UpdateCallback = () => Promise<void>;
 
 type FakeDocument = {
-  /** The update callbacks `startViewTransition` received. */
   callbacks: UpdateCallback[];
-  /** The one callback a transition received. */
   callback: () => UpdateCallback;
 };
 
-/**
- * Stand in for a document whose `startViewTransition` records its update callback without invoking
- * it, so a test can play the browser's side of the contract itself.
- */
 const installDocument = (
   options: { api?: boolean; reducedMotion?: boolean; visibility?: DocumentVisibilityState } = {},
 ): FakeDocument => {
@@ -52,7 +46,6 @@ const installDocument = (
   return fake;
 };
 
-/** Let every queued microtask run. */
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve));
 
 describe('withViewTransition', () => {
@@ -84,7 +77,6 @@ describe('withViewTransition', () => {
       callbackSettled = true;
     });
     await running;
-    // The effect saw the callback still pending, so the new state is captured after the effect's writes.
     expect(ran).toHaveBeenCalledOnce();
     expect(ran).toHaveBeenCalledWith(false);
     await done;
@@ -109,7 +101,6 @@ describe('withViewTransition', () => {
     const callback = fake.callback();
     await EffectEx.runPromise(Fiber.interrupt(fiber));
     expect(ran).not.toHaveBeenCalled();
-    // The browser invokes the callback whether or not anyone is still waiting, and must not hang on it.
     await expect(callback()).resolves.toBeUndefined();
   });
 });
