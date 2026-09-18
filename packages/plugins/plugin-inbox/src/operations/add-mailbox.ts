@@ -13,6 +13,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 import { InboxOperation } from '#types';
 
 import { getMailboxPath } from '../paths.ts';
+import { InboxOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(
@@ -25,7 +26,9 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       // The space id names the database, so the target has to live in it; one from another space —
       // or a detached one — would take the reference somewhere the mailbox is not.
       if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
-        return yield* Effect.fail(new Error(`Target collection does not belong to space ${db.spaceId}.`));
+        return yield* Effect.fail(
+          new InboxOperationError({ message: `Target collection does not belong to space ${db.spaceId}.` }),
+        );
       }
 
       yield* CollectionModel.add({ object, target });

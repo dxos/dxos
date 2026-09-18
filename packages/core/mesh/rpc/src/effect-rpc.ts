@@ -16,6 +16,7 @@ import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
 import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { type RpcPort } from './rpc.ts';
@@ -51,14 +52,17 @@ const subscribePort = (port: RpcPort) =>
     return queue;
   });
 
-const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void, Error> =>
+/** The underlying {@link RpcPort} rejected a frame. */
+export class RpcPortError extends BaseError.extend('RpcPortError', 'Failed to send an RPC frame.') {}
+
+const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void, RpcPortError> =>
   frame === undefined || typeof frame === 'string'
     ? Effect.die(new Error('rpc-port protocol requires binary frames'))
     : // Copy the frame: binary encoders reuse their output buffer, but RpcPort.send may be
       // asynchronous (e.g. postMessage) and read the bytes after the encoder has overwritten them.
       Effect.tryPromise({
         try: async () => port.send(frame.slice()),
-        catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        catch: (cause) => new RpcPortError({ cause }),
       });
 
 /**
