@@ -107,7 +107,28 @@ elsewhere. See "The two stacked tiles" below.
 | 9   | Total app code transferred per run    | `ciCodeBytes`        | sum     |
 | 10  | Total blocking time per run           | `ciTbtMs`            | sum     |
 | 11  | Total edge traffic per run            | `ciEdgeBytes`        | sum     |
-| 12  | Total SQLite disk I/O per run         | `ciSqliteWriteBytes` | sum     |
+| 12  | Total SQLite read bytes per run       | `ciSqliteReadBytes`  | sum     |
+| 13  | Total SQLite write bytes per run      | `ciSqliteWriteBytes` | sum     |
+
+### The SQLite tiles filter on `ciSqliteRealms > 0`
+
+Alone among the tiles, these two carry a `WHERE` that is not about comparability. Zero bytes means
+either that SQLite did no I/O or that nothing was instrumented, and the byte columns cannot tell
+those apart — so without the filter every run predating the VFS wrapper plots as a floor of zero
+and reads as a dramatic improvement that never happened. The integrity column is what makes the
+absence droppable rather than plottable.
+
+The two are not symmetric, and the difference is in the VFS contract rather than in the tiles:
+
+- **Read bytes are REQUESTED.** SQLite asks for a whole page past end-of-file during recovery and
+  the VFS zero-fills the remainder, so this is the I/O asked of storage.
+- **Write bytes are DELIVERED.** A short write is an error the VFS reports rather than a partial
+  success, so a rejected write contributes nothing and lands in `writeErrors`.
+
+Read the write tile against `ciSqliteSyncs`: bytes rising while syncs stay flat is a bigger
+transaction, while syncs rising with bytes flat is write amplification — the journal mode doing
+more fsyncs for the same data. `applyOpfsPragmas` sets journal mode and `synchronous`, so a change
+there should move these tiles and nothing else on the page.
 
 ### The two stacked tiles
 
