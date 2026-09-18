@@ -31,13 +31,13 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/progress": "workspace:*"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },
