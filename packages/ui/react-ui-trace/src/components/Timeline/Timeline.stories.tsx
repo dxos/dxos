@@ -294,6 +294,33 @@ export const Large: Story = {
   },
 };
 
+/**
+ * Windowing must not cost the graph: a row deep in the history still draws every lane crossing it,
+ * because the spans it reads are computed over the whole history, not over the mounted rows.
+ */
+export const Branching: Story = {
+  args: generateLargeHistory(),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
+
+    // Jump to the end, so every mounted row was windowed in rather than rendered at mount.
+    const timeline = canvasElement.querySelector<HTMLElement>('[tabindex="0"]');
+    timeline?.focus();
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await waitFor(() =>
+      expect(canvasElement.querySelector(`[data-commit-index="${LARGE_HISTORY_LENGTH - 1}"]`)).not.toBeNull(),
+    );
+
+    const rows = [...mountedRows(canvasElement)];
+    // Each row carries its own node, and a connector for every lane that runs through it.
+    const nodesPerRow = rows.map((row) => row.querySelectorAll('svg circle').length);
+    await expect(Math.min(...nodesPerRow)).toBeGreaterThan(0);
+    // Somewhere in the window a second lane is open, so its through-line is drawn beside the node.
+    const connectorsPerRow = rows.map((row) => row.querySelectorAll('svg path').length);
+    await expect(Math.max(...connectorsPerRow)).toBeGreaterThan(1);
+  },
+};
+
 export const Keyboard: Story = {
   args: generateLargeHistory(),
   play: async ({ canvasElement }) => {
