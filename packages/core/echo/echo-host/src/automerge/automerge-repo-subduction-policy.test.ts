@@ -21,6 +21,7 @@ import {
   denyPeers,
   documentIdToSedimentreeIdString,
   findInStates,
+  peekDoc,
   reconnectAdapters,
   waitForReadyWithRedrive,
   waitForSubductionSave,
@@ -878,7 +879,7 @@ describe('SubductionPolicy', () => {
       // it land.
       await reconnectAdapters(adapters, { repos });
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
+        .poll(() => peekDoc<{ text?: string }>(client, handle.url)?.text, { timeout: 10_000 })
         .toEqual('gated-put');
     });
 

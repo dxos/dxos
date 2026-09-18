@@ -97,6 +97,16 @@ export const waitForReadyWithRedrive = async <T>(
   }
 };
 
+/**
+ * Read a document's contents from `repo`'s handle cache without issuing a query.
+ *
+ * After a deliberate policy denial the query has already settled `unavailable`, and `repo.find()`
+ * rejects from then on however many times it is polled; the handle still updates when the holder's
+ * re-driven push finally lands.
+ */
+export const peekDoc = <T>(repo: Repo, url: AutomergeUrl): T | undefined =>
+  (repo.handles[parseAutomergeUrl(url).documentId] as DocHandle<T> | undefined)?.doc();
+
 export const findInStates = async <T>(
   repo: Repo,
   url: AutomergeUrl,
