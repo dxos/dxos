@@ -57,6 +57,8 @@ GraphBuilder.createExtension({
 Convenience wrapper that matches ECHO objects of a specific type. The callback receives the typed object.
 
 ```typescript
+import { AppNode } from '@dxos/app-toolkit';
+
 GraphBuilder.createTypeExtension({
   id: 'item-actions',
   type: MyItem.MyItem,  // The Effect/Schema type with ECHO annotations.

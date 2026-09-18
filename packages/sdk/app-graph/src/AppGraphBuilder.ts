@@ -12,6 +12,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { Entity, type Type } from '@dxos/echo';
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position, isNonNullable } from '@dxos/util';
@@ -212,6 +213,8 @@ export class GraphBuilder extends Builder.GraphBuilder<
       decorateNode,
       store: (hooks, resolvedRegistry) => makeStore(graphProps, hooks, resolvedRegistry),
     });
+    // An empty prefix would make every segment read as linked.
+    invariant(grammar.linked.prefix.length > 0, 'UrlGrammar.linked.prefix must not be empty');
     this.urlGrammar = grammar;
   }
 

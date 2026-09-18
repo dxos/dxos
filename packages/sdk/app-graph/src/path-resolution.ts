@@ -140,6 +140,11 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   table.set(linked.key, { key: linked.key, hasId: true, anchor: false });
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.meta.key;
+    if (key === linked.key || key === anchorKey) {
+      // The grammar's keys are read before any item lookup, so an extension bound to one could never resolve.
+      log.warn('URL prefix key is reserved by the grammar', { key, extension: extension.id });
+      continue;
+    }
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
     const hasId = extension.meta.kind !== 'singleton';
     const anchor = false;

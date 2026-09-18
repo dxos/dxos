@@ -516,6 +516,10 @@ describe('path-resolution', () => {
       expect(Option.isNone(PathResolution.representNode(custom, `root/${WORKSPACE_A}/docA/~notes`))).toBe(true);
     });
 
+    test('rejects an empty linked prefix', ({ expect }) => {
+      expect(() => GraphBuilder.make({ urlGrammar: { linked: { prefix: '' } } })).toThrow();
+    });
+
     test('returns none for a node with no key-declaring producer', async ({ expect }) => {
       const builder = buildTestBuilder();
       const represented = PathResolution.representNode(builder, GraphNode.RootId);
