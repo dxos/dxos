@@ -12,14 +12,12 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
-
-// `Effect.tryPromise` needs an `Error`, and a rejection is not guaranteed to be one.
-const toError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
@@ -125,7 +123,7 @@ export class DataServiceImpl implements DataService.Handlers {
           await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
         }
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -138,7 +136,7 @@ export class DataServiceImpl implements DataService.Handlers {
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -153,7 +151,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
         await synchronizer.update(Context.default(), request.updates);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -162,7 +160,7 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._automergeHost.flush(Context.default(), request);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -182,7 +180,7 @@ export class DataServiceImpl implements DataService.Handlers {
           },
         };
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -193,7 +191,7 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -202,7 +200,7 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -211,7 +209,7 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._updateIndexes();
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -221,7 +219,7 @@ export class DataServiceImpl implements DataService.Handlers {
         invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
         return this._getSpaceStats(request.spaceId);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -233,7 +231,7 @@ export class DataServiceImpl implements DataService.Handlers {
         invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
         return this._runGarbageCollection(request.spaceId, request);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
