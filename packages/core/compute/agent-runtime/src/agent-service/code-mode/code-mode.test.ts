@@ -22,7 +22,7 @@ import { AssistantTestLayer } from '../../testing/index.ts';
 import * as AgentService from '../AgentService.ts';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, Operation as SandboxOperation } from './Dialect.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
@@ -128,12 +128,17 @@ const ScoreOperation: SandboxOperation = {
   name: 'score',
   description: 'Scores a title',
   parameters: {},
+  // The real definition, so a dialect that hands the model the operation itself has one to bind.
+  definition: Score,
   invoke: (input: unknown) => Effect.succeed((input as { title: string }).title.length),
 };
 
+/** How the effect dialect keys `ops`: by the operation's own DXN, not its derived tool name. */
+const SCORE_KEY = String(Score.meta.key);
+
 /** Runs `code` through the eval tool exactly as a turn would, returning what it printed. */
 const runEval = Effect.fnUntraced(function* (code: string, dialect: Dialect = PlainDialect) {
-  const runtime = yield* Effect.context<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service | Operation.Service>();
   const toolkit = makeEvalToolkit({
     dialect: { ...dialect, bindings: (context) => ({ ...dialect.bindings(context), ProbeError }) },
     sandbox: Sandbox.inProcess,
@@ -215,7 +220,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           const created = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Review the PR', status: 'open' }));
           yield* Database.flush();
           yield* print('created', created.title);
-          yield* print('scored', yield* ops.score({ title: created.title }));
+          yield* print('scored', yield* Operation.invoke(ops['${SCORE_KEY}'], { title: created.title }));
         `,
           EffectDialect,
         );

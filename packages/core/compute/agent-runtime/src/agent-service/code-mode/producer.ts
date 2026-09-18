@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -10,15 +9,16 @@ import * as Record from 'effect/Record';
 import * as Tool from 'effect/unstable/ai/Tool';
 
 import { callTool } from '@dxos/ai';
-import { AiRequest, AiSession, createToolkit, formatSystemPrompt } from '@dxos/assistant';
+import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
+import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import type { Database } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { ContentBlock, Message } from '@dxos/types';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '../turn-producer.ts';
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, Operation } from './Dialect.ts';
+import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
 import { makeEvalToolkit } from './eval-tool.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -67,14 +67,14 @@ export const makeCodeModeTurnProducer =
   ({ feed, runtime, instructions }) =>
     EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime, instructions })).pipe(
       Effect.map((session): TurnProducer => ({
-        runTurn: (params) => runCodeModeTurn({ session, runtime, instructions, params, options }),
+        runTurn: (params) => runCodeModeTurn({ session, feed, instructions, params, options }),
         getSkills: () => session.context.getSkills(),
       })),
     );
 
 type RunTurnOptions = {
   session: AiSession.Session;
-  runtime: Context.Context<Database.Service>;
+  feed: Parameters<MakeTurnProducer>[0]['feed'];
   instructions: Parameters<MakeTurnProducer>[0]['instructions'];
   params: TurnRequest;
   options: CodeModeOptions;
@@ -86,7 +86,7 @@ type RunTurnOptions = {
  */
 const runCodeModeTurn = ({
   session,
-  runtime,
+  feed,
   instructions,
   params,
   options,
@@ -97,6 +97,10 @@ const runCodeModeTurn = ({
     // installed as a layer without every caller passing it; the in-process one is the fallback.
     const sandbox =
       options.sandbox ?? Option.getOrElse(yield* Effect.serviceOption(Sandbox.Service), () => Sandbox.inProcess);
+
+    // The turn's own services, not the producer's database-only runtime: the sandbox runs the
+    // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.
+    const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
     const history = yield* Effect.promise(() => session.getHistory());
     const request = new AiRequest.Request({
@@ -126,7 +130,9 @@ const runCodeModeTurn = ({
         timeout: options.timeout,
       });
       const system = yield* formatSystemPrompt({
-        system: [dialect.instructions(operations), options.system, params.system].filter(isPresent).join('\n\n'),
+        system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
+          .filter(isPresent)
+          .join('\n\n'),
         skills,
         objects: session.context.getObjects(),
         instructions,
@@ -152,7 +158,47 @@ const runCodeModeTurn = ({
     }
 
     return [...request.pending];
-  }).pipe(Effect.withSpan('CodeMode.runTurn'));
+  }).pipe(
+    // What `AiSession.createRequest` provides around its own turn: an operation invoked from the
+    // sandbox is part of this conversation, the same as one invoked as a tool.
+    Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
+    Effect.withSpan('CodeMode.runTurn'),
+  );
+
+/**
+ * The operation a tool invokes, when one backs it.
+ *
+ * Absent for a provider-defined or MCP tool, which carries no annotation context — and on which
+ * `getOperationFromTool` throws rather than returning `None`, so the throw is contained here.
+ */
+const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined => {
+  try {
+    return Option.getOrUndefined(getOperationFromTool(tool));
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Every object type the workspace has registered, with its fields.
+ *
+ * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
+ * invites the model to introspect a schema for the shape it needs, and that costs turns it should
+ * be spending on the task.
+ */
+const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.gen(function* () {
+  const { db } = yield* Database.Service;
+  return db.registry
+    .list()
+    .filter((entity) => Type.isType(entity) && Type.isObject(entity))
+    .map((type) => ({
+      typename: Type.getTypename(type) ?? '',
+      // The same `fields` record the sandbox's bound type carries, which is what the model would
+      // otherwise go looking for.
+      fields: Object.keys(('fields' in type && type.fields) || {}),
+    }))
+    .filter(({ typename }) => typename.length > 0);
+});
 
 /**
  * Projects the skills' tools into callable operations. Resolution goes through the ordinary toolkit
@@ -162,13 +208,15 @@ const runCodeModeTurn = ({
 const projectOperations = Effect.fnUntraced(function* (skills: readonly Skill.Skill[]) {
   const skillToolkit = yield* createToolkit({ skills });
   const handlers = yield* skillToolkit.handlers;
-  return Record.toEntries(skillToolkit.toolkit.tools).map(([name, tool]): Operation => ({
+  return Record.toEntries(skillToolkit.toolkit.tools).map(([name, tool]): SandboxOperation => ({
     name,
     description: tool.description,
     parameters: Tool.getJsonSchema(tool),
+    // Carried so a dialect can hand the model the operation itself rather than a wrapper around it.
+    definition: operationBehind(tool),
     // A failed operation raises in the sandbox — as a rejected promise or a failed effect,
     // depending on the dialect — since `toolResultValue` throws whatever the tool reported.
-    invoke: (input) =>
+    invoke: (input: unknown) =>
       callTool(handlers, {
         _tag: 'toolCall',
         toolCallId: `code-mode-${name}`,

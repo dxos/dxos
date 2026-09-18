@@ -263,15 +263,20 @@ defineTask({
     }),
     Scorer.make({
       name: 'organization-linked',
-      description: "The person's organization ref resolves to the seeded Initech organization.",
+      description: "The person's organization ref points at the seeded Initech organization.",
+      // Compared by entity id rather than by loading the ref: an agent writes it as a bare
+      // `echo:<id>`, which resolves only inside the space, and the scorer runs outside it.
       score: Effect.gen(function* () {
-        const people = yield* Database.query(Filter.type(Person.Person)).run;
+        const [people, organizations] = [
+          yield* Database.query(Filter.type(Person.Person)).run,
+          yield* Database.query(Filter.type(Organization.Organization)).run,
+        ];
         const ada = people.find((person) => person.fullName === 'Ada Lovelace');
-        if (ada?.organization === undefined) {
+        const initech = organizations.find((organization) => organization.name === 'Initech');
+        if (ada?.organization === undefined || initech === undefined) {
           return false;
         }
-        const organization = yield* Database.load(ada.organization as Ref.Ref<Organization.Organization>);
-        return organization.name === 'Initech';
+        return Ref.hasEntityId(initech.id)(ada.organization);
       }),
     }),
     Scorer.database({

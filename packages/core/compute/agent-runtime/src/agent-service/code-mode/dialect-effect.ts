@@ -5,12 +5,21 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { type BindingsContext, type Dialect, NO_OPERATIONS, type Operation, renderOperation } from './Dialect.ts';
+import {
+  type BindingsContext,
+  type Dialect,
+  type InstructionsContext,
+  NO_OPERATIONS,
+  type SandboxOperation,
+  renderOperation,
+  renderTypes,
+} from './Dialect.ts';
 
 /**
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
@@ -39,6 +48,7 @@ export const EffectDialect: Dialect = {
     Ref,
     Type,
     DXN,
+    Operation,
 
     /** Every registered object type, keyed by typename — what `Obj.make` and `Filter.type` take. */
     types: Object.fromEntries(
@@ -50,13 +60,23 @@ export const EffectDialect: Dialect = {
 
     print: (...values: unknown[]) => Effect.sync(() => print(...values)),
 
-    ops: Object.fromEntries(operations.map((operation) => [operation.name, operation.invoke])),
+    // The operations themselves, not wrappers: the model invokes one the way a source file does,
+    // `yield* Operation.invoke(ops['<dxn>'], input)`. Keyed by DXN rather than by the tool name the
+    // other dialect uses — that name is derived from the key lossily (kebab-cased, dots to dashes)
+    // and is a model-facing identifier, not something this repo's code ever refers to an operation
+    // by. A tool with no definition behind it (provider-defined, MCP) has nothing to bind here, and
+    // is left out of the reference too.
+    ops: Object.fromEntries(
+      operations.flatMap((operation) =>
+        operation.definition ? [[operationKey(operation.definition), operation.definition]] : [],
+      ),
+    ),
 
     /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
     runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
   }),
 
-  instructions: (operations: readonly Operation[]) => trim`
+  instructions: ({ operations, types }: InstructionsContext) => trim`
     ## Code mode
 
     You have exactly one tool, \`eval\`. Its \`code\` is the body of an \`Effect.gen\` generator run
@@ -69,8 +89,8 @@ export const EffectDialect: Dialect = {
 
     ### In scope
 
-    - \`Database\`, \`Filter\`, \`Query\`, \`Obj\`, \`Ref\`, \`Type\`, \`DXN\`, \`Effect\` — the DXOS
-      ECHO modules, as a source file would import them.
+    - \`Database\`, \`Filter\`, \`Query\`, \`Obj\`, \`Ref\`, \`Type\`, \`DXN\`, \`Operation\`, \`Effect\` —
+      the DXOS modules, as a source file would import them.
     - \`types\` — every registered object type, keyed by typename:
       \`types['example.com/type/Task']\`.
     - \`print(...values)\` — an effect: \`yield* print('count', tasks.length)\`. Strings go through
@@ -92,17 +112,31 @@ export const EffectDialect: Dialect = {
     \`Obj.update\` is synchronous and is the only way to change a stored object. \`Database.remove\`
     deletes one. Call \`Database.flush()\` before printing a final confirmation.
 
-    ${operations.length > 0 ? renderEffectOperations(operations) : NO_OPERATIONS}
+    ${renderTypes(types)}
+
+    ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
   `,
 };
 
-const renderEffectOperations = (operations: readonly Operation[]): string => trim`
+/** The key an operation is bound and documented under: its own DXN, as `Operation.meta.key` holds it. */
+const operationKey = (definition: Operation.Definition.Any): string => String(definition.meta.key);
+
+const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
-  The skills above describe their capabilities as tools; in code mode they are NOT tools. Each one
-  is an effect on \`ops\`, taking one argument matching its parameter schema:
-  \`const result = yield* ops['tool-name']({ ... })\`. A failed operation fails the effect, so wrap
-  a call you expect to fail in \`Effect.result\`.
+  The skills above describe their capabilities as tools; in code mode they are NOT tools. \`ops\`
+  holds the operation definitions themselves, which you invoke the way any other DXOS code does:
 
-  ${operations.map((operation) => renderOperation(operation, (name) => `yield* ops['${name}'](input)`)).join('\n')}
+  \`\`\`js
+  const result = yield* Operation.invoke(ops['tool-name'], { ...input });
+  \`\`\`
+
+  A failed operation fails the effect, so wrap a call you expect to fail in \`Effect.result\`.
+
+  ${operations
+    .filter((operation) => operation.definition)
+    .map((operation) =>
+      renderOperation(operation, () => `yield* Operation.invoke(ops['${operationKey(operation.definition!)}'], input)`),
+    )
+    .join('\n')}
 `;

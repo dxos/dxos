@@ -5,26 +5,43 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import type * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 /**
  * An operation the sandbox exposes, projected from a skill-bound tool.
  */
-export type Operation = {
+export type SandboxOperation = {
   /** Name it is bound under, i.e. the tool name derived from the operation key. */
   readonly name: string;
   readonly description?: string;
   /** JSON schema of the operation's input, rendered into the model's API reference. */
   readonly parameters: unknown;
-  /** Runs the operation, raising whatever error the tool reported. */
+  /**
+   * The operation itself, for a dialect that hands the model the real thing to call
+   * (`Operation.invoke(definition, input)`). Absent for a tool that is not operation-backed — a
+   * provider-defined or MCP tool — which such a dialect cannot express.
+   */
+  readonly definition?: Operation.Definition.Any;
+  /** Runs the operation through the tool path, raising whatever error the tool reported. */
   readonly invoke: (input: unknown) => Effect.Effect<unknown>;
 };
 
+/** A type the workspace has registered, as the model is told about it. */
+export type SandboxType = {
+  readonly typename: string;
+  /** Field names, so the model never has to introspect a schema to find out what it may write. */
+  readonly fields: readonly string[];
+};
+
 export type BindingsContext = {
-  /** Services the sandbox's ECHO access runs against. */
-  readonly runtime: Context.Context<Database.Service>;
-  readonly operations: readonly Operation[];
+  /**
+   * Services the sandbox's code runs against: the database it reads and writes, and the operation
+   * service `Operation.invoke` resolves a handler through.
+   */
+  readonly runtime: Context.Context<Database.Service | Operation.Service>;
+  readonly operations: readonly SandboxOperation[];
   /** Appends a line to this call's output — the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };
@@ -41,7 +58,7 @@ export interface Dialect {
   readonly name: string;
 
   /** The API reference rendered into the system prompt, ahead of the skills' own instructions. */
-  readonly instructions: (operations: readonly Operation[]) => string;
+  readonly instructions: (context: InstructionsContext) => string;
 
   /** Wraps the model's code into the body the sandbox evaluates. */
   readonly wrap: (code: string) => string;
@@ -50,8 +67,25 @@ export interface Dialect {
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
 }
 
+export type InstructionsContext = {
+  readonly operations: readonly SandboxOperation[];
+  readonly types: readonly SandboxType[];
+};
+
+/** The types section of the API reference, shared by the dialects. */
+export const renderTypes = (types: readonly SandboxType[]): string =>
+  types.length === 0
+    ? '### Types\n\nNo types are registered.'
+    : trim`
+      ### Types
+
+      Every registered type and its fields. This is the whole schema — do not introspect it further.
+
+      ${types.map(({ typename, fields }) => `- \`${typename}\` — ${fields.join(', ')}`).join('\n')}
+    `;
+
 /** One operation's line in the API reference, `call` rendering the dialect's own call syntax. */
-export const renderOperation = (operation: Operation, call: (name: string) => string): string => trim`
+export const renderOperation = (operation: SandboxOperation, call: (name: string) => string): string => trim`
   - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
     input: ${JSON.stringify(operation.parameters)}
 `;

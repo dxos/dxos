@@ -10,7 +10,15 @@ import { RuntimeProvider } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { type BindingsContext, type Dialect, NO_OPERATIONS, type Operation, renderOperation } from './Dialect.ts';
+import {
+  type BindingsContext,
+  type Dialect,
+  type InstructionsContext,
+  NO_OPERATIONS,
+  type SandboxOperation,
+  renderOperation,
+  renderTypes,
+} from './Dialect.ts';
 
 /**
  * A typename the registry has no object type for — an expected failure of the model's code, so it
@@ -87,7 +95,7 @@ export const PlainDialect: Dialect = {
     };
   },
 
-  instructions: (operations: readonly Operation[]) => trim`
+  instructions: ({ operations, types }: InstructionsContext) => trim`
     ## Code mode
 
     You have exactly one tool, \`eval\`, which runs the body of an async JavaScript function against
@@ -111,11 +119,13 @@ export const PlainDialect: Dialect = {
     - \`await flush()\` — waits for pending writes to land; call it before printing a final
       confirmation.
 
+    ${renderTypes(types)}
+
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,
 };
 
-const renderPlainOperations = (operations: readonly Operation[]): string => trim`
+const renderPlainOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
   The skills above describe their capabilities as tools; in code mode they are NOT tools. Each one

@@ -3,7 +3,7 @@
 //
 
 export * as Sandbox from './Sandbox.ts';
-export { type BindingsContext, type Dialect, type Operation } from './Dialect.ts';
+export { type BindingsContext, type Dialect, type SandboxOperation } from './Dialect.ts';
 export { EffectDialect } from './dialect-effect.ts';
 export { PlainDialect } from './dialect-plain.ts';
 export { EVAL_TOOL_NAME, EvalTool, makeEvalToolkit } from './eval-tool.ts';

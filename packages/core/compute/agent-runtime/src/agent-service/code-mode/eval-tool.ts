@@ -11,10 +11,11 @@ import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
+import type * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type { Dialect, Operation } from './Dialect.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** The single tool a code-mode agent carries. */
@@ -43,9 +44,9 @@ export const EvalToolkitDefinition = Toolkit.make(EvalTool);
 export type EvalToolkitOptions = {
   readonly dialect: Dialect;
   readonly sandbox: Sandbox.Sandbox;
-  /** Services the sandbox's ECHO access runs against. */
-  readonly runtime: Context.Context<Database.Service>;
-  readonly operations: readonly Operation[];
+  /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
+  readonly runtime: Context.Context<Database.Service | Operation.Service>;
+  readonly operations: readonly SandboxOperation[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
 };
