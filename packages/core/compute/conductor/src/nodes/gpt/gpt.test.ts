@@ -73,8 +73,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(typeof output.text).toBe('string');
           expect(output.text.length).toBeGreaterThan(10);
         },
-        Effect.provide(Trace.writerLayerNoop),
-        Effect.provide(computeNodeContextLayerNoop),
+        Effect.provide(Layer.provideMerge(Trace.writerLayerNoop, computeNodeContextLayerNoop)),
       ),
       60_000,
     );
@@ -111,8 +110,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
         },
-        Effect.provide(Trace.writerLayerNoop),
-        Effect.provide(computeNodeContextLayerNoop),
+        Effect.provide(Layer.provideMerge(Trace.writerLayerNoop, computeNodeContextLayerNoop)),
       ),
       60_000,
     );

@@ -8,6 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import { expect, vi } from 'vitest';
 
+import { ObservabilityError } from './errors.ts';
 import * as Observability from './Observability.ts';
 import * as ObservabilityExtension from './ObservabilityExtension.ts';
 
@@ -90,7 +91,9 @@ describe('Observability', () => {
         let callCount = 0;
         const ext = createMockExtension({
           initialize: vi.fn(() =>
-            ++callCount === 1 ? Effect.fail(new Error('init failed')) : Effect.succeed(undefined),
+            ++callCount === 1
+              ? Effect.fail(new ObservabilityError({ message: 'init failed' }))
+              : Effect.succeed(undefined),
           ),
         });
 
@@ -496,7 +499,8 @@ describe('Observability', () => {
 
     it.effect('provider errors do not crash initialization', () =>
       Effect.gen(function* () {
-        const failingProvider: Observability.DataProvider = () => Effect.fail(new Error('provider failed'));
+        const failingProvider: Observability.DataProvider = () =>
+          Effect.fail(new ObservabilityError({ message: 'provider failed' }));
         const obs = yield* Function.pipe(Observability.make(), Observability.addDataProvider(failingProvider));
         // Should not throw — error is caught internally.
         yield* obs.initialize();

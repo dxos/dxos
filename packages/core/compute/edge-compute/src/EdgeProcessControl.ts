@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
@@ -101,7 +102,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
       return yield* RpcClient.make(group).pipe(
         Effect.provideServiceEffect(RpcClient.Protocol, RpcClient.makeProtocolHttp(httpClient)),
       );
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(RpcSerialization.layerNdjson), Effect.orDie),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, RpcSerialization.layerNdjson)), Effect.orDie),
 });
 /**
  * Build from a `Client`, deferring edge-client creation until first use (identity may be absent at

@@ -117,6 +117,35 @@ test QA-1: A project with a large task set and long documents
       note: |
         Cold profile, so this stage carries onboarding and the whole boot module graph. Comparable
         only against other `first-run` rows — which is why `profileState` is on every row.
+    - name: Wait for the space to replicate
+      id: await-replication
+      do: Poll the space's sync state until it has caught up with EDGE.
+      expect: nothing outstanding, or 95% replicated held for ten seconds
+      note: |
+        The stage every stage below it depends on. The fixture's writes keep replicating long after
+        the last `tasks.create` resolves, so without this wait whichever stage happened to be
+        running absorbed setup's SQLite writes and socket traffic — which is why the per-stage disk
+        and network columns varied far more run to run than the stages themselves did.
+
+        Read from `space.db.getSyncState()`, the combined automerge-documents and feed-blocks view
+        already selected against the EDGE peer, with `space.db.getAutomergeSyncState()` read beside
+        it for the peer LIST: the combined view reports zeroes for every document field when no
+        EDGE peer is present, so "replicated" and "not replicating" are otherwise the same reading.
+        `progress` is `1 - (unsynced documents + blocks to push + blocks to pull) / (documents known
+        to either peer + blocks held locally)`.
+
+        Two ways to finish, because a strict zero is not reachable: nothing outstanding, or 95% held
+        for ten seconds. The app keeps producing small mutations of its own, so the last few
+        documents can stay outstanding indefinitely while the fixture is long since on the remote —
+        waiting for a true zero would trade a noisy measurement for a timeout. Dropping back under
+        95% restarts the ten seconds.
+
+        Its own columns are setup's cost, not the app's: read it as the absorber that makes the
+        stages after it clean, rather than as a measurement.
+
+        Budget is `DX_PERF_REPLICATION_TIMEOUT_MS`, 180s by default. A timeout FAILS the stage,
+        logging every reading where something changed, so the row is never trended and the run says
+        the stages after it carried setup's replication rather than presenting them as measurements.
     - name: Open the fixture space
       id: open-space
       do: Pick the "PERF: Projects" space from the space list.

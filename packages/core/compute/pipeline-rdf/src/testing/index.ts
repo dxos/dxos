@@ -9,6 +9,8 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
+import { SemanticIndexError } from '../errors.ts';
+
 export * from './harness/serialize.ts';
 export * from './harness/generate-facts.ts';
 
@@ -28,8 +30,8 @@ export const failingAiService = (): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, {
     model: () =>
       Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.fail(new Error('boom')),
-        generateObject: () => Effect.fail(new Error('boom')),
+        generateText: () => Effect.fail(new SemanticIndexError({ message: 'boom' })),
+        generateObject: () => Effect.fail(new SemanticIndexError({ message: 'boom' })),
         streamText: () => Stream.fail(new Error('boom')),
       } as any),
   });

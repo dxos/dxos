@@ -18,6 +18,7 @@ import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
+import { EchoClientError } from '../errors.ts';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 
 describe('Feed', () => {
@@ -317,7 +318,7 @@ describe('Feed', () => {
         'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
           callCount++;
           return callCount === 1
-            ? Effect.fail(new Error('simulated insertIntoFeed failure'))
+            ? Effect.fail(new EchoClientError({ message: 'simulated insertIntoFeed failure' }))
             : realHandlers['FeedService.insertIntoFeed'](...args);
         },
       };
@@ -451,7 +452,9 @@ describe('Feed', () => {
               return realHandlers['FeedService.insertIntoFeed'](...args);
             }
             sent.resolve();
-            return Effect.promise(() => release.promise).pipe(Effect.andThen(Effect.fail(new Error('john refused'))));
+            return Effect.promise(() => release.promise).pipe(
+              Effect.andThen(Effect.fail(new EchoClientError({ message: 'john refused' }))),
+            );
           },
         }),
       );
@@ -756,7 +759,7 @@ const refusingHandlers = (handlers: FeedService.Handlers, name: string): FeedSer
   ...handlers,
   'FeedService.insertIntoFeed': (...args) =>
     args[0].objects?.some((object) => object.includes(name))
-      ? Effect.fail(new Error(`${name} refused`))
+      ? Effect.fail(new EchoClientError({ message: `${name} refused` }))
       : handlers['FeedService.insertIntoFeed'](...args),
 });
 

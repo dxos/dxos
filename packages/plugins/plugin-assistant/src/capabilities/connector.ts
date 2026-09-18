@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
@@ -11,6 +13,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
+import { ConnectorKeyInvalidError } from '../operations/errors.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = ConnectorSpec.TokenForm({
@@ -22,27 +25,26 @@ const AnthropicTokenForm = ConnectorSpec.TokenForm({
  * Best-effort validation: 401/403 from Anthropic blocks the save; CORS/network failures
  * are tolerated so the form still works in environments where the direct browser call is blocked.
  */
-const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () =>
-      fetch('https://api.anthropic.com/v1/models', {
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-      }),
-    catch: (cause) => cause,
+const validateAnthropicKey = (apiKey: string): Effect.Effect<void, ConnectorKeyInvalidError> =>
+  HttpClient.get('https://api.anthropic.com/v1/models', {
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
   }).pipe(
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
           ? Effect.fail(
-              new Error('Invalid Anthropic API key. Check it at https://console.anthropic.com/settings/keys.'),
+              new ConnectorKeyInvalidError({
+                message: 'Invalid Anthropic API key. Check it at https://console.anthropic.com/settings/keys.',
+              }),
             )
           : Effect.void,
       onFailure: () => Effect.void,
     }),
+    Effect.provide(FetchHttpClient.layer),
   );
 
 /** API-key form for the DeepSeek BYOK provider; key is best-effort validated against `/models`. */
@@ -52,18 +54,20 @@ const DeepSeekTokenForm = ConnectorSpec.TokenForm({
 });
 
 /** Best-effort validation, on the same terms as {@link validateAnthropicKey}. */
-const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () => fetch('https://api.deepseek.com/models', { headers: { Authorization: `Bearer ${apiKey}` } }),
-    catch: (cause) => cause,
-  }).pipe(
+const validateDeepSeekKey = (apiKey: string): Effect.Effect<void, ConnectorKeyInvalidError> =>
+  HttpClient.get('https://api.deepseek.com/models', { headers: { Authorization: `Bearer ${apiKey}` } }).pipe(
     Effect.matchEffect({
       onSuccess: (response) =>
         response.status === 401 || response.status === 403
-          ? Effect.fail(new Error('Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.'))
+          ? Effect.fail(
+              new ConnectorKeyInvalidError({
+                message: 'Invalid DeepSeek API key. Check it at https://platform.deepseek.com/api_keys.',
+              }),
+            )
           : Effect.void,
       onFailure: () => Effect.void,
     }),
+    Effect.provide(FetchHttpClient.layer),
   );
 
 type TokenValues = { readonly token: string };
@@ -78,7 +82,7 @@ const makeCredentialForm = ({
   schema: Schema.Codec<TokenValues, any>;
   source: string;
   label: string;
-  validate: (apiKey: string) => Effect.Effect<void, Error>;
+  validate: (apiKey: string) => Effect.Effect<void, ConnectorKeyInvalidError>;
 }): ConnectorSpec.CredentialForm<TokenValues> => ({
   schema,
   defaultValues: { token: '' },
