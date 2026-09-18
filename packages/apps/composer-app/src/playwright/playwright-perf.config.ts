@@ -29,6 +29,12 @@ export default defineConfig({
   ...preset,
   projects: preset.projects?.filter((project) => project.name === 'chromium'),
   testMatch: '**/perf-*.spec.ts',
+  // TRACING OFF, unlike every other config here: `retain-on-failure` still RECORDS, and the
+  // recorder's DOM snapshotter runs on the page's main thread — ~960 ms of the `reopen-project`
+  // stage on the 94k-node task list, a third of that stage's measured TBT, spent by the instrument
+  // rather than the app. Nothing is lost: these specs assert nothing, and the harness writes its
+  // own `.cpuprofile` and stills to read a regression with.
+  use: { ...preset.use, trace: 'off' },
   // No config-level bound: the spec derives the budget from the measured fixture cost and sets it
   // per test, which overrides this value anyway, so a number here would only mislead about which
   // limit applies. A config expiry also reports no stage at all — the one failure that explains
