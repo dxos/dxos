@@ -26,6 +26,69 @@ const API_RESOURCE_TYPES: ReadonlySet<string> = new Set(['fetch', 'xhr', 'websoc
 type Bucket = 'code' | 'api' | 'other';
 
 /**
+ * Hosts that are the app's own backend. Suffix-matched, so `dxos.network` covers
+ * `dev.dxos.network` and `preview.dxos.network` without listing every deployment.
+ *
+ * The default is the `runtime.services.edge.url` host of `dx.yml`, which is what a `vite preview`
+ * build over the production config actually talks to. Overridable because a run against a local
+ * worker is a different host and would otherwise classify as third party.
+ */
+const DEFAULT_EDGE_HOSTS: readonly string[] = ['dxos.network', 'dxos.workers.dev'];
+
+/**
+ * Telemetry endpoints, kept OUT of the edge columns.
+ *
+ * Analytics rides the same `fetch` resource type as a real API call, so without this the backend
+ * columns silently include however much PostHog happened to flush during a stage — which is both
+ * noise and not the app's cost.
+ */
+const ANALYTICS_HOSTS: readonly string[] = [
+  'posthog.com',
+  'i.posthog.com',
+  'sentry.io',
+  'ingest.sentry.io',
+  'segment.io',
+  'segment.com',
+  'google-analytics.com',
+  'googletagmanager.com',
+  'doubleclick.net',
+];
+
+export type NetworkOrigin = 'edge' | 'analytics' | 'other';
+
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+};
+
+const matchesSuffix = (host: string, suffixes: readonly string[]): boolean =>
+  suffixes.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
+
+/**
+ * Which party a URL belongs to.
+ *
+ * Analytics is tested FIRST: an analytics endpoint hosted on an edge subdomain would otherwise
+ * count as backend traffic, and a reverse proxy for telemetry is a normal arrangement.
+ */
+export const classifyOrigin = (url: string, edgeHosts: readonly string[] = DEFAULT_EDGE_HOSTS): NetworkOrigin => {
+  const host = hostOf(url);
+  if (!host) {
+    return 'other';
+  }
+  if (matchesSuffix(host, ANALYTICS_HOSTS)) {
+    return 'analytics';
+  }
+  return matchesSuffix(host, edgeHosts) ? 'edge' : 'other';
+};
+
+/** Byte length of a frame payload, which Playwright gives as text or binary. */
+const frameBytes = (payload: string | Buffer): number =>
+  typeof payload === 'string' ? Buffer.byteLength(payload, 'utf8') : payload.byteLength;
+
+/**
  * Which half of the budget a response belongs to.
  *
  * Resource type first and extension second, because the classification that matters is intent:
@@ -46,7 +109,23 @@ export const classify = (url: string, resourceType: string): Bucket => {
   return 'other';
 };
 
-const EMPTY: NetworkMetrics = { codeBytes: 0, apiBytes: 0, otherBytes: 0, requests: 0, apiRequests: 0 };
+const EMPTY: NetworkMetrics = {
+  codeBytes: 0,
+  apiBytes: 0,
+  otherBytes: 0,
+  requests: 0,
+  apiRequests: 0,
+  edgeApiBytes: 0,
+  edgeApiRequests: 0,
+  edgeSocketBytes: 0,
+  edgeSocketFrames: 0,
+  analyticsBytes: 0,
+};
+
+export type TrackNetworkOptions = {
+  /** Suffix-matched hosts treated as the app's backend; defaults to the `dx.yml` edge host. */
+  edgeHosts?: readonly string[];
+};
 
 /**
  * Accumulates classified response bytes for the page's lifetime, readable as a running total.
@@ -55,15 +134,35 @@ const EMPTY: NetworkMetrics = { codeBytes: 0, apiBytes: 0, otherBytes: 0, reques
  * `harness-helpers.trackNetwork` — the resource-timing buffer caps out on a graph this size, so
  * the response event is the only complete accounting.
  */
-export const trackNetwork = (page: Page): (() => NetworkMetrics) => {
+export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (() => NetworkMetrics) => {
   const totals: NetworkMetrics = { ...EMPTY };
+  const edgeHosts = options.edgeHosts ?? DEFAULT_EDGE_HOSTS;
+
+  // Frame-level, because a socket fires exactly one `response` — the 101, with an empty body — so
+  // every byte ECHO replicates is invisible to the handler below. Frames are counted in both
+  // directions: a sync is a conversation, and an upload regression is as real as a download one.
+  page.on('websocket', (socket) => {
+    if (classifyOrigin(socket.url(), edgeHosts) !== 'edge') {
+      return;
+    }
+    const count = (payload: string | Buffer) => {
+      totals.edgeSocketBytes += frameBytes(payload);
+      totals.edgeSocketFrames += 1;
+    };
+    socket.on('framesent', (frame) => count(frame.payload));
+    socket.on('framereceived', (frame) => count(frame.payload));
+  });
 
   page.on('response', async (response) => {
     const request = response.request();
     const bucket = classify(response.url(), request.resourceType());
+    const origin = classifyOrigin(response.url(), edgeHosts);
     totals.requests += 1;
     if (bucket === 'api') {
       totals.apiRequests += 1;
+      if (origin === 'edge') {
+        totals.edgeApiRequests += 1;
+      }
     }
     try {
       const header = response.headers()['content-length'];
@@ -78,6 +177,14 @@ export const trackNetwork = (page: Page): (() => NetworkMetrics) => {
         totals.apiBytes += bytes;
       } else {
         totals.otherBytes += bytes;
+      }
+      // Origin is orthogonal to the code/API split, so it accumulates separately rather than
+      // partitioning the columns above — the bundle is served from the same host as the API in a
+      // deployed build, and `codeBytes` must keep meaning the whole bundle.
+      if (origin === 'analytics') {
+        totals.analyticsBytes += bytes;
+      } else if (origin === 'edge' && bucket === 'api') {
+        totals.edgeApiBytes += bytes;
       }
     } catch {
       // Redirects and preflights have no readable body; the request is still counted above.
@@ -97,4 +204,9 @@ export const diffNetwork = (before: NetworkMetrics, after: NetworkMetrics): Netw
   otherBytes: after.otherBytes - before.otherBytes,
   requests: after.requests - before.requests,
   apiRequests: after.apiRequests - before.apiRequests,
+  edgeApiBytes: after.edgeApiBytes - before.edgeApiBytes,
+  edgeApiRequests: after.edgeApiRequests - before.edgeApiRequests,
+  edgeSocketBytes: after.edgeSocketBytes - before.edgeSocketBytes,
+  edgeSocketFrames: after.edgeSocketFrames - before.edgeSocketFrames,
+  analyticsBytes: after.analyticsBytes - before.analyticsBytes,
 });

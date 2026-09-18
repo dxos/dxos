@@ -127,11 +127,30 @@ export type RealmLag = {
 export type NetworkMetrics = {
   /** Scripts, stylesheets, wasm, fonts, the document itself — the cost of loading the app. */
   codeBytes: number;
-  /** `fetch`/`xhr`/websocket traffic — the cost of using it. */
+  /** `fetch`/`xhr` traffic to ANY host — the cost of using the app, analytics included. */
   apiBytes: number;
   otherBytes: number;
   requests: number;
   apiRequests: number;
+  /**
+   * `fetch`/`xhr` bytes to the EDGE hosts alone, which is the app talking to its backend.
+   *
+   * Separate from `apiBytes` because that column counts analytics and any third party too, so it
+   * cannot answer what the app costs the backend.
+   */
+  edgeApiBytes: number;
+  edgeApiRequests: number;
+  /**
+   * WebSocket FRAME bytes to the edge hosts — ECHO's replication traffic.
+   *
+   * The `response` event cannot see this: a socket produces exactly one response, the 101 with an
+   * empty body, so before frame accounting every data-syncing stage of the flow recorded 0 bytes
+   * and 0 requests. This is the column that makes the network numbers mean anything.
+   */
+  edgeSocketBytes: number;
+  edgeSocketFrames: number;
+  /** Analytics and third-party bytes, recorded so the edge columns can be read as clean. */
+  analyticsBytes: number;
 };
 
 /**

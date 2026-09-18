@@ -188,6 +188,12 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       codeBytes: row.network.codeBytes,
       apiBytes: row.network.apiBytes,
       apiRequests: row.network.apiRequests,
+      edgeApiBytes: row.network.edgeApiBytes,
+      edgeApiRequests: row.network.edgeApiRequests,
+      edgeSocketBytes: row.network.edgeSocketBytes,
+      edgeSocketFrames: row.network.edgeSocketFrames,
+      edgeBytes: row.network.edgeApiBytes + row.network.edgeSocketBytes,
+      analyticsBytes: row.network.analyticsBytes,
 
       longTaskMaxMs: row.responsiveness.longTaskMaxMs,
       tbtMs: row.responsiveness.tbtMs,

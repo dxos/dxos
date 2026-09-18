@@ -346,7 +346,15 @@ Recorded here so nobody rediscovers them as bugs.
    `'Performance.enable' wasn't found` on every worker target, which is why `threadByRealm` covers
    only realms that have the domain (the page, today). What remains: `boot` has no profile in
    either mode, since there is no target to attach to before the page exists.
-2. **No disk I/O.** Nothing in CDP reports read/write bytes; `Storage.getUsageAndQuota` gives a
+2. **Analytics used to contaminate the API column, and socket traffic was missing entirely.**
+   Fixed: `edgeApiBytes`/`edgeSocketBytes` count the app's own backend alone, and
+   `analyticsBytes` is recorded separately so the split is auditable rather than assumed. The
+   socket half was the serious one — a WebSocket emits exactly ONE `response` (the 101, empty
+   body), so before frame accounting every data-syncing stage recorded 0 API bytes and 0 requests:
+   `edit-document`, `toggle-task`, `scroll-tasks` and `reopen-project` all read as zero network on
+   a real CI run, which is impossible for a flow that replicates through ECHO. Frames are counted
+   in both directions, since an upload regression is as real as a download one.
+3. **No disk I/O.** Nothing in CDP reports read/write bytes; `Storage.getUsageAndQuota` gives a
    stored-bytes _level_, not operations. `/proc/<pid>/io` exists on Linux but counts the browser's
    own traffic alongside ours, so an attributable measurement has to come from the storage layer.
    The OPFS VFS is `AccessHandlePoolVFS` from `@dxos/wa-sqlite` — vendored, not ours — but it is
@@ -357,11 +365,11 @@ Recorded here so nobody rediscovers them as bugs.
    one, and node uses native SQLite with no JS VFS, so the instrument is browser-only. Nothing
    counts VFS operations today — the existing instrumentation there is per-SQL-statement
    (`recordSqliteQueryMetrics`, plus a slow-query log above 20 ms), a different granularity.
-3. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
+4. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
-4. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
+5. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
    would be visible per realm.
-5. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode. The
+6. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode. The
    variance that motivated it is real and does not go away — `open-tasks` moved
    9,172 → 6,803 → 7,833 → 10,195 ms across single runs, and `boot` moved +20.9% between two runs
    instrumented identically (not at all) — so a single sample could not resolve anything below
@@ -371,7 +379,7 @@ Recorded here so nobody rediscovers them as bugs.
    different questions: one slow but SUCCESSFUL iteration moves the mean and not the median. A
    failed stage is not that case and never was — `writePosthogBatch` filters on `row.ok`, so an
    expired stage lowers the sample count instead of dragging anything.
-6. **`boot` carries no profile** in either mode: there is no target to attach to until the page
+7. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
 
 ## Where the numbers go
