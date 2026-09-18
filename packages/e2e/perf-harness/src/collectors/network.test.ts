@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { classify, classifyOrigin } from './network.ts';
+import { EDGE_REQUEST_RESOURCE_TYPES, classify, classifyOrigin } from './network.ts';
 
 describe('classifyOrigin', () => {
   test('a subdomain of an edge host is edge', ({ expect }) => {
@@ -61,5 +61,15 @@ describe('classify', () => {
     // The handshake response only; the frames are counted by the socket listener, since a socket
     // emits exactly one response and it carries an empty body.
     expect(classify('wss://dxos.network/ws/a/b', 'websocket')).toBe('api');
+  });
+
+  test('a websocket is in the api bucket but is not an edge REQUEST', ({ expect }) => {
+    // The distinction the request counter turns on: both are `api`, only one is a call. Counting
+    // the handshake as a request would report a connection as a call and double-count traffic
+    // `edgeSocketFrames` already holds.
+    expect(EDGE_REQUEST_RESOURCE_TYPES.has('websocket')).toBe(false);
+    expect(EDGE_REQUEST_RESOURCE_TYPES.has('eventsource')).toBe(false);
+    expect(EDGE_REQUEST_RESOURCE_TYPES.has('fetch')).toBe(true);
+    expect(EDGE_REQUEST_RESOURCE_TYPES.has('xhr')).toBe(true);
   });
 });

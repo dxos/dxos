@@ -64,17 +64,25 @@ the old series flat. All four are always present; `0` means the realm was absent
 
 ## Tiles
 
-**Every chart is a RUN TOTAL with an error bar.** One box per night: the phases are reduced within
-an iteration to a single run-level number, and the box then describes the spread across the
-night's ten iterations.
+**Every DISTRIBUTION tile is a run total with an error bar.** One box per night: the phases are
+reduced within an iteration to a single run-level number, and the box then describes the spread
+across the night's ten iterations. That is tiles 1-12 below.
+
+The **two stacked tiles are the exception** and carry no error bar — they answer "where did it go"
+rather than "how much and how variable", and they use means so their segments sum to a total shown
+elsewhere. See "The two stacked tiles" below.
 
 - **Box** = mean +/- one **sample** standard deviation. An error bar, not an interquartile range —
   the choice `EDGE nightly join latency` made, and the reason its tiles read as measurements. True
   quartiles are one edit away (`quantile(0.25)` / `quantile(0.75)`) if the spread is ever the wrong
   question.
-- **Whiskers** = the lowest and highest iteration. **Line** = median, **marker** = mean.
-- Whiskers are widened to enclose the box and the lower edge floored at zero: a renderer needs
-  `min <= p25 <= p75 <= max`, and a sample whose sd exceeds its mean would otherwise invert them.
+- **Line** = median, **marker** = mean.
+- **Whiskers** = the lowest and highest iteration, EXCEPT where the renderer needs them widened.
+  A box plot requires `min <= p25 <= p75 <= max`, so when one sd reaches past the observed range
+  the whisker is pushed out to enclose the box, and the lower edge is floored at zero. The two
+  cases are worth keeping apart when reading a tile: a whisker at the box edge is the widening
+  rule, not a night where the extreme iteration happened to sit exactly one sd out. The raw
+  minimum and maximum are always available per iteration in the runs table.
 - `stddevSamp` returns **NaN** for a single sample, and no `coalesce` catches a NaN — hence
   `if(count() > 1, stddevSamp(x), 0)`. Without it a one-iteration day renders an empty box rather
   than a degenerate one.
@@ -172,8 +180,12 @@ charts above, where nothing marks it as short.
 - **`ciDomNodes` is the only machine-independent measure here.** Across a CI runner and a local
   sandbox it differs by 1% while wall time differs 1.7x and TBT 3x. Read it for regressions; read
   the timing tiles as trends.
-- **The box IS the noise floor, so read it before reading the trend.** The run-to-run spread on a
-  stage is ~20%, and the nightly's ten iterations now measure that directly rather than leaving it
-  asserted. A mean that moves by less than the boxes overlap is not a regression; a shift that
-  separates two nights' boxes is worth investigating. This is what one sample per night could never
-  support.
+- **The box measures the noise floor, so read it before reading the trend.** The run-to-run spread
+  on a stage is ~20%, and the nightly's ten iterations measure that directly rather than leaving it
+  asserted — which one sample per night could never support.
+
+  What the box is NOT: mean +/- one sd is a description of the samples, not a confidence interval
+  and not a hypothesis test. Overlapping boxes are not evidence that nothing regressed, and
+  separated boxes do not establish that something did. Read overlap as "this movement is within
+  what the harness sees night to night" and separation as "worth investigating", and if a decision
+  actually rests on it, take more samples rather than reading more into these.
