@@ -15,6 +15,7 @@ import {
   attachAll,
   installProbes,
   launchInstrumentedBrowser,
+  publishPosthogBatch,
   startProfiling,
   startScreencast,
   startTracing,
@@ -77,6 +78,19 @@ const documentEditor = (page: Page): Locator => page.getByTestId('composer.markd
 const SETTLE_MS = 20_000;
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
+
+/**
+ * Iterations of the whole flow per mode, each a fresh browser and a fresh fixture.
+ *
+ * One run per night cannot separate a regression from noise: the run-to-run spread on a stage is
+ * ~20%, so a single sample moves more than anything worth alerting on. `iteration` is already a
+ * row field and part of the PostHog dedup key, so repeats land as distinct rows the tiles can take
+ * a median over rather than overwriting each other.
+ *
+ * Defaults to 1, because a local run is usually somebody reading one flow; the nightly asks for
+ * more explicitly.
+ */
+const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
 
 /**
  * Drops the screencast from a `diagnose` run, which is how its cost was isolated from the
@@ -336,7 +350,22 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     appendRows(WORKSPACE_ROOT, name, rows);
     writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
     if (mode === 'measure') {
-      writePosthogBatch(WORKSPACE_ROOT, name, rows, capturedAt);
+      // Published HERE, at the end of each iteration, rather than once for the whole run: the
+      // workflow's trending step cannot run if the job dies partway, so a ten-iteration run that
+      // lost its runner on iteration eight used to publish nothing at all — including the seven
+      // that had completed and were sitting on disk. Each iteration now stands on its own.
+      //
+      // The batch file carries the iteration in its name, so this publishes exactly what this
+      // iteration measured. There is no end-of-run backstop on purpose — see `publishPosthogBatch`.
+      const batch = writePosthogBatch(WORKSPACE_ROOT, `${name}-${iteration}`, rows, capturedAt);
+      const published = publishPosthogBatch(WORKSPACE_ROOT, batch);
+      // Logged at `warn` when it did not publish, because that row reached disk and the artifact
+      // but not the trend, and nothing on the dashboard can show a point that was never sent.
+      if (published) {
+        log.info('published perf batch', { batch, iteration });
+      } else {
+        log.warn('perf batch NOT published', { batch, iteration, keyPresent: !!process.env.DX_POSTHOG_API_KEY });
+      }
     }
 
     runner.dispose();
@@ -364,14 +393,24 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   }
 };
 
-test.describe.serial('Projects + Tasks performance', () => {
-  // Derived, not flat: the config's `timeout` is only the outer bound, and a `setTimeout` here
-  // silently overrides it — a flat value below the fixture's cost expires before any stage runs.
+// Not `describe.serial`, although the runs must not overlap: `workers: 1` and
+// `fullyParallel: false` in the config are what serialize them, and serial mode would additionally
+// SKIP every later iteration once one fails — discarding nine good samples over one flaky stage,
+// which is the opposite of why there are ten. Each iteration is independent: its own browser, its
+// own profile, its own fixture.
+test.describe('Projects + Tasks performance', () => {
+  // Derived, not flat, and PER TEST: the config's `timeout` is only the outer bound, and a
+  // `setTimeout` here silently overrides it — a flat value below the fixture's cost expires before
+  // any stage runs. One iteration is one test, so this budget is not multiplied by ITERATIONS.
   test.setTimeout(testBudget(SCALE));
 
   for (const mode of modes) {
-    test(mode, async () => {
-      await runFlow(mode, SCALE, 0);
-    });
+    for (let iteration = 0; iteration < ITERATIONS; ++iteration) {
+      // The iteration is in the title only when there is more than one, so a single-iteration run
+      // keeps the test name it has always had.
+      test(ITERATIONS > 1 ? `${mode} ${iteration + 1}/${ITERATIONS}` : mode, async () => {
+        await runFlow(mode, SCALE, iteration);
+      });
+    }
   }
 });

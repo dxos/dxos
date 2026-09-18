@@ -3,6 +3,7 @@
 //
 
 import { toBinary } from '@bufbuild/protobuf';
+import { base64Decode } from '@bufbuild/protobuf/wire';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -204,7 +205,7 @@ export const presentCredentialsForChallenge = async (
   identity: EdgeIdentity,
   challenge: string,
 ): Promise<Uint8Array> => {
-  const presentation = await identity.presentCredentials({ challenge: Buffer.from(challenge, 'base64') });
+  const presentation = await identity.presentCredentials({ challenge: base64Decode(challenge) });
   return toBinary(PresentationSchema, presentation);
 };
 

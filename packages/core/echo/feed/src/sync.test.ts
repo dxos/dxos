@@ -171,6 +171,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 4,
         serverToken,
+        blocksToPull: 0,
       });
 
       const positions = await blockPositions(client);
@@ -202,6 +203,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: freshToken,
+        blocksToPull: 0,
       });
 
       // Blocks survived the reset and are re-pushed to the new server.
@@ -231,12 +233,14 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 1,
         serverToken: await server.getServerToken(spaceId),
+        blocksToPull: 0,
       });
       // The re-fetched block at 2 is the one already held, so progress simply resumes.
       expect(await builder.pull(client)).toEqual({ done: false });
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 4,
         serverToken: await server.getServerToken(spaceId),
+        blocksToPull: 0,
       });
       expect(await blockPositions(client)).toEqual([0, 1, 2, 3, 4]);
       await client.setSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, lastPulledPosition: 2 });
@@ -252,6 +256,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 1,
         serverToken: await replacement.getServerToken(spaceId),
+        blocksToPull: 0,
       });
       // The re-fetched block at 2 is the replacement's, which displaces the old server's and
       // replays the namespace.
@@ -259,6 +264,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: await replacement.getServerToken(spaceId),
+        blocksToPull: 0,
       });
 
       let done = false;
@@ -295,6 +301,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 10,
         serverToken: await replacement.getServerToken(spaceId),
+        blocksToPull: 0,
       });
     });
 
@@ -351,6 +358,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 6,
         serverToken: await server.getServerToken(spaceId),
+        blocksToPull: 0,
       });
     });
 
@@ -380,6 +388,7 @@ describe('Sync', () => {
       expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: 3,
         serverToken: await server.getServerToken(spaceId),
+        blocksToPull: 0,
       });
     });
 

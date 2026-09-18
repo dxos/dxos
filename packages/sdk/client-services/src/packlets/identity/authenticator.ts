@@ -11,7 +11,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { AuthSchema, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type ComplexSet } from '@dxos/util';
+import { type ComplexSet, arraysEqual } from '@dxos/util';
 
 import { type AuthProvider, type AuthVerifier } from '../space/index.ts';
 
@@ -62,7 +62,9 @@ export class TrustedKeySetAuthVerifier {
       }
 
       const proofNonce = credential.proof?.nonce;
-      if (!proofNonce?.length || !Buffer.from(nonce).equals(proofNonce)) {
+      // Compared as bytes: the browser `buffer` polyfill's `equals` rejects a plain `Uint8Array`,
+      // which is what protobuf decoding yields for the nonce.
+      if (!proofNonce?.length || !arraysEqual(nonce, proofNonce)) {
         log('Invalid nonce', { nonce, credential });
         return false;
       }
