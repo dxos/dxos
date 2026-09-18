@@ -467,6 +467,12 @@ type StoryArgs = {
   sidebarState?: DeckSchema.StoredDeckState['sidebarState'];
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
+  /**
+   * Seed the deck with no `companionPlanks` entry at all, rather than the (possibly empty) array
+   * `companionPlanks` above writes — the "reader has never opened or closed one" state. Takes
+   * precedence over `companionPlanks` when set.
+   */
+  uninitializedCompanions?: boolean;
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
   launcher?: boolean;
   /**
@@ -486,6 +492,7 @@ const DefaultStory = ({
   count = 0,
   sidebarState = 'closed',
   companionPlanks = NO_COMPANIONS,
+  uninitializedCompanions = false,
   launcher = false,
   revealControls = false,
   openNextControl = false,
@@ -534,7 +541,12 @@ const DefaultStory = ({
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], companionPlanks: open },
+        [current.activeDeck]: {
+          ...current.decks[current.activeDeck],
+          // Omitting the key altogether (rather than writing `[]`) is what exercises the "reader has
+          // never decided" state `isCompanionOpen` special-cases.
+          ...(uninitializedCompanions ? {} : { companionPlanks: open }),
+        },
       },
     }));
     // What is open is the URL's, and there is no URL here, so the story writes it where the projection
@@ -543,7 +555,17 @@ const DefaultStory = ({
       ...current,
       open: { ...current.open, [state.activeDeck]: { active, inactive: [] } },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState, updateEphemeral]);
+  }, [
+    items,
+    count,
+    sidebarState,
+    companionPlanks,
+    uninitializedCompanions,
+    launcher,
+    launcherNode,
+    updateState,
+    updateEphemeral,
+  ]);
 
   return (
     <>
@@ -717,6 +739,45 @@ export const CompanionPerPlank: Story = {
     await expect(planks).toHaveLength(3);
     for (const plank of planks) {
       await expect(plank.closest('[data-scope="splitter"][data-part="panel"]')).not.toBeNull();
+    }
+  },
+};
+
+// Regression: a stacked deck (`flatten` unset here) that has never had its companion touched must start
+// with every plank's companion closed — the old `isCompanionOpen` returned `true` for every plank when
+// `companionPlanks` was `undefined`, opening a companion beside each one before the reader ever asked.
+export const CompanionsClosedUntilOpened: Story = {
+  tags: ['test'],
+  args: { count: 3, uninitializedCompanions: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    // Nothing shows a companion yet, though the deck has never recorded a decision either way.
+    await expect(showingCompanionsFor(canvasElement)).toEqual([]);
+
+    // Opening one plank's companion through the real toolbar affordance still works from this
+    // uninitialized state, and opens only the plank asked for. The control only appears once the
+    // plank's companion edges have loaded (an async graph expansion on mount), so wait for it.
+    const firstPlankId = `${STORY_WORKSPACE_ID}/story-item-1`;
+    const findCompanionButton = () =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-testid="deck.plank"][data-attendable-id="${firstPlankId}"] [data-testid="plankHeading.companion"]`,
+      );
+    await waitFor(() => expect(findCompanionButton(), 'no companion control for the first plank').not.toBeNull());
+
+    // `UpdateCompanion`'s handler resolves the active workspace from the URL (see the priming comment
+    // on `OpenFocusesBeforePaint`); the seeded planks bypass it, so it has to be primed here too.
+    const previousUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
+    try {
+      // The companion anchors to the attended plank, so the plank whose control is being clicked has
+      // to hold attention, else the companion opens beside whichever plank attention falls back to.
+      await attendPlank(canvasElement, 1);
+      findCompanionButton()?.click();
+      await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview']));
+    } finally {
+      window.history.replaceState(null, '', previousUrl);
     }
   },
 };

@@ -153,6 +153,7 @@ export const getCompanionSelection = (
   platform: Platform,
   state: StoredDeckState,
   viewStateVariant: string | undefined,
+  flatten: boolean | undefined,
 ): CompanionSelection => {
   if (platform === 'mobile') {
     const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
@@ -160,7 +161,8 @@ export const getCompanionSelection = (
   }
 
   const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
-  const open = companionPlanks === undefined || companionPlanks.length > 0;
+  // A deck holding no flag reads as `isCompanionOpen` does: open only where one plank is laid out.
+  const open = companionPlanks === undefined ? !!flatten : companionPlanks.length > 0;
   return { open, variant: open ? viewStateVariant : undefined };
 };
 

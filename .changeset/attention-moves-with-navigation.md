@@ -1,7 +1,6 @@
 ---
-# multiple-changesets: stacked on #13224, whose workspace view transition is its own entry
 '@dxos/react-ui-attention': patch
 '@dxos/plugin-deck': patch
 ---
 
-Attention now moves in the same frame as navigation, and opening a plank crossfades the content region. The plank heading no longer paints its sigil and title as unattended for a frame before flipping: `useAttention` and `useAttended` read the current state synchronously on first render, and the deck focuses a newly opened plank before paint, carrying the scroll intent in the same write as the plank list. An in-app open runs that write as a view transition where the browser supports one.
+Navigation in the deck is smoother in three ways. A plank's heading no longer paints its sigil and title as unattended for a frame before flipping: `useAttention` and `useAttended` read the current state synchronously on first render, and a newly opened plank takes focus before paint, carrying the scroll intent in the same write as the plank list. Opening a plank crossfades the content region where the browser supports a view transition. A deck showing several planks at once no longer opens a companion pane beside every one of them before the reader has opened or closed a single one; an untouched companion flag now reads as open only where one plank is laid out at a time.

@@ -48,6 +48,9 @@ export default Capability.makeModule(
       return [];
     }
     const deckEphemeralAtom = deckEphemeralOption.value;
+    // Whether a deck lays out one plank or several decides what an untouched companion flag means, so
+    // provisioning cannot read that flag without it.
+    const deckSettingsAtom = Option.getOrUndefined(yield* Capability.getOption(DeckCapabilities.Settings));
     // The mobile drawer and the desktop companion plank record "which companion is on screen" in
     // different fields, so the host has to be known before that state can be read.
     const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
@@ -123,6 +126,7 @@ export default Capability.makeModule(
         platform,
         deckState,
         registry.get(variantAtom),
+        deckSettingsAtom && registry.get(deckSettingsAtom).flatten,
       );
       if (!deck || !open) {
         unsubAllPlanks();
@@ -167,6 +171,7 @@ export default Capability.makeModule(
     const unsubOpen = registry.subscribe(deckEphemeralAtom, provision);
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
+    const unsubSettings = deckSettingsAtom ? registry.subscribe(deckSettingsAtom, provision) : () => {};
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
@@ -174,6 +179,7 @@ export default Capability.makeModule(
         unsubOpen();
         unsub2();
         unsub3();
+        unsubSettings();
         unsubAllPlanks();
       }),
     );
