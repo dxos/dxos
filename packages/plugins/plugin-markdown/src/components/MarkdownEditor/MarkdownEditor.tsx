@@ -102,6 +102,7 @@ export const MarkdownEditorProvider = ({
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
+    attendableId,
     object,
     compact,
     viewMode,

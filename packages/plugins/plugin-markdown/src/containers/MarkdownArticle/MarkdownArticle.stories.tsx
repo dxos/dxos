@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -201,10 +202,46 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Test:
+ * 1. Scroll the document with the wheel over the sketch and over the embedded notes: the document
+ *    scrolls; neither embed pans or scrolls.
+ * 2. Click the sketch: it gains a focus ring and the tldraw UI appears; the wheel now pans the sketch.
+ * 3. Press Escape: the ring goes and the wheel scrolls the document again.
+ * 4. Click the embedded notes, then click back into the document text: the notes lose the ring.
+ */
 export const WithObjects: Story = {
   args: {
     title: 'Testing with objects',
     content: 'Here are some inline objects:',
     objects: true,
+  },
+};
+
+/** An embed is inert until clicked, and inert again once Escape hands focus back to the editor. */
+export const EmbedFocus: Story = {
+  args: WithObjects.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The client/space initialize and the embeds resolve well past testing-library's default timeout.
+    const embeds = await waitFor(
+      async () => {
+        const elements = canvas.getAllByTestId('markdown.embed');
+        await expect(elements.length).toBeGreaterThanOrEqual(2);
+        return elements;
+      },
+      { timeout: 15_000 },
+    );
+    const [sketch] = embeds;
+    const surface = sketch.firstElementChild;
+    await expect(surface).toBeInstanceOf(HTMLElement);
+    await expect(surface).toHaveAttribute('inert');
+
+    await userEvent.click(sketch);
+    await waitFor(() => expect(surface).not.toHaveAttribute('inert'));
+    await expect(sketch).toHaveAttribute('data-w-attention-source', 'true');
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(surface).toHaveAttribute('inert'));
   },
 };
