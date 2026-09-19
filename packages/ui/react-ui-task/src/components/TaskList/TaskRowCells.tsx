@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
@@ -46,6 +46,22 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: statusIcon(status), classNames: statusTextStyle(status) };
 
+  // Sourced from the schema's own option table, so the picker offers exactly what the field accepts
+  // and carries the same hue the form's select paints it with. A thunk, so a row that is never
+  // opened builds neither the options nor their labels.
+  const actions = useCallback(
+    () =>
+      Task.StatusOptions.map(({ id }) =>
+        createMenuAction(`status-${id}`, () => onTaskUpdate?.(task, { status: id }), {
+          label: t(`status-${id}.label`),
+          icon: statusIcon(id),
+          iconClassNames: statusTextStyle(id),
+          checked: status === id,
+        }),
+      ),
+    [onTaskUpdate, task, status, t],
+  );
+
   if (!onTaskUpdate) {
     // `IconBlock square` rather than a bare span: the glyph must hold the same square an
     // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
@@ -58,40 +74,32 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     );
   }
 
+  // The button is the trigger, not the block: the button stops the click so the row is not selected
+  // too, and a trigger above it would never receive it. The block still gives every control in the
+  // row one rail-item square.
+  const trigger = (
+    <IconButton
+      data-testid='taskList.item.status'
+      // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+      // which the `Icon` root reads, so a colour set on the button is overridden at rest and
+      // only reappears once selection invalidates the variable.
+      iconClassNames={iconClassNames}
+      variant='ghost'
+      icon={icon}
+      iconOnly
+      label={t('task-status.label')}
+      // The row is the selection target; opening the menu must not also select it.
+      onClick={(event) => event.stopPropagation()}
+    />
+  );
+
   return (
-    <>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      <IconBlock square classNames={classNames}>
-        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
-        <ActionMenu
-          actions={Task.StatusOptions.map(({ id }) =>
-            createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-              label: t(`status-${id}.label`),
-              icon: statusIcon(id),
-              iconClassNames: statusTextStyle(id),
-              checked: status === id,
-            }),
-          )}
-        >
-          <IconButton
-            data-testid='taskList.item.status'
-            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-            // which the `Icon` root reads, so a colour set on the button is overridden at rest and
-            // only reappears once selection invalidates the variable.
-            iconClassNames={iconClassNames}
-            variant='ghost'
-            icon={icon}
-            iconOnly
-            label={t('task-status.label')}
-            // The row is the selection target; opening the menu must not also select it.
-            onClick={(event) => event.stopPropagation()}
-          />
-        </ActionMenu>
-      </IconBlock>
-    </>
+    <IconBlock square classNames={classNames}>
+      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
+      <ActionMenu deferUntilOpen actions={actions}>
+        {trigger}
+      </ActionMenu>
+    </IconBlock>
   );
 };
 

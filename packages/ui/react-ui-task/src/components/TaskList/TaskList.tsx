@@ -521,13 +521,17 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   return (
     <>
       <IconBlock>
+        {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
         <ActionMenu
-          actions={[Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
-              label: title,
-              checked: (estimate ?? 'none') === id,
-            }),
-          )}
+          deferUntilOpen
+          actions={() =>
+            [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+              createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+                label: title,
+                checked: (estimate ?? 'none') === id,
+              }),
+            )
+          }
         >
           <Button
             variant='ghost'
@@ -573,15 +577,19 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
 
   return (
     <IconBlock>
+      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
-        actions={[Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
-          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
-            label: t(`priority-${id}.label`),
-            icon: optionIcon,
-            iconClassNames: priorityTextStyle(id),
-            checked: priority === id,
-          }),
-        )}
+        deferUntilOpen
+        actions={() =>
+          [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
+            createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+              label: t(`priority-${id}.label`),
+              icon: optionIcon,
+              iconClassNames: priorityTextStyle(id),
+              checked: priority === id,
+            }),
+          )
+        }
       >
         <IconButton
           variant='ghost'
@@ -680,7 +688,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
       {/* The button is the trigger, not the block: the button stops the click so the row is not selected
           too, and a trigger above it would never receive it. The block still gives every control in
           the row one rail-item square. */}
-      <ActionMenu actions={actions}>
+      <ActionMenu deferUntilOpen actions={actions}>
         <IconButton
           variant='ghost'
           iconOnly
