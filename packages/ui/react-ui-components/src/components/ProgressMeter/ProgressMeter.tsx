@@ -172,8 +172,9 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
     // meters would say what each is doing and never which task it is.
     const lines = useNotes(label ?? name, note, state.startedAt);
 
-    // const progress = (current: number, total: number) => `${current}/${total}`;
-    const progress = (current: number, total: number) => Math.round((current / total) * 100) + '%';
+    // A zero-work run is complete, as the bar's fraction already says; dividing by it would read NaN.
+    const progress = (current: number, total: number) =>
+      total === 0 ? '100%' : `${Math.round((current / total) * 100)}%`;
 
     return (
       <div
