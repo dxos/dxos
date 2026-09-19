@@ -215,7 +215,10 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
     disconnectAdapters(adapters);
     await Promise.all(repos.map((repo) => shutdownRepo(repo)));
   });
-  return { repos, adapters };
+  const repoPairs = args.connections.map(
+    ([left, right]) => [repos[args.peers.indexOf(left)], repos[args.peers.indexOf(right)]] as [Repo, Repo],
+  );
+  return { repos, adapters, repoPairs };
 };
 
 export const createHostClientRepoTopology = (options?: ConnectedRepoOptions) =>
@@ -252,20 +255,26 @@ const onceSubductionPeerBound = (repo: Repo): Promise<void> => {
 };
 
 /**
- * Only the side that verifies the peer emits `subduction-peer-bound`, so the FIRST binding — not
- * all of them — is what says the handshake completed.
+ * Arm a per-pair handshake barrier, before any candidate goes out.
+ *
+ * Only the side that verifies the peer emits `subduction-peer-bound`, so a pair is bound once
+ * EITHER of its repos reports — but every pair must report, or a later fetch can reach a still
+ * unbound pair, settle success-empty, and never be re-asked.
  */
-const awaitFirstBinding = (bound: Promise<void>[], timeout = 10_000): Promise<unknown> =>
-  asyncTimeout(Promise.race(bound), timeout);
+const armBindings = (repoPairs: [Repo, Repo][]): Promise<unknown>[] =>
+  repoPairs.map(([left, right]) => Promise.race([onceSubductionPeerBound(left), onceSubductionPeerBound(right)]));
+
+const awaitBindings = (bound: Promise<unknown>[], timeout = 10_000): Promise<unknown> =>
+  asyncTimeout(Promise.all(bound), timeout);
 
 export const connectAdapters = async (
   pairs: [TestAdapter, TestAdapter][],
-  options?: { noEmitPeerCandidate?: boolean; repos?: Repo[]; timeout?: number },
+  options?: { noEmitPeerCandidate?: boolean; repoPairs?: [Repo, Repo][]; timeout?: number },
 ) => {
   // `peer-candidate` only STARTS the handshake. A test whose data already exists must wait for it
   // to bind: a fetch issued first settles success-empty and subduction never re-asks, so the doc
-  // never arrives. Opt-in, because a test that denies `authorizeConnect` never binds at all.
-  const bound = options?.repos?.map((repo) => onceSubductionPeerBound(repo));
+  // never arrives. Opt-in per pair, because a test that denies `authorizeConnect` never binds.
+  const bound = options?.repoPairs && armBindings(options.repoPairs);
   for (const pair of pairs) {
     await pair[0].onConnect.wait();
     await pair[1].onConnect.wait();
@@ -275,7 +284,7 @@ export const connectAdapters = async (
     }
   }
   if (bound) {
-    await awaitFirstBinding(bound, options?.timeout);
+    await awaitBindings(bound, options?.timeout);
   }
 };
 
@@ -292,11 +301,11 @@ export const disconnectAdapters = (pairs: [TestAdapter, TestAdapter][]) => {
 
 export const reconnectAdapters = async (
   pairs: [TestAdapter, TestAdapter][],
-  options?: { repos?: Repo[]; timeout?: number },
+  options?: { repoPairs?: [Repo, Repo][]; timeout?: number },
 ) => {
   // Same handshake barrier as `connectAdapters`: the candidate only starts the new handshake, and a
   // fetch — or a `shareConfigChanged()` kick — issued before it binds sees no peers and settles.
-  const bound = options?.repos?.map((repo) => onceSubductionPeerBound(repo));
+  const bound = options?.repoPairs && armBindings(options.repoPairs);
   for (const pair of pairs) {
     pair[0].peerDisconnected(pair[1].peerId!);
     pair[1].peerDisconnected(pair[0].peerId!);
@@ -304,7 +313,7 @@ export const reconnectAdapters = async (
     pair[1].peerCandidate(pair[0].peerId!);
   }
   if (bound) {
-    await awaitFirstBinding(bound, options?.timeout);
+    await awaitBindings(bound, options?.timeout);
   }
 };
 

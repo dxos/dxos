@@ -44,9 +44,9 @@ describe('AutomergeRepo with Subduction', () => {
   });
 
   test('documents missing from local storage go to loading state', async () => {
-    const { repos, adapters } = await createHostClientRepoTopology();
+    const { repos, adapters, repoPairs } = await createHostClientRepoTopology();
     const [host] = repos;
-    await connectAdapters(adapters, { repos: repos });
+    await connectAdapters(adapters, { repoPairs });
     const url = 'automerge:3JN8F3Z4dUWEEKKFN7WE9gEGvVUT' as AutomergeUrl;
 
     const progress = host.findWithProgress(url);
@@ -79,9 +79,9 @@ describe('AutomergeRepo with Subduction', () => {
 
   describe('network', () => {
     test('basic networking', async () => {
-      const { repos, adapters } = await createHostClientRepoTopology();
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology();
       const [host, client] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const handle = host.create<{ text?: string }>();
       const text = 'Hello world';
@@ -96,14 +96,14 @@ describe('AutomergeRepo with Subduction', () => {
     });
 
     test('share config does not gate subduction replication', async () => {
-      const { repos, adapters } = await createHostClientRepoTopology({
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         shareConfig: {
           access: async () => false,
           announce: async () => false,
         },
       });
       const [host, client] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const handle = host.create<{ text?: string }>();
       handle.change((doc: any) => {
@@ -130,7 +130,7 @@ describe('AutomergeRepo with Subduction', () => {
     // the doc by the time the next downstream peer opens its source), avoiding
     // the cascading heal backoffs while still exercising the full chain.
     test('replication through a 4 peer chain', { timeout: 15_000 }, async () => {
-      const { repos, adapters } = await createRepoTopology({
+      const { repos, adapters, repoPairs } = await createRepoTopology({
         peers: ['A', 'B', 'C', 'D'],
         connections: [
           ['A', 'B'],
@@ -139,7 +139,7 @@ describe('AutomergeRepo with Subduction', () => {
         ],
       });
       const [repoA, repoB, repoC, repoD] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const docA = repoA.create<{ text?: string }>();
       docA.change((doc: any) => {
@@ -173,9 +173,9 @@ describe('AutomergeRepo with Subduction', () => {
       // `Repo.shutdown()` closes its storage adapter; reopen before reusing it in the topology.
       await storage.open();
 
-      const { repos, adapters } = await createHostClientRepoTopology({ storages: [storage] });
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology({ storages: [storage] });
       const [peer1, peer2] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const hostHandle = await peer1.find<any>(url as AutomergeUrl);
       await hostHandle.whenReady();
@@ -224,9 +224,9 @@ describe('AutomergeRepo with Subduction', () => {
     });
 
     test('two repo sync docs on `update` call', async () => {
-      const { repos, adapters } = await createHostClientRepoTopology();
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology();
       const [repoA, repoB] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const handleA = repoA.create<any>();
       // Barrier before B looks: a fetch that races A's unflushed save settles success-empty and
@@ -293,11 +293,11 @@ describe('AutomergeRepo with Subduction', () => {
     // is not in this path.
     test('partitioned concurrent edits converge on reconnect', { timeout: 60_000 }, async () => {
       let connectionState: 'on' | 'off' = 'on';
-      const { repos, adapters } = await createHostClientRepoTopology({
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         connectionStateProvider: () => connectionState,
       });
       const [host, client] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const handleA = host.create<{ fromHost?: string; fromClient?: string }>();
       handleA.change((doc: any) => {
@@ -320,7 +320,7 @@ describe('AutomergeRepo with Subduction', () => {
       expect(getHeads(handleA.doc()!).some((head) => getHeads(handleB.doc()!).includes(head))).toBe(false);
 
       connectionState = 'on';
-      await reconnectAdapters(adapters, { repos });
+      await reconnectAdapters(adapters, { repoPairs });
 
       await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
       await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
@@ -341,7 +341,7 @@ describe('AutomergeRepo with Subduction', () => {
     //     `'no-peers'` from prior recompute cycles; `reconnectAdapters`
     //     bumps the connection generation and forces a re-sync.
     test('replicate document after request', { timeout: 15_000 }, async () => {
-      const { repos, adapters } = await createHostClientRepoTopology();
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology();
       const [host, client] = repos;
       await connectAdapters(adapters, { noEmitPeerCandidate: true });
 
@@ -363,7 +363,7 @@ describe('AutomergeRepo with Subduction', () => {
       // to start a fresh transport and bumps the generation so the dormant
       // source re-syncs. We must reconnect on BOTH sides; with only one side
       // emitting `peer-candidate`, only one transport is initiated.
-      await reconnectAdapters(adapters, { repos });
+      await reconnectAdapters(adapters, { repoPairs });
       await waitForReadyWithRedrive(client, progress, { timeout: 10_000 });
     });
 
@@ -404,7 +404,7 @@ describe('AutomergeRepo with Subduction', () => {
           ]);
         });
 
-        await connectAdapters([adapters], { repos: [repoA, repoB] });
+        await connectAdapters([adapters], { repoPairs: [[repoA, repoB]] });
 
         // Get a doc onto both sides so each peer has a running entry.
         // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
@@ -439,11 +439,11 @@ describe('AutomergeRepo with Subduction', () => {
   describe('subduction contract', () => {
     describe('role matrix', () => {
       test('connect/accept syncs', async () => {
-        const { repos, adapters } = await createHostClientRepoTopology({
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           roles: { host: 'connect', client: 'accept' },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters, { repos: repos });
+        await connectAdapters(adapters, { repoPairs });
 
         const handle = host.create<{ text?: string }>();
         handle.change((doc: any) => {
@@ -457,11 +457,11 @@ describe('AutomergeRepo with Subduction', () => {
       });
 
       test('accept/connect syncs', { timeout: 15_000 }, async () => {
-        const { repos, adapters } = await createHostClientRepoTopology({
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           roles: { host: 'accept', client: 'connect' },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters, { repos: repos });
+        await connectAdapters(adapters, { repoPairs });
 
         const handle = host.create<{ text?: string }>();
         handle.change((doc: any) => {
@@ -484,7 +484,7 @@ describe('AutomergeRepo with Subduction', () => {
       // assertion at 1.5 s; if the fork ever heals via retry this test will catch
       // the change.
       test('accept/accept does not sync', async () => {
-        const { repos, adapters } = await createHostClientRepoTopology({
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           roles: { host: 'accept', client: 'accept' },
         });
         const [host, client] = repos;
@@ -546,11 +546,11 @@ describe('AutomergeRepo with Subduction', () => {
           filterAuthorizedFetch: async (_peerId, ids) => ids,
         };
 
-        const { repos, adapters } = await createHostClientRepoTopology({
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           subductionPolicies: { host: denyingPolicy },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters, { repos: repos });
+        await connectAdapters(adapters, { repoPairs });
 
         const handle = host.create<{ text?: string }>({ text: 'should-not-fetch' });
         await waitForSubductionSave(repos);
@@ -575,9 +575,9 @@ describe('AutomergeRepo with Subduction', () => {
       // ("with permissive host, client gets the doc") and makes the
       // `authorizeFetch` denial result meaningful.
       test('authorizeFetch permissive on server allows fetcher (control)', async () => {
-        const { repos, adapters } = await createHostClientRepoTopology();
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology();
         const [host, client] = repos;
-        await connectAdapters(adapters, { repos: repos });
+        await connectAdapters(adapters, { repoPairs });
 
         const handle = host.create<{ text?: string }>({ text: 'should-fetch' });
         await waitForSubductionSave(repos);
@@ -602,11 +602,11 @@ describe('AutomergeRepo with Subduction', () => {
         // Receiver creates the doc and seeds initial content; sender then attempts
         // to push a change. Receiver's policy denies puts → receiver doc must
         // remain at the original heads.
-        const { repos, adapters } = await createHostClientRepoTopology({
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           subductionPolicies: { host: denyingPolicy },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters, { repos: repos });
+        await connectAdapters(adapters, { repoPairs });
 
         const hostHandle = host.create<{ text?: string }>({ text: 'initial' });
         await waitForSubductionSave(repos);
@@ -656,11 +656,11 @@ describe('AutomergeRepo with Subduction', () => {
           filterAuthorizedFetch: async (_peerId, ids) => ids,
         };
 
-        const { repos, adapters } = await createHostClientRepoTopology({
+        const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           subductionPolicies: { host: mutablePolicy },
         });
         const [host, client] = repos;
-        await connectAdapters(adapters, { repos: repos });
+        await connectAdapters(adapters, { repoPairs });
 
         const handle = host.create<{ text?: string }>({ text: 'gated' });
         await waitForSubductionSave(repos);
@@ -717,7 +717,7 @@ describe('AutomergeRepo with Subduction', () => {
         }
       };
 
-      const { repos, adapters } = await createRepoTopology({
+      const { repos, adapters, repoPairs } = await createRepoTopology({
         peers: ['A', 'B', 'C'],
         connections: [
           ['A', 'B'],
@@ -727,7 +727,7 @@ describe('AutomergeRepo with Subduction', () => {
         onMessageByConnection: { 1: onMessage },
       });
       const [repoA, repoB, repoC] = repos;
-      await connectAdapters(adapters, { repos: repos });
+      await connectAdapters(adapters, { repoPairs });
 
       const docA = repoA.create<{ text?: string }>();
       docA.change((doc: any) => {
@@ -753,7 +753,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
 
   test('a peer offered again mid-round does not hold back later edits', { timeout: 30_000 }, async () => {
     let framesDelivered: 'on' | 'off' = 'on';
-    const { repos, adapters } = await createHostClientRepoTopology({
+    const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
       connectionStateProvider: () => framesDelivered,
       subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
     });
@@ -785,7 +785,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
 
   test('losing one peer mid-round does not hold back edits for the others', { timeout: 30_000 }, async () => {
     let server1Reachable: 'on' | 'off' = 'on';
-    const { repos, adapters } = await createStarTopology({
+    const { repos, adapters, repoPairs } = await createStarTopology({
       connectionStateProviderByConnection: { 0: () => server1Reachable },
       subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
     });
@@ -818,7 +818,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
 
   test('a peer lost before its handshake completes does not hold back edits', { timeout: 30_000 }, async () => {
     let server1Reachable: 'on' | 'off' = 'on';
-    const { repos, adapters } = await createStarTopology({
+    const { repos, adapters, repoPairs } = await createStarTopology({
       connectionStateProviderByConnection: { 0: () => server1Reachable },
       subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
     });

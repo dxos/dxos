@@ -562,11 +562,18 @@ describe('AutomergeHost with Subduction', () => {
   // policy denies BOTH `authorizeFetch` and `authorizePut` during the
   // initial subduction sync round (confirmed via subduction_core WARNs
   // `policy denied: authorizePut denied by client share policy`), flipping
-  // the policy to allow recovers replication within ~5 seconds WITHOUT any
-  // external nudge (no fresh commit, no explicit `shareConfigChanged()`
-  // call from the test). The recovery is driven by `AutomergeHost`'s
-  // automatic `_sharePolicyChangedTask` firing on `documentRequested`
-  // events from subduction's heal-retry attempts.
+  // the policy to allow recovers replication in seconds on `AutomergeHost`'s
+  // own machinery — no fresh commit and no `shareConfigChanged()` from the
+  // test — PROVIDED the scope change is signalled.
+  //
+  // CORRECTION: an earlier reading of this test had recovery needing no
+  // signal at all. It does. `_sharePolicyChangedTask` is scheduled by
+  // `onConnectionOpen`, `onConnectionAuthScopeChanged` and `documentRequested`
+  // only; a policy flip that signals none of them recovers just when a heal
+  // retry happens to request a document, which is why the unsignalled version
+  // failed at every window from 10s to 70s. Production always pairs a policy
+  // change with `onConnectionAuthScopeChanged` (e.g.
+  // `MeshEchoReplicator.authorizeDevice`), so the test now does too.
   //
   // This contradicts the raw-Repo F1 test in
   // `automerge-repo-subduction.test.ts` ("authorizePut deny → allow needs
@@ -614,9 +621,8 @@ describe('AutomergeHost with Subduction', () => {
     };
 
     test(
-      'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
-      // 3s deny window + up to 70s convergence poll + teardown.
-      { timeout: 90_000 },
+      'deny→allow flip recovers via AutomergeHost machinery once the scope change is signalled',
+      { timeout: 30_000 },
       async ({ expect }) => {
         const rt1 = createRuntime();
         onTestFinished(() => rt1.dispose());
@@ -638,15 +644,16 @@ describe('AutomergeHost with Subduction', () => {
           expect(await allConverged(host1, host2, documentIds)).toBe(false);
 
           allowOnHost1 = true;
+          // Signal the scope change the way production does. `_sharePolicyChangedTask` is scheduled
+          // by exactly three things — `onConnectionOpen`, `onConnectionAuthScopeChanged`, and an
+          // incidental `documentRequested` — and flipping a `shouldAdvertise` closure fires none of
+          // them, so without this the test waits on a heal retry happening to ask host1 for a doc.
+          // That is why it failed at windows of 10s, 20s, 35s and 70s alike.
+          for (const connection of host1Replicator.connections) {
+            host1Replicator.context!.onConnectionAuthScopeChanged(connection);
+          }
 
-          // The assertion is that recovery happens unaided, not that it is fast, so the window has
-          // to cover the slowest path the machinery allows. `AutomergeHost` passes no
-          // `subductionTimeouts`, so a round already in flight when the policy flips holds for the
-          // default 60s `syncMs` — `shareConfigChanged()` can only flag `needsResync` on an
-          // in-flight round, so the re-sync waits for that round to land. Anything under 60s
-          // therefore fails intermittently however the backoff rungs land. The happy path, where
-          // no round is in flight, still returns on the first post-flip attempt (~3s).
-          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 70_000 }).toBe(true);
+          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 15_000 }).toBe(true);
         } finally {
           await host1.close();
           await host2.close();
