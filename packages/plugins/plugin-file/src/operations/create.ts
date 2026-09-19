@@ -39,14 +39,11 @@ export class FileReadError extends BaseError.extend('FileReadError', 'Failed to 
  * - otherwise `undefined`, leaving `File.fromBytes`'s `storage` option unset so it falls through
  *   to the Blob registry's own configured default (edge when configured, inline otherwise)
  *   instead of hardcoding `inline`
- *
- * Still requires at least one descriptor to be registered, as a sanity check that the plugin's
- * settings UI has something to show.
  */
-export const resolveActiveStorage = Effect.gen(function* () {
+export const resolvePreferredStorage = Effect.gen(function* () {
   const backends = yield* Capability.getAll(FileCapabilities.Backend);
   if (backends.length === 0) {
-    return yield* Effect.fail(new NoBackendError());
+    return undefined;
   }
 
   const settingsAtomOpt = yield* Capability.get(FileCapabilities.SettingsAtom).pipe(Effect.option);
@@ -63,6 +60,23 @@ export const resolveActiveStorage = Effect.gen(function* () {
   }
 
   return undefined;
+});
+
+/**
+ * {@link resolvePreferredStorage}, plus the settings-UI sanity check: a plugin host that registers
+ * no {@link FileCapabilities.Backend} descriptor has nothing to show in settings, so the operation
+ * says so rather than silently writing inline.
+ *
+ * Only for the path a person drives from the UI. A headless host registers no plugin capabilities
+ * at all, so this check can never pass there and the operation resolves the preference directly.
+ */
+export const resolveActiveStorage = Effect.gen(function* () {
+  const backends = yield* Capability.getAll(FileCapabilities.Backend);
+  if (backends.length === 0) {
+    return yield* Effect.fail(new NoBackendError());
+  }
+
+  return yield* resolvePreferredStorage;
 });
 
 const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperation.Create.pipe(
