@@ -1,6 +1,6 @@
 # plugin-markdown — Tasks
 
-_Resume: build + typecheck, run the `EmbedFocus` story, open the PR. Uncommitted: all of it. Last: focus gating implemented._
+_Resume: open the PR. Uncommitted: none. Last: verified in the browser (wheel over an inert embed scrolls the page; attended embed keeps it), tailwind-merge ring fix._
 
 ## Phase 1: focusable inline object embeds
 
@@ -18,7 +18,9 @@ that must be clicked to take events.
       attention; focus ring while attended; Escape focuses the editor.
 - [x] **Story** — `MarkdownArticle` `WithObjects` manual `Test:` block + `EmbedFocus` play story
       asserting the inert toggle.
-- [ ] **Verify** — build, lint, format, run the play story, manual check of wheel over the sketch.
+- [x] **Verify** — build, lint, format, play story green, browser check of the wheel over the sketch.
+- [x] **tailwind-merge** — `ring-focus-line` / `ring-offset-focus-offset` registered as widths in the shared
+      merge config; `mx()` had been dropping the width beside the colour, so the ring never rendered.
 - [ ] **PR**
 
 ### Follow-ups
