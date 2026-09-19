@@ -8,7 +8,7 @@ import { type Database } from '@dxos/echo';
 
 import { toSpaceUpdate } from './space-sync-progress.ts';
 
-describe('toSpaceUpdate', ({ expect }) => {
+describe('toSpaceUpdate', () => {
   test('caught up on both backlogs yields no monitor', ({ expect }) => {
     expect(toSpaceUpdate('Space', makeState({ totalDocumentCount: 10, totalBlocks: '100' }))).toBeUndefined();
   });

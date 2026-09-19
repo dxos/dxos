@@ -41,8 +41,19 @@ type ScriptedSpace = {
 };
 
 const SPACES: ScriptedSpace[] = [
-  { key: 'space/dx', label: 'Syncing DX', total: 121, rate: 7, loop: true },
-  { key: 'space/bramble', label: 'Syncing Bramble Coffee', total: 15, rate: 3 },
+  {
+    key: 'space/dx',
+    label: 'Syncing DX Space',
+    total: 1121,
+    rate: 7,
+    loop: true,
+  },
+  {
+    key: 'space/bramble',
+    label: 'Syncing Bramble Coffee',
+    total: 15,
+    rate: 3,
+  },
 ];
 
 /**
@@ -115,13 +126,13 @@ export const Live: Story = {
 
     // The popover is portaled, so it is read from the document rather than the canvas.
     const body = within(document.body);
-    const counter = async () => (await body.findByText(/\/ 121$/)).textContent;
+    const counter = async () => (await body.findByText(/\/1121$/)).textContent;
     const before = await counter();
     // An open popover keeps following the registry: the count moves without closing and reopening.
     await waitFor(async () => expect(await counter()).not.toBe(before), { timeout: 3_000 });
 
     // A space that catches up leaves the list while the popover stays open for the one still syncing.
-    await waitFor(() => expect(body.queryByText(/\/ 15$/)).toBeNull(), { timeout: 5_000 });
-    await expect(body.getByText(/\/ 121$/)).toBeTruthy();
+    await waitFor(() => expect(body.queryByText(/\/15$/)).toBeNull(), { timeout: 5_000 });
+    await expect(body.getByText(/\/1121$/)).toBeTruthy();
   },
 };

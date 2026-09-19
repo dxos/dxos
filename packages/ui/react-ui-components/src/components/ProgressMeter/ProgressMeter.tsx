@@ -176,11 +176,11 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-description' lines={lines} greedy />
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
-            <span className='font-mono'>
-              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
+            <span className='tabular-nums'>
+              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current}/${total}`}
             </span>
             {!indeterminate && etaMs !== undefined && status === 'running' && (
-              <span className='text-description'>{formatDuration(etaMs)} left</span>
+              <span className='text-description'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
               <IconButton
