@@ -124,15 +124,17 @@ export const Live: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole('button'));
 
-    // The popover is portaled, so it is read from the document rather than the canvas.
-    const body = within(document.body);
-    const counter = async () => (await body.findByText(/\/1121$/)).textContent;
-    const before = await counter();
-    // An open popover keeps following the registry: the count moves without closing and reopening.
-    await waitFor(async () => expect(await counter()).not.toBe(before), { timeout: 3_000 });
+    // Read from the bar's value rather than the readout's text: the popover is portaled, and the
+    // readout's format is the meter's to change.
+    const bar = (label: string) => document.querySelector(`[aria-label="${label}"]`);
+    const fraction = (label: string) => bar(label)?.getAttribute('aria-valuenow') ?? null;
+    await waitFor(() => expect(bar('Syncing DX Space')).not.toBeNull());
+    const before = fraction('Syncing DX Space');
+    // An open popover keeps following the registry: the bar moves without closing and reopening.
+    await waitFor(() => expect(fraction('Syncing DX Space')).not.toBe(before), { timeout: 3_000 });
 
     // A space that catches up leaves the list while the popover stays open for the one still syncing.
-    await waitFor(() => expect(body.queryByText(/\/15$/)).toBeNull(), { timeout: 5_000 });
-    await expect(body.getByText(/\/1121$/)).toBeTruthy();
+    await waitFor(() => expect(bar('Syncing Bramble Coffee')).toBeNull(), { timeout: 5_000 });
+    await expect(bar('Syncing DX Space')).not.toBeNull();
   },
 };
