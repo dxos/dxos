@@ -10,7 +10,7 @@
 
 import { ark } from '@ark-ui/react/factory';
 import { Portal } from '@ark-ui/react/portal';
-import { Tooltip as TooltipPrimitive, useTooltip } from '@ark-ui/react/tooltip';
+import { Tooltip as TooltipPrimitive, type UseTooltipReturn, useTooltip } from '@ark-ui/react/tooltip';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentRef,
@@ -89,16 +89,6 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   const registry = useRef(new Map<string, TooltipEntry>());
   const [, setRegistryVersion] = useState(0);
   const activeValueRef = useRef<string | null>(null);
-  const register = useCallback((value: string, entry: TooltipEntry) => {
-    registry.current.set(value, entry);
-    if (activeValueRef.current === value) {
-      setRegistryVersion((version) => version + 1);
-    }
-    return () => {
-      registry.current.delete(value);
-    };
-  }, []);
-
   const contentId = useId();
   // The machine copies `positioning` when it opens or switches trigger, so the side must be rendered before that event.
   const [placement, setPlacement] = useState<TooltipSide>('top');
@@ -111,6 +101,16 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
     }
   }, []);
 
+  const register = useCallback((value: string, entry: TooltipEntry) => {
+    registry.current.set(value, entry);
+    if (activeValueRef.current === value) {
+      setRegistryVersion((version) => version + 1);
+    }
+    return () => {
+      registry.current.delete(value);
+    };
+  }, []);
+
   const tooltip = useTooltip({
     open,
     onOpenChange: ({ open: next }) => setOpen(next),
@@ -120,9 +120,24 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
     // A trigger's DOM id is its value, which is how the machine finds the active one to position at.
     ids: { content: contentId, trigger: (value) => value ?? '' },
   });
-  const apiRef = useRef(tooltip);
+  const apiRef = useRef<UseTooltipReturn | null>(tooltip);
   apiRef.current = tooltip;
   activeValueRef.current = tooltip.triggerValue;
+
+  // Open with nothing to point at — `defaultOpen`, or `open` set before any trigger was hovered — the
+  // machine has no anchor and shows an empty tooltip off screen. The first registered trigger becomes
+  // it. After the triggers' own layout effects, so the registry is filled by the time this runs.
+  const triggerValue = tooltip.triggerValue;
+  useEffect(() => {
+    if (!open || triggerValue) {
+      return;
+    }
+    const first = registry.current.keys().next().value;
+    if (first) {
+      prepareTrigger(first);
+      apiRef.current?.setTriggerValue(first);
+    }
+  }, [open, triggerValue, prepareTrigger]);
 
   const active = tooltip.triggerValue ? registry.current.get(tooltip.triggerValue) : undefined;
 

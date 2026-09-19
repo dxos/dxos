@@ -23,7 +23,7 @@ const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc)
 const content: ComponentFunction<PopoverStyleProps> = ({ elevation, surface }, ...etc) =>
   mx(
     !surface && 'dx-popover-surface',
-    'dx-focus-ring rounded-sm min-h-[1rem]',
+    'dx-focus-ring rounded-xs min-h-[1rem]',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     ...etc,
