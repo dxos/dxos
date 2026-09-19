@@ -13,7 +13,7 @@ describe('toSpaceUpdate', () => {
     expect(toSpaceUpdate('Space', makeState({ totalDocumentCount: 10, totalBlocks: '100' }))).toBeUndefined();
   });
 
-  test('combines documents and feed blocks into one meter', () => {
+  test('a monitor opens at the start of its run, with the backlog as its total', () => {
     const update = toSpaceUpdate(
       'Notes',
       makeState({
@@ -26,10 +26,31 @@ describe('toSpaceUpdate', () => {
     );
     expect(update).toEqual({
       label: 'Syncing Notes',
-      current: 98,
-      total: 110,
+      current: 0,
+      total: 12,
+      synced: 98,
       note: '4 objects · ↓6 ↑2',
     });
+  });
+
+  test('against its baseline, a monitor counts what the run has synced', () => {
+    const update = toSpaceUpdate(
+      'Notes',
+      makeState({ totalDocumentCount: 10, unsyncedDocumentCount: 1, totalBlocks: '100', blocksToPull: '3' }),
+      98,
+    );
+    expect(update).toEqual({
+      label: 'Syncing Notes',
+      current: 8,
+      total: 12,
+      synced: 106,
+      note: '1 objects · ↓3 ↑0',
+    });
+  });
+
+  test('a backlog that grows extends the total without moving the count backwards', () => {
+    const update = toSpaceUpdate('Notes', makeState({ totalDocumentCount: 20, unsyncedDocumentCount: 8 }), 10);
+    expect(update).toMatchObject({ current: 2, total: 10, synced: 12 });
   });
 
   test('unsynced documents alone keep the meter up', () => {
@@ -37,6 +58,7 @@ describe('toSpaceUpdate', () => {
       label: 'Syncing Space',
       current: 0,
       total: 3,
+      synced: 0,
       note: '3 objects',
     });
   });
@@ -44,8 +66,9 @@ describe('toSpaceUpdate', () => {
   test('feed blocks alone keep the meter up', () => {
     expect(toSpaceUpdate('Notes', makeState({ totalBlocks: '10', blocksToPush: '2' }))).toEqual({
       label: 'Syncing Notes',
-      current: 8,
-      total: 10,
+      current: 0,
+      total: 2,
+      synced: 8,
       note: '↓0 ↑2',
     });
   });
