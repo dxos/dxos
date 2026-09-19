@@ -1,6 +1,6 @@
 # plugin-markdown — Tasks
 
-_Resume: open the PR for phase 2 (deleted embed targets). Uncommitted: none after commit. Last: DeletedEmbed play test green._
+_Resume: land PR #13239. Uncommitted: none. Last: PR opened 2026-09-20._
 
 ## Phase 1: focusable inline object embeds
 
