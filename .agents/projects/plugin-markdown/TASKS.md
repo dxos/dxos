@@ -38,6 +38,11 @@ that must be clicked to take events.
       object already matched the picker; replaced by `useSelectedObjectColor` (compare, no flag) +
       regression test. Orbit inertia halved (0.45).
 
+- [x] **plugin-mermaid theming** — `theme`/`themeVariables`/`themeCSS` options, tokens via `themeCSS`,
+      re-render on colour-mode switch; **plugin-tldraw** follows the app theme (not
+      `prefers-color-scheme`); **plugin-space** single-card delete routed through `RemoveObjects`
+      (undoable).
+
 ### Follow-ups
 
 - [ ] Clicking an embedded _document_ scrolls the outer document (~190px): the inner editor focuses
