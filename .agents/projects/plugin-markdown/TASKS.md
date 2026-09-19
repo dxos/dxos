@@ -1,6 +1,6 @@
 # plugin-markdown — Tasks
 
-_Resume: PR #13237 landing (auto-merge). Uncommitted: none. Last: changeset rewritten from the whole diff, 2026-09-19._
+_Resume: PR #13237 MERGED 2026-09-19. Uncommitted: none. Next: the follow-ups below._
 
 ## Phase 1: focusable inline object embeds
 
