@@ -334,6 +334,10 @@ const widgetStateMapStateField = StateField.define<WidgetStateMap>({
   },
 });
 
+/** The accumulated state a host has reported for a widget id, if any. */
+export const getWidgetState = (state: EditorState, id: string): Partial<WidgetProps> | undefined =>
+  state.field(widgetStateMapStateField, false)?.[id];
+
 /**
  * Re-applies the accumulated widget state at mount time.
  *

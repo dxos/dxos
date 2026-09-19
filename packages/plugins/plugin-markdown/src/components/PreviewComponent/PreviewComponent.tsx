@@ -12,12 +12,14 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Card, Icon, IconButton } from '@dxos/react-ui';
+import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { type WidgetProps } from '@dxos/ui-editor';
+import { type LinkWidgetState, type WidgetProps, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
+
+import { meta } from '#meta';
 
 import { parseEmbedLabel } from './parse-embed-label.ts';
 
@@ -52,18 +54,22 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
-export type PreviewComponentProps = WidgetProps<{
-  db?: Database.Database;
-  /** The containing editor's attendable id; the embed nests under it as `<attendableId>/<object id>`. */
-  attendableId?: string;
-  eid: string;
-  label: string;
-  block?: boolean;
-  suggest?: boolean;
-  onOpen?: (eid: URI.URI) => void;
-  /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
-  isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
-}>;
+export type PreviewComponentProps = WidgetProps<
+  {
+    /** The widget id, for reporting the target's state back to the editor. */
+    id: string;
+    db?: Database.Database;
+    /** The containing editor's attendable id; the embed nests under it as `<attendableId>/<object id>`. */
+    attendableId?: string;
+    eid: string;
+    label: string;
+    block?: boolean;
+    suggest?: boolean;
+    onOpen?: (eid: URI.URI) => void;
+    /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
+    isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
+  } & LinkWidgetState
+>;
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
@@ -72,15 +78,19 @@ export type PreviewComponentProps = WidgetProps<{
  * focus to the editor.
  */
 export const PreviewComponent = ({
+  id,
   db,
   attendableId: parentAttendableId,
   eid,
   label: labelProp,
   view,
   range,
+  unresolved,
+  intrinsic,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
+  const { t } = useTranslation(meta.profile.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
@@ -101,6 +111,26 @@ export const PreviewComponent = ({
   // instanceOf check fail, so embeds rendered nothing.
   const [subject] = useObject(object);
 
+  // `object` is undefined both while the target loads and when there is nothing to load; only a
+  // settled load tells them apart, and a deleted object still resolves, so both count as missing.
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    setMissing(false);
+    if (!ref) {
+      return;
+    }
+    let cancelled = false;
+    ref.tryLoad().then(
+      (target: Obj.Unknown | undefined) => !cancelled && setMissing(!target || Obj.isDeleted(target)),
+      () => !cancelled && setMissing(true),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [ref]);
+  const available = !!object && !Obj.isDeleted(object);
+  const unavailable = !available && (missing || !!object);
+
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
   const { height } = parseEmbedLabel(labelProp);
@@ -118,9 +148,38 @@ export const PreviewComponent = ({
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject && attendableId ? { subject, attendableId, extrinsic } : undefined),
-    [subject, attendableId, extrinsic],
+    () => (subject && attendableId && available ? { subject, attendableId, extrinsic } : undefined),
+    [subject, attendableId, extrinsic, available],
   );
+  const mode = !data
+    ? undefined
+    : isSurfaceAvailable({ type: AppSurface.Section, data })
+      ? 'section'
+      : isSurfaceAvailable({ type: AppSurface.CardContent, data })
+        ? 'card'
+        : undefined;
+
+  // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved
+  // target puts the source back (editable) with the error inline, and a card drops the reserved
+  // height a section would have used. Deferred: the report can arrive from a render the editor's own
+  // update triggered, and a dispatch inside an update throws.
+  useEffect(() => {
+    if (!view || !id) {
+      return;
+    }
+    const next: LinkWidgetState = {};
+    if (available && unresolved) {
+      next.unresolved = false;
+    } else if (unavailable && !unresolved) {
+      next.unresolved = true;
+    }
+    if (mode && !!intrinsic !== (mode === 'card')) {
+      next.intrinsic = mode === 'card';
+    }
+    if (Object.keys(next).length > 0) {
+      queueMicrotask(() => setLinkWidgetState(view, id, next));
+    }
+  }, [view, id, available, unavailable, unresolved, mode, intrinsic]);
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
@@ -236,12 +295,23 @@ export const PreviewComponent = ({
     [uri, object, onOpen, invokePromise],
   );
 
+  // The chip renders only once the editor has rebuilt this link inline; in the block (before the
+  // report lands) it would flash at the top of the reserved box.
+  if (unresolved) {
+    return (
+      <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
+        <Icon icon='ph--warning--regular' size={4} />
+        {t('object-not-found.label')}
+      </span>
+    );
+  }
+
   if (uri && object && data) {
     const objectIcon = Obj.getIcon(object);
     const objectLabel = Obj.getLabel(object);
 
     // Section preview.
-    if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
+    if (mode === 'section') {
       return (
         <div
           className='relative grid scroll-mt-16 outline-hidden'
@@ -296,7 +366,7 @@ export const PreviewComponent = ({
     }
 
     // Card preview.
-    if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
+    if (mode === 'card') {
       return (
         <div className='outline-hidden' {...frameProps}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
@@ -316,9 +386,6 @@ export const PreviewComponent = ({
     }
   }
 
-  return (
-    <span className='bg-card-surface text-sm border border-separator rounded-sm p-1'>
-      Invalid object: <span className='font-mono'>{eid}</span>
-    </span>
-  );
+  // Loading: the placeholder holds the reserved height until the target settles.
+  return null;
 };

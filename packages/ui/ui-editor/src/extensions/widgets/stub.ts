@@ -187,8 +187,15 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     // The signature too: an id that does not encode the tag's content (a streaming tag is keyed on
     // its opening position) would otherwise pin the widget to the props of the first chunk, so a run
     // that keeps appending to the same tag never re-renders until the document is rebuilt.
+    // And the reserved height: a host that releases or restores a block's pin needs a fresh root,
+    // since the cached one carries the old inline height.
     const context = (props: TProps) => (props as WidgetProps).context;
-    return this.id === other.id && this.signature === other.signature && context(this.props) === context(other.props);
+    return (
+      this.id === other.id &&
+      this.signature === other.signature &&
+      this.blockHeight === other.blockHeight &&
+      context(this.props) === context(other.props)
+    );
   }
 
   override ignoreEvent() {
@@ -213,19 +220,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     const cached = this.#keepAlive && this.#root != null;
     if (!this.#root) {
       this.#root = this.block ? Domino.of('div').classNames('min-h-[24px]').root : Domino.of('span').root;
-      if (this.block && this.blockHeight != null) {
-        if (this.heightMode === 'min') {
-          // A floor rather than a pin: the box cannot be measured empty while its portaled content
-          // is still to paint, and can still grow when that content changes size.
-          this.#root.style.minHeight = `${this.blockHeight}px`;
-        } else {
-          // Fixed (not min) height: give CM an authoritative, content-independent measurement so an async
-          // widget that mounts / re-lays-out later cannot perturb the heightmap (we know the height up
-          // front). `overflow: hidden` keeps content that briefly overshoots from changing the measured box.
-          this.#root.style.height = `${this.blockHeight}px`;
-          this.#root.style.overflow = 'hidden';
-        }
-      }
+      this.#applyBlockHeight(this.#root);
     }
 
     const props = Object.assign({}, this.props, { view }) as TProps;
@@ -249,8 +244,16 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
   // Called on the REPLACEMENT widget with the outgoing instance's DOM, so `view` arrives as the
   // argument — `#view` is only ever set by this instance's own `toDOM`, which has not run.
   override updateDOM(dom: HTMLElement, view: EditorView) {
+    // CodeMirror offers the outgoing DOM to any widget of the same class; a block cannot continue
+    // in an inline span (or the reverse), so decline and let `toDOM` build the right element.
+    if (this.block !== (dom.tagName === 'DIV')) {
+      return false;
+    }
     this.#root = dom;
     this.#view = view;
+    // The reserved height is this instance's, not the outgoing widget's: a host that released it
+    // (`intrinsic`) or set another must not inherit the old pin from the reused element.
+    this.#applyBlockHeight(dom);
     const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({
       id: this.id,
@@ -275,6 +278,23 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     this.notifier.unmounted(this.id, this.#root ?? _dom);
     this.#root = null;
     this.#view = undefined;
+  }
+
+  /** Pins, floors, or frees the block per `blockHeight`/`heightMode`; a no-op for inline widgets. */
+  #applyBlockHeight(root: HTMLElement): void {
+    if (!this.block) {
+      return;
+    }
+    const pinned = this.blockHeight != null && this.heightMode !== 'min';
+    const floored = this.blockHeight != null && this.heightMode === 'min';
+    // A floor rather than a pin: the box cannot be measured empty while its portaled content is
+    // still to paint, and can still grow when that content changes size.
+    root.style.minHeight = floored ? `${this.blockHeight}px` : '';
+    // Fixed (not min) height: give CM an authoritative, content-independent measurement so an async
+    // widget that mounts / re-lays-out later cannot perturb the heightmap (we know the height up
+    // front). `overflow: hidden` keeps content that briefly overshoots from changing the measured box.
+    root.style.height = pinned ? `${this.blockHeight}px` : '';
+    root.style.overflow = pinned ? 'hidden' : '';
   }
 
   /**
