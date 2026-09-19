@@ -196,9 +196,13 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
             <span className='tabular-nums'>
-              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : progress(current, total)}
+              {indeterminate
+                ? active && elapsedMs >= SECOND_MS
+                  ? formatDuration(elapsedMs)
+                  : ''
+                : progress(current, total)}
             </span>
-            {!indeterminate && etaMs !== undefined && status === 'running' && etaMs && (
+            {!indeterminate && etaMs !== undefined && etaMs >= SECOND_MS && status === 'running' && (
               <span className='text-description'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
@@ -298,6 +302,9 @@ const useNotes = (label: string | undefined, note: string | undefined, startedAt
 //
 // Util
 //
+
+/** A duration under this rounds to `0s`, which reads as done or stuck; the readout waits for a whole second. */
+const SECOND_MS = 1_000;
 
 /** Compact human duration (e.g. `12s`, `3m 05s`, `1h 02m`). */
 export const formatDuration = (ms: number): string => {
