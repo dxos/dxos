@@ -10,6 +10,8 @@ import { random } from '@dxos/random';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
+
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter.tsx';
 
 const TICK_MS = 200;
@@ -151,9 +153,7 @@ const meta = {
   title: 'ui/react-ui-components/ProgressMeter',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
