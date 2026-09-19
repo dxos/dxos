@@ -93,6 +93,8 @@ export type ServiceContextOptions = {
   signalManager?: SignalManager;
   transportFactory?: TransportFactory;
   runtimeProps?: ServiceContextRuntimeProps;
+  /** A test config configures no edge endpoint, so a test that needs edge has to pass a stub. */
+  edgeHttpClient?: EdgeHttpClient;
 };
 
 /**
@@ -208,6 +210,7 @@ export class ServiceContext {
         },
         signalManager: this.#options.signalManager,
         transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
+        edgeHttpClient: this.#options.edgeHttpClient,
       }).pipe(
         Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect)),
         Layer.provide(Layer.succeed(ConfigService, this.#config)),
@@ -273,11 +276,13 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
 export const createServiceContext = async ({
   signalManagerFactory = async () => new MemorySignalManager(new MemorySignalManagerContext()),
   runtimeProps,
+  edgeHttpClient,
 }: {
   signalManagerFactory?: () => Promise<SignalManager>;
   runtimeProps?: ServiceContextRuntimeProps;
+  edgeHttpClient?: EdgeHttpClient;
 } = {}): Promise<ServiceContext> => {
-  const context = new ServiceContext({ signalManager: await signalManagerFactory(), runtimeProps });
+  const context = new ServiceContext({ signalManager: await signalManagerFactory(), runtimeProps, edgeHttpClient });
   // Tests close the context; the SQLite runtime goes with it so layer finalizers do not leak across tests.
   const close = context.close.bind(context);
   context.close = async (ctx) => {
@@ -291,6 +296,7 @@ export const createPeers = async (
   numPeers: number,
   signalManagerFactory?: () => Promise<SignalManager>,
   runtimeProps?: ServiceContextRuntimeProps,
+  edgeHttpClient?: EdgeHttpClient,
 ) => {
   if (!signalManagerFactory) {
     const signalContext = new MemorySignalManagerContext();
@@ -298,7 +304,7 @@ export const createPeers = async (
   }
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalManagerFactory, runtimeProps });
+      const peer = await createServiceContext({ signalManagerFactory, runtimeProps, edgeHttpClient });
       await peer.open(new Context());
       return peer;
     }),
