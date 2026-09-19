@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-markdown
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-19
+    summary: 'Inline object embeds (`![label](echo:///…)`) in markdown documents: the embed container is a focusable attendable — click to focus (focus ring, events reach the surface), otherwise inert so wheel/scroll passes to the document.'
+    tasks: .agents/projects/plugin-markdown/TASKS.md
+    design: .agents/projects/plugin-markdown/DESIGN.md
+    prs: [13237]
+    resume: 'PR #13237 OPEN (focus-gated embeds + tailwind-merge ring fix). NEXT: watch Check, address review, land; then the TASKS.md follow-ups (card previews ungated, Tab into an embed).'
   - name: plugin-debug
     status: active
     user: burdon
