@@ -41,18 +41,17 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
   );
 
 /**
- * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
- * outward. The content draws no border, only its focus ring, so the tip follows the ring: its two
- * outer edges are ring-width borders, transparent until the content is focus-visible and then the
- * ring's colour, and it is shifted outward by the ring's width (`--arrow-inset`, applied by
- * `positioning.css`) so those edges meet the ring's outer edge. The shift is constant, so taking
- * focus never moves the arrow; the content's backdrop filter makes it the arrow's containing block.
+ * The arrow box straddles the content's edge and `positioning.css` shifts it outward by
+ * `--arrow-inset`, the focus ring's width, so the box is centred on the ring's outer edge. The
+ * content draws no border, only its ring, so the tip's stroke (see `Popover.Arrow`) is transparent
+ * until the content is focus-visible and then the ring's colour, at the ring's width. The shift is
+ * constant, so taking focus never moves the arrow.
  */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
     '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:var(--dx-focus-line)]',
-    '[&>[data-part=arrow-tip]]:border-transparent [&>[data-part=arrow-tip]]:border-t-[length:var(--dx-focus-line)] [&>[data-part=arrow-tip]]:border-l-[length:var(--dx-focus-line)]',
-    '[:focus-visible>&>[data-part=arrow-tip]]:border-(--color-focus-ring-subtle)',
+    '[&>svg]:overflow-visible [&>svg]:size-full [&>svg]:fill-(--arrow-background)',
+    '[&>svg]:stroke-transparent [&>svg]:stroke-(length:--dx-focus-line) [:focus-visible>&>svg]:stroke-(--color-focus-ring-subtle)',
     ...etc,
   );
 

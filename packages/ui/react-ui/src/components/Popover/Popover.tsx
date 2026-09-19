@@ -308,11 +308,26 @@ const ARROW_NAME = 'Popover.Arrow';
 
 type PopoverArrowProps = ThemedClassName<ComponentPropsWithRef<typeof PopoverPrimitive.Arrow>>;
 
+/**
+ * The tip is drawn rather than taken from the machine: its rotated-square tip is two CSS borders
+ * meeting a box-shadow ring, and the joint between a diagonal border band and a straight ring is
+ * never clean. Here the outline is one stroked path — the ring's line for four px, the chevron,
+ * and the ring's line again — so the corners are mitred by the rasteriser and the arrow's edges
+ * are the ring's own line continued. It is drawn pointing right for a popover on the left, and
+ * turned per side by `positioning.css`.
+ *
+ * Coordinates are in the machine's 12px arrow box, which `positioning.css` centres on the ring's
+ * outer edge: the content edge is at 4, the ring's band spans 4–6 and its centre line is 5. The
+ * fill covers the band under the chevron so the ring appears to open into it.
+ */
 const PopoverArrow = forwardRef<HTMLDivElement, PopoverArrowProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <PopoverPrimitive.Arrow {...props} className={tx('popover.arrow', {}, classNames)} ref={forwardedRef}>
-      <PopoverPrimitive.ArrowTip />
+      <svg viewBox='0 0 12 12' aria-hidden='true'>
+        <path d='M4 0H5L11 6L5 12H4Z' stroke='none' />
+        <path d='M5 -4V0L11 6L5 12V16' fill='none' />
+      </svg>
     </PopoverPrimitive.Arrow>
   );
 });
