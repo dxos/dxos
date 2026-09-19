@@ -764,7 +764,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     handle.change((doc: any) => {
       doc.text = 'first';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
     await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
 
@@ -772,11 +772,11 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     handle.change((doc: any) => {
       doc.text = 'second';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     handle.change((doc: any) => {
       doc.text = 'third';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
 
     framesDelivered = 'on';
     await reconnectAdapters(adapters);
@@ -796,7 +796,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     handle.change((doc: any) => {
       doc.text = 'first';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
     await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
 
@@ -804,11 +804,11 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     handle.change((doc: any) => {
       doc.text = 'second';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     handle.change((doc: any) => {
       doc.text = 'third';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
 
     const [clientSide, server1Side] = adapters[0];
     clientSide.peerDisconnected(server1Side.peerId!);
@@ -838,7 +838,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     handle.change((doc: any) => {
       doc.text = 'first';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
     await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
 
@@ -846,11 +846,11 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     handle.change((doc: any) => {
       doc.text = 'second';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     handle.change((doc: any) => {
       doc.text = 'third';
     });
-    await waitForSubductionSave();
+    await waitForSubductionSave(repos);
     await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
   });
 });
