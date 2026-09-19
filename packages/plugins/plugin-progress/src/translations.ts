@@ -3,6 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 
 import { meta } from '#meta';
 
@@ -15,4 +16,5 @@ export const translations = [
       },
     },
   },
+  ...componentsTranslations,
 ] as const satisfies Resource[];

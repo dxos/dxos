@@ -14,7 +14,10 @@ import {
   composable,
   composableProps,
   stepCount,
+  useTranslation,
 } from '@dxos/react-ui';
+
+import { translationKey } from '#translations';
 
 export type ProgressMeterProps = ThemedClassName<
   Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
@@ -135,6 +138,7 @@ type InnerProgressMeterProps = ProgressMeterProps & { state: ProgressModel.TaskP
  */
 export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterProps>(
   ({ state, selected, onSelect, onCancel, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const { current = 0, total, label, name, status, note, error } = state;
     // Derived here rather than supplied: `deriveEta` projects from the task's own elapsed time, so
     // every producer gets the same estimate without computing one.
@@ -157,6 +161,9 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
     // meters would say what each is doing and never which task it is.
     const lines = useNotes(label ?? name, note, state.startedAt);
 
+    // const progress = (current: number, total: number) => `${current}/${total}`;
+    const progress = (current: number, total: number) => Math.round((current / total) * 100) + '%';
+
     return (
       <div
         {...composableProps(props, {
@@ -177,7 +184,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
             <span className='tabular-nums'>
-              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current}/${total}`}
+              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : progress(current, total)}
             </span>
             {!indeterminate && etaMs !== undefined && status === 'running' && (
               <span className='text-description'>({formatDuration(etaMs)})</span>
@@ -190,7 +197,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
                 icon='ph--x--regular'
                 iconOnly
                 disabled={!cancellable}
-                label={failed ? 'Dismiss' : 'Cancel'}
+                label={t(failed ? 'progress-meter.dismiss.label' : 'progress-meter.cancel.label')}
                 onClick={onCancel}
               />
             )}
