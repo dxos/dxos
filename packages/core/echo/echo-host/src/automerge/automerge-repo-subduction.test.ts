@@ -758,7 +758,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
       subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
     });
     const [host, client] = repos;
-    await connectAdapters(adapters);
+    await connectAdapters(adapters, { repoPairs });
 
     const handle = host.create<{ text?: string }>();
     handle.change((doc: any) => {
@@ -790,7 +790,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
       subductionTimeouts: { syncMs: 6_000, healInitialDelayMs: 100 },
     });
     const [client, , server2] = repos;
-    await connectAdapters(adapters);
+    await connectAdapters(adapters, { repoPairs });
 
     const handle = client.create<{ text?: string }>();
     handle.change((doc: any) => {
@@ -824,7 +824,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     });
     const [client, server1, server2] = repos;
     const [clientSide, server1Side] = adapters[0];
-    await connectAdapters([adapters[1]]);
+    await connectAdapters([adapters[1]], { repoPairs: [repoPairs[1]] });
     await clientSide.onConnect.wait();
     await server1Side.onConnect.wait();
 
