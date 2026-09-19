@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-inbox",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Cross-cutting storybook stories for plugin-inbox (extractors, MessageArticle/MailboxArticle integration with sibling plugins).",
   "homepage": "https://dxos.org",
