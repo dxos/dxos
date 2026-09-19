@@ -64,7 +64,11 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
       held.current = state;
     }
 
-    const visible = useDeferredVisible(Boolean(state), delay, minDuration);
+    // Counted from when the run started, not from when this meter mounted: a run that has already
+    // lasted `delay` is worth reporting the moment a surface opens on it, and a popover that opened
+    // on such runs was otherwise empty for the whole delay.
+    const startedAt = state?.startedAt ? Date.parse(state.startedAt) : undefined;
+    const visible = useDeferredVisible(Boolean(state), delay, minDuration, startedAt);
     if (!visible || !held.current) {
       return null;
     }
@@ -75,16 +79,20 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
 
 ProgressMeter.displayName = 'ProgressMeter';
 
+/** How much of `delay` is still to run, given when the thing became present. */
+const remainingDelay = (delay: number, since: number | undefined): number =>
+  since === undefined ? delay : Math.max(0, delay - (Date.now() - since));
+
 /**
  * Whether a thing that is `present` should be shown, given a delay before it appears and a minimum
- * time it stays once it has.
+ * time it stays once it has. `since` is when it became present, if that predates the mount.
  *
  * Both bounds exist because a surface that flashes is worse than one that is slightly late: a
  * readout appearing and vanishing inside a few frames reads as a fault, and one that appears at all
  * should stay long enough to be read.
  */
-const useDeferredVisible = (present: boolean, delay: number, minDuration: number): boolean => {
-  const [visible, setVisible] = useState(present && delay === 0);
+const useDeferredVisible = (present: boolean, delay: number, minDuration: number, since?: number): boolean => {
+  const [visible, setVisible] = useState(present && remainingDelay(delay, since) === 0);
   // When it became visible, so `minDuration` counts from the render rather than from the moment
   // `present` flipped — a meter held back by `delay` has not been on screen at all yet.
   const shownAt = useRef<number | undefined>(visible ? Date.now() : undefined);
@@ -95,10 +103,13 @@ const useDeferredVisible = (present: boolean, delay: number, minDuration: number
         return;
       }
 
-      const timer = setTimeout(() => {
-        shownAt.current = Date.now();
-        setVisible(true);
-      }, delay);
+      const timer = setTimeout(
+        () => {
+          shownAt.current = Date.now();
+          setVisible(true);
+        },
+        remainingDelay(delay, since),
+      );
       return () => clearTimeout(timer);
     }
 
@@ -119,7 +130,7 @@ const useDeferredVisible = (present: boolean, delay: number, minDuration: number
       setVisible(false);
     }, remaining);
     return () => clearTimeout(timer);
-  }, [present, visible, delay, minDuration]);
+  }, [present, visible, delay, minDuration, since]);
 
   return visible;
 };

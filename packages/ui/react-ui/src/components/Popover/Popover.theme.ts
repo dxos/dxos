@@ -23,7 +23,7 @@ const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc)
 const content: ComponentFunction<PopoverStyleProps> = ({ elevation, surface }, ...etc) =>
   mx(
     !surface && 'dx-popover-surface',
-    'border-2 border-separator rounded-sm',
+    'border border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     'dx-focus-ring',
@@ -51,8 +51,8 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
  */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:2px]',
-    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:1px]',
+    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t [&>[data-part=arrow-tip]]:border-l',
     ...etc,
   );
 
