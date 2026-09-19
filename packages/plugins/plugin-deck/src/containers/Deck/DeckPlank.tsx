@@ -90,7 +90,11 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   // viewport, which positions the plank past the pile of spines, so this focus must not scroll.
   useLayoutEffect(() => {
     if (scrollIntoView?.id === id) {
-      if (scrollIntoView.focus !== false) {
+      if (scrollIntoView.focus === 'content') {
+        // Straight into the content, as Enter on the plank would: a keyboard navigation that landed
+        // on the plank itself would need a second Enter before the reader could type.
+        (findFirstFocusable(rootRef.current) ?? rootRef.current)?.focus({ preventScroll: true });
+      } else if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);
       }
       onScrollIntoView(undefined);
