@@ -12,27 +12,6 @@ import { Model, Scene } from '#types';
 
 import { type UseSelectedObjectColorOptions, useSelectedObjectColor } from './useSelectedObjectColor.ts';
 
-/** A scene with one coloured object and a picker the hook drives; `props` builds the hook's options. */
-const setup = (color: string, hue = color) => {
-  const object = Model.make({ color });
-  const scene = Obj.make(Scene.Scene, { objects: [Ref.make(object)] });
-  const picker = { hue };
-  const props = (overrides: Partial<UseSelectedObjectColorOptions> = {}): UseSelectedObjectColorOptions => ({
-    scene,
-    selectedObjectId: object.id,
-    hue: picker.hue,
-    onHueChange: (next) => {
-      picker.hue = next;
-    },
-    ...overrides,
-  });
-  const render = (overrides: Partial<UseSelectedObjectColorOptions> = {}) =>
-    renderHook((options: UseSelectedObjectColorOptions) => useSelectedObjectColor(options), {
-      initialProps: props(overrides),
-    });
-  return { object, picker, props, render };
-};
-
 describe('useSelectedObjectColor', () => {
   test('selecting an object adopts its colour', ({ expect }) => {
     const { object, picker, render } = setup('red', 'blue');
@@ -59,3 +38,24 @@ describe('useSelectedObjectColor', () => {
     expect(object.color).toBe('green');
   });
 });
+
+/** A scene with one coloured object and a picker the hook drives; `props` builds the hook's options. */
+const setup = (color: string, hue = color) => {
+  const object = Model.make({ color });
+  const scene = Obj.make(Scene.Scene, { objects: [Ref.make(object)] });
+  const picker = { hue };
+  const props = (overrides: Partial<UseSelectedObjectColorOptions> = {}): UseSelectedObjectColorOptions => ({
+    scene,
+    selectedObjectId: object.id,
+    hue: picker.hue,
+    onHueChange: (next) => {
+      picker.hue = next;
+    },
+    ...overrides,
+  });
+  const render = (overrides: Partial<UseSelectedObjectColorOptions> = {}) =>
+    renderHook((options: UseSelectedObjectColorOptions) => useSelectedObjectColor(options), {
+      initialProps: props(overrides),
+    });
+  return { object, picker, props, render };
+};

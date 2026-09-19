@@ -178,8 +178,10 @@ export const PreviewComponent = ({
     [hasAttention],
   );
 
-  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch);
-  // Escape hands attention back to the document by focusing the editor.
+  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch).
+  // Escape is layered: a surface that consumes it (`preventDefault`, e.g. a task list clearing its
+  // selection) keeps that press, and the next one hands attention back to the document by focusing
+  // the editor.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (!hasAttention) {
