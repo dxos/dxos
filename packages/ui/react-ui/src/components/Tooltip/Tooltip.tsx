@@ -113,12 +113,17 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
 
   // Open with nothing to point at — `defaultOpen`, or `open` set before any trigger was hovered — the
   // machine would show an empty tooltip off screen, and switching its trigger while open closes and
-  // reopens it. So the machine is held closed until an anchor exists: the first registered trigger is
-  // adopted below, after the triggers' layout effects have filled the registry, and only then does
-  // the machine see `open`. A hover opens through the machine, which sets its own trigger first.
+  // reopens it. So the machine is held closed until it has a trigger: the first registered one is
+  // adopted below, after the triggers' layout effects have filled the registry. A hover sets the
+  // machine's trigger before it asks to open, and the ref sees that synchronously, so the hover path
+  // never passes through a closed render — which would close and reopen the tooltip it just showed.
+  const triggerValueRef = useRef<string | null>(null);
   const [anchored, setAnchored] = useState(false);
   const tooltip = useTooltip({
-    open: open && anchored,
+    open: open && (anchored || triggerValueRef.current !== null),
+    onTriggerValueChange: ({ value }) => {
+      triggerValueRef.current = value;
+    },
     onOpenChange: ({ open: next }) => setOpen(next),
     openDelay: delayDuration,
     interactive: !disableHoverableContent,

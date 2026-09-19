@@ -16,8 +16,9 @@ import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
-import { focusContent, focusPane } from '../../util/index.ts';
+import { focusPane } from '../../util/index.ts';
 import { CompanionPlank } from './CompanionPlank.tsx';
+import { focusContent } from './focus-content.ts';
 import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
 import { useDeckPlank } from './useDeckPlank.ts';
