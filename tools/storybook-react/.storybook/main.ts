@@ -461,7 +461,12 @@ export const createConfig = ({
           // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
           // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
           // consumer of `@vitejs/plugin-react-swc`.
-          react(),
+          // One builder serves every package's stories, so there is no per-package opt-in here:
+          // the React Compiler is all-or-nothing and stays off, leaving `DX_REACT_COMPILER=1` as
+          // the way to render stories the way a compiler-enabled package actually ships.
+          // Allowlist, matching `REACT_COMPILER_ALL` in vite.base.config.ts: `=0` / `=false` must
+          // turn the compiler off, not on.
+          react(['1', 'true'].includes(process.env.DX_REACT_COMPILER ?? '') ? { compiler: true } : undefined),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({
