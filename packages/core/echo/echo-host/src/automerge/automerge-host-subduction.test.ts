@@ -615,8 +615,8 @@ describe('AutomergeHost with Subduction', () => {
 
     test(
       'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
-      // 3s deny window + up to 35s convergence poll + teardown.
-      { timeout: 60_000 },
+      // 3s deny window + up to 70s convergence poll + teardown.
+      { timeout: 90_000 },
       async ({ expect }) => {
         const rt1 = createRuntime();
         onTestFinished(() => rt1.dispose());
@@ -639,12 +639,14 @@ describe('AutomergeHost with Subduction', () => {
 
           allowOnHost1 = true;
 
-          // The assertion is that recovery happens unaided, not that it is fast, so the window
-          // spans the whole backoff schedule rather than a guess: `AutomergeHost` passes no
-          // `subductionTimeouts`, so the scheduler's default 2s initial delay doubles into rungs at
-          // 2/6/14/30s, and each denied round before the flip pushes recovery onto a later one.
-          // The happy path still returns on the first post-flip attempt (~3s).
-          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 35_000 }).toBe(true);
+          // The assertion is that recovery happens unaided, not that it is fast, so the window has
+          // to cover the slowest path the machinery allows. `AutomergeHost` passes no
+          // `subductionTimeouts`, so a round already in flight when the policy flips holds for the
+          // default 60s `syncMs` — `shareConfigChanged()` can only flag `needsResync` on an
+          // in-flight round, so the re-sync waits for that round to land. Anything under 60s
+          // therefore fails intermittently however the backoff rungs land. The happy path, where
+          // no round is in flight, still returns on the first post-flip attempt (~3s).
+          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 70_000 }).toBe(true);
         } finally {
           await host1.close();
           await host2.close();
