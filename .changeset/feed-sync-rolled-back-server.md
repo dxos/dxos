@@ -1,5 +1,0 @@
----
-'@dxos/feed': patch
----
-
-Feed sync heals a namespace whose server lost acknowledged positions: the positions the server re-issues are adopted, the namespace is replayed and the displaced blocks are pushed again, instead of every push and pull of that namespace failing forever. A rollback is also caught once other clients have written the server back past this one's cursor: a held block arriving at a new position counts like a displacement, and every query response names the block the server holds at the requested position so a client holding a different one there replays too. The first server token a client sees is verified by re-fetching the block at its cursor rather than forcing a full re-sync, a failing pull backs off without taking the other spaces' polling schedule with it, a space the server reports deleted (`Error` reply coded `space_deleted`) is left out of sync until the next reconnect instead of timing out on every run, `Error` replies carry the request id so a failed request no longer waits out its timeout, and a reply carrying fewer positions than blocks fails the push instead of silently leaving the tail pending.
