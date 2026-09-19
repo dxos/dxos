@@ -26,6 +26,14 @@ that must be clicked to take events.
 - [x] **Attended containment** — `overscroll-contain` on the wrapper; keydown/keyup stop at the
       container; border switches to `border-focus-ring-subtle`.
 
+### Also in PR #13237 (plugin-spacetime)
+
+- [x] **Scene card** — `Scene` carries `CardAnnotation`, `SceneCard` renders the canvas (non-interactive,
+      no fps) as `CardContent`; the object masonry picks it up without custom logic.
+- [x] **SpacetimeArticle → SceneArticle**; camera pose memoised per scene URI via a `local`
+      react-ui-attention view-state aspect (`SceneView.cameraAspect`), written 250ms after the orbit
+      settles and applied when the canvas mounts.
+
 ### Follow-ups
 
 - [ ] Clicking an embedded _document_ scrolls the outer document (~190px): the inner editor focuses

@@ -233,14 +233,7 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 
 type SpacetimeEditorCanvasProsp = Omit<
   SpacetimeCanvasProps,
-  | 'showAxes'
-  | 'showFps'
-  | 'editorStateAtom'
-  | 'scene'
-  | 'objectCount'
-  | 'parentSolidsRef'
-  | 'importGLBRef'
-  | 'handleActionRef'
+  'showAxes' | 'editorStateAtom' | 'scene' | 'objectCount' | 'parentSolidsRef' | 'importGLBRef' | 'handleActionRef'
 >;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {

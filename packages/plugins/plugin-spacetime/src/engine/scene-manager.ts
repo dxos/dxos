@@ -61,6 +61,14 @@ export type SceneManagerOptions = {
   canvas: HTMLCanvasElement;
 };
 
+/** An orbit camera's pose, in the shape the plugin persists (see `SceneView.Camera`). */
+export type CameraState = {
+  alpha: number;
+  beta: number;
+  radius: number;
+  target: { x: number; y: number; z: number };
+};
+
 /**
  * Manages the Babylon.js engine, scene, camera, and lighting.
  */
@@ -117,6 +125,18 @@ export class SceneManager {
 
   get camera(): ArcRotateCamera {
     return this._camera;
+  }
+
+  getCameraState(): CameraState {
+    const { alpha, beta, radius, target } = this._camera;
+    return { alpha, beta, radius, target: { x: target.x, y: target.y, z: target.z } };
+  }
+
+  setCameraState({ alpha, beta, radius, target }: CameraState): void {
+    this._camera.alpha = alpha;
+    this._camera.beta = beta;
+    this._camera.radius = radius;
+    this._camera.target = new Vector3(target.x, target.y, target.z);
   }
 
   set showAxes(show: boolean) {
