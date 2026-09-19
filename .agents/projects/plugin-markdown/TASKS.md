@@ -34,6 +34,10 @@ that must be clicked to take events.
       react-ui-attention view-state aspect (`SceneView.cameraAspect`), written 250ms after the orbit
       settles and applied when the canvas mounts.
 
+- [x] **Colour edits always saved** — the programmatic-hue flag stayed armed when the selected
+      object already matched the picker; replaced by `useSelectedObjectColor` (compare, no flag) +
+      regression test. Orbit inertia halved (0.45).
+
 ### Follow-ups
 
 - [ ] Clicking an embedded _document_ scrolls the outer document (~190px): the inner editor focuses

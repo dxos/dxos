@@ -96,6 +96,8 @@ export class SceneManager {
     this._camera.lowerRadiusLimit = 2;
     this._camera.upperRadiusLimit = 50;
     this._camera.wheelPrecision = 20;
+    // Half of Babylon's default (0.9): an orbit settles soon after the drag ends rather than coasting.
+    this._camera.inertia = 0.45;
 
     // HemisphericLight direction = vector toward the sky.
     // Surfaces facing the sky get diffuse; surfaces facing away get groundColor.
