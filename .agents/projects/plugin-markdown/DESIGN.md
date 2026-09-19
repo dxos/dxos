@@ -19,10 +19,10 @@ the embed has attention.
   fired. Using attention makes the ring, the tldraw UI, and event gating one signal.
 - **Nested id `<editor attendable id>/<object id>`.** Attention ancestry is slash-prefix based, so
   nesting keeps the document an ancestor while the embed is primary — the same shape as a section in
-  a stack. The object *id* is used rather than the URI because the URI's slashes would split into
+  a stack. The object _id_ is used rather than the URI because the URI's slashes would split into
   bogus prefixes; the object id as last segment also marks a plank showing the same object as
   `isRelated`.
-- **`inert` over `pointer-events: none`.** `inert` removes the subtree from hit-testing *and* the
+- **`inert` over `pointer-events: none`.** `inert` removes the subtree from hit-testing _and_ the
   focus order, so a click lands on the container (which is `tabIndex=0` and focuses itself) and the
   wheel bubbles from the container to the editor's scroller. `pointer-events` alone would still let
   the subtree receive keyboard focus.
