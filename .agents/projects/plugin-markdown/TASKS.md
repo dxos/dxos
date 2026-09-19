@@ -23,7 +23,13 @@ that must be clicked to take events.
       merge config; `mx()` had been dropping the width beside the colour, so the ring never rendered.
 - [x] **PR** — #13237.
 
+- [x] **Attended containment** — `overscroll-contain` on the wrapper; keydown/keyup stop at the
+      container; border switches to `border-focus-ring-subtle`.
+
 ### Follow-ups
+
+- [ ] Clicking an embedded _document_ scrolls the outer document (~190px): the inner editor focuses
+      its cursor and `scrollIntoView` chains up. Needs `preventScroll` on the inner editor's focus.
 
 - [ ] Card previews (`AppSurface.CardContent`) are not gated; they have no scrollable content today.
 - [ ] Keyboard: Tab into an embed from the editor is not wired (CodeMirror owns Tab).

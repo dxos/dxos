@@ -177,15 +177,29 @@ export const PreviewComponent = ({
     [hasAttention],
   );
 
+  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch);
   // Escape hands attention back to the document by focusing the editor.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
+      if (!hasAttention) {
+        return;
+      }
+      event.stopPropagation();
       if (event.key === 'Escape' && !event.defaultPrevented && view) {
         event.preventDefault();
         view.focus();
       }
     },
-    [view],
+    [hasAttention, view],
+  );
+
+  const handleKeyUp = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
   );
 
   const handleOpen = useCallback(
@@ -226,15 +240,18 @@ export const PreviewComponent = ({
           ref={containerRef}
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
         >
           {/* The row is capped at the box (`minmax(0, 1fr)`): with the default `auto` row the section
               keeps its intrinsic height and only its overflow is clipped, so it never scrolls.
               Inert until attended: an unfocused embed must not swallow the wheel (the page scrolls,
-              not the sketch) or take focus from a click, which lands on the container instead. */}
+              not the sketch) or take focus from a click, which lands on the container instead.
+              `overscroll-contain` on this (overflow-hidden) box ends the scroll chain here, so an
+              attended embed scrolled to its end does not start scrolling the document. */}
           <div
             className={mx(
-              'grid grid-rows-[minmax(0,1fr)] overflow-hidden border border-subdued-separator rounded-md',
-              hasAttention && 'ring-inset ring-focus-line ring-[var(--color-focus-ring)]',
+              'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
+              hasAttention ? 'border-focus-ring-subtle' : 'border-subdued-separator',
             )}
             inert={hasAttention ? undefined : true}
           >

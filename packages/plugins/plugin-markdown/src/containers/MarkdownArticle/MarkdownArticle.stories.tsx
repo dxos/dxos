@@ -206,9 +206,12 @@ export const Default: Story = {
  * Test:
  * 1. Scroll the document with the wheel over the sketch and over the embedded notes: the document
  *    scrolls; neither embed pans or scrolls.
- * 2. Click the sketch: it gains a focus ring and the tldraw UI appears; the wheel now pans the sketch.
- * 3. Press Escape: the ring goes and the wheel scrolls the document again.
- * 4. Click the embedded notes, then click back into the document text: the notes lose the ring.
+ * 2. Click the sketch: its border takes the focus colour and the tldraw UI appears; the wheel now
+ *    pans the sketch.
+ * 3. Press Escape: the border reverts and the wheel scrolls the document again.
+ * 4. Click the embedded notes and wheel past their end: the document does not scroll.
+ * 5. With the notes attended, press Mod-B: the outer document's toolbar/formatting does not react.
+ * 6. Click back into the document text: the notes lose the focus border.
  */
 export const WithObjects: Story = {
   args: {
@@ -218,7 +221,10 @@ export const WithObjects: Story = {
   },
 };
 
-/** An embed is inert until clicked, and inert again once Escape hands focus back to the editor. */
+/**
+ * An embed is inert until clicked, keeps key events to itself while attended, and is inert again
+ * once Escape hands focus back to the editor.
+ */
 export const EmbedFocus: Story = {
   args: WithObjects.args,
   play: async ({ canvasElement }) => {
@@ -241,7 +247,17 @@ export const EmbedFocus: Story = {
     await waitFor(() => expect(surface).not.toHaveAttribute('inert'));
     await expect(sketch).toHaveAttribute('data-w-attention-source', 'true');
 
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(surface).toHaveAttribute('inert'));
+    // A key pressed inside the attended embed does not reach the document (an app shortcut).
+    const leaked: string[] = [];
+    const onKeyDown = (event: KeyboardEvent) => leaked.push(event.key);
+    document.addEventListener('keydown', onKeyDown);
+    try {
+      await userEvent.keyboard('b');
+      await expect(leaked).toEqual([]);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(surface).toHaveAttribute('inert'));
+    } finally {
+      document.removeEventListener('keydown', onKeyDown);
+    }
   },
 };

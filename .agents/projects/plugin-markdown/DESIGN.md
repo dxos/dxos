@@ -27,6 +27,12 @@ the embed has attention.
   wheel bubbles from the container to the editor's scroller. `pointer-events` alone would still let
   the subtree receive keyboard focus.
 - **Escape** focuses the editor view, which moves attention back to the document.
+- **Attended, nothing leaks out.** `overscroll-behavior: contain` on the (overflow-hidden) surface
+  wrapper ends the scroll chain, so an embed wheeled past its end does not scroll the document; key
+  events stop propagating at the container, so an app or editor shortcut cannot fire from inside a
+  sketch. Mouse and focus events still bubble: attention depends on them.
+- **Focus border, not a ring.** The wrapper border switches to `border-focus-ring-subtle` (the
+  neutral token the deck uses for its attended tile), never the primary blue.
 
 ### Not done
 
