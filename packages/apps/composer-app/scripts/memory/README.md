@@ -64,6 +64,12 @@ Six rules make the arithmetic valid:
   memory-infra emits no `process_mmaps` provider outside Linux and Windows.
   Closing that slice on Linux needs a `process_mmaps` reader, which is not
   implemented — the region reads here shell out to `vmmap`.
+- **Allocation is sampled, not tracked.** `--by-code` uses
+  `HeapProfiler.startSampling`, which reports allocation volume per stack. The
+  retained-bytes equivalent needs `startTrackingHeapObjects({trackAllocations})`,
+  and that makes this app's boot take over ten minutes while
+  `stopTrackingHeapObjects` returns no snapshot at all — so allocation is what is
+  reported, and it answers which code churns rather than which code holds.
 - **`partition_alloc/allocated_objects/<unspecified>` has no finer breakdown.**
   It is the part of Blink's allocator no dump provider claims. Nothing decomposes
   it here: `Memory.getSamplingProfile` returns real stacks but Chrome for Testing
@@ -97,6 +103,7 @@ alongside any number:
 | Script                   | Answers                                                                                                                                                                                              |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ledger.mjs`             | Private footprint per process, the allocator breakdown with ownership views removed, per-realm heap and wasm linear memory per module, and a document census, at named checkpoints through a journey |
+| `ledger.mjs --by-code`   | JS allocation per workspace package, from V8's sampling heap profiler resolved through the build's sourcemaps; needs `--dist`                                                                        |
 | `heap-attribution.mjs`   | What a realm's heap holds by constructor, and who retains its ArrayBuffer backing stores — the naming a heap snapshot can give that memory-infra cannot                                              |
 | `measure.mjs`            | Heap per execution context (page, shared and dedicated workers) after a forced GC; optional snapshot capture                                                                                         |
 | `soak.mjs`               | Footprint and heap over time; can block request patterns or stub the perf timeline to isolate a suspect                                                                                              |
@@ -130,6 +137,9 @@ node scripts/memory/ledger.mjs http://localhost:4173 --detached --json ./tmp/led
 # Split SDK cost from app cost by measuring a smaller app on the same SDK first.
 node scripts/memory/ledger.mjs http://localhost:4174 --detached --ready none --json ./tmp/todomvc.json
 node scripts/memory/ledger.mjs http://localhost:4173 --detached --baseline ./tmp/todomvc.json
+
+# Which package allocates the JS, and which plugin owns the DOM.
+node scripts/memory/ledger.mjs http://localhost:4173 --detached --by-code --dist out/composer
 
 # Name what the JS heap and the buffers hold (slow: parses a snapshot per realm).
 node scripts/memory/ledger.mjs http://localhost:4173 --detached --snapshot

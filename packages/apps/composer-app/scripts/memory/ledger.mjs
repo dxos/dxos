@@ -23,6 +23,8 @@ import path from 'node:path';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
+import { attributeSamples, createResolver } from './heap-attribution.mjs';
+
 /**
  * Restated rather than imported from `plugin-projects`, whose module graph every
  * run would then pay for and whose `paths` module is not an exported subpath.
@@ -62,6 +64,13 @@ const vmOut = arg('--vmmap', null);
 // Heap snapshots name what memory-infra reports as `<unspecified>`; off by
 // default because a snapshot of a loaded tab costs ~30s and several GB to parse.
 const snapshots = process.argv.includes('--snapshot');
+/**
+ * Sample allocation stacks, so the ledger can say which package allocated the
+ * memory. Sampled rather than tracked per object: `trackAllocations` records a
+ * stack for every allocation and makes this app's boot take over ten minutes.
+ */
+const byCode = process.argv.includes('--by-code');
+const distDir = arg('--dist', 'out/composer');
 // Only the last checkpoint: a snapshot per realm per checkpoint is minutes of
 // wall clock and gigabytes of parse, and the composition question is about the
 // state the journey ends in.
@@ -327,6 +336,7 @@ if (detached) {
 }
 
 const snapshotDir = snapshots ? mkdtempSync(path.join(tmpdir(), 'ledger-snap-')) : null;
+const resolvePackage = byCode ? createResolver(distDir) : () => null;
 
 const shutdown = () => {
   if (snapshotDir) {
@@ -358,6 +368,10 @@ try {
       // which has no document to install one against.
       await browserCdp.trySend('Page.addScriptToEvaluateOnNewDocument', { source: WASM_PROBE }, sessionId);
       await browserCdp.trySend('Runtime.evaluate', { expression: WASM_PROBE, returnByValue: true }, sessionId);
+      if (byCode) {
+        await browserCdp.trySend('HeapProfiler.enable', {}, sessionId);
+        await browserCdp.trySend('HeapProfiler.startSampling', { samplingInterval: 16384 }, sessionId);
+      }
     }
     await browserCdp.trySend('Runtime.runIfWaitingForDebugger', {}, sessionId);
   });
@@ -389,6 +403,12 @@ try {
           continue;
         }
         await cdp.trySend('Runtime.evaluate', { expression: WASM_PROBE, returnByValue: true });
+        // Armed before the realm's first allocation, which is the only point from
+        // which the profile can cover boot.
+        if (byCode) {
+          await cdp.trySend('HeapProfiler.enable');
+          await cdp.trySend('HeapProfiler.startSampling', { samplingInterval: 16384 });
+        }
         cdp.close();
       }
     };
@@ -427,6 +447,10 @@ try {
     await pageCdp.trySend('Page.enable');
     await pageCdp.trySend('Page.addScriptToEvaluateOnNewDocument', { source: WASM_PROBE });
     await pageCdp.trySend('Runtime.evaluate', { expression: WASM_PROBE, returnByValue: true });
+    if (byCode) {
+      await pageCdp.trySend('HeapProfiler.enable');
+      await pageCdp.trySend('HeapProfiler.startSampling', { samplingInterval: 16384 });
+    }
     const evaluate = async (expression) => {
       const result = await pageCdp.trySend('Runtime.evaluate', { expression, returnByValue: true });
       return result?.result?.value;
@@ -497,11 +521,7 @@ try {
     const taken = await cdp
       .send(
         'HeapProfiler.takeHeapSnapshot',
-        {
-          captureNumericValue: false,
-          reportProgress: false,
-          treatGlobalObjectsAsRoots: true,
-        },
+        { captureNumericValue: false, reportProgress: false, treatGlobalObjectsAsRoots: true },
         undefined,
         300_000,
       )
@@ -514,7 +534,12 @@ try {
     try {
       const output = execFileSync(
         process.execPath,
-        ['--max-old-space-size=8192', path.join(import.meta.dirname, 'heap-attribution.mjs'), file],
+        [
+          '--max-old-space-size=8192',
+          path.join(import.meta.dirname, 'heap-attribution.mjs'),
+          file,
+          ...(byCode ? ['--dist', distDir] : []),
+        ],
         { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
       );
       return JSON.parse(output);
@@ -544,6 +569,7 @@ try {
         await cdp.trySend('HeapProfiler.collectGarbage');
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
+      const samples = byCode ? await cdp.trySend('HeapProfiler.getSamplingProfile') : undefined;
       const heap = await cdp.trySend('Runtime.getHeapUsage');
       const wasm = await cdp.trySend('Runtime.evaluate', {
         expression: 'JSON.stringify(globalThis.__wasmProbe ? globalThis.__wasmProbe() : null)',
@@ -565,6 +591,7 @@ try {
         heapBytes,
         externalBytes: Math.max(0, (external?.result?.value ?? 0) - heapBytes),
         wasm: JSON.parse(wasm?.result?.value ?? 'null'),
+        ...(samples?.profile ? { code: attributeSamples(samples.profile, resolvePackage) } : {}),
         ...(withSnapshots ? { attribution: await attributeRealm(cdp, `${label}-${target.type}-${name}`) } : {}),
       });
       cdp.close();
@@ -720,6 +747,20 @@ try {
     }
     return rules;
   };
+  // Elements grouped by the nearest testid namespace, which plugins own: the DOM
+  // is what Oilpan and the compositor hold, and a raw element count names nobody.
+  const byOwner = {};
+  for (const element of document.getElementsByTagName('*')) {
+    let owner = '(unowned)';
+    for (let node = element; node; node = node.parentElement) {
+      const testId = node.getAttribute && node.getAttribute('data-testid');
+      if (testId) {
+        owner = testId.split('.').slice(0, 2).join('.');
+        break;
+      }
+    }
+    byOwner[owner] = (byOwner[owner] ?? 0) + 1;
+  }
   const resources = performance.getEntriesByType('resource');
   const byType = {};
   for (const entry of resources) {
@@ -728,6 +769,7 @@ try {
   return JSON.stringify({
     cssRules: count(document.styleSheets),
     elements: document.getElementsByTagName('*').length,
+    elementsByOwner: Object.fromEntries(Object.entries(byOwner).sort((a, b) => b[1] - a[1]).slice(0, 20)),
     fonts: document.fonts ? document.fonts.size : 0,
     marks: performance.getEntriesByType('mark').length,
     measures: performance.getEntriesByType('measure').length,
@@ -968,6 +1010,21 @@ try {
           `  (${(100 * Math.abs(row.residualBytes / row.footprintBytes)).toFixed(1)}% unattributed)`,
       );
     }
+  }
+
+  if (byCode) {
+    const totals = new Map();
+    for (const realm of last.realms) {
+      for (const { bytes, name } of realm.code?.byPackage ?? []) {
+        totals.set(name, (totals.get(name) ?? 0) + bytes);
+      }
+    }
+    console.log('\n=== JS allocation by package (sampled) ===');
+    for (const [name, bytes] of [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30)) {
+      console.log(`  ${String(MB(bytes)).padStart(8)}MB  ${name}`);
+    }
+    const unresolved = last.realms.reduce((total, realm) => total + (realm.code?.unresolvedBytes ?? 0), 0);
+    console.log(`  ${String(MB(unresolved)).padStart(8)}MB  (unresolved)`);
   }
 
   console.log('\n=== realms at last checkpoint ===');
