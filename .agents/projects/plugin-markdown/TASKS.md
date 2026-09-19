@@ -1,6 +1,6 @@
 # plugin-markdown — Tasks
 
-_Resume: land PR #13237 once Check is green. Uncommitted: none. Last: PR opened 2026-09-19._
+_Resume: PR #13237 landing (auto-merge). Uncommitted: none. Last: changeset rewritten from the whole diff, 2026-09-19._
 
 ## Phase 1: focusable inline object embeds
 
