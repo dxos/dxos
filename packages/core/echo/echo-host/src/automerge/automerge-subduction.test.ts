@@ -290,10 +290,7 @@ class CountingStorageAdapter implements StorageAdapterInterface {
   }
 }
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('automerge-subduction', () => {
+describe('automerge-subduction', () => {
   beforeAll(async () => {
     await initSubduction();
   });

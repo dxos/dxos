@@ -27,11 +27,9 @@ import { AutomergeHost } from './automerge-host.ts';
 import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
+import { SUBDUCTION_PUSH_SETTLE_MS } from './subduction-test-utils.ts';
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
+describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
     const { runtime, dispose } = createRuntime();
     onTestFinished(() => dispose());
@@ -564,11 +562,18 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // policy denies BOTH `authorizeFetch` and `authorizePut` during the
   // initial subduction sync round (confirmed via subduction_core WARNs
   // `policy denied: authorizePut denied by client share policy`), flipping
-  // the policy to allow recovers replication within ~5 seconds WITHOUT any
-  // external nudge (no fresh commit, no explicit `shareConfigChanged()`
-  // call from the test). The recovery is driven by `AutomergeHost`'s
-  // automatic `_sharePolicyChangedTask` firing on `documentRequested`
-  // events from subduction's heal-retry attempts.
+  // the policy to allow recovers replication in seconds on `AutomergeHost`'s
+  // own machinery — no fresh commit and no `shareConfigChanged()` from the
+  // test — PROVIDED the scope change is signalled.
+  //
+  // CORRECTION: an earlier reading of this test had recovery needing no
+  // signal at all. It does. `_sharePolicyChangedTask` is scheduled by
+  // `onConnectionOpen`, `onConnectionAuthScopeChanged` and `documentRequested`
+  // only; a policy flip that signals none of them recovers just when a heal
+  // retry happens to request a document, which is why the unsignalled version
+  // failed at every window from 10s to 70s. Production always pairs a policy
+  // change with `onConnectionAuthScopeChanged` (e.g.
+  // `MeshEchoReplicator.authorizeDevice`), so the test now does too.
   //
   // This contradicts the raw-Repo F1 test in
   // `automerge-repo-subduction.test.ts` ("authorizePut deny → allow needs
@@ -616,9 +621,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     };
 
     test(
-      'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
-      // 3s deny window + up to 10s convergence poll + teardown — give CI headroom.
-      { timeout: 25_000 },
+      'deny→allow flip recovers via AutomergeHost machinery once the scope change is signalled',
+      { timeout: 30_000 },
       async ({ expect }) => {
         const rt1 = createRuntime();
         onTestFinished(() => rt1.dispose());
@@ -640,8 +644,16 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           expect(await allConverged(host1, host2, documentIds)).toBe(false);
 
           allowOnHost1 = true;
+          // Signal the scope change the way production does. `_sharePolicyChangedTask` is scheduled
+          // by exactly three things — `onConnectionOpen`, `onConnectionAuthScopeChanged`, and an
+          // incidental `documentRequested` — and flipping a `shouldAdvertise` closure fires none of
+          // them, so without this the test waits on a heal retry happening to ask host1 for a doc.
+          // That is why it failed at windows of 10s, 20s, 35s and 70s alike.
+          for (const connection of host1Replicator.connections) {
+            host1Replicator.context!.onConnectionAuthScopeChanged(connection);
+          }
 
-          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
+          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 15_000 }).toBe(true);
         } finally {
           await host1.close();
           await host2.close();
@@ -921,8 +933,12 @@ const countStoredRemoteHeads = async (runtime: RuntimeArg): Promise<number> => {
   return (await adapter.loadRange(['subduction', 'remote-heads'])).length;
 };
 
+/**
+ * Every call site already awaits `host.flush()`, which is the durability half of the barrier; this
+ * covers only the window a proactive push needs to traverse the replication network.
+ */
 const waitForSubductionSave = async () => {
-  await sleep(150);
+  await sleep(SUBDUCTION_PUSH_SETTLE_MS);
 };
 
 /**
