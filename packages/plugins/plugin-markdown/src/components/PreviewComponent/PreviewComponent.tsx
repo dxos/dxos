@@ -66,9 +66,10 @@ export type PreviewComponentProps = WidgetProps<{
 }>;
 
 /**
- * Registry-backed block widget for URL-scheme preview slots.
- * Replaces the addBlockContainer callback pattern.
- * Used as the `image` widget of `objectLinks()`.
+ * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
+ * The embed is an attendable nested under the editor: inert until clicked, so the wheel and keys
+ * reach the document; attended, its surface takes input, nothing leaks out, and Escape returns
+ * focus to the editor.
  */
 export const PreviewComponent = ({
   db,
@@ -202,6 +203,16 @@ export const PreviewComponent = ({
     [hasAttention],
   );
 
+  // Shared by both previews: the container takes focus for the embed and hosts the attention id.
+  const frameProps = {
+    'tabIndex': 0,
+    'data-testid': 'markdown.embed',
+    ...attentionAttributes,
+    'onMouseDown': handleMouseDown,
+    'onKeyDown': handleKeyDown,
+    'onKeyUp': handleKeyUp,
+  };
+
   const handleOpen = useCallback(
     (event: MouseEvent) => {
       if (!uri || !object) {
@@ -233,14 +244,9 @@ export const PreviewComponent = ({
         <div
           className='relative grid scroll-mt-16 outline-hidden'
           style={sizeStyle(size, 'vertical')}
-          tabIndex={0}
-          data-testid='markdown.embed'
-          {...attentionAttributes}
+          {...frameProps}
           {...resizeAttributes}
           ref={containerRef}
-          onMouseDown={handleMouseDown}
-          onKeyDown={handleKeyDown}
-          onKeyUp={handleKeyUp}
         >
           {/* The row is capped at the box (`minmax(0, 1fr)`): with the default `auto` row the section
               keeps its intrinsic height and only its overflow is clipped, so it never scrolls.
@@ -290,16 +296,19 @@ export const PreviewComponent = ({
     // Card preview.
     if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
       return (
-        <div>
-          <Card.Root>
-            <Card.Header>
-              <Card.Block />
-              <Card.Title>{objectLabel}</Card.Title>
-            </Card.Header>
-            <Card.Body>
-              <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-            </Card.Body>
-          </Card.Root>
+        <div className='outline-hidden' {...frameProps}>
+          {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
+          <div inert={hasAttention ? undefined : true}>
+            <Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
+              <Card.Header>
+                <Card.Block />
+                <Card.Title>{objectLabel}</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+              </Card.Body>
+            </Card.Root>
+          </div>
         </div>
       );
     }

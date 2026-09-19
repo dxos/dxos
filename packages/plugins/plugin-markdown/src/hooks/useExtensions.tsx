@@ -77,6 +77,10 @@ export type ExtensionsOptions = {
   onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
 };
 
+/**
+ * The CodeMirror extensions for a document: data binding to its content, the markdown decorations,
+ * object-link widgets (embeds nest under `attendableId`), and the settings-driven extras.
+ */
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
   id,

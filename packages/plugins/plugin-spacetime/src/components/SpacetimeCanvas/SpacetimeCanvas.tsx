@@ -123,6 +123,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       const cameraObserver = manager.camera.onViewMatrixChangedObservable.add(() => {
         clearTimeout(cameraTimeout);
         cameraTimeout = setTimeout(() => {
+          cameraTimeout = undefined;
           onCameraChangeRef.current?.(manager.getCameraState());
         }, CAMERA_CHANGE_DELAY);
       });
@@ -377,8 +378,12 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         }
         solidsRef.current.clear();
         clearInterval(fpsInterval);
-        clearTimeout(cameraTimeout);
         manager.camera.onViewMatrixChangedObservable.remove(cameraObserver);
+        // A pose still waiting on the delay would be lost with the canvas: report it now.
+        if (cameraTimeout !== undefined) {
+          clearTimeout(cameraTimeout);
+          onCameraChangeRef.current?.(manager.getCameraState());
+        }
         resizeObserver.disconnect();
         manager.dispose();
         managerRef.current = null;

@@ -14,6 +14,7 @@ import { Scene, SceneView } from '#types';
 
 export type SceneArticleProps = AppSurface.ObjectArticleProps<Scene.Scene>;
 
+/** A scene as a full plank (toolbar + canvas) or, in the section role, an inline square canvas. */
 export const SceneArticle = ({ subject, attendableId, role }: SceneArticleProps) => {
   // Keyed by the scene, not the plank: the same scene opened anywhere resumes from the same pose.
   const contextId = Obj.getURI(subject);

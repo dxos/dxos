@@ -238,14 +238,15 @@ export const EmbedFocus: Story = {
       },
       { timeout: 15_000 },
     );
-    const [sketch] = embeds;
-    const surface = sketch.firstElementChild;
+    // The first embed is a card preview; the gate is the same for section previews.
+    const [embed] = embeds;
+    const surface = embed.firstElementChild;
     await expect(surface).toBeInstanceOf(HTMLElement);
     await expect(surface).toHaveAttribute('inert');
 
-    await userEvent.click(sketch);
+    await userEvent.click(embed);
     await waitFor(() => expect(surface).not.toHaveAttribute('inert'));
-    await expect(sketch).toHaveAttribute('data-w-attention-source', 'true');
+    await expect(embed).toHaveAttribute('data-w-attention-source', 'true');
 
     // A key pressed inside the attended embed does not reach the document (an app shortcut).
     const leaked: string[] = [];
