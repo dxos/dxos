@@ -19,6 +19,15 @@ import {
 
 import { translationKey } from '#translations';
 
+/**
+ * Long enough that a run which finishes almost immediately never shows a meter at all, short enough
+ * that a real one still feels responsive.
+ */
+const DEFAULT_DELAY = 500;
+
+/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
+const DEFAULT_MIN_DURATION = 1_000;
+
 export type ProgressMeterProps = ThemedClassName<
   Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
     state?: ProgressModel.TaskProgress;
@@ -36,15 +45,6 @@ export type ProgressMeterProps = ThemedClassName<
     minDuration?: number;
   }
 >;
-
-/**
- * Long enough that a run which finishes almost immediately never shows a meter at all, short enough
- * that a real one still feels responsive.
- */
-const DEFAULT_DELAY = 500;
-
-/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
-const DEFAULT_MIN_DURATION = 1_000;
 
 /**
  * Shows the meter for a run, or nothing when there is none.
@@ -197,7 +197,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <span className='tabular-nums'>
               {indeterminate ? (active ? formatDuration(elapsedMs) : '') : progress(current, total)}
             </span>
-            {!indeterminate && etaMs !== undefined && status === 'running' && (
+            {!indeterminate && etaMs !== undefined && status === 'running' && etaMs && (
               <span className='text-description'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (

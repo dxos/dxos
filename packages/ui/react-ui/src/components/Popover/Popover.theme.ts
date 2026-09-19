@@ -23,10 +23,9 @@ const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc)
 const content: ComponentFunction<PopoverStyleProps> = ({ elevation, surface }, ...etc) =>
   mx(
     !surface && 'dx-popover-surface',
-    'border border-separator rounded-sm',
+    'dx-focus-ring rounded-sm min-h-[1rem]',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
-    'dx-focus-ring',
     ...etc,
   );
 
@@ -43,16 +42,17 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
 
 /**
  * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
- * outward. Painted in the surface colour with the border on those two edges, its inner half covers
- * the content's border and the outline appears to bend around the tip. The content's backdrop
- * filter makes it the arrow's containing block, whose padding box starts inside the border, so
- * `positioning.css` moves the arrow outward by `--arrow-inset`, the border width, to meet the
- * border's outer edge.
+ * outward. The content draws no border, only its focus ring, so the tip follows the ring: its two
+ * outer edges are ring-width borders, transparent until the content is focus-visible and then the
+ * ring's colour, and it is shifted outward by the ring's width (`--arrow-inset`, applied by
+ * `positioning.css`) so those edges meet the ring's outer edge. The shift is constant, so taking
+ * focus never moves the arrow; the content's backdrop filter makes it the arrow's containing block.
  */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:1px]',
-    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t [&>[data-part=arrow-tip]]:border-l',
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:var(--dx-focus-line)]',
+    '[&>[data-part=arrow-tip]]:border-transparent [&>[data-part=arrow-tip]]:border-t-[length:var(--dx-focus-line)] [&>[data-part=arrow-tip]]:border-l-[length:var(--dx-focus-line)]',
+    '[:focus-visible>&>[data-part=arrow-tip]]:border-(--color-focus-ring-subtle)',
     ...etc,
   );
 
