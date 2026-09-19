@@ -17,7 +17,7 @@ export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 't
  */
 const DEFAULT_THEME_CSS = `
   .node rect, .node circle, .node ellipse, .node polygon, .node path { fill: var(--color-card-surface); stroke: var(--color-separator); }
-  .nodeLabel, .edgeLabel, .label, text { color: var(--color-base-fg); fill: var(--color-base-fg); }
+  .label text, .node text, .nodeLabel, .edgeLabel, .label span { color: var(--color-base-fg); fill: var(--color-base-fg); }
   .edgePath .path, .flowchart-link { stroke: var(--color-subdued); }
   .edgeLabel { background-color: var(--color-group-surface); }
   .marker { fill: var(--color-subdued); stroke: var(--color-subdued); }
