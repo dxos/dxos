@@ -32,7 +32,7 @@ that must be clicked to take events.
       no fps) as `CardContent`; the object masonry picks it up without custom logic.
 - [x] **SpacetimeArticle → SceneArticle**; camera pose memoised per scene URI via a `local`
       react-ui-attention view-state aspect (`SceneView.cameraAspect`), written 250ms after the orbit
-      settles and applied when the canvas mounts.
+      settles, again on unmount/`pagehide`, and applied when the canvas mounts.
 
 - [x] **Colour edits always saved** — the programmatic-hue flag stayed armed when the selected
       object already matched the picker; replaced by `useSelectedObjectColor` (compare, no flag) +

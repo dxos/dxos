@@ -119,14 +119,19 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       if (initialCameraRef.current) {
         manager.setCameraState(initialCameraRef.current);
       }
+      // The pose is reported once a move settles, and again whenever the scene is left (unmount, or
+      // the page hidden/closed) so the last view is what the scene reopens to.
       let cameraTimeout: ReturnType<typeof setTimeout> | undefined;
+      const reportCamera = () => {
+        clearTimeout(cameraTimeout);
+        cameraTimeout = undefined;
+        onCameraChangeRef.current?.(manager.getCameraState());
+      };
       const cameraObserver = manager.camera.onViewMatrixChangedObservable.add(() => {
         clearTimeout(cameraTimeout);
-        cameraTimeout = setTimeout(() => {
-          cameraTimeout = undefined;
-          onCameraChangeRef.current?.(manager.getCameraState());
-        }, CAMERA_CHANGE_DELAY);
+        cameraTimeout = setTimeout(reportCamera, CAMERA_CHANGE_DELAY);
       });
+      window.addEventListener('pagehide', reportCamera);
 
       // Load WASM once, then build meshes from scene objects.
       void getManifold().then((wasm) => {
@@ -379,11 +384,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         solidsRef.current.clear();
         clearInterval(fpsInterval);
         manager.camera.onViewMatrixChangedObservable.remove(cameraObserver);
-        // A pose still waiting on the delay would be lost with the canvas: report it now.
-        if (cameraTimeout !== undefined) {
-          clearTimeout(cameraTimeout);
-          onCameraChangeRef.current?.(manager.getCameraState());
-        }
+        window.removeEventListener('pagehide', reportCamera);
+        reportCamera();
         resizeObserver.disconnect();
         manager.dispose();
         managerRef.current = null;
