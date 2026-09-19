@@ -12,8 +12,13 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
+import { isAnyCompanionOpen } from '../util/companion-anchor.ts';
+
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
+
+/** A companion of a plank, as opposed to one of the deck. */
+export const isPlankCompanion = (node: { type?: string }): boolean => node.type === PLANK_COMPANION_TYPE;
 
 export const selectCompanion = <T extends { id: string }>(
   companions: readonly T[],
@@ -40,6 +45,8 @@ export const OpenDeck = Schema.Struct({
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
   segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
+  /** The pathname the workspace was last projected from; a return restores it as a reload would. */
+  url: Schema.optional(Schema.String),
 });
 export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
 
@@ -153,14 +160,14 @@ export const getCompanionSelection = (
   platform: Platform,
   state: StoredDeckState,
   viewStateVariant: string | undefined,
+  flatten: boolean | undefined,
 ): CompanionSelection => {
   if (platform === 'mobile') {
     const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
     return { open, variant: open ? state.complementarySidebarPanel : undefined };
   }
 
-  const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
-  const open = companionPlanks === undefined || companionPlanks.length > 0;
+  const open = isAnyCompanionOpen(state.decks[state.activeDeck]?.companionPlanks, flatten);
   return { open, variant: open ? viewStateVariant : undefined };
 };
 

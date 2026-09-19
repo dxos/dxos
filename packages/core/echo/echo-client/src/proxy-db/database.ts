@@ -381,6 +381,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.rootChanged;
   }
 
+  get linksAdded() {
+    return this._entityManager.linksAdded;
+  }
+
   // ── Resource lifecycle ──────────────────────────────────────────────────
 
   @synchronized

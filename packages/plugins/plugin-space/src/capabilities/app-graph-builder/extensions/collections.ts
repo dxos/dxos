@@ -203,12 +203,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       id: 'objects',
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
-      // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
-      // dynamically — see `resolveCollectionObjectPath`.
+      // data-dependent (the object's collection ancestry), so the id is the object's own segment and
+      // `resolve` finds the rest — see `resolveCollectionObjectPath`.
       url: {
         key: 'object',
         kind: 'item',
-        path: ({ id, workspace }) =>
+        path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections],
+        resolve: ({ id, workspace }) =>
           Effect.gen(function* () {
             if (!SpaceId.isValid(workspace)) {
               return null;

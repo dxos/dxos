@@ -52,7 +52,6 @@ export type MergePreview = {
 
 /** Ephemeral space plugin state (not persisted). */
 export type SpaceEphemeralState = {
-  awaiting: string | undefined;
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
   viewersByObject: Record<string, ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>>;

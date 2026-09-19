@@ -660,7 +660,7 @@ const setup = async (
       documents: 0,
       feeds: 0,
       feedBlocks: 0,
-      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0 },
+      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0, leases: 0 },
     }),
     runGarbageCollection: async () => ({
       unlinkedObjects: 0,

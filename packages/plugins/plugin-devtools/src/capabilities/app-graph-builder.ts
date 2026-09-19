@@ -50,6 +50,7 @@ export default Capability.makeModule(
       // Devtools deck companion.
       AppGraphBuilder.createExtension({
         id: 'devtoolsOverview',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

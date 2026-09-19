@@ -12,3 +12,5 @@ export * from './upsert-toast.ts';
 export * from './openable-children.ts';
 export * from './resolve-deck-spec.ts';
 export * from './update-active-deck.ts';
+export * from './view-transition.ts';
+export * from './workspace-retention.ts';

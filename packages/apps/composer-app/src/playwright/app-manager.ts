@@ -19,7 +19,9 @@ import { DeckManager } from './plugins/index.ts';
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
 
-export const INITIAL_URL = 'http://localhost:4173';
+// 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a page
+// served over IPv6 loopback, which strands every invitation.
+export const INITIAL_URL = 'http://127.0.0.1:4173';
 
 // `REGISTRY_ID`, restated so this page-object does not import the registry plugin: its module graph
 // reaches packages that fail to load under playwright's loader.
