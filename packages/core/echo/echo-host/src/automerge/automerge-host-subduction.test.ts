@@ -11,7 +11,7 @@ import {
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -642,6 +642,73 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
           allowOnHost1 = true;
 
           await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
+        } finally {
+          await host1.close();
+          await host2.close();
+          await network.close();
+        }
+      },
+    );
+
+    // The mirror of the flip above: host1 never held the document, so it learns of it only through
+    // collection sync while the holder refuses to serve it. A refused round parks the Subduction entry, and `SubductionSource`
+    // re-drives a parked entry only when the connection generation advances — which never happens
+    // on a link that stays up, so a collection-sync pass that keeps reporting the document
+    // `missingOnLocal` has to issue the resync itself.
+    //
+    // Asserted on the resync rather than on convergence: the heal scheduler retries a *failed*
+    // round on its own backoff and would recover this scenario without the pass doing anything,
+    // which is exactly what makes the parked case (a round that settled, so no heal is pending)
+    // invisible to an end-to-end assertion.
+    test(
+      'a collection-sync pass re-syncs a document whose fetch has parked',
+      // 3s deny window + up to 10s poll + teardown — give CI headroom.
+      { timeout: 25_000 },
+      async ({ expect }) => {
+        const rt1 = createRuntime();
+        onTestFinished(() => rt1.dispose());
+        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+        const rt2 = createRuntime();
+        onTestFinished(() => rt2.dispose());
+        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+
+        // Only the holder has them: host1 has nothing to diverge from, so the diff reports them
+        // `missingOnLocal` rather than `different`.
+        const documentIds: DocumentId[] = [];
+        for (const index of range(NUM_DOCUMENTS)) {
+          const handle = await host2.createDoc({ docIndex: index });
+          documentIds.push(handle.documentId);
+        }
+        await host2.flush(Context.default());
+        await waitForSubductionSave();
+
+        const network = await new TestReplicationNetwork().open();
+        try {
+          // Denied on the holder: `authorizeFetch` consults the serving side's `shouldAdvertise`,
+          // so this is what makes host1's fetch come back empty.
+          await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+          await host2.addReplicator(
+            Context.default(),
+            await network.createReplicator({ shouldAdvertise: () => false }),
+          );
+
+          const collectionId = 'parked-collection';
+          await host1.updateLocalCollectionState(collectionId, documentIds);
+          await host2.updateLocalCollectionState(collectionId, documentIds);
+
+          // Long enough for host1 to attempt, be refused, and park every entry.
+          await sleep(3_000);
+          expect(await allConverged(host1, host2, documentIds)).toBe(false);
+
+          // Spied after the park, so only passes over an already-parked query are counted.
+          const resyncDocument = vi.spyOn(host1, 'resyncDocument');
+          // Neither side commits, so a collection-sync pass over unchanged heads is the only thing
+          // left to notice — exactly what the peer advertising the document gives us in production.
+          await host1.updateLocalCollectionState(collectionId, documentIds);
+
+          await expect
+            .poll(() => resyncDocument.mock.calls.map(([documentId]) => documentId).sort(), { timeout: 10_000 })
+            .toEqual([...documentIds].sort());
         } finally {
           await host1.close();
           await host2.close();

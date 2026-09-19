@@ -281,7 +281,7 @@ export class AutomergeHost extends Resource {
   private _nonConvergingSyncPasses = new Map<string, number>();
 
   /**
-   * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
+   * Heads a stalled document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
    *
    * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
    * backoff — so one call per observed head pair is the whole retry budget, and calling it again
@@ -292,7 +292,7 @@ export class AutomergeHost extends Resource {
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
    */
-  private _divergedResyncHeads = new Map<
+  private _stalledResyncHeads = new Map<
     string,
     { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
   >();
@@ -934,9 +934,9 @@ export class AutomergeHost extends Resource {
     }
     // A removed document never converges, so neither of the other cleanups (convergence of its
     // collection, or its peer disconnecting) is guaranteed to reach its entry.
-    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+    for (const [resyncKey, entry] of this._stalledResyncHeads) {
       if (entry.documentId === documentId) {
-        this._divergedResyncHeads.delete(resyncKey);
+        this._stalledResyncHeads.delete(resyncKey);
       }
     }
   }
@@ -1438,9 +1438,9 @@ export class AutomergeHost extends Resource {
     // With no local state `_handleCollectionSync` returns before its convergence cleanup, so a
     // cleared collection's entries would otherwise outlive it and suppress the first resync if it
     // is registered again.
-    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+    for (const [resyncKey, entry] of this._stalledResyncHeads) {
       if (entry.collectionId === collectionId) {
-        this._divergedResyncHeads.delete(resyncKey);
+        this._stalledResyncHeads.delete(resyncKey);
       }
     }
   }
@@ -1474,9 +1474,9 @@ export class AutomergeHost extends Resource {
     }
     // A reconnect is a fresh chance for the push that did not land, so the resync budget resets
     // with the connection.
-    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+    for (const [resyncKey, entry] of this._stalledResyncHeads) {
       if (entry.peerId === peerId) {
-        this._divergedResyncHeads.delete(resyncKey);
+        this._stalledResyncHeads.delete(resyncKey);
       }
     }
     this._collectionSynchronizer.onConnectionClosed(peerId);
@@ -1502,9 +1502,9 @@ export class AutomergeHost extends Resource {
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
-      for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      for (const [resyncKey, entry] of this._stalledResyncHeads) {
         if (entry.collectionId === collectionId && entry.peerId === peerId) {
-          this._divergedResyncHeads.delete(resyncKey);
+          this._stalledResyncHeads.delete(resyncKey);
         }
       }
       return;
@@ -1575,50 +1575,50 @@ export class AutomergeHost extends Resource {
     let sharePolicyCanHelp = false;
 
     for (const documentId of toReplicate) {
-      // `findWithProgress` resolves from the existing query for an already-`ready` document and
-      // `_documentsToSync` feeds a share policy Subduction does not consult, so neither moves a
-      // diverged document, resident or not. `resyncDocument` is the lever for a resident one: it
-      // clears the heal state and marks the entry never-synced, so Subduction opens a fresh
-      // bidirectional round (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) —
-      // which is what delivers a local commit the peer never received. An evicted one needs no
-      // lever: `_leaseUntilSettled` below faults it in and `SubductionSource.attach` gives it a
-      // fresh never-synced entry.
-      if (this._useSubduction && differentSet.has(documentId)) {
-        if (isDocumentLoaded(this._repo, documentId as DocumentId)) {
-          const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
-          // Both sides' heads: a round already spent against this exact pair cannot do better, but
-          // either side advancing means the situation changed and is worth another.
-          const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
-          if (this._divergedResyncHeads.get(resyncKey)?.heads !== heads) {
-            this._divergedResyncHeads.set(resyncKey, {
-              collectionId,
-              peerId,
-              documentId: documentId as DocumentId,
-              heads,
-            });
-            log('resyncing diverged document', {
-              collectionId,
-              peerId,
-              documentId,
-              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-              localHeads: localState.documents[documentId],
-              remoteHeads: remoteState.documents[documentId],
-            });
-            this.resyncDocument(documentId as DocumentId);
-            sharePolicyCanHelp = true;
-          } else {
-            // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-            // so at warn level it floods the console without indicating a real fault.
-            log.verbose('diverged document already resynced at these heads', {
-              collectionId,
-              peerId,
-              documentId,
-              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-            });
-          }
-        }
-      } else {
+      // Only under Subduction: the classical share policy is every document's lever, diverged ones
+      // included, so narrowing the flag there would strand them.
+      const diverged = this._useSubduction && differentSet.has(documentId);
+      if (!diverged) {
         sharePolicyCanHelp = true;
+      }
+      // `findWithProgress` resolves from the existing query rather than re-issuing it and
+      // `_documentsToSync` feeds a share policy Subduction does not consult, so neither moves a
+      // document whose Subduction entry has already settled. `resyncDocument` is the lever: it
+      // clears the heal state and marks the entry never-synced, so Subduction opens a fresh
+      // bidirectional round (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`).
+      if (this._useSubduction && this._resyncIsTheLever(documentId as DocumentId, diverged)) {
+        const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
+        // Both sides' heads: a round already spent against this exact pair cannot do better, but
+        // either side advancing means the situation changed and is worth another.
+        const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
+        if (this._stalledResyncHeads.get(resyncKey)?.heads !== heads) {
+          this._stalledResyncHeads.set(resyncKey, {
+            collectionId,
+            peerId,
+            documentId: documentId as DocumentId,
+            heads,
+          });
+          log('resyncing stalled document', {
+            collectionId,
+            peerId,
+            documentId,
+            reason: diverged ? 'diverged' : 'missing',
+            sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+            localHeads: localState.documents[documentId],
+            remoteHeads: remoteState.documents[documentId],
+          });
+          this.resyncDocument(documentId as DocumentId);
+          sharePolicyCanHelp = true;
+        } else {
+          // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+          // so at warn level it floods the console without indicating a real fault.
+          log.verbose('document already resynced at these heads', {
+            collectionId,
+            peerId,
+            documentId,
+            sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+          });
+        }
       }
       this._documentsToSync.add(documentId);
       this._leaseUntilSettled(documentId as DocumentId);
@@ -1627,6 +1627,25 @@ export class AutomergeHost extends Resource {
     if (sharePolicyCanHelp) {
       this._sharePolicyChangedTask!.schedule();
     }
+  }
+
+  /**
+   * Whether a fresh Subduction round is the only lever left for this document.
+   *
+   * A diverged document qualifies once it is resident: its entry has settled at heads the peer does
+   * not share. A missing one qualifies once its query has given up — `SubductionSource` re-drives a
+   * round that settled without the bytes only when the connection generation advances, so over one
+   * long-lived connection a peer can keep advertising a document that is never asked for again. One
+   * the repo does not hold at all qualifies for nothing: `_leaseUntilSettled` faults it in and
+   * `SubductionSource.attach` gives it a fresh never-synced entry.
+   */
+  private _resyncIsTheLever(documentId: DocumentId, diverged: boolean): boolean {
+    if (diverged) {
+      return isDocumentLoaded(this._repo, documentId);
+    }
+    // `'loading'` is a round in flight, and resetting its heal budget mid-round buys nothing.
+    const state = getHandleState(this._repo, documentId);
+    return state === 'unavailable' || state === 'failed';
   }
 
   /**

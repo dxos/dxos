@@ -360,10 +360,57 @@ describe('AutomergeHost', () => {
     await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
 
     // A removed document never converges, so its retry budget has to go with it.
-    const resyncHeads: Map<string, { documentId: string }> = (host as any)._divergedResyncHeads;
+    const resyncHeads: Map<string, { documentId: string }> = (host as any)._stalledResyncHeads;
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(true);
     await host.removeDocument(documentId);
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
+  });
+
+  // The mirror case: a document the host does not hold at all, whose Subduction query has parked.
+  // `SubductionSource` re-drives a settled entry only when the connection generation advances, so on
+  // a link that stays up a peer can keep advertising a document that is never asked for again —
+  // `_handleCollectionSync` is once more the only place that sees it.
+  test('a missing document whose query has parked is resynced once per head pair', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    // Faulted in with no replicator attached, so the round finds no peer and the query settles
+    // `unavailable` — the same parked state a refused or empty fetch leaves behind.
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    const lease = host.acquireDoc(documentId);
+    onTestFinished(() => lease[Symbol.dispose]());
+    await expect.poll(() => lease.state, { timeout: 5_000 }).toEqual('unavailable');
+
+    // Empty heads are filtered out of the local state, so the diff reports `missingOnLocal`.
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+
+    const resynced: DocumentId[] = [];
+    const resyncDocument = host.resyncDocument.bind(host);
+    host.resyncDocument = (id) => {
+      resynced.push(id);
+      resyncDocument(id);
+    };
+
+    const peerId = 'test-peer' as PeerId;
+    const remoteState = { documents: { [documentId]: ['0'.repeat(64)] } };
+    const synchronizer = (host as any)._collectionSynchronizer;
+
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(1);
+
+    // The peer keeps re-advertising the same heads, and re-arming the heal backoff on every one of
+    // those passes would pin it at zero.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await sleep(500);
+    expect(resynced).toEqual([documentId]);
   });
 
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
