@@ -39,7 +39,7 @@ export const ProgressStatusIndicator = () => {
       </Popover.Trigger>
       {active.length > 0 && (
         <Popover.Portal>
-          <Popover.Content side='left'>
+          <Popover.Content side='left' border>
             <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
               {active.map((monitor) => (
                 <ProgressMeter

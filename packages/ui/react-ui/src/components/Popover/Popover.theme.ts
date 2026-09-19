@@ -6,6 +6,8 @@ import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar 
 import { type ComponentFunction, type Elevation, type Surface, type Theme } from '@dxos/ui-types';
 
 export type PopoverStyleProps = Partial<{
+  /** Outline the content with the separator; the arrow's stroke follows it. */
+  border: boolean;
   constrainBlock: boolean;
   constrainInline: boolean;
   elevation: Elevation;
@@ -20,10 +22,12 @@ export type PopoverStyleProps = Partial<{
 const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
-const content: ComponentFunction<PopoverStyleProps> = ({ elevation, surface }, ...etc) =>
+const content: ComponentFunction<PopoverStyleProps> = ({ border, elevation, surface }, ...etc) =>
   mx(
     !surface && 'dx-popover-surface',
-    'dx-focus-ring rounded-xs min-h-[1rem]',
+    // The arrow reads the outline it has to continue from these, so they travel with the border.
+    border && 'border border-separator [--popover-stroke:var(--color-separator)] [--popover-stroke-width:1px]',
+    'dx-focus-ring min-h-[1rem] rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     ...etc,
@@ -42,16 +46,19 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
 
 /**
  * The arrow box straddles the content's edge and `positioning.css` shifts it outward by
- * `--arrow-inset`, the focus ring's width, so the box is centred on the ring's outer edge. The
- * content draws no border, only its ring, so the tip's stroke (see `Popover.Arrow`) is transparent
- * until the content is focus-visible and then the ring's colour, at the ring's width. The shift is
- * constant, so taking focus never moves the arrow.
+ * `--arrow-inset`, the width of whatever outline the content draws, so the box is centred on that
+ * outline's outer edge. The tip (see `Popover.Arrow`) strokes that edge at twice the width and is
+ * clipped to the arrow's outer shape, so exactly one width shows inside it whatever the width is.
+ * The outline is the content's border when it has one (`--popover-stroke`), nothing otherwise, and
+ * the focus ring while the content is focus-visible.
  */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:var(--dx-focus-line)]',
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)]',
+    '[--arrow-inset:var(--popover-stroke-width,0px)] [:focus-visible>&]:[--arrow-inset:var(--dx-focus-line)]',
     '[&>svg]:overflow-visible [&>svg]:size-full [&>svg]:fill-(--arrow-background)',
-    '[&>svg]:stroke-transparent [&>svg]:stroke-(length:--dx-focus-line) [:focus-visible>&>svg]:stroke-(--color-focus-ring-subtle)',
+    '[&>svg]:stroke-(--popover-stroke,transparent) [&>svg]:stroke-[length:calc(var(--popover-stroke-width,0px)*2)]',
+    '[:focus-visible>&>svg]:stroke-(--color-focus-ring-subtle) [:focus-visible>&>svg]:stroke-[length:calc(var(--dx-focus-line)*2)]',
     ...etc,
   );
 

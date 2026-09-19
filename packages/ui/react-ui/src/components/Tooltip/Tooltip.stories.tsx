@@ -73,29 +73,49 @@ export const DefaultOpen: Story = {
 
 export const Left: Story = {
   args: {
+    defaultOpen: true,
     tooltips,
     side: 'left',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('left');
   },
 };
 
 export const Right: Story = {
   args: {
+    defaultOpen: true,
     tooltips,
     side: 'right',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('right');
   },
 };
 
 export const Top: Story = {
   args: {
+    defaultOpen: true,
     tooltips,
     side: 'top',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('top');
   },
 };
 
 export const Bottom: Story = {
   args: {
+    defaultOpen: true,
     tooltips,
     side: 'bottom',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('bottom');
   },
 };
 

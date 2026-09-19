@@ -111,8 +111,14 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
     };
   }, []);
 
+  // Open with nothing to point at — `defaultOpen`, or `open` set before any trigger was hovered — the
+  // machine would show an empty tooltip off screen, and switching its trigger while open closes and
+  // reopens it. So the machine is held closed until an anchor exists: the first registered trigger is
+  // adopted below, after the triggers' layout effects have filled the registry, and only then does
+  // the machine see `open`. A hover opens through the machine, which sets its own trigger first.
+  const [anchored, setAnchored] = useState(false);
   const tooltip = useTooltip({
-    open,
+    open: open && anchored,
     onOpenChange: ({ open: next }) => setOpen(next),
     openDelay: delayDuration,
     interactive: !disableHoverableContent,
@@ -124,32 +130,48 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   apiRef.current = tooltip;
   activeValueRef.current = tooltip.triggerValue;
 
-  // Open with nothing to point at — `defaultOpen`, or `open` set before any trigger was hovered — the
-  // machine has no anchor and shows an empty tooltip off screen. The first registered trigger becomes
-  // it. After the triggers' own layout effects, so the registry is filled by the time this runs.
   const triggerValue = tooltip.triggerValue;
   useEffect(() => {
-    if (!open || triggerValue) {
+    if (!open) {
+      setAnchored(false);
+      return;
+    }
+    if (anchored) {
+      return;
+    }
+    if (triggerValue) {
+      setAnchored(true);
       return;
     }
     const first = registry.current.keys().next().value;
-    if (first) {
-      prepareTrigger(first);
-      apiRef.current?.setTriggerValue(first);
+    if (!first) {
+      return;
     }
-  }, [open, triggerValue, prepareTrigger]);
+    // The side is rendered before the trigger is adopted, so the machine opens with the right
+    // placement; a synchronous flush is not allowed from an effect, hence the second pass.
+    const side = registry.current.get(first)?.side ?? 'top';
+    if (placement !== side) {
+      placementRef.current = side;
+      setPlacement(side);
+      return;
+    }
+    apiRef.current?.setTriggerValue(first);
+    setAnchored(true);
+  }, [open, anchored, triggerValue, placement]);
 
   const active = tooltip.triggerValue ? registry.current.get(tooltip.triggerValue) : undefined;
 
-  // The open trigger's side can change without an event to forward, so reposition in place.
+  // The open trigger's side can change without an event to forward, so reposition in place. Only
+  // once there is an open trigger: before one is adopted below, this would keep resetting the side
+  // that adoption has just rendered.
   const activeSide = active?.side ?? 'top';
   useEffect(() => {
-    if (open && placementRef.current !== activeSide) {
+    if (open && active && placementRef.current !== activeSide) {
       placementRef.current = activeSide;
       setPlacement(activeSide);
       apiRef.current?.reposition({ placement: activeSide });
     }
-  }, [open, activeSide]);
+  }, [open, active, activeSide]);
 
   const stateAttribute: TooltipStateAttribute = open ? 'delayed-open' : 'closed';
 
