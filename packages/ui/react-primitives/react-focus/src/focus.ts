@@ -123,6 +123,28 @@ const search = (parent: Element, backward: boolean): HTMLElement | null => {
 export const findFirstFocusable = (container: HTMLElement | null | undefined): HTMLElement | null =>
   container ? search(container, false) : null;
 
+/**
+ * Marks the element a container wants focus to land on when focus is handed to it as a whole — a
+ * document's editor rather than the toolbar button that happens to come first in the DOM. The
+ * marked element may be the target itself or a wrapper around it.
+ */
+export const INITIAL_FOCUS_ATTRIBUTE = 'data-initial-focus';
+
+/**
+ * Where focus should land when `container` is entered as a whole: the first tabbable inside the
+ * element it marks with {@link INITIAL_FOCUS_ATTRIBUTE}, else that element itself, else the
+ * container's first tabbable descendant. Inside-first because the mark usually sits on a wrapper
+ * that is focusable only as a landing pad, around a control a library created (an editor's
+ * contenteditable) that is where the caret has to go.
+ */
+export const findInitialFocusable = (container: HTMLElement | null | undefined): HTMLElement | null => {
+  const marked = container?.querySelector<HTMLElement>(`[${INITIAL_FOCUS_ATTRIBUTE}]`);
+  if (marked) {
+    return findFirstFocusable(marked) ?? (isTabbable(marked) ? marked : null) ?? findFirstFocusable(container);
+  }
+  return findFirstFocusable(container);
+};
+
 /** Last tabbable descendant of `container`, in DOM order. */
 export const findLastFocusable = (container: HTMLElement | null | undefined): HTMLElement | null =>
   container ? search(container, true) : null;

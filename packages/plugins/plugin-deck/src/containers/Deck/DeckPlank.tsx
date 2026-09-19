@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { findFirstFocusable } from '@dxos/react-focus';
+import { findFirstFocusable, findInitialFocusable } from '@dxos/react-focus';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
@@ -91,9 +91,10 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   useLayoutEffect(() => {
     if (scrollIntoView?.id === id) {
       if (scrollIntoView.focus === 'content') {
-        // Straight into the content, as Enter on the plank would: a keyboard navigation that landed
-        // on the plank itself would need a second Enter before the reader could type.
-        (findFirstFocusable(rootRef.current) ?? rootRef.current)?.focus({ preventScroll: true });
+        // Straight into the content: a keyboard navigation that landed on the plank itself would need
+        // a second Enter before the reader could type. The article says where its content starts
+        // (`data-initial-focus`); without a mark, the first tabbable is the toolbar's first button.
+        (findInitialFocusable(rootRef.current) ?? rootRef.current)?.focus({ preventScroll: true });
       } else if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);
       }
