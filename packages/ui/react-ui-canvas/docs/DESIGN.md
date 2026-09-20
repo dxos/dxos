@@ -271,7 +271,9 @@ subscribers are mounted in this mode.
 
 Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to top:
 
-1. **Grid**: the existing multi-resolution SVG `GridComponent` fed `{scale: zoom, offset: camera × zoom}`.
+1. **Grid**: the existing multi-resolution SVG `GridComponent` fed `{scale: zoom, offset: camera × zoom}`, 16 px
+   at zoom 1 (`DEFAULT_GRID`), toggled with `g`. Move and resize snap edges to it, and the fixture and the
+   solver / layout defaults (pitch, size, origin) are grid multiples, so an untouched layout is already snapped.
 2. **Scene layer**: one `div` whose transform is `scale(zoom) translate(x, y)`, set **imperatively from the
    camera atom** (no React re-render on pan/zoom). Inside, one `div` per placed cell positioned at its bounds, and
    one `svg` (overflow visible) per scene holding link paths in scene coordinates. Portals in the live tier mount

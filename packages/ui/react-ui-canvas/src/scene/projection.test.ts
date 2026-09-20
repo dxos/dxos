@@ -29,8 +29,8 @@ describe('freehand projection', () => {
     const scene = fixture();
     const locked = { ...scene, cells: { ...scene.cells, 'scene:r/b': { ...scene.cells['scene:r/b'], locked: true } } };
     const next = reduceIntent(locked, { kind: 'move', ids: ['scene:r/a', 'scene:r/b'], delta: { x: 10, y: -5 } });
-    expect(centerOf(next, 'scene:r/a')).toEqual({ x: 260, y: 195 });
-    expect(centerOf(next, 'scene:r/b')).toEqual({ x: 650, y: 160 });
+    expect(centerOf(next, 'scene:r/a')).toEqual({ x: 258, y: 195 });
+    expect(centerOf(next, 'scene:r/b')).toEqual({ x: 648, y: 200 });
     expect(reduceIntent(scene, { kind: 'move', ids: ['missing'], delta: { x: 1, y: 1 } })).toBe(scene);
   });
 
@@ -94,7 +94,7 @@ describe('freehand projection', () => {
     const unsubscribe = registry.subscribe(projection.scene, (scene) => seen.push(scene));
 
     projection.apply({ kind: 'move', ids: ['scene:r/a'], delta: { x: 5, y: 5 } });
-    expect(centerOf(registry.get(projection.scene), 'scene:r/a')).toEqual({ x: 255, y: 205 });
+    expect(centerOf(registry.get(projection.scene), 'scene:r/a')).toEqual({ x: 253, y: 205 });
 
     updateScene(registry, store, root, (scene) => reduceIntent(scene, { kind: 'delete', ids: ['scene:r/t'] }));
     expect(registry.get(projection.scene).cells['scene:r/t']).toBeUndefined();

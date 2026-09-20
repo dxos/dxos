@@ -45,6 +45,7 @@ import {
   type Camera,
   type Cell,
   type CellId,
+  DEFAULT_GRID,
   type Endpoint,
   type PlacedCell,
   type Point,
@@ -61,7 +62,8 @@ const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
 const FIT_INSET = 40;
 const PORT_SNAP_PX = 16;
-const DEFAULT_CELL: Size = { width: 160, height: 100 };
+/** Half of each side is a grid multiple, so snapping the centre also snaps the edges. */
+const DEFAULT_CELL: Size = { width: 160, height: 96 };
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -113,7 +115,7 @@ export const SceneView = ({
   registry: cellRegistry = defaultRegistry,
   createProjection,
   atoms: atomsProp,
-  grid = 16,
+  grid = DEFAULT_GRID,
   showPalette = true,
 }: SceneViewProps) => {
   const registry = useRegistry();

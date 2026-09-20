@@ -130,3 +130,6 @@ export type Capabilities = {
 };
 
 export type Tool = 'select' | 'hand' | 'rect' | 'text' | 'scene' | 'link';
+
+/** Grid spacing and snap unit in scene px; fixtures and layout defaults are multiples of it. */
+export const DEFAULT_GRID = 16;

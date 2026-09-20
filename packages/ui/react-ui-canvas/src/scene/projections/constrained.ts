@@ -38,10 +38,11 @@ export type ConstrainedOptions = {
   origin?: Point;
 };
 
+/** Multiples of the default grid, so a solved layout is already snapped. */
 const DEFAULTS: Required<ConstrainedOptions> = {
-  pitch: { width: 260, height: 180 },
-  size: { width: 180, height: 100 },
-  origin: { x: 120, y: 90 },
+  pitch: { width: 256, height: 176 },
+  size: { width: 176, height: 96 },
+  origin: { x: 120, y: 96 },
 };
 
 export const CONSTRAINED_SCENE_ID = 'constrained';
