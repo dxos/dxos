@@ -211,6 +211,61 @@ profile. What a long-lived tab costs has not been measured; it is not smaller.
 
 todomvc, on the same SDK, does none of this — it has no log store.
 
+## The `v8` node, and why it has no single owner
+
+171.5 MB on a loaded journey run, and never opened until now. The allocator tree
+splits it per isolate and per space:
+
+|     MB | node                         |
+| -----: | ---------------------------- |
+| 128.89 | `v8/main`                    |
+| 100.13 | `v8/main/heap/old_space`     |
+|  15.30 | `v8/main/heap/code_space`    |
+|  10.83 | `v8/main/heap/trusted_space` |
+|  40.62 | `v8/workers`                 |
+|  22.66 | `v8/workers/heap/old_space`  |
+|   6.08 | `v8/workers/heap/code_space` |
+|   1.97 | `v8/shared/read_only_space`  |
+
+**The tab holds 4.4x the live JS of the worker.** 100 MB against 23 MB, in an
+architecture where ECHO and automerge are supposed to live in the worker. That
+fits the tab-side automerge replica already recorded against the login-sync work.
+
+A heap snapshot of the page realm on the same profile — three spaces opened,
+140.72 MB of self size over 2,560,784 nodes — says the 100 MB has no dominant
+holder. Grouping the constructors:
+
+|    MB | what                                                                                  |
+| ----: | ------------------------------------------------------------------------------------- |
+| 24.75 | object machinery: property backing arrays, shapes, `PropertyArray`, `DescriptorArray` |
+| 20.46 | `ExternalStringData` — strings whose bytes Blink owns, which is script source         |
+| 19.27 | compiled code: `InstructionStream`, `BytecodeArray`, `ScopeInfo`, feedback            |
+| 12.12 | closures                                                                              |
+|  9.49 | plain objects and arrays                                                              |
+|  7.41 | `Managed (WasmNativeModuleTag)` — the tab's own wasm module                           |
+|  6.43 | `JSArrayBufferData`                                                                   |
+
+The largest single line is 20 MB and the rest is a long tail. **There is no
+second log-store sweep in here.** Code, closures and the shapes that describe
+them come to roughly 56 MB, which is the 920-module cost again from the V8 side,
+and the `byHolder` view finds nothing worth naming because only 6.43 MB of the
+heap is array buffers at all.
+
+Two things this rules out. The tab is not caching document bytes in JS: 6.43 MB
+of `JSArrayBufferData` is the whole of it at this data scale, and whatever the
+tab-side replica costs is in its wasm module and that module's linear memory,
+which no JS-heap reading sees. And the heap is not leaking a structure: its shape
+is a large application's, not a growing cache's.
+
+So reducing it means shipping less code and instantiating fewer objects, not
+finding a bug. Per-package attribution would sharpen that, and is not available:
+it needs `trace_function_infos`, which only `startTrackingHeapObjects` produces,
+and that takes over ten minutes on this app and then returns no snapshot.
+
+Measured against the pre-fix build. The eviction sweep allocated in PartitionAlloc
+and Blink strings rather than V8's heap, so this is not expected to have moved,
+but it has not been re-measured since [#13251](https://github.com/dxos/dxos/pull/13251).
+
 ## 2. Script source — 31 MB, and it stays
 
 The largest steady item: **30.5–31.6 MB in all eight runs**, both arms, and 30.8 MB
@@ -349,9 +404,9 @@ workers were not measured this way and Chromium may host them elsewhere.
    Composer's code shape at 96.9 MB of footprint.
 4. **Collapse the duplicate automerge instances.** Two Rust binaries plus a
    tab-side replica, 146.6 MB committed once data is open.
-5. **Decompose the `v8` node.** 171 MB on a loaded journey run and never opened,
-   which makes it the largest single thing on this page with no attribution
-   behind it at all. The document data should be in there.
+5. **Move work out of the tab.** Its 100 MB of live JS is 4.4x the worker's, in
+   an architecture where the worker is supposed to hold the data. No single
+   object owns it, so this is an architecture change rather than a fix.
 
 ## What changed in this revision
 

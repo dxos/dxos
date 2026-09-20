@@ -306,7 +306,16 @@ const LAUNCH_ARGS = [
   '--enable-precise-memory-info',
 ];
 
-const profileDir = detached ? mkdtempSync(path.join(tmpdir(), 'ledger-profile-')) : null;
+/**
+ * A profile to reuse rather than a throwaway one, so `--snapshot` can name what a tab holds
+ * when it has data in it. `seed-profile.mjs` builds one.
+ */
+const persistentProfile = arg('--profile', null);
+const profileDir = detached
+  ? persistentProfile
+    ? path.resolve(persistentProfile)
+    : mkdtempSync(path.join(tmpdir(), 'ledger-profile-'))
+  : null;
 let child;
 let browser;
 if (detached) {
@@ -342,7 +351,8 @@ const shutdown = () => {
   if (snapshotDir) {
     rmSync(snapshotDir, { force: true, recursive: true });
   }
-  if (profileDir) {
+  // A profile the caller passed in is an input, never removed.
+  if (profileDir && !persistentProfile) {
     rmSync(profileDir, { force: true, recursive: true });
   }
   child?.kill('SIGKILL');
