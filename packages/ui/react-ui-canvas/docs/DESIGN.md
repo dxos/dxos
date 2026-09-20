@@ -1,8 +1,8 @@
 # plugin-canvas — Design
 
 Status: spec for review (2026-09-20, rev 4: §6b mobile navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
-landscape), and the throwaway spike `packages/ui/react-ui-canvas/src/experimental/` (story
-`ui/react-ui-canvas/experimental/SceneView`).
+landscape), and a throwaway spike (deleted once the engine's `Nested` story covered it; its findings are folded
+into §5). Engine: `packages/ui/react-ui-canvas/src/scene/`, stories `ui/react-ui-canvas/scene/SceneView`.
 
 ## 1. Goal
 
@@ -301,7 +301,7 @@ packages/ui/react-ui-canvas/src/scene/
 ```
 
 Exported from the package under `./scene` (not the root barrel) until it replaces `Canvas`. The spike folder
-`src/experimental/` is deleted in the phase 1 PR. `projections/*` wrap `@dxos/diagram` dialects and `applyCommands`
+`src/experimental/` was deleted when the `Nested` story covered it. `projections/*` wrap `@dxos/diagram` dialects and `applyCommands`
 over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from illustrator is copied.
 
 ## 10. Phases

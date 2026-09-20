@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: PR 0 (`@dxos/diagram` extraction) is open as #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`); watch CI and review; once it lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
+_Resume: PR 0 (`@dxos/diagram` extraction) is open as #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`, mirrored to `claude/infinite-canvas-depth-7e0949`), blocked on the first npm publish of `@dxos/diagram`; phase 1 engine is stacked on the same branch (`src/scene/`, Freehand + Nested stories smoke-tested); next: Constrained + Dynamic projections and stories. Once PR 0 lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
 
 ## Phase 0: audit + design
 
@@ -12,7 +12,7 @@ Decide rewrite vs adopt (xyflow) for an infinite, multi-depth canvas, and pin th
   - react-ui-canvas, react-ui-canvas-editor, react-ui-canvas-compute, react-ui-board (Board + Chain), react-ui-diagram, react-ui-graph, react-ui-gameboard, react-ui-dashboard, react-ui-geo, plugin-board/excalidraw/graph/conductor.
 - [x] **External research** (`packages/ui/react-ui-canvas/docs/RESEARCH.md`) — infinitecanvas.tools, Muse boards-in-boards, tldraw hybrid rendering, xyflow sub-flows, JSON Canvas, semantic zoom, d3 usefulness.
 - [x] **Design spec** → `packages/ui/react-ui-canvas/docs/DESIGN.md` (pointer in `agents/superpowers/specs/2026-09-20-infinite-canvas-design.md`) — awaiting user review.
-- [x] **Throwaway spike story** demonstrating zoom between depths — `react-ui-canvas/src/experimental/SceneView.stories.tsx`; verified: fit, pinch zoom, tiers, auto + double-click drill-in, Escape drill-out, select, drag-move. Delete when the engine lands.
+- [x] **Throwaway spike story** demonstrating zoom between depths (`src/experimental/`, verified: fit, pinch zoom, tiers, auto + double-click drill-in, Escape drill-out, select, drag-move); deleted once the engine's `Nested` story covered it.
 
 ## Phase 0b (PR 0): extract `@dxos/diagram`
 
@@ -50,8 +50,8 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [ ] Constrained projection (cardinal constraints → solve; move rewrites) + `Constrained` story.
 - [ ] Dynamic projection (object graph → `@dxos/diagram` layout + overrides) + `Dynamic` story.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
-- [ ] Delete `src/experimental/` once the stories cover the spike.
-- [ ] Headless smoke test of the stories (Playwright) before handing over.
+- [x] Delete `src/experimental/` once the stories cover the spike.
+- [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
 
 ### References
 
