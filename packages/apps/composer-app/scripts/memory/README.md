@@ -16,7 +16,7 @@ one a result is:
 | ----------------------- | ------------------------------------------- | -------------------------------------------------------- |
 | JS heap (used)          | `measure.mjs`                               | live JS objects, per execution context                   |
 | Heap snapshot self size | `retainers.mjs`, `snapshot-diff.mjs`        | live JS + some native accounting, one context            |
-| Attributed allocators   | `memory-dump.mjs`, `parse-trace-stream.mjs` | V8 + malloc + PartitionAlloc + Blink + compositor        |
+| Attributed allocators   | `ledger.mjs`, `parse-trace-stream.mjs`      | V8 + malloc + PartitionAlloc + Blink + compositor        |
 | Private footprint       | `ledger.mjs`, `soak.mjs`, `plain-soak.mjs`  | everything committed, including free-but-committed pages |
 
 Chrome's tab-hover figure is the last one. Code-residency work moves the first;
@@ -117,7 +117,6 @@ alongside any number:
 | `measure.mjs`            | Heap per execution context (page, shared and dedicated workers) after a forced GC; optional snapshot capture                                                                                         |
 | `soak.mjs`               | Footprint and heap over time; can block request patterns or stub the perf timeline to isolate a suspect                                                                                              |
 | `plain-soak.mjs`         | The same, with no CDP client attached to the page — the control for instrumentation-induced growth                                                                                                   |
-| `memory-dump.mjs`        | Per-allocator ledger from two `memory-infra` dumps, with the delta between them                                                                                                                      |
 | `parse-trace-stream.mjs` | The same ledger from a trace captured in a real browser (`chrome://tracing`, category `disabled-by-default-memory-infra`); streams, since these run to hundreds of MB                                |
 | `boot-census.mjs`        | What a tab loads and executes: bytes per package via sourcemaps, execution ratio via precise coverage, and the module-activation roster split into boot and idle waves                               |
 | `snapshot-diff.mjs`      | Which constructors grew between two points — the way to find an accumulator                                                                                                                          |
@@ -172,9 +171,6 @@ node scripts/memory/api-census.mjs http://localhost:4173 --settle 90
 scripts/memory/fetch-electron.sh
 node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
   --symbols "$(find ./tmp/electron -name 'Electron Framework.sym' -print -quit)"
-
-# Where the non-JS memory is, and what grew between two points.
-node scripts/memory/memory-dump.mjs http://localhost:4173 --wait1 60 --wait2 480
 
 # Who retains the big strings in a snapshot.
 node scripts/memory/retainers.mjs ./tmp/snaps/baseline-page.heapsnapshot --min 400000
