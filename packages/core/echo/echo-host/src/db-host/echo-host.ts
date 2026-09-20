@@ -554,28 +554,50 @@ export class EchoHost extends Resource {
    * itself is built a layer up, where credential encoding lives.
    */
   /**
-   * Adopts a space root minted elsewhere, so a joining peer records the root the space already has
-   * rather than minting a second one over it. Idempotent; the root must name this space.
+   * Adopts a space root minted elsewhere, so a peer records the root the space already has rather
+   * than minting a second one over it. Idempotent; the root must name this space.
+   *
+   * A local root that disagrees is REPLACED, not kept: the root in force is the one EDGE recorded,
+   * write-once and identical for every device, so a local one can only be a root this device minted
+   * before that record existed. Keeping it would leave the device reading a document no one else
+   * writes to. The credentials document the replaced root named is dropped with it, which costs
+   * nothing while the control feed is still the source of truth -- every credential in it is
+   * replayed into whichever document the space is anchored on.
    */
-  async adoptSpaceRoot(ctx: Context, spaceId: SpaceId, spaceRootUrl: AutomergeUrl): Promise<SpaceRootRefs> {
+  async adoptSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    spaceRootUrl: AutomergeUrl,
+    options: { fetchFromNetwork?: boolean } = {},
+  ): Promise<SpaceRootRefs> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
-    if (existing) {
-      invariant(existing.spaceRootDocUrl === spaceRootUrl, `Space already anchored on another root: ${spaceId}`);
+    if (existing?.spaceRootDocUrl === spaceRootUrl) {
       return existing;
     }
+    if (existing) {
+      log.warn('replacing a space root this device minted with the one in force', {
+        spaceId,
+        was: existing.spaceRootDocUrl,
+        now: spaceRootUrl,
+      });
+    }
 
-    // Local-only: a caller adopting a root it was merely told about must not block on the network.
-    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
+    // A root this peer was merely TOLD about must not block on the network -- that cost every device
+    // join 5s -- but one edge minted has never been seen locally, so it has to be fetched.
+    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, {
+      fetchFromNetwork: options.fetchFromNetwork ?? false,
+    });
     const root = rootHandle?.doc();
     invariant(root && isSpaceRoot(root), 'Space root document must load.');
     invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
 
     // The directory travels with the root, so a peer that has never opened the space gets one here.
-    if (!this._spaceStateManager.getRootBySpaceId(spaceId)) {
-      await this.updateSpaceRoot(ctx, spaceId, root.directory);
-    }
+    // Unconditional, and `updateSpaceRoot` no-ops on an unchanged url: a peer REPLACING a root has a
+    // directory already, and skipping on that would leave it writing to the directory its own root
+    // named while every other device reads the one edge recorded.
+    await this.updateSpaceRoot(ctx, spaceId, root.directory);
 
     const refs: SpaceRootRefs = {
       spaceRootDocUrl: spaceRootUrl,

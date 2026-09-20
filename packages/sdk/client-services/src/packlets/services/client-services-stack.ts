@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Config, ConfigService } from '@dxos/config';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { Hook } from '@dxos/effect';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
@@ -39,6 +40,8 @@ export type ClientServicesLayerOptions = {
   signalManager?: SignalManager;
   /** Overrides the WebRTC transport; tests pass the in-memory transport. */
   transportFactory?: TransportFactory;
+  /** Overrides the config-derived edge HTTP client; see {@link ClientPlatformLayerOptions}. */
+  edgeHttpClient?: EdgeHttpClient;
   /** @default true */
   connectionLog?: boolean;
   /**
@@ -72,6 +75,7 @@ export const ClientServicesLayer = ({
   runtimeProps,
   signalManager,
   transportFactory,
+  edgeHttpClient,
   connectionLog = true,
   autoConnect = true,
 }: ClientServicesLayerOptions = {}): Layer.Layer<
@@ -94,7 +98,7 @@ export const ClientServicesLayer = ({
             autoConnect,
           }),
         ),
-        Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
+        Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory, edgeHttpClient })),
         // Re-provided so the built stack context carries them, as every consumer of the context expects.
         Layer.provideMerge(Layer.succeed(ConfigService, config)),
         Layer.provideMerge(Layer.succeed(Hook.Controller, controller)),

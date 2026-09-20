@@ -52,7 +52,7 @@ import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/i
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AlreadyJoinedError } from '@dxos/protocols';
+import { AlreadyJoinedError, EdgeCallFailedError } from '@dxos/protocols';
 import {
   buf,
   fromDate,
@@ -246,6 +246,13 @@ export type CreateSpaceOptions = {
 /** Backoff bounds for retrying an anchor that is waiting on replication or an unassigned directory. */
 const ANCHOR_RETRY_INITIAL = 500;
 const ANCHOR_RETRY_MAX = 30_000;
+
+/**
+ * `EdgeFailure.data.type` edge answers with for a space it holds but has not processed far enough to
+ * know a directory for. Duplicated rather than imported: edge pins an older `@dxos/protocols` than
+ * this branch, so the constant cannot travel through the package yet.
+ */
+const SPACE_ROOT_PENDING = 'space_root_pending';
 
 /** Backoff bounds for reporting a space root to edge; replication normally lands well inside this. */
 const SPACE_ROOT_REPORT_RETRY_INITIAL = 500;
@@ -585,6 +592,7 @@ export class DataSpaceManager extends Resource {
       return true;
     }
 
+    let anchoredByEdge = false;
     try {
       if (!this._echoHost.getSpaceRootRefs(space.id)) {
         // A root the inviter named is the space's only root; adopting it has to wait for it to
@@ -600,12 +608,21 @@ export class DataSpaceManager extends Resource {
             return false;
           }
         } else {
-          const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
-          if (!refs) {
+          // A legacy space is anchored by EDGE, not here: every device holds this space already and
+          // none was told a root, so a device that minted its own would fork the anchor. Edge's
+          // per-space durable object serializes the callers and its record is write-once, so all of
+          // them are handed the same root. An unreachable edge leaves the space unanchored for this
+          // attempt, which the anchor's own retry picks up.
+          const settled = await this._requestSpaceRootFromEdge(space);
+          if (!settled) {
             return false;
           }
 
-          log('migrated space to root document', { spaceId: space.id, refs });
+          const refs = await this._echoHost.adoptSpaceRoot(ctx, space.id, settled, { fetchFromNetwork: true });
+          log('adopted the space root edge minted', { spaceId: space.id, refs });
+          // Edge minted it, so it already holds the record; reporting it back would only spend a
+          // round trip -- and arm a retry ladder -- to be handed the same url again.
+          anchoredByEdge = true;
         }
       }
 
@@ -620,7 +637,9 @@ export class DataSpaceManager extends Resource {
       if (!(await this._mirrorCredentialsToDocument(space))) {
         return false;
       }
-      this._reportSpaceRootToEdge(space);
+      if (!anchoredByEdge) {
+        this._reportSpaceRootToEdge(space);
+      }
       return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
@@ -631,6 +650,34 @@ export class DataSpaceManager extends Resource {
   /** Whether the anchor's background work may still act on this space. */
   private _isSpaceLive(space: DataSpace): boolean {
     return space.isOpen && !this._closingSpaces.has(space.id);
+  }
+
+  /**
+   * Asks edge for this space's root, which it mints on the first such call, and returns the url in
+   * force. Undefined when edge is unconfigured or unreachable, or when it has not processed the
+   * space's control feed far enough to know its directory yet -- the two are logged differently,
+   * since only the second is a state that resolves on its own.
+   */
+  private async _requestSpaceRootFromEdge(space: DataSpace): Promise<AutomergeUrl | undefined> {
+    if (!this._edgeHttpClient) {
+      return undefined;
+    }
+
+    try {
+      // No `rootDocumentUrl`: edge mints rather than records. See `EdgeHttpClient.recordSpaceRoot`.
+      const { rootDocumentUrl } = await this._edgeHttpClient.recordSpaceRoot(this._ctx, space.id, {});
+      return rootDocumentUrl as AutomergeUrl;
+    } catch (err) {
+      if (err instanceof EdgeCallFailedError && err.data?.type === SPACE_ROOT_PENDING) {
+        // Edge has the space but has not processed its control feed far enough to know a directory.
+        log('edge has not anchored the space yet', { spaceId: space.id });
+        return undefined;
+      }
+      // Anything else -- an edge too old to mint, an unreachable one, a rejection -- leaves every
+      // legacy space unanchored indefinitely, so it must not read as the expected case.
+      log.warn('edge did not anchor the space', { spaceId: space.id, err });
+      return undefined;
+    }
   }
 
   /**

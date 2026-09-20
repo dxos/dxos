@@ -147,7 +147,7 @@ export const ServiceStack = (
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
-    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : meshReplicatorLayer()),
+    Layer.provideMerge(registerReplicator(MeshEchoReplicatorService)),
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
     Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -161,6 +161,9 @@ export const ServiceStack = (
         automergeCredentials: options.automergeCredentials,
       }),
     ),
+    // Below the identity manager, which reads it for the HALO's automerge replication; the
+    // registration above only attaches it to the echo host and needs the echo host from below.
+    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
     Layer.provideMerge(NetworkLifecycleLayer({ autoConnect: options.autoConnect })),
     Layer.provideMerge(SwarmNetworkManagerLayer({ connectionLog: options.connectionLog })),
@@ -232,9 +235,6 @@ const registerReplicator = <Self>(
       }),
     ),
   );
-
-const meshReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService, never, EchoHostService | Hook.Controller> =>
-  registerReplicator(MeshEchoReplicatorService).pipe(Layer.provideMerge(MeshEchoReplicatorLayer()));
 
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.

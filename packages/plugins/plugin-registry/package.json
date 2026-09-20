@@ -26,10 +26,12 @@
     },
     "#commands": {
       "source": {
+        "workerd": "./src/capabilities/commands.browser.ts",
         "node": "./src/capabilities/commands.ts",
         "default": "./src/capabilities/commands.browser.ts"
       },
       "types": "./dist/types/src/capabilities/commands.d.ts",
+      "workerd": "./dist/lib/commands.browser.mjs",
       "node": "./dist/lib/commands.mjs",
       "default": "./dist/lib/commands.browser.mjs"
     },

@@ -15,7 +15,8 @@ import {
 import { type DatabaseDirectory, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -254,10 +255,29 @@ describe('DataSpaceManager', () => {
       .to.equal(assertion.spaceRootUrl);
   });
 
+  /**
+   * Stands in for edge minting a legacy space's root — one writer, idempotent, and the documents
+   * land where the asking peer can load them, which is what `adoptSpaceRoot` then fetches. The
+   * client no longer mints for itself, so a migration test needs this to have an anchor at all.
+   */
+  const mintingEdge = (echoHost: () => TestPeer['echoHost']) =>
+    ({
+      recordSpaceRoot: async (ctx: Context, spaceId: SpaceId, body: { rootDocumentUrl?: string }) => {
+        if (body.rootDocumentUrl !== undefined) {
+          return body;
+        }
+        const refs = await echoHost().migrateSpaceToRootDocument(ctx, spaceId);
+        invariant(refs, `no directory to anchor: ${spaceId}`);
+        return { rootDocumentUrl: refs.spaceRootDocUrl };
+      },
+    }) as unknown as EdgeHttpClient;
+
   test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer();
+    const peer: TestPeer = builder.createPeer({
+      edgeHttpClient: mintingEdge(() => peer.echoHost),
+    });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -295,7 +315,9 @@ describe('DataSpaceManager', () => {
   test('data written before migration is still readable through the space root afterwards', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer();
+    const peer: TestPeer = builder.createPeer({
+      edgeHttpClient: mintingEdge(() => peer.echoHost),
+    });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -324,7 +346,10 @@ describe('DataSpaceManager', () => {
   test('a legacy space anchors itself on the next load, with nobody calling migrate', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
+    const peer: TestPeer = builder.createPeer({
+      dataSpaceProps: { automergeCredentials: true },
+      edgeHttpClient: mintingEdge(() => peer.echoHost),
+    });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -380,7 +405,9 @@ describe('DataSpaceManager', () => {
   test('a migrated space mirrors its control-feed credentials into the credentials document', async () => {
     const builder = new TestBuilder();
 
-    const peer = builder.createPeer();
+    const peer: TestPeer = builder.createPeer({
+      edgeHttpClient: mintingEdge(() => peer.echoHost),
+    });
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 

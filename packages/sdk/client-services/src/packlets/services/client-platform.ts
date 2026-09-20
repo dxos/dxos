@@ -36,6 +36,13 @@ export type ClientPlatformLayerOptions = {
   signalManager?: SignalManager;
   /** Overrides the WebRTC transport; tests pass the in-memory transport. */
   transportFactory?: TransportFactory;
+  /**
+   * Overrides the config-derived edge HTTP client, which otherwise exists only with a configured
+   * endpoint; tests pass a stub to exercise the paths that go through edge, such as anchoring a
+   * legacy space on the root it mints. Provided on its own, without the socket: the two are
+   * independent, and the credential paths need only this one.
+   */
+  edgeHttpClient?: EdgeHttpClient;
 };
 
 /**
@@ -49,12 +56,16 @@ export type ClientPlatformLayerOptions = {
 export const ClientPlatformLayer = (
   options: ClientPlatformLayerOptions = {},
 ): Layer.Layer<SignalManagerService | TransportFactoryService, never, ConfigService> => {
+  const httpClientLayer = options.edgeHttpClient
+    ? Layer.succeed(EdgeHttpClientService, options.edgeHttpClient)
+    : undefined;
   const edgeLayer = Layer.unwrap(
     Effect.gen(function* () {
       const config = yield* ConfigService;
       const endpoint = config.get('runtime.services.edge.url');
       if (!endpoint) {
-        return Layer.empty;
+        // An override still applies with no endpoint: the HTTP client does not need the socket.
+        return httpClientLayer ?? Layer.empty;
       }
       const clientTag = resolveTelemetryTag(config);
       return Layer.mergeAll(
@@ -64,7 +75,7 @@ export const ClientPlatformLayer = (
           EdgeConnectionService,
           () => new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag, deferConnect: true }),
         ),
-        Layer.sync(EdgeHttpClientService, () => new EdgeHttpClient(endpoint, { clientTag })),
+        httpClientLayer ?? Layer.sync(EdgeHttpClientService, () => new EdgeHttpClient(endpoint, { clientTag })),
       );
     }),
   );
