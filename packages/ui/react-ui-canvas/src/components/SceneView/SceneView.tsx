@@ -891,8 +891,12 @@ export const SceneView = ({
         return undefined;
       }
       const drawn = boundsFromPoints(drag.from, drag.to);
-      const clicked = drawn.width < major || drawn.height < major;
-      const size = clicked ? def.defaultSize : { width: drawn.width, height: drawn.height };
+      // A press that moved less than a grid cell on both axes is a click; a drawn box never goes below the type's minimum.
+      const clicked = drawn.width < major && drawn.height < major;
+      const minSize = def.minSize ?? { width: major, height: major };
+      const size = clicked
+        ? def.defaultSize
+        : { width: Math.max(drawn.width, minSize.width), height: Math.max(drawn.height, minSize.height) };
       const center = clicked
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };

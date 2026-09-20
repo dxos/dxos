@@ -274,12 +274,13 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         break;
       }
       case 'create': {
-        if (isPortalNode(intent.node)) {
+        // The model records built-in types only; a portal or a host type has no place in it and is refused.
+        if (!isBuiltinNode(intent.node) || isPortalNode(intent.node)) {
           return;
         }
         const node: ConstrainedNode = {
           id: intent.node.id,
-          type: isBuiltinNode(intent.node) ? intent.node.type : undefined,
+          type: intent.node.type,
           label: labelOf(intent.node),
         };
         const added = { ...current, nodes: [...current.nodes, node] };

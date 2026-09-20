@@ -35,9 +35,16 @@ export const copySelection = (scene: Scene, selection: Iterable<ElementId>): Cli
   const ids = new Set(selection);
   const nodes = Object.values(scene.nodes).filter((node) => ids.has(node.id));
   const nodeIds = new Set(nodes.map(({ id }) => id));
-  // A free end travels with the fragment; a node end must be in it.
+  // A link comes along when every node end is in the fragment and at least one end is (a free end travels
+  // with the node it is drawn to); a link with two free ends comes only when it is selected itself.
   const inFragment = (end: Endpoint) => isPointEndpoint(end) || nodeIds.has(end.node);
-  const links = Object.values(scene.links).filter((link) => inFragment(link.source) && inFragment(link.target));
+  const attached = (end: Endpoint) => !isPointEndpoint(end) && nodeIds.has(end.node);
+  const links = Object.values(scene.links).filter(
+    (link) =>
+      inFragment(link.source) &&
+      inFragment(link.target) &&
+      (ids.has(link.id) || attached(link.source) || attached(link.target)),
+  );
   return nodes.length > 0 ? { nodes, links, pasted: 0 } : undefined;
 };
 

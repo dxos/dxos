@@ -13,7 +13,7 @@ import React, { memo } from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
+import { type NodeRegistry, nodeDef } from '../../model/registry.ts';
 import {
   type Bounds,
   type ElementId,
@@ -155,7 +155,7 @@ export const ControlFrame = memo(
           });
         })}
         {/* Handles after the ports so a handle wins where a port sits on the same point (a side centre). */}
-        {single && registry[single.type].resizable && !single.locked && (
+        {single && nodeDef(registry, single)?.resizable && !single.locked && (
           <g>
             {HANDLES.map((handle) => {
               const point = handlePoint(nodeBounds(single), handle);

@@ -66,6 +66,11 @@ describe('clipboard', () => {
     const withFree = { ...scene, links: { ...scene.links, f: free } };
     const clipboard = copySelection(withFree, ['scene:r/a']);
     expect(clipboard?.links.map(({ id }) => id)).toEqual(['f']);
+    // A link with two free ends is nobody's: it comes along only when selected itself.
+    const loose: Link = { ...free, id: 'loose', source: { point: { x: 1, y: 1 } } };
+    const withLoose = { ...withFree, links: { ...withFree.links, loose } };
+    expect(copySelection(withLoose, ['scene:r/b'])?.links).toEqual([]);
+    expect(copySelection(withLoose, ['scene:r/b', 'loose'])?.links.map(({ id }) => id)).toEqual(['loose']);
     if (!clipboard) {
       throw new Error('nothing copied');
     }

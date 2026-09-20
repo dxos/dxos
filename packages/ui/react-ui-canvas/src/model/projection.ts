@@ -14,7 +14,16 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { resizeNode } from '../utils/shapes.ts';
 import { type SceneStore, putScene, updateScene } from './store.ts';
-import { type Capabilities, type Intent, type Link, type Node, Scene, type SceneId, endpointNode } from './types.ts';
+import {
+  type Capabilities,
+  type Intent,
+  type Link,
+  type Node,
+  OpenScene,
+  type Scene,
+  type SceneId,
+  endpointNode,
+} from './types.ts';
 
 export type Projection = {
   /** Positioned nodes and links; re-emitted on every model change. */
@@ -152,7 +161,8 @@ export const createFreehandProjection = ({ registry, store, sceneId }: FreehandP
   capabilities: freehandCapabilities,
   snapshot: () => registry.get(store.scene(sceneId)),
   restore: (snapshot) => {
-    if (Schema.is(Scene)(snapshot)) {
+    // A host's nodes are `NodeBase` to the engine, so a snapshot is checked against the open schema.
+    if (Schema.is(OpenScene)(snapshot)) {
       putScene(registry, store, snapshot);
     }
   },

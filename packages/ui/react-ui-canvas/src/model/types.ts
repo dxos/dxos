@@ -242,6 +242,9 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
 
 /** The scene schema over the built-in node types. */
 export const Scene = createSceneSchema([RectNode, EllipseNode, ClassNode, TextNode, PortalNode]);
+
+/** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
+export const OpenScene = createSceneSchema([NodeBase]);
 export type Scene = {
   readonly id: SceneId;
   readonly name?: string;

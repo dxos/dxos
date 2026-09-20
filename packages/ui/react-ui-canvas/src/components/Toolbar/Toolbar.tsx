@@ -53,6 +53,7 @@ export type ToolbarProps = ThemedClassName<{
   children?: React.ReactNode;
 }>;
 
+/** The editor toolbar over the view's actions; `children` is the trailing status readout. */
 export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: ToolbarProps) => {
   const { path } = actions;
   return (
