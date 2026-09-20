@@ -12,13 +12,13 @@ empty on every composer log; filter on `severity_number` (9=INFO, 13=WARN,
 
 ## Volume by environment (7d)
 
-| env | INFO (9) | WARN (13) | ERROR (17) |
-| --- | --- | --- | --- |
-| preview | 49,178 | 18,290 | **2,642** |
-| production | 675 | 404 | **104** |
-| local | 680 | 5,096 | 178 |
-| dev | 596 | 411 | 54 |
-| main | 2,374 | 1,243 | 0 |
+| env        | INFO (9) | WARN (13) | ERROR (17) |
+| ---------- | -------- | --------- | ---------- |
+| preview    | 49,178   | 18,290    | **2,642**  |
+| production | 675      | 404       | **104**    |
+| local      | 680      | 5,096     | 178        |
+| dev        | 596      | 411       | 54         |
+| main       | 2,374    | 1,243     | 0          |
 
 ## Catalog
 
@@ -28,8 +28,9 @@ empty on every composer log; filter on `severity_number` (9=INFO, 13=WARN,
   and `:773` (216).
 - `Error: Timeout [10,000ms]` out of `RpcPeer.send` → `_sendMessage` → `write`.
 - Dominates all composer errors (69% of preview ERRORs). Correlates with WARN
-  `received subduction error; re-handshaking in place` (`ctx_message:
-  "subduction: session lost"`) and WARN `collection sync not converging`
+  `received subduction error; re-handshaking in place`
+  (`ctx_message` = `subduction: session lost`) and WARN
+  `collection sync not converging`
   (`automerge-host.ts:1518`, hundreds of passes on one collection).
 - Read: EDGE websocket sessions dropping under preview; the replicator retries
   and logs one ERROR per queued message, so counts are inflated per incident.
@@ -50,19 +51,19 @@ empty on every composer log; filter on `severity_number` (9=INFO, 13=WARN,
 
 Grouped by `meta` (body empty — the error is the payload):
 
-| file:line | count |
-| --- | --- |
-| `core/mesh/edge-client/src/edge-ws-connection.ts:132` | 83 |
-| `echo-host/src/db-host/query-service.ts:275` | 66 |
-| `echo-client/src/client/index-query-source-provider.ts:296` | 64 |
-| `network-manager/src/transport/webrtc/rtc-transport-proxy.ts:108` | 35 |
-| `echo-host/src/automerge/echo-network-adapter.ts:305 / :315` | 29 / 18 |
-| `index-query-source-provider.ts:370 / :399 / :369` | 19 / 12 / 8 |
+| file:line                                                         | count       |
+| ----------------------------------------------------------------- | ----------- |
+| `core/mesh/edge-client/src/edge-ws-connection.ts:132`             | 83          |
+| `echo-host/src/db-host/query-service.ts:275`                      | 66          |
+| `echo-client/src/client/index-query-source-provider.ts:296`       | 64          |
+| `network-manager/src/transport/webrtc/rtc-transport-proxy.ts:108` | 35          |
+| `echo-host/src/automerge/echo-network-adapter.ts:305 / :315`      | 29 / 18     |
+| `index-query-source-provider.ts:370 / :399 / :369`                | 19 / 12 / 8 |
 
 ### P5 — `repo-proxy` lifecycle invariant (preview 6+)
 
 - `Error: invariant violation [this._lifecycleState === LifecycleState.OPEN] at
-  packages/core/echo/echo-client/src/automerge/repo-proxy.ts:417`, from
+packages/core/echo/echo-client/src/automerge/repo-proxy.ts:417`, from
   `_loadLinkedObjects` → `find` → `_getOrLoadHandle`.
 - Object loading racing client teardown. Also seen as bare
   `_loadHandle/_loadLinkedObjects` rejections (14).
@@ -94,7 +95,7 @@ Grouped by `meta` (body empty — the error is the payload):
 ### P9 — Passkey / onboarding (prod 10, preview 5)
 
 - `PasskeyDismissedError: No passkey was presented` — `Caused by: The operation
-  either timed out or was not allowed.` (WebAuthn).
+either timed out or was not allowed.` (WebAuthn).
 - Surfaces as `operation invocation failed` for
   `dxn:org.dxos.operation.client.redeemPasskey` (prod 5, preview 5) and
   `…createPasskey` (prod 4), plus errors at `WelcomeScreen.tsx:122/124`.
@@ -104,7 +105,7 @@ Grouped by `meta` (body empty — the error is the payload):
 ### P10 — Trigger dispatcher (prod 5)
 
 - `NoHandlerError: No handler found for operation:
-  dxn:org.dxos.plugin.inbox.operation.googleMailSync` (2) — a stored trigger
+dxn:org.dxos.plugin.inbox.operation.googleMailSync` (2) — a stored trigger
   referencing an operation no longer registered.
 - `EntityNotFoundError: Entity not found: echo:///01KYMGPJCXG398JQYERR2BJ80W` (2) —
   trigger pointing at a deleted object.
@@ -114,7 +115,7 @@ Grouped by `meta` (body empty — the error is the payload):
 ### P11 — Entity manager invariant on space open (prod 2)
 
 - `Error: invariant violation [!this._objects.has(id)] at
-  packages/core/echo/echo-client/src/core-db/entity-manager.ts:1700`, in
+packages/core/echo/echo-client/src/core-db/entity-manager.ts:1700`, in
   `_createInlineObjects` → `openWithSpaceState` → `_initializeDb`.
 - Duplicate object id while opening a space — blocks that space from opening.
 
@@ -168,5 +169,6 @@ signoz_aggregate_logs
   groupBy: deployment.environment, body
   timeRange: 7d
 ```
+
 Then drill in with `groupBy: error` (full message + stack), `meta` (source
 location), `ctx_opKey` (operation DXN), `ctx_module` (plugin module id).
