@@ -60,23 +60,25 @@ Six rules make the arithmetic valid:
   it stays unattributed. It is a rounding error against the tab, but it is why
   the app total closes to a few percent while the tab itself closes to under one.
 - **Loaded, a few percent stays unattributed.** macOS puts every anonymous
-  allocation under one VM tag, so `vmmap` cannot decompose it further, and
-  memory-infra emits no `process_mmaps` provider outside Linux and Windows.
-  Closing that slice on Linux needs a `process_mmaps` reader, which is not
-  implemented — the region reads here shell out to `vmmap`.
+  allocation under one VM tag, so `vmmap` cannot decompose it further.
+  memory-infra does emit `process_mmaps` on macOS, but only as a module map —
+  address, size and mapped file per region, with none of the `byte_stats` that
+  make it a decomposition on Linux. It is useful for turning a stack address
+  into module+offset, not for placing bytes.
 - **Allocation is sampled, not tracked.** `--by-code` uses
   `HeapProfiler.startSampling`, which reports allocation volume per stack. The
   retained-bytes equivalent needs `startTrackingHeapObjects({trackAllocations})`,
   and that makes this app's boot take over ten minutes while
   `stopTrackingHeapObjects` returns no snapshot at all — so allocation is what is
   reported, and it answers which code churns rather than which code holds.
-- **`partition_alloc/allocated_objects/<unspecified>` has no finer breakdown.**
-  It is the part of Blink's allocator no dump provider claims. Nothing decomposes
-  it here: `Memory.getSamplingProfile` returns real stacks but Chrome for Testing
-  is stripped, so `atos` resolves only `ChromeMain+offset`; a heap snapshot sees
-  JS objects, and this memory is C++. Attribute it by layer instead — run the
-  same measurement against a smaller app on the same SDK and pass it as
-  `--baseline`. Against `todomvc`, Composer's share of that block is +72 MB.
+- **`partition_alloc/allocated_objects/<unspecified>` needs the native heap
+  profiler, not the dump.** It is the part of Blink's allocator no dump provider
+  claims, so no `ledger.mjs` run will ever name it. The allocation stacks do
+  exist — `Memory.getSamplingProfile` returns them — but Chrome for Testing and
+  the Chromium snapshot builds are both shipped stripped (3 and 2,690 symbols
+  respectively, in a ~250 MB binary), so the frames come back as bare addresses.
+  `native-heap.mjs` runs the same page in Electron, which embeds the same
+  Chromium and publishes a breakpad symbol file per release, and resolves them.
 
 Do not sum `ps` RSS across the browser's process tree. Every process's RSS
 counts the shared pages it maps, so the total triple-counts: an empty headless
@@ -104,6 +106,8 @@ alongside any number:
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ledger.mjs`             | Private footprint per process, the allocator breakdown with ownership views removed, per-realm heap and wasm linear memory per module, and a document census, at named checkpoints through a journey |
 | `ledger.mjs --by-code`   | JS allocation per workspace package, from V8's sampling heap profiler resolved through the build's sourcemaps; needs `--dist`                                                                        |
+| `native-heap.mjs`        | The C++ call sites behind `malloc` and `partition_alloc`, with byte totals and a rollup by mechanism — the naming that memory-infra's `<unspecified>` cannot give; needs `fetch-electron.sh` first   |
+| `fetch-electron.sh`      | Downloads the Electron build and breakpad symbols `native-heap.mjs` symbolizes against, and checks their UUIDs match                                                                                 |
 | `cost-fixtures.mjs`      | Generates the single-variable pages behind the per-unit cost table in `.agents/projects/memory-usage/ALLOCATION.md`; measure each pair with `ledger.mjs --detached --ready none`                     |
 | `heap-attribution.mjs`   | What a realm's heap holds by constructor, and who retains its ArrayBuffer backing stores — the naming a heap snapshot can give that memory-infra cannot                                              |
 | `measure.mjs`            | Heap per execution context (page, shared and dedicated workers) after a forced GC; optional snapshot capture                                                                                         |
@@ -156,6 +160,11 @@ node scripts/memory/soak.mjs http://localhost:4173 --minutes 10 --interval 30
 
 # What loads at boot, attributed per package.
 node scripts/memory/boot-census.mjs http://localhost:4173 out/composer --settle 150
+
+# Name the C++ call sites behind malloc and partition_alloc.
+scripts/memory/fetch-electron.sh
+node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
+  --symbols "$(find ./tmp/electron -name 'Electron Framework.sym')"
 
 # Where the non-JS memory is, and what grew between two points.
 node scripts/memory/memory-dump.mjs http://localhost:4173 --wait1 60 --wait2 480
