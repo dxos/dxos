@@ -40,13 +40,18 @@ Design: DESIGN.md §6b, decision 14, open questions 6–7. Same scene, same proj
 - [ ] Stories: `Columns` at phone width; mode-toggle story on the same scene.
 - [ ] Resolve open questions 6 (what an aspect is) and 7 (mode switch trigger) with the user before building.
 
-## Phase 1: first PR
+## Phase 1: first PR (in progress on the PR 0 branch, stacked)
 
-- [ ] Types, registry, projection seam; freehand / constrained / dynamic projections (minimal).
-- [ ] Infinite zoomable canvas with grid, camera, select/marquee, control frame (move + resize), ports + automatic pairing, port-drag linking.
-- [ ] Navigation: double-click / auto / Escape / breadcrumbs / history.
-- [ ] Palette: rectangle, link, scene (nested).
-- [ ] Stories: Freehand, Constrained, Dynamic, Nested; unit tests per pure module.
+Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/react-ui-canvas/scene`. Stories: `ui/react-ui-canvas/scene/SceneView`.
+
+- [x] Types (`types.ts`), fractional order (`order.ts`), camera + portal math (`camera.ts`), derived bounds + hit testing (`hit.ts`), ports + automatic pairing (`ports.ts`), curve routes (`route.ts`), atom store (`store.ts`), projection seam + freehand reducer (`projection.ts`); unit tests for each.
+- [x] Surface: per-view atoms, cell registry, `SceneLayer` (links, nested live portals with tiers), `ControlFrame` (outline, 8 handles, ports, marquee, rubber band), `Palette`, `Breadcrumbs`, `SceneView` (wheel/pinch/pan, select/marquee, move + resize via intents, port-drag linking incl. drop-on-canvas create, R/T/S create tools, Delete, arrows nudge, cmd+A, Shift+1/2/0, Alt+←/→ history, double-click / auto / Escape / breadcrumb drill).
+- [x] Stories: `Freehand` (depth 1), `Nested` (depth 4).
+- [ ] Constrained projection (cardinal constraints → solve; move rewrites) + `Constrained` story.
+- [ ] Dynamic projection (object graph → `@dxos/diagram` layout + overrides) + `Dynamic` story.
+- [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
+- [ ] Delete `src/experimental/` once the stories cover the spike.
+- [ ] Headless smoke test of the stories (Playwright) before handing over.
 
 ### References
 
