@@ -218,6 +218,9 @@ export class EntityManager implements IDatabaseBinding {
   /** Ids {@link _linksAddedEvent} has already reported. */
   #linkedObjectIds = new Set<string>();
 
+  /** Set from {@link close} until the next {@link open}: the working set is gone, not merely unloaded. */
+  #closed = false;
+
   constructor(options: EntityManagerProps) {
     this._createEntity = options.createEntity;
     this._spaceKey = options.spaceKey;
@@ -256,6 +259,7 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
+    this.#closed = false;
     // The rate only coalesces a bulk delivery from the host, where every emission re-runs each live
     // query and re-hydrates index results over the whole space; every other trigger skips the delay,
     // so a query reflects a local write, or a peer's single edit, at once.
@@ -379,20 +383,11 @@ export class EntityManager implements IDatabaseBinding {
   async close(): Promise<void> {
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
+    this.#closed = true;
     // Dropped before the proxy closes, so a change delivered during teardown cannot trigger a load
     // against a closed proxy.
     this._unsubscribeFromHandles();
     await this._repoProxy.close();
-  }
-
-  /**
-   * Whether the repo proxy this manager loads through is gone. Loads are asynchronous and outlive
-   * the space that started them, so every path reaching `RepoProxy.find` checks this first — the
-   * proxy asserts it is open and a load landing after teardown would raise an invariant violation
-   * nobody is left to catch.
-   */
-  private get _isTornDown(): boolean {
-    return !this._repoProxy.isOpen;
   }
 
   // ── Core object operations ───────────────────────────────────────────────
@@ -467,7 +462,7 @@ export class EntityManager implements IDatabaseBinding {
     objectId: string,
     { timeout, returnWithUnsatisfiedDeps, diskOnly }: LoadObjectOptions = {},
   ): Promise<ObjectCore | undefined> {
-    if (this._isTornDown) {
+    if (this.#closed) {
       throw new ContextDisposedError();
     }
     if (diskOnly && this._unavailableObjects.has(objectId)) {
@@ -531,7 +526,7 @@ export class EntityManager implements IDatabaseBinding {
       failOnTimeout?: boolean;
     } = {},
   ): Promise<(ObjectCore | undefined)[]> {
-    if (this._isTornDown) {
+    if (this.#closed) {
       throw new ContextDisposedError();
     }
     if (!this._spaceRootDocHandle) {
@@ -1604,8 +1599,8 @@ export class EntityManager implements IDatabaseBinding {
     if (!links) {
       return;
     }
-    if (this._isTornDown) {
-      log('database torn down while links were resolving, abandoning load', { links: Object.keys(links) });
+    if (this.#closed) {
+      log('database closed while links were resolving, abandoning load', { links: Object.keys(links) });
       return;
     }
     for (const [objectId, automergeUrlData] of Object.entries(links)) {
@@ -1692,8 +1687,8 @@ export class EntityManager implements IDatabaseBinding {
       this._onObjectDocumentLoaded({ handle, objectId });
     } catch (err) {
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
-      if (this._isTornDown) {
-        log('database torn down while a document was loading, abandoning load', { objectId });
+      if (this.#closed) {
+        log('database closed while a document was loading, abandoning load', { objectId });
         return;
       }
       log.warn('failed to load a document, retrying', {
