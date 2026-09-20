@@ -165,8 +165,12 @@ export class IdentityManager {
   private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
   private _identity?: Identity;
-  /** Owns the HALO anchoring subscriptions, which outlive any single open() call. */
-  private readonly _ctx = new Context();
+  /**
+   * Owns the HALO anchoring subscriptions, which outlive any single open() call. Replaced on
+   * {@link deleteIdentity}, since a disposed context runs new `onDispose` callbacks immediately and
+   * would tear down the next identity's subscriptions as they are registered.
+   */
+  private _ctx = new Context();
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(params: IdentityManagerProps) {
@@ -229,16 +233,19 @@ export class IdentityManager {
    */
   async deleteIdentity(ctx: Context): Promise<void> {
     const identity = this._identity;
-    if (!identity) {
-      log('no identity to delete');
-      return;
+    if (identity) {
+      log('deleting identity', { identityKey: identity.identityKey });
+      // Dropped before teardown so anything observing `stateUpdate` cannot read a half-closed identity.
+      this._identity = undefined;
+      await this._ctx.dispose();
+      this._ctx = new Context();
+      await identity.close(ctx).catch((err) => log.warn('identity teardown failed; deleting anyway', { err }));
+    } else {
+      log('no live identity to delete');
     }
 
-    log('deleting identity', { identityKey: identity.identityKey });
-    // Dropped before teardown so anything observing `stateUpdate` cannot read a half-closed identity.
-    this._identity = undefined;
-    await this._ctx.dispose();
-    await identity.close(ctx).catch((err) => log.warn('identity teardown failed; deleting anyway', { err }));
+    // Unconditional, so a call that failed here is retried rather than leaving the persisted record
+    // to resurrect an identity the caller already deleted.
     await this._metadataStore.clear();
     this.stateUpdate.emit();
     log('deleted identity');

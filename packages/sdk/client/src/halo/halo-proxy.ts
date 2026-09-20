@@ -79,8 +79,8 @@ export class HaloProxy implements Halo {
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
     /**
      * Wipes storage and closes the client once the identity is gone; supplied by {@link Client} so
-     * the proxy does not have to reach back into it. Absent in standalone use, where the caller
-     * owns the teardown.
+     * the proxy does not have to reach back into it. Optional only so a proxy built directly over a
+     * service provider needs no teardown — {@link deleteIdentity} refuses to run without it.
      */
     private readonly _wipeStorage?: () => Promise<void>,
   ) {}
@@ -314,6 +314,12 @@ export class HaloProxy implements Halo {
    * Like `Client.reset`, this leaves the client closed; re-using it afterwards is not supported.
    */
   async deleteIdentity(): Promise<void> {
+    // Checked before anything is destroyed: without the wipe this call would drop the identity and
+    // report success while the host's keyring and feeds survive, which is worse than not starting.
+    if (!this._wipeStorage) {
+      throw new ApiError({ message: 'Cannot delete identity: no storage teardown was provided.' });
+    }
+
     await runServiceCall(this._runtime, this._serviceProvider.rpc['IdentityService.deleteIdentity'](undefined), {
       timeout: RPC_TIMEOUT,
       label: 'IdentityService.deleteIdentity',
@@ -321,7 +327,7 @@ export class HaloProxy implements Halo {
     this._identityChanged.emit(null);
     // Removes the automerge documents, hypercore files, feed store, index tables and keyring the
     // deleted identity wrote; the host owns that storage, so it runs the wipe.
-    await this._wipeStorage?.();
+    await this._wipeStorage();
   }
 
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {

@@ -122,12 +122,37 @@ describe('IdentityService.deleteIdentity', () => {
     expect(serviceContext.identityManager.identity).to.be.undefined;
   });
 
+  test('a failed metadata clear leaves the deletion retryable', async () => {
+    await createIdentity();
+    const metadataStore = serviceContext.metadataStore;
+    const clear = metadataStore.clear.bind(metadataStore);
+    // The persisted record is what resurrects an identity on the next open, so a failure here must
+    // not be swallowed by the second call's early return.
+    metadataStore.clear = () => Promise.reject(new Error('clear failed'));
+
+    await expect(deleteIdentity()).rejects.toThrowError('clear failed');
+    expect(serviceContext.identityManager.identity).to.be.undefined;
+
+    metadataStore.clear = clear;
+    await deleteIdentity();
+    expect(metadataStore.getIdentityRecord()).to.be.undefined;
+  });
+
   test('an identity can be created again after deletion', async () => {
     const first = await createIdentity();
     await deleteIdentity();
 
     const second = await createIdentity();
     expect(second.identityKey).to.not.deep.equal(first.identityKey);
+  });
+
+  test('leaves a live context for the next identity to anchor its HALO on', async () => {
+    await createIdentity();
+    await deleteIdentity();
+
+    // A disposed context runs new `onDispose` callbacks immediately, which would tear the next
+    // identity's credential subscription down as it is registered.
+    expect(serviceContext.identityManager['_ctx'].disposed).to.be.false;
   });
 
   test('removes the automerge documents, hypercore files, feeds, index tables and keys', async () => {
