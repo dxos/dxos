@@ -1903,14 +1903,22 @@ export class EntityManager implements IDatabaseBinding {
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
 
-    // The body was previously marked unavailable but its bytes have now arrived (e.g. a peer
-    // eventually delivered them); clear the mark so any in-flight body load resolves afresh.
-    this._markObjectAvailable(objectId);
-
     if (this._objects.has(objectId)) {
+      // The body was previously marked unavailable but its bytes have now arrived (e.g. a peer
+      // eventually delivered them); clear the mark so any in-flight body load resolves afresh.
+      this._markObjectAvailable(objectId);
       return;
     }
 
+    // A ready handle does not mean the body arrived: a linked document settles empty while the peer
+    // holding it is still replicating, and a core mounted on a path the document lacks would hand
+    // every query an undefined structure. The `change` event above creates the core once it lands.
+    if (handle.doc()?.objects?.[objectId] == null) {
+      this._onObjectUnavailable({ handle, objectId });
+      return;
+    }
+
+    this._markObjectAvailable(objectId);
     this._createObjectInDocument(handle, objectId);
     // Surface the new body. The query pipeline re-evaluates strong-dep satisfaction through the
     // resolver; dependents whose closure includes this entity are woken by their satisfaction

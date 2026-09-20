@@ -381,6 +381,28 @@ describe('DatabaseImpl', () => {
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
       });
 
+      test('a linked document that settles without the object body yields no core', async () => {
+        const object = Obj.make(TestSchema.Expando, { content: 'body' });
+        // The linked document replicates as an empty document: its body never arrived, which is what
+        // a peer that synced the space directory ahead of the object payload sees.
+        const db = await createClientDbInSpaceWithObject(object, (handles) => {
+          handles.linkedDocHandles[0]!.change((newDoc: any) => {
+            newDoc.objects = {};
+          });
+        });
+
+        // Bounded: with the body absent the load legitimately never settles, and the point of the
+        // test is what the working set holds meanwhile.
+        await db.loadObjectCoreById(object.id, { timeout: 1_000 }).catch(() => undefined);
+
+        // Any relation traversal scans every loaded core, so a body-less core crashes the whole query
+        // with `Cannot read properties of undefined (reading 'system')`.
+        await db.query(Query.select(Filter.everything()).sourceOf()).run();
+        for (const core of db.allObjectCores()) {
+          expect(core.getObjectStructure(), `core ${core.id} has no structure in its document`).to.not.be.undefined;
+        }
+      });
+
       test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {
         const testBuilder = new EchoTestBuilder();
         await openAndClose(testBuilder);
