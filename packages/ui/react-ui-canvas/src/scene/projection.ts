@@ -104,6 +104,9 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
       return scene;
     }
 
+    case 'batch':
+      return intent.intents.reduce(reduceIntent, scene);
+
     case 'update': {
       const node = scene.nodes[intent.id];
       if (node) {

@@ -9,6 +9,7 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { type Clipboard } from './clipboard.ts';
 import {
   type Bounds,
   type Camera,
@@ -68,6 +69,8 @@ export type SceneViewAtoms = {
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** Projection snapshots for undo and redo (`undo.ts`). */
   undo: Atom.Writable<UndoState>;
+  /** The last cut or copied fragment (`clipboard.ts`). */
+  clipboard: Atom.Writable<Clipboard | undefined>;
 };
 
 /**
@@ -86,4 +89,5 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
+  clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
 });

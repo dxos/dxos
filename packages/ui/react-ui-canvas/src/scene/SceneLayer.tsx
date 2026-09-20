@@ -49,6 +49,7 @@ export type ElementHandlers = {
   onNodePointerDown?: (node: Node, event: React.PointerEvent) => void;
   onLinkPointerDown?: (link: Link, event: React.PointerEvent) => void;
   onLinkDoubleClick?: (link: Link, event: React.MouseEvent) => void;
+  onLinkContextMenu?: (link: Link, event: React.MouseEvent) => void;
 };
 
 export type SceneLayerProps = {
@@ -88,6 +89,7 @@ export const SceneLayer = memo(({ store, scene, registry, zoom, depth, selected,
                 strokeWidth={12 * unit}
                 onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
                 onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
               />
             )}
             <path

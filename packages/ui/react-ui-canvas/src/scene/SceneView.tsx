@@ -29,10 +29,11 @@ import {
   screenToScene,
   zoomAt,
 } from './camera.ts';
+import { clipboardBounds, copySelection, pasteFragment } from './clipboard.ts';
 import { ControlFrame, type LinkEnd, handlePoint } from './ControlFrame.tsx';
 import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds } from './hit.ts';
 import { useRegistry, useSceneProjection, useViewport, useWheel } from './hooks.ts';
-import { topZ } from './order.ts';
+import { between, topZ } from './order.ts';
 import { Palette, toolForKey } from './Palette.tsx';
 import { nodePorts, portPoint } from './ports.ts';
 import { type FreehandProjectionOptions, type Projection, reduceIntent } from './projection.ts';
@@ -141,6 +142,7 @@ export const SceneView = ({
   const snapEnabled = useAtomValue(atoms.snap);
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
+  const clipboard = useAtomValue(atoms.clipboard);
   const sceneId = path[path.length - 1];
   const canUndo = undoState.key === sceneId && undoState.past.length > 0;
   const canRedo = undoState.key === sceneId && undoState.future.length > 0;
@@ -496,19 +498,102 @@ export const SceneView = ({
     [capabilities.update, removePoint, registry, atoms.point, startDrag],
   );
 
-  // Right-click on a control point: select it and open the menu at the pointer, anchored to an empty
-  // element parked under the cursor (the menu positions itself at a real element).
+  // The right-click menu opens at the pointer, anchored to an empty element parked under the cursor
+  // (the menu positions itself at a real element); what it offers depends on what was pressed.
   const menuAnchorRef = useRef<HTMLSpanElement>(null);
-  const [menuAt, setMenuAt] = useState<Point | undefined>(undefined);
-  const onPointContextMenu = useCallback(
-    (link: SplineLink, index: number, event: React.MouseEvent) => {
+  const [menu, setMenu] = useState<{ at: Point; scene: Point; kind: 'point' | 'element' | 'canvas' } | undefined>(
+    undefined,
+  );
+  const openMenu = useCallback(
+    (event: React.MouseEvent, kind: 'point' | 'element' | 'canvas') => {
       event.preventDefault();
       event.stopPropagation();
-      registry.set(atoms.point, { link: link.id, index });
       const rect = rootRef.current?.getBoundingClientRect();
-      setMenuAt({ x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) });
+      setMenu({
+        at: { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) },
+        scene: toScene(event),
+        kind,
+      });
     },
-    [registry, atoms.point],
+    [toScene],
+  );
+  const onPointContextMenu = useCallback(
+    (link: SplineLink, index: number, event: React.MouseEvent) => {
+      registry.set(atoms.point, { link: link.id, index });
+      openMenu(event, 'point');
+    },
+    [registry, atoms.point, openMenu],
+  );
+  /** Right-click on an element adds it to the selection unless it is already in it, then offers edit actions. */
+  const onElementContextMenu = useCallback(
+    (id: ElementId, event: React.MouseEvent) => {
+      if (!registry.get(atoms.selection).has(id)) {
+        select([id]);
+      }
+      openMenu(event, 'element');
+    },
+    [registry, atoms.selection, select, openMenu],
+  );
+  const onLinkContextMenu = useCallback(
+    (link: Link, event: React.MouseEvent) => onElementContextMenu(link.id, event),
+    [onElementContextMenu],
+  );
+  const onContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      const node = hitTest(scene, toScene(event));
+      if (node) {
+        onElementContextMenu(node.id, event);
+      } else {
+        openMenu(event, 'canvas');
+      }
+    },
+    [scene, toScene, onElementContextMenu, openMenu],
+  );
+
+  //
+  // Clipboard.
+  //
+
+  const copy = useCallback(() => {
+    const fragment = copySelection(scene, registry.get(atoms.selection));
+    if (fragment) {
+      registry.set(atoms.clipboard, fragment);
+    }
+    return fragment !== undefined;
+  }, [scene, registry, atoms.selection, atoms.clipboard]);
+
+  const cut = useCallback(() => {
+    if (!capabilities.delete || !copy()) {
+      return;
+    }
+    projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
+    select([]);
+  }, [capabilities.delete, copy, projection, registry, atoms.selection, select]);
+
+  /** Paste one grid step further each time, or with the fragment's top-left at `at` when given. */
+  const paste = useCallback(
+    (at?: Point) => {
+      const fragment = registry.get(atoms.clipboard);
+      if (!fragment || !capabilities.create) {
+        return;
+      }
+      const bounds = clipboardBounds(fragment);
+      const step = major * (fragment.pasted + 1);
+      const offset = at && bounds ? { x: snap(at.x) - bounds.x, y: snap(at.y) - bounds.y } : { x: step, y: step };
+      let nodeZ = topZ(Object.values(scene.nodes));
+      let linkZ = topZ(Object.values(scene.links));
+      const { intent, ids } = pasteFragment({
+        clipboard: fragment,
+        offset,
+        createId,
+        nodeZ: () => (nodeZ = between(nodeZ, undefined)),
+        linkZ: () => (linkZ = between(linkZ, undefined)),
+      });
+      projection.apply(intent);
+      registry.set(atoms.clipboard, { ...fragment, pasted: at ? fragment.pasted : fragment.pasted + 1 });
+      select(ids);
+    },
+    [registry, atoms.clipboard, capabilities.create, major, snap, scene.nodes, scene.links, projection, select],
   );
 
   /** Dragging a link's end re-attaches it; the other end stays put and anchors the rubber band. */
@@ -825,6 +910,15 @@ export const SceneView = ({
         };
         projection.apply({ kind: 'move', ids: selectedNodes, delta });
         event.preventDefault();
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c') {
+        copy();
+        event.preventDefault();
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'x') {
+        cut();
+        event.preventDefault();
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'v') {
+        paste();
+        event.preventDefault();
       } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
         if (event.shiftKey) {
           onRedo();
@@ -869,6 +963,9 @@ export const SceneView = ({
       toggleSnap,
       onUndo,
       onRedo,
+      copy,
+      cut,
+      paste,
     ],
   );
 
@@ -906,8 +1003,8 @@ export const SceneView = ({
   }, [scene, drag]);
 
   const handlers = useMemo<ElementHandlers>(
-    () => ({ onNodePointerDown, onLinkPointerDown, onLinkDoubleClick }),
-    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick],
+    () => ({ onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu }),
+    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu],
   );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
@@ -945,6 +1042,7 @@ export const SceneView = ({
       onPointerCancel={onPointerUp}
       onPointerLeave={() => updateHover(undefined)}
       onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
     >
       {snapEnabled && (
@@ -993,23 +1091,54 @@ export const SceneView = ({
       <span
         ref={menuAnchorRef}
         className='absolute size-0 pointer-events-none'
-        style={{ left: menuAt?.x ?? 0, top: menuAt?.y ?? 0 }}
+        style={{ left: menu?.at.x ?? 0, top: menu?.at.y ?? 0 }}
       />
-      <Menu.Root modal={false} open={menuAt !== undefined} onOpenChange={(open) => !open && setMenuAt(undefined)}>
+      <Menu.Root modal={false} open={menu !== undefined} onOpenChange={(open) => !open && setMenu(undefined)}>
         <Menu.VirtualTrigger virtualRef={menuAnchorRef} />
         <Menu.Content side='right' sideOffset={4} collisionPadding={8}>
           <Menu.Viewport>
-            <Menu.Item
-              data-testid='remove-point'
-              onSelect={() => {
-                const point = registry.get(atoms.point);
-                if (point) {
-                  removePoint(point);
-                }
-              }}
-            >
-              Remove control point
-            </Menu.Item>
+            {menu?.kind === 'point' && (
+              <Menu.Item
+                data-testid='remove-point'
+                onSelect={() => {
+                  const point = registry.get(atoms.point);
+                  if (point) {
+                    removePoint(point);
+                  }
+                }}
+              >
+                Remove control point
+              </Menu.Item>
+            )}
+            {menu?.kind === 'element' && (
+              <>
+                <Menu.Item data-testid='menu-cut' disabled={!capabilities.delete} onSelect={cut}>
+                  Cut
+                </Menu.Item>
+                <Menu.Item data-testid='menu-copy' onSelect={copy}>
+                  Copy
+                </Menu.Item>
+                <Menu.Item
+                  data-testid='menu-delete'
+                  disabled={!capabilities.delete}
+                  onSelect={() => {
+                    projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
+                    select([]);
+                  }}
+                >
+                  Delete
+                </Menu.Item>
+              </>
+            )}
+            {menu?.kind === 'canvas' && (
+              <Menu.Item
+                data-testid='menu-paste'
+                disabled={!clipboard || !capabilities.create}
+                onSelect={() => paste(menu.scene)}
+              >
+                Paste
+              </Menu.Item>
+            )}
           </Menu.Viewport>
         </Menu.Content>
       </Menu.Root>
@@ -1048,6 +1177,33 @@ export const SceneView = ({
           disabled={!canRedo}
           data-testid='redo'
           onClick={onRedo}
+        />
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--scissors--regular'
+          label='Cut (⌘X)'
+          disabled={selection.size === 0 || !capabilities.delete}
+          data-testid='cut'
+          onClick={cut}
+        />
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--copy--regular'
+          label='Copy (⌘C)'
+          disabled={selection.size === 0}
+          data-testid='copy'
+          onClick={copy}
+        />
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--clipboard-text--regular'
+          label='Paste (⌘V)'
+          disabled={!clipboard || !capabilities.create}
+          data-testid='paste'
+          onClick={() => paste()}
         />
         <span className='text-description font-mono'>
           {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}

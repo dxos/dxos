@@ -55,6 +55,7 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Typed nodes and links (decision 9): `Scene {nodes, links}`; node types rect / ellipse / class (UML) / text / scene with a centre plus per-type properties and optional per-node ports; link types line / curve / spline (control points: drag, double-click to add, alt-click to remove); `shapes.ts` pure geometry; `NodeDef` / `LinkDef` registries generate the palette (R E C T S / L K P); links are selectable and deletable.
 - [x] Link editing: end handles re-attach either end (drop lands on the nearest port, previewed as created while hovering), control points selectable with Delete and a right-click menu, splines perpendicular at the ports, ports fill on hover.
 - [x] Undo / redo: per-view snapshot log over the projection seam (`undo.ts`), ⌘Z / ⇧⌘Z and toolbar buttons.
+- [x] Cut / copy / paste: per-view clipboard, fresh ids, links rewired, one `batch` intent; ⌘X / ⌘C / ⌘V, toolbar buttons, right-click menu (element: Cut / Copy / Delete; canvas: Paste).
 - [x] `docs/MIGRATION.md`: feature map of react-ui-canvas-editor and react-ui-canvas-compute against the engine, five design decisions, migration plan M1–M5.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
 - [x] Delete `src/experimental/` once the stories cover the spike.

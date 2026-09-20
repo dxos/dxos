@@ -169,6 +169,9 @@ export const createDynamicProjection = ({
         });
         break;
       }
+      case 'batch':
+        intent.intents.forEach(apply);
+        break;
       case 'update': {
         // The label is the graph's; a geometry edit becomes an override like a move would.
         const model = registry.get(graph);

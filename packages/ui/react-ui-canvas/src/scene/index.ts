@@ -4,6 +4,7 @@
 
 export * from './atoms.ts';
 export * from './camera.ts';
+export * from './clipboard.ts';
 export * from './hit.ts';
 export * from './hooks.ts';
 export * from './order.ts';

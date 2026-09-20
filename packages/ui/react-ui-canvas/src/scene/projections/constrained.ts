@@ -291,6 +291,9 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         });
         break;
       }
+      case 'batch':
+        intent.intents.forEach(apply);
+        break;
       case 'update': {
         // Only the label lives in the model; geometry is solved, so those edits are dropped.
         const label = labelOf(intent.values);

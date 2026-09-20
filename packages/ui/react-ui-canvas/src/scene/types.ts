@@ -177,7 +177,9 @@ export type Intent =
   | { kind: 'delete'; ids: ElementId[] }
   | { kind: 'reorder'; id: ElementId; z: string }
   /** Property edits (label, text, geometry, control points); `id` and `type` never change. */
-  | { kind: 'update'; id: ElementId; values: Partial<Node> | Partial<Link> };
+  | { kind: 'update'; id: ElementId; values: Partial<Node> | Partial<Link> }
+  /** Several intents applied as one model change (one undo step), e.g. a paste. */
+  | { kind: 'batch'; intents: Intent[] };
 
 export type Capabilities = {
   move?: boolean;
