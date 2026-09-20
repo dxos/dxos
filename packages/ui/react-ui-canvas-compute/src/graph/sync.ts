@@ -10,18 +10,20 @@
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { isNonNullable } from '@dxos/util';
 
 import { type ComputeShape, type TriggerShape } from '../shapes/index.ts';
 import { createComputeNode, isValidComputeNode } from './node-defs.ts';
 
-/** A compute node for the shape, added to the model; the shape's `node` is what it returns. */
-export const syncCreate = (model: ComputeGraphModel, shape: ComputeShape): ComputeNode | undefined => {
+/**
+ * A compute node for the shape, added to the model; the shape's `node` is what it returns. `id` keeps
+ * a known compute id, so a shape restored by undo gets back the node its links name.
+ */
+export const syncCreate = (model: ComputeGraphModel, shape: ComputeShape, id?: string): ComputeNode | undefined => {
   invariant(shape.type);
   if (!isValidComputeNode(shape.type)) {
     return undefined;
   }
-  const computeNode = createComputeNode(shape);
+  const computeNode = { ...createComputeNode(shape), ...(id ? { id } : {}) };
   if (shape.type === 'trigger') {
     linkTriggerToCompute(model, computeNode, shape as TriggerShape);
   }
@@ -47,23 +49,49 @@ export const syncLink = (
   return edge;
 };
 
+/**
+ * The compute edge a link stands for, passing over `claimed` ids so parallel links with the same ends
+ * and ports match distinct edges.
+ */
+export const findEdge = (
+  model: ComputeGraphModel,
+  { source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }: ComputeLink,
+  claimed: ReadonlySet<string> = new Set(),
+): ComputeEdge | undefined =>
+  model.edges.find(
+    (edge) =>
+      !claimed.has(edge.id) &&
+      edge.source === source &&
+      edge.target === target &&
+      edge.output === output &&
+      edge.input === input,
+  );
+
+/** The ids of the edges the links stand for, each edge claimed once. */
+export const findEdges = (model: ComputeGraphModel, links: ComputeLink[]): string[] => {
+  const claimed = new Set<string>();
+  for (const link of links) {
+    const edge = findEdge(model, link, claimed);
+    if (edge) {
+      claimed.add(edge.id);
+    }
+  }
+  return [...claimed];
+};
+
 /** Removes the compute nodes and the compute edges that mirror the deleted shapes and links. */
 export const syncDelete = (model: ComputeGraphModel, nodeIds: string[], links: ComputeLink[]): void => {
-  const edgeIds = links
-    .map(
-      ({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) =>
-        model.edges.find(
-          (edge) => edge.source === source && edge.target === target && edge.output === output && edge.input === input,
-        )?.id,
-    )
-    .filter(isNonNullable);
+  const edgeIds = findEdges(model, links);
   model.removeNodes(nodeIds);
   model.removeEdges(edgeIds);
 };
 
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
   const functionTrigger = triggerData.functionTrigger?.target;
-  invariant(functionTrigger);
+  // A restored trigger whose object was removed with it keeps its node but cannot be wired.
+  if (!functionTrigger) {
+    return;
+  }
   Obj.update(functionTrigger, (functionTrigger) => {
     // TODO(wittjosiah): Widen Runnable union to include ComputeGraph and remove cast.
     functionTrigger.runnable = Ref.make(graph.root) as any;

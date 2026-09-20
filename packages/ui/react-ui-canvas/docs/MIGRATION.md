@@ -178,8 +178,9 @@ for M1–M3.
 - **M3: canvas-compute on the engine (compute package)** — done, additive: the editor path keeps working until M4.
   `scene/defs.ts` turns every `ShapeDef` into a `NodeDef` (the shape schema with `z`, the component under
   `computeNodeView`, ports from `getAnchors`, the palette groups); `createComputeProjection` mirrors `create` /
-  `link` / `delete` into the compute graph through `graph/sync.ts` (shared with `useGraphMonitor`) and writes runtime
-  ports from the compute node's schemas; `Bullets` animates outputs along the link paths; `sceneFromCircuit` maps
+  `link` / `delete` and a re-attached link end into the compute graph through `graph/sync.ts` (shared with
+  `useGraphMonitor`), reconciles the graph with a restored scene so undo / redo take the compute nodes and edges
+  along, and writes runtime ports from the compute node's schemas; `Bullets` animates outputs along the link paths; `sceneFromCircuit` maps
   the circuit factories to scenes; `scene.test.ts` and the twelve `scene` stories over `SceneView`. The engine gained
   `Port.snap`, `data-link-id`, an `overlay` slot, a host-owned `projection` and keyless palette entries. The
   controller, `useComputeNodeState`, `node-defs.ts` and the conductor runtime are untouched.

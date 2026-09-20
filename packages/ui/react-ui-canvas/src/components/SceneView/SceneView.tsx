@@ -26,6 +26,7 @@ import {
 } from '../../model/atoms.ts';
 import { type FreehandProjectionOptions, type Projection, reduceIntent } from '../../model/projection.ts';
 import {
+  type CreateProps,
   type LinkRegistry,
   type NodeRegistry,
   defaultLinkRegistry,
@@ -880,6 +881,10 @@ export const SceneView = ({
     ],
   );
 
+  // The node the current create gesture made, re-framed by every ghost frame and by the drop, so a
+  // definition whose `create` has effects (a trigger mints an object) runs it once, for the node that lands.
+  const pendingRef = useRef<{ type: NodeType; node: Node } | undefined>(undefined);
+
   /**
    * The node a create drag would make: what was drawn, or the type's default size at the press when the
    * drag was a click. Shared by the ghost preview and the drop, so the preview is what lands.
@@ -900,9 +905,23 @@ export const SceneView = ({
       const center = clicked
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
-      return def.create({ id, z: topZ(Object.values(scene.nodes)), center, size });
+      const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
+      const pending = pendingRef.current;
+      const node: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
+      pendingRef.current = { type: drag.type, node };
+      return node;
     },
     [nodeRegistry, major, scene.nodes],
+  );
+
+  /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
+  const commitCreated = useCallback(
+    (node: Node) => {
+      pendingRef.current = undefined;
+      projection.apply({ kind: 'create', node });
+      select([node.id]);
+    },
+    [projection, select],
   );
 
   const onPointerUp = useCallback(() => {
@@ -984,8 +1003,7 @@ export const SceneView = ({
             [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
           });
         }
-        projection.apply({ kind: 'create', node });
-        select([node.id]);
+        commitCreated(node);
         setTool({ kind: 'select' });
         break;
       }
@@ -1015,6 +1033,7 @@ export const SceneView = ({
     store,
     setTool,
     createdNode,
+    commitCreated,
   ]);
 
   const onKeyDown = useCallback(
@@ -1275,11 +1294,10 @@ export const SceneView = ({
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
       const node = createdNode({ kind: 'create', type, from, to: from }, createId(type));
       if (node) {
-        projection.apply({ kind: 'create', node });
-        select([node.id]);
+        commitCreated(node);
       }
     },
-    [nodeRegistry, capabilities.create, snap, pointer, createdNode, projection, select],
+    [nodeRegistry, capabilities.create, snap, pointer, createdNode, commitCreated],
   );
 
   const toolbarActions = useMemo<ToolbarActions>(
