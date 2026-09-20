@@ -432,7 +432,7 @@ export class EntityManager implements IDatabaseBinding {
   /** The entity for an id already in the working set, keyed on `core.rootProxy` so no second identity map outlives it. */
   getEntityById(id: string, { deleted = false }: { deleted?: boolean } = {}): Entity.Unknown | undefined {
     const core = this.getObjectCoreById(id);
-    if (!core || (core.isDeleted() && !deleted)) {
+    if (!core || !core.isBodyAvailable || (core.isDeleted() && !deleted)) {
       return undefined;
     }
     return core.rootProxy ?? this._createEntity(core);
@@ -444,7 +444,7 @@ export class EntityManager implements IDatabaseBinding {
     { allowDeleted = false, ...options }: LoadObjectOptions & { allowDeleted?: boolean } = {},
   ): Promise<Entity.Unknown | undefined> {
     const core = await this.loadObjectCoreById(objectId, options);
-    if (!core || (core.isDeleted() && !allowDeleted)) {
+    if (!core || !core.isBodyAvailable || (core.isDeleted() && !allowDeleted)) {
       return undefined;
     }
     return core.rootProxy ?? this._createEntity(core);
@@ -488,6 +488,11 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private _isCoreResolved(core: ObjectCore, returnWithUnsatisfiedDeps?: boolean): boolean {
+    // A core whose body has not landed carries nothing to read, so a load waits on rather than
+    // resolves with it.
+    if (!core.isBodyAvailable) {
+      return false;
+    }
     if (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core)) {
       return true;
     }
@@ -495,6 +500,9 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private _coreOrUndefined(core: ObjectCore, returnWithUnsatisfiedDeps?: boolean): ObjectCore | undefined {
+    if (!core.isBodyAvailable) {
+      return undefined;
+    }
     if (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core)) {
       return core;
     }
@@ -529,7 +537,9 @@ export class EntityManager implements IDatabaseBinding {
         continue;
       }
 
-      const core = this.getObjectCoreById(objectId, { load: true });
+      // A core whose body has not landed reads as nothing, so it counts as still loading.
+      const loadedCore = this.getObjectCoreById(objectId, { load: true });
+      const core = loadedCore?.isBodyAvailable ? loadedCore : undefined;
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
@@ -1274,7 +1284,8 @@ export class EntityManager implements IDatabaseBinding {
       }
       seen.add(core.id);
       result.push(core);
-      for (const id of referencedObjectIds(core.getObjectStructure())) {
+      const structure = core.getObjectStructure();
+      for (const id of structure ? referencedObjectIds(structure) : []) {
         if (seen.has(id)) {
           continue;
         }
@@ -1760,6 +1771,7 @@ export class EntityManager implements IDatabaseBinding {
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
+    this._markBodiesAvailable(documentChanges.updatedObjectIds);
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
       coalesce: event.patchInfo.source === 'bulk',
@@ -1903,23 +1915,20 @@ export class EntityManager implements IDatabaseBinding {
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
 
-    if (this._objects.has(objectId)) {
-      // The body was previously marked unavailable but its bytes have now arrived (e.g. a peer
-      // eventually delivered them); clear the mark so any in-flight body load resolves afresh.
-      this._markObjectAvailable(objectId);
-      return;
-    }
+    const core = this._objects.get(objectId) ?? this._createObjectInDocument(handle, objectId);
 
     // A ready handle does not mean the body arrived: a linked document settles empty while the peer
-    // holding it is still replicating, and a core mounted on a path the document lacks would hand
-    // every query an undefined structure. The `change` event above creates the core once it lands.
-    if (handle.doc()?.objects?.[objectId] == null) {
+    // holding it is still replicating. The core is created either way so the object keeps one
+    // identity across the body landing, and carries the absence as `isBodyAvailable` — which the
+    // read paths check — instead of encoding it as a missing core.
+    if (!core.isBodyAvailable) {
       this._onObjectUnavailable({ handle, objectId });
       return;
     }
 
+    // The body was previously marked unavailable but its bytes have now arrived (e.g. a peer
+    // eventually delivered them); clear the mark so any in-flight body load resolves afresh.
     this._markObjectAvailable(objectId);
-    this._createObjectInDocument(handle, objectId);
     // Surface the new body. The query pipeline re-evaluates strong-dep satisfaction through the
     // resolver; dependents whose closure includes this entity are woken by their satisfaction
     // request's load op transitioning to ready.
@@ -2004,6 +2013,18 @@ export class EntityManager implements IDatabaseBinding {
   private _markObjectAvailable(objectId: string): void {
     if (this._unavailableObjects.delete(objectId)) {
       this._scheduleThrottledUpdate([objectId]);
+    }
+  }
+
+  /**
+   * Clears the unavailable mark of every object whose body has now landed in its document — the
+   * other half of a core created against a document that settled without one.
+   */
+  private _markBodiesAvailable(objectIds: string[]): void {
+    for (const objectId of objectIds) {
+      if (this._unavailableObjects.has(objectId) && this._objects.get(objectId)?.isBodyAvailable) {
+        this._markObjectAvailable(objectId);
+      }
     }
   }
 

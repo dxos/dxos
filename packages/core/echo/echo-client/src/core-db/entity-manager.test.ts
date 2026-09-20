@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -381,26 +382,43 @@ describe('DatabaseImpl', () => {
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
       });
 
-      test('a linked document that settles without the object body yields no core', async () => {
+      test('a body-less linked document yields an unavailable core that queries skip', async () => {
         const object = Obj.make(TestSchema.Expando, { content: 'body' });
-        // The linked document replicates as an empty document: its body never arrived, which is what
-        // a peer that synced the space directory ahead of the object payload sees.
+        // The linked document replicates empty: the peer synced the space directory ahead of the
+        // object payload, which is what a second peer sees here.
         const db = await createClientDbInSpaceWithObject(object, (handles) => {
           handles.linkedDocHandles[0]!.change((newDoc: any) => {
             newDoc.objects = {};
           });
         });
 
-        // Bounded: with the body absent the load legitimately never settles, and the point of the
-        // test is what the working set holds meanwhile.
+        // Bounded: the load legitimately never settles while the body is missing, and the point of
+        // the test is what the working set holds meanwhile.
         await db.loadObjectCoreById(object.id, { timeout: 1_000 }).catch(() => undefined);
+        await waitForCondition({
+          condition: () => db.getObjectCoreById(object.id, { load: false }) != null,
+          timeout: 5_000,
+        });
 
-        // Any relation traversal scans every loaded core, so a body-less core crashes the whole query
-        // with `Cannot read properties of undefined (reading 'system')`.
-        await db.query(Query.select(Filter.everything()).sourceOf()).run();
-        for (const core of db.allObjectCores()) {
-          expect(core.getObjectStructure(), `core ${core.id} has no structure in its document`).to.not.be.undefined;
-        }
+        // A relation traversal scans every loaded core, and a core without a body crashed it with
+        // `Cannot read properties of undefined (reading 'system')`.
+        expect(await db.query(Query.select(Filter.everything()).sourceOf()).run()).to.have.length(0);
+        expect(await db.query(Filter.everything()).run()).to.have.length(0);
+
+        const core = db.getObjectCoreById(object.id, { load: false });
+        invariant(core, 'the core exists so the object keeps one identity across the body arriving');
+        const docHandle = core.docHandle;
+        invariant(docHandle);
+        expect(core.isBodyAvailable).to.be.false;
+        expect(db.getObjectById(object.id)).to.be.undefined;
+
+        // The body lands.
+        addObjectToDoc(docHandle, { id: object.id, content: 'body' });
+        await db.flush();
+
+        expect(db.getObjectCoreById(object.id), 'the same core carries the body').to.eq(core);
+        expect(core.isBodyAvailable).to.be.true;
+        expect((await db.query(Filter.id(object.id)).first({ timeout: 1_000 })).content).to.eq('body');
       });
 
       test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {
