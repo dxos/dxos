@@ -351,6 +351,13 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 ## 9. Package layout
 
 ```
+packages/plugins/plugin-canvas/src/            (phase 3: the illustrator drawing variant `dxos.org/scene/1`)
+  model/content.ts  Drawing.Canvas.content encoding: one record per scene, node and link; readScenes / writeScenes
+  model/handler.ts  SceneHandler: illustrator DSL objects ↔ root-scene nodes and links (identity on the records)
+  model/store.ts    bindCanvasStore: SceneStore ↔ canvas records inside Obj.update; createCanvas
+  containers/       CanvasArticle: SceneView over the bound store
+  capabilities/     DrawingVariant (IllustratorCapabilities.VariantProvider), Translations
+
 packages/ui/react-ui-canvas/src/scene/         (phase 1, as built; phase 2+ files marked †)
   types.ts          Schema: Scene {nodes, links}, Node (rect/ellipse/class/text/scene), Link (line/curve/spline), Endpoint, Port, Camera, Intent, Tool
   shapes.ts         pure per-type geometry: nodeBounds, resizeNode, DEFAULT_SIZES, createNode, createLink

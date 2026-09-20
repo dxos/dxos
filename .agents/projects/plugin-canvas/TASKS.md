@@ -70,6 +70,16 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
 
+## Phase 3: `@dxos/plugin-canvas` (started 2026-09-20)
+
+Package `packages/plugins/plugin-canvas` (private), registered in Composer's plugin list (labs, off by default).
+
+- [x] Illustrator drawing variant `dxos.org/scene/1`: `Drawing.Canvas.content` holds one record per scene, node and link (`model/content.ts`); `bindCanvasStore` syncs it with the engine's `SceneStore` both ways inside `Obj.update`; `CanvasArticle` renders `SceneView`.
+- [x] DSL bridge (`model/handler.ts`): illustrator objects compile to root-scene nodes and links with their identity stamped on the records (boxes, circles, text, portals as titled boxes, arrows between refs); polylines, curves, arcs and free arrows are dropped; `read` derives the objects back, hand-drawn nodes count as unmanaged.
+- [ ] Nested drawings: a DSL `portal` should become a `scene` node whose child scene is the referenced drawing (cross-object store).
+- [ ] Article chrome: attention / read-only in sections and slides, selection and `onActivate` wiring (`DrawingVariantSurfaceProps`).
+- [ ] End-to-end test through the illustrator operations (as `plugin-tldraw/src/variant.test.ts`).
+
 ### References
 
 - Muse: https://museapp.com · infinitecanvas.tools · tldraw · @xyflow/react
