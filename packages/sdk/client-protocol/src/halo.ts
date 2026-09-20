@@ -48,7 +48,7 @@ export interface Halo {
   /**
    * Closes and deletes every space and the identity itself, then wipes the storage they left
    * behind (automerge documents, hypercore feeds, the feed store, the index tables and the
-   * keyring). Like a client reset, this leaves the client closed.
+   * keyring). The client stays open, so {@link createIdentity} may be called straight afterwards.
    */
   deleteIdentity(): Promise<void>;
 
