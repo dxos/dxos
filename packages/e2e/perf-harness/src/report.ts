@@ -180,7 +180,14 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
 
       ...(row.cpuMsByRealm ? { cpuMsWorkers, ...cpuByRealm } : {}),
 
-      peakRssBytes: row.peakRssBytes,
+      appFootprintBytes: row.appFootprintBytes,
+      // Beside the app's own figure rather than folded into it: Chrome's browser, GPU and service
+      // processes are ~218 MB that has nothing to do with the app, and hiding them in the total is
+      // what made the quantity this replaces unusable.
+      chromeFootprintBytes: row.footprint.reduce(
+        (total, reading) => total + (reading.process === 'Renderer' ? 0 : reading.bytes),
+        0,
+      ),
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByRealm,
       domNodes: row.domNodes,

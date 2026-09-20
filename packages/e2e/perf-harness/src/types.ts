@@ -60,6 +60,20 @@ export type HeapReading = {
 };
 
 /**
+ * One browser process's private footprint, from a memory-infra dump.
+ *
+ * Private rather than resident: RSS counts the shared pages a process maps, so RSS summed over
+ * Chrome's process tree multi-counts and is not a quantity. Footprints are disjoint, so the
+ * renderers' can be added.
+ */
+export type FootprintReading = {
+  pid: number;
+  /** Chrome's own process name: `Browser`, `GPU Process`, `Renderer`, `Service: …`. */
+  process: string;
+  bytes: number;
+};
+
+/**
  * Main-thread cost attribution from `Performance.getMetrics`, as deltas over the stage.
  *
  * Seconds in CDP, milliseconds here. `taskMs` is the envelope; `scriptMs`, `layoutMs` and
@@ -247,8 +261,10 @@ export type StageRow = {
 
   heap: HeapReading[];
   heapUsedTotalBytes: number;
-  /** Peak RSS across the browser process tree during the stage. The headline memory number. */
-  peakRssBytes: number;
+  /** Private footprint of every browser process at the stage's end. Empty if the read failed. */
+  footprint: FootprintReading[];
+  /** Footprint of the renderers, which is the app. The headline memory number. */
+  appFootprintBytes: number;
   domNodes: number;
   domListeners: number;
   domDocuments: number;
