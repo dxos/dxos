@@ -67,6 +67,7 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Portal frame on the grid: a whole multiple of the portal box, grid-placed near the child's centre; the drilled-in frame is drawn dashed orange.
 - [x] Grid always shown (minor / major / coarse, by on-screen size); the toggle is Snap only. The canvas ignores the pointer while the camera moves (wheel, animation).
 - [x] Class properties: attributes / methods edit as one entry per line (`fieldMap` renderer); a portal being drilled into renders plain (no tint / title).
+- [x] Package layout: the pre-engine canvas moved to `src/archive` (root export unchanged); `src/scene` split into `model/`, `utils/`, `hooks/` and `components/<Name>/` (one folder per component, stories beside it); `GridComponent` now lives in the engine and the archive's `Grid` wraps it.
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
 
