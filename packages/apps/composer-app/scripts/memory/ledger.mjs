@@ -472,8 +472,17 @@ try {
   } else {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     page = await context.newPage();
+    // Through CDP rather than `page.evaluate`, so both drivers evaluate an expression STRING the
+    // same way. `page.evaluate` takes a function, and bridging a string through it needs an `eval`
+    // in the page.
+    const playwrightCdp = await context.newCDPSession(page);
     driver = {
-      evaluate: (expression) => page.evaluate((source) => eval(source), expression),
+      evaluate: async (expression) => {
+        const result = await playwrightCdp
+          .send('Runtime.evaluate', { expression, returnByValue: true })
+          .catch(() => undefined);
+        return result?.result?.value;
+      },
       navigate: (target) => page.goto(target, { timeout: 180_000 }),
       url: async () => page.url(),
       waitForReady: (testId) => page.getByTestId(testId).waitFor({ timeout: 180_000 }),
