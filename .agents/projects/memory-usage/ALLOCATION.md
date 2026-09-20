@@ -1,66 +1,86 @@
 # Where Composer's memory goes, for a JavaScript developer
 
-Every figure below comes from Chromium's native sampling heap profiler, which
+`partition_alloc/allocated_objects/<unspecified>` was the largest unexplained
+block in a Composer tab — around 100 MB that `ledger.mjs` could weigh and not
+name. It has a cause, and most of it is one function.
+
+Everything below comes from Chromium's native sampling heap profiler, which
 records a C++ stack per allocation and drops the sample when the allocation is
 freed. Run it with
 [`scripts/memory/native-heap.mjs`](../../../packages/apps/composer-app/scripts/memory/native-heap.mjs).
-It names **76–89% of the bytes the allocator reports as live** in `malloc` and
-`partition_alloc` — the two nodes `ledger.mjs` could previously only weigh.
-
-Read this together with the harness
+Read it together with the harness
 [README](../../../packages/apps/composer-app/scripts/memory/README.md), which
 covers what each allocator node means and why a tab's footprint is not the sum
 of them.
 
-## How to read the numbers
+## Method, and what the numbers are not
 
-Three runs against the same production build, fresh profile, nothing opened:
-
-| settle | footprint | named by the profiler | coverage of live objects |
-| -----: | --------: | --------------------: | -----------------------: |
-|   90 s |    382 MB |                145 MB |                      88% |
-|   90 s |    312 MB |                 74 MB |                      76% |
-|  240 s |    305 MB |                 91 MB |                      89% |
-
-Footprint swings by 25% between identical runs and falls as the boot burst is
-collected, so **quote the settle time with any number from this page**, and
-treat a single run's total as a sample rather than a fact. These were measured
-in Electron 44.4.3 (Chromium 152); the same page under Chrome for Testing 153
-reads 417–445 MB, so compare figures within an engine, not across.
-
-The profiler covers `malloc` and PartitionAlloc. It does not see the V8 JS heap's
+The profiler is one process wide and covers `malloc` and PartitionAlloc
+**together**; it does not separate them, and it does not see the V8 JS heap's
 contents, Oilpan (`blink_gc`), or WebAssembly linear memory, each of which has
-its own instrument.
+its own instrument. Percentages below are shares of what it sampled, not of the
+tab's footprint.
+
+Every run: production build, fresh profile, nothing opened, 90 s settle, a
+forced collection in all four realms before the profile is read, Electron 44.4.3
+(Chromium 152). The same page under Chrome for Testing 153 reads a higher
+footprint, so compare within an engine.
+
+Two arms. **As shipped**, and a **control** with `IdbLogStore#maybeEvict` stubbed
+out to return immediately — the one-line change that removes the log store's
+eviction sweep and nothing else.
+
+| arm     | run | footprint | `<unspecified>` | sampled | of live objects | unresolved |
+| ------- | --: | --------: | --------------: | ------: | --------------: | ---------: |
+| shipped |   1 |    259 MB |         36.8 MB | 66.6 MB |             70% |       0.9% |
+| shipped |   2 |    388 MB |        112.1 MB |  178 MB |             99% |       0.3% |
+| shipped |   3 |    335 MB |        100.7 MB |  147 MB |             94% |       0.3% |
+| control |   1 |    284 MB |         35.2 MB | 60.3 MB |             70% |       0.6% |
+| control |   2 |    281 MB |         35.2 MB | 60.3 MB |             70% |       1.0% |
+
+"unresolved" is the share of sampled bytes whose attributed frame has no symbol
+and is printed as `module+0x…`. It is under 1%, so the call sites below are
+names, not guesses.
+
+The control is reproducible to two decimal places. The shipped arm is not,
+because whether a run lands on a sweep is luck — shipped run 1 missed one and
+lands exactly on the control's baseline.
 
 ## What the profiler names
 
-Shares of the 90 s / 240 s runs. First match wins, so work done inside a
-callback is charged to the thing that called it.
+Megabytes. Categories are matched against the whole stack and the first match in
+this order wins, so an allocation made inside an IndexedDB callback is charged to
+IndexedDB rather than to whatever allocated it.
 
-| Mechanism                                    |  90 s a |  90 s b |   240 s |
-| -------------------------------------------- | ------: | ------: | ------: |
-| IndexedDB reads, and what their callbacks do | 44.6 MB | 11.6 MB | 31.3 MB |
-| Script source: fetch, decode, retain         | 31.0 MB | 28.2 MB | 28.0 MB |
-| WebAssembly compile and code                 | 10.0 MB |  9.2 MB |  8.9 MB |
-| V8 heap pages and isolate tables             | 12.9 MB |  8.3 MB |  7.8 MB |
-| Font shaping tables                          | 10.2 MB |  4.7 MB |  4.8 MB |
-| `performance.measure(…, {detail})` clones    | 17.5 MB |  1.0 MB |  1.2 MB |
-| everything else                              | 19.4 MB | 10.8 MB |  9.5 MB |
+| Mechanism                                  | shipped 1 | shipped 2 | shipped 3 | control 1 | control 2 |
+| ------------------------------------------ | --------: | --------: | --------: | --------: | --------: |
+| IndexedDB, including what its callbacks do |      0.27 |    112.80 |     88.46 |      0.22 |      0.30 |
+| script source: fetch, decode, retain       |     31.74 |     31.42 |     31.20 |     31.01 |     31.62 |
+| WebAssembly compile and code               |      9.27 |      9.18 |      9.07 |      9.44 |      8.78 |
+| V8 heap pages and isolate tables           |      6.42 |      7.31 |      5.90 |      5.75 |      5.87 |
+| font shaping tables                        |      5.60 |      3.85 |      3.81 |      3.76 |      3.96 |
+| network and streams                        |      4.12 |      2.10 |      2.37 |      1.95 |      1.99 |
+| `performance.measure(…, {detail})` clones  |      0.81 |      4.07 |      0.72 |      0.91 |      0.83 |
+| DOM, CSS, paint                            |      1.84 |      1.68 |      1.67 |      1.75 |      1.52 |
+| Blink strings not covered above            |      1.71 |      1.98 |      1.17 |      1.78 |      1.71 |
+| structured clone elsewhere                 |      1.28 |      0.56 |      0.47 |      1.32 |      1.30 |
+| mojo plumbing                              |      1.74 |      0.97 |      0.91 |      0.86 |      0.86 |
+| uncategorised                              |      1.83 |      1.72 |      1.46 |      1.53 |      1.54 |
 
-Two of these are spiky and four are steady. The spread on the IndexedDB and
-`performance.measure` rows is not noise — it is what a periodic burst looks like
-when you sample it at one instant.
+One row moves with the control. Everything else is within its own run-to-run
+spread, including the two rows — fonts and `performance.measure` — that vary by
+more than 2× between shipped runs for reasons this measurement does not settle.
 
-## The mechanisms, in JavaScript terms
+## 1. The log store's eviction sweep — 0 to 113 MB
 
-### 1. The log store reads and re-encodes itself every 30 seconds — up to 45 MB
-
-The single largest thing the profiler found, and it is a loop, not a leak.
+The answer to `<unspecified>`. With the sweep stubbed out, the block is 35.2 MB
+in both control runs; with it running and caught, 100.7 and 112.1 MB.
 
 [`IdbLogStore#evict`](../../../packages/common/log-store-idb/src/idb-log-store.ts)
-runs on a 30-second interval and does this:
+does this:
 
 ```ts
+const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
 const rows = (await promisifyRequest(store.getAll())) as LogChunk[];
 const chunks = keys.map((key, index) => ({
   key,
@@ -69,84 +89,94 @@ const chunks = keys.map((key, index) => ({
 }));
 ```
 
-Two costs, both avoidable:
+Two costs, both avoidable, and the profiler separates them. Of shipped run 2's
+112.8 MB:
 
-- `store.getAll()` pulls **every log chunk** out of IndexedDB. The rows arrive
-  over mojo as `mojo_base::BigBuffer` — 5.6–14.2 MB per sweep in these runs.
-- `byteLengthUtf8` calls `TextEncoder.encode(value).length` on each row, which
-  allocates a full `Uint8Array` copy of the chunk purely to read `.length` and
-  then discards it — 6.5–23.9 MB per sweep, landing in
-  `blink::ArrayBufferContents`.
+- **63.1 MB in `blink::ArrayBufferContents` under `TextEncoder::encode`.**
+  `byteLengthUtf8` allocates a full `Uint8Array` copy of each chunk purely to
+  read `.length`, then discards it. Nothing needs the bytes.
+- **36.0 MB in `mojo_base::BigBuffer`** — the rows themselves, arriving from the
+  browser process. `getAll()` reads every chunk in the store even though only
+  each chunk's size is wanted, and the size could ride in the key the way
+  `lineCount` already does.
+- the remainder is IndexedDB key and value deserialization on the same path.
 
-The store's cap is 50 MB, so on a tab that has been open long enough to fill it
-the sweep reads 50 MB and allocates another ~50 MB every 30 seconds. Nothing
-retains it afterwards, which is why one 90-second run caught 44.6 MB and another
-caught 11.6 MB — the difference is whether the dump landed mid-sweep.
+The sweep is not on a 30-second cycle. `#scheduleEviction` sets a 30 s timer, but
+`#writeBatch` also calls `void this.#maybeEvict()` after **every flush**, and the
+flush interval is 250 ms. An origin-wide web lock (`ifAvailable: true`) stops two
+from running concurrently, but the sweep is re-entered as fast as the lock frees.
+That is why 99 MB of it can be simultaneously reachable after a forced
+collection, against a database holding only 2.4 MB: measured directly, the
+`composer-logs` store held 391 rows and 2.4 MB of text at the 90-second mark.
 
-Composer disables eviction in the tab and in the client worker
-(`evictionInterval: 0`), but
-[`observability-worker.ts`](../../../packages/apps/composer-app/src/workers/observability-worker.ts)
-does not, and it is a **dedicated** worker, which runs inside the creating
-renderer's process. `main.tsx` and `dedicated-worker.ts` each start one, so two
-copies of the sweep run in two renderers over the same database.
+It runs in the observability worker. Composer's tab-side `IdbLogStore` is a read
+handle for log downloads with no log processor attached, so it never writes and
+never sweeps; `main.tsx` and `dedicated-worker.ts` each start an
+[`observability-worker`](../../../packages/apps/composer-app/src/workers/observability-worker.ts),
+which owns the writes and passes no `evictionInterval`. Those are **dedicated**
+workers, so they run inside the creating renderer's process rather than one of
+their own, and the cost shows up in the tab's footprint.
 
-todomvc, on the same SDK, shows zero here — it does not use the log store.
+The store's cap is 50 MB. These runs saw it at 2.4 MB, 90 seconds into a fresh
+profile. What a long-lived tab costs has not been measured, and the relationship
+is not a simple multiple, but it is not smaller.
 
-### 2. Script source text — 28–31 MB
+todomvc, on the same SDK, shows nothing here — it does not use the log store.
 
-The largest steady item, and the one that does not go away.
+## 2. Script source — 31 MB, and it stays
 
-Composer loads ~920 scripts holding 12.55 MB of source. Blink downloads each as
-bytes and decodes it to UTF-16 before handing it to V8, which is where the
-factor of two comes from. The profiler splits it as:
+The largest steady item, identical across both arms and still 28 MB at a
+four-minute settle. Composer loads ~920 scripts holding 12.55 MB of source, and
+the profiler splits the 31.01 MB of control run 1 as:
 
-- `ScriptDecoder::FinishDecode` on the thread pool, 4.8–16.9 MB — the off-thread
-  decode of a script body.
-- `TextCodecUtf8::Decode` under `TextResource::DecodedText`, ~4–6 MB — the same
-  work on the main thread, mostly for worker main scripts via
-  `WorkerModuleScriptFetcher`, plus stylesheets.
-- `ModuleScript::ResolveModuleSpecifier`, 1.9–2.4 MB — resolving one import
-  specifier against another, which scales with the number of modules rather than
-  their size.
+|    MB | Call site                                                         |
+| ----: | ----------------------------------------------------------------- |
+| 10.07 | `TextResourceDecoder::Decode` ← `ScriptDecoder::DidReceiveData`   |
+|  8.88 | `ScriptDecoder::FinishDecode` on the thread pool                  |
+|  5.19 | `TextResourceDecoder::Decode` ← `TextResource::DecodedText`       |
+|  2.53 | `ModuleScript::RunScriptOnScriptStateAndReturnValue`              |
+|  1.97 | `ModuleScript::ResolveModuleSpecifier` ← `JSModuleScript::Create` |
+|  0.91 | `BackgroundJSStreamManager::RunScriptStreamingTask`               |
+|  0.63 | `TextResource::DecodedText` ← `ScriptResource::GetSourceText`     |
 
-This is the native half of the earlier finding that a synthetic page of the same
+So roughly 14.7 MB of decoded source text held, 11 MB of decode buffers that are
+still reachable 90 seconds later, and 4.5 MB of module-graph bookkeeping that
+scales with the number of modules rather than their size. Blink stores ASCII as
+one byte per character, so 12.55 MB of source becoming 14.7 MB of text is close
+to one copy; the decode buffers on top of it are the part that looks avoidable
+and this measurement does not explain why they persist.
+
+This is the native half of the fixture result that a synthetic page of the same
 shape — 927 modules, 56,547 functions, 13.28 MB of source, doing nothing — costs
-96.9 MB. Fewer and larger modules is the lever; the bytes inside them matter
-less than how many files they arrive in.
+96.9 MB of footprint. Fewer, larger modules is the lever.
 
-### 3. WebAssembly compile and code — 9–10 MB
+## 3. WebAssembly compile and code — 9 MB
 
 `FetchDataLoaderForWasmStreaming::OnStateChange` and
-`wasm::NativeModule::AddCompiledCode`: the module bytes as they stream in, and
-the compiled machine code. This is **not** wasm linear memory, which no
-allocator node and no profiler here can see — for that, see the `WebAssembly`
-section below.
+`wasm::NativeModule::AddCompiledCode`: module bytes as they stream in, and the
+compiled machine code. This is **not** wasm linear memory, which no allocator
+node and no profiler here can see; see below. todomvc spends 8.2 MB here against
+Composer's 8.8–9.4, so it is the SDK's automerge, not Composer. The category
+cannot separate automerge's wasm from the SQLite build's.
 
-todomvc spends 8.2 MB here against Composer's 8.9–10.0, so this is the SDK's
-automerge cost, not Composer's.
+## 4. V8 heap pages — 6 MB, and font shaping tables — 4–6 MB
 
-### 4. V8 heap pages and isolate tables — 8–13 MB
+`MemoryAllocator::AllocatePage` and friends is the container V8's own allocator
+draws from, not its contents; the objects inside are the `v8` node, separately
+~99–101 MB.
 
-`MemoryAllocator::AllocatePage` and friends: the pages V8 hands its own
-allocator, plus the string table and traced-handle blocks. This is the container,
-not the contents — the objects inside are the `v8` node in `ledger.mjs`,
-separately ~98–113 MB.
+`HarfBuzzSkiaGetTable` under `HarfBuzzShaper::Shape` is HarfBuzz building a
+per-font accelerator for the GSUB, GPOS, GDEF and morx tables the first time it
+shapes text in that font. todomvc spends 1.9 MB against Composer's 3.8–5.6. The
+gap is real; whether it is font count or text volume is not established, and the
+row's own 1.5× spread between shipped runs is most of the difference.
 
-### 5. Font shaping tables — 5–10 MB
+## 5. `performance.measure(…, {detail})` — 0.7 to 4 MB
 
-`HarfBuzzSkiaGetTable` under `HarfBuzzShaper::Shape`: HarfBuzz builds an
-accelerator structure per font for the GSUB, GPOS, GDEF and morx tables the first
-time it shapes text in that font. Composer spends 4.7–10.2 MB against todomvc's
-1.9, which is a font-count difference, not a text-volume one.
-
-### 6. `performance.measure(…, {detail})` — 1–17 MB
-
-Passing `detail` to `performance.measure` structured-clones the object into a
-`SerializedScriptValue` that the entry holds for the life of the timeline. The
-profiler catches the serialization through
-`PerformanceMeasure::Create → V8ScriptValueSerializer::Serialize`.
-
-The call sites are ECHO query execution
+Passing `detail` structured-clones the object into a `SerializedScriptValue` the
+entry holds for the life of the timeline; the profiler catches it as
+`PerformanceMeasure::Create → V8ScriptValueSerializer::Serialize`. The call sites
+are ECHO query execution
 ([`query-executor.ts`](../../../packages/core/echo/echo-host/src/query/query-executor.ts)),
 ECHO indexing
 ([`echo-host.ts`](../../../packages/core/echo/echo-host/src/db-host/echo-host.ts)),
@@ -156,35 +186,34 @@ and the Effect `addTrackEntry` helper
 ([`Performance.ts`](../../../packages/common/effect/src/Performance.ts)), each
 attaching a `devtools` track-entry object.
 
-Nothing in the repo calls `clearMeasures` or `clearMarks`. At idle a tab holds
-about 1.2 MB of retained clones and 2,094 marks / 1,750 measures against
-todomvc's 7 and 14, and one run caught 17.5 MB live during the boot indexing
-burst. The retained figure is small today; it grows for as long as the tab is
-open, and it buys nothing in production where no DevTools track is listening.
+Nothing in the repo calls `clearMeasures` or `clearMarks`, and a tab holds 2,094
+marks and 1,750 measures at idle against todomvc's 7 and 14. Under 4 MB today, it
+grows for as long as the tab is open, and nothing reads it in production.
 
 ## What the profiler does not name
 
-At 90 s the renderer's footprint was 382 MB. The profiler named 145 MB of it.
-The rest is accounted for, just by other instruments:
+Shipped run 3, footprint 334.5 MB, of which the profiler named 147.2 MB:
 
-| Where                                     |  MB | Instrument                   |
-| ----------------------------------------- | --: | ---------------------------- |
-| named above                               | 145 | `native-heap.mjs`            |
-| allocator slack: committed but not in use | ~99 | `ledger.mjs` node vs subnode |
-| V8 JS heap contents                       | 113 | `ledger.mjs --by-code`       |
-| Oilpan (DOM, CSSOM, perf entries)         |  40 | `ledger.mjs --snapshot`      |
+| Where                                                              |    MB | Instrument                                   |
+| ------------------------------------------------------------------ | ----: | -------------------------------------------- |
+| named above                                                        | 147.2 | `native-heap.mjs`                            |
+| `malloc` and PartitionAlloc committed but not holding live objects | 104.1 | `ledger.mjs`: node minus `allocated_objects` |
+| the `v8` node                                                      |  98.5 | `ledger.mjs`                                 |
+| Oilpan, `blink_gc`                                                 |  16.6 | `ledger.mjs`                                 |
 
-The slack row is `malloc` 152 MB against `malloc/allocated_objects` 83 MB, plus
-`partition_alloc` 112 MB against its 82 MB of live objects. That is memory the
-allocator has committed and not returned to the OS, and the size of it is a
-direct consequence of the spiky mechanisms above: an allocator that has peaked at
-45 MB of log-sweep buffers keeps the pages.
+These do not sum to the footprint and are not meant to: `v8` and `blink_gc` are
+separate mappings from the first two rows, and `ledger.mjs` is the tool that does
+the ownership-edge subtraction properly. The `v8` node is the allocator's view of
+V8 — heap pages, code, metadata and external memory together — not the live JS
+heap, which `--snapshot` measures separately.
 
-These rows do not sum to the footprint and are not meant to — `v8` and
-`blink_gc` overlap the page allocations counted in the first row, and
-`ledger.mjs` is the tool that does the ownership-edge subtraction properly.
+The slack row is `malloc` 138.6 MB against 56.5 MB of live objects plus
+`partition_alloc` 122.7 against 100.8. It is memory the allocator has committed
+and not returned, and the size of it follows directly from the spiky mechanism
+above: an allocator that has just peaked at 100 MB of sweep buffers keeps the
+pages.
 
-### WebAssembly
+### WebAssembly linear memory
 
 Invisible to every allocator node and every JS heap API; `ledger.mjs` measures it
 by shimming `WebAssembly.Memory`. Within one `--work` run, committed linear
@@ -196,8 +225,8 @@ resident, and it grows as pages are touched.
 
 ## What a thing costs
 
-Unchanged from the previous revision, and independent of the above. Each row is
-one pair of pages differing in one variable, generated by
+Independent of the above, and unchanged. Each row is one pair of pages differing
+in one variable, generated by
 [`cost-fixtures.mjs`](../../../packages/apps/composer-app/scripts/memory/cost-fixtures.mjs),
 measured as the change in process footprint under `ledger.mjs --detached`.
 
@@ -212,49 +241,51 @@ measured as the change in process footprint under `ledger.mjs --detached`.
 | Ship one more function                                 | **~0.5 KB**    | `v8` 47%, `web_cache` 27% |
 
 Each is n=1 per fixture against a blank-page baseline that varies 34.5–37.2 MB
-between runs, so treat anything under ~3 MB as noise. Binary data costs the same
-wherever it lives: 80 MB of `ArrayBuffer` held inside a dedicated worker moved
-the renderer's footprint by 81.8 MB, because dedicated and shared workers run
-inside the creating renderer. Only a service worker gets its own process.
+between runs, so treat anything under ~3 MB as noise. These are whole-footprint
+deltas and overlap the mechanisms above rather than adding to them. Binary data
+costs the same wherever it lives: 80 MB of `ArrayBuffer` held inside a dedicated
+worker moved the renderer's footprint by 81.8 MB, because dedicated and shared
+workers run inside the creating renderer. Only a service worker gets its own
+process.
 
 ## What this says to do
 
-1. **Stop the log store's eviction sweep from reading and re-encoding the whole
-   database.** `getAllKeys()` plus a byte count stored in the key removes both
-   halves at once; failing that, count UTF-8 bytes without allocating. Largest
-   single item found, up to 45 MB per sweep every 30 seconds, and the sweep runs
-   in two renderers.
+1. **Fix the log store's eviction sweep.** Store each chunk's byte length in the
+   key next to `lineCount` and sweep with `getAllKeys()` alone; that removes both
+   the `getAll()` payload and the `TextEncoder` copies. Failing that, count UTF-8
+   bytes without allocating, and stop re-entering the sweep on every 250 ms
+   flush. Worth up to ~100 MB and ~77 MB of `<unspecified>`, and it is the only
+   item here with a control behind it.
 2. **Drop the `detail` payload from `performance.measure` outside development.**
-   It is structured-cloned and retained for the life of the tab, and nothing
-   reads it in production.
-3. **Ship fewer modules.** 920 of them cost 28–31 MB of decoded source that never
-   goes away, plus per-module overhead measured at ~24 KB each.
+   Small today, retained for the life of the tab, and unread in production.
+3. **Ship fewer, larger modules.** 31 MB of decoded source and module-graph
+   bookkeeping that does not go away, and the fixture puts the whole cost of
+   Composer's code shape at 96.9 MB of footprint.
 4. **Collapse the duplicate automerge instances.** Two Rust binaries plus a
    tab-side replica, 146.6 MB committed once data is open.
 
 ## What changed in this revision
 
-The previous version of this page said the ~100 MB of
-`partition_alloc/allocated_objects/<unspecified>` had no mechanism and that
-naming it "needs a symbolized Chromium, which Chrome for Testing does not
-publish". The first half is now wrong and the second was the wrong conclusion:
+The previous version said `<unspecified>` had no mechanism and that naming it
+"needs a symbolized Chromium, which Chrome for Testing does not publish". The
+first is now answered and the second was the wrong conclusion:
 
-- Chromium's native sampling heap profiler has the stacks, reachable over CDP as
+- Chromium's native sampling heap profiler has the stacks, over CDP as
   `Memory.startSampling` / `Memory.getSamplingProfile`, or in a memory-infra dump
   as `heaps_v2` when the browser is launched with `--memlog`.
 - Chrome for Testing is stripped (3 symbols in a 246 MB framework) and so are the
   Chromium snapshot builds (2,690 exports, no DWARF) — but **Electron embeds the
   same Chromium and publishes a breakpad symbol file per release**, 553,160
-  function records whose UUID matches the shipped binary. Same engine, same page,
-  resolvable frames.
-- The Electron renderer's allocator profile matches Chrome for Testing's closely
-  enough to stand in — at a matched 25 s settle, 103 MB of `<unspecified>` against
-  101, `malloc` 172 against 193, `v8` 113 against 114.
+  function records whose UUID matches the shipped binary.
+- Electron's renderer profile is close enough to stand in: at a matched 25 s
+  settle, 103 MB of `<unspecified>` against Chrome for Testing's 101, `malloc`
+  172 against 193, `v8` 113 against 114. One matched pair against a measurement
+  that varies by 25% between identical runs is weak evidence for equivalence, so
+  the comparison arms here are all Electron.
 
-Also corrected: macOS memory-infra _does_ emit `process_mmaps`, contrary to what
-the harness README said, but only as a module map — it carries none of the
-`byte_stats` that make it a decomposition on Linux, so it is useful for turning a
-stack address into module+offset and nothing else.
+Also corrected: macOS memory-infra _does_ emit `process_mmaps`, contrary to the
+harness README, but only as a module map with no `byte_stats`, so it decomposes
+nothing and no script here reads it.
 
 ## Reproducing
 
@@ -264,15 +295,17 @@ From `packages/apps/composer-app`, against a production build:
 moon run composer-app:bundle
 pnpm --filter @dxos/composer-app exec vite preview --port 4173 &
 
-# One-time: Electron plus its breakpad symbols (~250 MB).
+# One-time: Electron plus its breakpad symbols. macOS only; ~250 MB of
+# downloads and ~1.5 GB on disk once the symbol index is built.
 scripts/memory/fetch-electron.sh
 
 node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
-  --symbols "$(find ./tmp/electron -name 'Electron Framework.sym')" \
+  --symbols "$(find ./tmp/electron -name 'Electron Framework.sym' -print -quit)" \
   --json ./tmp/native-heap.json
 
 # The allocator ledger the shares above are a share of.
 node scripts/memory/ledger.mjs http://localhost:4173 --detached --settle 90
 ```
 
-Run it three times before believing any single number.
+To re-run the control, make `IdbLogStore#maybeEvict` return immediately, rebuild,
+and compare. Run each arm at least twice: the shipped arm's spread is the finding.

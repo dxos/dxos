@@ -14,14 +14,17 @@
  *
  * Electron is the way around that: it embeds the same Chromium and publishes a breakpad
  * symbol file per release, so the same profile resolves to real function names. Run
- * `fetch-electron.sh` once to download both.
+ * `fetch-electron.sh` once to download both. macOS arm64 only, as written.
+ *
+ * The profile is one process wide and does not separate `malloc` from PartitionAlloc, so
+ * read it as a decomposition of the two together.
  *
  * Usage: node native-heap.mjs <url> [--settle 90] [--rate 10000] [--json out.json]
  *        [--electron <Electron.app>] [--symbols <Electron Framework.sym>]
  */
 
 import { spawn } from 'node:child_process';
-import { createReadStream, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
@@ -29,12 +32,29 @@ import { createInterface } from 'node:readline';
 const url = process.argv[2]?.startsWith('--') ? 'http://localhost:4173' : (process.argv[2] ?? 'http://localhost:4173');
 const arg = (name, dflt) => {
   const i = process.argv.indexOf(name);
-  return i > 0 ? process.argv[i + 1] : dflt;
+  if (i < 0) {
+    return dflt;
+  }
+  const value = process.argv[i + 1];
+  // Otherwise `--settle` with no value silently becomes NaN and the run does not settle.
+  if (value === undefined || value.startsWith('--')) {
+    console.error(`${name} needs a value`);
+    process.exit(1);
+  }
+  return value;
 };
-const settleS = parseFloat(arg('--settle', '90'));
+const number = (name, dflt) => {
+  const value = Number(arg(name, dflt));
+  if (!Number.isFinite(value) || value < 0) {
+    console.error(`${name} must be a non-negative number`);
+    process.exit(1);
+  }
+  return value;
+};
+const settleS = number('--settle', '90');
 // The mean bytes between samples. Large allocations are captured near-exactly at any
 // setting; this only controls how well the long tail of small ones is estimated.
-const rate = parseInt(arg('--rate', '10000'), 10);
+const rate = number('--rate', '10000');
 const jsonOut = arg('--json', null);
 const electronRoot = arg('--electron', process.env.ELECTRON_APP ?? './tmp/electron/Electron.app');
 const symFile = arg('--symbols', process.env.ELECTRON_SYMBOLS ?? null);
@@ -55,32 +75,45 @@ if (!symFile || !existsSync(symFile)) {
 }
 
 /**
- * FUNC records from a breakpad .sym, sorted by module-relative address.
+ * Address ranges from a breakpad .sym, sorted by module-relative address.
  *
- * The .sym is ~700 MB of text and only its FUNC lines matter, so the extract is cached
- * beside it; rebuilding costs a few seconds, reading the original costs far more.
+ * `PUBLIC` as well as `FUNC`, because an address that only has a `PUBLIC` record would
+ * otherwise come back unresolved and then read as a plausible-looking call site. The .sym
+ * is ~700 MB of text and only these two record types matter, so the extract is cached
+ * beside it.
  */
 const loadSymbols = async (file) => {
-  const cache = `${file}.funcs.tsv`;
+  const cache = `${file}.ranges.tsv`;
   if (!existsSync(cache)) {
     const rows = [];
     const lines = createInterface({ input: createReadStream(file, { highWaterMark: 1 << 22 }), crlfDelay: Infinity });
     for await (const line of lines) {
-      if (!line.startsWith('FUNC ')) {
+      // FUNC [m] <address> <size> <parameter_size> <name> / PUBLIC [m] <address> <parameter_size> <name>
+      const func = line.startsWith('FUNC ');
+      if (!func && !line.startsWith('PUBLIC ')) {
         continue;
       }
-      // FUNC [m] <address> <size> <parameter_size> <name>, all hex but the name.
-      const rest = line.slice(5).replace(/^m /, '');
-      const a = rest.indexOf(' ');
-      const b = rest.indexOf(' ', a + 1);
-      const c = rest.indexOf(' ', b + 1);
-      if (c > 0) {
-        rows.push([parseInt(rest.slice(0, a), 16), parseInt(rest.slice(a + 1, b), 16), rest.slice(c + 1)]);
+      const rest = line.slice(func ? 5 : 7).replace(/^m /, '');
+      const fields = rest.split(' ');
+      if (fields.length < (func ? 4 : 3)) {
+        continue;
+      }
+      const start = parseInt(fields[0], 16);
+      const size = func ? parseInt(fields[1], 16) : 0;
+      const name = fields.slice(func ? 3 : 2).join(' ');
+      if (Number.isFinite(start) && name) {
+        rows.push([start, Number.isFinite(size) ? size : 0, name]);
       }
     }
-    rows.sort((x, y) => x[0] - y[0]);
-    writeFileSync(cache, rows.map((r) => `${r[0].toString(16)}\t${r[1].toString(16)}\t${r[2]}`).join('\n'));
-    console.error(`  indexed ${rows.length} functions -> ${cache}`);
+    // Widest extent first at a shared start address, so the dedupe below keeps the record
+    // that can actually contain an offset rather than a zero-size alias.
+    rows.sort((x, y) => x[0] - y[0] || y[1] - x[1]);
+    const written = `${cache}.${process.pid}.part`;
+    writeFileSync(written, rows.map((r) => `${r[0].toString(16)}\t${r[1].toString(16)}\t${r[2]}`).join('\n'));
+    // Renamed rather than written in place: an interrupted write would otherwise leave a
+    // truncated cache that every later run reuses, silently resolving to the wrong names.
+    renameSync(written, cache);
+    console.error(`  indexed ${rows.length} symbols -> ${cache}`);
   }
   const starts = [];
   const sizes = [];
@@ -91,9 +124,16 @@ const loadSymbols = async (file) => {
       continue;
     }
     const b = line.indexOf('\t', a + 1);
-    starts.push(parseInt(line.slice(0, a), 16));
+    const start = parseInt(line.slice(0, a), 16);
+    if (starts.length && starts.at(-1) === start) {
+      continue;
+    }
+    starts.push(start);
     sizes.push(parseInt(line.slice(a + 1, b), 16));
     names.push(line.slice(b + 1));
+  }
+  if (starts.length === 0) {
+    throw new Error(`no symbols parsed from ${file}`);
   }
   return (offset) => {
     let lo = 0;
@@ -108,9 +148,16 @@ const loadSymbols = async (file) => {
         hi = mid - 1;
       }
     }
-    // Only inside the function's own extent: the nearest preceding symbol to an address
-    // in a gap belongs to something else and would name the wrong caller.
-    return best >= 0 && offset < starts[best] + sizes[best] ? names[best] : null;
+    if (best < 0) {
+      return null;
+    }
+    // A `FUNC` names only its own extent; past that the offset belongs to something else
+    // and the preceding symbol would name the wrong caller. A `PUBLIC` has no extent, so
+    // it is the nearest-preceding answer and is marked as approximate.
+    if (sizes[best] > 0) {
+      return offset < starts[best] + sizes[best] ? names[best] : null;
+    }
+    return `${names[best]}+0x${(offset - starts[best]).toString(16)}`;
   };
 };
 
@@ -135,14 +182,22 @@ class Cdp {
         message.error ? reject(new Error(message.error.message)) : resolve(message.result);
       } else if (message.method) {
         for (const fn of cdp.#listeners.get(message.method) ?? []) {
-          fn(message.params);
+          fn(message.params, message.sessionId);
         }
       }
+    });
+    // Otherwise a socket that dies mid-run leaves every outstanding call hanging until its
+    // own timeout, which on a 240s settle is most of the run.
+    cdp.#ws.addEventListener('close', () => {
+      for (const { reject } of cdp.#pending.values()) {
+        reject(new Error('CDP socket closed'));
+      }
+      cdp.#pending.clear();
     });
     return cdp;
   }
 
-  send(method, params = {}, timeoutMs = 180_000) {
+  send(method, params = {}, { sessionId, timeoutMs = 180_000 } = {}) {
     const id = ++this.#id;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -160,12 +215,12 @@ class Cdp {
           resolve(value);
         },
       });
-      this.#ws.send(JSON.stringify({ id, method, params }));
+      this.#ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
     });
   }
 
-  trySend(method, params, timeoutMs) {
-    return this.send(method, params, timeoutMs).catch(() => undefined);
+  trySend(method, params, options) {
+    return this.send(method, params, options).catch(() => undefined);
   }
 
   on(method, fn) {
@@ -188,7 +243,7 @@ const lookup = await loadSymbols(symFile);
 const appDir = mkdtempSync(path.join(tmpdir(), 'native-heap-app-'));
 writeFileSync(
   path.join(appDir, 'package.json'),
-  JSON.stringify({ name: 'native-heap', version: '1.0.0', main: 'main.js' }),
+  JSON.stringify({ main: 'main.js', name: 'native-heap', version: '1.0.0' }),
 );
 writeFileSync(
   path.join(appDir, 'main.js'),
@@ -216,10 +271,24 @@ let childLog = '';
 child.stdout.on('data', (chunk) => (childLog += chunk));
 child.stderr.on('data', (chunk) => (childLog += chunk));
 
+let cleaned = false;
 const shutdown = () => {
-  child.kill('SIGKILL');
+  if (cleaned) {
+    return;
+  }
+  cleaned = true;
+  // SIGTERM first so the browser tears its helper processes down itself; SIGKILL on the
+  // parent alone would orphan the renderer, which is the 300 MB one.
+  child.kill('SIGTERM');
+  setTimeout(() => child.kill('SIGKILL'), 2000).unref?.();
   rmSync(appDir, { force: true, recursive: true });
 };
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(signal, () => {
+    shutdown();
+    process.exit(130);
+  });
+}
 
 try {
   let version;
@@ -251,6 +320,16 @@ try {
   }
 
   const cdp = await Cdp.connect(page.webSocketDebuggerUrl);
+  // Dedicated workers are not top-level targets and never appear in `/json/list`, so the
+  // only way to reach the realms Composer does most of its work in is to auto-attach.
+  const workerSessions = new Set();
+  cdp.on('Target.attachedToTarget', ({ sessionId, targetInfo }) => {
+    if (['iframe', 'service_worker', 'shared_worker', 'worker'].includes(targetInfo.type)) {
+      workerSessions.add(sessionId);
+    }
+  });
+  cdp.on('Target.detachedFromTarget', ({ sessionId }) => workerSessions.delete(sessionId));
+  await cdp.trySend('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: false });
   await cdp.send('Page.enable');
   await cdp.send('Memory.startSampling', { samplingInterval: rate, suppressRandomness: false });
   await cdp.send('Page.navigate', { url });
@@ -258,35 +337,32 @@ try {
   await new Promise((resolve) => setTimeout(resolve, settleS * 1000));
 
   // The sampler drops a sample when its allocation is freed, so a collection first is what
-  // makes the result retention rather than churn. Every realm has its own isolate to collect.
-  await cdp.trySend('HeapProfiler.enable', {}, GC_TIMEOUT_MS);
-  await cdp.trySend('HeapProfiler.collectGarbage', {}, GC_TIMEOUT_MS);
-  const realms = await fetch(`http://127.0.0.1:${port}/json/list`)
-    .then((response) => response.json())
-    .catch(() => []);
-  for (const realm of realms) {
-    if (realm.type === 'page' || !realm.webSocketDebuggerUrl) {
-      continue;
-    }
-    try {
-      const worker = await Promise.race([
-        Cdp.connect(realm.webSocketDebuggerUrl),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('connect timed out')), GC_TIMEOUT_MS).unref?.()),
-      ]);
-      await worker.trySend('HeapProfiler.enable', {}, GC_TIMEOUT_MS);
-      await worker.trySend('HeapProfiler.collectGarbage', {}, GC_TIMEOUT_MS);
-      worker.close();
-    } catch {
-      // A realm that went away between the listing and the connect is not an error.
+  // makes the result retention rather than churn. Each realm has its own isolate.
+  await cdp.trySend('HeapProfiler.enable', {}, { timeoutMs: GC_TIMEOUT_MS });
+  await cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS });
+  let collected = 0;
+  for (const sessionId of workerSessions) {
+    await cdp.trySend('HeapProfiler.enable', {}, { sessionId, timeoutMs: GC_TIMEOUT_MS });
+    const result = await cdp.trySend('HeapProfiler.collectGarbage', {}, { sessionId, timeoutMs: GC_TIMEOUT_MS });
+    if (result) {
+      collected++;
     }
   }
+  console.error(`  collected ${collected + 1} of ${workerSessions.size + 1} realms`);
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
   const { profile } = await cdp.send('Memory.getSamplingProfile');
+  if (!profile?.samples?.length) {
+    throw new Error('the sampling profile is empty — the renderer was probably swapped on navigation');
+  }
 
   // The allocator ledger for the same renderer, so the sample can be read as a share of it.
   const events = [];
-  cdp.on('Tracing.dataCollected', ({ value }) => events.push(...value));
+  cdp.on('Tracing.dataCollected', ({ value }) => {
+    for (const event of value) {
+      events.push(event);
+    }
+  });
   const complete = new Promise((resolve) => cdp.on('Tracing.tracingComplete', resolve));
   await cdp.send('Tracing.start', {
     traceConfig: { excludedCategories: ['*'], includedCategories: ['disabled-by-default-memory-infra'] },
@@ -303,9 +379,18 @@ try {
     name: module.name.replace(/^.*\//, ''),
   }));
   const framework = modules.find((module) => /Electron Framework/.test(module.name));
+  if (!framework) {
+    throw new Error(`the profile carries no Electron Framework module: ${modules.map((m) => m.name).join(', ')}`);
+  }
+  const UNRESOLVED = /^(Electron Framework|[^+]+)\+0x[0-9a-f]+$|^0x[0-9a-f]+$/;
   const symbolize = (address) => {
-    const value = Number(BigInt(address));
-    if (framework && value >= framework.base && value < framework.end) {
+    let value;
+    try {
+      value = Number(BigInt(address));
+    } catch {
+      return String(address);
+    }
+    if (value >= framework.base && value < framework.end) {
       return lookup(value - framework.base) ?? `Electron Framework+0x${(value - framework.base).toString(16)}`;
     }
     const module = modules.find((candidate) => value >= candidate.base && value < candidate.end);
@@ -322,9 +407,10 @@ try {
     /base::internal::(Invoke|FunctorTraits|InvokeHelper)/,
   ];
   // Container and string internals are real frames, but "a vector grew" names no feature;
-  // the caller one frame further down does.
+  // the caller one frame further down does. Anchored at the start of the symbol so a
+  // container appearing only as a template parameter of a real call site does not match.
   const GENERIC =
-    /StringImpl::(Create|Allocate)|StringBuffer|StringBuilder|CharacterBuffer|VectorBuffer|Vector<.*>::(expand|reserve|Grow|Reallocate|append)|HashTable<.*>::(Rehash|expand)|::(ReserveCapacity|AllocateBuffer|resize|Resize|reserve|insert|__emplace)\b|__hash_table|__tree|__add_back_capacity|absl::container_internal|MakeGarbageCollected|std::__Cr::(vector|deque|basic_string|unique_ptr|shared_ptr|function|__function)/;
+    /^(blink::)?(StringImpl::(Create|Allocate)|StringBuffer|StringBuilder|CharacterBuffer|VectorBuffer)|^(blink::)?Vector<.*>::(expand|reserve|Grow|Reallocate|append)|^(blink::)?HashTable<.*>::(Rehash|expand)|^(blink::)?VectorBufferBase<|::(ReserveCapacity|AllocateBuffer|__add_back_capacity)\b|^std::__Cr::(vector|deque|basic_string|__hash_table|__tree)|^absl::container_internal|^blink::MakeGarbageCollected/;
   const isPlumbing = (frame) => !frame || PLUMBING.some((pattern) => pattern.test(frame));
   const pick = (stack, skipGeneric) => {
     for (const frame of stack) {
@@ -341,56 +427,53 @@ try {
     stack: sample.stack.map(symbolize),
   }));
   const sampled = samples.reduce((sum, sample) => sum + sample.bytes, 0);
+  // An address with no symbol still reads as a call site once it is printed, so say how
+  // much of the total is one.
+  const unresolved = samples
+    .filter((sample) => UNRESOLVED.test(pick(sample.stack, false)))
+    .reduce((sum, sample) => sum + sample.bytes, 0);
 
-  const totals = {};
-  let footprint = 0;
-  let rendererPid = null;
+  // Only a renderer has a PartitionAlloc tree, and the profile came from the renderer the
+  // page is in — which is not the browser's largest process, and not necessarily the first
+  // renderer in the trace either, since Composer runs more than one.
+  const perPid = new Map();
   for (const event of events) {
     const dumps = event.args?.dumps;
     if (event.ph !== 'v' || !dumps) {
       continue;
     }
+    const entry = perPid.get(event.pid) ?? { allocators: {}, footprint: 0 };
     const raw = dumps.process_totals?.private_footprint_bytes;
-    if (raw && parseInt(raw, 16) > footprint) {
-      footprint = parseInt(raw, 16);
-      rendererPid = event.pid;
+    if (raw) {
+      entry.footprint = Math.max(entry.footprint, parseInt(raw, 16));
     }
+    for (const [name, node] of Object.entries(dumps.allocators ?? {})) {
+      const size = node.attrs?.size ?? node.attrs?.effective_size;
+      if (size) {
+        entry.allocators[name] = parseInt(size.value, 16);
+      }
+    }
+    perPid.set(event.pid, entry);
   }
-  for (const event of events) {
-    if (event.ph !== 'v' || event.pid !== rendererPid) {
-      continue;
-    }
-    for (const [name, node] of Object.entries(event.args?.dumps?.allocators ?? {})) {
-      const raw = node.attrs?.size ?? node.attrs?.effective_size;
-      if (raw) {
-        totals[name] = parseInt(raw.value, 16);
-      }
-    }
+  const renderers = [...perPid].filter(([, entry]) => entry.allocators.partition_alloc != null);
+  // Matched on the allocator total the profile itself explains: the sampled bytes are a
+  // subset of this renderer's live objects, so the right process is the one large enough
+  // to hold them, and among several that is reliably the largest.
+  const [rendererPid, renderer] = renderers.sort((a, b) => b[1].footprint - a[1].footprint)[0] ?? [null, null];
+  if (!renderer) {
+    throw new Error('the memory dump contains no renderer process');
   }
-  // The GPU process can out-footprint the renderer, so pick the one the sample came from:
-  // the only process with a PartitionAlloc tree is a renderer.
-  if (!totals.partition_alloc) {
-    for (const event of events) {
-      if (event.ph !== 'v' || !event.args?.dumps?.allocators?.partition_alloc) {
-        continue;
-      }
-      rendererPid = event.pid;
-      for (const [name, node] of Object.entries(event.args.dumps.allocators)) {
-        const raw = node.attrs?.size ?? node.attrs?.effective_size;
-        if (raw) {
-          totals[name] = parseInt(raw.value, 16);
-        }
-      }
-      footprint = 0;
-      for (const other of events) {
-        const raw = other.pid === rendererPid ? other.args?.dumps?.process_totals?.private_footprint_bytes : null;
-        if (raw) {
-          footprint = Math.max(footprint, parseInt(raw, 16));
-        }
-      }
-      break;
-    }
+  if (renderers.length > 1) {
+    console.error(
+      `  ${renderers.length} renderers in the dump; reading pid ${rendererPid} (${MB(renderer.footprint)} MB), ` +
+        `others ${renderers
+          .filter(([pid]) => pid !== rendererPid)
+          .map(([pid, entry]) => `${pid}@${MB(entry.footprint)}MB`)
+          .join(', ')}`,
+    );
   }
+  const totals = renderer.allocators;
+  const footprint = renderer.footprint;
 
   const live = (totals['malloc/allocated_objects'] ?? 0) + (totals['partition_alloc/allocated_objects'] ?? 0);
   console.log(`\nrenderer pid ${rendererPid}, private footprint ${MB(footprint)} MB`);
@@ -411,6 +494,10 @@ try {
     `  ${'sampled by the native heap profiler'.padEnd(48)} ${String(MB(sampled)).padStart(9)} MB` +
       (live ? ` (${((sampled / live) * 100).toFixed(0)}% of live allocated objects)` : ''),
   );
+  console.log(
+    `  ${'  of which no symbol could be resolved'.padEnd(48)} ${String(MB(unresolved)).padStart(9)} MB` +
+      (sampled ? ` (${((unresolved / sampled) * 100).toFixed(1)}%)` : ''),
+  );
 
   const report = (label, skipGeneric) => {
     const by = new Map();
@@ -426,38 +513,50 @@ try {
   report('bytes by allocating call site', false);
   report('bytes by first caller outside a container or string', true);
 
-  // First match wins, so a `TextEncoder` call inside an IndexedDB callback is charged to
-  // the read that provoked it rather than to encoding in general.
+  // A sample is charged to the first category in this list any of its frames matches, so
+  // the order is the priority and an overlap resolves upwards, not by stack position.
   const CATEGORIES = [
     [
-      'IndexedDB reads, and what their callbacks do',
-      /IDBDatabase_Get|IDBValueDataView|IDBRecordDataView|IDBFactory|blink::IDBKey|IDBTransaction|IDBRequest/,
+      'IndexedDB, including what its callbacks do',
+      /blink::mojom::(blink::)?IDB|blink::IDB|IDBDatabase_|IDBTransaction|IDBRequest/,
     ],
-    ['performance.measure(…, {detail}) clones', /PerformanceMeasure::Create|UserTiming::Measure|Performance::Measure/],
+    [
+      'performance.measure(…, {detail}) clones',
+      /blink::PerformanceMeasure::|blink::UserTiming::|blink::Performance::Measure/,
+    ],
     [
       'script source: fetch, decode, retain',
-      /ScriptDecoder|TextResource::DecodedText|ScriptResource::GetSourceText|ModuleScript::ResolveModuleSpecifier|ModuleRecordResolver|CachedMetadata/,
+      /blink::ScriptDecoder|blink::TextResource(Decoder)?::|blink::ScriptResource::|blink::ModuleScript::|blink::ModuleRecordResolver|blink::CachedMetadata/,
     ],
-    ['WebAssembly compile and code', /wasm|Wasm/],
+    [
+      'WebAssembly compile and code',
+      /v8::internal::wasm::|WasmStreaming|ForWasmStreaming|v8::internal::trap_handler::/,
+    ],
     [
       'font shaping tables',
-      /HarfBuzz|hb_shape|^OT::|^AAT::|SkTypeface|SkScalerContext|FontPlatformData|SimpleFontData/,
+      /HarfBuzz|hb_shape|^OT::|^AAT::|SkTypeface|SkScalerContext|blink::(FontPlatformData|SimpleFontData|ShapeResult)/,
     ],
     [
       'structured clone elsewhere (postMessage, storage)',
-      /V8ScriptValueSerializer|SerializedScriptValue|ValueSerializer|MessagePort/,
+      /V8ScriptValueSerializer|SerializedScriptValue|v8::internal::ValueSerializer|blink::MessagePort/,
     ],
     [
       'V8 heap pages and isolate tables',
-      /MemoryAllocator::Allocate|NormalPage::|TracedHandles|StringTable::|ThreadIsolation|Isolate::Init|IsolateHolder/,
+      /v8::internal::(MemoryAllocator|NormalPage|TracedHandles|StringTable|ThreadIsolation|Isolate::Init)|gin::IsolateHolder/,
     ],
     [
       'network and streams',
-      /ResourceLoader|ResponseBodyLoader|BytesConsumer|FetchDataLoader|TeeHelper|URLLoader|FetchHeaderList/,
+      /blink::(ResourceLoader|ResponseBodyLoader|ResourceFetcher|BytesConsumer|DataPipeBytesConsumer|FetchDataLoader|FetchHeaderList)|URLLoader/,
     ],
-    ['mojo plumbing', /mojo::|ipcz::|MojoCreate/],
-    ['DOM, CSS, paint', /Element|CSSStyle|StyleResolver|LayoutObject|PaintLayer|PendingLayer|Document::|PathBuilder/],
-    ['Blink strings not covered above', /StringImpl|AtomicString|SmallStringCache|StringCache|ToBlinkString|TextCodec/],
+    ['mojo plumbing', /^mojo::|^ipcz::|^MojoCreate/],
+    [
+      'DOM, CSS, paint',
+      /blink::(Element|CSSStyle|StyleResolver|LayoutObject|PaintLayer|PendingLayer|Document|PathBuilder)/,
+    ],
+    [
+      'Blink strings not covered above',
+      /blink::(StringImpl|AtomicString|StringCache|String)|SmallStringCache|ToBlinkString|TextCodec/,
+    ],
   ];
   const buckets = new Map(CATEGORIES.map(([name]) => [name, 0]));
   let uncategorised = 0;
@@ -479,12 +578,30 @@ try {
   }
 
   if (jsonOut) {
-    writeFileSync(
-      jsonOut,
-      JSON.stringify({ footprint, rate, sampled, samples, settleS, totals, url, version: version.Browser }),
-    );
-    console.log(`\nwrote ${jsonOut}`);
+    try {
+      writeFileSync(
+        jsonOut,
+        JSON.stringify({
+          footprint,
+          modules,
+          rate,
+          rendererPid,
+          sampled,
+          samples,
+          settleS,
+          totals,
+          unresolved,
+          url,
+          version: version.Browser,
+        }),
+      );
+      console.log(`\nwrote ${jsonOut}`);
+    } catch (error) {
+      // A failed write must not discard a measurement that took minutes to take.
+      console.error(`could not write ${jsonOut}: ${error.message}`);
+    }
   }
+  cdp.close();
 } finally {
   shutdown();
 }

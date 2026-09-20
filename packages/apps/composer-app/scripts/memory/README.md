@@ -61,10 +61,11 @@ Six rules make the arithmetic valid:
   the app total closes to a few percent while the tab itself closes to under one.
 - **Loaded, a few percent stays unattributed.** macOS puts every anonymous
   allocation under one VM tag, so `vmmap` cannot decompose it further.
-  memory-infra does emit `process_mmaps` on macOS, but only as a module map —
-  address, size and mapped file per region, with none of the `byte_stats` that
-  make it a decomposition on Linux. It is useful for turning a stack address
-  into module+offset, not for placing bytes.
+  memory-infra does emit `process_mmaps` on macOS, contrary to what this file
+  used to say, but only as a module map — address, size and mapped file per
+  region, with none of the `byte_stats` that make it a decomposition on Linux.
+  No script here reads it: `native-heap.mjs` gets the module bases it needs from
+  the sampling profile instead.
 - **Allocation is sampled, not tracked.** `--by-code` uses
   `HeapProfiler.startSampling`, which reports allocation volume per stack. The
   retained-bytes equivalent needs `startTrackingHeapObjects({trackAllocations})`,
@@ -106,8 +107,8 @@ alongside any number:
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ledger.mjs`             | Private footprint per process, the allocator breakdown with ownership views removed, per-realm heap and wasm linear memory per module, and a document census, at named checkpoints through a journey |
 | `ledger.mjs --by-code`   | JS allocation per workspace package, from V8's sampling heap profiler resolved through the build's sourcemaps; needs `--dist`                                                                        |
-| `native-heap.mjs`        | The C++ call sites behind `malloc` and `partition_alloc`, with byte totals and a rollup by mechanism — the naming that memory-infra's `<unspecified>` cannot give; needs `fetch-electron.sh` first   |
-| `fetch-electron.sh`      | Downloads the Electron build and breakpad symbols `native-heap.mjs` symbolizes against, and checks their UUIDs match                                                                                 |
+| `native-heap.mjs`        | The C++ call sites behind `malloc` and `partition_alloc` together, with byte totals and a rollup by mechanism — the naming that memory-infra's `<unspecified>` cannot give. macOS only; run `fetch-electron.sh` first |
+| `fetch-electron.sh`      | Downloads the Electron build and breakpad symbols `native-heap.mjs` symbolizes against and checks their UUIDs match: ~250 MB of downloads, ~1.5 GB on disk                                           |
 | `cost-fixtures.mjs`      | Generates the single-variable pages behind the per-unit cost table in `.agents/projects/memory-usage/ALLOCATION.md`; measure each pair with `ledger.mjs --detached --ready none`                     |
 | `heap-attribution.mjs`   | What a realm's heap holds by constructor, and who retains its ArrayBuffer backing stores — the naming a heap snapshot can give that memory-infra cannot                                              |
 | `measure.mjs`            | Heap per execution context (page, shared and dedicated workers) after a forced GC; optional snapshot capture                                                                                         |
@@ -161,10 +162,10 @@ node scripts/memory/soak.mjs http://localhost:4173 --minutes 10 --interval 30
 # What loads at boot, attributed per package.
 node scripts/memory/boot-census.mjs http://localhost:4173 out/composer --settle 150
 
-# Name the C++ call sites behind malloc and partition_alloc.
+# Name the C++ call sites behind malloc and partition_alloc (macOS only).
 scripts/memory/fetch-electron.sh
 node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
-  --symbols "$(find ./tmp/electron -name 'Electron Framework.sym')"
+  --symbols "$(find ./tmp/electron -name 'Electron Framework.sym' -print -quit)"
 
 # Where the non-JS memory is, and what grew between two points.
 node scripts/memory/memory-dump.mjs http://localhost:4173 --wait1 60 --wait2 480
