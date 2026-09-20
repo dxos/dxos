@@ -1372,7 +1372,8 @@ export const SceneView = ({
       onPointerDown={onBackgroundPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+      onPointerCancel={cancelDrag}
       onPointerLeave={() => updateHover(undefined)}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
