@@ -26,7 +26,10 @@ const needles = arg('--match', 'zod,modelcontextprotocol').split(',');
 const out = arg('--out', 'zod-residency.json');
 const KB = (b) => +(b / 1024).toFixed(1);
 
-const browser = await chromium.launch({ headless: true });
+// The cloud sandbox ships a chromium that need not match the repo's pinned Playwright build;
+// PW_CHROMIUM_PATH points at it there and is unset (so Playwright resolves its own) everywhere else.
+const executablePath = process.env.PW_CHROMIUM_PATH || undefined;
+const browser = await chromium.launch({ headless: true, executablePath });
 const context = await browser.newContext();
 const page = await context.newPage();
 const cdp = await page.context().newCDPSession(page);
