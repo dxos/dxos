@@ -268,13 +268,6 @@ test QA-1: Create a table bound to a schema and add a row
   actors: agent
   covers: [F-1.1, F-1.2, F-2.2, T-1, T-2]
   status: blocked
-  automated:
-    - composer-e2e:tables.spec.ts#Table tests › create
-    - composer-e2e:tables.spec.ts#Table tests › can add rows
-    - composer-e2e:tables.spec.ts#Table tests › can delete rows
-    - composer-e2e:tables.spec.ts#Table tests › can add columns
-    - composer-e2e:tables.spec.ts#Table tests › can delete columns
-    - composer-e2e:tables.spec.ts#Table tests › can rename columns
   given:
     - an identity exists
     - space: a space is open, with a mutable schema type registered (e.g. Task)

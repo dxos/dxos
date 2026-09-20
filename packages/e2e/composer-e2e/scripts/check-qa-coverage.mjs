@@ -69,9 +69,13 @@ const readSpec = (file) => {
     while (trail.length > 0 && indent <= trail[trail.length - 1].indent) {
       trail.pop();
     }
-    const describe = /^\s*test\.describe(?:\.skip)?\(\s*(['"])(.*?)\1/.exec(line);
+    // Skipping is INHERITED: `test.describe.skip` disables every test under it, and a flow that
+    // counted those as coverage would read as automated while nothing ran — the exact rot this
+    // check exists to catch. `tables.spec.ts` and `inbox.spec.ts` are both whole-suite skips.
+    const inheritedSkip = trail.some((entry) => entry.skipped);
+    const describe = /^\s*test\.describe(\.skip)?\(\s*(['"])(.*?)\2/.exec(line);
     if (describe) {
-      trail.push({ indent, title: describe[2] });
+      trail.push({ indent, title: describe[3], skipped: describe[1] !== undefined || inheritedSkip });
       continue;
     }
     const test = /^\s*test(\.skip)?\(\s*(['"])(.*?)\2\s*,(.*)$/.exec(line);
@@ -82,7 +86,7 @@ const readSpec = (file) => {
         title: [...trail.map((entry) => entry.title), test[3]].join(' › '),
         tags,
         // A disabled test still declares its flow, but must not be counted as covering it.
-        skipped: test[1] !== undefined,
+        skipped: test[1] !== undefined || inheritedSkip,
       });
     }
   }
@@ -155,8 +159,14 @@ const main = () => {
     for (const { flow, entry } of declared) {
       byFlow.set(flow, [...(byFlow.get(flow) ?? []), entry]);
       const owner = tests.find(({ file, title }) => entry === `${PACKAGE}:${file}#${title}`);
+      // The tag has to name THIS flow, not merely exist: a test retagged from `@QA-1` to `@QA-2`
+      // would otherwise leave QA-1's stale entry matching on file and title alone, so QA-1 would go
+      // on claiming a test that no longer declares it.
+      const expected = `@${prefix ? `${prefix}:` : ''}${flow}`;
       if (!owner) {
         errors.push(`${relativePath}: ${flow} automates "${entry}", which no test in this package declares.`);
+      } else if (!owner.tags.includes(expected)) {
+        errors.push(`${relativePath}: ${flow} automates "${entry}", but that test does not declare ${expected}.`);
       } else if (owner.skipped) {
         // The rot this whole check exists for: the flow reads as automated while nothing runs it.
         errors.push(

@@ -20,7 +20,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -82,6 +82,9 @@ const main = () => {
   }
 
   const batch = path.join(REPORT_DIR, 'posthog-events.ndjson');
+  // `--report` can name a file outside the default location, where this directory does not exist
+  // yet; a script that promises never to fail must not die of ENOENT writing its own batch.
+  mkdirSync(REPORT_DIR, { recursive: true });
   writeFileSync(batch, toBatch(events));
   const counts = events.reduce((totals, event) => {
     totals[event.properties.status] = (totals[event.properties.status] ?? 0) + 1;

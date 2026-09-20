@@ -27,9 +27,16 @@ test QA-1: Spaces and documents
 ```
 
 `scripts/check-qa-coverage.mjs` fails the build when either side names something the other does
-not have, and when an `automated:` entry points at a `test.skip`. The duplication is the point: a
-one-sided link rots silently — rename a test and the suite stays green while the flow it claimed to
-cover stops being exercised.
+not have, and when the tag does not name that flow. The duplication is the point: a one-sided link
+rots silently — rename a test and the suite stays green while the flow it claimed to cover stops
+being exercised.
+
+**A skipped test carries its tag but is not coverage.** `automated:` lists only tests that actually
+run, so a `test.skip` — or anything under a `test.describe.skip`, since skipping is inherited —
+must be left out of it, and the checker rejects an entry naming one. The tag stays so the flow is
+still findable from the spec; the `automated:` entry goes back when the test does. `tables.spec.ts`
+and `inbox.spec.ts` are whole-suite skips today, so `table:QA-1` and `inbox:QA-1` have no automated
+coverage at all — which is the true state, and the point of not letting a list claim otherwise.
 
 **Write the flow first.** If there is no `QA-n` for what you are about to test, add one to the
 owning `.mdl` (`APP.mdl` for a journey crossing plugins, the plugin's `PLUGIN.mdl` otherwise). It

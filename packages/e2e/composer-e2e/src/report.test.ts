@@ -170,6 +170,11 @@ describe('toEvents', () => {
     // batch has to collapse onto the rows it already sent rather than doubling the counts.
     expect(second[0].dedup).toEqual(first[0].dedup);
     expect(second[0].timestamp).toEqual(first[0].timestamp);
+
+    // A DIFFERENT run must not: two nightlies days apart routinely sit on one commit, so if the
+    // run did not reach the key they would share a uuid and the second night would be dropped.
+    const later = toEvents(report(suites), { packageName: 'composer-e2e', startedAt: '2026-09-21T04:00:00.000Z' });
+    expect(later[0].dedup).not.toEqual(first[0].dedup);
   });
 
   test('an explicit start time wins over the report stats', ({ expect }) => {

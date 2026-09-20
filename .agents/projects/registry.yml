@@ -11,11 +11,11 @@ projects:
     user: dmytro
     host: cloud
     created: 2026-09-20
-    summary: 'Composer browser e2e extracted to `packages/e2e/composer-e2e`; every spec bound two-sided to an `.mdl` `test QA-n` via a new `automated:` field plus Playwright `@QA-n` tags and a coverage check; authoring rules in BEST-PRACTICES.md; results published from main as `ci.e2e-test` and charted in PostHog (stacked outcomes per run + currently-failing table).'
+    summary: 'Composer browser e2e extracted to `packages/e2e/composer-e2e`; every ACTIVE spec bound two-sided to an `.mdl` `test QA-n` via a new `automated:` field plus Playwright `@QA-n` tags and a coverage check (a skipped test keeps its tag but is not coverage); authoring rules in BEST-PRACTICES.md; results published from main as `ci.e2e-test` and charted in PostHog (stacked outcomes per run + currently-failing table).'
     tasks: .agents/projects/composer-e2e/TASKS.md
     design: .agents/projects/composer-e2e/DESIGN.md
     prs: [13247]
-    resume: 'PR #13247 OPEN (2026-09-20, branch claude/composer-playwright-tests-we38ii): package extraction, 38 tests bound two-sided to mdl QA flows (+QA-5..QA-9), BEST-PRACTICES.md, ci.e2e-test published from main, PostHog dashboard 963444. NEXT: drive CI green, then the TASKS.md follow-ups (restore inbox.spec by seeding rather than syncing, fix or attribute the tables.spec skip, attribute the chromium-only skips).'
+    resume: 'PR #13247 OPEN (2026-09-20, branch claude/composer-playwright-tests-we38ii): package extraction, 38 tests bound two-sided to mdl QA flows (+QA-5..QA-9), BEST-PRACTICES.md, ci.e2e-test published from main, PostHog dashboard 963444. CodeRabbit round 1 applied (inherited describe.skip in the coverage checker, tag verification on `automated:` entries, publish gated to the composer shard, mkdir guard) — `table:QA-1` and `inbox:QA-1` lost their automated claims, both suites being whole-suite skips. NEXT: drive CI green, then the TASKS.md follow-ups (restore inbox.spec by seeding rather than syncing, fix or attribute the tables.spec skip, attribute the chromium-only skips).'
   - name: plugin-markdown
     status: active
     user: burdon

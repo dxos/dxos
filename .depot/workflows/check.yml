@@ -592,8 +592,12 @@ jobs:
       #
       # `always()` because the report of a RED run is the entire point — gating on success would
       # publish only the runs where nothing failed, and the failing-tests table would never fill.
+      #
+      # `composer` shard only. The `rest` cells write their own suites' reports to the same
+      # directory, and publishing those would mint permanent property definitions and rows for
+      # unrelated packages in Composer's PRODUCT analytics project, which nothing charts.
       - name: Publish results
-        if: ${{ always() && github.ref == 'refs/heads/main' }}
+        if: ${{ always() && github.ref == 'refs/heads/main' && matrix.shard == 'composer' }}
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: node packages/e2e/composer-e2e/scripts/publish-results.mjs

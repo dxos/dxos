@@ -151,7 +151,13 @@ export const toEvents = (report: JsonReport, options: ReportOptions): TestEvent[
       events.push({
         event: EVENT_NAME,
         timestamp,
-        dedup: [options.packageName, spec.file ?? '', title, browser].join('|'),
+        // The run's timestamp is in the key as defence in depth. `ci-event.mjs` seeds its uuid
+        // from (commit, dedup) and PostHog's dedup tuple includes the timestamp, so two nightlies
+        // on one commit would stay distinct without it — but that rests entirely on this event
+        // being dated by the RUN, and if that ever changed the two nights would silently collapse
+        // into one point. Re-publishing a run is still idempotent: the timestamp is the report's
+        // own `stats.startTime`, not the moment of publishing.
+        dedup: [options.packageName, spec.file ?? '', title, browser, timestamp].join('|'),
         properties: {
           package: options.packageName,
           file: spec.file ?? '',

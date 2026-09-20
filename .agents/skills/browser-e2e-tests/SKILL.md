@@ -40,6 +40,10 @@ Write the flow first if none exists — `APP.mdl` for a journey crossing plugins
 `PLUGIN.mdl` otherwise. A prefixed tag (`@review:QA-1`) binds to that plugin's spec; register the
 prefix in `SPEC_FILES` in the checker.
 
+A **skipped** test still carries its tag but stays out of `automated:` — skipping is inherited from
+`test.describe.skip`, and a flow listing a test that never runs reads as automated while nothing
+exercises it.
+
 ## Golden rule: target by `data-testid`, never by label, text, or role-name
 
 Labels and visible text come from `translations.ts` and change with copy/i18n; role-names are
