@@ -30,7 +30,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-jmap": "workspace:*",
-    "@dxos/plugin-stack": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/test-utils": "workspace:*"

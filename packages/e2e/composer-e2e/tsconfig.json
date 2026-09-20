@@ -38,9 +38,6 @@
       "path": "../../plugins/plugin-jmap"
     },
     {
-      "path": "../../plugins/plugin-stack"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

@@ -2689,9 +2689,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/shell':
-        specifier: workspace:*
-        version: link:../../sdk/shell
       '@dxos/solid-ui-geo':
         specifier: workspace:*
         version: link:../../ui/solid-ui-geo
@@ -7321,9 +7318,6 @@ importers:
       '@dxos/plugin-jmap':
         specifier: workspace:*
         version: link:../../plugins/plugin-jmap
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-stack
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
