@@ -16,30 +16,30 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { Client } from './client.ts';
 
 describe('Client.halo.deleteIdentity', () => {
-  // Persistent storage, so a second client over the same root proves the data is really gone
-  // rather than merely absent from a fresh in-memory store.
+  // Persistent storage, so "gone" means really wiped rather than merely absent from a fresh
+  // in-memory store.
   let dataRoot: string;
 
-  const config = () => new Config({ runtime: { client: { storage: { persistent: true, dataRoot } } } });
-
   const openClient = async () => {
-    const client = new Client({ config: config() });
+    const client = new Client({
+      config: new Config({ runtime: { client: { storage: { persistent: true, dataRoot } } } }),
+    });
     onTestFinished(() => client.destroy());
     await client.initialize();
     return client;
   };
 
-  /** A client with an identity, a space and one object in it. */
-  const createPopulatedClient = async (displayName = 'first') => {
-    const client = await openClient();
-    const identity = await client.halo.createIdentity(buf.create(ProfileDocumentSchema, { displayName }));
-    await client.addTypes([TestSchema.Expando]);
+  const createIdentity = (client: Client, displayName: string) =>
+    client.halo.createIdentity(buf.create(ProfileDocumentSchema, { displayName }));
 
+  /** Adds a space holding one object. */
+  const populate = async (client: Client, name: string) => {
+    await client.addTypes([TestSchema.Expando]);
     const space = await client.spaces.create();
     await space.waitUntilReady();
-    space.db.add(Obj.make(TestSchema.Expando, { name: 'doomed' }));
+    space.db.add(Obj.make(TestSchema.Expando, { name }));
     await space.db.flush();
-    return { client, identityKey: requirePublicKey(identity.identityKey).toHex(), spaceId: space.id };
+    return space;
   };
 
   beforeEach(() => {
@@ -50,60 +50,56 @@ describe('Client.halo.deleteIdentity', () => {
     rmSync(dataRoot, { recursive: true, force: true });
   });
 
-  test('removes the identity and the spaces it owned', { timeout: 30_000 }, async () => {
-    const { client } = await createPopulatedClient();
+  test('removes the identity and its spaces, leaving the client open', { timeout: 30_000 }, async () => {
+    const client = await openClient();
+    await createIdentity(client, 'first');
+    await populate(client, 'doomed');
     expect(client.halo.identity.get()).to.exist;
     expect(client.spaces.get()).to.have.length.greaterThan(0);
 
     await client.halo.deleteIdentity();
 
     expect(client.halo.identity.get()).to.be.null;
-    // Wiping storage leaves the client closed, exactly as `client.reset()` does.
-    expect(client.resetting).to.be.true;
+    // The whole point: no teardown, so the client is still usable.
+    expect(client.initialized).to.be.true;
+    expect(client.resetting).to.be.false;
   });
 
-  test('a fresh client over the same storage sees no identity, spaces or objects', { timeout: 30_000 }, async () => {
-    const { client } = await createPopulatedClient();
+  test('a new identity can be created immediately afterwards', { timeout: 30_000 }, async () => {
+    const client = await openClient();
+    const first = await createIdentity(client, 'first');
+    const { id: deletedSpaceId } = await populate(client, 'doomed');
+
     await client.halo.deleteIdentity();
+
+    // No reopen, no second client: straight onto the same live instance.
+    const second = await createIdentity(client, 'second');
+
+    // A genuinely new identity, not the deleted one reloaded.
+    expect(requirePublicKey(second.identityKey).toHex()).to.not.equal(requirePublicKey(first.identityKey).toHex());
+    expect(second.profile?.displayName).to.equal('second');
+    expect(client.halo.identity.get()?.profile?.displayName).to.equal('second');
+
+    // It owns nothing the deleted identity did.
+    expect(client.spaces.get().map((space) => space.id)).to.not.contain(deletedSpaceId);
+
+    // And it works: creating a space exercises the device credential chain it had to mint.
+    const space = await populate(client, 'reborn');
+    expect(space.id).to.not.equal(deletedSpaceId);
+    const names = (await space.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name);
+    expect(names).to.deep.equal(['reborn']);
+  });
+
+  test('the deleted identity does not come back on a fresh client', { timeout: 30_000 }, async () => {
+    const client = await openClient();
+    await createIdentity(client, 'first');
+    await populate(client, 'doomed');
+    await client.halo.deleteIdentity();
+    await client.destroy();
 
     const reopened = await openClient();
     expect(reopened.halo.identity.get()).to.be.null;
     expect(reopened.spaces.get()).to.have.length(0);
-
-    // The deleted identity's data is gone, so a new one starts empty rather than inheriting it.
-    await reopened.halo.createIdentity();
-    await reopened.addTypes([TestSchema.Expando]);
-    const space = await reopened.spaces.create();
-    await space.waitUntilReady();
-    const objects = await space.db.query(Filter.type(TestSchema.Expando)).run();
-    expect(objects).to.have.length(0);
-  });
-
-  test('a new identity created after deletion is distinct and fully usable', { timeout: 30_000 }, async () => {
-    const { client, identityKey: deletedKey, spaceId: deletedSpaceId } = await createPopulatedClient('first');
-    await client.halo.deleteIdentity();
-
-    const reopened = await openClient();
-    const identity = await reopened.halo.createIdentity(buf.create(ProfileDocumentSchema, { displayName: 'second' }));
-
-    // A genuinely new identity, not the deleted one reloaded from the storage that survived.
-    expect(requirePublicKey(identity.identityKey).toHex()).to.not.equal(deletedKey);
-    expect(identity.profile?.displayName).to.equal('second');
-    expect(reopened.halo.identity.get()?.profile?.displayName).to.equal('second');
-
-    // The new identity owns nothing the deleted one did.
-    expect(reopened.spaces.get().map((space) => space.id)).to.not.contain(deletedSpaceId);
-
-    // Round-trips its own data, which the RPC surface alone would not prove.
-    await reopened.addTypes([TestSchema.Expando]);
-    const space = await reopened.spaces.create();
-    await space.waitUntilReady();
-    expect(space.id).to.not.equal(deletedSpaceId);
-    space.db.add(Obj.make(TestSchema.Expando, { name: 'reborn' }));
-    await space.db.flush();
-
-    const names = (await space.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name);
-    expect(names).to.deep.equal(['reborn']);
   });
 
   test('is a no-op when there is no identity', { timeout: 30_000 }, async () => {
@@ -112,5 +108,6 @@ describe('Client.halo.deleteIdentity', () => {
     await client.halo.deleteIdentity();
 
     expect(client.halo.identity.get()).to.be.null;
+    expect(client.initialized).to.be.true;
   });
 });

@@ -756,10 +756,13 @@ export class DataSpaceManager extends Resource {
    */
   @synchronized
   async deleteAllSpaces(ctx: Context): Promise<void> {
-    const spaceKeys = [...this._spaces.keys()];
-    log('deleting all spaces', { count: spaceKeys.length });
-    for (const spaceKey of spaceKeys) {
-      await this._tombstoneSpace(ctx, spaceKey);
+    const spaces = [...this._spaces.values()].map((space) => ({ key: space.key, id: space.id }));
+    log('deleting all spaces', { count: spaces.length });
+    for (const { key, id } of spaces) {
+      await this._tombstoneSpace(ctx, key);
+      // Drops the host's in-memory state for the space as well as the tombstone, since the stack
+      // stays open afterwards and would otherwise keep serving a space that no longer exists.
+      await this._echoHost.removeSpace(id);
     }
   }
 

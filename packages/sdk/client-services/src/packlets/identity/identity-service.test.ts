@@ -175,6 +175,8 @@ const createIdentityService = (serviceContext: ServiceContext) => {
     serviceContext.recoveryManager,
     serviceContext.keyring,
     serviceContext.dataSpaceManager ?? failedInvariant(),
+    // These tests never delete, so the wipe is never reached.
+    () => Promise.resolve(),
     (options) => serviceContext.createIdentity(options),
   );
 };

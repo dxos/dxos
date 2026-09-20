@@ -14,6 +14,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 
+import { wipeSqliteStorage } from '../services/sqlite-storage.ts';
 import { type ServiceContext, createServiceContext } from '../testing/index.ts';
 import { IdentityServiceImpl } from './identity-service.ts';
 
@@ -39,6 +40,7 @@ describe('IdentityService.deleteIdentity', () => {
       serviceContext.recoveryManager,
       serviceContext.keyring,
       serviceContext.dataSpaceManager ?? failedInvariant(),
+      () => serviceContext.runSql(wipeSqliteStorage.pipe(Effect.orDie)),
       (options) => serviceContext.createIdentity(options),
     );
   });
@@ -165,9 +167,8 @@ describe('IdentityService.deleteIdentity', () => {
     expect(written.automerge_chunks).to.be.greaterThan(0);
     expect(written.keyring).to.be.greaterThan(0);
 
+    // No reset: the wipe runs inside the live stack, which stays open.
     await deleteIdentity();
-    // Storage is the host's, not the identity service's: the client runs the reset chain next.
-    await serviceContext.reset();
 
     const tables = Object.values(STORAGE_TABLES).flat();
     expect(await countRows(tables)).to.deep.equal(allZero(tables));

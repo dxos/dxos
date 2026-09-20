@@ -105,13 +105,4 @@ describe('HaloProxy', () => {
       expect(toBinary(RecoverIdentityRequestSchema, request).length).to.be.greaterThan(0);
     });
   });
-
-  describe('deleteIdentity', () => {
-    test('refuses to run without the storage teardown', async () => {
-      // The stub proxy throws on any unexpected rpc tag, so this also proves the guard runs before
-      // the identity is destroyed rather than after.
-      const { halo } = recordRecoverIdentity();
-      await expect(halo.deleteIdentity()).rejects.toThrowError('no storage teardown');
-    });
-  });
 });
