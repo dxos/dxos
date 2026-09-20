@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -381,6 +382,45 @@ describe('DatabaseImpl', () => {
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
       });
 
+      test('a body-less linked document yields an unavailable core that queries skip', async () => {
+        const object = Obj.make(TestSchema.Expando, { content: 'body' });
+        // The linked document replicates empty: the peer synced the space directory ahead of the
+        // object payload, which is what a second peer sees here.
+        const db = await createClientDbInSpaceWithObject(object, (handles) => {
+          handles.linkedDocHandles[0]!.change((newDoc: any) => {
+            newDoc.objects = {};
+          });
+        });
+
+        // Bounded: the load legitimately never settles while the body is missing, and the point of
+        // the test is what the working set holds meanwhile.
+        await db.loadObjectCoreById(object.id, { timeout: 1_000 }).catch(() => undefined);
+        await waitForCondition({
+          condition: () => db.getObjectCoreById(object.id, { load: false }) != null,
+          timeout: 5_000,
+        });
+
+        // A relation traversal scans every loaded core, and a core without a body crashed it with
+        // `Cannot read properties of undefined (reading 'system')`.
+        expect(await db.query(Query.select(Filter.everything()).sourceOf()).run()).to.have.length(0);
+        expect(await db.query(Filter.everything()).run()).to.have.length(0);
+
+        const core = db.getObjectCoreById(object.id, { load: false });
+        invariant(core, 'the core exists so the object keeps one identity across the body arriving');
+        const docHandle = core.docHandle;
+        invariant(docHandle);
+        expect(core.isBodyAvailable).to.be.false;
+        expect(db.getObjectById(object.id)).to.be.undefined;
+
+        // The body lands.
+        addObjectToDoc(docHandle, { id: object.id, content: 'body' });
+        await db.flush();
+
+        expect(db.getObjectCoreById(object.id), 'the same core carries the body').to.eq(core);
+        expect(core.isBodyAvailable).to.be.true;
+        expect((await db.query(Filter.id(object.id)).first({ timeout: 1_000 })).content).to.eq('body');
+      });
+
       test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {
         const testBuilder = new EchoTestBuilder();
         await openAndClose(testBuilder);
@@ -391,6 +431,39 @@ describe('DatabaseImpl', () => {
         const loaded = await db.loadObjectCoreById(object.id);
         expect(loaded?.id).to.eq(object.id);
       });
+    });
+
+    test('database reopens after close with inline objects in the space root', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      // Inline objects live in the space root doc, so re-opening re-creates them from the directory.
+      const { id } = addObjectToDoc(db.getSpaceRootDocHandle(), { id: EntityId.random() });
+      await db.flush();
+      // Held across the reopen so the core is not collected — the registry holds cores weakly.
+      const core = await db.loadObjectCoreById(id);
+      expect(core?.id).to.eq(id);
+
+      await db.close();
+      await db.open();
+      expect(db.getObjectById(id)).to.not.be.undefined;
+    });
+
+    test('a synchronous core lookup after close resolves to undefined rather than throwing', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      const object = Obj.make(TestSchema.Expando, { name: 'late-caller' });
+      db.add(object);
+      await db.flush();
+      const core = getObjectCore(object);
+
+      await db.close();
+
+      // Index-query hydration outlives the close and recomputes its result synchronously through
+      // `isDeleted`, where a throw would surface as an unhandled rejection nothing can catch.
+      expect(db.getObjectCoreById(object.id)).to.be.undefined;
+      expect(() => core.isDeleted()).to.not.throw();
     });
 
     // TODO(dmaretskyi): Test for conflict resolution.
