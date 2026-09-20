@@ -24,14 +24,14 @@ import { type ElementId, type Link, type Node, type Scene } from './types.ts';
 /** Screen px below which a portal is a solid tile; above `PREVIEW_PX` it mounts the child scene live. */
 export const DOT_PX = 40;
 export const PREVIEW_PX = 260;
-/** Root plus this many live nested levels (decision 10). */
+/** Default for `liveDepth`: root plus this many live nested levels (decision 10). */
 export const MAX_LIVE_DEPTH = 1;
 /** Hysteresis at the tier boundaries so a portal does not flicker while zooming across one. */
 const TIER_HYSTERESIS = 0.1;
 
 export type Tier = 'dot' | 'preview' | 'live';
 
-export const tierFor = (node: Node, zoom: number, depth: number, previous?: Tier): Tier => {
+export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: number, previous?: Tier): Tier => {
   const { width, height } = nodeBounds(node);
   const px = Math.min(width, height) * zoom;
   const dot = previous === 'dot' ? DOT_PX * (1 + TIER_HYSTERESIS) : DOT_PX * (1 - TIER_HYSTERESIS);
@@ -39,7 +39,7 @@ export const tierFor = (node: Node, zoom: number, depth: number, previous?: Tier
   if (px < dot) {
     return 'dot';
   }
-  if (px < preview || depth >= MAX_LIVE_DEPTH) {
+  if (px < preview || depth >= liveDepth) {
     return 'preview';
   }
   return 'live';
@@ -59,63 +59,67 @@ export type SceneLayerProps = {
   /** Effective screen zoom of this layer (camera zoom × portal scales). */
   zoom: number;
   depth: number;
+  liveDepth: number;
   selected?: ReadonlySet<ElementId>;
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
 };
 
-export const SceneLayer = memo(({ store, scene, registry, zoom, depth, selected, handlers }: SceneLayerProps) => {
-  const nodes = useMemo(() => sortByZ(Object.values(scene.nodes)), [scene.nodes]);
-  const links = useMemo(
-    () =>
-      sortByZ(Object.values(scene.links))
-        .map((link) => linkGeometry(scene, registry, link))
-        .filter((geometry): geometry is LinkGeometry => geometry !== undefined),
-    [scene, registry],
-  );
-  const unit = 1 / Math.max(zoom, 0.05);
+export const SceneLayer = memo(
+  ({ store, scene, registry, zoom, depth, liveDepth, selected, handlers }: SceneLayerProps) => {
+    const nodes = useMemo(() => sortByZ(Object.values(scene.nodes)), [scene.nodes]);
+    const links = useMemo(
+      () =>
+        sortByZ(Object.values(scene.links))
+          .map((link) => linkGeometry(scene, registry, link))
+          .filter((geometry): geometry is LinkGeometry => geometry !== undefined),
+      [scene, registry],
+    );
+    const unit = 1 / Math.max(zoom, 0.05);
 
-  return (
-    <>
-      <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
-        {links.map(({ link, path }) => (
-          <g key={link.id}>
-            {/* A wide transparent twin makes the thin stroke easy to press. */}
-            {handlers && (
+    return (
+      <>
+        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+          {links.map(({ link, path }) => (
+            <g key={link.id}>
+              {/* A wide transparent twin makes the thin stroke easy to press. */}
+              {handlers && (
+                <path
+                  d={path}
+                  className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
+                  style={{ pointerEvents: 'stroke' }}
+                  strokeWidth={12 * unit}
+                  onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                  onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                  onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                />
+              )}
               <path
                 d={path}
-                className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
-                style={{ pointerEvents: 'stroke' }}
-                strokeWidth={12 * unit}
-                onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
-                onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
+                strokeWidth={2 * unit}
               />
-            )}
-            <path
-              d={path}
-              className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
-              strokeWidth={2 * unit}
-            />
-          </g>
+            </g>
+          ))}
+        </svg>
+        {nodes.map((node) => (
+          <NodeFrame
+            key={node.id}
+            store={store}
+            scene={scene}
+            registry={registry}
+            node={node}
+            zoom={zoom}
+            depth={depth}
+            liveDepth={liveDepth}
+            selected={selected?.has(node.id) ?? false}
+            handlers={handlers}
+          />
         ))}
-      </svg>
-      {nodes.map((node) => (
-        <NodeFrame
-          key={node.id}
-          store={store}
-          scene={scene}
-          registry={registry}
-          node={node}
-          zoom={zoom}
-          depth={depth}
-          selected={selected?.has(node.id) ?? false}
-          handlers={handlers}
-        />
-      ))}
-    </>
-  );
-});
+      </>
+    );
+  },
+);
 
 SceneLayer.displayName = 'SceneLayer';
 
@@ -185,9 +189,9 @@ export const TextNodeView = ({ node }: NodeViewProps) => (
   </div>
 );
 
-export const PortalNodeView = ({ node, store, registry, zoom, depth }: NodeViewProps) => {
+export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
   const child = useAtomValue(store.scene(node.type === 'scene' ? node.scene : ''));
-  const tier = child ? tierFor(node, zoom, depth) : 'dot';
+  const tier = child ? tierFor(node, zoom, depth, liveDepth) : 'dot';
   const bounds = useMemo(() => (child ? portalFrame(node, sceneBounds(child)) : undefined), [node, child]);
   return (
     <div className={mx('dx-fullscreen bg-hover-surface', tier === 'dot' && 'bg-primary-500/40')}>
@@ -213,6 +217,7 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth }: NodeViewP
               registry={registry}
               zoom={zoom * portalScale(node, bounds)}
               depth={depth + 1}
+              liveDepth={liveDepth}
             />
           </div>
         )}

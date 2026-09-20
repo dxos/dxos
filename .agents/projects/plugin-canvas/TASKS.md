@@ -56,6 +56,7 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Link editing: end handles re-attach either end (drop lands on the nearest port, previewed as created while hovering), control points selectable with Delete and a right-click menu, splines perpendicular at the ports, ports fill on hover.
 - [x] Undo / redo: per-view snapshot log over the projection seam (`undo.ts`), ⌘Z / ⇧⌘Z and toolbar buttons.
 - [x] Cut / copy / paste: per-view clipboard, fresh ids, links rewired, one `batch` intent; ⌘X / ⌘C / ⌘V, toolbar buttons, right-click menu (element: Cut / Copy / Delete; canvas: Paste).
+- [x] Portal frame: a portal gives its child a frame of its own aspect (centred content); drilled-in scenes show and fit that frame; `liveDepth` prop and story control for how many nested levels render live; drill-in clears the selection and hover before the zoom.
 - [x] `docs/MIGRATION.md`: feature map of react-ui-canvas-editor and react-ui-canvas-compute against the engine, five design decisions, migration plan M1–M5.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
 - [x] Delete `src/experimental/` once the stories cover the spike.

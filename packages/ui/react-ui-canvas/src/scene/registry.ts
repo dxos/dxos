@@ -24,6 +24,8 @@ export type NodeViewProps = {
   zoom: number;
   /** Nesting depth of the layer; 0 is the root. */
   depth: number;
+  /** Nested levels below the root that may mount live (decision 10). */
+  liveDepth: number;
   selected: boolean;
 };
 

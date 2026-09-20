@@ -40,7 +40,7 @@ import { nodePorts, portPoint } from './ports.ts';
 import { type FreehandProjectionOptions, type Projection, reduceIntent } from './projection.ts';
 import { type LinkRegistry, type NodeRegistry, defaultLinkRegistry, defaultNodeRegistry } from './registry.ts';
 import { insertIndex, linkGeometry } from './route.ts';
-import { type ElementHandlers, SceneLayer } from './SceneLayer.tsx';
+import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from './SceneLayer.tsx';
 import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from './shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
@@ -112,6 +112,8 @@ export type SceneViewProps = ThemedClassName<{
   atoms?: SceneViewAtoms;
   /** Minor grid spacing in scene px; snapping uses the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
+  /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
+  liveDepth?: number;
   showPalette?: boolean;
 }>;
 
@@ -124,6 +126,7 @@ export const SceneView = ({
   createProjection,
   atoms: atomsProp,
   grid = DEFAULT_GRID,
+  liveDepth = MAX_LIVE_DEPTH,
   showPalette = true,
 }: SceneViewProps) => {
   const registry = useRegistry();
@@ -266,11 +269,13 @@ export const SceneView = ({
         return;
       }
       interactedRef.current = true;
+      // The zoom is into the child, so the portal's selection outline and ports go before it starts.
+      select([]);
+      registry.set(atoms.hover, undefined);
       const childBounds = portalFrame(portal, sceneBounds(child));
       const swap = (camera: Camera) => {
         const next = enterPortal(camera, portal, childBounds);
         registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
-        select([]);
         setCamera(next);
         pushHistory({ path: registry.get(atoms.path), camera: next });
       };
@@ -281,7 +286,7 @@ export const SceneView = ({
         swap(registry.get(atoms.camera));
       }
     },
-    [scenes, registry, atoms.path, atoms.camera, viewport, animateTo, setCamera, select, pushHistory],
+    [scenes, registry, atoms.path, atoms.camera, atoms.hover, viewport, animateTo, setCamera, select, pushHistory],
   );
 
   const drillOut = useCallback(
@@ -1088,6 +1093,7 @@ export const SceneView = ({
             registry={nodeRegistry}
             zoom={camera.zoom}
             depth={0}
+            liveDepth={liveDepth}
             selected={selection}
             handlers={handlers}
           />
