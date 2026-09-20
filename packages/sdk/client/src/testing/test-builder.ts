@@ -129,8 +129,9 @@ export class TestBuilder {
   createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, Rpc.GroupServer] {
     const channel = new MessageChannel();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
-    // Served straight off the host's router, as a worker session serves a tab.
-    const server = Rpc.serveRouterOnPort(EffectContext.get(host.stack, RpcRouter.RpcRouter), channel.port2);
+    // Served straight off the host's router, as a worker session serves a tab; resolved on open so
+    // a host opened after this call is served.
+    const server = Rpc.serveRouterOnPort(() => EffectContext.get(host.stack, RpcRouter.RpcRouter), channel.port2);
 
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());

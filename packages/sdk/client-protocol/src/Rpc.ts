@@ -168,104 +168,12 @@ export type GroupServer = {
 };
 
 /**
- * Serves an {@link RpcGroup} on a {@link MessagePort} via the native Worker runner protocol.
+ * Wraps a server layer in the open/close lifecycle every transport server shares. The in-flight
+ * open is cached so concurrent opens share one runtime and a close during startup disposes the
+ * runtime that startup created rather than leaking it.
  */
-export const serve = <G, H extends Layer.Layer<never, never, never>>(
-  port: MessagePort,
-  group: G,
-  handlers: H,
-  options?: ServeOptions,
-): GroupServer => {
+const makeGroupServer = (buildLayer: () => Layer.Layer<never, never, never>): GroupServer => {
   let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
-
-  return {
-    async open(): Promise<void> {
-      if (runtime) {
-        return;
-      }
-
-      const serverLayer = makeServerLayer(group, handlers, options).pipe(
-        Layer.provide(
-          RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
-        ),
-        Layer.orDie,
-      );
-
-      const current = ManagedRuntime.make(serverLayer);
-      try {
-        await current.runPromise(Effect.void);
-      } catch (error) {
-        // Leave the server un-opened on startup failure so a later open() can retry rather than
-        // returning early against a runtime that never started.
-        await current.dispose();
-        throw error;
-      }
-      runtime = current;
-    },
-
-    async close(): Promise<void> {
-      const current = runtime;
-      runtime = undefined;
-      await current?.dispose();
-    },
-  };
-};
-
-/**
- * Serves whatever is registered with `router` on a {@link MessagePort} via the native Worker runner
- * protocol — the transport half of a worker session, without the stack around it.
- */
-export const serveRouterOnPort = (router: RpcRouter.Service, port: MessagePort): GroupServer => {
-  let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
-
-  return {
-    async open(): Promise<void> {
-      if (runtime) {
-        return;
-      }
-
-      const current = ManagedRuntime.make(
-        RpcRouter.layerTransport.pipe(
-          Layer.provide(Layer.succeed(RpcRouter.RpcRouter, router)),
-          Layer.provide(
-            RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
-          ),
-          Layer.orDie,
-        ),
-      );
-      try {
-        await current.runPromise(Effect.void);
-      } catch (error) {
-        // Leave the server un-opened on startup failure so a later open() can retry.
-        await current.dispose();
-        throw error;
-      }
-      runtime = current;
-    },
-
-    async close(): Promise<void> {
-      const current = runtime;
-      runtime = undefined;
-      await current?.dispose();
-    },
-  };
-};
-
-/**
- * Serves an {@link RpcGroup} over a caller-supplied {@link RpcServer.Protocol} layer.
- * Transport-agnostic counterpart to {@link makeClientOverProtocol}: consumers provide a byte
- * protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
- */
-export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>(
-  protocol: Layer.Layer<RpcServer.Protocol>,
-  group: G,
-  handlers: H,
-  options?: ServeOptions,
-): GroupServer => {
-  let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
-  // Cache the in-flight open so concurrent opens share one initialization and a close during open
-  // can await it before disposing — otherwise `runtime` is unset mid-open and a fast open/close
-  // (e.g. client restart) leaks the runtime.
   let openPromise: Promise<void> | undefined;
 
   return {
@@ -275,9 +183,7 @@ export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>
       }
 
       openPromise = (async () => {
-        const serverLayer = makeServerLayer(group, handlers, options).pipe(Layer.provide(protocol), Layer.orDie);
-
-        const current = ManagedRuntime.make(serverLayer);
+        const current = ManagedRuntime.make(buildLayer());
         try {
           await current.runPromise(Effect.void);
         } catch (error) {
@@ -303,3 +209,50 @@ export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>
     },
   };
 };
+
+/**
+ * Serves an {@link RpcGroup} on a {@link MessagePort} via the native Worker runner protocol.
+ */
+export const serve = <G, H extends Layer.Layer<never, never, never>>(
+  port: MessagePort,
+  group: G,
+  handlers: H,
+  options?: ServeOptions,
+): GroupServer =>
+  makeGroupServer(() =>
+    makeServerLayer(group, handlers, options).pipe(
+      Layer.provide(
+        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+      ),
+      Layer.orDie,
+    ),
+  );
+
+/**
+ * Serves whatever is registered with the ambient router on a {@link MessagePort} via the native
+ * Worker runner protocol — the transport half of a worker session, without the stack around it.
+ * The router is resolved on `open`, so a host that builds its stack later can be served.
+ */
+export const serveRouterOnPort = (router: () => RpcRouter.Service, port: MessagePort): GroupServer =>
+  makeGroupServer(() =>
+    RpcRouter.layerTransport.pipe(
+      Layer.provide(Layer.succeed(RpcRouter.RpcRouter, router())),
+      Layer.provide(
+        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+      ),
+      Layer.orDie,
+    ),
+  );
+
+/**
+ * Serves an {@link RpcGroup} over a caller-supplied {@link RpcServer.Protocol} layer.
+ * Transport-agnostic counterpart to {@link makeClientOverProtocol}: consumers provide a byte
+ * protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
+ */
+export const serveOverProtocol = <G, H extends Layer.Layer<never, never, never>>(
+  protocol: Layer.Layer<RpcServer.Protocol>,
+  group: G,
+  handlers: H,
+  options?: ServeOptions,
+): GroupServer =>
+  makeGroupServer(() => makeServerLayer(group, handlers, options).pipe(Layer.provide(protocol), Layer.orDie));

@@ -61,6 +61,10 @@ export interface Service {
 
 export class RpcRouter extends Context.Service<RpcRouter, Service>()('@dxos/rpc/RpcRouter') {}
 
+/**
+ * Serves `group` for request tags starting with `prefix` on the ambient {@link RpcRouter}, over
+ * every transport attached to it, until the current scope closes.
+ */
 export const serve = <Rpcs extends Rpc.Any>(
   prefix: string,
   group: RpcGroup.RpcGroup<Rpcs>,
@@ -71,9 +75,16 @@ export const serve = <Rpcs extends Rpc.Any>(
   RpcRouter | Scope.Scope | Rpc.ToHandler<Rpcs> | Rpc.Middleware<Rpcs> | Rpc.ServicesServer<Rpcs>
 > => Effect.flatMap(RpcRouter, (router) => router.serve(prefix, group, options));
 
+/**
+ * Serves every group registered with the ambient {@link RpcRouter} over `protocol`, until the
+ * current scope closes.
+ */
 export const attach = (protocol: RpcServer.Protocol['Service']): Effect.Effect<void, never, RpcRouter | Scope.Scope> =>
   Effect.flatMap(RpcRouter, (router) => router.attach(protocol));
 
+/**
+ * One in-process client over every registration of the ambient {@link RpcRouter} that supplies one.
+ */
 export const client: Effect.Effect<Client, never, RpcRouter | Scope.Scope> = Effect.flatMap(
   RpcRouter,
   (router) => router.client,
