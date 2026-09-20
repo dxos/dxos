@@ -1,6 +1,6 @@
 # plugin-canvas — Design
 
-Status: spec for review (2026-09-20, rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
+Status: spec for review (2026-09-20, rev 4: §6b mobile navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and the throwaway spike `packages/ui/react-ui-canvas/src/experimental/` (story
 `ui/react-ui-canvas/experimental/SceneView`).
 
@@ -19,21 +19,22 @@ Non-goals for the prototype: freehand drawing, cross-scene links, multiplayer cu
 
 ## 2. Decisions
 
-| #   | Decision                                                                                                                                                                                                     | Why                                                                                                                                                                                   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Rewrite** a new engine; do not adopt `@xyflow/react` or tldraw                                                                                                                                             | xyflow has one viewport per instance, a 0.5–2× zoom design, flat nested divs with z-index bugs and one store per instance; tldraw's SDK license blocks production. See `AUDIT.md` §5. |
-| 2   | Engine lives in **`packages/ui/react-ui-canvas/src/scene/`** during development                                                                                                                              | It replaces the current `Canvas` eventually; a sibling folder keeps the old exports intact for canvas-editor/compute/sequencer until the switch.                                      |
-| 3   | **All type definitions local** to the package (Effect `Schema`, no ECHO `Type.makeObject` yet)                                                                                                               | `react-ui-canvas-editor/src/types/schema.ts` is replaced only once the prototype works; a plain schema wraps into an ECHO type without change.                                        |
-| 4   | **Depth = scene nesting**; within a scene one flat coordinate space                                                                                                                                          | Containment is the hierarchy; grouping inside a scene is visual only.                                                                                                                 |
-| 5   | **Per-scene local coordinates**, doubles, unit = CSS px at zoom 1                                                                                                                                            | A global `(x, y, depth)` compounds float32 error in the compositor after a few levels and couples separate documents.                                                                 |
-| 6   | **Scene bounds are derived** from content (union of placed cells, padded), never stored                                                                                                                      | Muse "flex boards"; a portal maps the child's derived bounds into the cell.                                                                                                           |
-| 7   | **Rendering: DOM root** with the camera as one CSS transform; SVG as layers (links, overlay); canvas2d only for thumbnails. No third-party engine                                                            | Cells host live React content; SVG `foreignObject` is unreliable; pixi/konva cannot host HTML.                                                                                        |
-| 8   | **d3 only as pure functions**: `interpolateZoom`, `d3-shape` curves                                                                                                                                          | Native Pointer Events replace d3-zoom/d3-drag and keep React owning the DOM.                                                                                                          |
-| 9   | **Links are cells** with `{cell, port?}` endpoints                                                                                                                                                           | One map gives ordering, selection, undo and nesting uniformly; a missing port means "automatic".                                                                                      |
-| 10  | **Two live depths max** (root + one nested), further depths as previews                                                                                                                                      | Bounded DOM; verified in the spike.                                                                                                                                                   |
-| 11  | **The surface never writes coordinates.** It emits _intents_ (move, resize, link, create, delete) to a `Projection`, which owns the drawing model and re-projects                                            | This is what makes variants 1–3 share one surface.                                                                                                                                    |
-| 12  | **Ports come from the cell definition** (`CellDef.ports`), not from the data                                                                                                                                 | Same as anchors in canvas-editor's `ShapeRegistry` and `Port {side, offset}` in react-ui-diagram; shape-specific, not per-instance.                                                   |
-| 13  | **The engine is a `Drawing` variant** (`schema 'dxos.org/scene/1'`); illustrator's scene DSL commands are the write API behind the projection seam; the headless model is extracted to `@dxos/diagram` first | §3b: the ECHO envelope, agent operations, dialects and layout engines already exist; a UI package cannot depend on a plugin.                                                          |
+| #   | Decision                                                                                                                                                                                                                                                                                                                                                                                                                        | Why                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Rewrite** a new engine; do not adopt `@xyflow/react` or tldraw                                                                                                                                                                                                                                                                                                                                                                | xyflow has one viewport per instance, a 0.5–2× zoom design, flat nested divs with z-index bugs and one store per instance; tldraw's SDK license blocks production. See `AUDIT.md` §5.  |
+| 2   | Engine lives in **`packages/ui/react-ui-canvas/src/scene/`** during development                                                                                                                                                                                                                                                                                                                                                 | It replaces the current `Canvas` eventually; a sibling folder keeps the old exports intact for canvas-editor/compute/sequencer until the switch.                                       |
+| 3   | **All type definitions local** to the package (Effect `Schema`, no ECHO `Type.makeObject` yet)                                                                                                                                                                                                                                                                                                                                  | `react-ui-canvas-editor/src/types/schema.ts` is replaced only once the prototype works; a plain schema wraps into an ECHO type without change.                                         |
+| 4   | **Depth = scene nesting**; within a scene one flat coordinate space                                                                                                                                                                                                                                                                                                                                                             | Containment is the hierarchy; grouping inside a scene is visual only.                                                                                                                  |
+| 5   | **Per-scene local coordinates**, doubles, unit = CSS px at zoom 1                                                                                                                                                                                                                                                                                                                                                               | A global `(x, y, depth)` compounds float32 error in the compositor after a few levels and couples separate documents.                                                                  |
+| 6   | **Scene bounds are derived** from content (union of placed cells, padded), never stored                                                                                                                                                                                                                                                                                                                                         | Muse "flex boards"; a portal maps the child's derived bounds into the cell.                                                                                                            |
+| 7   | **Rendering: DOM root** with the camera as one CSS transform; SVG as layers (links, overlay); canvas2d only for thumbnails. No third-party engine                                                                                                                                                                                                                                                                               | Cells host live React content; SVG `foreignObject` is unreliable; pixi/konva cannot host HTML.                                                                                         |
+| 8   | **d3 only as pure functions**: `interpolateZoom`, `d3-shape` curves                                                                                                                                                                                                                                                                                                                                                             | Native Pointer Events replace d3-zoom/d3-drag and keep React owning the DOM.                                                                                                           |
+| 9   | **Links are cells** with `{cell, port?}` endpoints                                                                                                                                                                                                                                                                                                                                                                              | One map gives ordering, selection, undo and nesting uniformly; a missing port means "automatic".                                                                                       |
+| 10  | **Two live depths max** (root + one nested), further depths as previews                                                                                                                                                                                                                                                                                                                                                         | Bounded DOM; verified in the spike.                                                                                                                                                    |
+| 11  | **The surface never writes coordinates.** It emits _intents_ (move, resize, link, create, delete) to a `Projection`, which owns the drawing model and re-projects                                                                                                                                                                                                                                                               | This is what makes variants 1–3 share one surface.                                                                                                                                     |
+| 12  | **Ports come from the cell definition** (`CellDef.ports`), not from the data                                                                                                                                                                                                                                                                                                                                                    | Same as anchors in canvas-editor's `ShapeRegistry` and `Port {side, offset}` in react-ui-diagram; shape-specific, not per-instance.                                                    |
+| 13  | **The engine is a `Drawing` variant** (`schema 'dxos.org/scene/1'`); illustrator's scene DSL commands are the write API behind the projection seam; the headless model is extracted to `@dxos/diagram` first                                                                                                                                                                                                                    | §3b: the ECHO envelope, agent operations, dialects and layout engines already exist; a UI package cannot depend on a plugin.                                                           |
+| 14  | **Mobile navigation mode: the same scene rendered as columns.** On narrow or touch-only viewports the view switches from the 2D camera to a horizontal sequence of full-height **columns**, one per _aspect_ of the current scene, navigated by swipe, tabs or the breadcrumb; each column scrolls vertically. Aspects are read-only projections of the positioned `Scene`, so the model, projections and intents are unchanged | A 2D infinite canvas is unusable at phone width (pinch precision, no hover, no wheel, no keyboard); a linear column per aspect is how Composer already presents planks on mobile. §6b. |
 
 ## 3. Layered architecture
 
@@ -179,6 +180,49 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side */
 | Double-click a non-portal cell                                         | Opens it (`CellDef.openable`, e.g. text editing, or the ECHO object)         |
 | URL / deep link (phase 3)                                              | `{path, camera}` serialised so a location inside a nested scene is shareable |
 
+## 6b. Mobile navigation mode
+
+The 2D camera is replaced, not shrunk. Below the `md` breakpoint or when the primary input is coarse
+(`(pointer: coarse) and (hover: none)`), and always when the host asks for it (`mode='columns'`), `SceneView`
+renders the current scene as **columns**: a horizontally paged strip of full-height panels, one per **aspect**.
+The `columns` mode reads the same positioned `Scene` from the same `Projection`; it adds no model state.
+
+**Aspect** = a named, ordered, read-only projection of one scene into a vertical list. The engine ships these
+and a `CellDef` may contribute more (`CellDef.aspects?: (cell) => Aspect[]`):
+
+| Aspect         | Column contents                                                                                                                           | Order                                                                                                  |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `overview`     | every placed cell as a row (kind icon, label, summary); portals are rows that open the child scene as the next column                     | layout order: top-to-bottom, then left-to-right by cell centre, so a diagram reads the way it is drawn |
+| `cells:<kind>` | one column per cell kind present in the scene (rects, text, objects, portals)                                                             | same                                                                                                   |
+| `links`        | every link as `source → target` with its label; tapping either end selects that cell and scrolls `overview` to it                         | by source row, then target row                                                                         |
+| `cell:<id>`    | the selected cell in detail: its full content (`Surface` for object cells, the editor for text), its ports, and its links grouped by port | pushed when a row is tapped; one per selected cell                                                     |
+| `scene:<path>` | a nested scene, i.e. the `overview` of the child, reached from a portal row                                                               | pushed on drill-in                                                                                     |
+
+Aspects form a **strip** `Aspect[]`; the view keeps `{path, strip, column}` in the per-view atoms next to the
+2D `{path, camera}` and both survive a mode switch, so rotating a phone or docking a tablet moves between the
+2D camera and the column the user was reading (the column's first visible row maps to a camera fit on that
+cell; a camera maps to the `overview` column scrolled to the first fully visible cell).
+
+Navigation:
+
+| Gesture                                                               | Effect                                                                                                                                             |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Horizontal swipe, or the tab bar above the strip                      | Previous / next column in the strip                                                                                                                |
+| Tap a row                                                             | Push a `cell:<id>` column after the current one and page to it; selection follows                                                                  |
+| Tap a portal row, or the "open" affordance on a `scene` row           | Drill-in: push `scene:<path>` (its `overview`); the breadcrumb grows                                                                               |
+| Back (swipe from the edge, breadcrumb tap, hardware back via history) | Pop the pushed columns to that point; drill-out is popping past a `scene:` column                                                                  |
+| Long-press a row                                                      | Context menu: open, select, delete (the same intents as §8)                                                                                        |
+| Reorder rows by drag (`overview` and `cells:` only)                   | A `move` intent that keeps the cell's x and moves it to the dropped neighbour's y; the projection decides what it means, exactly as on the 2D view |
+
+Editing on mobile is deliberately thin in phase 2: create (palette in the column header: rect, text, scene),
+delete, rename, reorder; linking, resizing and free placement stay 2D. The intents are the same, so the
+constrained and dynamic projections need nothing extra.
+
+Rendering: one `div` per column with `scroll-snap-type: x mandatory` on the strip and `overflow-y: auto` per
+column, `contain: strict`; rows are the cell's `CellDef.component` in a `compact` variant (a prop, not a second
+component) so an object cell shows the same `Surface` in both modes. No grid, no overlay SVG, no camera atom
+subscribers are mounted in this mode.
+
 ## 7. Rendering
 
 Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to top:
@@ -232,7 +276,9 @@ packages/ui/react-ui-canvas/src/scene/
   route.ts          curve routing (d3-shape); ortho later
   index.ts          fractional index helpers
   atoms.ts          per-view atoms: camera, path, history, selection, drag, tool
-  hooks/            useCamera (imperative transform), useWheel, usePointer (state machine), useShortcuts
+  aspects.ts        Aspect projections of a positioned Scene (overview, cells:<kind>, links, cell:<id>, scene:<path>) + reading order
+  hooks/            useCamera (imperative transform), useWheel, usePointer (state machine), useShortcuts, useColumnsMode (breakpoint + pointer media queries)
+  components/columns/  ColumnStrip (paged, scroll-snap), Column, CellRow (compact CellView), AspectTabs
   components/       SceneView, SceneLayer, CellView (+ per-kind renderers), ControlFrame, Overlay, Palette, Breadcrumbs
   testing/          fixtures: scene tree, constraint set, object graph
   SceneView.stories.tsx   Freehand, Constrained, Dynamic, Nested
@@ -254,7 +300,9 @@ over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from 
    `Dynamic` (object graph → layout; toggle nodes to re-layout; drag writes an override), `Nested` (depth 4);
    unit tests for every pure module.
 2. **Phase 2**: text and object cells with `Surface` + type projectors, ortho routing, snap lines, keyboard nudge,
-   undo log, portal thumbnails, external drag-in, mixed-variant scenes.
+   undo log, portal thumbnails, external drag-in, mixed-variant scenes; **mobile navigation mode** (§6b):
+   `aspects.ts`, `ColumnStrip`, mode switch with state carried across, a `Columns` story at phone width and a
+   viewport-toggle story that switches modes on the same scene.
 3. **Phase 3**: ECHO-backed store via `makeBuilder({schema: 'dxos.org/scene/1', handler: SceneHandler})` over
    `Drawing.Canvas.content`; portals reference `Drawing`s; dynamic projection over a real ECHO query; deep links;
    `plugin-canvas` contributes a `VariantProvider` (article + card) instead of its own object type.
@@ -268,7 +316,11 @@ over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from 
   automatic port pairing re-attaches after a move, a constrained `move` rewrites the expected constraint and the
   re-solve honours it, a dynamic override survives an unrelated graph change and is dropped when its node goes.
 - Storybook: the four stories above; a scripted story exercising drill-in/out, linking and drag via Playwright in a
-  later phase.
+  later phase; `Columns` (phase 2) at a phone viewport, plus a mode-toggle story asserting the 2D ↔ columns state
+  mapping.
+- `aspects.ts` is pure: reading order is stable under a move that does not cross another cell, every link's ends
+  resolve to rows, a `scene:` column of a portal equals the child's `overview`, and the camera ↔ column mapping
+  round-trips to the same first visible cell.
 - Manual test script on each story (numbered).
 
 ## 12. Open questions
@@ -279,3 +331,9 @@ over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from 
 4. Constrained DSL surface: the constraint grammar is a dialect input; its `compile` emits `Scene.Command`s. Open:
    whether `move` rewrites the grammar (source of truth) or the commands (derived).
 5. Should a portal reference a `Drawing` (listable, named) or a hidden `Canvas`? Prototype: `Drawing`.
+6. Mobile aspects (§6b): is the built-in set (overview, per kind, links, cell detail, nested scene) the right
+   notion of "aspect", or should aspects be host-defined facets of an object (e.g. a person's tasks, mail,
+   documents) that the plugin contributes through `CellDef.aspects`? The design supports both; which ships
+   first decides whether phase 2 needs the `CellDef` hook.
+7. Mode switch trigger: media queries only, or also a user toggle in the toolbar on desktop (columns as a reading
+   mode for large diagrams)?

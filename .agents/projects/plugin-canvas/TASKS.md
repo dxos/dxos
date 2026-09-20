@@ -29,6 +29,17 @@ scene DSL, `applyCommands`, dialects and layout engines. Design: `packages/ui/re
 - [x] **Verify**: `moon run diagram:build diagram:test plugin-illustrator:build plugin-tldraw:build plugin-excalidraw:build`, `pnpm knip` for the new package, `pnpm format`, lint.
 - [x] **Changeset** for `@dxos/plugin-illustrator` (model moved) and the new package; open PR titled `diagram: extract the scene DSL and layout engines from plugin-illustrator`.
 
+## Phase 2: mobile navigation mode (requirement added 2026-09-20)
+
+Design: DESIGN.md §6b, decision 14, open questions 6–7. Same scene, same projections and intents; the 2D camera is replaced by a paged strip of vertical columns, one per aspect.
+
+- [ ] `aspects.ts`: overview / cells:<kind> / links / cell:<id> / scene:<path> projections with a stable reading order; unit tests.
+- [ ] `useColumnsMode`: breakpoint + `(pointer: coarse) and (hover: none)` + explicit `mode` prop; 2D ↔ columns state mapping (camera ↔ first visible cell) with tests.
+- [ ] `ColumnStrip` / `Column` / `CellRow` / `AspectTabs`; swipe, tabs, tap-to-push, back/pop, breadcrumb; long-press menu; drag-reorder → `move` intent.
+- [ ] Thin editing in columns: create (rect, text, scene), delete, rename, reorder.
+- [ ] Stories: `Columns` at phone width; mode-toggle story on the same scene.
+- [ ] Resolve open questions 6 (what an aspect is) and 7 (mode switch trigger) with the user before building.
+
 ## Phase 1: first PR
 
 - [ ] Types, registry, projection seam; freehand / constrained / dynamic projections (minimal).
