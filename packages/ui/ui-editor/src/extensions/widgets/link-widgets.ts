@@ -89,19 +89,30 @@ export type LinkWidgetProps<TContext = unknown> = WidgetProps<
 >;
 
 /**
- * Reports a link widget's target state and rebuilds the decorations so it takes effect: an
- * `unresolved` block becomes an inline widget after editable source, and `intrinsic` drops its
- * reserved height. Idempotent — a report that changes nothing is skipped, so a widget may call it
- * from a render effect.
+ * Reports a link widget's target state: an `unresolved` block becomes an inline widget after
+ * editable source, and `intrinsic` builds without a reserved height. With `rebuild` (the default)
+ * the decorations are rebuilt so it takes effect now; without it the state applies at the next
+ * rebuild, for a change the widget applies to its own element meanwhile (see
+ * {@link releaseBlockHeight}) — a redraw under the user's pointer can swap the element they are
+ * clicking. Idempotent: a report that changes nothing is skipped, so a widget may call it from a
+ * render effect.
  */
-export const setLinkWidgetState = (view: EditorView, id: string, state: LinkWidgetState): void => {
+export const setLinkWidgetState = (
+  view: EditorView,
+  id: string,
+  state: LinkWidgetState,
+  { rebuild = true }: { rebuild?: boolean } = {},
+): void => {
   const current = getWidgetState(view.state, id) ?? {};
   const keys = Object.keys(state) as (keyof LinkWidgetState)[];
   if (keys.every((key) => (current[key] ?? false) === state[key])) {
     return;
   }
   view.dispatch({
-    effects: [widgetUpdateEffect.of({ id, value: (prev) => ({ ...prev, ...state }) }), widgetRebuildEffect.of(null)],
+    effects: [
+      widgetUpdateEffect.of({ id, value: (prev) => ({ ...prev, ...state }) }),
+      ...(rebuild ? [widgetRebuildEffect.of(null)] : []),
+    ],
   });
 };
 

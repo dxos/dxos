@@ -123,6 +123,13 @@ export type WidgetDef<TProps extends WidgetProps = WidgetProps> = {
    * since a pinned box cannot open and clips what it holds.
    */
   heightMode?: 'fixed' | 'min';
+
+  /**
+   * Keep a block's placeholder (and portal) mounted across viewport culls and decoration rebuilds
+   * even without a reserved height — otherwise only known-height blocks are kept. For a bounded set
+   * of widgets (a document's embeds), not a stream: every kept block stays mounted off screen.
+   */
+  keepAlive?: boolean;
 };
 
 export type WidgetState = {
@@ -274,7 +281,7 @@ export const createWidget = <TProps extends WidgetProps>({
     // Known-height block widgets get their reserved height so the placeholder's fixed-height
     // keep-alive applies before the component mounts.
     const blockHeight = def.block ? def.estimatedHeight?.(props) : undefined;
-    return new StubWidget({
+    const widget = new StubWidget({
       id,
       Component: def.Component,
       props,
@@ -284,8 +291,17 @@ export const createWidget = <TProps extends WidgetProps>({
       block: !!def.block,
       blockHeight,
       heightMode: def.heightMode,
+      keepAlive: def.keepAlive,
       debug: def.debug,
     });
+    // The same object as last time when nothing about the link changed: CodeMirror then keeps the
+    // drawn tile and, for a block it culled meanwhile, the instance still holds its cached root.
+    const existing = notifier.instanceFor(id);
+    if (existing instanceof StubWidget && existing.block === widget.block && existing.eq(widget)) {
+      return existing;
+    }
+    notifier.track(widget);
+    return widget;
   }
   return undefined;
 };
@@ -358,6 +374,7 @@ const withCurrentWidgetState = (state: WidgetState): WidgetState => {
  */
 const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = false): WidgetNotifier => {
   const widgets = new Map<string, WidgetState>();
+  const instances = new Map<string, WidgetType>();
 
   // TODO(burdon): Batch updates?
   const notifier = {
@@ -370,6 +387,12 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
         log.info('widget-map: mounted', { id: state.id, count: widgets.size });
       }
       setWidgets?.([...widgets.values()]);
+    },
+    instanceFor: (id: string) => instances.get(id),
+    track: (widget: WidgetType) => {
+      if (widget instanceof StubWidget) {
+        instances.set(widget.id, widget);
+      }
     },
     updated: (id: string, widgetState: Partial<WidgetProps>) => {
       const current = widgets.get(id);
@@ -389,6 +412,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
         return;
       }
       widgets.delete(id);
+      instances.delete(id);
       // A cull drops the portal for a frame before it re-mounts — this is the blank-space window.
       if (debug) {
         log.info('widget-map: unmounted', { id, count: widgets.size });
@@ -400,6 +424,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
       for (const id of [...widgets.keys()]) {
         if (!liveIds.has(id)) {
           widgets.delete(id);
+          instances.delete(id);
           changed = true;
         }
       }
@@ -420,6 +445,8 @@ type WidgetDecorationSet = {
   /** Start position of an active unclosed streaming tag (for rebuild range). */
   streamingFrom?: number;
   decorations: DecorationSet;
+  /** `decorations` as the ranges the caret skips; block widgets are widened past their line breaks. */
+  atomic: DecorationSet;
   /** Created with the field, from the host's `setWidgets`; the update plugin reports through it. */
   notifier: WidgetNotifier;
 };
@@ -447,7 +474,7 @@ const buildDecorations = (
   // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
   const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
-    return { from: range.from, decorations: Decoration.none };
+    return { from: range.from, decorations: Decoration.none, atomic: Decoration.none };
   }
 
   let last = range.from;
@@ -503,7 +530,8 @@ const buildDecorations = (
     builder.add(match.from, match.to, match.decoration);
   }
 
-  return { from: last, streamingFrom, decorations: builder.finish() };
+  const decorations = builder.finish();
+  return { from: last, streamingFrom, decorations, atomic: atomicRanges(state, decorations) };
 };
 
 /**
@@ -518,7 +546,7 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
     // Forced only here, so a streamed chunk is not charged for a parse it will get anyway.
     return { ...buildDecorations(state, { from: 0, to: state.doc.length }, notifier, true), notifier };
   },
-  update: ({ from, streamingFrom, decorations, notifier }, tr) => {
+  update: ({ from, streamingFrom, decorations, atomic, notifier }, tr) => {
     const rebuild = (range: Range): WidgetDecorationSet => ({
       ...buildDecorations(tr.state, range, notifier),
       notifier,
@@ -531,7 +559,7 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
         if (tr.docChanged) {
           return rebuild(whole);
         }
-        return { from: 0, decorations: Decoration.none, notifier };
+        return { from: 0, decorations: Decoration.none, atomic: Decoration.none, notifier };
       }
       // Full rebuild once background parsing has advanced (no document change).
       if (effect.is(widgetRebuildEffect)) {
@@ -557,26 +585,43 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
         // Rebuild from the streaming tag start (if active) so the tree walk can detect completion.
         const rebuildFrom = streamingFrom ?? from;
         const result = buildDecorations(state, { from: rebuildFrom, to: state.doc.length }, notifier);
+        const next = decorations.update({
+          // Remove old streaming decorations — they are rebuilt each tick.
+          filter: (_f, _t, deco) => !deco.spec.streaming,
+          add: decorationSetToArray(result.decorations),
+        });
         return {
           from: result.from,
           streamingFrom: result.streamingFrom,
-          decorations: decorations.update({
-            // Remove old streaming decorations — they are rebuilt each tick.
-            filter: (_f, _t, deco) => !deco.spec.streaming,
-            add: decorationSetToArray(result.decorations),
-          }),
+          decorations: next,
+          atomic: atomicRanges(state, next),
           notifier,
         };
       }
     }
 
-    return { from, streamingFrom, decorations, notifier };
+    return { from, streamingFrom, decorations, atomic, notifier };
   },
   provide: (field) => [
     EditorView.decorations.from(field, (v) => v.decorations),
-    EditorView.atomicRanges.of((view) => view.state.field(field).decorations || Decoration.none),
+    EditorView.atomicRanges.of((view) => view.state.field(field).atomic || Decoration.none),
   ],
 });
+
+/**
+ * The ranges cursor motion skips over. A block widget replaces whole lines, so both ends of its own
+ * range sit on the hidden line and the caret vanished there for two presses; widened by the line
+ * breaks on either side, a single press lands on the neighbouring line instead.
+ */
+const atomicRanges = (state: EditorState, decorations: DecorationSet): DecorationSet =>
+  Decoration.set(
+    decorationSetToArray(decorations).map((range) =>
+      range.value.spec.block
+        ? range.value.range(Math.max(0, range.from - 1), Math.min(state.doc.length, range.to + 1))
+        : range.value.range(range.from, range.to),
+    ),
+    true,
+  );
 
 //
 // Plugins

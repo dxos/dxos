@@ -233,6 +233,9 @@ const createBaseExtensions = ({
             // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
             // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
             estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
+            // An embed that released its reserved height (a card) must still keep its element across
+            // rebuilds, or a click that reconfigures the editor remounts it out from under the user.
+            keepAlive: true,
             Component: (props) => <PreviewComponent {...props} db={space?.db} attendableId={attendableId} />,
           },
         }),

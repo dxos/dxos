@@ -15,7 +15,7 @@ import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { type LinkWidgetState, type WidgetProps, setLinkWidgetState } from '@dxos/ui-editor';
+import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -101,6 +101,7 @@ export const PreviewComponent = ({
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
@@ -176,13 +177,24 @@ export const PreviewComponent = ({
     } else if ((unavailable || unsupported) && !unresolved) {
       next.unresolved = true;
     }
-    if (mode && !!intrinsic !== (mode === 'card')) {
-      next.intrinsic = mode === 'card';
-    }
     if (Object.keys(next).length > 0) {
       queueMicrotask(() => setLinkWidgetState(view, id, next));
     }
-  }, [view, id, unavailable, unsupported, unresolved, mode, intrinsic]);
+  }, [view, id, unavailable, unsupported, unresolved, mode]);
+
+  // A card sizes itself: the pin is released on the mounted placeholder rather than by rebuilding
+  // the widget (a redraw under a click swapped the element being clicked), and recorded so the next
+  // rebuild does not pin it again. Every render, not on deps: a rebuilt widget that adopted this
+  // element re-pins it, and the release is a no-op once done.
+  useEffect(() => {
+    if (!view || !id || mode !== 'card' || !cardRef.current) {
+      return;
+    }
+    releaseBlockHeight(view, cardRef.current);
+    if (!intrinsic) {
+      queueMicrotask(() => setLinkWidgetState(view, id, { intrinsic: true }, { rebuild: false }));
+    }
+  });
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
@@ -371,7 +383,7 @@ export const PreviewComponent = ({
     // Card preview.
     if (mode === 'card') {
       return (
-        <div className='outline-hidden' {...frameProps}>
+        <div className='outline-hidden' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
             <Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
