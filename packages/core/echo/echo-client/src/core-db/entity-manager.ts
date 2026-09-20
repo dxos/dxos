@@ -379,7 +379,20 @@ export class EntityManager implements IDatabaseBinding {
   async close(): Promise<void> {
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
+    // Dropped before the proxy closes, so a change delivered during teardown cannot trigger a load
+    // against a closed proxy.
+    this._unsubscribeFromHandles();
     await this._repoProxy.close();
+  }
+
+  /**
+   * Whether the repo proxy this manager loads through is gone. Loads are asynchronous and outlive
+   * the space that started them, so every path reaching `RepoProxy.find` checks this first — the
+   * proxy asserts it is open and a load landing after teardown would raise an invariant violation
+   * nobody is left to catch.
+   */
+  private get _isTornDown(): boolean {
+    return !this._repoProxy.isOpen;
   }
 
   // ── Core object operations ───────────────────────────────────────────────
@@ -454,6 +467,9 @@ export class EntityManager implements IDatabaseBinding {
     objectId: string,
     { timeout, returnWithUnsatisfiedDeps, diskOnly }: LoadObjectOptions = {},
   ): Promise<ObjectCore | undefined> {
+    if (this._isTornDown) {
+      throw new ContextDisposedError();
+    }
     if (diskOnly && this._unavailableObjects.has(objectId)) {
       return undefined;
     }
@@ -515,6 +531,9 @@ export class EntityManager implements IDatabaseBinding {
       failOnTimeout?: boolean;
     } = {},
   ): Promise<(ObjectCore | undefined)[]> {
+    if (this._isTornDown) {
+      throw new ContextDisposedError();
+    }
     if (!this._spaceRootDocHandle) {
       throw new Error('Database is not ready.');
     }
@@ -1585,6 +1604,10 @@ export class EntityManager implements IDatabaseBinding {
     if (!links) {
       return;
     }
+    if (this._isTornDown) {
+      log('database torn down while links were resolving, abandoning load', { links: Object.keys(links) });
+      return;
+    }
     for (const [objectId, automergeUrlData] of Object.entries(links)) {
       const automergeUrl = automergeUrlData.toString();
       const logMeta = { objectId, automergeUrl };
@@ -1669,6 +1692,10 @@ export class EntityManager implements IDatabaseBinding {
       this._onObjectDocumentLoaded({ handle, objectId });
     } catch (err) {
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+      if (this._isTornDown) {
+        log('database torn down while a document was loading, abandoning load', { objectId });
+        return;
+      }
       log.warn('failed to load a document, retrying', {
         objectId,
         automergeUrl: handle.url,

@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { ContextDisposedError } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -391,6 +392,14 @@ describe('DatabaseImpl', () => {
         const loaded = await db.loadObjectCoreById(object.id);
         expect(loaded?.id).to.eq(object.id);
       });
+    });
+
+    test('loading a linked object after teardown is cancelled, not an invariant violation', async () => {
+      const object = Obj.make(TestSchema.Expando, { content: 'Hello, world!' });
+      // The object lives in its own linked document, so loading it reaches `RepoProxy.find`.
+      const db = await createClientDbInSpaceWithObject(object);
+      await db.close();
+      await expect(db._loadObjectById(object.id)).rejects.toBeInstanceOf(ContextDisposedError);
     });
 
     // TODO(dmaretskyi): Test for conflict resolution.
