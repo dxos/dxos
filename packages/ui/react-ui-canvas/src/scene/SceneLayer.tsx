@@ -61,12 +61,14 @@ export type SceneLayerProps = {
   depth: number;
   liveDepth: number;
   selected?: ReadonlySet<ElementId>;
+  /** The portal a drill-in is animating into, while it is. */
+  opening?: ElementId;
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
 };
 
 export const SceneLayer = memo(
-  ({ store, scene, registry, zoom, depth, liveDepth, selected, handlers }: SceneLayerProps) => {
+  ({ store, scene, registry, zoom, depth, liveDepth, selected, opening, handlers }: SceneLayerProps) => {
     const nodes = useMemo(() => sortByZ(Object.values(scene.nodes)), [scene.nodes]);
     const links = useMemo(
       () =>
@@ -113,6 +115,7 @@ export const SceneLayer = memo(
             depth={depth}
             liveDepth={liveDepth}
             selected={selected?.has(node.id) ?? false}
+            opening={opening === node.id}
             handlers={handlers}
           />
         ))}
@@ -189,12 +192,13 @@ export const TextNodeView = ({ node }: NodeViewProps) => (
   </div>
 );
 
-export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
+export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, opening }: NodeViewProps) => {
   const child = useAtomValue(store.scene(node.type === 'scene' ? node.scene : ''));
-  const tier = child ? tierFor(node, zoom, depth, liveDepth) : 'dot';
+  // Being entered, the portal is already the child scene on the canvas: live, and without the tile tint.
+  const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, sceneBounds(child)) : undefined), [node, child]);
   return (
-    <div className={mx('dx-fullscreen bg-hover-surface', tier === 'dot' && 'bg-primary-500/40')}>
+    <div className={mx('dx-fullscreen', !opening && 'bg-hover-surface', tier === 'dot' && 'bg-primary-500/40')}>
       {tier === 'preview' && child && (
         <div className='dx-fullscreen flex flex-col items-center justify-center gap-1 pointer-events-none'>
           <span className='text-2xl'>{child.name ?? child.id}</span>
@@ -221,7 +225,11 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth }
             />
           </div>
         )}
-      <span className='absolute top-1 left-2 text-xs text-subdued pointer-events-none'>{child?.name ?? child?.id}</span>
+      {!opening && (
+        <span className='absolute top-1 left-2 text-xs text-subdued pointer-events-none'>
+          {child?.name ?? child?.id}
+        </span>
+      )}
     </div>
   );
 };

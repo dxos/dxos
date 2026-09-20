@@ -9,28 +9,74 @@
 //
 
 import { type NodeRegistry } from './registry.ts';
-import { type Bounds, type Node, type Point, type Port, type Side } from './types.ts';
+import { nodeBounds } from './shapes.ts';
+import { type Bounds, MAJOR_GRID, type Node, type Point, type Port, type Side } from './types.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
 
-/** One port centred on each side. */
-export const defaultPorts: readonly Port[] = SIDES.map((side) => ({ id: side, side, offset: 0.5 }));
+export const DEFAULT_PORTS_PER_SIDE = 3;
 
-/** A node's ports: its own when it carries them, else its type's. */
-export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =>
-  node.ports ?? registry[node.type].ports(node);
+/**
+ * `count` ports spread evenly along each side, named `<side><index>` from the side's start (`e1` is the
+ * top of the east side). Each side lists its centre port first so an automatic link ties to the centre.
+ */
+export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
+  const middle = (count + 1) / 2;
+  const indices = Array.from({ length: count }, (_, index) => index + 1).sort(
+    (left, right) => Math.abs(left - middle) - Math.abs(right - middle) || left - right,
+  );
+  return SIDES.flatMap((side) =>
+    indices.map((index) => ({ id: `${side}${index}`, side, offset: index / (count + 1) })),
+  );
+};
 
-export const portPoint = (bounds: Bounds, port: Port): Point => {
+export const defaultPorts: readonly Port[] = sidePorts();
+
+/**
+ * A node's ports: its own when it carries them, else its type's, else `portsPerSide` of the type. Ports
+ * that snap onto the same grid point collapse to the first (a small node keeps fewer ports).
+ */
+export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
+  const def = registry[node.type];
+  const ports = node.ports ?? def.ports?.(node) ?? sidePorts(def.portsPerSide);
+  const bounds = nodeBounds(node);
+  const seen = new Set<string>();
+  return ports.filter((port) => {
+    const { x, y } = portPoint(bounds, port);
+    const key = `${x},${y}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
+/**
+ * A port's point on the frame: its offset along the side, snapped to the nearest major grid line inside
+ * the side. A side too short to contain one puts every port at its centre; a port is never at a corner.
+ */
+export const portPoint = (bounds: Bounds, port: Port, unit = MAJOR_GRID): Point => {
   switch (port.side) {
     case 'n':
-      return { x: bounds.x + bounds.width * port.offset, y: bounds.y };
+      return { x: along(bounds.x, bounds.width, port.offset, unit), y: bounds.y };
     case 's':
-      return { x: bounds.x + bounds.width * port.offset, y: bounds.y + bounds.height };
+      return { x: along(bounds.x, bounds.width, port.offset, unit), y: bounds.y + bounds.height };
     case 'w':
-      return { x: bounds.x, y: bounds.y + bounds.height * port.offset };
+      return { x: bounds.x, y: along(bounds.y, bounds.height, port.offset, unit) };
     case 'e':
-      return { x: bounds.x + bounds.width, y: bounds.y + bounds.height * port.offset };
+      return { x: bounds.x + bounds.width, y: along(bounds.y, bounds.height, port.offset, unit) };
   }
+};
+
+const along = (origin: number, length: number, offset: number, unit: number): number => {
+  const position = origin + length * offset;
+  const first = Math.floor(origin / unit) * unit + unit;
+  const last = Math.ceil((origin + length) / unit) * unit - unit;
+  if (first > last) {
+    return origin + length / 2;
+  }
+  return Math.min(Math.max(Math.round(position / unit) * unit, first), last);
 };
 
 const OPPOSITE: Record<Side, Side> = { n: 's', s: 'n', e: 'w', w: 'e' };

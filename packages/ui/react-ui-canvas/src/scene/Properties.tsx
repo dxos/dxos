@@ -11,8 +11,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Field, type ThemedClassName } from '@dxos/react-ui';
+import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { type SceneViewAtoms } from './atoms.ts';
@@ -32,6 +32,35 @@ import {
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
+
+/**
+ * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
+ * beats the generic array field's row of inputs. Blank lines survive while typing (they round-trip
+ * through split/join) and are dropped on blur, when the form saves.
+ */
+const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getValue, onValueChange, onBlur }) => {
+  const lines: string[] = getValue() ?? [];
+  return (
+    <Form.Field path={jsonPath} label={label} readonly={readonly}>
+      <Field.Textarea
+        rows={4}
+        classNames='font-mono'
+        disabled={!!readonly}
+        value={lines.join('\n')}
+        onChange={(event) => onValueChange(type, event.target.value.split('\n'))}
+        onBlur={(event) => {
+          onValueChange(
+            type,
+            lines.map((line) => line.trim()).filter((line) => line.length > 0),
+          );
+          onBlur(event);
+        }}
+      />
+    </Form.Field>
+  );
+};
+
+const CLASS_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
 
 export type PropertiesProps = ThemedClassName<{
   projection: Projection;
@@ -95,7 +124,7 @@ const ElementForm = ({ element, readonly, onSave }: ElementFormProps) => {
       );
     case 'class':
       return (
-        <Form.Root schema={ClassNode} values={element} {...common}>
+        <Form.Root schema={ClassNode} values={element} fieldMap={CLASS_FIELDS} {...common}>
           {fields}
         </Form.Root>
       );

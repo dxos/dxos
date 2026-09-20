@@ -60,6 +60,8 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] `SceneBuilder`: chainable scene DSL after illustrator's builders; the fixture's child scenes are distinct simple diagrams (flow, class model, cycle, note).
 - [x] `docs/MIGRATION.md`: feature map of react-ui-canvas-editor and react-ui-canvas-compute against the engine, five design decisions, migration plan M1–M5.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
+- [ ] Inline `react-ui-editor` for text nodes: double-click (`openable`) edits the text in place; Escape / blur commits an `update`.
+- [ ] Multi-part nodes: a node made of parts (e.g. a shape with text areas / compartments), each part with its own bounds, ports and editor within the node's frame.
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
 

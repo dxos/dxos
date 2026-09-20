@@ -10,7 +10,6 @@
 
 import { type ComponentType } from 'react';
 
-import { defaultPorts } from './ports.ts';
 import { ClassNodeView, EllipseNodeView, PortalNodeView, RectNodeView, TextNodeView } from './SceneLayer.tsx';
 import { type SceneStore } from './store.ts';
 import { type LinkType, type Node, type NodeType, type Port, type Scene, type Size } from './types.ts';
@@ -27,6 +26,8 @@ export type NodeViewProps = {
   /** Nested levels below the root that may mount live (decision 10). */
   liveDepth: number;
   selected: boolean;
+  /** The view is being zoomed into: a portal shows its child plainly, as the child will look once entered. */
+  opening?: boolean;
 };
 
 export type NodeDef = {
@@ -36,7 +37,10 @@ export type NodeDef = {
   /** Palette shortcut. */
   key: string;
   component: ComponentType<NodeViewProps>;
-  ports: (node: Node) => readonly Port[];
+  /** Explicit port layout; absent, the type gets `portsPerSide` ports spread along each side. */
+  ports?: (node: Node) => readonly Port[];
+  /** Defaults to `DEFAULT_PORTS_PER_SIDE`. */
+  portsPerSide?: number;
   resizable?: boolean;
   minSize?: Size;
   /** Double-click opens the node (a portal drills in; a text node edits, later). */
@@ -62,7 +66,6 @@ export const defaultNodeRegistry: NodeRegistry = {
     icon: 'ph--rectangle--regular',
     key: 'R',
     component: RectNodeView,
-    ports: () => defaultPorts,
     resizable: true,
     minSize: MIN_SIZE,
   },
@@ -72,7 +75,8 @@ export const defaultNodeRegistry: NodeRegistry = {
     icon: 'ph--circle--regular',
     key: 'E',
     component: EllipseNodeView,
-    ports: () => defaultPorts,
+    // Only the side centres of the frame lie on the curve.
+    portsPerSide: 1,
     resizable: true,
     minSize: MIN_SIZE,
   },
@@ -82,7 +86,6 @@ export const defaultNodeRegistry: NodeRegistry = {
     icon: 'ph--rows--regular',
     key: 'C',
     component: ClassNodeView,
-    ports: () => defaultPorts,
     resizable: true,
     minSize: { width: 128, height: 96 },
   },
@@ -92,7 +95,6 @@ export const defaultNodeRegistry: NodeRegistry = {
     icon: 'ph--text-t--regular',
     key: 'T',
     component: TextNodeView,
-    ports: () => defaultPorts,
     resizable: true,
     minSize: MIN_SIZE,
   },
@@ -102,7 +104,6 @@ export const defaultNodeRegistry: NodeRegistry = {
     icon: 'ph--frame-corners--regular',
     key: 'S',
     component: PortalNodeView,
-    ports: () => defaultPorts,
     resizable: true,
     minSize: { width: 96, height: 60 },
     openable: true,

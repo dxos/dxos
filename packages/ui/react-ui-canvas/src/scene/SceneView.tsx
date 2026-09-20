@@ -187,9 +187,12 @@ export const SceneView = ({
 
   // Clears the ref as well: a cancelled frame never runs the completion callback that would.
   const cancelRef = useRef<() => void>(undefined);
+  // The portal a drill-in is zooming into; it renders as the plain child scene until the root swaps.
+  const [opening, setOpening] = useState<ElementId>();
   const cancelAnimation = useCallback(() => {
     cancelRef.current?.();
     cancelRef.current = undefined;
+    setOpening(undefined);
   }, []);
 
   const animateTo = useCallback(
@@ -277,11 +280,13 @@ export const SceneView = ({
         const next = enterPortal(camera, portal, childBounds);
         registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
         setCamera(next);
+        setOpening(undefined);
         pushHistory({ path: registry.get(atoms.path), camera: next });
       };
       if (animate) {
         const target = fitBounds(nodeBounds(portal), viewport);
         animateTo(target, () => swap(target));
+        setOpening(portal.id);
       } else {
         swap(registry.get(atoms.camera));
       }
@@ -1098,6 +1103,7 @@ export const SceneView = ({
             depth={0}
             liveDepth={liveDepth}
             selected={selection}
+            opening={opening}
             handlers={handlers}
           />
         </div>

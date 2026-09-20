@@ -4,7 +4,7 @@
 
 //
 // Chainable scene builder, after plugin-illustrator's DSL builders: a scene is written as a sequence of
-// typed node and link calls in grid-friendly top-left coordinates and refs like `a#e` name a port, so
+// typed node and link calls in grid-friendly top-left coordinates and refs like `a#e2` name a port, so
 // fixtures, stories and tests read like a diagram description instead of a record dump.
 //
 

@@ -144,9 +144,9 @@ Curve    = LinkBase & { type: 'curve' }                       // cubic, tangent 
 Spline   = LinkBase & { type: 'spline', points: Point[] }     // Catmull-Rom through the control points
 Endpoint = { node: NodeId, port?: PortId }                    // no port = automatic (closest appropriate pair)
 
-NodeDef  = { type, name, icon, key, component, ports(node): Port[], resizable?, minSize?, openable? }   // registry
+NodeDef  = { type, name, icon, key, component, portsPerSide?, ports?(node): Port[], resizable?, minSize?, openable? }   // registry
 LinkDef  = { type, name, icon, key }
-Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side */ }
+Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; drawn at the nearest major grid line */ }
 ```
 
 - `shapes.ts` is the pure geometry of the types: `nodeBounds(node)` (the box, or the radii for an ellipse),
@@ -157,8 +157,12 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side */
 - **Derived properties**: an `Object` node's displayed props (label, icon, colour, summary, ports) come from a
   `projector(obj) → NodeProps` chosen by the object's type, merged under `node.overrides`. Rendering goes through
   `Surface` so plugins own the card body; the projector only supplies what the frame and ports need.
-- **Ports** come from the node type's `NodeDef.ports(node)` unless the node carries its own `ports`, which is how
-  compute nodes with schema-derived inputs/outputs will express them (see `MIGRATION.md`).
+- **Ports** come from the node's own `ports` when it carries them (how compute nodes with schema-derived
+  inputs/outputs will express them, see `MIGRATION.md`), else the type's `NodeDef.ports(node)`, else
+  `portsPerSide` (default 3) ports spread along each side, named `<side><index>` (`e2` is the east centre) and
+  listed centre-first so automatic links prefer the centre. A port is drawn at the major grid line nearest its
+  offset, kept within its side; ports that land on one point collapse to the first, so a small node keeps fewer.
+  The ellipse declares one port per side: only the frame's side centres lie on the curve.
 - **Automatic links**: when either endpoint has no `port`, the router picks the port pair with the shortest
   distance; it is recomputed whenever the projection re-emits, so re-arranging the diagram re-attaches links. A
   user who drags a link end onto a specific port pins it (`port` set); dragging it onto the node body unpins it.
