@@ -4,3 +4,4 @@
 
 export * from './controller.ts';
 export * from './node-defs.ts';
+export * from './sync.ts';

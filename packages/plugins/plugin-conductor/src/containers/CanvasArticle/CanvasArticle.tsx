@@ -71,7 +71,7 @@ export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: Ca
   const Root = role === AppSurface.Section.role ? Container : Fragment;
 
   return (
-    <ComputeContext.Provider value={{ controller }}>
+    <ComputeContext.Provider value={{ controller, registry }}>
       <Root>
         <KeyboardContainer id={id}>
           <Editor.Root

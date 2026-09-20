@@ -6,8 +6,10 @@ import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react
 
 import { invariant } from '@dxos/invariant';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { type CanvasBoard, useEditorContext, useShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
+
+import { useComputeContext } from '../../hooks/compute-context.ts';
 
 export type BoxActionHandler = (action: 'run' | 'open' | 'close') => void;
 
@@ -24,8 +26,9 @@ export type BoxProps = PropsWithChildren<
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, title, status, open, onAction }, forwardedRef) => {
     invariant(shape.type);
-    const { icon, name, openable } = useShapeDef(shape.type) ?? { icon: 'ph--circle-dashed--regular' };
-    const { debug } = useEditorContext();
+    // The chrome comes from the host's registry, whichever surface the shape is mounted in.
+    const { registry, debug = false } = useComputeContext();
+    const { icon, name, openable } = registry?.getShapeDef(shape.type) ?? { icon: 'ph--circle-dashed--regular' };
 
     return (
       <div ref={forwardedRef} className='flex flex-col dx-fill justify-between'>

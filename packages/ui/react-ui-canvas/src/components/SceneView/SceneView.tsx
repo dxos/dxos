@@ -119,6 +119,8 @@ export type SceneViewProps = ThemedClassName<{
   links?: LinkRegistry;
   /** Projection per scene; freehand (identity) by default. */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
+  /** A host-owned projection instead, shared with the host's panels (see `useSceneProjection`). */
+  projection?: Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: SceneViewAtoms;
   /** Minor grid spacing in scene px; snapping uses the major grid, `MAJOR_GRID_RATIO` times it. */
@@ -138,6 +140,7 @@ export const SceneView = ({
   nodes: nodeRegistry = defaultNodeRegistry,
   links: linkRegistry = defaultLinkRegistry,
   createProjection,
+  projection: projectionProp,
   atoms: atomsProp,
   grid = DEFAULT_GRID,
   liveDepth = MAX_LIVE_DEPTH,
@@ -151,7 +154,7 @@ export const SceneView = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  const projection = useSceneProjection({ store, atoms, createProjection });
+  const projection = useSceneProjection({ store, atoms, createProjection, projection: projectionProp });
   const scene = useAtomValue(projection.scene);
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
