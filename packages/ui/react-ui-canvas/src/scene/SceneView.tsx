@@ -10,7 +10,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Button, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -167,13 +167,15 @@ export const SceneView = ({
     [registry, atoms.camera, viewport, setCamera, cancelAnimation],
   );
 
-  // Keep the scene fitted while the viewport settles, until the user takes the camera over.
+  // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
+  // effect, so the fit lands before the first paint instead of one frame after it.
   const interactedRef = useRef(false);
-  useEffect(() => {
-    if (!interactedRef.current && viewport.width > 0 && viewport.height > 0) {
+  const measured = viewport.width > 0 && viewport.height > 0;
+  useLayoutEffect(() => {
+    if (!interactedRef.current && measured) {
       setCamera(fitBounds(bounds, viewport, FIT_INSET));
     }
-  }, [viewport, bounds, setCamera]);
+  }, [measured, viewport, bounds, setCamera]);
 
   useWheel(
     rootRef,
@@ -731,7 +733,7 @@ export const SceneView = ({
         />
       )}
       <div
-        className='absolute pointer-events-none'
+        className={mx('absolute pointer-events-none', !measured && 'invisible')}
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
         <div

@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { type RefObject, useContext, useEffect, useMemo, useState } from 'react';
+import { type RefObject, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { type SceneViewAtoms } from './atoms.ts';
 import { type FreehandProjectionOptions, type Projection, createFreehandProjection } from './projection.ts';
@@ -32,17 +32,23 @@ export const useSceneProjection = ({
   return useMemo(() => createProjection({ registry, store, sceneId }), [createProjection, registry, store, sceneId]);
 };
 
-/** Content size of an element, tracked with a ResizeObserver. */
+/**
+ * Content size of an element, tracked with a ResizeObserver. Measured in a layout effect so the
+ * first paint already knows the size: a passive measurement paints one unfitted frame first.
+ */
 export const useViewport = (ref: RefObject<HTMLElement | null>): Size => {
   const [viewport, setViewport] = useState<Size>({ width: 0, height: 0 });
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = ref.current;
     if (!element) {
       return;
     }
+    const update = (width: number, height: number) =>
+      setViewport((current) => (current.width === width && current.height === height ? current : { width, height }));
+    update(element.clientWidth, element.clientHeight);
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setViewport((current) => (current.width === width && current.height === height ? current : { width, height }));
+      update(width, height);
     });
     observer.observe(element);
     return () => observer.disconnect();
