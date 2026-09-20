@@ -45,6 +45,13 @@ export interface Halo {
   recoverIdentity(args: RecoverIdentityArgs): Promise<Identity>;
   updateProfile(profile: ProfileDocument): Promise<Identity>;
 
+  /**
+   * Closes and deletes every space and the identity itself, then wipes the storage they left
+   * behind (automerge documents, hypercore feeds, the feed store, the index tables and the
+   * keyring). Like a client reset, this leaves the client closed.
+   */
+  deleteIdentity(): Promise<void>;
+
   share(options?: Partial<Invitation>): CancellableInvitation;
   join(invitation: Invitation, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation;
 

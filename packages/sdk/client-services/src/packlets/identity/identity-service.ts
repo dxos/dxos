@@ -29,6 +29,7 @@ import {
 import { IdentityService } from '@dxos/protocols/rpc';
 
 import { ProfileUpdated } from '../services/events.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { IdentityLifecycleService } from './identity-lifecycle.ts';
 import { type CreateIdentityOptions, type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
@@ -39,6 +40,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     private readonly _identityManager: IdentityManager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
     private readonly _keyring: KeyringApi,
+    private readonly _dataSpaceManager: DataSpaceManager,
     private readonly _createIdentity: (params: CreateIdentityOptions, ctx?: Context) => Promise<Identity>,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {
@@ -147,6 +149,25 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
+  /**
+   * Closes and deletes every space, then closes and deletes the identity. The persisted bytes the
+   * identity leaves behind (automerge documents, hypercore feeds, the feed store, the index tables
+   * and the keyring) are removed by the reset chain the caller runs next; this call takes the live
+   * stack down to the state a fresh profile would be in.
+   */
+  ['IdentityService.deleteIdentity'](): Effect.Effect<void, BaseError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const ctx = Context.default();
+        // Spaces first: their teardown leaves the swarm and flushes through the identity's HALO,
+        // which the identity teardown below closes.
+        await this._dataSpaceManager.deleteAllSpaces(ctx);
+        await this._identityManager.deleteIdentity(ctx);
+      },
+      catch: toServiceError,
+    });
+  }
+
   // TODO(burdon): Rename createPresentation?
   ['IdentityService.signPresentation'](
     request: IdentityService.SignPresentationRequest,
@@ -209,12 +230,14 @@ export const IdentityServiceLayer = Layer.effect(
     const identityManager = yield* IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
+    const dataSpaceManager = yield* DataSpaceManagerService;
     const identityLifecycle = yield* IdentityLifecycleService;
     const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
     const service = new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
+      dataSpaceManager,
       (params, ctx) => identityLifecycle.createIdentity(params, ctx),
       (profile) =>
         profile ? RuntimeProvider.runPromise(runtime)(Hook.emit(ProfileUpdated, { profile })) : Promise.resolve(),

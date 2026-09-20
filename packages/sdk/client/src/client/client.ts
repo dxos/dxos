@@ -510,7 +510,9 @@ export class Client {
     log('client._open: echo client opened');
 
     const mesh = new MeshProxy(this._services, this._effectRuntime);
-    const halo = new HaloProxy(this._services, this._effectRuntime);
+    // `reset()` is what wipes the host's storage and closes the client; deleting the identity ends
+    // in the same place, so it reuses it rather than duplicating the teardown.
+    const halo = new HaloProxy(this._services, this._effectRuntime, () => this.reset());
     const spaces = new SpaceList(this._config, this._services, this._echoClient, this._effectRuntime);
 
     const shell = this._shellManager

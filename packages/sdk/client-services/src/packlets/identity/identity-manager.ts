@@ -222,6 +222,28 @@ export class IdentityManager {
     await this._identity?.close(ctx);
   }
 
+  /**
+   * Closes the identity and drops its persisted record, so the next open starts without one.
+   * The identity's storage (feeds, automerge documents, keys) is wiped separately by the reset
+   * chain — this only tears down the live identity and the metadata that would resurrect it.
+   */
+  async deleteIdentity(ctx: Context): Promise<void> {
+    const identity = this._identity;
+    if (!identity) {
+      log('no identity to delete');
+      return;
+    }
+
+    log('deleting identity', { identityKey: identity.identityKey });
+    // Dropped before teardown so anything observing `stateUpdate` cannot read a half-closed identity.
+    this._identity = undefined;
+    await this._ctx.dispose();
+    await identity.close(ctx).catch((err) => log.warn('identity teardown failed; deleting anyway', { err }));
+    await this._metadataStore.clear();
+    this.stateUpdate.emit();
+    log('deleted identity');
+  }
+
   async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
