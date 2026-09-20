@@ -126,6 +126,33 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     await replicator.disconnect();
   });
 
+  test('restarts when an in-place re-handshake never produces an inbound frame', async () => {
+    const { client, server } = await createClientServer();
+
+    const spaceId = SpaceId.random();
+    const { context, openConnections, connectionOpen, transportResets } = createMockContext();
+    const replicator = await connectReplicator(client, context, { rehandshakeLivenessTimeout: 50 });
+
+    const waitForOpen = connectionOpen.waitForCount(1);
+    await replicator.connectToSpace(Context.default(), spaceId);
+    await waitForOpen;
+    const firstConnection = openConnections[0];
+
+    // One error, answered in place — the budget is nowhere near spent, so only the watchdog can
+    // rescue a rebound session the edge silently dropped.
+    const waitForReopen = connectionOpen.waitForCount(1);
+    await sendErrorForCurrentConnection(client, server, spaceId, openConnections);
+    await waitForCondition({ condition: () => transportResets.length === 1 });
+    await waitForReopen;
+
+    const currentConnection = openConnections[openConnections.length - 1];
+    expect(transportResets.length).toBe(1);
+    expect(currentConnection).not.toBe(firstConnection);
+    expect(currentConnection.peerId).not.toBe(firstConnection.peerId);
+
+    await replicator.disconnect();
+  });
+
   describe('shouldAdvertise', () => {
     test('true if space document belongs to connection space', async () => {
       const { client } = await createClientServer();
@@ -167,11 +194,16 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     });
   });
 
-  const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
+  const connectReplicator = async (
+    client: EdgeClient,
+    context: AutomergeReplicatorContext,
+    options?: { rehandshakeLivenessTimeout?: number },
+  ) => {
     // EdgeHttpClient functionality is not used by the subduction replicator.
     const replicator = new EchoEdgeSubductionReplicator({
       edgeConnection: client,
       edgeHttpClient: {} as EdgeHttpClient,
+      ...options,
     });
     await replicator.connect(Context.default(), context);
     onTestFinished(() => replicator.disconnect());
