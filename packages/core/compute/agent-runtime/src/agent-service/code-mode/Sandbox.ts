@@ -10,6 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import type { BindingsContext, Dialect } from './Dialect.ts';
+
 /**
  * A failure the model's own code raised. Reported back to the model as output rather than failing
  * the turn, so its next move is to read the message and write different code.
@@ -18,13 +20,19 @@ export class EvaluationError extends Schema.TaggedError<EvaluationError>('Evalua
   message: Schema.String,
 }) {}
 
-/** One evaluation: the model's code, the names in scope while it runs, and the budget it may take. */
+/** One evaluation: the model's code, what it runs against, and the budget it may take. */
 export type EvaluateParams = {
   /** The body of an async function, as the dialect wrapped it. */
   readonly code: string;
-  /** Names bound in the code's scope. */
-  readonly bindings: Record<string, unknown>;
-  /** Abandons the evaluation after this long; absent means no bound. */
+  /**
+   * The dialect whose bindings the code is written against. Passed rather than its bindings,
+   * because an out-of-process sandbox builds them on the far side — against its own database —
+   * and only the dialect's identity can cross.
+   */
+  readonly dialect: Dialect;
+  /** What the bindings are built from, wherever they are built. */
+  readonly context: BindingsContext;
+  /** Bounds the evaluation; absent means no bound. What "bounds" means is the implementation's. */
   readonly timeout?: Duration.Input;
 };
 
@@ -68,9 +76,10 @@ const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
  * the thread and the timeout cannot even be observed until it exits.
  */
 export const inProcess: Sandbox = {
-  evaluate: ({ code, bindings, timeout }) =>
+  evaluate: ({ code, dialect, context, timeout }) =>
     Effect.tryPromise({
       try: () => {
+        const bindings = dialect.bindings(context);
         const names = Object.keys(bindings);
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
         const fn = new AsyncFunction(...names, `'use strict';\n${code}`);

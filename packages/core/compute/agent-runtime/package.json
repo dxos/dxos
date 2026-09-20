@@ -56,6 +56,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "effect": "catalog:"
   },

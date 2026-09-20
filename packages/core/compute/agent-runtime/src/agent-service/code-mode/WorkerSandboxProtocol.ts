@@ -6,71 +6,67 @@ import * as Schema from 'effect/Schema';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-/**
- * Where a binding sits in the scope the dialect built, as a path rather than a name, so a nested
- * group like `ops` survives the crossing without flattening its keys into an ambiguous string.
- */
-export const BindingPath = Schema.Array(Schema.String);
+import { ClientServicesRpcs } from '@dxos/client-protocol';
+import type { JsonSchema } from '@dxos/echo';
 
 /**
- * A binding call the worker wants the host to make.
+ * What the worker needs from the host beyond ECHO itself.
  *
- * `args` and the reply travel by structured clone, so they carry plain data only — the host
- * substitutes a snapshot for every live object on the way out and resolves it back on the way in.
+ * The database reaches the worker over {@link ClientServicesRpcs}, unchanged — an out-of-process
+ * sandbox is just another client, so there is nothing to invent there. These three calls are what
+ * that boundary has no service for: the turn's output buffer, the skills' operations (whose
+ * handlers live here with the conversation), and the evaluation's own result.
  */
-export const Call = Schema.Struct({
-  _tag: Schema.Literal('Call'),
-  /** Correlates the reply; unique for the life of one evaluation. */
-  id: Schema.Number,
-  path: BindingPath,
-  args: Schema.Array(Schema.Any),
-});
-
-/** The evaluation finished and produced this value. */
-export const Done = Schema.Struct({
-  _tag: Schema.Literal('Done'),
-  value: Schema.Any,
-});
-
-/** The model's code threw, or asked for something the boundary cannot carry. */
-export const Failed = Schema.Struct({
-  _tag: Schema.Literal('Failed'),
-  message: Schema.String,
-});
-
-/** Everything the worker emits over the life of one `evaluate`. */
-export const Outbound = Schema.Union([Call, Done, Failed]);
-export type Outbound = typeof Outbound.Type;
-
-/** What the host answers a {@link Call} with. */
-export const Outcome = Schema.Union([
-  Schema.Struct({ _tag: Schema.Literal('Ok'), value: Schema.Any }),
-  Schema.Struct({ _tag: Schema.Literal('Error'), message: Schema.String }),
-]);
-export type Outcome = typeof Outcome.Type;
-
-/**
- * The contract between the host and the worker it spawned, served BY the worker.
- *
- * The direction is forced by the transport: `effect/unstable/rpc` speaks host-client to
- * worker-server over a worker's own message channel, while the calls that matter run the other way
- * — the database lives on the host and only the model's code lives in the worker. So `evaluate`
- * streams the worker's requests out as its result, and the host answers each one with `resolve`,
- * which is a plain host-to-worker call. One channel, both directions, no second port.
- */
-export const SandboxProtocol = RpcGroup.make(
-  Rpc.make('evaluate', {
-    payload: Schema.Struct({
-      /** The body of an async function, as the dialect wrapped it. */
-      code: Schema.String,
-      /** Every binding the worker should put in that function's scope, as a stub calling home. */
-      bindings: Schema.Array(BindingPath),
-    }),
-    success: Outbound,
-    stream: true,
+export const SandboxHostRpcs = RpcGroup.make(
+  Rpc.make('Sandbox.print', {
+    payload: Schema.Struct({ values: Schema.Array(Schema.Any) }),
+    success: Schema.Void,
   }),
-  Rpc.make('resolve', {
-    payload: Schema.Struct({ id: Schema.Number, outcome: Outcome }),
+  Rpc.make('Sandbox.invokeOperation', {
+    payload: Schema.Struct({ key: Schema.String, input: Schema.Any }),
+    // The operation's own failure is data, not an RPC failure: the model's next move is to read it
+    // and write different code, exactly as it would for a throw.
+    success: Schema.Union([
+      Schema.Struct({ _tag: Schema.Literal('Ok'), value: Schema.Any }),
+      Schema.Struct({ _tag: Schema.Literal('Error'), message: Schema.String }),
+    ]),
+  }),
+  Rpc.make('Sandbox.complete', {
+    payload: Schema.Struct({
+      value: Schema.Any,
+      failure: Schema.NullOr(Schema.String),
+    }),
     success: Schema.Void,
   }),
 );
+
+/**
+ * The whole contract the worker speaks: the client services it would speak anywhere, plus the few
+ * calls above. One group, one port, one client — the worker is a client of both halves, because
+ * every call runs host-ward.
+ */
+export class SandboxRpcs extends RpcGroup.make().merge(ClientServicesRpcs, SandboxHostRpcs) {}
+
+/** What the host hands a freshly spawned worker, before any call is made. */
+export type SandboxInit = {
+  /** The body of an async function, as the dialect wrapped it. */
+  readonly code: string;
+  /** Selects the dialect the worker rebuilds its bindings from. */
+  readonly dialect: string;
+  /** Which database to open, named the way the host's own client names it. */
+  readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
+  /** Every registered type, as schema rather than as the class the worker cannot receive. */
+  readonly types: readonly {
+    readonly typename: string;
+    readonly version: string;
+    readonly jsonSchema: JsonSchema.JsonSchema;
+  }[];
+  /** The operations the conversation's skills bind, as the model is told about them. */
+  readonly operations: readonly {
+    readonly key: string;
+    readonly name: string;
+    readonly description?: string;
+    /** As the dialect renders it into the prompt: JSON schema, already plain data. */
+    readonly parameters: unknown;
+  }[];
+};

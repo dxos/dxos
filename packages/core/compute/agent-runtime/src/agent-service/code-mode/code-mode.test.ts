@@ -249,18 +249,25 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
 
   it.effect(
     'the sandbox abandons an evaluation that outruns its timeout',
-    Effect.fnUntraced(function* (_) {
-      const result = yield* Sandbox.inProcess
-        .evaluate({
-          code: 'await new Promise(() => {});',
-          bindings: {},
-          timeout: '20 millis',
-        })
-        .pipe(Effect.result);
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        const result = yield* Sandbox.inProcess
+          .evaluate({
+            code: 'await new Promise(() => {});',
+            // Nothing is bound: what is under test is the bound, not the API.
+            dialect: { ...PlainDialect, bindings: () => ({}) },
+            context: { runtime, operations: [], print: () => {} },
+            timeout: '20 millis',
+          })
+          .pipe(Effect.result);
 
-      expect(Result.isFailure(result)).toBe(true);
-      expect(Result.isFailure(result) && result.failure.message).toContain('abandoned');
-    }, TestHelpers.provideTestContext),
+        expect(Result.isFailure(result)).toBe(true);
+        expect(Result.isFailure(result) && result.failure.message).toContain('abandoned');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 
   //

@@ -79,18 +79,7 @@ export const PlainDialect: Dialect = {
       add: (obj: Obj.Unknown) => run(Database.add(obj)),
       remove: (obj: Obj.Unknown) => run(Database.remove(obj)),
       flush: () => run(Database.flush()),
-      /**
-       * Takes a patch as well as a mutator: a function cannot cross an out-of-process sandbox's
-       * boundary, so the patch is the form that works in every sandbox.
-       */
-      update: (obj: Obj.Unknown, change: Record<string, unknown> | ((obj: any) => void)) =>
-        Obj.update(obj, (obj: any) => {
-          if (typeof change === 'function') {
-            change(obj);
-          } else {
-            Object.assign(obj, change);
-          }
-        }),
+      update: (obj: Obj.Unknown, mutator: (obj: any) => void) => Obj.update(obj, mutator),
 
       ops: Object.fromEntries(
         operations.flatMap((operation) => {
@@ -126,8 +115,7 @@ export const PlainDialect: Dialect = {
       property values, e.g. \`await query('example.com/type/Task', { status: 'open' })\`.
     - \`await make(typename, props)\` — a new object; it is not stored until you add it.
     - \`await add(obj)\` / \`await remove(obj)\` — store or delete an object.
-    - \`update(obj, { field: value })\` — the only way to change a stored object. A mutator
-      function (\`update(obj, (obj) => { obj.field = value; })\`) also works, but prefer the patch.
+    - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
     - \`await flush()\` — waits for pending writes to land; call it before printing a final
       confirmation.
 

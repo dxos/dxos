@@ -74,7 +74,8 @@ export const makeEvalToolkit = ({
         const result = yield* sandbox
           .evaluate({
             code: dialect.wrap(code),
-            bindings: dialect.bindings({ runtime, operations, print: printer.print }),
+            dialect,
+            context: { runtime, operations, print: printer.print },
             timeout,
           })
           .pipe(Effect.result);

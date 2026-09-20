@@ -4,134 +4,141 @@
 
 // @import-as-namespace
 
+import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Stream from 'effect/Stream';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as Worker from 'effect/unstable/workers/Worker';
+import type * as WorkerThreads from 'node:worker_threads';
 
-import { Obj } from '@dxos/echo';
+import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@dxos/client-protocol';
+import { Database, JsonSchema, Type } from '@dxos/echo';
 
 import * as Sandbox from './Sandbox.ts';
-import { type Outbound, type Outcome, SandboxProtocol } from './WorkerSandboxProtocol.ts';
+import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
-/** A spawned worker, and the one thing the host needs from it beyond the message channel. */
+/**
+ * A spawned worker: the host's end of its channel, and the one other thing the host needs.
+ *
+ * The spawner owns the channel because only it knows the platform's own port type; the host just
+ * serves on whichever end it is handed.
+ */
 export type WorkerHandle = {
-  /** Passed to the platform layer as the thing to talk to. */
-  readonly worker: any;
+  readonly port: MessagePort;
   /** Stops the thread outright, whatever it is running. */
   readonly terminate: () => void;
 };
 
+/**
+ * What the worker's own ECHO client connects to: the host services a tab would connect to, and the
+ * space to open. Supplied by whoever wires the sandbox, since `Database` publishes neither the
+ * space key nor the root url — a sandbox has no business reconstructing them.
+ */
+export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'> & {
+  readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
+};
+
 export type WorkerSandboxOptions = {
   /**
-   * Module the worker runs. Defaults to the entry beside this one, resolved with the extension
-   * this module itself was loaded under, so it works both from source and from a build.
+   * Host-side ECHO services, resolved per evaluation so the served set follows the host lifecycle.
+   */
+  readonly echo: () => EchoAccess;
+  /**
+   * Module the worker runs. Defaults to the entry beside this one, under the extension this module
+   * was itself loaded under — a worker starts from a real file, not through a bundler.
    */
   readonly entry?: URL;
   /** Spawns the worker, for a runtime whose worker is not `node:worker_threads`. */
-  readonly spawn?: (entry: URL) => Promise<WorkerHandle>;
+  readonly spawn?: (entry: URL, init: SandboxInit) => Promise<WorkerHandle>;
 };
 
 /**
- * Runs the model's code in a worker thread, over an RPC channel back to this process.
+ * Runs the model's code on a worker thread, against its own ECHO client.
  *
- * This is the implementation `Sandbox` exists to accept. Two things follow from the code being on
- * another thread, and both are the point:
+ * The worker is not a special kind of peer: it connects to the host's `ClientServices` exactly as a
+ * tab does, so the dialect's bindings are built THERE and the code sees live objects, real queries
+ * and a working `Obj.update`. Only what that boundary has no service for is added to the same port
+ * — printing, invoking a skill's operation, and reporting the result.
  *
- * - A timeout KILLS it. The host terminates the thread, so an evaluation that outran its budget
- *   stops rather than carrying on with its bindings the way the in-process one does — including
- *   the synchronous loop that no in-process timeout can interrupt at all.
- * - A long evaluation cannot stall the turn's thread, because it was never on it.
+ * What this buys over {@link Sandbox.inProcess} is that a timeout KILLS the evaluation: the host
+ * terminates the thread, so code that outran its budget stops rather than carrying on with its
+ * bindings, including a synchronous loop no in-process timeout can interrupt. A long evaluation
+ * also cannot stall the turn's thread, because it was never on it.
  *
- * What it costs is that bindings are no longer live values. Every argument and result crosses by
- * structured clone, so a binding must be a function over plain data: live objects are replaced by
- * a snapshot on the way out and resolved back by id on the way in, and a function passed as an
- * ARGUMENT cannot cross at all (the host would have to call back into the worker from inside a
- * synchronous API, which cannot be made to work). That is why the dialect's `update` takes a patch
- * as well as a mutator — the patch is the form that survives this boundary.
- *
- * It is not a security boundary either: a worker shares the host's permissions and can reach the
- * network and the filesystem. It bounds TIME and isolates CRASHES, not authority.
+ * It is NOT a security boundary: a worker shares the host's permissions and can reach the network
+ * and the filesystem. It bounds time and isolates crashes, not authority.
  */
-export const make = (options: WorkerSandboxOptions = {}): Sandbox.Sandbox => ({
-  evaluate: ({ code, bindings, timeout }) =>
+export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
+  evaluate: ({ code, dialect, context, timeout }) =>
     Effect.gen(function* () {
-      const scope = collect(bindings);
-      const entry = options.entry ?? defaultEntry();
+      const { db } = Context.get(context.runtime, Database.Service);
+      const echo = options.echo();
+      const init: SandboxInit = {
+        code,
+        dialect: dialect.name,
+        space: echo.space,
+        types: registrySnapshot(db),
+        operations: context.operations.map((operation) => ({
+          key: String(operation.definition?.meta.key ?? operation.name),
+          name: operation.name,
+          description: operation.description,
+          parameters: operation.parameters,
+        })),
+      };
+
+      const settled = yield* Deferred.make<unknown, Sandbox.EvaluationError>();
 
       const handle = yield* Effect.acquireRelease(
-        Effect.promise(() => (options.spawn ?? spawnNodeWorker)(entry)),
+        Effect.promise(() => (options.spawn ?? spawnNodeWorker)(options.entry ?? defaultEntry(), init)),
         ({ terminate }) => Effect.sync(terminate),
       );
 
-      // Built into this evaluation's scope rather than provided around the call: the protocol has
-      // to outlive `make`, or the channel closes the moment the client exists.
-      const protocol = yield* Layer.build(
-        // One worker, but its requests must interleave: `evaluate` stays open for the whole
-        // evaluation, and every `resolve` answering it has to travel while it does.
-        RpcClient.layerProtocolWorker({ size: 1, concurrency: Number.MAX_SAFE_INTEGER }).pipe(
-          Layer.provide(platformLayer(handle)),
+      const server = Rpc.serve(
+        handle.port,
+        SandboxRpcs,
+        Layer.merge(
+          makeClientServicesHandlers({ services: () => echo }),
+          SandboxHostRpcs.toLayer({
+            'Sandbox.print': ({ values }) => Effect.sync(() => context.print(...values)),
+            'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
+            'Sandbox.complete': ({ value, failure }) =>
+              Deferred.complete(
+                settled,
+                failure === null
+                  ? Effect.succeed(value)
+                  : Effect.fail(new Sandbox.EvaluationError({ message: failure })),
+              ).pipe(Effect.asVoid),
+          }),
         ),
+        // Both ends must agree on the timing middleware; neither applies it, since this connection
+        // is internal to one evaluation and has no dashboard reading it.
+        { disableTracing: true, concurrency: 'unbounded', timing: false },
       );
-      const client = yield* RpcClient.make(SandboxProtocol, { disableTracing: true }).pipe(Effect.provide(protocol));
-
-      // Registered after the protocol so it runs BEFORE the protocol's own finalizer: closing a
-      // channel politely means waiting for an answer, and a worker wedged in a synchronous loop
-      // never gives one. Killing it first makes the close fail fast instead of hanging. Terminating
-      // twice is harmless, which is what makes this safe alongside the acquire above.
-      yield* Effect.addFinalizer(() => Effect.sync(handle.terminate));
-
-      // Live objects the host has handed out this evaluation, so one coming back — as the argument
-      // to `add`, `remove` or `update` — is the object itself again rather than a copy of it.
-      const live = new Map<string, unknown>();
-      // Built through a function returning the union, so the initial value does not narrow what
-      // the stream is allowed to assign to it below.
-      let outcome: Outbound = failure('The worker stopped without reporting a result.');
-
-      const evaluation = client.evaluate({ code, bindings: scope.paths }).pipe(
-        Stream.runForEach((message) =>
-          message._tag === 'Call'
-            ? answer(scope, live, message).pipe(Effect.flatMap((result) => client.resolve(result)))
-            : Effect.sync(() => {
-                outcome = message;
-              }),
-        ),
+      yield* Effect.acquireRelease(
+        Effect.promise(() => server.open()),
+        () => Effect.promise(() => server.close()),
       );
 
-      const bounded =
-        timeout === undefined
-          ? evaluation
-          : evaluation.pipe(
-              Effect.timeoutOrElse({
-                duration: timeout,
-                orElse: () =>
-                  Effect.sync(() => {
-                    // The whole reason for this sandbox: the thread dies, so the code on it does too.
-                    handle.terminate();
-                  }).pipe(
-                    Effect.flatMap(() =>
-                      Effect.fail(
-                        new Sandbox.EvaluationError({
-                          message: `Evaluation did not finish within ${Duration.format(Duration.fromInputUnsafe(timeout))}; the worker was killed.`,
-                        }),
-                      ),
+      const evaluation = Deferred.await(settled);
+      return yield* timeout === undefined
+        ? evaluation
+        : evaluation.pipe(
+            Effect.timeoutOrElse({
+              duration: timeout,
+              orElse: () =>
+                Effect.sync(handle.terminate).pipe(
+                  Effect.flatMap(() =>
+                    Effect.fail(
+                      new Sandbox.EvaluationError({
+                        message: `Evaluation did not finish within ${Duration.format(Duration.fromInputUnsafe(timeout))}; the worker was killed.`,
+                      }),
                     ),
                   ),
-              }),
-            );
-
-      yield* bounded;
-
-      if (outcome._tag === 'Failed') {
-        return yield* Effect.fail(new Sandbox.EvaluationError({ message: outcome.message }));
-      }
-      return outcome._tag === 'Done' ? outcome.value : undefined;
+                ),
+            }),
+          );
     }).pipe(
       Effect.scoped,
-      // One place to turn everything that can go wrong — spawning, the channel, the model's own
-      // code — into the output the model reads and writes different code against.
       Effect.catch((error) =>
         Effect.fail(
           error instanceof Sandbox.EvaluationError
@@ -142,96 +149,47 @@ export const make = (options: WorkerSandboxOptions = {}): Sandbox.Sandbox => ({
     ),
 });
 
-/** The outcome stands in until the worker reports one, typed as the union so it can be replaced. */
-const failure = (message: string): Outbound => ({ _tag: 'Failed', message });
-
-/** Runs one binding call on the host and packages whatever it did as the worker's answer. */
-const answer = (
-  scope: Scope,
-  live: Map<string, unknown>,
-  { id, path, args }: { readonly id: number; readonly path: readonly string[]; readonly args: readonly unknown[] },
-): Effect.Effect<{ id: number; outcome: Outcome }> => {
-  const binding = scope.functions.get(path.join('\u0000'));
-  if (binding === undefined) {
-    return Effect.succeed({ id, outcome: { _tag: 'Error' as const, message: `Unknown binding: ${path.join('.')}` } });
+/** Runs one operation here, where its handler and the conversation it belongs to live. */
+const invokeOperation = (
+  context: {
+    readonly operations: readonly {
+      readonly name: string;
+      readonly definition?: { meta: { key: unknown } };
+      readonly invoke: (input: unknown) => Effect.Effect<unknown>;
+    }[];
+  },
+  key: string,
+  input: unknown,
+) => {
+  const operation = context.operations.find(
+    (candidate) => String(candidate.definition?.meta.key ?? candidate.name) === key,
+  );
+  if (operation === undefined) {
+    return Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` });
   }
-  return Effect.tryPromise({
-    try: async () => encode(await binding(...args.map((arg) => decode(arg, live))), live),
-    catch: (error) => error,
-  }).pipe(
+  return operation.invoke(input).pipe(
     Effect.match({
-      onSuccess: (value: unknown) => ({ id, outcome: { _tag: 'Ok' as const, value } }),
-      onFailure: (error: unknown) => ({ id, outcome: { _tag: 'Error' as const, message: describe(error) } }),
+      onSuccess: (value: unknown) => ({ _tag: 'Ok' as const, value }),
+      onFailure: (error: unknown) => ({ _tag: 'Error' as const, message: describe(error) }),
     }),
   );
 };
 
 /**
- * Replaces every live object with a snapshot, remembering it so the same object can be recovered
- * when the worker names it again. Anything structured clone would reject reaches the worker as
- * `undefined` rather than failing the call, since the model can act on a missing field but not on
- * a dead channel.
+ * Every registered type as schema rather than as the class the worker cannot receive, which is the
+ * one thing the client-services boundary carries no service for.
  */
-const encode = (value: unknown, live: Map<string, unknown>): unknown => {
-  if (Obj.isObject(value)) {
-    live.set(value.id, value);
-    return Obj.toJSON(value);
-  }
-  if (Array.isArray(value)) {
-    return value.map((entry) => encode(entry, live));
-  }
-  if (isPlain(value)) {
-    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encode(entry, live)]));
-  }
-  return typeof value === 'function' || typeof value === 'symbol' ? undefined : value;
-};
-
-/** The inverse: a snapshot naming an object the host handed out becomes that object again. */
-const decode = (value: unknown, live: Map<string, unknown>): unknown => {
-  if (Array.isArray(value)) {
-    return value.map((entry) => decode(entry, live));
-  }
-  if (isPlain(value)) {
-    const id = (value as { id?: unknown }).id;
-    if (typeof id === 'string' && live.has(id)) {
-      return live.get(id);
+const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
+  db.registry.list().flatMap((entity) => {
+    if (!Type.isType(entity)) {
+      return [];
     }
-    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, decode(entry, live)]));
-  }
-  return value;
-};
-
-const isPlain = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' &&
-  value !== null &&
-  (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
-
-/** The dialect's bindings, flattened to the paths the worker rebuilds its scope from. */
-type Scope = {
-  readonly paths: readonly (readonly string[])[];
-  readonly functions: Map<string, (...args: any[]) => any>;
-};
-
-const collect = (bindings: Record<string, unknown>): Scope => {
-  const paths: (readonly string[])[] = [];
-  const functions = new Map<string, (...args: any[]) => any>();
-  const walk = (value: unknown, path: readonly string[]): void => {
-    if (typeof value === 'function') {
-      paths.push(path);
-      functions.set(path.join('\u0000'), value as (...args: any[]) => any);
-    } else if (isPlain(value)) {
-      // A group like `ops` is a plain object of functions, so it is walked rather than cloned; a
-      // non-function leaf is dropped, because only a call can cross this boundary.
-      for (const [key, entry] of Object.entries(value)) {
-        walk(entry, [...path, key]);
-      }
-    }
-  };
-  for (const [key, value] of Object.entries(bindings)) {
-    walk(value, [key]);
-  }
-  return { paths, functions };
-};
+    const typename = Type.getTypename(entity);
+    const version = Type.getVersion(entity);
+    return typename === undefined || version === undefined
+      ? []
+      : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity) }];
+  });
 
 const describe = (error: unknown): string => {
   if (error instanceof Error) {
@@ -241,12 +199,6 @@ const describe = (error: unknown): string => {
   return text.length > 0 && text !== '[object Object]' ? text : 'Unknown failure.';
 };
 
-/**
- * The entry beside this module, under the extension this module was itself loaded under:
- * `WorkerSandboxEntry.ts` next to the source, `WorkerSandboxEntry.mjs` next to the bundle, which
- * is why the build gives it an output of its own. A worker is started from a real file, so there
- * is nothing the bundler that resolved this import can do for it.
- */
 const defaultEntry = (): URL => {
   const extension = /\.[^./]+$/.exec(import.meta.url)?.[0] ?? '.js';
   return new URL(`./WorkerSandboxEntry${extension}`, import.meta.url);
@@ -256,23 +208,30 @@ const defaultEntry = (): URL => {
  * Imported here rather than at the top of the module so that loading this file does not pull
  * `node:worker_threads` into a browser bundle; a browser deployment passes its own `spawn`.
  */
-const spawnNodeWorker = async (entry: URL): Promise<WorkerHandle> => {
-  const { Worker } = await import('node:worker_threads');
-  const instance = new Worker(entry);
-  // Nothing is waiting on this thread at exit: the host terminates it, and until then the
-  // evaluation it is running is what holds the turn open.
+const spawnNodeWorker = async (entry: URL, init: SandboxInit): Promise<WorkerHandle> => {
+  const { MessageChannel, Worker } = await import('node:worker_threads');
+  const channel = new MessageChannel();
+  const instance = new Worker(entry, {
+    workerData: { init, port: channel.port2 },
+    transferList: [channel.port2],
+  });
+  // Nothing waits on this thread at exit: the host terminates it, and until then the evaluation it
+  // is running is what holds the turn open.
   instance.unref();
-  return { worker: instance, terminate: () => void instance.terminate() };
+  return { port: toMessagePort(channel.port1), terminate: () => void instance.terminate() };
 };
 
-const platformLayer = (handle: WorkerHandle): Layer.Layer<Worker.WorkerPlatform | Worker.Spawner> =>
-  Layer.unwrap(
-    Effect.promise(async () => {
-      const NodeWorker = await import('@effect/platform-node/NodeWorker');
-      return NodeWorker.layer(() => handle.worker);
-    }),
-  );
+/**
+ * The one place the two type worlds meet.
+ *
+ * `node:worker_threads` and the DOM describe the SAME runtime object — in Node the global
+ * `MessageChannel` is this one — but their types are irreconcilable: DOM `postMessage` takes
+ * `Transferable[]`, which includes things (`AudioData`) node's `TransferListItem` has never heard
+ * of, so neither is structurally assignable to the other. The rpc server is typed against the DOM
+ * port, node's `transferList` against node's, and a port cannot be transferred any other way.
+ */
+const toMessagePort = (port: WorkerThreads.MessagePort): MessagePort => port as unknown as MessagePort;
 
 /** Installs {@link make} as the ambient sandbox. */
-export const layer = (options: WorkerSandboxOptions = {}): Layer.Layer<Sandbox.Service> =>
+export const layer = (options: WorkerSandboxOptions): Layer.Layer<Sandbox.Service> =>
   Layer.succeed(Sandbox.Service, make(options));
