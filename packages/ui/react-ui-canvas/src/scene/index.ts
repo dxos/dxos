@@ -3,6 +3,7 @@
 //
 
 export * from './atoms.ts';
+export * from './builder.ts';
 export * from './camera.ts';
 export * from './clipboard.ts';
 export * from './hit.ts';

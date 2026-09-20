@@ -354,7 +354,8 @@ packages/ui/react-ui-canvas/src/scene/         (phase 1, as built; phase 2+ file
   Properties.tsx    schema-driven form over the selected node or link (update intent)
   MIGRATION.md (docs)  feature map of canvas-editor / canvas-compute against the engine, gaps, migration plan
   Palette.tsx, Breadcrumbs.tsx
-  testing.ts        createSceneTree fixture
+  builder.ts        SceneBuilder: chainable scene DSL (rect / ellipse / class / text / portal, line / curve / spline, `a#e` port refs)
+  testing.ts        createSceneTree fixture: root diagram plus flow / model / cycle / note child scenes, written with the builder
   *.test.ts         unit tests for every pure module and projection
   SceneView.stories.tsx (Freehand, Nested), Constrained.stories.tsx, Dynamic.stories.tsx
   handler.ts †      SceneHandler: ContentHandler over the cell map (phase 3, ECHO store)
