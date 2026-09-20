@@ -436,12 +436,17 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
+    // A core whose body has not landed matches nothing — there is no document to filter against.
+    const structure = core.getObjectStructure();
+    if (structure === undefined) {
+      return false;
+    }
     return (
       this._database.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
       filterMatchDoc(filter, {
         id: core.id,
-        doc: core.getObjectStructure(),
+        doc: structure,
         spaceId: this.spaceId,
       })
     );
