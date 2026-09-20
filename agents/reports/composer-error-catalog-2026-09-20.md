@@ -10,6 +10,10 @@ users — several families below are one session retrying. `severity_text` is
 empty on every composer log; filter on `severity_number` (9=INFO, 13=WARN,
 17=ERROR).
 
+Counting convention: every count is a number of log events, grouped by `body`.
+An error string quoted under a family is the `error` attribute _of_ those
+events, not an additional event — do not add the two together.
+
 ## Volume by environment (7d)
 
 | env        | INFO (9) | WARN (13) | ERROR (17) |
@@ -102,15 +106,21 @@ either timed out or was not allowed.` (WebAuthn).
 - Read: mostly user dismissal, not a defect — but it is logged at ERROR and
   pollutes the production signal.
 
-### P10 — Trigger dispatcher (prod 5)
+### P10 — Trigger dispatcher (prod 4)
+
+Four events, each pairing a log body with the error that caused it:
+
+| body                         | source                      | error payload         | count |
+| ---------------------------- | --------------------------- | --------------------- | ----- |
+| `trigger execution failure`  | `trigger-dispatcher.ts:615` | `NoHandlerError`      | 2     |
+| `trigger dispatcher error`   | `:457`                      | `EntityNotFoundError` | 1     |
+| `failed to refresh triggers` | `:1073`                     | `EntityNotFoundError` | 1     |
 
 - `NoHandlerError: No handler found for operation:
-dxn:org.dxos.plugin.inbox.operation.googleMailSync` (2) — a stored trigger
+dxn:org.dxos.plugin.inbox.operation.googleMailSync` — a stored trigger
   referencing an operation no longer registered.
-- `EntityNotFoundError: Entity not found: echo:///01KYMGPJCXG398JQYERR2BJ80W` (2) —
+- `EntityNotFoundError: Entity not found: echo:///01KYMGPJCXG398JQYERR2BJ80W` —
   trigger pointing at a deleted object.
-- `trigger execution failure` (`trigger-dispatcher.ts:615`, 2),
-  `trigger dispatcher error` (`:457`, 1), `failed to refresh triggers` (`:1073`, 1).
 
 ### P11 — Entity manager invariant on space open (prod 2)
 
@@ -123,15 +133,19 @@ packages/core/echo/echo-client/src/core-db/entity-manager.ts:1700`, in
 
 - `lifecycle: failed` at `compute-runtime/src/ProcessHandle.ts:96`.
 
-### P13 — Fatal dialog / startup (prod 9+2, preview 2)
+### P13 — Fatal dialog / startup (prod 11, preview 6)
 
 - `fatal dialog` (`ResetDialog.tsx:92`) — 9 in production, i.e. users hit the
-  reset screen. Plus `StartupTimeoutError: Startup timed out after 30000ms` (1),
-  `client services failed to open` (`main.tsx:550`, preview 2),
-  `client initialization failed` (`plugin-client/capabilities/client.ts:141`, preview 2),
-  `fatal dialog failed to render` (prod 2).
+  reset screen; 2 in preview.
+- `fatal dialog failed to render` — prod 2.
+- `client services failed to open` (`main.tsx:550`) — preview 2.
+- `client initialization failed` (`plugin-client/capabilities/client.ts:141`) —
+  preview 2.
+- `StartupTimeoutError: Startup timed out after 30000ms` — 1, observed in
+  production. This is an error payload, not a separate log body, so it is
+  already counted in the production total above rather than added to it.
 
-### P14 — Assistant / studio operation failures (preview 30)
+### P14 — Assistant / studio operation failures (preview 33)
 
 - `operation invocation failed` for `assistant.createChat` (12),
   `assistant.generateHomeSuggestions` (8), `studio.generate` (9),
