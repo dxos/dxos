@@ -18,18 +18,18 @@ import { initialKeys } from '../../utils/order.ts';
 import { createNode, withLabel } from '../../utils/shapes.ts';
 import { type Projection } from '../projection.ts';
 import {
+  type BuiltinNodeType,
   type Capabilities,
   type Intent,
   type Link,
   type Node,
-  type NodeType,
   type Point,
   type Scene,
   type Size,
 } from '../types.ts';
 import { labelOf } from './constrained.ts';
 
-export type GraphNode = { id: string; label?: string; type?: NodeType };
+export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
 export type GraphEdge = { id: string; from: string; to: string };
 
 export type GraphModel = {

@@ -81,6 +81,11 @@ Package `packages/plugins/plugin-canvas` (private), registered in Composer's plu
 - [ ] Article chrome: attention / read-only in sections and slides, selection and `onActivate` wiring (`DrawingVariantSurfaceProps`).
 - [ ] End-to-end test through the illustrator operations (as `plugin-tldraw/src/variant.test.ts`).
 
+## Phase 4: migration M1–M5 (`docs/MIGRATION.md` §4; started 2026-09-20 after #13249 landed)
+
+- [x] M1: `NodeBase` with `size`, open `Node` + built-in guards, `NodeDef.schema` / `create` / `defaultSize` / `group`, `createSceneSchema`; `Port.accepts` in pairing and drops; `Link.directed` arrowheads; palette groups; tests.
+- [ ] M2: editor parity (free endpoints and `ends` markers, hover border, ghost drags, symmetric resize, `Toolbar`, e2e).
+
 ### References
 
 - Muse: https://museapp.com · infinitecanvas.tools · tldraw · @xyflow/react

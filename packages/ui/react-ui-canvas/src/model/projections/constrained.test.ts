@@ -6,7 +6,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type Scene } from '../types.ts';
+import { type ClassNode, type EllipseNode, type Scene, isClassNode, isEllipseNode } from '../types.ts';
 import { type ConstrainedModel, createConstrainedProjection, rewriteForDrop, solve } from './constrained.ts';
 
 const model: ConstrainedModel = {
@@ -107,29 +107,32 @@ describe('constrained projection', () => {
     const registry = Registry.make();
     const atom = Atom.keepAlive(Atom.make<ConstrainedModel>({ nodes: [{ id: 'A' }], constraints: [] }));
     const projection = createConstrainedProjection({ registry, model: atom });
-    projection.apply({
-      kind: 'create',
-      node: { type: 'ellipse', id: 'E', z: 'z', center: { x: 400, y: 0 }, rx: 64, ry: 32, label: 'Round' },
-    });
-    projection.apply({
-      kind: 'create',
-      node: {
-        type: 'class',
-        id: 'K',
-        z: 'z',
-        center: { x: 0, y: 400 },
-        size: { width: 1, height: 1 },
-        name: 'Klass',
-        attributes: [],
-        methods: [],
-      },
-    });
+    const ellipse: EllipseNode = {
+      type: 'ellipse',
+      id: 'E',
+      z: 'z',
+      center: { x: 400, y: 0 },
+      size: { width: 128, height: 64 },
+      label: 'Round',
+    };
+    const klass: ClassNode = {
+      type: 'class',
+      id: 'K',
+      z: 'z',
+      center: { x: 0, y: 400 },
+      size: { width: 1, height: 1 },
+      name: 'Klass',
+      attributes: [],
+      methods: [],
+    };
+    projection.apply({ kind: 'create', node: ellipse });
+    projection.apply({ kind: 'create', node: klass });
     const scene = registry.get(projection.scene);
     expect(scene.nodes.E.type).toBe('ellipse');
-    expect(scene.nodes.E.type === 'ellipse' && scene.nodes.E.label).toBe('Round');
-    expect(scene.nodes.K.type === 'class' && scene.nodes.K.name).toBe('Klass');
+    expect(isEllipseNode(scene.nodes.E) && scene.nodes.E.label).toBe('Round');
+    expect(isClassNode(scene.nodes.K) && scene.nodes.K.name).toBe('Klass');
     projection.apply({ kind: 'update', id: 'K', values: { name: 'Renamed' } });
     const after = registry.get(projection.scene).nodes.K;
-    expect(after.type === 'class' && after.name).toBe('Renamed');
+    expect(isClassNode(after) && after.name).toBe('Renamed');
   });
 });

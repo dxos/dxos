@@ -29,6 +29,7 @@ import {
   type NodeRegistry,
   defaultLinkRegistry,
   defaultNodeRegistry,
+  nodeDef,
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
@@ -48,6 +49,7 @@ import {
   type Size,
   type SplineLink,
   type Tool,
+  isPortalNode,
 } from '../../model/types.ts';
 import {
   animateCamera,
@@ -65,7 +67,7 @@ import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipb
 import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds } from '../../utils/hit.ts';
 import { between, topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
-import { nodePorts, portPoint } from '../../utils/ports.ts';
+import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { insertIndex, linkGeometry } from '../../utils/route.ts';
 import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
@@ -90,6 +92,14 @@ const PORT_SNAP_PX = 16;
 const PREVIEW_LINK_ID = 'preview';
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+
+/** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
+const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
+  [source, target].some((end) => {
+    const node = scene.nodes[end.node];
+    const port = node && nodePorts(registry, node).find((candidate) => candidate.id === end.port);
+    return port !== undefined && port.accepts !== undefined && port.accepts !== 'any';
+  });
 
 /** Resize by a handle: the moving edges land on `snap`, the opposite edges stay put. */
 const resizeBounds = (
@@ -176,7 +186,7 @@ export const SceneView = ({
     (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
       const parent = parentId ? scenes[parentId] : undefined;
       return parent
-        ? Object.values(parent.nodes).find((node) => node.type === 'scene' && node.scene === childId)
+        ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === childId)
         : undefined;
     },
     [scenes],
@@ -318,7 +328,7 @@ export const SceneView = ({
 
   const drillIn = useCallback(
     (portal: Node, animate = true) => {
-      const child = portal.type === 'scene' ? scenes[portal.scene] : undefined;
+      const child = isPortalNode(portal) ? scenes[portal.scene] : undefined;
       if (!child) {
         return;
       }
@@ -370,7 +380,7 @@ export const SceneView = ({
         const child = scenes[next[next.length - 1]];
         const parent = scenes[next[next.length - 2]];
         const portal = parent
-          ? Object.values(parent.nodes).find((node) => node.type === 'scene' && node.scene === child?.id)
+          ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === child?.id)
           : undefined;
         if (!child || !portal) {
           break;
@@ -413,7 +423,7 @@ export const SceneView = ({
     }
     const timer = setTimeout(() => {
       const portal = Object.values(scene.nodes).find(
-        (node) => node.type === 'scene' && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
+        (node) => isPortalNode(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
       );
       if (portal) {
         drillIn(portal, false);
@@ -549,7 +559,8 @@ export const SceneView = ({
 
   const onPortPointerDown = useCallback(
     (node: Node, port: Port, event: React.PointerEvent) => {
-      if (event.button !== 0 || !capabilities.link) {
+      // A link leaves a port that accepts `out`; an input-only port is a drop target, not a source.
+      if (event.button !== 0 || !capabilities.link || !portAccepts(port, 'out')) {
         return;
       }
       event.stopPropagation();
@@ -732,9 +743,12 @@ export const SceneView = ({
     [capabilities.update, scene, nodeRegistry, toScene, snap, projection, select],
   );
 
-  /** The drop target for a link end: over a node (with a port-sized margin), the port nearest the pointer. */
+  /**
+   * The drop target for a link end: over a node (with a port-sized margin), the port nearest the pointer
+   * among those that accept the end (`in` for a target, `out` for a source); a node with none takes no drop.
+   */
   const linkTarget = useCallback(
-    (point: Point, exclude: NodeId): Endpoint | undefined => {
+    (point: Point, exclude: NodeId, direction: 'in' | 'out'): Endpoint | undefined => {
       const reach = PORT_SNAP_PX / registry.get(atoms.camera).zoom;
       const node = hitTest(scene, point, reach);
       if (!node || node.id === exclude) {
@@ -743,14 +757,14 @@ export const SceneView = ({
       const boundsOf = nodeBounds(node);
       let nearest: Port | undefined;
       let best = Infinity;
-      for (const candidate of nodePorts(nodeRegistry, node)) {
+      for (const candidate of nodePorts(nodeRegistry, node).filter((port) => portAccepts(port, direction))) {
         const value = Math.hypot(...distance(portPoint(boundsOf, candidate), point));
         if (value < best) {
           best = value;
           nearest = candidate;
         }
       }
-      return nearest ? { node: node.id, port: nearest.id } : { node: node.id };
+      return nearest ? { node: node.id, port: nearest.id } : undefined;
     },
     [scene, registry, atoms.camera, nodeRegistry],
   );
@@ -810,13 +824,13 @@ export const SceneView = ({
           const anchor = handlePoint(current.start, current.handle);
           const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
           const node = scene.nodes[current.id];
-          const minSize = (node && nodeRegistry[node.type].minSize) || { width: major, height: major };
+          const minSize = (node && nodeDef(nodeRegistry, node)?.minSize) || { width: major, height: major };
           setDrag({ ...current, bounds: resizeBounds(current.start, current.handle, delta, minSize, snap) });
           break;
         }
         case 'link': {
           const point = toScene(event);
-          setDrag({ ...current, to: point, target: linkTarget(point, current.source.node) });
+          setDrag({ ...current, to: point, target: linkTarget(point, current.source.node, 'in') });
           break;
         }
         case 'point': {
@@ -830,7 +844,11 @@ export const SceneView = ({
           const point = toScene(event);
           const link = scene.links[current.id];
           const other = link ? (current.end === 'source' ? link.target.node : link.source.node) : '';
-          setDrag({ ...current, to: point, target: linkTarget(point, other) });
+          setDrag({
+            ...current,
+            to: point,
+            target: linkTarget(point, other, current.end === 'source' ? 'out' : 'in'),
+          });
           break;
         }
       }
@@ -900,6 +918,8 @@ export const SceneView = ({
             source: current.source,
             target,
             midpoint: { x: snap((current.from.x + current.to.x) / 2), y: snap((current.from.y + current.to.y) / 2) },
+            // A link between ports that declare a direction is drawn with one.
+            directed: isDirected(scene, nodeRegistry, current.source, target),
           });
           projection.apply({ kind: 'link', link });
         }
@@ -909,20 +929,18 @@ export const SceneView = ({
         const drawn = boundsFromPoints(current.from, current.to);
         // A click without a drag places a default-sized node with its top-left at the click.
         const clicked = drawn.width < major || drawn.height < major;
-        const size = clicked ? DEFAULT_SIZES[current.type] : { width: drawn.width, height: drawn.height };
+        const def = nodeRegistry[current.type];
+        if (!def) {
+          break;
+        }
+        const size = clicked ? def.defaultSize : { width: drawn.width, height: drawn.height };
         const center = clicked
           ? { x: current.from.x + size.width / 2, y: current.from.y + size.height / 2 }
           : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
         const id = createId(current.type);
-        const node = createNode({
-          type: current.type,
-          id,
-          z: topZ(Object.values(scene.nodes)),
-          center,
-          size,
-          scene: current.type === 'scene' ? createId('scene') : undefined,
-        });
-        if (node.type === 'scene') {
+        const node = def.create({ id, z: topZ(Object.values(scene.nodes)), center, size });
+        // A new portal opens onto a fresh scene of its own.
+        if (isPortalNode(node)) {
           registry.set(store.scenes, {
             ...registry.get(store.scenes),
             [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
@@ -984,7 +1002,7 @@ export const SceneView = ({
         select([]);
       } else if (event.key === 'Enter' && selected.length === 1) {
         const node = scene.nodes[selected[0]];
-        if (node && nodeRegistry[node.type].openable) {
+        if (node && nodeDef(nodeRegistry, node)?.openable) {
           drillIn(node);
         }
       } else if (event.shiftKey && event.key === '!') {
@@ -1137,7 +1155,7 @@ export const SceneView = ({
       if (part && capabilities.update && partText(node, part) !== undefined) {
         select([node.id]);
         registry.set(atoms.editing, { id: node.id, part });
-      } else if (nodeRegistry[node.type].openable) {
+      } else if (nodeDef(nodeRegistry, node)?.openable) {
         drillIn(node);
       }
     },

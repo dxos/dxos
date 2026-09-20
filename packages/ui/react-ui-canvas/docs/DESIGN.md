@@ -130,26 +130,35 @@ Camera = { x, y, zoom }      // screen = (scene + {x, y}) * zoom
 
 Scene = { id, name?, nodes: Record<NodeId, Node>, links: Record<LinkId, Link> }   // positioned; the surface's input
 
-NodeBase = { id, type, z: string /* fractional index */, locked?, center: Point, ports?: Port[], style?: NodeStyle }
+NodeBase = { id, type: string, z: string /* fractional index */, locked?, center: Point, size: Size, ports?: Port[], style?: NodeStyle }
 NodeStyle = { hue?: Hue /* theme hue: fill, text and border */, rounded?, fill?, border? }   // frame look; absent = default
-Rect     = NodeBase & { type: 'rect', size: Size, label? }
-Ellipse  = NodeBase & { type: 'ellipse', rx, ry, label? }
-Class    = NodeBase & { type: 'class', size: Size, name, attributes: string[], methods: string[] }   // UML
-Text     = NodeBase & { type: 'text', size: Size, text }
-Portal   = NodeBase & { type: 'scene', size: Size, scene: SceneId }
+Rect     = NodeBase & { type: 'rect', label? }
+Ellipse  = NodeBase & { type: 'ellipse', label? }                // inscribed in the frame
+Class    = NodeBase & { type: 'class', name, attributes: string[], methods: string[] }   // UML
+Text     = NodeBase & { type: 'text', text }
+Portal   = NodeBase & { type: 'scene', scene: SceneId }
+BuiltinNode = Rect | Ellipse | Class | Text | Portal            // the engine's own; a host type is NodeBase & its fields
 Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   // phase 2: Surface + derived props
 
-LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint }
+LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, directed? /* arrowhead at the target */ }
 Line     = LinkBase & { type: 'line' }
 Curve    = LinkBase & { type: 'curve' }                       // cubic, tangent along each port's normal
 Spline   = LinkBase & { type: 'spline', points: Point[] }     // Catmull-Rom through the control points
 Endpoint = { node: NodeId, port?: PortId }                    // no port = automatic (closest appropriate pair)
 
-NodeDef  = { type, name, icon, key, component, portsPerSide?, ports?(node): Port[], resizable?, minSize?, openable? }   // registry
+NodeDef  = { type, name, icon, key, group?, schema, component, create(props), defaultSize, portsPerSide?, ports?(node), resizable?, minSize?, openable? }   // registry
 LinkDef  = { type, name, icon, key }
-Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; drawn at the nearest major grid line */ }
+Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; drawn at the nearest major grid line */, accepts?: 'in'|'out'|'any' }
 ```
 
+- **Open node types** (decision 1, M1): the engine works on `NodeBase` (every node has a centre and a size, so
+  placing, hit testing, ports and routes need no registry) and narrows to its built-ins with guards
+  (`isRectNode`, …). A host registers its own types with their schema, view, `create` and ports, and builds its
+  scene schema with `createSceneSchema(defs.map((def) => def.schema))`, so validation stays exact per type; the
+  palette groups types by `NodeDef.group`. A type the registry does not know renders as a frame with its name.
+- **Port direction** (decision 2): `Port.accepts` (`in`, `out`, default either) filters `pairPorts` and the drop
+  target (a link leaves an `out` port and lands on an `in` port; a node with no acceptable port takes no drop),
+  and `Link.directed` draws the arrowhead; a link created between ports that declare a direction is directed.
 - `shapes.ts` is the pure geometry of the types: `nodeBounds(node)` (the box, or the radii for an ellipse),
   `resizeNode(node, bounds)` (writes `size` or `rx`/`ry`), `createNode(type, …)` / `createLink(type, …)` defaults.
   The registry only renders and declares ports and flags; the projection never depends on it.

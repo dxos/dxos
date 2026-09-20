@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../model/registry.ts';
-import { type Bounds, MAJOR_GRID } from '../model/types.ts';
-import { defaultPorts, nodePorts, pairPorts, portPoint, sidePorts } from './ports.ts';
+import { type Bounds, MAJOR_GRID, type Port } from '../model/types.ts';
+import { defaultPorts, nodePorts, pairPorts, portAccepts, portPoint, sidePorts } from './ports.ts';
 import { curvePath, curvePoint } from './route.ts';
 import { createNode } from './shapes.ts';
 
@@ -107,5 +107,29 @@ describe('ports', () => {
     const mid = curvePoint(from, to, 0.5);
     expect(mid.x).toBeCloseTo(200);
     expect(mid.y).toBeCloseTo(50);
+  });
+});
+
+describe('port direction', () => {
+  const box: Bounds = { x: 0, y: 0, width: 256, height: 256 };
+  const outOnly: Port = { id: 'e2', side: 'e', offset: 0.5, accepts: 'out' };
+  const inOnly: Port = { id: 'w2', side: 'w', offset: 0.5, accepts: 'in' };
+  const either: Port = { id: 'n2', side: 'n', offset: 0.5 };
+
+  test('portAccepts reads the declared direction and defaults to either', ({ expect }) => {
+    expect(portAccepts(outOnly, 'out')).toBe(true);
+    expect(portAccepts(outOnly, 'in')).toBe(false);
+    expect(portAccepts(inOnly, 'in')).toBe(true);
+    expect(portAccepts(either, 'in') && portAccepts(either, 'out')).toBe(true);
+  });
+
+  test('pairPorts leaves through out ports and lands on in ports only', ({ expect }) => {
+    const source = { bounds: box, ports: [inOnly, outOnly] };
+    const target = { bounds: { ...box, x: 640 }, ports: [outOnly, inOnly] };
+    const pair = pairPorts(source, target);
+    expect([pair?.source.id, pair?.target.id]).toEqual(['e2', 'w2']);
+    // A pinned port the direction forbids leaves the end automatic; no acceptable port means no pair.
+    expect(pairPorts({ ...source, port: 'w2' }, target)?.source.id).toBe('e2');
+    expect(pairPorts({ bounds: box, ports: [inOnly] }, target)).toBeUndefined();
   });
 });

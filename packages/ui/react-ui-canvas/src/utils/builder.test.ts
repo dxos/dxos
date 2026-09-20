@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { isClassNode, isEllipseNode } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 
 describe('SceneBuilder', () => {
@@ -19,8 +20,8 @@ describe('SceneBuilder', () => {
     expect(scene.name).toBe('Sample');
     expect(Object.keys(scene.nodes)).toEqual(['a', 'b', 'c']);
     expect(scene.nodes.a.center).toEqual({ x: 100, y: 50 });
-    expect(scene.nodes.b.type === 'ellipse' && [scene.nodes.b.rx, scene.nodes.b.ry]).toEqual([100, 50]);
-    expect(scene.nodes.c.type === 'class' && scene.nodes.c.attributes).toEqual(['id: string']);
+    expect(isEllipseNode(scene.nodes.b) && scene.nodes.b.size).toEqual({ width: 200, height: 100 });
+    expect(isClassNode(scene.nodes.c) && scene.nodes.c.attributes).toEqual(['id: string']);
     expect(scene.links.ab.source).toEqual({ node: 'a', port: 'e2' });
     expect(scene.links.ab.target).toEqual({ node: 'b', port: 'w2' });
     expect(scene.links.bc.source).toEqual({ node: 'b' });

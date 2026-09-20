@@ -8,8 +8,16 @@
 // the diagram re-attaches its links.
 //
 
-import { type NodeRegistry } from '../model/registry.ts';
-import { type Bounds, MAJOR_GRID, type Node, type Point, type Port, type Side } from '../model/types.ts';
+import { type NodeRegistry, nodeDef } from '../model/registry.ts';
+import {
+  type Bounds,
+  MAJOR_GRID,
+  type Node,
+  type Point,
+  type Port,
+  type PortDirection,
+  type Side,
+} from '../model/types.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
@@ -37,8 +45,8 @@ export const defaultPorts: readonly Port[] = sidePorts();
  * that snap onto the same grid point collapse to the first (a small node keeps fewer ports).
  */
 export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
-  const def = registry[node.type];
-  const ports = node.ports ?? def.ports?.(node) ?? sidePorts(def.portsPerSide);
+  const def = nodeDef(registry, node);
+  const ports = node.ports ?? def?.ports?.(node) ?? sidePorts(def?.portsPerSide);
   const bounds = nodeBounds(node);
   const seen = new Set<string>();
   return ports.filter((port) => {
@@ -97,6 +105,10 @@ export const sideNormal = (side: Side): Point => {
   }
 };
 
+/** Whether a port takes a link end of `direction` (`out` leaves it, `in` arrives); an unlabelled port takes either. */
+export const portAccepts = (port: Port, direction: Exclude<PortDirection, 'any'>): boolean =>
+  (port.accepts ?? 'any') === 'any' || port.accepts === direction;
+
 export type PortTerminal = {
   bounds: Bounds;
   ports: readonly Port[];
@@ -110,11 +122,12 @@ const distance2 = (left: Point, right: Point) => (left.x - right.x) ** 2 + (left
 
 /**
  * The port pair joining two nodes: pinned ports are honoured, automatic ends take the port that
- * minimises the distance to the other end (ties broken by port order, so the result is stable).
+ * minimises the distance to the other end (ties broken by port order, so the result is stable). The
+ * source end only leaves a port that accepts `out`, the target end only lands on one that accepts `in`.
  */
 export const pairPorts = (source: PortTerminal, target: PortTerminal): PortPair | undefined => {
-  const sources = candidates(source);
-  const targets = candidates(target);
+  const sources = candidates(source, 'out');
+  const targets = candidates(target, 'in');
   if (sources.length === 0 || targets.length === 0) {
     return undefined;
   }
@@ -133,11 +146,14 @@ export const pairPorts = (source: PortTerminal, target: PortTerminal): PortPair 
   return best;
 };
 
-const candidates = ({ ports, port }: PortTerminal): readonly Port[] => {
+/** The ports an end may use: those accepting its direction, narrowed to the pinned one when it is among them. */
+const candidates = ({ ports, port }: PortTerminal, direction: Exclude<PortDirection, 'any'>): readonly Port[] => {
+  const allowed = ports.filter((candidate) => portAccepts(candidate, direction));
   if (port === undefined) {
-    return ports;
+    return allowed;
   }
-  const pinned = ports.find((candidate) => candidate.id === port);
-  // A pinned port the definition no longer has falls back to automatic rather than dropping the link.
-  return pinned ? [pinned] : ports;
+  const pinned = allowed.find((candidate) => candidate.id === port);
+  // A pinned port the definition no longer has, or that refuses the end, falls back to automatic rather
+  // than dropping the link.
+  return pinned ? [pinned] : allowed;
 };

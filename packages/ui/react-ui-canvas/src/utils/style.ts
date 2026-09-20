@@ -7,7 +7,7 @@
 // every hue is spelled out here rather than composed from the hue name.
 //
 
-import { type Node } from '../model/types.ts';
+import { type Node, isEllipseNode } from '../model/types.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -45,6 +45,6 @@ export const frameClasses = (node: Node, selected: boolean): string[] => {
     style.fill === false ? '' : hue.surface,
     hue.text,
     style.border === false && !selected ? 'border-transparent' : selected ? 'border-primary-500' : hue.border,
-    node.type === 'ellipse' ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
+    isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
   ];
 };

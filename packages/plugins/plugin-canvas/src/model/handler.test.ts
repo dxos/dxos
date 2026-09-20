@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type ContentMap, applyCommands } from '@dxos/diagram';
+import { isEllipseNode, isRectNode } from '@dxos/react-ui-canvas/scene';
 
 import { ROOT_SCENE_ID, readScenes, rootOf, writeScenes } from './content.ts';
 import { SceneHandler, elementId } from './handler.ts';
@@ -33,14 +34,14 @@ describe('SceneHandler', () => {
     expect(Object.keys(root.nodes).sort()).toEqual(['face/caption', 'face/eye', 'face/head']);
     expect(Object.keys(root.links)).toEqual(['face/look']);
     const head = root.nodes[elementId('face', 'head')];
-    expect(head.type === 'rect' && [head.center, head.size, head.label, head.style?.hue]).toEqual([
+    expect(isRectNode(head) && [head.center, head.size, head.label, head.style?.hue]).toEqual([
       { x: 192, y: 128 },
       { width: 256, height: 128 },
       'Head',
       'blue',
     ]);
     const eye = root.nodes[elementId('face', 'eye')];
-    expect(eye.type === 'ellipse' && [eye.center, eye.rx]).toEqual([{ x: 128, y: 96 }, 16]);
+    expect(isEllipseNode(eye) && [eye.center, eye.size.width]).toEqual([{ x: 128, y: 96 }, 32]);
     expect(root.links['face/look'].source).toEqual({ node: 'face/head' });
 
     const { scene, unmanaged } = SceneHandler.read(content);

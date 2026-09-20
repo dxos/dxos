@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { createSceneTree } from '../utils/testing.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
 import { createMemoryStore, updateScene } from './store.ts';
-import { type Scene } from './types.ts';
+import { type Scene, isRectNode } from './types.ts';
 
 const fixture = (): Scene => {
   const { scenes, root } = createSceneTree(1, 'r');
@@ -37,7 +37,7 @@ describe('freehand projection', () => {
     expect(rect.type === 'rect' && rect.size).toEqual({ width: 100, height: 50 });
     expect(rect.center).toEqual({ x: 50, y: 25 });
     const ellipse = reduceIntent(fixture(), { kind: 'resize', id: 'scene:r/b', bounds }).nodes['scene:r/b'];
-    expect(ellipse.type === 'ellipse' && [ellipse.rx, ellipse.ry]).toEqual([50, 25]);
+    expect(ellipse.type === 'ellipse' && ellipse.size).toEqual({ width: 100, height: 50 });
     expect(ellipse.center).toEqual({ x: 50, y: 25 });
   });
 
@@ -67,7 +67,7 @@ describe('freehand projection', () => {
     });
     const node = next.nodes['scene:r/a'];
     expect(node.type).toBe('rect');
-    expect(node.type === 'rect' && node.label).toBe('Renamed');
+    expect(isRectNode(node) && node.label).toBe('Renamed');
     expect(node.center).toEqual({ x: 1, y: 2 });
     expect(next.nodes.other).toBeUndefined();
 

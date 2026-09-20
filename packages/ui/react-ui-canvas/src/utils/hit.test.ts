@@ -4,16 +4,18 @@
 
 import { describe, test } from 'vitest';
 
-import { type Scene } from '../model/types.ts';
+import { type BuiltinNode, type Scene } from '../model/types.ts';
 import { DEFAULT_EXTENT, boundsFromPoints, hitTest, nodesIntersecting, sceneBounds } from './hit.ts';
+
+const nodes: Record<string, BuiltinNode> = {
+  a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
+  b: { type: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, size: { width: 100, height: 100 } },
+  t: { type: 'text', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
+};
 
 const scene: Scene = {
   id: 's',
-  nodes: {
-    a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
-    b: { type: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, rx: 50, ry: 50 },
-    t: { type: 'text', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
-  },
+  nodes,
   links: {
     l: { type: 'line', id: 'l', z: 'A', source: { node: 'a' }, target: { node: 'b' } },
   },

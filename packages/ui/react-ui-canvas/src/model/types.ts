@@ -4,8 +4,9 @@
 
 //
 // Scene engine types (docs/DESIGN.md §4). Plain Effect schemas: no ECHO yet, so the same shapes wrap
-// into an ECHO type later without change. A diagram is one scene of typed nodes and typed links; a
-// node has a centre plus the properties its type needs; a portal node references another scene.
+// into an ECHO type later without change. A diagram is one scene of typed nodes and typed links; every
+// node is a `NodeBase` (centre, size, ports, style) plus the properties its type adds, so the engine
+// works on the base and a host composes the scene schema from its own node types (decision 1).
 //
 
 import * as Schema from 'effect/Schema';
@@ -40,8 +41,17 @@ export type PortId = string;
 export const Side = Schema.Literals(['n', 'e', 's', 'w']);
 export type Side = Schema.Schema.Type<typeof Side>;
 
-/** An attachment point on a node's frame: a side and a 0..1 offset along it. */
-export const Port = Schema.Struct({ id: Schema.String, side: Side, offset: Schema.Number });
+/** What a port takes: links leaving it, links arriving at it, or either (the default). */
+export const PortDirection = Schema.Literals(['in', 'out', 'any']);
+export type PortDirection = Schema.Schema.Type<typeof PortDirection>;
+
+/** An attachment point on a node's frame: a side, a 0..1 offset along it, and what it accepts. */
+export const Port = Schema.Struct({
+  id: Schema.String,
+  side: Side,
+  offset: Schema.Number,
+  accepts: Schema.optional(PortDirection),
+});
 export type Port = Schema.Schema.Type<typeof Port>;
 
 //
@@ -58,30 +68,35 @@ export const NodeStyle = Schema.Struct({
 });
 export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
 
-const nodeBase = {
+/** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */
+export const nodeBase = {
   id: Schema.String,
   /** Fractional z-order key (see `order.ts`). */
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
   center: Point,
+  /** The frame is `size` centred on `center`, whatever the type draws inside it. */
+  size: Size,
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
   style: Schema.optional(NodeStyle),
 };
 
+/** Any node as the engine sees it: the shared fields and a type name; the registry knows the rest. */
+export const NodeBase = Schema.Struct({ type: Schema.String, ...nodeBase });
+export type NodeBase = Schema.Schema.Type<typeof NodeBase>;
+
 export const RectNode = Schema.Struct({
   type: Schema.Literal('rect'),
   ...nodeBase,
-  size: Size,
   label: Schema.optional(Schema.String),
 });
 export type RectNode = Schema.Schema.Type<typeof RectNode>;
 
+/** An ellipse inscribed in the frame. */
 export const EllipseNode = Schema.Struct({
   type: Schema.Literal('ellipse'),
   ...nodeBase,
-  rx: Schema.Number,
-  ry: Schema.Number,
   label: Schema.optional(Schema.String),
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
@@ -90,7 +105,6 @@ export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 export const ClassNode = Schema.Struct({
   type: Schema.Literal('class'),
   ...nodeBase,
-  size: Size,
   name: Schema.String,
   attributes: Schema.Array(Schema.String),
   methods: Schema.Array(Schema.String),
@@ -100,7 +114,6 @@ export type ClassNode = Schema.Schema.Type<typeof ClassNode>;
 export const TextNode = Schema.Struct({
   type: Schema.Literal('text'),
   ...nodeBase,
-  size: Size,
   text: Schema.String,
 });
 export type TextNode = Schema.Schema.Type<typeof TextNode>;
@@ -109,15 +122,28 @@ export type TextNode = Schema.Schema.Type<typeof TextNode>;
 export const PortalNode = Schema.Struct({
   type: Schema.Literal('scene'),
   ...nodeBase,
-  size: Size,
   scene: Schema.String,
 });
 export type PortalNode = Schema.Schema.Type<typeof PortalNode>;
 
-export const Node = Schema.Union([RectNode, EllipseNode, ClassNode, TextNode, PortalNode]);
-export type Node = Schema.Schema.Type<typeof Node>;
-export type NodeType = Node['type'];
-export const NODE_TYPES: readonly NodeType[] = ['rect', 'ellipse', 'class', 'text', 'scene'];
+/** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
+export const BuiltinNode = Schema.Union([RectNode, EllipseNode, ClassNode, TextNode, PortalNode]);
+export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
+export type BuiltinNodeType = BuiltinNode['type'];
+export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'class', 'text', 'scene'];
+
+/** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
+export type Node = NodeBase;
+/** A node type name; the engine's own are `BuiltinNodeType`. */
+export type NodeType = string;
+
+/** Narrows a node to one built-in type; sound because the registry maps each type name to one schema. */
+export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
+export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
+export const isClassNode = (node: NodeBase): node is ClassNode => node.type === 'class';
+export const isTextNode = (node: NodeBase): node is TextNode => node.type === 'text';
+export const isPortalNode = (node: NodeBase): node is PortalNode => node.type === 'scene';
+export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
 //
 // Links
@@ -136,6 +162,8 @@ const linkBase = {
   locked: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
+  /** Drawn with an arrowhead at the target; ports with `accepts` constrain which end lands where. */
+  directed: Schema.optional(Schema.Boolean),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -167,16 +195,33 @@ export const isLink = (element: Element): element is Link => 'source' in element
 // Scene
 //
 
-export const Scene = Schema.Struct({
-  id: Schema.String,
-  name: Schema.optional(Schema.String),
-  nodes: Schema.Record(Schema.String, Node),
-  links: Schema.Record(Schema.String, Link),
-});
-export type Scene = Schema.Schema.Type<typeof Scene>;
+/**
+ * The scene schema over a set of node schemas: a host composes it from its registry's types, so the
+ * schema stays exact for every type while the engine only ever sees `NodeBase`.
+ */
+export const createSceneSchema = <const Nodes extends readonly Schema.Codec<NodeBase, unknown>[]>(nodes: Nodes) =>
+  Schema.Struct({
+    id: Schema.String,
+    name: Schema.optional(Schema.String),
+    nodes: Schema.Record(Schema.String, Schema.Union(nodes)),
+    links: Schema.Record(Schema.String, Link),
+  });
+
+/** The scene schema over the built-in node types. */
+export const Scene = createSceneSchema([RectNode, EllipseNode, ClassNode, TextNode, PortalNode]);
+export type Scene = {
+  readonly id: SceneId;
+  readonly name?: string;
+  readonly nodes: Readonly<Record<NodeId, Node>>;
+  readonly links: Readonly<Record<LinkId, Link>>;
+};
 
 /** A node or link of the scene by id. */
 export const getElement = (scene: Scene, id: ElementId): Element | undefined => scene.nodes[id] ?? scene.links[id];
+
+/** Property edits: the shared fields typed, a type's own fields by name. */
+export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };
+export type LinkValues = Partial<Omit<Link, 'id' | 'type'>>;
 
 /**
  * What the surface asks of a projection (§3). The surface never writes coordinates itself: a
@@ -190,7 +235,7 @@ export type Intent =
   | { kind: 'delete'; ids: ElementId[] }
   | { kind: 'reorder'; id: ElementId; z: string }
   /** Property edits (label, text, geometry, control points); `id` and `type` never change. */
-  | { kind: 'update'; id: ElementId; values: Partial<Node> | Partial<Link> }
+  | { kind: 'update'; id: ElementId; values: NodeValues | LinkValues }
   /** Several intents applied as one model change (one undo step), e.g. a paste. */
   | { kind: 'batch'; intents: Intent[] };
 

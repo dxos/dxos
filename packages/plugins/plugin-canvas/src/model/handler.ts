@@ -20,6 +20,10 @@ import {
   type TextNode,
   between,
   createLink,
+  isClassNode,
+  isEllipseNode,
+  isRectNode,
+  isTextNode,
   nodeBounds,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
@@ -118,22 +122,20 @@ export const SceneHandler: ContentHandler = {
         }
         case 'ellipse': {
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const rx = (element.w * placement.scale) / 2;
-          const ry = (element.h * placement.scale) / 2;
-          const node: EllipseNode = { type: 'ellipse', id, z: nextZ(), center, rx, ry, label: element.text };
+          const size = { width: element.w * placement.scale, height: element.h * placement.scale };
+          const node: EllipseNode = { type: 'ellipse', id, z: nextZ(), center, size, label: element.text };
           put(element.id, withStyle(node, styleOf(element)));
           break;
         }
         case 'circle': {
-          const radius = element.r * placement.scale;
+          const diameter = element.r * 2 * placement.scale;
           const center = place(element.cx, element.cy);
           const node: EllipseNode = {
             type: 'ellipse',
             id,
             z: nextZ(),
             center,
-            rx: radius,
-            ry: radius,
+            size: { width: diameter, height: diameter },
             label: element.text,
           };
           put(element.id, withStyle(node, styleOf(element)));
@@ -208,13 +210,13 @@ export const SceneHandler: ContentHandler = {
           const frame = nodeBounds(node);
           const local = { x: frame.x - origin.x, y: frame.y - origin.y, w: frame.width, h: frame.height };
           const text = textOf(node);
-          if (node.type === 'text') {
+          if (isTextNode(node)) {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
           } else {
             elements.push({
-              kind: node.type === 'ellipse' ? 'ellipse' : 'rect',
+              kind: isEllipseNode(node) ? 'ellipse' : 'rect',
               id: element,
               ...local,
               ...(text ? { text } : {}),
@@ -249,17 +251,16 @@ export const SceneHandler: ContentHandler = {
 const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : record.link.z);
 
 const textOf = (node: Node): string => {
-  switch (node.type) {
-    case 'rect':
-    case 'ellipse':
-      return node.label ?? '';
-    case 'text':
-      return node.text;
-    case 'class':
-      return node.name;
-    case 'scene':
-      return '';
+  if (isRectNode(node) || isEllipseNode(node)) {
+    return node.label ?? '';
   }
+  if (isTextNode(node)) {
+    return node.text;
+  }
+  if (isClassNode(node)) {
+    return node.name;
+  }
+  return '';
 };
 
 /** The DSL ref of the node a link end names, relative to `object`. */

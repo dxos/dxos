@@ -17,21 +17,27 @@ const BASE: Entry[] = [
   { tool: { kind: 'hand' }, icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
 ];
 
+/** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
+const nodeGroups = (nodes: NodeRegistry): Entry[][] => {
+  const groups = new Map<string, Entry[]>();
+  for (const def of Object.values(nodes)) {
+    const name = def.group ?? '';
+    groups.set(name, [
+      ...(groups.get(name) ?? []),
+      { tool: { kind: 'node' as const, type: def.type }, icon: def.icon, label: def.name, key: def.key },
+    ]);
+  }
+  return [...groups.values()];
+};
+
 /**
- * Palette entries: the fixed tools, then a shape per node type, then a link per link type; a group the
+ * Palette entries: the fixed tools, then the node types by group, then a link per link type; a group the
  * projection cannot apply (`create`, `link`) is left out rather than offered and silently dropped.
  */
 export const paletteEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): Entry[][] =>
   [
     BASE,
-    capabilities.create
-      ? Object.values(nodes).map((def) => ({
-          tool: { kind: 'node' as const, type: def.type },
-          icon: def.icon,
-          label: def.name,
-          key: def.key,
-        }))
-      : [],
+    ...(capabilities.create ? nodeGroups(nodes) : []),
     capabilities.link
       ? Object.values(links).map((def) => ({
           tool: { kind: 'link' as const, type: def.type },

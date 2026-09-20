@@ -65,7 +65,7 @@ const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => str
       ['save(): void'],
     )
     .curve(elementId('ab'), elementId('a'), elementId('b'))
-    .line(elementId('ac'), elementId('a'), elementId('c'))
+    .line(elementId('ac'), elementId('a'), elementId('c'), { directed: true })
     .spline(elementId('bc'), elementId('b'), elementId('c'), [{ x: 640, y: 512 }]);
 
 const childScene = (id: SceneId, name: string, elementId: (suffix: string) => string, variant: Variant) => {
@@ -76,8 +76,8 @@ const childScene = (id: SceneId, name: string, elementId: (suffix: string) => st
         .rect(elementId('start'), { x: 128, y: 192, width: 256, height: 128 }, 'Start')
         .rect(elementId('work'), { x: 576, y: 192, width: 256, height: 128 }, 'Work')
         .ellipse(elementId('done'), { x: 1024, y: 192, width: 256, height: 128 }, 'Done')
-        .line(elementId('l1'), `${elementId('start')}#e2`, `${elementId('work')}#w2`)
-        .line(elementId('l2'), `${elementId('work')}#e2`, `${elementId('done')}#w2`);
+        .line(elementId('l1'), `${elementId('start')}#e2`, `${elementId('work')}#w2`, { directed: true })
+        .line(elementId('l2'), `${elementId('work')}#e2`, `${elementId('done')}#w2`, { directed: true });
     case 'model':
       return builder
         .class(

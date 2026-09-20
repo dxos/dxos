@@ -17,13 +17,15 @@ import { initialKeys } from '../../utils/order.ts';
 import { createNode, withLabel } from '../../utils/shapes.ts';
 import { type Projection } from '../projection.ts';
 import {
+  type BuiltinNodeType,
   type Capabilities,
   type Intent,
   type Node,
-  type NodeType,
   type Point,
   type Scene,
   type Size,
+  isBuiltinNode,
+  isPortalNode,
 } from '../types.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
@@ -32,7 +34,7 @@ export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
 export type Constraint = { subject: string; relation: Relation; object: string };
 
 /** `type` is the node's shape; the solver places every type on the same grid. */
-export type ConstrainedNode = { id: string; label?: string; type?: NodeType };
+export type ConstrainedNode = { id: string; label?: string; type?: BuiltinNodeType };
 
 export type ConstrainedModel = {
   nodes: ConstrainedNode[];
@@ -272,10 +274,14 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         break;
       }
       case 'create': {
-        if (intent.node.type === 'scene') {
+        if (isPortalNode(intent.node)) {
           return;
         }
-        const node: ConstrainedNode = { id: intent.node.id, type: intent.node.type, label: labelOf(intent.node) };
+        const node: ConstrainedNode = {
+          id: intent.node.id,
+          type: isBuiltinNode(intent.node) ? intent.node.type : undefined,
+          label: labelOf(intent.node),
+        };
         const added = { ...current, nodes: [...current.nodes, node] };
         // Constrain the new node as if it had been dropped where it was drawn.
         const solved = registry.get(scene);

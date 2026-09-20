@@ -8,13 +8,24 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useId, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
+import { type NodeRegistry, type NodeViewProps, nodeDef } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
-import { type ElementId, type Link, type Node, type NodeId, type Scene } from '../../model/types.ts';
+import {
+  type ElementId,
+  type Link,
+  type Node,
+  type NodeId,
+  type Scene,
+  isClassNode,
+  isEllipseNode,
+  isPortalNode,
+  isRectNode,
+  isTextNode,
+} from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
 import { sceneBounds } from '../../utils/hit.ts';
 import { sortByZ } from '../../utils/order.ts';
@@ -86,10 +97,26 @@ export const SceneLayer = memo(
       [scene, registry],
     );
     const unit = 1 / Math.max(zoom, 0.05);
+    // One arrowhead marker per layer, sized in scene units so it scales with the stroke.
+    const markerId = useId();
 
     return (
       <>
         <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+          <defs>
+            <marker
+              id={markerId}
+              viewBox='0 0 10 10'
+              refX={9}
+              refY={5}
+              markerWidth={6 * unit}
+              markerHeight={6 * unit}
+              markerUnits='userSpaceOnUse'
+              orient='auto'
+            >
+              <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
+            </marker>
+          </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
               {/* A wide transparent twin makes the thin stroke easy to press. */}
@@ -108,6 +135,7 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
                 strokeWidth={2 * unit}
+                markerEnd={link.directed ? `url(#${markerId})` : undefined}
               />
             </g>
           ))}
@@ -142,7 +170,7 @@ const NodeFrame = memo(({ handlers, editingPart, ...props }: NodeFrameProps) => 
   const { node, registry, selected } = props;
   const bounds = nodeBounds(node);
   const interactive = handlers !== undefined;
-  const Component = registry[node.type].component;
+  const Component = nodeDef(registry, node)?.component ?? UnknownNodeView;
   const editing = useMemo<PartEditing | undefined>(
     () =>
       editingPart && handlers
@@ -173,7 +201,7 @@ const NodeFrame = memo(({ handlers, editingPart, ...props }: NodeFrameProps) => 
 NodeFrame.displayName = 'NodeFrame';
 
 const LabelNodeView = ({ node, editing }: NodeViewProps) => {
-  const label = node.type === 'rect' || node.type === 'ellipse' ? (node.label ?? '') : '';
+  const label = isRectNode(node) || isEllipseNode(node) ? (node.label ?? '') : '';
   return (
     <TextPart
       part='label'
@@ -191,7 +219,7 @@ export const RectNodeView = LabelNodeView;
 export const EllipseNodeView = LabelNodeView;
 
 export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
-  if (node.type !== 'class') {
+  if (!isClassNode(node)) {
     return null;
   }
   return (
@@ -218,8 +246,13 @@ export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
   );
 };
 
+/** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
+export const UnknownNodeView = ({ node }: NodeViewProps) => (
+  <div className='dx-fullscreen flex items-center justify-center text-xs text-description'>{node.type}</div>
+);
+
 export const TextNodeView = ({ node, editing }: NodeViewProps) => {
-  const text = node.type === 'text' ? node.text : '';
+  const text = isTextNode(node) ? node.text : '';
   return (
     <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3 text-description'>
       {text}
@@ -228,7 +261,7 @@ export const TextNodeView = ({ node, editing }: NodeViewProps) => {
 };
 
 export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, opening }: NodeViewProps) => {
-  const child = useAtomValue(store.scene(node.type === 'scene' ? node.scene : ''));
+  const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
   // Being entered, the portal is already the child scene on the canvas: live, and without the tile tint.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, sceneBounds(child)) : undefined), [node, child]);
