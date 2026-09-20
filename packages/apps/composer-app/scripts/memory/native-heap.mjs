@@ -47,6 +47,8 @@ import { createInterface } from 'node:readline';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
+import { WASM_PROBE } from './probes.mjs';
+
 /** Restated rather than imported: `plugin-projects` does not export its `paths` module. */
 const getProjectPath = (spaceId, projectId) =>
   GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.ai, 'org.dxos.type.project', projectId);
@@ -428,6 +430,7 @@ try {
     }
     workerSessions.set(sessionId, targetInfo.type);
     void cdp.trySend('Runtime.evaluate', { expression: IDB_PROBE, returnByValue: true }, { sessionId });
+    void cdp.trySend('Runtime.evaluate', { expression: WASM_PROBE, returnByValue: true }, { sessionId });
     // Re-armed on the new session, because auto-attach covers a session's own children
     // only. Composer's client worker creates the observability worker that runs the log
     // store, and without this that grandchild realm is never reached.
@@ -441,6 +444,9 @@ try {
   await cdp.send('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: false });
   await cdp.send('Page.enable');
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: IDB_PROBE });
+  // Linear memory appears in no allocator node, so this is the only instrument that
+  // names the modules behind the residual — and the journey is when automerge grows.
+  await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: WASM_PROBE });
   await cdp.send('Memory.startSampling', { samplingInterval: rate, suppressRandomness: false });
   await cdp.send('Page.navigate', { url });
   console.error(`navigated; settling ${settleS}s ...`);
@@ -500,7 +506,12 @@ try {
   // Read before the dump, so a spike in the IndexedDB category can be matched to the JS
   // that issued the reads in the same run.
   const idbCalls = new Map();
+  const wasmByModule = new Map();
   for (const sessionId of [undefined, ...workerSessions.keys()]) {
+    // Which realm holds a memory is the question the module name alone cannot answer: the
+    // same automerge binary is instantiated in the tab and in the worker, and the split
+    // between them is what says whether the tab's replica or the worker's corpus is bigger.
+    const realm = sessionId ? (workerSessions.get(sessionId) ?? 'worker') : 'page';
     const result = await cdp.trySend(
       'Runtime.evaluate',
       { expression: 'JSON.stringify(globalThis.__idbProbe ?? {})', returnByValue: true },
@@ -508,6 +519,22 @@ try {
     );
     for (const [key, count] of Object.entries(JSON.parse(result?.result?.value ?? '{}'))) {
       idbCalls.set(key, (idbCalls.get(key) ?? 0) + count);
+    }
+    const wasm = await cdp.trySend(
+      'Runtime.evaluate',
+      { expression: 'JSON.stringify(globalThis.__wasmProbe?.() ?? {})', returnByValue: true },
+      { sessionId, timeoutMs: GC_TIMEOUT_MS },
+    );
+    for (const [key, bytes] of Object.entries(JSON.parse(wasm?.result?.value ?? '{}'))) {
+      // A `shared:` memory is visible in every realm it was posted to, so summing across
+      // realms would count one allocation once per realm; the probe tags it and the last
+      // reading wins rather than accumulating.
+      const tagged = `${realm}  ${key}`;
+      if (key.startsWith('shared:')) {
+        wasmByModule.set(tagged, bytes);
+      } else {
+        wasmByModule.set(tagged, (wasmByModule.get(tagged) ?? 0) + bytes);
+      }
     }
   }
 
@@ -749,6 +776,15 @@ try {
       uncategorised += sample.bytes;
     }
   }
+  const wasmTotal = [...wasmByModule.values()].reduce((sum, bytes) => sum + bytes, 0);
+  if (wasmTotal) {
+    console.log(`\n=== committed WebAssembly.Memory (in no allocator node) ===`);
+    for (const [key, bytes] of [...wasmByModule].sort((a, b) => b[1] - a[1])) {
+      console.log(`${String(MB(bytes)).padStart(9)} MB  ${key}`);
+    }
+    console.log(`${String(MB(wasmTotal)).padStart(9)} MB  total`);
+  }
+
   if (idbCalls.size) {
     console.log('\n=== IndexedDB reads, by JS call site ===');
     for (const [key, count] of [...idbCalls].sort((a, b) => b[1] - a[1]).slice(0, 8)) {
@@ -775,6 +811,7 @@ try {
           rate,
           rendererPid,
           idbCalls: Object.fromEntries(idbCalls),
+          wasmByModule: Object.fromEntries(wasmByModule),
           sampled,
           samples,
           settleS,
