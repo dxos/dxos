@@ -39,6 +39,7 @@ export const translations = [
         'navigate-to-document.label': 'Open document',
         'words.label': 'words',
         'object-not-found.label': 'Object not found',
+        'object-unsupported.label': 'No preview for this object',
         'words.label_zero': 'words',
         'words.label_one': 'word',
         'words.label_other': 'words',

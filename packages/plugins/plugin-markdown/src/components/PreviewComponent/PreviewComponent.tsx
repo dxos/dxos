@@ -129,7 +129,8 @@ export const PreviewComponent = ({
     };
   }, [ref]);
   const available = !!object && !Obj.isDeleted(object);
-  const unavailable = !available && (missing || !!object);
+  // No ref at all (no database to resolve against) is as final as a settled miss.
+  const unavailable = !ref || (!available && (missing || !!object));
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
@@ -158,6 +159,8 @@ export const PreviewComponent = ({
       : isSurfaceAvailable({ type: AppSurface.CardContent, data })
         ? 'card'
         : undefined;
+  // Resolved, but nothing contributes a preview for its type: as unresolvable as a missing target.
+  const unsupported = available && !!data && mode === undefined;
 
   // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved
   // target puts the source back (editable) with the error inline, and a card drops the reserved
@@ -168,9 +171,9 @@ export const PreviewComponent = ({
       return;
     }
     const next: LinkWidgetState = {};
-    if (available && unresolved) {
+    if (mode && unresolved) {
       next.unresolved = false;
-    } else if (unavailable && !unresolved) {
+    } else if ((unavailable || unsupported) && !unresolved) {
       next.unresolved = true;
     }
     if (mode && !!intrinsic !== (mode === 'card')) {
@@ -179,7 +182,7 @@ export const PreviewComponent = ({
     if (Object.keys(next).length > 0) {
       queueMicrotask(() => setLinkWidgetState(view, id, next));
     }
-  }, [view, id, available, unavailable, unresolved, mode, intrinsic]);
+  }, [view, id, unavailable, unsupported, unresolved, mode, intrinsic]);
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
@@ -301,7 +304,7 @@ export const PreviewComponent = ({
     return (
       <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
         <Icon icon='ph--warning--regular' size={4} />
-        {t('object-not-found.label')}
+        {t(unsupported ? 'object-unsupported.label' : 'object-not-found.label')}
       </span>
     );
   }
@@ -386,6 +389,7 @@ export const PreviewComponent = ({
     }
   }
 
-  // Loading: the placeholder holds the reserved height until the target settles.
+  // Loading, or waiting for the report above to rebuild the link: the placeholder holds the
+  // reserved height meanwhile.
   return null;
 };
