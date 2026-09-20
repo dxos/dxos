@@ -29,6 +29,7 @@ import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type }
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
+import { URI } from '@dxos/keys';
 import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager.ts';
@@ -96,6 +97,19 @@ const SubjectProbeOp = Operation.make({
   output: Schema.Struct({ type: Schema.String, subjectId: Schema.optional(Schema.String) }),
   services: [Database.Service],
 });
+
+/**
+ * Registered as an operation definition but deliberately absent from every handler set, so
+ * invoking it reproduces the production `NoHandlerError` raised by a plugin that is gone.
+ */
+const UnhandledOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.unhandled'), name: 'Unhandled' },
+  input: Schema.Any,
+  output: Schema.Void,
+});
+
+/** Shape of the uris seen in production, referencing an object that no longer exists. */
+const DANGLING_URI = URI.make('echo:///01KYMGPJCXG398JQYERR2BJ80W');
 
 /** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
 const TracedOp = Operation.make({
@@ -1546,6 +1560,136 @@ describe('TriggerDispatcher', () => {
           invariant(lastResult, 'expected a last result');
           expect(Exit.isSuccess(lastResult)).toBe(true);
         }
+      }, Effect.provide(TestLayer())),
+    );
+  });
+
+  // A trigger outlives what it points at: its target object is deleted, or the plugin contributing
+  // its operation is disabled. The dispatcher cannot repair either, so it must park that one
+  // trigger rather than fail the pass it is running in.
+  describe('Stale References', () => {
+    it.effect(
+      'a deleted feed parks its trigger without aborting the dispatch pass',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const healthy = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        const stale = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: { kind: 'feed', feed: Ref.fromURI(DANGLING_URI) },
+        });
+        // Added first so the pass reaches it before the healthy trigger.
+        yield* Database.add(stale);
+        yield* Database.add(healthy);
+        yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+
+        expect(results.map((result) => result.triggerId)).toEqual([healthy.id]);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+
+        const registry = yield* Registry.AtomRegistry;
+        const status = registry.get(dispatcher.state);
+        expect(status.triggers.find((t) => t.triggerId === stale.id)?.staleReference).toBeDefined();
+        expect(status.triggers.find((t) => t.triggerId === healthy.id)?.staleReference).toBeUndefined();
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a deleted feed does not fail the refresh pass that reconciles reactive sources',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(Reply);
+          const stale = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: { kind: 'feed', feed: Ref.fromURI(DANGLING_URI) },
+          });
+          yield* Database.add(stale);
+          const healthy = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('*/5 * * * *'),
+          });
+          yield* Database.add(healthy);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+          yield* dispatcher.refreshTriggers();
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          // The refresh completed: the healthy trigger got its schedule, and the dispatcher is up.
+          expect(status.enabled).toBe(true);
+          expect(status.triggers.find((t) => t.triggerId === healthy.id)?.nextExecution).toBeInstanceOf(Date);
+          expect(status.triggers.find((t) => t.triggerId === stale.id)?.staleReference).toBeDefined();
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
+      ),
+    );
+
+    it.effect(
+      'an operation with no registered handler parks the trigger instead of arming the cooldown',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(UnhandledOp);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('* * * * *'),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+          expect(results.length).toBe(1);
+          expect(Exit.isFailure(results[0].result)).toBe(true);
+
+          const registry = yield* Registry.AtomRegistry;
+          const triggerStatus = registry.get(dispatcher.state).triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.staleReference).toBeDefined();
+          expect(triggerStatus?.cooldownUntil).toBeUndefined();
+
+          // Past the failure cooldown the trigger stays parked rather than re-running and re-throwing.
+          yield* dispatcher.advanceTime(Duration.minutes(6));
+          expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] })).toEqual([]);
+
+          // The park is not permanent: the probe interval elapsing lets a repaired reference resume.
+          yield* dispatcher.advanceTime(Duration.minutes(16));
+          expect((yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] })).length).toBe(1);
+        },
+        Effect.provide(TestLayer({ failureCooldown: Duration.minutes(5) })),
+      ),
+    );
+
+    it.effect(
+      'a deleted operation object parks the trigger',
+      Effect.fnUntraced(function* ({ expect }) {
+        const trigger = Trigger.make({
+          runnable: Ref.fromURI(DANGLING_URI),
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { data: {} } });
+        expect(Exit.isFailure(result)).toBe(true);
+
+        const registry = yield* Registry.AtomRegistry;
+        const triggerStatus = registry.get(dispatcher.state).triggers.find((t) => t.triggerId === trigger.id);
+        expect(triggerStatus?.staleReference).toBeDefined();
+        expect(triggerStatus?.cooldownUntil).toBeUndefined();
       }, Effect.provide(TestLayer())),
     );
   });
