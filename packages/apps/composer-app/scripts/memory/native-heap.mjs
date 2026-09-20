@@ -14,7 +14,7 @@
  *
  * Electron is the way around that: it embeds the same Chromium and publishes a breakpad
  * symbol file per release, so the same profile resolves to real function names. Run
- * `fetch-electron.sh` once to download both. macOS arm64 only, as written.
+ * `fetch-electron.sh` once to download both. macOS only.
  *
  * The profile is one process wide and does not separate `malloc` from PartitionAlloc, so
  * read it as a decomposition of the two together.
@@ -39,6 +39,29 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
+
+// Installed alongside the native profiler so a run that catches a spike can say which JS
+// call produced it: the native stack names the C++ frame, and below that it is all JIT
+// addresses. Kept in step with `api-census.mjs`, which is the same shim on its own.
+const IDB_PROBE = `(() => {
+  if (globalThis.__idbProbe) { return; }
+  const calls = {};
+  globalThis.__idbProbe = calls;
+  for (const proto of [IDBObjectStore.prototype, IDBIndex.prototype]) {
+    for (const name of ['getAll', 'getAllKeys', 'getAllRecords', 'openCursor', 'openKeyCursor', 'get', 'getKey', 'count']) {
+      const original = proto[name];
+      if (!original) { continue; }
+      proto[name] = function (...args) {
+        let store = '?';
+        try { const owner = this.objectStore ?? this; store = owner.transaction.db.name + '/' + owner.name; } catch {}
+        const frames = (new Error().stack || '').split('\\n').slice(3, 7).map((line) => line.trim()).join(' | ');
+        const key = name + ' ' + store + ' @ ' + frames;
+        calls[key] = (calls[key] ?? 0) + 1;
+        return original.apply(this, args);
+      };
+    }
+  }
+})()`;
 
 const url = process.argv[2]?.startsWith('--') ? 'http://localhost:4173' : (process.argv[2] ?? 'http://localhost:4173');
 const arg = (name, dflt) => {
@@ -104,7 +127,17 @@ const loadSymbols = async (file, moduleLine) => {
   // written to the same path would otherwise resolve through the old index and produce
   // plausible names for the wrong binary.
   const stamp = `# ${moduleLine}`;
-  if (!existsSync(cache) || !readFileSync(cache, 'utf8').startsWith(`${stamp}\n`)) {
+  const stampMatches = () => {
+    if (!existsSync(cache)) {
+      return false;
+    }
+    const head = Buffer.alloc(Buffer.byteLength(stamp) + 1);
+    const fd = openSync(cache, 'r');
+    readSync(fd, head, 0, head.length, 0);
+    closeSync(fd);
+    return head.toString('utf8') === `${stamp}\n`;
+  };
+  if (!stampMatches()) {
     const rows = [];
     const lines = createInterface({ input: createReadStream(file, { highWaterMark: 1 << 22 }), crlfDelay: Infinity });
     for await (const line of lines) {
@@ -371,6 +404,7 @@ try {
       return;
     }
     workerSessions.set(sessionId, targetInfo.type);
+    void cdp.trySend('Runtime.evaluate', { expression: IDB_PROBE, returnByValue: true }, { sessionId });
     // Re-armed on the new session, because auto-attach covers a session's own children
     // only. Composer's client worker creates the observability worker that runs the log
     // store, and without this that grandchild realm is never reached.
@@ -383,6 +417,7 @@ try {
   cdp.on('Target.detachedFromTarget', ({ sessionId }) => workerSessions.delete(sessionId));
   await cdp.send('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: false });
   await cdp.send('Page.enable');
+  await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: IDB_PROBE });
   await cdp.send('Memory.startSampling', { samplingInterval: rate, suppressRandomness: false });
   await cdp.send('Page.navigate', { url });
   console.error(`navigated; settling ${settleS}s ...`);
@@ -391,8 +426,8 @@ try {
   // The sampler drops a sample when its allocation is freed, so a collection first is what
   // makes the result retention rather than churn. Each realm has its own isolate.
   await cdp.trySend('HeapProfiler.enable', {}, { timeoutMs: GC_TIMEOUT_MS });
-  await cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS });
-  let collected = 0;
+  const pageCollected = await cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS });
+  let collected = pageCollected ? 1 : 0;
   for (const sessionId of workerSessions.keys()) {
     await cdp.trySend('HeapProfiler.enable', {}, { sessionId, timeoutMs: GC_TIMEOUT_MS });
     const result = await cdp.trySend('HeapProfiler.collectGarbage', {}, { sessionId, timeoutMs: GC_TIMEOUT_MS });
@@ -403,9 +438,24 @@ try {
   // Named, because a realm missing from this list is one whose garbage the profile will
   // report as live — the difference between "retained" and "allocated faster than GC".
   console.error(
-    `  collected ${collected + 1} of ${workerSessions.size + 1} attached realms: page, ${[...workerSessions.values()].join(', ')}`,
+    `  collected ${collected} of ${workerSessions.size + 1} attached realms: page, ${[...workerSessions.values()].join(', ')}` +
+      ' (service and shared workers live in other processes and do not affect this one)',
   );
   await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  // Read before the dump, so a spike in the IndexedDB category can be matched to the JS
+  // that issued the reads in the same run.
+  const idbCalls = new Map();
+  for (const sessionId of [undefined, ...workerSessions.keys()]) {
+    const result = await cdp.trySend(
+      'Runtime.evaluate',
+      { expression: 'JSON.stringify(globalThis.__idbProbe ?? {})', returnByValue: true },
+      { sessionId, timeoutMs: GC_TIMEOUT_MS },
+    );
+    for (const [key, count] of Object.entries(JSON.parse(result?.result?.value ?? '{}'))) {
+      idbCalls.set(key, (idbCalls.get(key) ?? 0) + count);
+    }
+  }
 
   const { profile } = await cdp.send('Memory.getSamplingProfile');
   if (!profile?.samples?.length) {
@@ -570,10 +620,10 @@ try {
     `  ${'  of which no symbol could be resolved'.padEnd(48)} ${String(MB(unresolved)).padStart(9)} MB` +
       (sampled ? ` (${((unresolved / sampled) * 100).toFixed(1)}%)` : ''),
   );
-  if (live && sampled > live) {
-    // The sample cannot exceed the live objects of the process it came from, so this is a
-    // mispairing rather than a measurement.
-    console.error(`  WARNING: the sample is larger than pid ${rendererPid}'s live objects — wrong process?`);
+  // The sample is a Poisson estimate, so a few percent over the live total is the
+  // estimator; far over means the profile and the dump describe different processes.
+  if (live && sampled > live * 1.15) {
+    console.error(`  WARNING: the sample is much larger than pid ${rendererPid}'s live objects — wrong process?`);
   }
 
   const report = (label, skipGeneric) => {
@@ -645,6 +695,13 @@ try {
       uncategorised += sample.bytes;
     }
   }
+  if (idbCalls.size) {
+    console.log('\n=== IndexedDB reads, by JS call site ===');
+    for (const [key, count] of [...idbCalls].sort((a, b) => b[1] - a[1]).slice(0, 8)) {
+      console.log(`  x${String(count).padStart(5)}  ${key.slice(0, 200)}`);
+    }
+  }
+
   console.log('\n=== by mechanism ===');
   for (const [name, bytes] of [...buckets, ['uncategorised', uncategorised]].sort((a, b) => b[1] - a[1])) {
     if (bytes > 0) {
@@ -663,6 +720,7 @@ try {
           modules,
           rate,
           rendererPid,
+          idbCalls: Object.fromEntries(idbCalls),
           sampled,
           samples,
           settleS,

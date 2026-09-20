@@ -36,14 +36,15 @@ const MB = (bytes) => +(bytes / (1024 * 1024)).toFixed(2);
 /** Installed before the app's first script; idempotent, because realms get it twice. */
 const PROBE = `(() => {
   if (globalThis.__apiCensus) { return; }
-  const census = { encode: {}, query: {} };
+  const census = { cursor: {}, encode: {}, query: {} };
   globalThis.__apiCensus = census;
   const note = (bucket, key, bytes) => {
     const entry = (census[bucket][key] ??= { bytes: 0, calls: 0 });
     entry.calls++;
     entry.bytes += bytes || 0;
   };
-  // Six frames: enough to cross the bundler's wrappers and reach the caller that matters.
+  // Skips this helper and the shim that called it, then takes six frames: enough to cross
+  // the bundler's wrappers and reach the caller that matters.
   const where = (skip) =>
     (new Error().stack || '')
       .split('\\n')
@@ -51,7 +52,7 @@ const PROBE = `(() => {
       .map((line) => line.trim())
       .join(' | ');
   for (const proto of [IDBObjectStore.prototype, IDBIndex.prototype]) {
-    for (const name of ['getAll', 'getAllKeys', 'getAllRecords', 'openCursor']) {
+    for (const name of ['getAll', 'getAllKeys', 'getAllRecords', 'openCursor', 'openKeyCursor']) {
       const original = proto[name];
       if (!original) {
         continue;
@@ -64,7 +65,7 @@ const PROBE = `(() => {
         } catch {
           // A detached store still tells us the call happened.
         }
-        note('query', name + ' ' + store + ' @ ' + where(2), 0);
+        note(name.startsWith('open') ? 'cursor' : 'query', name + ' ' + store + ' @ ' + where(3), 0);
         return original.apply(this, args);
       };
     }
@@ -72,7 +73,7 @@ const PROBE = `(() => {
   const encode = TextEncoder.prototype.encode;
   TextEncoder.prototype.encode = function (input) {
     const out = encode.call(this, input);
-    note('encode', where(2), out.byteLength);
+    note('encode', where(3), out.byteLength);
     return out;
   };
   return true;
@@ -165,27 +166,54 @@ child.on('error', (error) => {
   rmSync(profileDir, { force: true, recursive: true });
   process.exit(1);
 });
-const shutdown = () => {
+let cleaned = false;
+const shutdown = async () => {
+  if (cleaned) {
+    return;
+  }
+  cleaned = true;
+  // SIGTERM first: killing the parent alone orphans the renderer helpers.
+  child.kill('SIGTERM');
+  await Promise.race([
+    new Promise((resolve) => child.once('exit', resolve)),
+    new Promise((resolve) => setTimeout(resolve, 2000).unref?.()),
+  ]);
   child.kill('SIGKILL');
   rmSync(profileDir, { force: true, recursive: true });
 };
 for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
   process.on(signal, () => {
-    shutdown();
-    process.exit(130);
+    void shutdown().then(() => process.exit(130));
   });
 }
 
 try {
-  await new Promise((resolve) => setTimeout(resolve, 2500));
-  const version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
+  let version;
+  for (let i = 0; i < 60 && !version; i++) {
+    version = await fetch(`http://127.0.0.1:${port}/json/version`)
+      .then((response) => response.json())
+      .catch(() => undefined);
+    if (!version) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  if (!version) {
+    throw new Error('Chromium never opened a debugger port');
+  }
   const browser = await Cdp.connect(version.webSocketDebuggerUrl);
 
   // Paused on start and re-armed per session: a realm that has already run its first
   // script cannot be instrumented, and auto-attach does not reach grandchildren.
   const realms = new Map();
-  browser.on('Target.attachedToTarget', async ({ sessionId, targetInfo }) => {
-    realms.set(sessionId, `${targetInfo.type}:${(targetInfo.url || '').split('/').pop()}`);
+  const armed = [];
+  browser.on('Target.attachedToTarget', ({ sessionId, targetInfo }) => {
+    armed.push(arm(sessionId, targetInfo));
+  });
+  const arm = async (sessionId, targetInfo) => {
+    realms.set(sessionId, {
+      label: `#${realms.size + 1} ${targetInfo.type}:${(targetInfo.url || '').split('/').pop()}`,
+      type: targetInfo.type,
+    });
     await browser.trySend('Page.enable', {}, sessionId);
     await browser.trySend('Runtime.enable', {}, sessionId);
     await browser.trySend('Page.addScriptToEvaluateOnNewDocument', { source: PROBE }, sessionId);
@@ -196,8 +224,11 @@ try {
       sessionId,
     );
     await browser.trySend('Runtime.runIfWaitingForDebugger', {}, sessionId);
-  });
+  };
   await browser.send('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: true });
+  // Everything attached so far has to be armed before the app runs a line, or a realm it
+  // creates early goes uninstrumented and silently missing from the census.
+  await Promise.all(armed);
 
   const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
   const page = targets.find((target) => target.type === 'page');
@@ -223,8 +254,11 @@ try {
     }
   };
   await read('page', (method, params) => cdp.send(method, params));
-  for (const [sessionId, label] of realms) {
-    await read(label, (method, params) => browser.trySend(method, params, sessionId));
+  for (const [sessionId, realm] of realms) {
+    // The page is also attached at browser level; reading it through both would count it twice.
+    if (realm.type !== 'page') {
+      await read(realm.label, (method, params) => browser.trySend(method, params, sessionId));
+    }
   }
 
   for (const { data, label } of collected) {
@@ -233,10 +267,14 @@ try {
     const bytes = encode.reduce((sum, [, entry]) => sum + entry.bytes, 0);
     const calls = encode.reduce((sum, [, entry]) => sum + entry.calls, 0);
     const queries = query.reduce((sum, [, entry]) => sum + entry.calls, 0);
-    if (!calls && !queries) {
+    const cursors = Object.values(data.cursor ?? {}).reduce((sum, entry) => sum + entry.calls, 0);
+    if (!calls && !queries && !cursors) {
       continue;
     }
-    console.log(`\n=== ${label} — TextEncoder ${MB(bytes)} MB over ${calls} calls, ${queries} bulk IDB reads ===`);
+    console.log(
+      `\n=== ${label} — TextEncoder ${MB(bytes)} MB over ${calls} calls, ` +
+        `${queries} bulk IDB reads, ${cursors} cursors ===`,
+    );
     for (const [key, entry] of query.slice(0, 4)) {
       console.log(`  x${entry.calls}  ${key.slice(0, 260)}`);
     }
@@ -250,5 +288,5 @@ try {
     console.log(`\nwrote ${jsonOut}`);
   }
 } finally {
-  shutdown();
+  await shutdown();
 }
