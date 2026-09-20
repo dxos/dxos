@@ -13,14 +13,6 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "build": "tsc"
   },

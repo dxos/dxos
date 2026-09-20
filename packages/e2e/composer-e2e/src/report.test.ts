@@ -8,18 +8,6 @@ import { EVENT_NAME, type JsonReport, toBatch, toEvents } from './report.ts';
 
 const STARTED_AT = '2026-09-20T04:00:00.000Z';
 
-/**
- * The shape Playwright's JSON reporter writes: a file-level suite whose title IS its path, the
- * describe blocks nested under it, and one `tests` entry per project.
- */
-const report = (specs: JsonReport['suites']): JsonReport => ({ suites: specs, stats: { startTime: STARTED_AT } });
-
-const fileSuite = (file: string, inner: NonNullable<JsonReport['suites']>[number]) => ({
-  title: file,
-  file,
-  suites: [inner],
-});
-
 describe('toEvents', () => {
   test('maps a passing test to one row per browser', ({ expect }) => {
     const events = toEvents(
@@ -230,4 +218,16 @@ describe('toBatch', () => {
     expect(lines).toHaveLength(2);
     expect(JSON.parse(lines[0]).event).toEqual(EVENT_NAME);
   });
+});
+
+/**
+ * The shape Playwright's JSON reporter writes: a file-level suite whose title IS its path, the
+ * describe blocks nested under it, and one `tests` entry per project.
+ */
+const report = (specs: JsonReport['suites']): JsonReport => ({ suites: specs, stats: { startTime: STARTED_AT } });
+
+const fileSuite = (file: string, inner: NonNullable<JsonReport['suites']>[number]) => ({
+  title: file,
+  file,
+  suites: [inner],
 });
