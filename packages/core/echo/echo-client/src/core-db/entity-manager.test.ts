@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
-import { waitForCondition } from '@dxos/async';
+import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { ContextDisposedError } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -473,6 +474,45 @@ describe('DatabaseImpl', () => {
       const db = await createClientDbInSpaceWithObject(object);
       await db.close();
       await expect(db._loadObjectById(object.id)).rejects.toBeInstanceOf(ContextDisposedError);
+    });
+
+    test('a load pending across close and reopen is cancelled, not resolved from the new lifetime', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+
+      // A document advertised in the directory but minted on an isolated peer: the load reaches the
+      // network wait and stays there, which is the in-flight state the close has to settle.
+      const orphanObjectId = EntityId.random();
+      const sourceBuilder = new EchoTestBuilder();
+      await openAndClose(sourceBuilder);
+      const sourcePeer = await sourceBuilder.createPeer();
+      const orphanHandle = await sourcePeer.host.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceKey: db.spaceKey.toHex() },
+        objects: {
+          [orphanObjectId]: { meta: { keys: [] }, data: { name: 'unreachable' }, system: { kind: 'object' } },
+        },
+      });
+      db.getSpaceRootDocHandle().change((newDoc: DatabaseDirectory) => {
+        newDoc.links ??= {};
+        newDoc.links[orphanObjectId] = new A.RawString(orphanHandle.url);
+      });
+      await db.flush();
+
+      // Settled eagerly: the outcome is asserted after the reopen, and an unobserved rejection in
+      // between would surface as an unhandled one.
+      const outcome = db.loadObjectCoreById(orphanObjectId).then(
+        (core) => ({ kind: 'resolved' as const, core }),
+        (err: unknown) => ({ kind: 'rejected' as const, err }),
+      );
+
+      await db.close();
+      await db.open();
+
+      const result = await asyncTimeout(outcome, 5_000);
+      invariant(result.kind === 'rejected', 'a load spanning a close must not resolve from the reopened lifetime');
+      expect(result.err).to.be.instanceOf(ContextDisposedError);
     });
 
     // TODO(dmaretskyi): Test for conflict resolution.
