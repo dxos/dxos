@@ -9,6 +9,7 @@
 // the projection as an intent; the view never writes coordinates itself (decision 11).
 //
 
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
@@ -42,11 +43,11 @@ import {
   MAJOR_GRID_RATIO,
   type Node,
   type NodeId,
+  type NodeType,
   type Point,
   type Port,
   type Scene,
   type SceneId,
-  type Size,
   type SplineLink,
   type Tool,
   endpointNode,
@@ -66,10 +67,12 @@ import {
   zoomAt,
 } from '../../utils/camera.ts';
 import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
+import { nodeDragType } from '../../utils/dnd.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds } from '../../utils/hit.ts';
 import { between, topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
+import { resizeBounds } from '../../utils/resize.ts';
 import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
 import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
@@ -90,8 +93,9 @@ const GRID_LEVELS = [1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2] as const;
 /** Minor cells under 6px are noise; the major grid has no upper bound. */
 const GRID_RANGE = [6, Infinity] as const;
 const PORT_SNAP_PX = 16;
-/** Id of the link drawn while a link drag hovers a drop target; never reaches the model. */
-const PREVIEW_LINK_ID = 'preview';
+/** Ids of the link and node drawn as previews during a drag; neither reaches the model. */
+const PREVIEW_LINK_ID = 'preview-link';
+const PREVIEW_NODE_ID = 'preview-node';
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -105,34 +109,6 @@ const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, targ
     const port = node && nodePorts(registry, node).find((candidate) => candidate.id === end.port);
     return port !== undefined && port.accepts !== undefined && port.accepts !== 'any';
   });
-
-/** Resize by a handle: the moving edges land on `snap`, the opposite edges stay put. */
-const resizeBounds = (
-  start: Bounds,
-  handle: Handle,
-  delta: Point,
-  minSize: Size,
-  snap: (value: number) => number,
-): Bounds => {
-  let { x, y, width, height } = start;
-  if (handle.includes('e')) {
-    width = Math.max(minSize.width, snap(x + width + delta.x) - x);
-  }
-  if (handle.includes('s')) {
-    height = Math.max(minSize.height, snap(y + height + delta.y) - y);
-  }
-  if (handle.includes('w')) {
-    const next = Math.max(minSize.width, x + width - snap(x + delta.x));
-    x += width - next;
-    width = next;
-  }
-  if (handle.includes('n')) {
-    const next = Math.max(minSize.height, y + height - snap(y + delta.y));
-    y += height - next;
-    height = next;
-  }
-  return { x, y, width, height };
-};
 
 export type SceneViewProps = ThemedClassName<{
   store: SceneStore;
@@ -181,6 +157,7 @@ export const SceneView = ({
   const undoState = useAtomValue(atoms.undo);
   const clipboard = useAtomValue(atoms.clipboard);
   const editing = useAtomValue(atoms.editing);
+  const debug = useAtomValue(atoms.debug);
   const sceneId = path[path.length - 1];
   const canUndo = undoState.key === sceneId && undoState.past.length > 0;
   const canRedo = undoState.key === sceneId && undoState.future.length > 0;
@@ -449,6 +426,7 @@ export const SceneView = ({
     [snapEnabled, major],
   );
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
+  const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
   const toScene = useCallback(
     (event: { clientX: number; clientY: number }): Point => {
       const rect = rootRef.current?.getBoundingClientRect();
@@ -505,10 +483,11 @@ export const SceneView = ({
           );
         }
       } else {
-        if (!event.shiftKey) {
+        const mode = event.altKey ? 'subtract' : event.shiftKey ? 'add' : 'replace';
+        if (mode === 'replace') {
           select([]);
         }
-        startDrag({ kind: 'marquee', from: point, to: point, additive: event.shiftKey }, event);
+        startDrag({ kind: 'marquee', from: point, to: point, mode }, event);
       }
     },
     [registry, atoms.tool, toScene, startDrag, select, capabilities.create, capabilities.link, snap],
@@ -838,8 +817,14 @@ export const SceneView = ({
           const anchor = handlePoint(current.start, current.handle);
           const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
           const node = scene.nodes[current.id];
-          const minSize = (node && nodeDef(nodeRegistry, node)?.minSize) || { width: major, height: major };
-          setDrag({ ...current, bounds: resizeBounds(current.start, current.handle, delta, minSize, snap) });
+          const def = node && nodeDef(nodeRegistry, node);
+          const bounds = resizeBounds(current.start, current.handle, delta, {
+            minSize: def?.minSize ?? { width: major, height: major },
+            maxSize: def?.maxSize,
+            symmetric: event.shiftKey,
+            snap,
+          });
+          setDrag({ ...current, bounds });
           break;
         }
         case 'link': {
@@ -885,6 +870,27 @@ export const SceneView = ({
     ],
   );
 
+  /**
+   * The node a create drag would make: what was drawn, or the type's default size at the press when the
+   * drag was a click. Shared by the ghost preview and the drop, so the preview is what lands.
+   */
+  const createdNode = useCallback(
+    (drag: Extract<Drag, { kind: 'create' }>, id: NodeId): Node | undefined => {
+      const def = nodeRegistry[drag.type];
+      if (!def) {
+        return undefined;
+      }
+      const drawn = boundsFromPoints(drag.from, drag.to);
+      const clicked = drawn.width < major || drawn.height < major;
+      const size = clicked ? def.defaultSize : { width: drawn.width, height: drawn.height };
+      const center = clicked
+        ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
+        : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
+      return def.create({ id, z: topZ(Object.values(scene.nodes)), center, size });
+    },
+    [nodeRegistry, major, scene.nodes],
+  );
+
   const onPointerUp = useCallback(() => {
     const current = registry.get(atoms.drag);
     if (!current) {
@@ -894,7 +900,14 @@ export const SceneView = ({
     switch (current.kind) {
       case 'marquee': {
         const hits = nodesIntersecting(scene, boundsFromPoints(current.from, current.to)).map(({ id }) => id);
-        select(current.additive ? [...registry.get(atoms.selection), ...hits] : hits);
+        const previous = registry.get(atoms.selection);
+        select(
+          current.mode === 'add'
+            ? [...previous, ...hits]
+            : current.mode === 'subtract'
+              ? [...previous].filter((id) => !hits.includes(id))
+              : hits,
+        );
         break;
       }
       case 'move': {
@@ -946,19 +959,10 @@ export const SceneView = ({
         break;
       }
       case 'create': {
-        const drawn = boundsFromPoints(current.from, current.to);
-        // A click without a drag places a default-sized node with its top-left at the click.
-        const clicked = drawn.width < major || drawn.height < major;
-        const def = nodeRegistry[current.type];
-        if (!def) {
+        const node = createdNode(current, createId(current.type));
+        if (!node) {
           break;
         }
-        const size = clicked ? def.defaultSize : { width: drawn.width, height: drawn.height };
-        const center = clicked
-          ? { x: current.from.x + size.width / 2, y: current.from.y + size.height / 2 }
-          : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
-        const id = createId(current.type);
-        const node = def.create({ id, z: topZ(Object.values(scene.nodes)), center, size });
         // A new portal opens onto a fresh scene of its own.
         if (isPortalNode(node)) {
           registry.set(store.scenes, {
@@ -967,7 +971,7 @@ export const SceneView = ({
           });
         }
         projection.apply({ kind: 'create', node });
-        select([id]);
+        select([node.id]);
         setTool({ kind: 'select' });
         break;
       }
@@ -994,9 +998,9 @@ export const SceneView = ({
     projection,
     capabilities.create,
     snap,
-    major,
     store,
     setTool,
+    createdNode,
   ]);
 
   const onKeyDown = useCallback(
@@ -1024,8 +1028,9 @@ export const SceneView = ({
         if (node && nodeDef(nodeRegistry, node)?.openable) {
           drillIn(node);
         }
-      } else if (event.shiftKey && event.key === '!') {
+      } else if ((event.shiftKey && event.key === '!') || event.key === 'Home') {
         animateTo(fitBounds(bounds, viewport, FIT_INSET));
+        event.preventDefault();
       } else if (event.shiftKey && event.key === '@' && selectedNodes.length > 0) {
         const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
         if (union) {
@@ -1064,6 +1069,8 @@ export const SceneView = ({
         event.preventDefault();
       } else if (event.key === 'g' && !event.metaKey && !event.ctrlKey && !event.altKey) {
         toggleSnap();
+      } else if (event.key === 'd' && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        toggleDebug();
       } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
         const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
         if (next) {
@@ -1094,6 +1101,7 @@ export const SceneView = ({
       major,
       setTool,
       toggleSnap,
+      toggleDebug,
       onUndo,
       onRedo,
       copy,
@@ -1135,8 +1143,13 @@ export const SceneView = ({
       const end: Endpoint = drag.target ?? { point: drag.to };
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
     }
+    if (drag?.kind === 'create') {
+      // The type's own view as a ghost, so the preview is the node that will land.
+      const node = createdNode(drag, PREVIEW_NODE_ID);
+      return node ? reduceIntent(scene, { kind: 'create', node }) : scene;
+    }
     return scene;
-  }, [scene, drag]);
+  }, [scene, drag, createdNode]);
 
   const onPartCommit = useCallback(
     (node: Node, part: PartKey, text: string) => {
@@ -1180,6 +1193,40 @@ export const SceneView = ({
     },
     [scene, toScene, nodeRegistry, drillIn, capabilities.update, select, registry, atoms.editing],
   );
+
+  // A node type dragged in (from the palette or a host's draggable) previews as a create drag would and
+  // lands through the same drop, so what the ghost shows is what is created.
+  const onPointerUpRef = useRef(onPointerUp);
+  onPointerUpRef.current = onPointerUp;
+  useEffect(() => {
+    const element = rootRef.current;
+    if (!element) {
+      return;
+    }
+    const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
+      const point = toScene(input);
+      const from = { x: snap(point.x), y: snap(point.y) };
+      return { kind: 'create', type, from, to: from };
+    };
+    return dropTargetForElements({
+      element,
+      canDrop: ({ source }) => capabilities.create === true && nodeDragType(source.data) !== undefined,
+      onDragEnter: ({ source, location }) => {
+        const type = nodeDragType(source.data);
+        if (type !== undefined) {
+          setDrag(dragAt(type, location.current.input));
+        }
+      },
+      onDrag: ({ source, location }) => {
+        const type = nodeDragType(source.data);
+        if (type !== undefined) {
+          setDrag(dragAt(type, location.current.input));
+        }
+      },
+      onDragLeave: () => setDrag(undefined),
+      onDrop: () => onPointerUpRef.current(),
+    });
+  }, [capabilities.create, toScene, snap, setDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
@@ -1234,8 +1281,11 @@ export const SceneView = ({
             depth={0}
             liveDepth={liveDepth}
             selected={selection}
+            hover={hover}
             opening={opening}
             editing={editing}
+            ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
+            debug={debug}
             handlers={handlers}
           />
         </div>

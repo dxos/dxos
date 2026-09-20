@@ -80,17 +80,43 @@ export type SceneLayerProps = {
   depth: number;
   liveDepth: number;
   selected?: ReadonlySet<ElementId>;
+  hover?: NodeId;
   /** The portal a drill-in is animating into, while it is. */
   opening?: ElementId;
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
+  /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
+  ghost?: NodeId;
+  /** Frames show their id, type and geometry. */
+  debug?: boolean;
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
 };
 
 export const SceneLayer = memo(
-  ({ store, scene, registry, zoom, depth, liveDepth, selected, opening, editing, handlers }: SceneLayerProps) => {
-    const nodes = useMemo(() => sortByZ(Object.values(scene.nodes)), [scene.nodes]);
+  ({
+    store,
+    scene,
+    registry,
+    zoom,
+    depth,
+    liveDepth,
+    selected,
+    hover,
+    opening,
+    editing,
+    ghost,
+    debug,
+    handlers,
+  }: SceneLayerProps) => {
+    // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
+    // hide under a neighbour, while the model's z stays what the user arranged.
+    const nodes = useMemo(() => {
+      const sorted = sortByZ(Object.values(scene.nodes));
+      return selected?.size
+        ? [...sorted.filter((node) => !selected.has(node.id)), ...sorted.filter((node) => selected.has(node.id))]
+        : sorted;
+    }, [scene.nodes, selected]);
     const links = useMemo(
       () =>
         sortByZ(Object.values(scene.links))
@@ -145,8 +171,11 @@ export const SceneLayer = memo(
             depth={depth}
             liveDepth={liveDepth}
             selected={selected?.has(node.id) ?? false}
+            hovered={hover === node.id}
             opening={opening === node.id}
             editingPart={editing?.id === node.id ? editing.part : undefined}
+            ghost={ghost === node.id}
+            debug={debug}
             handlers={handlers}
           />
         ))}
@@ -196,13 +225,19 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
   );
 };
 
-type NodeFrameProps = Omit<NodeViewProps, 'editing'> & { editingPart?: PartKey; handlers?: ElementHandlers };
+type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
+  hovered?: boolean;
+  editingPart?: PartKey;
+  ghost?: boolean;
+  debug?: boolean;
+  handlers?: ElementHandlers;
+};
 
 /** Positions a node, owns its frame styling and pointer events; the node definition renders the body. */
-const NodeFrame = memo(({ handlers, editingPart, ...props }: NodeFrameProps) => {
+const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props }: NodeFrameProps) => {
   const { node, registry, selected } = props;
   const bounds = nodeBounds(node);
-  const interactive = handlers !== undefined;
+  const interactive = handlers !== undefined && !ghost;
   const Component = nodeDef(registry, node)?.component ?? UnknownNodeView;
   const editing = useMemo<PartEditing | undefined>(
     () =>
@@ -219,14 +254,24 @@ const NodeFrame = memo(({ handlers, editingPart, ...props }: NodeFrameProps) => 
     <div
       className={mx(
         'absolute box-border border-2 overflow-hidden',
-        ...frameClasses(node, selected),
+        ...frameClasses(node, selected, hovered),
         interactive && !node.locked && 'cursor-grab',
+        ghost && 'opacity-50 border-dashed pointer-events-none',
       )}
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       data-node-id={node.id}
+      data-ghost={ghost || undefined}
       onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
     >
       <Component {...props} editing={editing} />
+      {debug && (
+        <div
+          className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-description pointer-events-none'
+          data-testid='node-debug'
+        >
+          {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+        </div>
+      )}
     </div>
   );
 });

@@ -32,8 +32,8 @@ export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 export type Drag =
   /** Screen-space pan; `last` is the previous pointer position. */
   | { kind: 'pan'; last: Point }
-  /** Marquee in scene coordinates. */
-  | { kind: 'marquee'; from: Point; to: Point; additive: boolean }
+  /** Marquee in scene coordinates; shift adds the hits to the selection, alt subtracts them. */
+  | { kind: 'marquee'; from: Point; to: Point; mode: 'replace' | 'add' | 'subtract' }
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
    * and `delta` the resulting scene-space offset applied transiently to every selected node.
@@ -79,6 +79,8 @@ export type SceneViewAtoms = {
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
   editing: Atom.Writable<EditingPart | undefined>;
+  /** Frames show their id, type and geometry. */
+  debug: Atom.Writable<boolean>;
 };
 
 /**
@@ -99,4 +101,5 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
+  debug: Atom.keepAlive(Atom.make<boolean>(false)),
 });

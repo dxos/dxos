@@ -78,6 +78,7 @@ export type NodeDef = {
   portsPerSide?: number;
   resizable?: boolean;
   minSize?: Size;
+  maxSize?: Size;
   /** Double-click opens the node (a portal drills in; a text node edits, later). */
   openable?: boolean;
 };

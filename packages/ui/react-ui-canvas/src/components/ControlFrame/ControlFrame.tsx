@@ -105,7 +105,6 @@ export const ControlFrame = memo(
       portNodes.add(dropTarget);
     }
     const marquee = drag?.kind === 'marquee' ? boundsFromPoints(drag.from, drag.to) : undefined;
-    const create = drag?.kind === 'create' ? boundsFromPoints(drag.from, drag.to) : undefined;
     // The layer draws every provisional link that will land (over a target, or free-ended); the band is only
     // a port drag over free space, where dropping would create a node rather than a free end.
     const band =
@@ -129,26 +128,6 @@ export const ControlFrame = memo(
             />
           );
         })}
-        {single && registry[single.type].resizable && !single.locked && (
-          <g>
-            {HANDLES.map((handle) => {
-              const point = handlePoint(nodeBounds(single), handle);
-              return (
-                <rect
-                  key={handle}
-                  x={point.x - handleSize / 2}
-                  y={point.y - handleSize / 2}
-                  width={handleSize}
-                  height={handleSize}
-                  className='fill-base-surface stroke-primary-500 pointer-events-auto'
-                  strokeWidth={unit}
-                  style={{ cursor: cursorFor(handle) }}
-                  onPointerDown={(event) => onHandlePointerDown?.(single, handle, event)}
-                />
-              );
-            })}
-          </g>
-        )}
         {[...portNodes].map((node) => {
           const bounds = nodeBounds(node);
           return nodePorts(registry, node).map((port) => {
@@ -175,6 +154,27 @@ export const ControlFrame = memo(
             );
           });
         })}
+        {/* Handles after the ports so a handle wins where a port sits on the same point (a side centre). */}
+        {single && registry[single.type].resizable && !single.locked && (
+          <g>
+            {HANDLES.map((handle) => {
+              const point = handlePoint(nodeBounds(single), handle);
+              return (
+                <rect
+                  key={handle}
+                  x={point.x - handleSize / 2}
+                  y={point.y - handleSize / 2}
+                  width={handleSize}
+                  height={handleSize}
+                  className='fill-base-surface stroke-primary-500 pointer-events-auto'
+                  strokeWidth={unit}
+                  style={{ cursor: cursorFor(handle) }}
+                  onPointerDown={(event) => onHandlePointerDown?.(single, handle, event)}
+                />
+              );
+            })}
+          </g>
+        )}
         {selectedLinks.map((link) => {
           const geometry = linkGeometry(scene, registry, link);
           if (!geometry) {
@@ -243,17 +243,6 @@ export const ControlFrame = memo(
             height={marquee.height}
             className='fill-primary-500/10 stroke-primary-500'
             strokeWidth={unit}
-          />
-        )}
-        {create && (
-          <rect
-            x={create.x}
-            y={create.y}
-            width={create.width}
-            height={create.height}
-            className='fill-none stroke-primary-500'
-            strokeWidth={unit}
-            strokeDasharray={`${6 * unit} ${4 * unit}`}
           />
         )}
       </svg>

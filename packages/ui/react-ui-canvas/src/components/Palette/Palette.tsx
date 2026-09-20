@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import React, { useEffect, useRef } from 'react';
 
 import { IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type Tool } from '../../model/types.ts';
+import { nodeDragData } from '../../utils/dnd.ts';
 
 type Entry = { tool: Tool; icon: string; label: string; key: string };
 
@@ -69,23 +71,57 @@ export type PaletteProps = {
   onToolChange: (tool: Tool) => void;
 };
 
-/** Minimal tool palette for the stories; the plugin toolbar owns this in the app (open question 3). */
+/**
+ * Tool palette: a click picks the tool; a node type can also be dragged onto the canvas, which creates
+ * it where it drops (the canvas is a pragmatic-dnd drop target for `nodeDragData`).
+ */
 export const Palette = ({ tool, nodes, links, capabilities, onToolChange }: PaletteProps) => (
-  <div className='flex flex-col rounded-sm bg-modal-surface border border-separator divide-y divide-separator'>
+  <div
+    className='flex flex-col rounded-sm bg-modal-surface border border-separator divide-y divide-separator'
+    data-testid='palette'
+  >
     {paletteEntries(nodes, links, capabilities).map((group, index) => (
       <div key={index} className='flex flex-col gap-1 p-1'>
         {group.map((entry) => (
-          <IconButton
+          <PaletteButton
             key={entry.label}
-            variant='ghost'
-            iconOnly
-            icon={entry.icon}
-            label={`${entry.label} (${entry.key})`}
-            classNames={mx(sameTool(tool, entry.tool) && 'bg-primary-500/20')}
-            onClick={() => onToolChange(entry.tool)}
+            entry={entry}
+            active={sameTool(tool, entry.tool)}
+            onToolChange={onToolChange}
           />
         ))}
       </div>
     ))}
   </div>
 );
+
+const PaletteButton = ({
+  entry,
+  active,
+  onToolChange,
+}: {
+  entry: Entry;
+  active: boolean;
+  onToolChange: (tool: Tool) => void;
+}) => {
+  const ref = useRef<HTMLButtonElement>(null);
+  const nodeType = entry.tool.kind === 'node' ? entry.tool.type : undefined;
+  useEffect(() => {
+    if (!ref.current || nodeType === undefined) {
+      return;
+    }
+    return draggable({ element: ref.current, getInitialData: () => nodeDragData(nodeType) });
+  }, [nodeType]);
+  return (
+    <IconButton
+      ref={ref}
+      variant='ghost'
+      iconOnly
+      icon={entry.icon}
+      label={`${entry.label} (${entry.key})`}
+      classNames={mx(active && 'bg-primary-500/20')}
+      data-testid={`palette-${entry.key}`}
+      onClick={() => onToolChange(entry.tool)}
+    />
+  );
+};
