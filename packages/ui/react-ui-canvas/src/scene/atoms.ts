@@ -35,6 +35,8 @@ export type SceneViewAtoms = {
   selection: Atom.Writable<ReadonlySet<CellId>>;
   hover: Atom.Writable<CellId | undefined>;
   tool: Atom.Writable<Tool>;
+  /** Grid shown and moves/resizes snapped to it. */
+  snap: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
 };
@@ -49,6 +51,7 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   selection: Atom.keepAlive(Atom.make<ReadonlySet<CellId>>(new Set<CellId>())),
   hover: Atom.keepAlive(Atom.make<CellId | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>('select')),
+  snap: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
 });

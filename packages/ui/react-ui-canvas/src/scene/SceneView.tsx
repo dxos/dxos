@@ -32,16 +32,11 @@ import {
 } from './camera.ts';
 import { ControlFrame, handlePoint } from './ControlFrame.tsx';
 import { boundsFromPoints, cellsIntersecting, hitTest, sceneBounds, unionBounds } from './hit.ts';
-import { useRegistry, useViewport, useWheel } from './hooks.ts';
+import { useRegistry, useSceneProjection, useViewport, useWheel } from './hooks.ts';
 import { topZ } from './order.ts';
 import { Palette, toolForKey } from './Palette.tsx';
 import { portPoint } from './ports.ts';
-import {
-  type FreehandProjectionOptions,
-  type Projection,
-  createFreehandProjection,
-  reduceIntent,
-} from './projection.ts';
+import { type FreehandProjectionOptions, type Projection, reduceIntent } from './projection.ts';
 import { type CellRegistry, defaultRegistry } from './registry.ts';
 import { type CellHandlers, SceneLayer } from './SceneLayer.tsx';
 import { type SceneStore } from './store.ts';
@@ -109,7 +104,7 @@ export const SceneView = ({
   store,
   root,
   registry: cellRegistry = defaultRegistry,
-  createProjection = createFreehandProjection,
+  createProjection,
   atoms: atomsProp,
   grid = 16,
   showPalette = true,
@@ -120,17 +115,14 @@ export const SceneView = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  const sceneId = path[path.length - 1];
-  const projection = useMemo(
-    () => createProjection({ registry, store, sceneId }),
-    [createProjection, registry, store, sceneId],
-  );
+  const projection = useSceneProjection({ store, atoms, createProjection });
   const scene = useAtomValue(projection.scene);
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
   const hover = useAtomValue(atoms.hover);
   const tool = useAtomValue(atoms.tool);
+  const snapEnabled = useAtomValue(atoms.snap);
   const drag = useAtomValue(atoms.drag);
 
   const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
@@ -306,7 +298,11 @@ export const SceneView = ({
   // Pointer state machine.
   //
 
-  const snap = useCallback((value: number) => Math.round(value / grid) * grid, [grid]);
+  const snap = useCallback(
+    (value: number) => (snapEnabled ? Math.round(value / grid) * grid : value),
+    [snapEnabled, grid],
+  );
+  const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toScene = useCallback(
     (event: { clientX: number; clientY: number }): Point => {
       const rect = rootRef.current?.getBoundingClientRect();
@@ -616,6 +612,8 @@ export const SceneView = ({
             .map(({ id }) => id),
         );
         event.preventDefault();
+      } else if (event.key === 'g' && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        toggleSnap();
       } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
         const next = toolForKey(event.key);
         if (next) {
@@ -642,6 +640,7 @@ export const SceneView = ({
       goHistory,
       grid,
       setTool,
+      toggleSnap,
     ],
   );
 
@@ -705,12 +704,14 @@ export const SceneView = ({
       onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
     >
-      <GridComponent
-        size={grid}
-        scale={camera.zoom}
-        offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
-        showAxes={false}
-      />
+      {snapEnabled && (
+        <GridComponent
+          size={grid}
+          scale={camera.zoom}
+          offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
+          showAxes={false}
+        />
+      )}
       <div
         className='absolute pointer-events-none'
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
@@ -750,6 +751,15 @@ export const SceneView = ({
         <Breadcrumbs path={path} nameOf={nameOf} onSelect={(index) => drillOut(path.length - 1 - index)} />
         <Button variant='ghost' density='sm' onClick={() => animateTo(fitBounds(bounds, viewport, FIT_INSET))}>
           Fit
+        </Button>
+        <Button
+          variant='ghost'
+          density='sm'
+          classNames={mx(snapEnabled && 'bg-primary-500/20')}
+          title='Grid (G): show the grid and snap moves and resizes to it'
+          onClick={toggleSnap}
+        >
+          Grid
         </Button>
         <span className='text-description font-mono'>
           {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}

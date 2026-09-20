@@ -106,6 +106,15 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
       }
       return { ...scene, cells: { ...scene.cells, [intent.id]: { ...cell, z: intent.z } } };
     }
+
+    case 'update': {
+      const cell = scene.cells[intent.id];
+      if (!cell) {
+        return scene;
+      }
+      const next = Object.assign({}, cell, intent.values, { id: cell.id, kind: cell.kind });
+      return { ...scene, cells: { ...scene.cells, [intent.id]: next } };
+    }
   }
 };
 
@@ -115,7 +124,14 @@ export type FreehandProjectionOptions = {
   sceneId: SceneId;
 };
 
-export const freehandCapabilities: Capabilities = { move: true, resize: true, link: true, create: true, delete: true };
+export const freehandCapabilities: Capabilities = {
+  move: true,
+  resize: true,
+  link: true,
+  create: true,
+  delete: true,
+  update: true,
+};
 
 /** Identity projection over the store: what the surface asks for is what the model becomes. */
 export const createFreehandProjection = ({ registry, store, sceneId }: FreehandProjectionOptions): Projection => ({

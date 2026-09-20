@@ -49,6 +49,8 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Stories: `Freehand` (depth 1), `Nested` (depth 4).
 - [x] Constrained projection (`projections/constrained.ts`: cardinal constraints + aligned rows → `Layout.rank` per axis with id tie-breaks; move/create rewrite the moved node's constraints against the nearest cell; delete drops them) + `Constrained` story with a live constraint list; smoke-tested.
 - [x] Dynamic projection (`projections/dynamic.ts`: graph → `Layout.rank` rows, id-ordered columns, links; overlay of position overrides that win, survive unrelated graph edits and are pruned with their node; link adds an edge, delete removes a node with its edges) + `Dynamic` story with node toggles, edge and override lists; smoke-tested.
+- [x] Grid toggle (`snap` view atom, Grid button + `G`): grid shown and moves/resizes/creates snapped only while on.
+- [x] Cell properties panel (`CellProperties`): schema-driven `Form` over the selected cell's own schema, edits as `update` intents; `useSceneProjection` shares the projection between the view and its panels; all four stories carry it on the right.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.

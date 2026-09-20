@@ -101,7 +101,7 @@ export const pruneOverlay = (graph: GraphModel, overlay: Overlay): Overlay => {
   return Object.keys(positions).length === Object.keys(overlay.positions).length ? overlay : { positions };
 };
 
-export const dynamicCapabilities: Capabilities = { move: true, link: true, delete: true };
+export const dynamicCapabilities: Capabilities = { move: true, link: true, delete: true, update: true };
 
 export type DynamicProjectionOptions = {
   registry: Registry.AtomRegistry;
@@ -151,6 +151,22 @@ export const createDynamicProjection = ({
           nodes: model.nodes.filter(({ id }) => !ids.has(id)),
           edges: model.edges.filter(({ id, from, to }) => !ids.has(id) && !ids.has(from) && !ids.has(to)),
         });
+        break;
+      }
+      case 'update': {
+        // The label is the graph's; a geometry edit becomes an override like a move would.
+        const model = registry.get(graph);
+        if (intent.values.kind === 'rect' && typeof intent.values.label === 'string') {
+          const label = intent.values.label;
+          registry.set(graph, {
+            ...model,
+            nodes: model.nodes.map((node) => (node.id === intent.id ? { ...node, label } : node)),
+          });
+        }
+        if ('center' in intent.values && intent.values.center) {
+          const center = intent.values.center;
+          registry.set(overlay, { positions: { ...registry.get(overlay).positions, [intent.id]: center } });
+        }
         break;
       }
       default:

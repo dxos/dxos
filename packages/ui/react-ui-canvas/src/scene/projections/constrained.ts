@@ -209,7 +209,7 @@ export const rewriteForDrop = (model: ConstrainedModel, scene: Scene, id: string
   return { ...model, constraints: [...kept, ...added] };
 };
 
-export const constrainedCapabilities: Capabilities = { move: true, create: true, delete: true };
+export const constrainedCapabilities: Capabilities = { move: true, create: true, delete: true, update: true };
 
 export type ConstrainedProjectionOptions = {
   registry: Registry.AtomRegistry;
@@ -250,6 +250,17 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
           nodes: current.nodes.filter(({ id }) => !ids.has(id)),
           constraints: current.constraints.filter(({ subject, object }) => !ids.has(subject) && !ids.has(object)),
         });
+        break;
+      }
+      case 'update': {
+        // Only the label lives in the model; geometry is solved, so those edits are dropped.
+        if (intent.values.kind === 'rect' && typeof intent.values.label === 'string') {
+          const label = intent.values.label;
+          registry.set(model, {
+            ...current,
+            nodes: current.nodes.map((node) => (node.id === intent.id ? { ...node, label } : node)),
+          });
+        }
         break;
       }
       default:

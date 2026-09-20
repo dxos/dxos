@@ -20949,6 +20949,9 @@ importers:
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(react@19.2.7)(scheduler@0.27.0)

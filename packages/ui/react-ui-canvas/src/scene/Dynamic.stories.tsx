@@ -11,6 +11,9 @@ import React, { type ReactNode, useCallback, useContext, useMemo, useState } fro
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { createSceneViewAtoms } from './atoms.ts';
+import { CellProperties } from './CellProperties.tsx';
+import { useSceneProjection } from './hooks.ts';
 import { type FreehandProjectionOptions } from './projection.ts';
 import { DYNAMIC_SCENE_ID, type GraphModel, type Overlay, createDynamicProjection } from './projections/dynamic.ts';
 import { SceneView } from './SceneView.tsx';
@@ -112,10 +115,13 @@ const DefaultStory = () => {
     ({ registry }: FreehandProjectionOptions) => createDynamicProjection({ registry, graph, overlay }),
     [graph, overlay],
   );
+  const atoms = useMemo(() => createSceneViewAtoms(DYNAMIC_SCENE_ID), []);
+  const projection = useSceneProjection({ store, atoms, createProjection });
   return (
-    <div className='dx-fill grid grid-cols-[1fr_16rem]'>
-      <SceneView store={store} root={DYNAMIC_SCENE_ID} createProjection={createProjection} />
+    <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
+      <SceneView store={store} root={DYNAMIC_SCENE_ID} atoms={atoms} createProjection={createProjection} />
       <GraphPanel graph={graph} overlay={overlay} />
+      <CellProperties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
   );
 };

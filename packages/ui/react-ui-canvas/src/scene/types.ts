@@ -116,7 +116,9 @@ export type Intent =
   | { kind: 'link'; id: CellId; source: Endpoint; target: Endpoint }
   | { kind: 'create'; cell: Cell }
   | { kind: 'delete'; ids: CellId[] }
-  | { kind: 'reorder'; id: CellId; z: string };
+  | { kind: 'reorder'; id: CellId; z: string }
+  /** Property edits (label, text, geometry); `id` and `kind` never change. */
+  | { kind: 'update'; id: CellId; values: Partial<Cell> };
 
 export type Capabilities = {
   move?: boolean;
@@ -124,6 +126,7 @@ export type Capabilities = {
   link?: boolean;
   create?: boolean;
   delete?: boolean;
+  update?: boolean;
 };
 
 export type Tool = 'select' | 'hand' | 'rect' | 'text' | 'scene' | 'link';

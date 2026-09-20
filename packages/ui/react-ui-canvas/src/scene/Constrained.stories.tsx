@@ -11,6 +11,9 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { createSceneViewAtoms } from './atoms.ts';
+import { CellProperties } from './CellProperties.tsx';
+import { useSceneProjection } from './hooks.ts';
 import { type FreehandProjectionOptions } from './projection.ts';
 import { CONSTRAINED_SCENE_ID, type ConstrainedModel, createConstrainedProjection } from './projections/constrained.ts';
 import { SceneView } from './SceneView.tsx';
@@ -75,10 +78,13 @@ const DefaultStory = () => {
     ({ registry }: FreehandProjectionOptions) => createConstrainedProjection({ registry, model }),
     [model],
   );
+  const atoms = useMemo(() => createSceneViewAtoms(CONSTRAINED_SCENE_ID), []);
+  const projection = useSceneProjection({ store, atoms, createProjection });
   return (
-    <div className='dx-fill grid grid-cols-[1fr_16rem]'>
-      <SceneView store={store} root={CONSTRAINED_SCENE_ID} createProjection={createProjection} />
+    <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
+      <SceneView store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection} />
       <ConstraintList model={model} />
+      <CellProperties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
   );
 };

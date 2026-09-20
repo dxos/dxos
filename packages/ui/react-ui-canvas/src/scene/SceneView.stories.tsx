@@ -9,6 +9,9 @@ import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { createSceneViewAtoms } from './atoms.ts';
+import { CellProperties } from './CellProperties.tsx';
+import { useSceneProjection } from './hooks.ts';
 import { SceneView } from './SceneView.tsx';
 import { createMemoryStore } from './store.ts';
 import { createSceneTree } from './testing.ts';
@@ -20,6 +23,7 @@ import { createSceneTree } from './testing.ts';
  * 3. L (link tool) shows ports; drag from a port onto a cell or port links; onto empty canvas creates a rect and links.
  * 4. R / T / S then drag draws a rect, text or nested scene; Delete removes the selection.
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
+ * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected cell.
  */
 type StoryArgs = { depth: number };
 
@@ -34,13 +38,24 @@ const withRegistry: Decorator = (Story) => (
   </RegistryWrapper>
 );
 
+const Editor = ({ store, root }: { store: ReturnType<typeof createMemoryStore>; root: string }) => {
+  const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
+  const projection = useSceneProjection({ store, atoms });
+  return (
+    <div className='dx-fill grid grid-cols-[1fr_20rem]'>
+      <SceneView store={store} root={root} atoms={atoms} />
+      <CellProperties projection={projection} atoms={atoms} classNames='border-l border-separator' />
+    </div>
+  );
+};
+
 const DefaultStory = ({ depth }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     const tree = createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth]);
-  // Keyed on the root so a new tree remounts the view, whose atoms are created on mount.
-  return <SceneView key={root} store={store} root={root} />;
+  // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.
+  return <Editor key={root} store={store} root={root} />;
 };
 
 const meta: Meta<StoryArgs> = {

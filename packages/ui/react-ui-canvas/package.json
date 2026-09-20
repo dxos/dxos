@@ -36,6 +36,7 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/diagram": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@effect/atom-react": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",

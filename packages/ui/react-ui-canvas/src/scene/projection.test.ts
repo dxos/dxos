@@ -67,6 +67,19 @@ describe('freehand projection', () => {
     ).toBe(scene);
   });
 
+  test('update merges properties but never the id or kind', ({ expect }) => {
+    const next = reduceIntent(fixture(), {
+      kind: 'update',
+      id: 'scene:r/a',
+      values: { id: 'other', label: 'Renamed', center: { x: 1, y: 2 } },
+    });
+    const cell = next.cells['scene:r/a'];
+    expect(cell.kind).toBe('rect');
+    expect(cell.kind === 'rect' && cell.label).toBe('Renamed');
+    expect(cell.kind === 'rect' && cell.center).toEqual({ x: 1, y: 2 });
+    expect(next.cells.other).toBeUndefined();
+  });
+
   test('delete removes cells and the links attached to them', ({ expect }) => {
     const next = reduceIntent(fixture(), { kind: 'delete', ids: ['scene:r/a'] });
     expect(Object.keys(next.cells).sort()).toEqual(['scene:r/b', 'scene:r/c', 'scene:r/t']);
