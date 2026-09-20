@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: PR 0 (`@dxos/diagram` extraction) is implemented on this branch and being submitted; once it lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
+_Resume: PR 0 (`@dxos/diagram` extraction) is open as #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`); watch CI and review; once it lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
 
 ## Phase 0: audit + design
 
