@@ -82,6 +82,9 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
+      "path": "packages/e2e/composer-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/apps/composer-stream-deck/tsconfig.json"
     },
     {

@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: composer-e2e
+    status: active
+    user: dmytro
+    host: cloud
+    created: 2026-09-20
+    summary: 'Composer browser e2e extracted to `packages/e2e/composer-e2e`; every spec bound two-sided to an `.mdl` `test QA-n` via a new `automated:` field plus Playwright `@QA-n` tags and a coverage check; authoring rules in BEST-PRACTICES.md; results published from main as `ci.e2e-test` and charted in PostHog (stacked outcomes per run + currently-failing table).'
+    tasks: .agents/projects/composer-e2e/TASKS.md
+    design: .agents/projects/composer-e2e/DESIGN.md
+    prs: []
+    resume: 'Branch claude/composer-playwright-tests-we38ii. Phases 1-4 complete locally; PR not yet opened. NEXT: open the PR, then the TASKS.md follow-ups (restore inbox.spec by seeding rather than syncing, fix or attribute the tables.spec skip, attribute the chromium-only skips).'
   - name: plugin-markdown
     status: active
     user: burdon

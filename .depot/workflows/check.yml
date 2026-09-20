@@ -131,6 +131,12 @@ jobs:
           - name: Check public packages are published
             run: pnpm run check-packages-published
 
+          # Both sides of the spec <-> `.mdl` QA binding. In stage 1 because it needs no build and
+          # because the failure it catches — a renamed test leaving a flow claiming coverage it no
+          # longer has — is cheapest to report before anything compiles.
+          - name: Check e2e tests are bound to QA flows
+            run: node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
+
       # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
       # declares an implicit input to every task, and neither restores it on a hard cancellation.
       #
@@ -553,10 +559,10 @@ jobs:
             id: shard
             run: |
               if [ "${{ matrix.shard }}" = "composer" ]; then
-                targets=composer-app:e2e
+                targets=composer-e2e:e2e
               else
                 targets=$(moon query tasks "task=e2e" |
-                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-app').sort().map((project)=>project+':e2e').join(' ')))")
+                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().map((project)=>project+':e2e').join(' ')))")
               fi
               [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
@@ -576,6 +582,21 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+
+      # Trends every test's outcome in PostHog (`ci.e2e-test`), which the "Composer e2e" dashboard
+      # charts. Only from main: a PR run measures a branch, a fork PR has no project token at all,
+      # and a trend that mixes the two answers nothing. The NIGHTLY is the authoritative sample —
+      # `DX_E2E_RUN_ID` is set on `schedule`, so that run actually executes every suite instead of
+      # replaying a moon cache hit; a push to main that replays the cache restores no report and the
+      # script no-ops.
+      #
+      # `always()` because the report of a RED run is the entire point — gating on success would
+      # publish only the runs where nothing failed, and the failing-tests table would never fill.
+      - name: Publish results
+        if: ${{ always() && github.ref == 'refs/heads/main' }}
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: node packages/e2e/composer-e2e/scripts/publish-results.mjs
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7

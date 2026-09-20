@@ -710,6 +710,11 @@ test QA-1: Add a mailbox, compose a draft, read it back
   actors: both
   covers: [F-1.1, F-1.2, F-4.1]
   status: unverified
+  automated:
+    - composer-e2e:inbox.spec.ts#Inbox › JMAP: connecting an account syncs it with no sync press
+    - composer-e2e:inbox.spec.ts#Inbox › JMAP: a connected account populates when sync is pressed
+    - composer-e2e:inbox.spec.ts#Inbox › selecting a thread opens the message companion
+    - composer-e2e:inbox.spec.ts#Inbox › JMAP: reply sends
   given:
     - an identity exists
     - space: a space is open
