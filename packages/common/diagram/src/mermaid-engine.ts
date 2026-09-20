@@ -668,7 +668,7 @@ const emit = (
 
   if (graph.edges.length > 0) {
     // Frames are containers, not obstacles: only node rects block routes.
-    const router = route ?? makeAvoidingRouter([...nodes.values()], zRouter);
+    const router = route ?? makeAvoidingRouter([...nodes.values()], zRouter, { step: GRID / 4 });
     const buses = bus && !horizontal ? inheritanceBuses(graph.edges, nodes) : { elements: [], consumed: new Set() };
     const routed = graph.edges.filter((edge) => !buses.consumed.has(edge));
     // In columns the root level runs across the flow, so an edge between two of its members — groups
