@@ -45,6 +45,7 @@
   "scripts": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
