@@ -24,7 +24,18 @@
  */
 
 import { spawn } from 'node:child_process';
-import { createReadStream, existsSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  closeSync,
+  createReadStream,
+  existsSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  readSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
@@ -55,6 +66,11 @@ const settleS = number('--settle', '90');
 // The mean bytes between samples. Large allocations are captured near-exactly at any
 // setting; this only controls how well the long tail of small ones is estimated.
 const rate = number('--rate', '10000');
+if (rate === 0) {
+  // A zero interval asks the Poisson sampler to record every allocation.
+  console.error('--rate must be greater than zero');
+  process.exit(1);
+}
 const jsonOut = arg('--json', null);
 const electronRoot = arg('--electron', process.env.ELECTRON_APP ?? './tmp/electron/Electron.app');
 const symFile = arg('--symbols', process.env.ELECTRON_SYMBOLS ?? null);
@@ -82,9 +98,13 @@ if (!symFile || !existsSync(symFile)) {
  * is ~700 MB of text and only these two record types matter, so the extract is cached
  * beside it.
  */
-const loadSymbols = async (file) => {
+const loadSymbols = async (file, moduleLine) => {
   const cache = `${file}.ranges.tsv`;
-  if (!existsSync(cache)) {
+  // Keyed on the .sym's own MODULE line, not just its path: a different Electron version
+  // written to the same path would otherwise resolve through the old index and produce
+  // plausible names for the wrong binary.
+  const stamp = `# ${moduleLine}`;
+  if (!existsSync(cache) || !readFileSync(cache, 'utf8').startsWith(`${stamp}\n`)) {
     const rows = [];
     const lines = createInterface({ input: createReadStream(file, { highWaterMark: 1 << 22 }), crlfDelay: Infinity });
     for await (const line of lines) {
@@ -109,7 +129,10 @@ const loadSymbols = async (file) => {
     // that can actually contain an offset rather than a zero-size alias.
     rows.sort((x, y) => x[0] - y[0] || y[1] - x[1]);
     const written = `${cache}.${process.pid}.part`;
-    writeFileSync(written, rows.map((r) => `${r[0].toString(16)}\t${r[1].toString(16)}\t${r[2]}`).join('\n'));
+    writeFileSync(
+      written,
+      `${stamp}\n${rows.map((r) => `${r[0].toString(16)}\t${r[1].toString(16)}\t${r[2]}`).join('\n')}`,
+    );
     // Renamed rather than written in place: an interrupted write would otherwise leave a
     // truncated cache that every later run reuses, silently resolving to the wrong names.
     renameSync(written, cache);
@@ -120,7 +143,7 @@ const loadSymbols = async (file) => {
   const names = [];
   for (const line of readFileSync(cache, 'utf8').split('\n')) {
     const a = line.indexOf('\t');
-    if (a < 0) {
+    if (a < 0 || line.startsWith('#')) {
       continue;
     }
     const b = line.indexOf('\t', a + 1);
@@ -236,7 +259,17 @@ class Cdp {
 }
 
 console.error('loading symbols ...');
-const lookup = await loadSymbols(symFile);
+// Read as a handful of bytes: the .sym itself is ~700 MB and only its first line is wanted.
+const header = Buffer.alloc(256);
+const symFd = openSync(symFile, 'r');
+readSync(symFd, header, 0, header.length, 0);
+closeSync(symFd);
+const moduleLine = header.toString('utf8').split('\n')[0];
+if (!moduleLine?.startsWith('MODULE ')) {
+  console.error(`${symFile} is not a breakpad symbol file`);
+  process.exit(1);
+}
+const lookup = await loadSymbols(symFile, moduleLine);
 
 // A one-file Electron app: a hidden window that stays on about:blank until the profiler
 // is armed, so the app's own allocation is inside the sample and the harness's is not.
@@ -272,21 +305,31 @@ child.stdout.on('data', (chunk) => (childLog += chunk));
 child.stderr.on('data', (chunk) => (childLog += chunk));
 
 let cleaned = false;
-const shutdown = () => {
+const shutdown = async () => {
   if (cleaned) {
     return;
   }
   cleaned = true;
   // SIGTERM first so the browser tears its helper processes down itself; SIGKILL on the
-  // parent alone would orphan the renderer, which is the 300 MB one.
+  // parent alone would orphan the renderer, which is the 300 MB one. Awaited, so the
+  // escalation is not cut short by the process exiting.
   child.kill('SIGTERM');
-  setTimeout(() => child.kill('SIGKILL'), 2000).unref?.();
+  await Promise.race([
+    new Promise((resolve) => child.once('exit', resolve)),
+    new Promise((resolve) => setTimeout(resolve, 2000).unref?.()),
+  ]);
+  child.kill('SIGKILL');
   rmSync(appDir, { force: true, recursive: true });
 };
+// Without a listener a failed exec throws out of band, past the try/finally below.
+child.on('error', (error) => {
+  console.error(`could not run ${electronBin}: ${error.message}`);
+  rmSync(appDir, { force: true, recursive: true });
+  process.exit(1);
+});
 for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
   process.on(signal, () => {
-    shutdown();
-    process.exit(130);
+    void shutdown().then(() => process.exit(130));
   });
 }
 
@@ -322,14 +365,23 @@ try {
   const cdp = await Cdp.connect(page.webSocketDebuggerUrl);
   // Dedicated workers are not top-level targets and never appear in `/json/list`, so the
   // only way to reach the realms Composer does most of its work in is to auto-attach.
-  const workerSessions = new Set();
+  const workerSessions = new Map();
   cdp.on('Target.attachedToTarget', ({ sessionId, targetInfo }) => {
-    if (['iframe', 'service_worker', 'shared_worker', 'worker'].includes(targetInfo.type)) {
-      workerSessions.add(sessionId);
+    if (!['iframe', 'service_worker', 'shared_worker', 'worker'].includes(targetInfo.type)) {
+      return;
     }
+    workerSessions.set(sessionId, targetInfo.type);
+    // Re-armed on the new session, because auto-attach covers a session's own children
+    // only. Composer's client worker creates the observability worker that runs the log
+    // store, and without this that grandchild realm is never reached.
+    void cdp.trySend(
+      'Target.setAutoAttach',
+      { autoAttach: true, flatten: true, waitForDebuggerOnStart: false },
+      { sessionId },
+    );
   });
   cdp.on('Target.detachedFromTarget', ({ sessionId }) => workerSessions.delete(sessionId));
-  await cdp.trySend('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: false });
+  await cdp.send('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: false });
   await cdp.send('Page.enable');
   await cdp.send('Memory.startSampling', { samplingInterval: rate, suppressRandomness: false });
   await cdp.send('Page.navigate', { url });
@@ -341,14 +393,18 @@ try {
   await cdp.trySend('HeapProfiler.enable', {}, { timeoutMs: GC_TIMEOUT_MS });
   await cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS });
   let collected = 0;
-  for (const sessionId of workerSessions) {
+  for (const sessionId of workerSessions.keys()) {
     await cdp.trySend('HeapProfiler.enable', {}, { sessionId, timeoutMs: GC_TIMEOUT_MS });
     const result = await cdp.trySend('HeapProfiler.collectGarbage', {}, { sessionId, timeoutMs: GC_TIMEOUT_MS });
     if (result) {
       collected++;
     }
   }
-  console.error(`  collected ${collected + 1} of ${workerSessions.size + 1} realms`);
+  // Named, because a realm missing from this list is one whose garbage the profile will
+  // report as live — the difference between "retained" and "allocated faster than GC".
+  console.error(
+    `  collected ${collected + 1} of ${workerSessions.size + 1} attached realms: page, ${[...workerSessions.values()].join(', ')}`,
+  );
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
   const { profile } = await cdp.send('Memory.getSamplingProfile');
@@ -371,7 +427,7 @@ try {
   await cdp.send('Tracing.requestMemoryDump', { deterministic: true, levelOfDetail: 'detailed' });
   await new Promise((resolve) => setTimeout(resolve, 5000));
   await cdp.send('Tracing.end');
-  await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 120_000))]);
+  await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 120_000).unref?.())]);
 
   const modules = profile.modules.map((module) => ({
     base: Number(BigInt(module.baseAddress)),
@@ -382,19 +438,30 @@ try {
   if (!framework) {
     throw new Error(`the profile carries no Electron Framework module: ${modules.map((m) => m.name).join(', ')}`);
   }
-  const UNRESOLVED = /^(Electron Framework|[^+]+)\+0x[0-9a-f]+$|^0x[0-9a-f]+$/;
+  // Recorded as they are produced rather than recognised by shape afterwards: a
+  // PUBLIC-resolved `name+0x…` is still a name, and a C++ symbol may contain a `+`.
+  const unresolvedFrames = new Set();
   const symbolize = (address) => {
     let value;
     try {
       value = Number(BigInt(address));
     } catch {
+      unresolvedFrames.add(String(address));
       return String(address);
     }
     if (value >= framework.base && value < framework.end) {
-      return lookup(value - framework.base) ?? `Electron Framework+0x${(value - framework.base).toString(16)}`;
+      const name = lookup(value - framework.base);
+      if (name) {
+        return name;
+      }
+      const frame = `Electron Framework+0x${(value - framework.base).toString(16)}`;
+      unresolvedFrames.add(frame);
+      return frame;
     }
     const module = modules.find((candidate) => value >= candidate.base && value < candidate.end);
-    return module ? `${module.name}+0x${(value - module.base).toString(16)}` : `0x${value.toString(16)}`;
+    const frame = module ? `${module.name}+0x${(value - module.base).toString(16)}` : `0x${value.toString(16)}`;
+    unresolvedFrames.add(frame);
+    return frame;
   };
 
   // The allocator shim and the sampler itself sit on top of every stack and name nothing.
@@ -418,7 +485,7 @@ try {
         return frame;
       }
     }
-    return stack.find((frame) => !isPlumbing(frame)) ?? stack.at(-1) ?? '<empty stack>';
+    return stack.find((frame) => !isPlumbing(frame)) ?? '<allocator internals only>';
   };
 
   const samples = profile.samples.map((sample) => ({
@@ -430,7 +497,7 @@ try {
   // An address with no symbol still reads as a call site once it is printed, so say how
   // much of the total is one.
   const unresolved = samples
-    .filter((sample) => UNRESOLVED.test(pick(sample.stack, false)))
+    .filter((sample) => unresolvedFrames.has(pick(sample.stack, false)))
     .reduce((sum, sample) => sum + sample.bytes, 0);
 
   // Only a renderer has a PartitionAlloc tree, and the profile came from the renderer the
@@ -455,20 +522,25 @@ try {
     }
     perPid.set(event.pid, entry);
   }
-  const renderers = [...perPid].filter(([, entry]) => entry.allocators.partition_alloc != null);
-  // Matched on the allocator total the profile itself explains: the sampled bytes are a
-  // subset of this renderer's live objects, so the right process is the one large enough
-  // to hold them, and among several that is reliably the largest.
-  const [rendererPid, renderer] = renderers.sort((a, b) => b[1].footprint - a[1].footprint)[0] ?? [null, null];
+  // A Blink heap as well as a PartitionAlloc tree: under PartitionAlloc-Everywhere a
+  // non-renderer can carry the latter, and only a renderer runs Oilpan.
+  const liveOf = (entry) =>
+    (entry.allocators['malloc/allocated_objects'] ?? 0) + (entry.allocators['partition_alloc/allocated_objects'] ?? 0);
+  const renderers = [...perPid].filter(
+    ([, entry]) => entry.allocators.partition_alloc != null && entry.allocators.blink_gc != null,
+  );
+  // Ranked by live objects rather than footprint, because the sample is a subset of them:
+  // the process the profile came from has to be big enough to contain it.
+  const [rendererPid, renderer] = renderers.sort((a, b) => liveOf(b[1]) - liveOf(a[1]))[0] ?? [null, null];
   if (!renderer) {
     throw new Error('the memory dump contains no renderer process');
   }
   if (renderers.length > 1) {
     console.error(
-      `  ${renderers.length} renderers in the dump; reading pid ${rendererPid} (${MB(renderer.footprint)} MB), ` +
+      `  ${renderers.length} renderers in the dump; reading pid ${rendererPid} (${MB(liveOf(renderer))} MB live), ` +
         `others ${renderers
           .filter(([pid]) => pid !== rendererPid)
-          .map(([pid, entry]) => `${pid}@${MB(entry.footprint)}MB`)
+          .map(([pid, entry]) => `${pid}@${MB(liveOf(entry))}MB`)
           .join(', ')}`,
     );
   }
@@ -498,6 +570,11 @@ try {
     `  ${'  of which no symbol could be resolved'.padEnd(48)} ${String(MB(unresolved)).padStart(9)} MB` +
       (sampled ? ` (${((unresolved / sampled) * 100).toFixed(1)}%)` : ''),
   );
+  if (live && sampled > live) {
+    // The sample cannot exceed the live objects of the process it came from, so this is a
+    // mispairing rather than a measurement.
+    console.error(`  WARNING: the sample is larger than pid ${rendererPid}'s live objects — wrong process?`);
+  }
 
   const report = (label, skipGeneric) => {
     const by = new Map();
@@ -603,5 +680,5 @@ try {
   }
   cdp.close();
 } finally {
-  shutdown();
+  await shutdown();
 }

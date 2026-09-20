@@ -1,7 +1,8 @@
 # Memory harness
 
-Instruments for measuring where a Composer tab's memory goes. Each script drives
-headless Chrome over CDP and prints a table; none of them run in CI.
+Instruments for measuring where a Composer tab's memory goes. Each drives a
+browser over CDP and prints a table — headless Chrome, except `native-heap.mjs`,
+which needs Electron for its symbols. None of them run in CI.
 
 Findings and the composition model they produced live in
 [`.agents/projects/memory-usage/`](../../../../../.agents/projects/memory-usage).
@@ -30,7 +31,7 @@ attributed against a 546 MB footprint. `ledger.mjs` reports both plus a
 
 `ledger.mjs` closes the books per process as: private allocator nodes +
 committed wasm + residual. On the app's own renderer that residual is under 1%.
-Six rules make the arithmetic valid:
+These rules make the arithmetic valid:
 
 - **Measure with `--detached`.** A Playwright page costs this app ~130 MB of
   Blink PartitionAlloc, and an early `Network.enable` another ~45 MB, because
@@ -107,6 +108,7 @@ alongside any number:
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ledger.mjs`             | Private footprint per process, the allocator breakdown with ownership views removed, per-realm heap and wasm linear memory per module, and a document census, at named checkpoints through a journey |
 | `ledger.mjs --by-code`   | JS allocation per workspace package, from V8's sampling heap profiler resolved through the build's sourcemaps; needs `--dist`                                                                        |
+| `api-census.mjs`         | Which application code calls `TextEncoder.encode` and IndexedDB's bulk reads, per realm, with the JS stack — the caller-side half of `native-heap.mjs`, and the only one that reaches dedicated workers |
 | `native-heap.mjs`        | The C++ call sites behind `malloc` and `partition_alloc` together, with byte totals and a rollup by mechanism — the naming that memory-infra's `<unspecified>` cannot give. macOS only; run `fetch-electron.sh` first |
 | `fetch-electron.sh`      | Downloads the Electron build and breakpad symbols `native-heap.mjs` symbolizes against and checks their UUIDs match: ~250 MB of downloads, ~1.5 GB on disk                                           |
 | `cost-fixtures.mjs`      | Generates the single-variable pages behind the per-unit cost table in `.agents/projects/memory-usage/ALLOCATION.md`; measure each pair with `ledger.mjs --detached --ready none`                     |
@@ -161,6 +163,9 @@ node scripts/memory/soak.mjs http://localhost:4173 --minutes 10 --interval 30
 
 # What loads at boot, attributed per package.
 node scripts/memory/boot-census.mjs http://localhost:4173 out/composer --settle 150
+
+# Which application code asks for the memory. No symbols needed; start here.
+node scripts/memory/api-census.mjs http://localhost:4173 --settle 90
 
 # Name the C++ call sites behind malloc and partition_alloc (macOS only).
 scripts/memory/fetch-electron.sh

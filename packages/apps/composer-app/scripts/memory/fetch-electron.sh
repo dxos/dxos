@@ -34,24 +34,30 @@ fi
 mkdir -p "${DEST}"
 cd "${DEST}"
 
+# Staging directories are scratch, so an interrupted or failed run leaves none behind.
+trap 'rm -rf ./.stage.*' EXIT
+
 # Unpacked into a staging directory and moved into place, so an interrupted download or
 # unzip cannot leave a half-populated directory that every later run then skips.
 fetch() {
-  local artifact="$1" marker="$2" stage
-  if [[ -e "${marker}" ]]; then
+  local artifact="$1" marker="$2" stamp="$2.version" stage
+  # The stamp carries the version, so asking for a different one re-downloads instead of
+  # silently reusing whatever is on disk and then UUID-checking it against itself.
+  if [[ -e "${marker}" && "$(cat "${stamp}" 2>/dev/null || true)" == "${VERSION} ${ARCH}" ]]; then
     return
   fi
-  stage="$(mktemp -d "./.${marker}.XXXXXX")"
+  rm -rf "${marker}" "${stamp}"
+  stage="$(mktemp -d "./.stage.XXXXXX")"
   echo "downloading ${artifact} ..."
   curl -fL --retry 3 -o "${stage}/archive.zip" "${BASE}/${artifact}"
   unzip -q -o "${stage}/archive.zip" -d "${stage}/out"
   if [[ ! -e "${stage}/out/${marker}" ]]; then
     echo "${artifact} does not contain ${marker}: $(ls "${stage}/out")" >&2
-    rm -rf "${stage}"
     exit 1
   fi
   mv "${stage}/out/${marker}" "./${marker}"
   rm -rf "${stage}"
+  echo "${VERSION} ${ARCH}" > "${stamp}"
 }
 
 fetch "electron-${VERSION}-${ARCH}.zip" Electron.app
@@ -68,10 +74,16 @@ fi
 # The UUIDs must match or every address resolves to the wrong function, silently. dwarfdump
 # prints one line per architecture, so pick the slice rather than every field.
 FRAMEWORK='Electron.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework'
-BIN_UUID="$(dwarfdump --uuid "${FRAMEWORK}" | awk -v arch="(${ARCH##*-})" '$3 == arch { print $2 }' | tr -d '-')"
+# dwarfdump names the slice the way the linker does, not the way Electron names its
+# release asset: x64 there is x86_64 here.
+SLICE="${ARCH##*-}"
+if [[ "${SLICE}" == "x64" ]]; then
+  SLICE="x86_64"
+fi
+BIN_UUID="$(dwarfdump --uuid "${FRAMEWORK}" | awk -v arch="(${SLICE})" '$3 == arch { print $2 }' | tr -d '-')"
 SYM_UUID="$(head -1 "${SYM}" | awk '{print $4}')"
 if [[ -z "${BIN_UUID}" || "${SYM_UUID}" != "${BIN_UUID}"* ]]; then
-  echo "symbol/binary UUID mismatch for ${ARCH}: '${SYM_UUID}' vs '${BIN_UUID}'" >&2
+  echo "symbol/binary UUID mismatch for ${SLICE}: '${SYM_UUID}' vs '${BIN_UUID}'" >&2
   exit 1
 fi
 
