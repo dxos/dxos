@@ -18791,6 +18791,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite

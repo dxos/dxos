@@ -18,7 +18,7 @@ import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
+import { makeInProcessClient, normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -35,7 +35,7 @@ import {
   SystemService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
-import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
+import { type RpcPort, RpcRouter, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_CHANNEL } from './config.ts';
@@ -221,23 +221,61 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
- * The handler layer for one service's rpcs, resolved from its tag and normalized so effect-rpc
- * finds and correctly invokes a class-instance implementation (see {@link normalizeHandlers}).
+ * A client service's rpc definitions and the tag its handlers are registered under — what
+ * {@link RegisterService} needs to serve it.
  */
-export const layerHandlersFromTag = <Rpcs extends EffectRpc.Any, Identifier, Shape extends object>(
-  group: RpcGroup.RpcGroup<Rpcs>,
-  tag: Context.Key<Identifier, Shape>,
-) => group.toLayer(Effect.map(tag, (service) => normalizeHandlers(group, service as RpcGroup.HandlersFrom<Rpcs>)));
+export type ServiceDefinition<Rpcs extends EffectRpc.Any, Identifier> = {
+  readonly Rpcs: RpcGroup.RpcGroup<Rpcs>;
+  readonly Tag: Context.Key<Identifier, RpcGroup.HandlersFrom<Rpcs>>;
+};
 
 /**
- * Serves every client service over the ambient {@link RpcServer.Protocol}, with the handler layers
- * supplied by the caller (typically {@link layerHandlersFromTag} per service over a stack context).
+ * The rpc tag prefix a group was defined with (e.g. `DataService.`), read off its requests so a
+ * registration carries no second copy of the service name.
  */
-export const layerClientServicesServer = <R>(
-  handlers: Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>, never, R>,
-): Layer.Layer<never, never, RpcServer.Protocol | R> =>
-  // `timing` must match the tab client, whose middleware is `requiredForClient`.
-  Rpc.serverLayer(ClientServicesRpcs, handlers, { disableTracing: true, concurrency: 'unbounded', timing: true });
+const servicePrefix = <Rpcs extends EffectRpc.Any>(group: RpcGroup.RpcGroup<Rpcs>): string => {
+  const [tag] = [...group.requests.keys()];
+  invariant(tag, 'rpc group has no requests');
+  const index = tag.indexOf('.');
+  invariant(index > 0, `rpc tag is not service-prefixed: ${tag}`);
+  return tag.slice(0, index + 1);
+};
+
+/**
+ * Registers a service's handlers with the stack's {@link RpcRouter.RpcRouter}, which serves them
+ * over every attached transport (and in-process) for the life of the layer. Handler creation and
+ * registration stay separate layers: a provider merges this with the layer that supplies its tag,
+ * and no list of services is needed anywhere else.
+ */
+export const RegisterService = <Rpcs extends EffectRpc.Any, Identifier>(service: ServiceDefinition<Rpcs, Identifier>) =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      const handlers = normalizeHandlers(service.Rpcs, yield* service.Tag);
+      yield* Rpc.serveOnRouter(servicePrefix(service.Rpcs), service.Rpcs, service.Rpcs.toLayer(handlers), {
+        // The in-process surface calls the handlers directly, so it is built from the group as
+        // defined rather than from the middleware-wrapped one the transport serves; the router
+        // holds it dynamically, keyed by the same rpc tags it is typed by.
+        inProcessClient: makeInProcessClient(service.Rpcs, handlers) as Effect.Effect<
+          RpcRouter.Client,
+          never,
+          Scope.Scope
+        >,
+      });
+    }),
+  );
+
+/**
+ * The whole in-process {@link ClientServicesRpc}, sourced from the services registered with the
+ * router rather than from an enumerated handler map.
+ */
+export const makeClientServicesRpcFromRouter: Effect.Effect<
+  ClientServicesRpc,
+  never,
+  RpcRouter.RpcRouter | Scope.Scope
+> =
+  // The router's client is keyed dynamically by rpc tag; `ClientServicesRpc` is the static view of
+  // the same record, and is what every consumer of the stack expects.
+  RpcRouter.client.pipe(Effect.map((client) => client as unknown as ClientServicesRpc));
 
 /**
  * Builds handler layers for every client service RPC, dispatching to the service implementations

@@ -12,7 +12,7 @@ import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { type Trigger } from '@dxos/async';
-import { type ClientServicesHandlers, makeInProcessClientServicesRpc } from '@dxos/client-protocol';
+import { type ClientServicesRpc, makeClientServicesRpcFromRouter } from '@dxos/client-protocol';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
@@ -68,7 +68,6 @@ import {
   type ClientServicesStackContext,
   type ServiceContextRuntimeProps,
   StackReadinessService,
-  handlersFromStack,
 } from '../services/index.ts';
 import { SqliteStorage, wipeSqliteStorage } from '../services/sqlite-storage.ts';
 import { SpaceManager, SpaceManagerService } from '../space/index.ts';
@@ -130,9 +129,12 @@ export class ServiceContext {
     return this.#config;
   }
 
-  /** The RPC handlers served while open; only the system service while closed. */
-  get services(): Partial<ClientServicesHandlers> {
-    return this.#stack ? handlersFromStack(this.#stack) : {};
+  /**
+   * The in-process rpc surface over the services registered with the stack's router; scoped to the
+   * caller, who closes it when done.
+   */
+  get rpc(): Effect.Effect<ClientServicesRpc, never, Scope.Scope> {
+    return makeClientServicesRpcFromRouter.pipe(Effect.provide(this.stack));
   }
 
   get stack(): EffectContext.Context<ClientServicesStackContext> {
@@ -234,7 +236,7 @@ export class ServiceContext {
     await EffectEx.runPromise(
       Effect.scoped(
         Effect.gen({ self: this }, function* () {
-          const rpc = yield* makeInProcessClientServicesRpc(() => this.services);
+          const rpc = yield* this.rpc;
           yield* rpc['SystemService.reset']();
         }),
       ),
