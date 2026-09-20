@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: user reviews packages/ui/react-ui-canvas/docs/DESIGN.md; on approval write the phase 1 plan and build `react-ui-canvas/src/scene/`. Uncommitted: none. Last: AUDIT.md + research committed; throwaway spike verified in storybook (`packages/ui/react-ui-canvas/src/experimental`, story `ui/react-ui-canvas/experimental/SceneView`)._
+_Resume: user reviews packages/ui/react-ui-canvas/docs/DESIGN.md rev 2 (layered projections, control frame/ports, navigation); on approval write the phase 1 plan and build `react-ui-canvas/src/scene/`. Uncommitted: none. Last: AUDIT.md + research committed; throwaway spike verified in storybook (`packages/ui/react-ui-canvas/src/experimental`, story `ui/react-ui-canvas/experimental/SceneView`)._
 
 ## Phase 0: audit + design
 
@@ -16,9 +16,11 @@ Decide rewrite vs adopt (xyflow) for an infinite, multi-depth canvas, and pin th
 
 ## Phase 1: first PR
 
-- [ ] Infinite zoomable canvas with grid.
-- [ ] Basic shape palette: rectangle, link, scene (nested).
-- [ ] Storybook story + tests.
+- [ ] Types, registry, projection seam; freehand / constrained / dynamic projections (minimal).
+- [ ] Infinite zoomable canvas with grid, camera, select/marquee, control frame (move + resize), ports + automatic pairing, port-drag linking.
+- [ ] Navigation: double-click / auto / Escape / breadcrumbs / history.
+- [ ] Palette: rectangle, link, scene (nested).
+- [ ] Stories: Freehand, Constrained, Dynamic, Nested; unit tests per pure module.
 
 ### References
 
