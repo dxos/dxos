@@ -1,6 +1,7 @@
 # plugin-canvas — Design
 
-Status: spec for review (2026-09-20, rev 4: §6b mobile navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
+Status: spec for review (2026-09-20, rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
+navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and a throwaway spike (deleted once the engine's `Nested` story covered it; its findings are folded
 into §5). Engine: `packages/ui/react-ui-canvas/src/scene/`, stories `ui/react-ui-canvas/scene/SceneView`.
 
@@ -153,6 +154,33 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side */
 - A scene referenced from two portals is a Muse "linked card"; nothing forbids it.
 - Ephemeral state (selection, hover, drag offset, camera, scene path) lives in per-view atoms, never in the model.
 
+## 4b. Layers and data structures as built
+
+Four layers, each one an Effect atom the next one subscribes to; nothing below a layer knows what is above it.
+
+```
+ store              projection               view state                surface
+ ┌───────────────┐  ┌────────────────────┐   ┌───────────────────────┐ ┌──────────────────────────────┐
+ │ SceneStore    │  │ Projection         │   │ SceneViewAtoms        │ │ SceneView                    │
+ │  scenes:      │─▶│  scene: Atom<Scene>│──▶│  camera, path,        │▶│  grid ▸ SceneLayer ▸ overlay │
+ │   Atom<Map>   │  │  apply(Intent)     │◀──│  selection, hover,    │ │  pointer machine, keys       │
+ │  scene(id)    │◀─│  capabilities      │   │  tool, snap, drag,    │ │  CellProperties, Palette,    │
+ └───────────────┘  └────────────────────┘   │  history              │ │  Breadcrumbs                 │
+                     freehand | constrained  └───────────────────────┘ └──────────────────────────────┘
+                     | dynamic                (per view, never stored)  (React; reads atoms, emits intents)
+```
+
+| Layer          | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Data structure                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Store**      | Every scene of a document, by id (`store.ts`). In memory now; the ECHO `Canvas.content` map in phase 3. Writes go through `updateScene(registry, store, id, fn)`, a no-op when `fn` returns the same object.                                                                                                                                                                                                                                                              | `SceneStore = { scenes: Atom.Writable<Record<SceneId, Scene>>, scene(id): Atom<Scene \| undefined> }`; the per-id atom is derived and cached so a view subscribes to exactly the scene it shows.                                                                                                                                                                                                                                                                                                                                             |
+| **Projection** | The meaning of an intent for one scene (`projection.ts`, `projections/*`). `freehand` is the identity (`reduceIntent`, a pure reducer over `Scene`); `constrained` keeps a `ConstrainedModel {nodes, constraints}` and re-solves; `dynamic` keeps a `GraphModel {nodes, edges}` plus an `Overlay {positions}` and re-lays out. Each returns a `Projection` over its own atoms.                                                                                            | `Projection = { scene: Atom<Scene>, apply(intent), capabilities }`. `Intent = move {ids, delta} \| resize {id, bounds} \| link {id, source, target} \| create {cell} \| delete {ids} \| reorder {id, z} \| update {id, values}`. `Capabilities` flags which intents the projection accepts; the surface greys out the rest.                                                                                                                                                                                                                  |
+| **View state** | Everything ephemeral for one view (`atoms.ts`): the camera, the scene path (breadcrumbs), selection, hover, the active tool, the grid/snap toggle, the in-flight drag and the drill history. Created by `createSceneViewAtoms(root)` and optionally owned by the host, so two views of one scene stay independent and a panel (properties, constraint list) shares the view's selection.                                                                                  | `SceneViewAtoms = { camera: Atom.Writable<Camera>, path: Atom.Writable<SceneId[]>, selection: Atom.Writable<ReadonlySet<CellId>>, hover, tool: Tool, snap: boolean, drag: Drag \| undefined, history: {entries, index} }`. `Drag` is a union of the pointer machine's states: `pan {last}`, `marquee {from, to, additive}`, `move {ids, origin, anchor, delta}`, `resize {id, handle, start, bounds}`, `link {source, from, to, target?}`, `create {tool, from, to}`; the transient result is rendered, the intent is emitted on pointer-up. |
+| **Surface**    | Rendering and gestures (`SceneView.tsx`, `SceneLayer.tsx`, `ControlFrame.tsx`). `SceneView` reads the atoms, runs the pointer state machine and key handling, and calls `projection.apply`. `SceneLayer` renders one scene under one CSS transform: a `div` per placed cell (component from the registry) and an `svg` of link paths; a live portal mounts a nested read-only layer. `ControlFrame` draws the selection outline, handles, ports, marquee and rubber band. | `CellRegistry = Record<kind, CellDef>` with `CellDef = { kind, component, ports(cell), resizable?, minSize?, openable? }` (decision 12). `LinkGeometry = { link, path, source: RouteEnd, target: RouteEnd }` is computed per render from `pairPorts` + `curvePath`. `Tier = dot \| preview \| live` per portal from its screen size with hysteresis.                                                                                                                                                                                         |
+
+The model on the wire between the layers is the positioned `Scene` of §4: `{ id, name?, cells: Record<CellId, Cell> }` with `Cell = RectCell | TextCell | PortalCell | LinkCell`, every cell carrying `{ id, kind, z, locked? }`, placed cells `{ center, size }`, links `{ source: Endpoint, target: Endpoint, route? }`. Scene bounds, hit tests, port positions and link routes are all derived from it (`hit.ts`, `ports.ts`, `route.ts`, `camera.ts`) and never stored; `order.ts` supplies the fractional `z` keys.
+
+Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped) and the surface renders the scene with `reduceIntent` applied locally for preview → pointer-up emits one `Intent` → the projection applies, rewrites or rejects it and writes its model (the store, a constraint set, an overlay) → the projection's `scene` atom re-emits → the surface re-renders. The undo unit is the intent.
+
 ## 5. Coordinate system and camera
 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to
@@ -276,33 +304,38 @@ Pointer Events state machine with tools: `select` (default), `hand`, `rect`, `te
 ## 9. Package layout
 
 ```
-packages/ui/react-ui-canvas/src/scene/
-  types.ts          Schema: Scene, Cell, Endpoint, Port, Camera, Intent
-  registry.ts       CellDef registry (component, ports, resizable, openable) + default defs
-  projection.ts     Projection seam + intent types; intents → @dxos/diagram Scene.Commands
-  handler.ts        SceneHandler: ContentHandler over the cell map (render/read/identify/translate)
+packages/ui/react-ui-canvas/src/scene/         (phase 1, as built; phase 2+ files marked †)
+  types.ts          Schema: Scene, Cell (rect/text/scene/link), Endpoint, Port, Camera, Intent, Capabilities
+  registry.ts       CellDef registry (component, ports, resizable, minSize, openable) + defaultRegistry
+  projection.ts     Projection seam, reduceIntent (freehand reducer), createFreehandProjection
   projections/
-    freehand.ts     identity projection over an in-memory (later ECHO) store
-    constrained.ts  cardinal-constraint DSL + solver; intents rewrite constraints
-    dynamic.ts      graph → layered layout (rank/columns) + Overlay overrides
-  store.ts          SceneStore seam + in-memory implementation + derived bounds
-  camera.ts         projection math, zoomAt, fitBounds, enterPortal/exitPortal, coverage, animateCamera
-  hit.ts            hit testing, marquee intersection, port lookup in scene coords
-  ports.ts          port geometry per side/offset, automatic port pairing
-  route.ts          curve routing (d3-shape); ortho later
-  index.ts          fractional index helpers
-  atoms.ts          per-view atoms: camera, path, history, selection, drag, tool
-  aspects.ts        Aspect projections of a positioned Scene (overview, cells:<kind>, links, cell:<id>, scene:<path>) + reading order
-  hooks/            useCamera (imperative transform), useWheel, usePointer (state machine), useShortcuts, useColumnsMode (breakpoint + pointer media queries)
-  components/columns/  ColumnStrip (paged, scroll-snap), Column, CellRow (compact CellView), AspectTabs
-  components/       SceneView, SceneLayer, CellView (+ per-kind renderers), ControlFrame, Overlay, Palette, Breadcrumbs
-  testing/          fixtures: scene tree, constraint set, object graph
-  SceneView.stories.tsx   Freehand, Constrained, Dynamic, Nested
+    constrained.ts  cardinal constraints → longest-path ranks per axis (Layout.rank); a move rewrites them
+    dynamic.ts      GraphModel → ranked rows + Overlay position overrides; link adds an edge
+  store.ts          SceneStore seam, createMemoryStore, updateScene / putScene
+  camera.ts         zoomAt, panBy, fitBounds, portal mapping, enterPortal/exitPortal, coverage, animateCamera
+  hit.ts            derived sceneBounds, hitTest, cellsIntersecting, bounds helpers
+  ports.ts          default ports, portPoint, sideNormal, pairPorts (automatic pairing)
+  route.ts          curvePath / curvePoint (cubic); ortho later †
+  order.ts          fractional z keys: between, sortByZ, topZ, initialKeys
+  atoms.ts          per-view atoms: camera, path, selection, hover, tool, snap, drag, history
+  hooks.ts          useRegistry, useSceneProjection, useViewport, useWheel
+  SceneView.tsx     root view: grid, camera, pointer state machine, keys, drill-in/out, snap
+  SceneLayer.tsx    one scene under one transform: cell views, link svg, portal tiers, nested live layer
+  ControlFrame.tsx  selection outline, resize handles, ports, marquee, rubber band
+  CellProperties.tsx  schema-driven form over the selected cell (update intent)
+  Palette.tsx, Breadcrumbs.tsx
+  testing.ts        createSceneTree fixture
+  *.test.ts         unit tests for every pure module and projection
+  SceneView.stories.tsx (Freehand, Nested), Constrained.stories.tsx, Dynamic.stories.tsx
+  handler.ts †      SceneHandler: ContentHandler over the cell map (phase 3, ECHO store)
+  aspects.ts †      Aspect projections + reading order (§6b)
+  columns/ †        ColumnStrip, Column, CellRow, AspectTabs (§6b)
 ```
 
 Exported from the package under `./scene` (not the root barrel) until it replaces `Canvas`. The spike folder
-`src/experimental/` was deleted when the `Nested` story covered it. `projections/*` wrap `@dxos/diagram` dialects and `applyCommands`
-over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from illustrator is copied.
+`src/experimental/` was deleted when the `Nested` story covered it. `projections/*` use `@dxos/diagram`'s
+`Layout.rank` directly today and become dialect wrappers over `applyCommands` through `SceneHandler` in phase 3;
+nothing from illustrator is copied.
 
 ## 10. Phases
 
