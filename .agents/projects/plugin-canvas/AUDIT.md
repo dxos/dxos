@@ -124,4 +124,64 @@ mirror selection through `shape.meta.object` / `element.customData.object`.
 
 ## 5. External landscape
 
-_Pending: infinitecanvas.tools, Muse, tldraw, xyflow, JSON Canvas, semantic zoom, d3._
+### Comparison
+
+| Tool | Rendering | Nesting | Semantic zoom / LOD | License |
+|---|---|---|---|---|
+| tldraw 3.x | HTML div layer with CSS camera transform; per-shape div hosting `HTMLContainer` or `SVGContainer` | `parentId`, child coords local to parent, page transform composed per shape (children are NOT DOM-nested); frames clip, groups derive bounds; fractional-index z-order per sibling set | None built in; culled shapes stay in DOM as `display:none` | SDK license: dev only by default; production needs a key (trial / commercial / watermark hobby) |
+| React Flow 12.11 (`@xyflow/react`, MIT) | HTML divs for nodes, SVG for edges, d3-zoom | `parentId` sub-flows, coords relative to parent, `extent: 'parent'`, parents must precede children; nested edges have z-index issues (xyflow#5203) | None; "contextual zoom" example reads `store.transform[2]` in each node (re-render per zoom tick) | MIT |
+| Excalidraw | Canvas2D (roughjs) | Flat array with `frameId` + `groupIds`; absolute coords; children listed before frame | None | MIT |
+| JSON Canvas 1.0 (Obsidian) | n/a (format) | `group` nodes are bounding boxes only, containment is spatial | None | MIT |
+| Figma | WebGL tile renderer, own DOM/compositor/text | Frames nest arbitrarily | Yes (tile-based, internals unpublished) | Proprietary |
+| Muse / Allume | Native Swift, 120 fps | Boards-in-boards, nested board rendered as a live-preview card, depth "haze" | Zoom is navigation: pinch into a card, view snaps to nearest stable zoom level; pinch-out at min zoom returns to parent | Proprietary |
+
+infinitecanvas.tools catalogues ~120 apps on four properties (expansiveness, zoom, direct manipulation,
+collaboration) but publishes no architectural facets; the table above is assembled from primary sources.
+
+### Muse / Allume model (the reference for "depth = containment")
+
+1. Boards are **finite** ("flex boards" size to content); the team rejected infinite boards for disorientation and
+   technical reasons. A board's card on its parent is a scaled view of that finite extent.
+2. Cards keep absolute positions **within their board**; crossing a board boundary is a camera transition, not a
+   coordinate change. "Linked cards" alias one board from several places.
+3. Data is split into *transactional* (positions, metadata), *blob* (PDF/video, lazy) and *ephemeral* (cursors,
+   in-progress ink); persisted as a bag of entity-attribute-value-timestamp atoms, LWW, custom sync server.
+   Sources: Ink & Switch "Muse" essay, Metamuse ep. 56 "Sync", Wiggins' retrospective.
+
+### tldraw mechanics worth copying
+
+1. Root `div.tl-canvas` (`contain: strict`); `div.tl-html-layer` receives the camera transform imperatively via a
+   reactor, not a React re-render. Shared SVG `<defs>` in a sibling `tl-svg-context`; overlays (selection, brush,
+   handles) at a fixed z-index above shapes.
+2. Each shape div gets `transform = pageTransform(shape)` set imperatively; component chooses HTML or SVG container.
+3. Camera `{x, y, z}`, zoom steps `[0.1 … 8]`, `zoomToBounds(bounds, {inset, targetZoom, animation})`, constraints
+   (`free | fixed | inside | outside | contain`). Culling via `CullingController` with O(1) subscriptions.
+
+### Semantic zoom / LOD patterns
+
+1. **Discrete tiers by on-screen size**: `screenSize = size × zoom` selects dot → title → summary → live editor,
+   with hysteresis. Cheap, deterministic, testable.
+2. **Crossfade band** between two tiers; visual tiers only, never live editors.
+3. **Drill-in = camera transition then root swap**: animate the parent camera to fit the child cell
+   (`d3-interpolate` `interpolateZoom`, van Wijk–Nuij), then swap the root scene and reset the camera.
+4. **Mount live HTML only at the top tier**; below it render a static preview.
+5. **Precision**: doubles lose accuracy with distance from origin, and CSS transforms go through float32 in the
+   compositor, so a single global `(x, y, depth)` with a monotonically growing zoom breaks after a few levels.
+   tldraw bounds zoom to `[0.1, 8]`; Figma keeps everything in bounded frames. Per-scene local coordinates with a
+   bounded camera give unlimited depth with bounded numbers and one CRDT doc per scene.
+
+### d3
+
+`d3-zoom` transform math, `constrain`, and `interpolateZoom` are DOM-agnostic and worth keeping for camera
+transitions; `d3-shape` `link`/`curve*` give edge splines from side-aligned tangents (no orthogonal routing, same
+as React Flow); `d3-drag` fights React DOM ownership and is replaced by ~150 lines of Pointer Events plus
+ctrl+wheel pinch.
+
+### Interaction defaults (tldraw / React Flow / Muse)
+
+Drag on empty canvas = marquee (intersection), shift adds; space+drag and wheel = pan, ctrl/cmd+wheel = zoom at
+cursor; multi-move rewrites each member's local coords; snap in scene coords; connector = handle on a cell side,
+edge stores `{node, side}`; shift+1 fit, shift+2 selection, shift+0 reset; drill-in on double-click or pinch past
+threshold on a scene cell, pinch-out at min zoom returns to parent.
+
+Full research notes with sources: `agents/superpowers/specs/2026-09-20-infinite-canvas-research.md`.
