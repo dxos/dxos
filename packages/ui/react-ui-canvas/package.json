@@ -18,8 +18,8 @@
       "import": "./dist/lib/index.mjs"
     },
     "./scene": {
-      "source": "./src/scene/index.ts",
-      "types": "./dist/types/src/scene/index.d.ts",
+      "source": "./src/scene.ts",
+      "types": "./dist/types/src/scene.d.ts",
       "import": "./dist/lib/scene.mjs"
     },
     "./types": {

@@ -42,7 +42,7 @@ Design: DESIGN.md §6b, decision 14, open questions 6–7. Same scene, same proj
 
 ## Phase 1: first PR (in progress on the PR 0 branch, stacked)
 
-Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/react-ui-canvas/scene`. Stories: `ui/react-ui-canvas/scene/SceneView`.
+Engine lives in `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`), exported as `@dxos/react-ui-canvas/scene`. Stories: `ui/react-ui-canvas/scene/SceneView`.
 
 - [x] Types (`types.ts`), fractional order (`order.ts`), camera + portal math (`camera.ts`), derived bounds + hit testing (`hit.ts`), ports + automatic pairing (`ports.ts`), curve routes (`route.ts`), atom store (`store.ts`), projection seam + freehand reducer (`projection.ts`); unit tests for each.
 - [x] Surface: per-view atoms, cell registry, `SceneLayer` (links, nested live portals with tiers), `ControlFrame` (outline, 8 handles, ports, marquee, rubber band), `Palette`, `Breadcrumbs`, `SceneView` (wheel/pinch/pan, select/marquee, move + resize via intents, port-drag linking incl. drop-on-canvas create, R/T/S create tools, Delete, arrows nudge, cmd+A, Shift+1/2/0, Alt+←/→ history, double-click / auto / Escape / breadcrumb drill).
@@ -67,7 +67,7 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Portal frame on the grid: a whole multiple of the portal box, grid-placed near the child's centre; the drilled-in frame is drawn dashed orange.
 - [x] Grid always shown (minor / major / coarse, by on-screen size); the toggle is Snap only. The canvas ignores the pointer while the camera moves (wheel, animation).
 - [x] Class properties: attributes / methods edit as one entry per line (`fieldMap` renderer); a portal being drilled into renders plain (no tint / title).
-- [x] Package layout: the pre-engine canvas moved to `src/archive` (root export unchanged); `src/scene` split into `model/`, `utils/`, `hooks/` and `components/<Name>/` (one folder per component, stories beside it); `GridComponent` now lives in the engine and the archive's `Grid` wraps it.
+- [x] Package layout: the pre-engine canvas moved to `src/archive` (root export unchanged); the engine lives at `src/{model,utils,hooks,components/<Name>}` (one folder per component, stories beside it) behind the `src/scene.ts` barrel; `GridComponent` now lives in the engine and the archive's `Grid` wraps it.
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { GridComponent, type GridProps } from '../../../scene/components/Grid/index.ts';
+import { GridComponent, type GridProps } from '../../../components/Grid/index.ts';
 import { useCanvasContext } from '../../hooks/index.ts';
 
 export type { GridProps };
