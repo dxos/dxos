@@ -534,15 +534,24 @@ export class EntityManager implements IDatabaseBinding {
       return core != null && this._isCoreResolved(core, returnWithUnsatisfiedDeps);
     };
 
-    const waitForUpdate = this._updateEvent.waitFor(
-      (event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady(),
-    );
+    // Subscribed explicitly rather than through `Event.waitFor`, which unsubscribes only when its
+    // predicate matches and returns no handle — so a wait the cancellation below wins would leave
+    // its predicate running on every later update, for every load a teardown interrupted.
+    let disposeUpdateListener: CleanupFn = () => {};
+    const waitForUpdate = new Promise<void>((resolve) => {
+      disposeUpdateListener = this._updateEvent.on((event) => {
+        if (event.itemsUpdated.some(({ id }) => id === objectId) && isReady()) {
+          resolve();
+        }
+      });
+    });
     this._loadObjectDocument(objectId, { diskOnly });
 
     const cancellation = this.#rejectWhenStale(generation);
     try {
       await Promise.race([timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate, cancellation.promise]);
     } finally {
+      disposeUpdateListener();
       cancellation.dispose();
     }
     if (this.#isStale(generation)) {

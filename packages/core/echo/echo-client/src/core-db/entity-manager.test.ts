@@ -500,6 +500,7 @@ describe('DatabaseImpl', () => {
       });
       await db.flush();
 
+      const listenersBeforeLoad = db._updateEvent.listenerCount();
       // Settled eagerly: the outcome is asserted after the reopen, and an unobserved rejection in
       // between would surface as an unhandled one.
       const outcome = db.loadObjectCoreById(orphanObjectId).then(
@@ -513,6 +514,9 @@ describe('DatabaseImpl', () => {
       const result = await asyncTimeout(outcome, 5_000);
       invariant(result.kind === 'rejected', 'a load spanning a close must not resolve from the reopened lifetime');
       expect(result.err).to.be.instanceOf(ContextDisposedError);
+      // A cancelled load unsubscribes its update listener; one left behind would keep evaluating its
+      // predicate for the rest of the process, once per load a teardown interrupted.
+      expect(db._updateEvent.listenerCount()).to.eq(listenersBeforeLoad);
     });
 
     // TODO(dmaretskyi): Test for conflict resolution.
