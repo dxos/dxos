@@ -65,21 +65,28 @@ const DEFAULT_CELL: Size = { width: 160, height: 100 };
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
-const resizeBounds = (start: Bounds, handle: Handle, delta: Point, minSize: Size): Bounds => {
+/** Resize by a handle: the moving edges land on `snap`, the opposite edges stay put. */
+const resizeBounds = (
+  start: Bounds,
+  handle: Handle,
+  delta: Point,
+  minSize: Size,
+  snap: (value: number) => number,
+): Bounds => {
   let { x, y, width, height } = start;
   if (handle.includes('e')) {
-    width = Math.max(minSize.width, width + delta.x);
+    width = Math.max(minSize.width, snap(x + width + delta.x) - x);
   }
   if (handle.includes('s')) {
-    height = Math.max(minSize.height, height + delta.y);
+    height = Math.max(minSize.height, snap(y + height + delta.y) - y);
   }
   if (handle.includes('w')) {
-    const next = Math.max(minSize.width, width - delta.x);
+    const next = Math.max(minSize.width, x + width - snap(x + delta.x));
     x += width - next;
     width = next;
   }
   if (handle.includes('n')) {
-    const next = Math.max(minSize.height, height - delta.y);
+    const next = Math.max(minSize.height, y + height - snap(y + delta.y));
     y += height - next;
     height = next;
   }
@@ -367,7 +374,11 @@ export const SceneView = ({
       }
       select(next);
       if (capabilities.move && !cell.locked) {
-        startDrag({ kind: 'move', ids: [...next], origin: toScene(event), delta: { x: 0, y: 0 } }, event);
+        const { x, y } = cellBounds(cell);
+        startDrag(
+          { kind: 'move', ids: [...next], origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 } },
+          event,
+        );
       }
     },
     [registry, atoms.tool, atoms.selection, select, capabilities.move, toScene, startDrag],
@@ -436,20 +447,25 @@ export const SceneView = ({
           break;
         }
         case 'move': {
+          // Snap the pressed cell's top-left to the grid; the selection moves by the same offset.
           const point = toScene(event);
+          const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
             ...current,
-            delta: { x: snap(point.x - current.origin.x), y: snap(point.y - current.origin.y) },
+            delta: {
+              x: snap(current.anchor.x + raw.x) - current.anchor.x,
+              y: snap(current.anchor.y + raw.y) - current.anchor.y,
+            },
           });
           break;
         }
         case 'resize': {
           const point = toScene(event);
           const anchor = handlePoint(current.start, current.handle);
-          const delta = { x: snap(point.x - anchor.x), y: snap(point.y - anchor.y) };
+          const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
           const cell = scene.cells[current.id];
           const minSize = (cell && isPlaced(cell) && cellRegistry[cell.kind].minSize) || { width: grid, height: grid };
-          setDrag({ ...current, bounds: resizeBounds(current.start, current.handle, delta, minSize) });
+          setDrag({ ...current, bounds: resizeBounds(current.start, current.handle, delta, minSize, snap) });
           break;
         }
         case 'link': {

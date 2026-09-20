@@ -18,8 +18,11 @@ export type Drag =
   | { kind: 'pan'; last: Point }
   /** Marquee in scene coordinates. */
   | { kind: 'marquee'; from: Point; to: Point; additive: boolean }
-  /** Moving the selection; `delta` is the snapped scene-space offset applied transiently. */
-  | { kind: 'move'; ids: CellId[]; origin: Point; delta: Point }
+  /**
+   * Moving the selection; `anchor` is the pressed cell's top-left, which is what snaps to the grid,
+   * and `delta` the resulting scene-space offset applied transiently to every selected cell.
+   */
+  | { kind: 'move'; ids: CellId[]; origin: Point; anchor: Point; delta: Point }
   /** Resizing one cell by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: CellId; handle: Handle; start: Bounds; bounds: Bounds }
   /** Rubber band from a port; `target` is set while hovering a valid drop. */
