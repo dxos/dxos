@@ -15,9 +15,8 @@ import { mx } from '@dxos/ui-theme';
 import { portalScale, portalTransform } from './camera.ts';
 import { sceneBounds } from './hit.ts';
 import { sortByZ } from './order.ts';
-import { pairPorts, portPoint } from './ports.ts';
-import { type NodeRegistry, type NodeViewProps, nodePorts } from './registry.ts';
-import { type RouteEnd, linkPath } from './route.ts';
+import { type NodeRegistry, type NodeViewProps } from './registry.ts';
+import { type LinkGeometry, linkGeometry } from './route.ts';
 import { nodeBounds } from './shapes.ts';
 import { type SceneStore } from './store.ts';
 import { type ElementId, type Link, type Node, type Scene } from './types.ts';
@@ -44,29 +43,6 @@ export const tierFor = (node: Node, zoom: number, depth: number, previous?: Tier
     return 'preview';
   }
   return 'live';
-};
-
-export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };
-
-/** Resolve a link's ends to ports (automatic pairing unless pinned) and route it by its type. */
-export const linkGeometry = (scene: Scene, registry: NodeRegistry, link: Link): LinkGeometry | undefined => {
-  const source = scene.nodes[link.source.node];
-  const target = scene.nodes[link.target.node];
-  if (!source || !target) {
-    return undefined;
-  }
-  const sourceBounds = nodeBounds(source);
-  const targetBounds = nodeBounds(target);
-  const pair = pairPorts(
-    { bounds: sourceBounds, ports: nodePorts(registry, source), port: link.source.port },
-    { bounds: targetBounds, ports: nodePorts(registry, target), port: link.target.port },
-  );
-  if (!pair) {
-    return undefined;
-  }
-  const from = { point: portPoint(sourceBounds, pair.source), side: pair.source.side };
-  const to = { point: portPoint(targetBounds, pair.target), side: pair.target.side };
-  return { link, path: linkPath(link, from, to), source: from, target: to };
 };
 
 export type ElementHandlers = {

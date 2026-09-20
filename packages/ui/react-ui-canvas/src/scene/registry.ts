@@ -51,10 +51,6 @@ export type LinkDef = {
 export type NodeRegistry = Readonly<Record<NodeType, NodeDef>>;
 export type LinkRegistry = Readonly<Record<LinkType, LinkDef>>;
 
-/** A node's ports: its own when it carries them, else its type's. */
-export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =>
-  node.ports ?? registry[node.type].ports(node);
-
 const MIN_SIZE: Size = { width: 64, height: 32 };
 
 export const defaultNodeRegistry: NodeRegistry = {

@@ -10,13 +10,13 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Menu, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { GridComponent } from '../components/Grid/index.ts';
-import { type Drag, type Handle, type SceneViewAtoms, createSceneViewAtoms } from './atoms.ts';
+import { type ControlPointRef, type Drag, type Handle, type SceneViewAtoms, createSceneViewAtoms } from './atoms.ts';
 import { Breadcrumbs } from './Breadcrumbs.tsx';
 import {
   animateCamera,
@@ -29,22 +29,16 @@ import {
   screenToScene,
   zoomAt,
 } from './camera.ts';
-import { ControlFrame, handlePoint } from './ControlFrame.tsx';
+import { ControlFrame, type LinkEnd, handlePoint } from './ControlFrame.tsx';
 import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds } from './hit.ts';
 import { useRegistry, useSceneProjection, useViewport, useWheel } from './hooks.ts';
 import { topZ } from './order.ts';
 import { Palette, toolForKey } from './Palette.tsx';
-import { portPoint } from './ports.ts';
+import { nodePorts, portPoint } from './ports.ts';
 import { type FreehandProjectionOptions, type Projection, reduceIntent } from './projection.ts';
-import {
-  type LinkRegistry,
-  type NodeRegistry,
-  defaultLinkRegistry,
-  defaultNodeRegistry,
-  nodePorts,
-} from './registry.ts';
-import { insertIndex } from './route.ts';
-import { type ElementHandlers, SceneLayer, linkGeometry } from './SceneLayer.tsx';
+import { type LinkRegistry, type NodeRegistry, defaultLinkRegistry, defaultNodeRegistry } from './registry.ts';
+import { insertIndex, linkGeometry } from './route.ts';
+import { type ElementHandlers, SceneLayer } from './SceneLayer.tsx';
 import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from './shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
@@ -139,6 +133,7 @@ export const SceneView = ({
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
   const hover = useAtomValue(atoms.hover);
+  const selectedPoint = useAtomValue(atoms.point);
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
   const drag = useAtomValue(atoms.drag);
@@ -216,8 +211,11 @@ export const SceneView = ({
   );
 
   const select = useCallback(
-    (ids: Iterable<ElementId>) => registry.set(atoms.selection, new Set(ids)),
-    [registry, atoms.selection],
+    (ids: Iterable<ElementId>) => {
+      registry.set(atoms.selection, new Set(ids));
+      registry.set(atoms.point, undefined);
+    },
+    [registry, atoms.selection, atoms.point],
   );
 
   const drillIn = useCallback(
@@ -448,7 +446,18 @@ export const SceneView = ({
     [capabilities.link, registry, atoms.tool, atoms.linkType, startDrag],
   );
 
-  /** A spline's control point: drag moves it, alt-click removes it. */
+  const removePoint = useCallback(
+    ({ link: id, index }: ControlPointRef) => {
+      const link = scene.links[id];
+      if (link?.type === 'spline' && capabilities.update) {
+        projection.apply({ kind: 'update', id, values: { points: link.points.filter((_, i) => i !== index) } });
+      }
+      registry.set(atoms.point, undefined);
+    },
+    [scene.links, capabilities.update, projection, registry, atoms.point],
+  );
+
+  /** A spline's control point: press selects it, drag moves it, alt-click removes it. */
   const onPointPointerDown = useCallback(
     (link: SplineLink, index: number, event: React.PointerEvent) => {
       if (event.button !== 0 || !capabilities.update) {
@@ -456,16 +465,46 @@ export const SceneView = ({
       }
       event.stopPropagation();
       if (event.altKey) {
-        projection.apply({
-          kind: 'update',
-          id: link.id,
-          values: { points: link.points.filter((_, i) => i !== index) },
-        });
+        removePoint({ link: link.id, index });
         return;
       }
+      registry.set(atoms.point, { link: link.id, index });
       startDrag({ kind: 'point', id: link.id, index, points: [...link.points] }, event);
     },
-    [capabilities.update, projection, startDrag],
+    [capabilities.update, removePoint, registry, atoms.point, startDrag],
+  );
+
+  // Right-click on a control point: select it and open the menu at the pointer, anchored to an empty
+  // element parked under the cursor (the menu positions itself at a real element).
+  const menuAnchorRef = useRef<HTMLSpanElement>(null);
+  const [menuAt, setMenuAt] = useState<Point | undefined>(undefined);
+  const onPointContextMenu = useCallback(
+    (link: SplineLink, index: number, event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      registry.set(atoms.point, { link: link.id, index });
+      const rect = rootRef.current?.getBoundingClientRect();
+      setMenuAt({ x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) });
+    },
+    [registry, atoms.point],
+  );
+
+  /** Dragging a link's end re-attaches it; the other end stays put and anchors the rubber band. */
+  const onEndPointerDown = useCallback(
+    (link: Link, end: LinkEnd, event: React.PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update) {
+        return;
+      }
+      event.stopPropagation();
+      const geometry = linkGeometry(scene, nodeRegistry, link);
+      if (!geometry) {
+        return;
+      }
+      const fixed = end === 'source' ? geometry.target.point : geometry.source.point;
+      const to = end === 'source' ? geometry.source.point : geometry.target.point;
+      startDrag({ kind: 'end', id: link.id, end, fixed, to }, event);
+    },
+    [capabilities.update, scene, nodeRegistry, startDrag],
   );
 
   /** Double-click on a spline adds a control point there; other link types have no points to edit. */
@@ -492,19 +531,25 @@ export const SceneView = ({
     [capabilities.update, scene, nodeRegistry, toScene, snap, projection, select],
   );
 
-  /** The drop target for a link end: a port within reach pins it; a node body leaves it automatic. */
+  /** The drop target for a link end: over a node (with a port-sized margin), the port nearest the pointer. */
   const linkTarget = useCallback(
-    (point: Point, source: NodeId): Endpoint | undefined => {
-      const node = hitTest(scene, point);
-      if (!node || node.id === source) {
+    (point: Point, exclude: NodeId): Endpoint | undefined => {
+      const reach = PORT_SNAP_PX / registry.get(atoms.camera).zoom;
+      const node = hitTest(scene, point, reach);
+      if (!node || node.id === exclude) {
         return undefined;
       }
       const boundsOf = nodeBounds(node);
-      const reach = PORT_SNAP_PX / registry.get(atoms.camera).zoom;
-      const port = nodePorts(nodeRegistry, node).find(
-        (candidate) => Math.hypot(...distance(portPoint(boundsOf, candidate), point)) <= reach,
-      );
-      return port ? { node: node.id, port: port.id } : { node: node.id };
+      let nearest: Port | undefined;
+      let best = Infinity;
+      for (const candidate of nodePorts(nodeRegistry, node)) {
+        const value = Math.hypot(...distance(portPoint(boundsOf, candidate), point));
+        if (value < best) {
+          best = value;
+          nearest = candidate;
+        }
+      }
+      return nearest ? { node: node.id, port: nearest.id } : { node: node.id };
     },
     [scene, registry, atoms.camera, nodeRegistry],
   );
@@ -578,6 +623,13 @@ export const SceneView = ({
           setDrag({ ...current, points });
           break;
         }
+        case 'end': {
+          const point = toScene(event);
+          const link = scene.links[current.id];
+          const other = link ? (current.end === 'source' ? link.target.node : link.source.node) : '';
+          setDrag({ ...current, to: point, target: linkTarget(point, other) });
+          break;
+        }
       }
     },
     [
@@ -589,6 +641,7 @@ export const SceneView = ({
       toScene,
       snap,
       scene.nodes,
+      scene.links,
       nodeRegistry,
       major,
       linkTarget,
@@ -681,6 +734,13 @@ export const SceneView = ({
         projection.apply({ kind: 'update', id: current.id, values: { points: current.points } });
         break;
       }
+      case 'end': {
+        // Dropped on nothing: the end stays where it was.
+        if (current.target) {
+          projection.apply({ kind: 'update', id: current.id, values: { [current.end]: current.target } });
+        }
+        break;
+      }
       case 'pan':
         break;
     }
@@ -703,14 +763,19 @@ export const SceneView = ({
     (event: React.KeyboardEvent) => {
       const selected = [...registry.get(atoms.selection)];
       const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
+      const point = registry.get(atoms.point);
       if (event.key === 'Escape') {
         if (registry.get(atoms.drag)) {
           setDrag(undefined);
+        } else if (point) {
+          registry.set(atoms.point, undefined);
         } else if (selected.length > 0) {
           select([]);
         } else {
           drillOut();
         }
+      } else if ((event.key === 'Delete' || event.key === 'Backspace') && point) {
+        removePoint(point);
       } else if ((event.key === 'Delete' || event.key === 'Backspace') && selected.length > 0 && capabilities.delete) {
         projection.apply({ kind: 'delete', ids: selected });
         select([]);
@@ -755,6 +820,8 @@ export const SceneView = ({
       atoms.selection,
       atoms.drag,
       atoms.camera,
+      atoms.point,
+      removePoint,
       setDrag,
       select,
       drillOut,
@@ -866,14 +933,40 @@ export const SceneView = ({
           registry={nodeRegistry}
           selection={selection}
           hover={hover}
+          selectedPoint={selectedPoint}
           zoom={camera.zoom}
           drag={drag}
           showPorts={tool.kind === 'link'}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
+          onEndPointerDown={onEndPointerDown}
           onPointPointerDown={onPointPointerDown}
+          onPointContextMenu={onPointContextMenu}
         />
       </div>
+      <span
+        ref={menuAnchorRef}
+        className='absolute size-0 pointer-events-none'
+        style={{ left: menuAt?.x ?? 0, top: menuAt?.y ?? 0 }}
+      />
+      <Menu.Root modal={false} open={menuAt !== undefined} onOpenChange={(open) => !open && setMenuAt(undefined)}>
+        <Menu.VirtualTrigger virtualRef={menuAnchorRef} />
+        <Menu.Content side='right' sideOffset={4} collisionPadding={8}>
+          <Menu.Viewport>
+            <Menu.Item
+              data-testid='remove-point'
+              onSelect={() => {
+                const point = registry.get(atoms.point);
+                if (point) {
+                  removePoint(point);
+                }
+              }}
+            >
+              Remove control point
+            </Menu.Item>
+          </Menu.Viewport>
+        </Menu.Content>
+      </Menu.Root>
 
       <div className='absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-sm bg-modal-surface border border-separator text-sm'>
         <Button variant='ghost' density='sm' disabled={path.length < 2} onClick={() => drillOut()}>

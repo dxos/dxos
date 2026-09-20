@@ -9,8 +9,10 @@
 // `@dxos/diagram`'s router.
 //
 
-import { sideNormal } from './ports.ts';
-import { type Link, type Point, type Side } from './types.ts';
+import { nodePorts, pairPorts, portPoint, sideNormal } from './ports.ts';
+import { type NodeRegistry } from './registry.ts';
+import { nodeBounds } from './shapes.ts';
+import { type Link, type Point, type Scene, type Side } from './types.ts';
 
 const MIN_TANGENT = 40;
 const TANGENT_RATIO = 0.4;
@@ -52,24 +54,33 @@ export const curvePoint = (from: RouteEnd, to: RouteEnd, t: number): Point => {
 };
 
 /**
- * Centripetal-style Catmull-Rom through every point, as cubic segments (the standard conversion with
- * tension 1/6); two points degrade to a line.
+ * Catmull-Rom through every point, as cubic segments (the standard conversion with tension 1/6). At an
+ * end that has a `side`, the tangent is that side's outward normal instead, so the curve leaves and
+ * enters its ports perpendicular to the frame; two points without sides degrade to a line.
  */
-export const splinePath = (points: readonly Point[]): string => {
+export const splinePath = (points: readonly Point[], from?: Side, to?: Side): string => {
   if (points.length < 2) {
     return '';
   }
-  if (points.length === 2) {
+  if (points.length === 2 && !from && !to) {
     return linePath(points[0], points[1]);
   }
+  const last = points.length - 1;
   const segments: string[] = [`M ${pt(points[0])}`];
-  for (let index = 0; index < points.length - 1; index++) {
+  for (let index = 0; index < last; index++) {
     const p0 = points[Math.max(index - 1, 0)];
     const p1 = points[index];
     const p2 = points[index + 1];
-    const p3 = points[Math.min(index + 2, points.length - 1)];
-    const c1 = { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
-    const c2 = { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
+    const p3 = points[Math.min(index + 2, last)];
+    const reach = Math.max(MIN_TANGENT, Math.hypot(p2.x - p1.x, p2.y - p1.y) * TANGENT_RATIO);
+    const c1 =
+      index === 0 && from
+        ? { x: p1.x + sideNormal(from).x * reach, y: p1.y + sideNormal(from).y * reach }
+        : { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
+    const c2 =
+      index === last - 1 && to
+        ? { x: p2.x + sideNormal(to).x * reach, y: p2.y + sideNormal(to).y * reach }
+        : { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
     segments.push(`C ${pt(c1)}, ${pt(c2)}, ${pt(p2)}`);
   }
   return segments.join(' ');
@@ -83,8 +94,31 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd): string => {
     case 'curve':
       return curvePath(from, to);
     case 'spline':
-      return splinePath([from.point, ...link.points, to.point]);
+      return splinePath([from.point, ...link.points, to.point], from.side, to.side);
   }
+};
+
+export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };
+
+/** Resolve a link's ends to ports (automatic pairing unless pinned) and route it by its type. */
+export const linkGeometry = (scene: Scene, registry: NodeRegistry, link: Link): LinkGeometry | undefined => {
+  const source = scene.nodes[link.source.node];
+  const target = scene.nodes[link.target.node];
+  if (!source || !target) {
+    return undefined;
+  }
+  const sourceBounds = nodeBounds(source);
+  const targetBounds = nodeBounds(target);
+  const pair = pairPorts(
+    { bounds: sourceBounds, ports: nodePorts(registry, source), port: link.source.port },
+    { bounds: targetBounds, ports: nodePorts(registry, target), port: link.target.port },
+  );
+  if (!pair) {
+    return undefined;
+  }
+  const from = { point: portPoint(sourceBounds, pair.source), side: pair.source.side };
+  const to = { point: portPoint(targetBounds, pair.target), side: pair.target.side };
+  return { link, path: linkPath(link, from, to), source: from, target: to };
 };
 
 /** Index at which a new control point at `point` keeps the polyline `ends`+`points` in order. */

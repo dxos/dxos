@@ -8,12 +8,17 @@
 // the diagram re-attaches its links.
 //
 
-import { type Bounds, type Point, type Port, type Side } from './types.ts';
+import { type NodeRegistry } from './registry.ts';
+import { type Bounds, type Node, type Point, type Port, type Side } from './types.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
 
 /** One port centred on each side. */
 export const defaultPorts: readonly Port[] = SIDES.map((side) => ({ id: side, side, offset: 0.5 }));
+
+/** A node's ports: its own when it carries them, else its type's. */
+export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =>
+  node.ports ?? registry[node.type].ports(node);
 
 export const portPoint = (bounds: Bounds, port: Port): Point => {
   switch (port.side) {

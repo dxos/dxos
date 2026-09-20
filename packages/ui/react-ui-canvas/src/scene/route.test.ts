@@ -46,4 +46,23 @@ describe('route', () => {
     expect(insertIndex(from.point, points, to.point, { x: 150, y: 110 })).toBe(1);
     expect(insertIndex(from.point, points, to.point, { x: 260, y: 40 })).toBe(2);
   });
+
+  test('a spline leaves and enters its ports along the side normals', ({ expect }) => {
+    const path = splinePath(
+      [
+        { x: 0, y: 0 },
+        { x: 150, y: 100 },
+        { x: 300, y: 0 },
+      ],
+      'e',
+      'w',
+    );
+    // First control point is due east of the start, last control point due west of the end.
+    expect(path).toMatch(/^M 0 0 C (\d+(\.\d+)?) 0, /);
+    expect(path).toMatch(/, (\d+(\.\d+)?) 0, 300 0$/);
+    const [, firstX] = path.match(/^M 0 0 C (\d+(\.\d+)?) 0, /) ?? [];
+    const [, lastX] = path.match(/, (\d+(\.\d+)?) 0, 300 0$/) ?? [];
+    expect(Number(firstX)).toBeGreaterThan(0);
+    expect(Number(lastX)).toBeLessThan(300);
+  });
 });

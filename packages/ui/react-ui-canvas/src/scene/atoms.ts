@@ -42,15 +42,21 @@ export type Drag =
   /** Drawing a new node with a tool. */
   | { kind: 'create'; type: NodeType; from: Point; to: Point }
   /** Moving one control point of a spline; `points` is the transient list. */
-  | { kind: 'point'; id: LinkId; index: number; points: Point[] };
+  | { kind: 'point'; id: LinkId; index: number; points: Point[] }
+  /** Re-attaching one end of a link; `fixed` is the other end's resolved point for the rubber band. */
+  | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; to: Point; target?: Endpoint };
 
 export type HistoryEntry = { path: SceneId[]; camera: Camera };
+
+export type ControlPointRef = { link: LinkId; index: number };
 
 export type SceneViewAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<SceneId[]>;
   selection: Atom.Writable<ReadonlySet<ElementId>>;
   hover: Atom.Writable<NodeId | undefined>;
+  /** The selected control point of a selected spline, if any. */
+  point: Atom.Writable<ControlPointRef | undefined>;
   tool: Atom.Writable<Tool>;
   /** The link type a port drag creates under the select tool (the last link tool picked). */
   linkType: Atom.Writable<LinkType>;
@@ -69,6 +75,7 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   path: Atom.keepAlive(Atom.make<SceneId[]>([root])),
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),
   hover: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
+  point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
