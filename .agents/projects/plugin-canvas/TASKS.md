@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: PR 0 (`@dxos/diagram` extraction) is open as #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`, mirrored to `claude/infinite-canvas-depth-7e0949`), blocked on the first npm publish of `@dxos/diagram`; phase 1 engine is stacked on the same branch (`src/scene/`, Freehand + Nested stories smoke-tested); next: Constrained + Dynamic projections and stories. Once PR 0 lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
+_Resume: PR 0 (`@dxos/diagram` extraction) is open as #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`, mirrored to `claude/infinite-canvas-depth-7e0949`), blocked on the first npm publish of `@dxos/diagram`; phase 1 engine is stacked on the same branch (`src/scene/`: Freehand, Nested, Constrained, Dynamic stories all smoke-tested headlessly); next: user review of the stories, then the camera-as-imperative-transform item and phase 2. Once PR 0 lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
 
 ## Phase 0: audit + design
 
@@ -47,8 +47,8 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Types (`types.ts`), fractional order (`order.ts`), camera + portal math (`camera.ts`), derived bounds + hit testing (`hit.ts`), ports + automatic pairing (`ports.ts`), curve routes (`route.ts`), atom store (`store.ts`), projection seam + freehand reducer (`projection.ts`); unit tests for each.
 - [x] Surface: per-view atoms, cell registry, `SceneLayer` (links, nested live portals with tiers), `ControlFrame` (outline, 8 handles, ports, marquee, rubber band), `Palette`, `Breadcrumbs`, `SceneView` (wheel/pinch/pan, select/marquee, move + resize via intents, port-drag linking incl. drop-on-canvas create, R/T/S create tools, Delete, arrows nudge, cmd+A, Shift+1/2/0, Alt+←/→ history, double-click / auto / Escape / breadcrumb drill).
 - [x] Stories: `Freehand` (depth 1), `Nested` (depth 4).
-- [ ] Constrained projection (cardinal constraints → solve; move rewrites) + `Constrained` story.
-- [ ] Dynamic projection (object graph → `@dxos/diagram` layout + overrides) + `Dynamic` story.
+- [x] Constrained projection (`projections/constrained.ts`: cardinal constraints + aligned rows → `Layout.rank` per axis with id tie-breaks; move/create rewrite the moved node's constraints against the nearest cell; delete drops them) + `Constrained` story with a live constraint list; smoke-tested.
+- [x] Dynamic projection (`projections/dynamic.ts`: graph → `Layout.rank` rows, id-ordered columns, links; overlay of position overrides that win, survive unrelated graph edits and are pruned with their node; link adds an edge, delete removes a node with its edges) + `Dynamic` story with node toggles, edge and override lists; smoke-tested.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.

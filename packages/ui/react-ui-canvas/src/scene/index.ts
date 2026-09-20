@@ -8,6 +8,8 @@ export * from './hit.ts';
 export * from './order.ts';
 export * from './ports.ts';
 export * from './projection.ts';
+export * from './projections/constrained.ts';
+export * from './projections/dynamic.ts';
 export * from './registry.ts';
 export * from './route.ts';
 export * from './store.ts';
