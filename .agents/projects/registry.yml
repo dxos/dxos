@@ -24,8 +24,8 @@ projects:
     summary: 'Inline object embeds (`![label](echo:///…)`) in markdown documents: the embed container is a focusable attendable — click to focus (focus ring, events reach the surface), otherwise inert so wheel/scroll passes to the document.'
     tasks: .agents/projects/plugin-markdown/TASKS.md
     design: .agents/projects/plugin-markdown/DESIGN.md
-    prs: [13237]
-    resume: 'PR #13237 LANDING via auto-merge 2026-09-19 (focus-gated embeds, card fade mask, tailwind-merge ring fix, spacetime scene card + camera memo + colour fix, mermaid/tldraw theming, undoable card delete). NEXT: confirm merge; then TASKS.md follow-ups (Tab into an embed, embedded-document click scrolls the outer doc, AiChatProcessor.adopt() session-attach warning).'
+    prs: [13237, 13239, 13253]
+    resume: 'PR #13253 OPEN (section embed takes its reservation back after a card; follow-up to #13239). #13239 MERGED 2026-09-20T19:56Z (deleted embed targets inline/editable/error, atomic arrow step over blocks, in-place height release, keepAlive). #13237 MERGED 2026-09-19. NEXT: land #13253; then TASKS.md follow-ups.'
   - name: plugin-debug
     status: active
     user: burdon
