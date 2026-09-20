@@ -79,6 +79,21 @@ export const createNode = ({ type, id, z, center, size = DEFAULT_SIZES[type], sc
   }
 };
 
+/** The node's display text, in the field its type uses for it. */
+export const withLabel = <N extends Node>(node: N, label: string): N => {
+  switch (node.type) {
+    case 'rect':
+    case 'ellipse':
+      return { ...node, label };
+    case 'class':
+      return { ...node, name: label };
+    case 'text':
+      return { ...node, text: label };
+    case 'scene':
+      return node;
+  }
+};
+
 export type CreateLinkProps = {
   type: LinkType;
   id: string;

@@ -744,7 +744,7 @@ export const SceneView = ({
       } else if (event.key === 'g' && !event.metaKey && !event.ctrlKey && !event.altKey) {
         toggleSnap();
       } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
-        const next = toolForKey(nodeRegistry, linkRegistry, event.key);
+        const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
         if (next) {
           setTool(next);
         }
@@ -899,7 +899,13 @@ export const SceneView = ({
       </div>
       {showPalette && (
         <div className='absolute top-14 left-2'>
-          <Palette tool={tool} nodes={nodeRegistry} links={linkRegistry} onToolChange={setTool} />
+          <Palette
+            tool={tool}
+            nodes={nodeRegistry}
+            links={linkRegistry}
+            capabilities={capabilities}
+            onToolChange={setTool}
+          />
         </div>
       )}
     </div>

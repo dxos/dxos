@@ -8,7 +8,7 @@ import { IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type LinkRegistry, type NodeRegistry } from './registry.ts';
-import { type Tool } from './types.ts';
+import { type Capabilities, type Tool } from './types.ts';
 
 type Entry = { tool: Tool; icon: string; label: string; key: string };
 
@@ -17,28 +17,41 @@ const BASE: Entry[] = [
   { tool: { kind: 'hand' }, icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
 ];
 
-/** Palette entries: the fixed tools, then a shape per node type, then a link per link type. */
-export const paletteEntries = (nodes: NodeRegistry, links: LinkRegistry): Entry[][] => [
-  BASE,
-  Object.values(nodes).map((def) => ({
-    tool: { kind: 'node', type: def.type },
-    icon: def.icon,
-    label: def.name,
-    key: def.key,
-  })),
-  Object.values(links).map((def) => ({
-    tool: { kind: 'link', type: def.type },
-    icon: def.icon,
-    label: def.name,
-    key: def.key,
-  })),
-];
+/**
+ * Palette entries: the fixed tools, then a shape per node type, then a link per link type; a group the
+ * projection cannot apply (`create`, `link`) is left out rather than offered and silently dropped.
+ */
+export const paletteEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): Entry[][] =>
+  [
+    BASE,
+    capabilities.create
+      ? Object.values(nodes).map((def) => ({
+          tool: { kind: 'node' as const, type: def.type },
+          icon: def.icon,
+          label: def.name,
+          key: def.key,
+        }))
+      : [],
+    capabilities.link
+      ? Object.values(links).map((def) => ({
+          tool: { kind: 'link' as const, type: def.type },
+          icon: def.icon,
+          label: def.name,
+          key: def.key,
+        }))
+      : [],
+  ].filter((group) => group.length > 0);
 
 export const sameTool = (left: Tool, right: Tool): boolean =>
   left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
 
-export const toolForKey = (nodes: NodeRegistry, links: LinkRegistry, key: string): Tool | undefined =>
-  paletteEntries(nodes, links)
+export const toolForKey = (
+  nodes: NodeRegistry,
+  links: LinkRegistry,
+  capabilities: Capabilities,
+  key: string,
+): Tool | undefined =>
+  paletteEntries(nodes, links, capabilities)
     .flat()
     .find((entry) => entry.key === key.toUpperCase())?.tool;
 
@@ -46,13 +59,14 @@ export type PaletteProps = {
   tool: Tool;
   nodes: NodeRegistry;
   links: LinkRegistry;
+  capabilities: Capabilities;
   onToolChange: (tool: Tool) => void;
 };
 
 /** Minimal tool palette for the stories; the plugin toolbar owns this in the app (open question 3). */
-export const Palette = ({ tool, nodes, links, onToolChange }: PaletteProps) => (
+export const Palette = ({ tool, nodes, links, capabilities, onToolChange }: PaletteProps) => (
   <div className='flex flex-col rounded-sm bg-modal-surface border border-separator divide-y divide-separator'>
-    {paletteEntries(nodes, links).map((group, index) => (
+    {paletteEntries(nodes, links, capabilities).map((group, index) => (
       <div key={index} className='flex flex-col gap-1 p-1'>
         {group.map((entry) => (
           <IconButton

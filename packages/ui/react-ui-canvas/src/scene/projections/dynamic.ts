@@ -16,9 +16,20 @@ import { Layout } from '@dxos/diagram';
 
 import { initialKeys } from '../order.ts';
 import { type Projection } from '../projection.ts';
-import { type Capabilities, type Intent, type Link, type Node, type Point, type Scene, type Size } from '../types.ts';
+import { createNode, withLabel } from '../shapes.ts';
+import {
+  type Capabilities,
+  type Intent,
+  type Link,
+  type Node,
+  type NodeType,
+  type Point,
+  type Scene,
+  type Size,
+} from '../types.ts';
+import { labelOf } from './constrained.ts';
 
-export type GraphNode = { id: string; label?: string };
+export type GraphNode = { id: string; label?: string; type?: NodeType };
 export type GraphEdge = { id: string; from: string; to: string };
 
 export type GraphModel = {
@@ -69,17 +80,14 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   const nodes: Record<string, Node> = {};
   graph.nodes.forEach((node, index) => {
     const override = overlay.positions[node.id];
-    nodes[node.id] = {
-      type: 'rect',
-      id: node.id,
-      z: keys[graph.edges.length + index],
-      center: override ?? {
-        x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
-        y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
-      },
-      size,
-      label: node.label ?? node.id,
+    const center = override ?? {
+      x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
+      y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
     };
+    nodes[node.id] = withLabel(
+      createNode({ type: node.type ?? 'rect', id: node.id, z: keys[graph.edges.length + index], center, size }),
+      node.label ?? node.id,
+    );
   });
   const links: Record<string, Link> = {};
   graph.edges.forEach((edge, index) => {
@@ -159,8 +167,8 @@ export const createDynamicProjection = ({
       case 'update': {
         // The label is the graph's; a geometry edit becomes an override like a move would.
         const model = registry.get(graph);
-        if ('label' in intent.values && typeof intent.values.label === 'string') {
-          const label = intent.values.label;
+        const label = labelOf(intent.values);
+        if (label !== undefined) {
           registry.set(graph, {
             ...model,
             nodes: model.nodes.map((node) => (node.id === intent.id ? { ...node, label } : node)),

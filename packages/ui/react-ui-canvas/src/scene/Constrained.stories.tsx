@@ -24,7 +24,7 @@ import { createMemoryStore } from './store.ts';
  * 1. Nodes are placed by the constraints listed on the right; there are no stored coordinates.
  * 2. Drag a node next to another: its constraints are rewritten (east/west + aligned, or north/south of the
  *    nearest node) and the scene re-solves. A drop with no neighbour snaps back.
- * 3. R then drag draws a rect that is constrained relative to where it was drawn; Delete removes a node and
+ * 3. R / E / C / T then drag draws a node of that type, constrained relative to where it was drawn; Delete removes a node and
  *    its constraints. Resize and link are unavailable: the projection does not offer them.
  */
 const INITIAL: ConstrainedModel = {

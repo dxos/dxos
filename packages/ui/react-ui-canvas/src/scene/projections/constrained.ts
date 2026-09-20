@@ -15,14 +15,24 @@ import { Layout } from '@dxos/diagram';
 
 import { initialKeys } from '../order.ts';
 import { type Projection } from '../projection.ts';
-import { type Capabilities, type Intent, type Node, type Point, type Scene, type Size } from '../types.ts';
+import { createNode, withLabel } from '../shapes.ts';
+import {
+  type Capabilities,
+  type Intent,
+  type Node,
+  type NodeType,
+  type Point,
+  type Scene,
+  type Size,
+} from '../types.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
 export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
 
 export type Constraint = { subject: string; relation: Relation; object: string };
 
-export type ConstrainedNode = { id: string; label?: string };
+/** `type` is the node's shape; the solver places every type on the same grid. */
+export type ConstrainedNode = { id: string; label?: string; type?: NodeType };
 
 export type ConstrainedModel = {
   nodes: ConstrainedNode[];
@@ -170,17 +180,14 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {})
   const keys = initialKeys(model.nodes.length);
   const nodes: Record<string, Node> = {};
   model.nodes.forEach((node, index) => {
-    nodes[node.id] = {
-      type: 'rect',
-      id: node.id,
-      z: keys[index],
-      center: {
-        x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
-        y: origin.y + (rows.get(node.id) ?? 0) * pitch.height,
-      },
-      size,
-      label: node.label ?? node.id,
+    const center = {
+      x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
+      y: origin.y + (rows.get(node.id) ?? 0) * pitch.height,
     };
+    nodes[node.id] = withLabel(
+      createNode({ type: node.type ?? 'rect', id: node.id, z: keys[index], center, size }),
+      node.label ?? node.id,
+    );
   });
   return { id: CONSTRAINED_SCENE_ID, name: 'Constrained', nodes, links: {} };
 };
@@ -224,6 +231,20 @@ export const rewriteForDrop = (model: ConstrainedModel, scene: Scene, id: string
   return { ...model, constraints: [...kept, ...added] };
 };
 
+/** The display text of a node or a partial update, whichever field its type uses. */
+export const labelOf = (values: object): string | undefined => {
+  if ('label' in values && typeof values.label === 'string') {
+    return values.label;
+  }
+  if ('name' in values && typeof values.name === 'string') {
+    return values.name;
+  }
+  if ('text' in values && typeof values.text === 'string') {
+    return values.text;
+  }
+  return undefined;
+};
+
 export const constrainedCapabilities: Capabilities = { move: true, create: true, delete: true, update: true };
 
 export type ConstrainedProjectionOptions = {
@@ -248,10 +269,10 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         break;
       }
       case 'create': {
-        if (intent.node.type !== 'rect') {
+        if (intent.node.type === 'scene') {
           return;
         }
-        const node = { id: intent.node.id, label: intent.node.label };
+        const node: ConstrainedNode = { id: intent.node.id, type: intent.node.type, label: labelOf(intent.node) };
         const added = { ...current, nodes: [...current.nodes, node] };
         // Constrain the new node as if it had been dropped where it was drawn.
         const solved = registry.get(scene);
@@ -269,8 +290,8 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
       }
       case 'update': {
         // Only the label lives in the model; geometry is solved, so those edits are dropped.
-        if ('label' in intent.values && typeof intent.values.label === 'string') {
-          const label = intent.values.label;
+        const label = labelOf(intent.values);
+        if (label !== undefined) {
           registry.set(model, {
             ...current,
             nodes: current.nodes.map((node) => (node.id === intent.id ? { ...node, label } : node)),
