@@ -409,6 +409,23 @@ describe('DatabaseImpl', () => {
       expect(db.getObjectById(id)).to.not.be.undefined;
     });
 
+    test('a synchronous core lookup after close resolves to undefined rather than throwing', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      const object = Obj.make(TestSchema.Expando, { name: 'late-caller' });
+      db.add(object);
+      await db.flush();
+      const core = getObjectCore(object);
+
+      await db.close();
+
+      // Index-query hydration outlives the close and recomputes its result synchronously through
+      // `isDeleted`, where a throw would surface as an unhandled rejection nothing can catch.
+      expect(db.getObjectCoreById(object.id)).to.be.undefined;
+      expect(() => core.isDeleted()).to.not.throw();
+    });
+
     // TODO(dmaretskyi): Test for conflict resolution.
     test('atomic replace object', async () => {
       const testBuilder = new EchoTestBuilder();
