@@ -232,15 +232,21 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
     setCameraState(value);
   }, []);
 
+  // Clears the ref as well: a cancelled frame never runs the completion callback that would.
+  const cancelAnimation = useCallback(() => {
+    cancelRef.current?.();
+    cancelRef.current = undefined;
+  }, []);
+
   const animateTo = useCallback(
     (target: Camera, done?: () => void) => {
-      cancelRef.current?.();
+      cancelAnimation();
       cancelRef.current = animateCamera(cameraRef.current, target, viewport, setCamera, () => {
         cancelRef.current = undefined;
         done?.();
       });
     },
-    [viewport, setCamera],
+    [viewport, setCamera, cancelAnimation],
   );
 
   // Viewport size.
@@ -275,7 +281,7 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       interactedRef.current = true;
-      cancelRef.current?.();
+      cancelAnimation();
       const rect = element.getBoundingClientRect();
       const pointer = { x: event.clientX - rect.left, y: event.clientY - rect.top };
       if (event.ctrlKey || event.metaKey) {
@@ -290,7 +296,7 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
     };
     element.addEventListener('wheel', onWheel, { passive: false });
     return () => element.removeEventListener('wheel', onWheel);
-  }, [setCamera]);
+  }, [setCamera, cancelAnimation]);
 
   const portalFor = useCallback(
     (parent: Scene, childId: string) =>
@@ -360,16 +366,19 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
   }, [camera, scene, path.length, viewport, drillIn, drillOut]);
 
   // Pointer: drag on the background pans; drag on a cell moves the selection.
-  const onBackgroundPointerDown = useCallback((event: React.PointerEvent) => {
-    if (event.target !== event.currentTarget || event.button !== 0) {
-      return;
-    }
-    interactedRef.current = true;
-    cancelRef.current?.();
-    setSelected(new Set());
-    dragRef.current = { kind: 'pan', last: { x: event.clientX, y: event.clientY } };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }, []);
+  const onBackgroundPointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      if (event.target !== event.currentTarget || event.button !== 0) {
+        return;
+      }
+      interactedRef.current = true;
+      cancelAnimation();
+      setSelected(new Set());
+      dragRef.current = { kind: 'pan', last: { x: event.clientX, y: event.clientY } };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [cancelAnimation],
+  );
 
   const onCellPointerDown = useCallback(
     (cell: PlacedCell, event: React.PointerEvent) => {
@@ -377,7 +386,7 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
         return;
       }
       event.stopPropagation();
-      cancelRef.current?.();
+      cancelAnimation();
       const next = new Set(event.shiftKey ? selected : selected.has(cell.id) ? selected : []);
       if (event.shiftKey && selected.has(cell.id)) {
         next.delete(cell.id);
@@ -388,7 +397,7 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
       dragRef.current = { kind: 'move', last: { x: event.clientX, y: event.clientY }, ids: [...next] };
       rootRef.current?.setPointerCapture(event.pointerId);
     },
-    [selected],
+    [selected, cancelAnimation],
   );
 
   const onPointerMove = useCallback(

@@ -23,7 +23,8 @@ type StoryArgs = { depth: number };
  */
 const DefaultStory = ({ depth }: StoryArgs) => {
   const { store, root } = useMemo(() => createSceneTree(depth), [depth]);
-  return <SceneView store={store} root={root} />;
+  // Keyed on the root so a new tree remounts the view, whose store and path state are set on mount.
+  return <SceneView key={root} store={store} root={root} />;
 };
 
 const meta = {
