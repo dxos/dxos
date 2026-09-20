@@ -294,13 +294,6 @@ export const createWidget = <TProps extends WidgetProps>({
       keepAlive: def.keepAlive,
       debug: def.debug,
     });
-    // The same object as last time when nothing about the link changed: CodeMirror then keeps the
-    // drawn tile and, for a block it culled meanwhile, the instance still holds its cached root.
-    const existing = notifier.instanceFor(id);
-    if (existing instanceof StubWidget && existing.block === widget.block && existing.eq(widget)) {
-      return existing;
-    }
-    notifier.track(widget);
     return widget;
   }
   return undefined;
@@ -374,7 +367,6 @@ const withCurrentWidgetState = (state: WidgetState): WidgetState => {
  */
 const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = false): WidgetNotifier => {
   const widgets = new Map<string, WidgetState>();
-  const instances = new Map<string, WidgetType>();
 
   // TODO(burdon): Batch updates?
   const notifier = {
@@ -387,12 +379,6 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
         log.info('widget-map: mounted', { id: state.id, count: widgets.size });
       }
       setWidgets?.([...widgets.values()]);
-    },
-    instanceFor: (id: string) => instances.get(id),
-    track: (widget: WidgetType) => {
-      if (widget instanceof StubWidget) {
-        instances.set(widget.id, widget);
-      }
     },
     updated: (id: string, widgetState: Partial<WidgetProps>) => {
       const current = widgets.get(id);
@@ -412,7 +398,6 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
         return;
       }
       widgets.delete(id);
-      instances.delete(id);
       // A cull drops the portal for a frame before it re-mounts — this is the blank-space window.
       if (debug) {
         log.info('widget-map: unmounted', { id, count: widgets.size });
@@ -424,7 +409,6 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
       for (const id of [...widgets.keys()]) {
         if (!liveIds.has(id)) {
           widgets.delete(id);
-          instances.delete(id);
           changed = true;
         }
       }

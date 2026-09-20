@@ -270,16 +270,14 @@ export const EmbedFocus: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The client/space initialize and the embeds resolve well past testing-library's default timeout.
-    const embeds = await waitFor(
-      async () => {
-        const elements = canvas.getAllByTestId('markdown.embed');
-        await expect(elements.length).toBeGreaterThanOrEqual(2);
-        return elements;
-      },
-      { timeout: 15_000 },
-    );
+    await waitFor(async () => expect(canvas.getAllByTestId('markdown.embed').length).toBeGreaterThanOrEqual(2), {
+      timeout: 15_000,
+    });
+    // Let the load-time rebuilds (parse completion, the cards' height release) land first: a block
+    // redrawn under the click would be a fresh element, and the click's focus would go with the old one.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
     // The first embed is a card preview; the gate is the same for section previews.
-    const [embed] = embeds;
+    const [embed] = canvas.getAllByTestId('markdown.embed');
     const surface = embed.firstElementChild;
     await expect(surface).toBeInstanceOf(HTMLElement);
     await expect(surface).toHaveAttribute('inert');

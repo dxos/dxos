@@ -160,8 +160,6 @@ export const PreviewComponent = ({
       : isSurfaceAvailable({ type: AppSurface.CardContent, data })
         ? 'card'
         : undefined;
-  // Resolved, but nothing contributes a preview for its type: as unresolvable as a missing target.
-  const unsupported = available && !!data && mode === undefined;
 
   // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved
   // target puts the source back (editable) with the error inline, and a card drops the reserved
@@ -172,15 +170,17 @@ export const PreviewComponent = ({
       return;
     }
     const next: LinkWidgetState = {};
+    // Not a resolved object without a preview: the surface registry answers "none" while a lazy
+    // surface loads, and a report on that would flip the embed to an error for the duration.
     if (mode && unresolved) {
       next.unresolved = false;
-    } else if ((unavailable || unsupported) && !unresolved) {
+    } else if (unavailable && !unresolved) {
       next.unresolved = true;
     }
     if (Object.keys(next).length > 0) {
       queueMicrotask(() => setLinkWidgetState(view, id, next));
     }
-  }, [view, id, unavailable, unsupported, unresolved, mode]);
+  }, [view, id, unavailable, unresolved, mode]);
 
   // A card sizes itself: the pin is released on the mounted placeholder rather than by rebuilding
   // the widget (a redraw under a click swapped the element being clicked), and recorded so the next
@@ -316,7 +316,7 @@ export const PreviewComponent = ({
     return (
       <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
         <Icon icon='ph--warning--regular' size={4} />
-        {t(unsupported ? 'object-unsupported.label' : 'object-not-found.label')}
+        {t('object-not-found.label')}
       </span>
     );
   }

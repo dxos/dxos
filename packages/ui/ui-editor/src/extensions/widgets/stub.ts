@@ -20,14 +20,6 @@ export interface WidgetNotifier {
    */
   unmounted(id: string, root?: HTMLElement | null): void;
   /**
-   * The instance last built for `id`, so a rebuild that changes nothing about a widget hands
-   * CodeMirror the same object: a fresh instance would be drawn without the cached root, moving the
-   * portal (and any focus in it) to a new element. Replaced by {@link WidgetNotifier.track}.
-   */
-  instanceFor(id: string): WidgetType | undefined;
-  /** Records the instance built for its id. */
-  track(widget: WidgetType): void;
-  /**
    * Re-render the mounted widget for `id` with updated props. Keyed by id rather than by widget
    * instance: a rebuild constructs fresh widgets, but `StubWidget.eq` (id equality) makes CodeMirror
    * keep the previously-rendered DOM, so the instance in the decoration set is not the one holding
@@ -218,10 +210,17 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     // The signature too: an id that does not encode the tag's content (a streaming tag is keyed on
     // its opening position) would otherwise pin the widget to the props of the first chunk, so a run
     // that keeps appending to the same tag never re-renders until the document is rebuilt.
-    // Not the reserved height: a host releases a pin on the mounted element (`releaseBlockHeight`),
-    // and a rebuild that differed only there would remount every embed for nothing.
+    // `block` too: CodeMirror reuses an equal widget's element, and a block's div must never stand
+    // in for an inline span (or the reverse) when a link switches form. Not the reserved height: a
+    // host releases a pin on the mounted element (`releaseBlockHeight`), and a rebuild that differed
+    // only there would remount every embed for nothing.
     const context = (props: TProps) => (props as WidgetProps).context;
-    return this.id === other.id && this.signature === other.signature && context(this.props) === context(other.props);
+    return (
+      this.id === other.id &&
+      this.block === other.block &&
+      this.signature === other.signature &&
+      context(this.props) === context(other.props)
+    );
   }
 
   override ignoreEvent() {
