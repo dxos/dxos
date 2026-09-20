@@ -65,6 +65,8 @@ const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
 const FIT_INSET = 40;
 const PORT_SNAP_PX = 16;
+/** Id of the link drawn while a link drag hovers a drop target; never reaches the model. */
+const PREVIEW_LINK_ID = 'preview';
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -441,7 +443,10 @@ export const SceneView = ({
       const from = portPoint(nodeBounds(node), port);
       const currentTool = registry.get(atoms.tool);
       const type = currentTool.kind === 'link' ? currentTool.type : registry.get(atoms.linkType);
-      startDrag({ kind: 'link', type, source: { node: node.id, port: port.id }, from, to: from }, event);
+      startDrag(
+        { kind: 'link', type, source: { node: node.id, port: port.id }, from, fromSide: port.side, to: from },
+        event,
+      );
     },
     [capabilities.link, registry, atoms.tool, atoms.linkType, startDrag],
   );
@@ -500,9 +505,9 @@ export const SceneView = ({
       if (!geometry) {
         return;
       }
-      const fixed = end === 'source' ? geometry.target.point : geometry.source.point;
+      const other = end === 'source' ? geometry.target : geometry.source;
       const to = end === 'source' ? geometry.source.point : geometry.target.point;
-      startDrag({ kind: 'end', id: link.id, end, fixed, to }, event);
+      startDrag({ kind: 'end', id: link.id, end, fixed: other.point, fixedSide: other.side, to }, event);
     },
     [capabilities.update, scene, nodeRegistry, startDrag],
   );
@@ -845,7 +850,8 @@ export const SceneView = ({
   // Render.
   //
 
-  // Transient drag state is rendered by projecting it onto a copy, so links re-route while dragging.
+  // Transient drag state is rendered by projecting it onto a copy, so links re-route while dragging and
+  // a link being drawn or re-attached over a drop target looks exactly as it will once dropped.
   const displayScene = useMemo<Scene>(() => {
     if (drag?.kind === 'move') {
       return reduceIntent(scene, { kind: 'move', ids: drag.ids, delta: drag.delta });
@@ -855,6 +861,20 @@ export const SceneView = ({
     }
     if (drag?.kind === 'point') {
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } });
+    }
+    if (drag?.kind === 'link' && drag.target) {
+      const link = createLink({
+        type: drag.type,
+        id: PREVIEW_LINK_ID,
+        z: topZ(Object.values(scene.links)),
+        source: drag.source,
+        target: drag.target,
+        midpoint: { x: (drag.from.x + drag.to.x) / 2, y: (drag.from.y + drag.to.y) / 2 },
+      });
+      return reduceIntent(scene, { kind: 'link', link });
+    }
+    if (drag?.kind === 'end' && drag.target) {
+      return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: drag.target } });
     }
     return scene;
   }, [scene, drag]);

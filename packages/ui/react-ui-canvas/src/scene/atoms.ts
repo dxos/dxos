@@ -20,6 +20,7 @@ import {
   type NodeType,
   type Point,
   type SceneId,
+  type Side,
   type Tool,
 } from './types.ts';
 
@@ -37,14 +38,14 @@ export type Drag =
   | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
-  /** Rubber band from a port; `target` is set while hovering a valid drop. */
-  | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; to: Point; target?: Endpoint }
+  /** Rubber band from a port; `target` is set while hovering a valid drop, and the link is then previewed as created. */
+  | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
   /** Drawing a new node with a tool. */
   | { kind: 'create'; type: NodeType; from: Point; to: Point }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
-  /** Re-attaching one end of a link; `fixed` is the other end's resolved point for the rubber band. */
-  | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; to: Point; target?: Endpoint };
+  /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
+  | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
 
 export type HistoryEntry = { path: SceneId[]; camera: Camera };
 

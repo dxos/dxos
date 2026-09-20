@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ControlPointRef, type Drag, type Handle } from './atoms.ts';
 import { boundsFromPoints } from './hit.ts';
-import { nodePorts, portPoint } from './ports.ts';
+import { nodePorts, oppositeSide, portPoint } from './ports.ts';
 import { type NodeRegistry } from './registry.ts';
 import { curvePath, linkGeometry } from './route.ts';
 import { nodeBounds } from './shapes.ts';
@@ -103,11 +103,12 @@ export const ControlFrame = memo(
     }
     const marquee = drag?.kind === 'marquee' ? boundsFromPoints(drag.from, drag.to) : undefined;
     const create = drag?.kind === 'create' ? boundsFromPoints(drag.from, drag.to) : undefined;
+    // Over a drop target the layer already draws the provisional link; the band only reaches free space.
     const band =
-      drag?.kind === 'link'
-        ? { from: drag.from, to: drag.to }
-        : drag?.kind === 'end'
-          ? { from: drag.fixed, to: drag.to }
+      drag?.kind === 'link' && !drag.target
+        ? { from: { point: drag.from, side: drag.fromSide }, to: drag.to }
+        : drag?.kind === 'end' && !drag.target
+          ? { from: { point: drag.fixed, side: drag.fixedSide }, to: drag.to }
           : undefined;
 
     return (
@@ -226,7 +227,7 @@ export const ControlFrame = memo(
         })}
         {band && (
           <path
-            d={curvePath({ point: band.from, side: 'e' }, { point: band.to, side: 'w' })}
+            d={curvePath(band.from, { point: band.to, side: oppositeSide(band.from.side) })}
             className='fill-none stroke-primary-500'
             strokeWidth={2 * unit}
             strokeDasharray={`${6 * unit} ${4 * unit}`}

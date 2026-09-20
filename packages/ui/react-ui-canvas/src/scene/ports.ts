@@ -33,6 +33,10 @@ export const portPoint = (bounds: Bounds, port: Port): Point => {
   }
 };
 
+const OPPOSITE: Record<Side, Side> = { n: 's', s: 'n', e: 'w', w: 'e' };
+
+export const oppositeSide = (side: Side): Side => OPPOSITE[side];
+
 /** Outward unit normal of a side. */
 export const sideNormal = (side: Side): Point => {
   switch (side) {
