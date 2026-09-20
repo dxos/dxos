@@ -393,6 +393,39 @@ describe('DatabaseImpl', () => {
       });
     });
 
+    test('database reopens after close with inline objects in the space root', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      // Inline objects live in the space root doc, so re-opening re-creates them from the directory.
+      const { id } = addObjectToDoc(db.getSpaceRootDocHandle(), { id: EntityId.random() });
+      await db.flush();
+      // Held across the reopen so the core is not collected — the registry holds cores weakly.
+      const core = await db.loadObjectCoreById(id);
+      expect(core?.id).to.eq(id);
+
+      await db.close();
+      await db.open();
+      expect(db.getObjectById(id)).to.not.be.undefined;
+    });
+
+    test('a synchronous core lookup after close resolves to undefined rather than throwing', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+      const object = Obj.make(TestSchema.Expando, { name: 'late-caller' });
+      db.add(object);
+      await db.flush();
+      const core = getObjectCore(object);
+
+      await db.close();
+
+      // Index-query hydration outlives the close and recomputes its result synchronously through
+      // `isDeleted`, where a throw would surface as an unhandled rejection nothing can catch.
+      expect(db.getObjectCoreById(object.id)).to.be.undefined;
+      expect(() => core.isDeleted()).to.not.throw();
+    });
+
     // TODO(dmaretskyi): Test for conflict resolution.
     test('atomic replace object', async () => {
       const testBuilder = new EchoTestBuilder();

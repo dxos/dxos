@@ -218,6 +218,9 @@ export class EntityManager implements IDatabaseBinding {
   /** Ids {@link _linksAddedEvent} has already reported. */
   #linkedObjectIds = new Set<string>();
 
+  /** Set from {@link close} until the next {@link open}: the working set is gone, not merely unloaded. */
+  #closed = false;
+
   constructor(options: EntityManagerProps) {
     this._createEntity = options.createEntity;
     this._spaceKey = options.spaceKey;
@@ -256,6 +259,7 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
+    this.#closed = false;
     // The rate only coalesces a bulk delivery from the host, where every emission re-runs each live
     // query and re-hydrates index results over the whole space; every other trigger skips the delay,
     // so a query reflects a local write, or a peer's single edit, at once.
@@ -379,6 +383,18 @@ export class EntityManager implements IDatabaseBinding {
   async close(): Promise<void> {
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
+    // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
+    // creates a core for every inline object in the directory — so cores and handles surviving the
+    // close would be re-created over themselves.
+    this.#closed = true;
+    this._unsubscribeFromHandles();
+    this._clearHandleReferences();
+    this._objects.clear();
+    this._unavailableObjects.clear();
+    this._objectsPendingDocumentLoad.clear();
+    this._currentlyLoadingObjects.clear();
+    this._objectsForNextDbUpdate.clear();
+    this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
   }
 
@@ -390,6 +406,13 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+    // A closed database has an empty working set, and every caller of this synchronous read already
+    // treats an absent core as unresolved — whereas throwing reaches the fire-and-forget query
+    // paths that outlive the close (index hydration recomputing a result) as an unhandled
+    // rejection. The throw below stays for a database that was never opened, which is a caller bug.
+    if (this.#closed) {
+      return undefined;
+    }
     if (!this._spaceRootDocHandle) {
       throw new Error('Database is not ready.');
     }
