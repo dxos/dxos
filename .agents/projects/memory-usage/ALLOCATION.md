@@ -201,6 +201,16 @@ by side, each with its own heap; the tab runs a third. At boot with nothing open
 the same probe reads 4.4 MB, so this is the corpus, not the runtime — it is what
 opening three spaces costs.
 
+One caveat on the module column. The probe names a memory by the script on the
+stack that created it, and a bundle chunk can carry more than one wasm binary —
+`boot-9` contains both. So read the binary names as indicative and the realm
+split and the sizes as solid: three separate linear memories, one in the page and
+two in the worker, ~35, ~31 and ~27 MB. Which package owns each is worth
+confirming before anyone acts on it. `echo-host` depends on both
+`@automerge/automerge` and `@automerge/automerge-subduction`, so two binaries in
+the worker is expected by construction; two binaries each holding tens of
+megabytes of corpus is the part that is not obviously necessary.
+
 Committed is not resident: a `WebAssembly.Memory` reports the pages it has
 reserved, and the footprint only counts the ones touched. Read the 110-113 MB as
 naming where the residual lives, not as a term that closes the arithmetic.
