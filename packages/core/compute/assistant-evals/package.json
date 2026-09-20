@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*"
   },

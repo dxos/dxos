@@ -16,7 +16,7 @@ import {
   applyCommands as applyContentCommands,
   makeBuilder,
   nextIndex,
-} from '@dxos/plugin-illustrator/model';
+} from '@dxos/diagram';
 
 import { Excalidraw } from '#types';
 

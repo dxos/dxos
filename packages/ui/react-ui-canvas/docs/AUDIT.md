@@ -5,24 +5,24 @@ design (`DESIGN.md`). Paths are repo-relative. Line counts are `wc -l` of `src`.
 
 ## 1. Summary table
 
-| Package / component | Root renderer | Infinite pan/zoom | Coords | Hierarchy | Persistence | Drag lib | Select | Edges | HTML islands | Lines | Consumers |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| `react-ui-canvas` `Canvas` | DOM, one CSS `translate/scale` on child layers | Yes, no zoom clamp | Continuous world, `{scale, offset}` matrix (`transformation-matrix`) | None | None | Raw pointer (pan), `useWheel` | None | None | Yes (children under transform) | 2464 (pkg) | canvas-editor, canvas-compute, plugin-sequencer |
-| `react-ui-canvas` `Grid` | SVG `<pattern>` | n/a | Follows projection | n/a | n/a | n/a | n/a | n/a | n/a | — | canvas-editor |
-| `react-ui-canvas` `CellGrid` | 2× HTML canvas (static + overlay) + input div, rAF | Scroll ≥ 0, x-zoom only 0.25–8 | Discrete cells, `Viewport {scrollX, scrollY, baseCellWidth, cellHeight, zoomX}` | None | Atoms (ECHO anticipated) | Pointer handlers | Rect range | None | No | ~800 | plugin-sequencer |
-| `react-ui-canvas-editor` `Editor`/`Canvas` | DOM frames + per-path SVG, on `react-ui-canvas` | Yes; zoom-in ≤16, zoom-to-fit ≤1 | World centres, `Polygon {center, size}`, snap 16 | None (flat `{nodes, edges}`) | ECHO `CanvasBoard.layout: GraphModel.Data` | pragmatic-dnd + `DragMonitor` atom | Click, shift-marquee (DOM `getClientRects`) | `Connection` derived to `PathShape` each render | Yes (every polygon is React) | 5276 | plugin-conductor, plugin-debug (headless), canvas-compute |
-| `react-ui-canvas-editor` `GraphCanvas` | `@xyflow/react` | xyflow | xyflow, `origin [0.5,0.5]` | None | Same model | xyflow | xyflow | xyflow default | xyflow nodes | 325 | Story only, not exported, dev-dep |
-| `react-ui-canvas-compute` | Shape defs into editor registry | inherits | inherits | Planned "group nodes", never built | ECHO (`CanvasBoard` + `Ref(ComputeGraph)`) | inherits | inherits | inherits | Yes (`Surface`, Cards, CodeMirror) | 4619 | plugin-conductor, plugin-debug |
-| `react-ui-board` `Board` | DOM abs-pos tiles in `ScrollArea`, CSS `scale()` | No: finite grid, zoom (0,1] | Integer cells `{x,y,w,h}` | None | ECHO `BoardLayout {size, cells: Record<id, cell>}` + `items: Ref[]` | pragmatic-dnd; raw pointer resize + magnetize | Single/multi (shift) | None | Yes (`Surface` CardContent) | 2852 | plugin-board, plugin-studio Lightbox |
-| `react-ui-board` `Chain` | `@xyflow/react` spike | xyflow | xyflow | None | None (local state) | xyflow | xyflow | xyflow | Custom node div | ~100 | Story only, not exported |
-| `react-ui-diagram` `Diagram` | `@xyflow/react` | xyflow, `fitView maxZoom 1` | World, quantised `GRID 16`; children parent-relative | **Yes**: `Node.parent`, `type 'group'`, `parentId + extent 'parent'` | None (`Overlay` designed, no writer) | xyflow (`onNodeDragStop`) | xyflow | xyflow, `nodesConnectable=false` | DOM nodes, no `Surface` | 1317 | None (private) |
-| `react-ui-graph` | SVG, imperative d3; `d3-zoom` on `<g>` | Yes, extent 1/4–4 | Centred-origin viewBox, `Scale` util | Synthetic cluster/hier projectors only | None | d3-drag | `onSelect` | Yes (SVG paths, linker) | No | 8784 | devtools, plugin-explorer, react-ui-rdf |
-| `react-ui-gameboard` | CSS grid 8×8 | No | Discrete `[col,row]` | None | Atom model | pragmatic-dnd | n/a | None | Squares/pieces only | 1134 | plugin-chess |
-| `react-ui-dashboard` | CSS grid | No | n/a (activity calendar) | None | None | None | None | None | n/a | 703 | plugin-space |
-| `react-ui-geo` / `solid-ui-geo` | Globe: canvas2d `d3-geo`; Map: Leaflet | Geographic | Geographic projections | None | None | custom | n/a | n/a | No | 3113 / 2113 | plugin-map, plugin-trip, plugin-map-solid |
-| `plugin-tldraw` | tldraw 3.x (`TldrawEditor`) | tldraw | tldraw | tldraw frames/groups | ECHO `Drawing → Ref(Canvas {schema, content: Record})` via `echo-doc` store adapter | tldraw | tldraw | tldraw | tldraw | ~20 files | composer |
-| `plugin-excalidraw` | Excalidraw | Excalidraw | Excalidraw | Excalidraw groups/frames | Same `Drawing`/`Canvas` (`excalidraw.com/2`) | Excalidraw | Excalidraw | Excalidraw | No | — | composer |
-| `plugin-illustrator` | `SceneSvg.tsx` SVG scene renderer + UML grid | No | Scene model | `model/scene.ts` | Owns `Drawing`/`Canvas` types | n/a | n/a | n/a | No | — | tldraw, excalidraw variants |
+| Package / component                        | Root renderer                                      | Infinite pan/zoom                | Coords                                                                          | Hierarchy                                                            | Persistence                                                                         | Drag lib                                      | Select                                      | Edges                                           | HTML islands                       | Lines       | Consumers                                                 |
+| ------------------------------------------ | -------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------- | ----------------------------------------------- | ---------------------------------- | ----------- | --------------------------------------------------------- |
+| `react-ui-canvas` `Canvas`                 | DOM, one CSS `translate/scale` on child layers     | Yes, no zoom clamp               | Continuous world, `{scale, offset}` matrix (`transformation-matrix`)            | None                                                                 | None                                                                                | Raw pointer (pan), `useWheel`                 | None                                        | None                                            | Yes (children under transform)     | 2464 (pkg)  | canvas-editor, canvas-compute, plugin-sequencer           |
+| `react-ui-canvas` `Grid`                   | SVG `<pattern>`                                    | n/a                              | Follows projection                                                              | n/a                                                                  | n/a                                                                                 | n/a                                           | n/a                                         | n/a                                             | n/a                                | —           | canvas-editor                                             |
+| `react-ui-canvas` `CellGrid`               | 2× HTML canvas (static + overlay) + input div, rAF | Scroll ≥ 0, x-zoom only 0.25–8   | Discrete cells, `Viewport {scrollX, scrollY, baseCellWidth, cellHeight, zoomX}` | None                                                                 | Atoms (ECHO anticipated)                                                            | Pointer handlers                              | Rect range                                  | None                                            | No                                 | ~800        | plugin-sequencer                                          |
+| `react-ui-canvas-editor` `Editor`/`Canvas` | DOM frames + per-path SVG, on `react-ui-canvas`    | Yes; zoom-in ≤16, zoom-to-fit ≤1 | World centres, `Polygon {center, size}`, snap 16                                | None (flat `{nodes, edges}`)                                         | ECHO `CanvasBoard.layout: GraphModel.Data`                                          | pragmatic-dnd + `DragMonitor` atom            | Click, shift-marquee (DOM `getClientRects`) | `Connection` derived to `PathShape` each render | Yes (every polygon is React)       | 5276        | plugin-conductor, plugin-debug (headless), canvas-compute |
+| `react-ui-canvas-editor` `GraphCanvas`     | `@xyflow/react`                                    | xyflow                           | xyflow, `origin [0.5,0.5]`                                                      | None                                                                 | Same model                                                                          | xyflow                                        | xyflow                                      | xyflow default                                  | xyflow nodes                       | 325         | Story only, not exported, dev-dep                         |
+| `react-ui-canvas-compute`                  | Shape defs into editor registry                    | inherits                         | inherits                                                                        | Planned "group nodes", never built                                   | ECHO (`CanvasBoard` + `Ref(ComputeGraph)`)                                          | inherits                                      | inherits                                    | inherits                                        | Yes (`Surface`, Cards, CodeMirror) | 4619        | plugin-conductor, plugin-debug                            |
+| `react-ui-board` `Board`                   | DOM abs-pos tiles in `ScrollArea`, CSS `scale()`   | No: finite grid, zoom (0,1]      | Integer cells `{x,y,w,h}`                                                       | None                                                                 | ECHO `BoardLayout {size, cells: Record<id, cell>}` + `items: Ref[]`                 | pragmatic-dnd; raw pointer resize + magnetize | Single/multi (shift)                        | None                                            | Yes (`Surface` CardContent)        | 2852        | plugin-board, plugin-studio Lightbox                      |
+| `react-ui-board` `Chain`                   | `@xyflow/react` spike                              | xyflow                           | xyflow                                                                          | None                                                                 | None (local state)                                                                  | xyflow                                        | xyflow                                      | xyflow                                          | Custom node div                    | ~100        | Story only, not exported                                  |
+| `react-ui-diagram` `Diagram`               | `@xyflow/react`                                    | xyflow, `fitView maxZoom 1`      | World, quantised `GRID 16`; children parent-relative                            | **Yes**: `Node.parent`, `type 'group'`, `parentId + extent 'parent'` | None (`Overlay` designed, no writer)                                                | xyflow (`onNodeDragStop`)                     | xyflow                                      | xyflow, `nodesConnectable=false`                | DOM nodes, no `Surface`            | 1317        | None (private)                                            |
+| `react-ui-graph`                           | SVG, imperative d3; `d3-zoom` on `<g>`             | Yes, extent 1/4–4                | Centred-origin viewBox, `Scale` util                                            | Synthetic cluster/hier projectors only                               | None                                                                                | d3-drag                                       | `onSelect`                                  | Yes (SVG paths, linker)                         | No                                 | 8784        | devtools, plugin-explorer, react-ui-rdf                   |
+| `react-ui-gameboard`                       | CSS grid 8×8                                       | No                               | Discrete `[col,row]`                                                            | None                                                                 | Atom model                                                                          | pragmatic-dnd                                 | n/a                                         | None                                            | Squares/pieces only                | 1134        | plugin-chess                                              |
+| `react-ui-dashboard`                       | CSS grid                                           | No                               | n/a (activity calendar)                                                         | None                                                                 | None                                                                                | None                                          | None                                        | None                                            | n/a                                | 703         | plugin-space                                              |
+| `react-ui-geo` / `solid-ui-geo`            | Globe: canvas2d `d3-geo`; Map: Leaflet             | Geographic                       | Geographic projections                                                          | None                                                                 | None                                                                                | custom                                        | n/a                                         | n/a                                             | No                                 | 3113 / 2113 | plugin-map, plugin-trip, plugin-map-solid                 |
+| `plugin-tldraw`                            | tldraw 3.x (`TldrawEditor`)                        | tldraw                           | tldraw                                                                          | tldraw frames/groups                                                 | ECHO `Drawing → Ref(Canvas {schema, content: Record})` via `echo-doc` store adapter | tldraw                                        | tldraw                                      | tldraw                                          | tldraw                             | ~20 files   | composer                                                  |
+| `plugin-excalidraw`                        | Excalidraw                                         | Excalidraw                       | Excalidraw                                                                      | Excalidraw groups/frames                                             | Same `Drawing`/`Canvas` (`excalidraw.com/2`)                                        | Excalidraw                                    | Excalidraw                                  | Excalidraw                                      | No                                 | —           | composer                                                  |
+| `plugin-illustrator`                       | `SceneSvg.tsx` SVG scene renderer + UML grid       | No                               | Scene model                                                                     | `model/scene.ts`                                                     | Owns `Drawing`/`Canvas` types                                                       | n/a                                           | n/a                                         | n/a                                             | No                                 | —           | tldraw, excalidraw variants                               |
 
 Not spatial despite the name: `plugin-graph` (app navigation graph), `plugin-spacetime` (3D Babylon).
 
@@ -53,31 +53,32 @@ packages declare it; only `react-ui-diagram` uses it on a real render path. CSS:
    d3-drag in `useRope`), plus two zoom implementations and two coordinate models across the canvas packages.
 8. **Test coverage is thin**: `resizeAxis` and `CellGrid.viewport` only. A rewrite has almost no regression net.
 9. **The repo already hosts a third-party infinite canvas on ECHO** (`plugin-tldraw` via the `Drawing → Canvas
-   {schema, content}` indirection and `echo-doc/src/store-adapter.ts`), and mirrors selection with
+{schema, content}` indirection and `echo-doc/src/store-adapter.ts`), and mirrors selection with
    `shape.meta.object`. This is the established pattern for an opaque CRDT content bag.
 
 ## 3. Reusable modules (carry forward)
 
-| Module | Why |
-|---|---|
-| `react-ui-canvas/src/hooks/projection.tsx` | Pure `{scale, offset}` matrix mapper, zoom-about-point, eased `zoomTo`. No React. Composes per scene. |
-| `react-ui-canvas/src/hooks/useWheel.tsx` | Complete trackpad pan + ctrl/cmd pinch, capture-phase non-passive. |
-| `react-ui-canvas/src/components/Grid/Grid.tsx` | Multi-resolution SVG grid keyed on scale; the LOD pattern for the grid layer. |
-| `react-ui-canvas/src/components/CellGrid/{state/viewport.ts, render/*}` | Culled, rAF, DPR-correct canvas2d painting off atoms. Template for the canvas half of a hybrid renderer. |
-| `react-ui-canvas-editor/src/layout/geometry.ts` | ~30 pure rect/point/path functions incl. line–rect intersection and curve builders. |
-| `react-ui-canvas-editor/src/components/Canvas/registry.ts` | `ShapeRegistry`/`ShapeDef` plug-in seam, proven by 27 compute shapes. Extend with renderer/LOD hints. |
-| `react-ui-canvas-editor/src/hooks/{useShortcuts,useSnap}.ts`, `KeyboardContainer.tsx` | Attention-scoped hotkeys, grid snapping. Renderer-independent. |
-| `plugin-conductor/.../CanvasArticle.tsx:44-54` + `CanvasGraphModel` | The `Obj.update` mirror + `Obj.subscribe → sync()` ECHO write/reload contract. |
-| `react-ui-diagram/src/{types/diagram.ts, model/layout.ts}` | Only tested hierarchy-aware model and layout (parent-relative coords, groups sized to children, `Overlay`). |
-| `react-ui-board/src/components/Board/engine.ts` | Pure collision/compaction/resolver algebra; optional snap/pack mode for tiles inside a scene. |
-| `react-ui-board` `Board.Map` (`Board.tsx:957-1007`) | Minimap whose viewport outline is read from live DOM geometry. |
-| `react-ui-graph/src/graph/projector/projector.ts` | `'topology' | 'positions'` update kinds; fast path for position-only changes. 12 layout projectors. |
-| `plugin-board/.../BoardArticle.tsx:207-217` | The working `Surface type={AppSurface.CardContent}` hosting pattern for an ECHO object in a cell. |
-| `echo-doc/src/store-adapter.ts` + `plugin-illustrator/src/types/Drawing.ts` | Opaque CRDT content bag with dialect id; how third-party canvases are hosted today. |
+| Module                                                                                | Why                                                                                                         |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `react-ui-canvas/src/hooks/projection.tsx`                                            | Pure `{scale, offset}` matrix mapper, zoom-about-point, eased `zoomTo`. No React. Composes per scene.       |
+| `react-ui-canvas/src/hooks/useWheel.tsx`                                              | Complete trackpad pan + ctrl/cmd pinch, capture-phase non-passive.                                          |
+| `react-ui-canvas/src/components/Grid/Grid.tsx`                                        | Multi-resolution SVG grid keyed on scale; the LOD pattern for the grid layer.                               |
+| `react-ui-canvas/src/components/CellGrid/{state/viewport.ts, render/*}`               | Culled, rAF, DPR-correct canvas2d painting off atoms. Template for the canvas half of a hybrid renderer.    |
+| `react-ui-canvas-editor/src/layout/geometry.ts`                                       | ~30 pure rect/point/path functions incl. line–rect intersection and curve builders.                         |
+| `react-ui-canvas-editor/src/components/Canvas/registry.ts`                            | `ShapeRegistry`/`ShapeDef` plug-in seam, proven by 27 compute shapes. Extend with renderer/LOD hints.       |
+| `react-ui-canvas-editor/src/hooks/{useShortcuts,useSnap}.ts`, `KeyboardContainer.tsx` | Attention-scoped hotkeys, grid snapping. Renderer-independent.                                              |
+| `plugin-conductor/.../CanvasArticle.tsx:44-54` + `CanvasGraphModel`                   | The `Obj.update` mirror + `Obj.subscribe → sync()` ECHO write/reload contract.                              |
+| `react-ui-diagram/src/{types/diagram.ts, model/layout.ts}`                            | Only tested hierarchy-aware model and layout (parent-relative coords, groups sized to children, `Overlay`). |
+| `react-ui-board/src/components/Board/engine.ts`                                       | Pure collision/compaction/resolver algebra; optional snap/pack mode for tiles inside a scene.               |
+| `react-ui-board` `Board.Map` (`Board.tsx:957-1007`)                                   | Minimap whose viewport outline is read from live DOM geometry.                                              |
+| `react-ui-graph/src/graph/projector/projector.ts`                                     | `'topology'                                                                                                 | 'positions'` update kinds; fast path for position-only changes. 12 layout projectors. |
+| `plugin-board/.../BoardArticle.tsx:207-217`                                           | The working `Surface type={AppSurface.CardContent}` hosting pattern for an ECHO object in a cell.           |
+| `echo-doc/src/store-adapter.ts` + `plugin-illustrator/src/types/Drawing.ts`           | Opaque CRDT content bag with dialect id; how third-party canvases are hosted today.                         |
 
 ## 4. Per-package notes
 
 ### `react-ui-canvas`
+
 Exports `Canvas`, `Grid`, `CellGrid`, `FPS`, `ProjectionMapper`, `useDrag`, `useWheel`, `Point/Dimension/Rect`
 schemas. `Canvas` keeps projection in React `useState` and publishes `styles` on context; the root div does not
 apply the transform, consumers do. No zoom clamp. d3 is used only for eased transitions. Deps:
@@ -85,6 +86,7 @@ apply the transform, consumers do. No zoom clamp. d3 is used only for eased tran
 Tests: `CellGrid/state/viewport.test.ts`. Stories: Canvas, Grid, CellGrid, svg.
 
 ### `react-ui-canvas-editor`
+
 Exports `Editor {Root, Canvas, UI}`, `Shapes`/`Frame`/`Anchor`, `ShapeRegistry`, hooks, layout, shapes
 (`rectangle`, `ellipse`, `note`, `path`), `CanvasGraphModel`, `CanvasBoard`. Polygons are absolutely positioned
 divs at `center`; paths are per-shape SVGs with a hit path and markers from a hidden `dx-defs` SVG. Edges are not
@@ -93,17 +95,20 @@ rect clipping). Auto-layout via `@antv/layout` (circular/force/grid/radial). Sho
 Tests: `useDragMonitor.test.ts` (resize axis). Stories: Editor, Frame, Rope, TextBox, GraphCanvas.
 
 ### `react-ui-canvas-compute`
+
 27 compute shape defs plus `ComputeGraphController` mirroring canvas nodes into a `ComputeGraph` (two ECHO graphs
 kept in sync by `useGraphMonitor`). Demonstrates the HTML-island model at full strength (`Surface`, Cards, audio,
 tables inside frames). README lists "Group nodes (sub-graph)" and "Auto layout" as open.
 
 ### `react-ui-board`
+
 `Board {Root, Container, Viewport, Content, Backdrop, Cell, Zoom, Map}`. One DOM drop-target per backdrop cell
 (no virtualisation); drag disabled below zoom 1; `resolveCollisions`/`compact`/`pushToFit`/`resizeToFit`/
 `rejectIfNoFit` resolvers. `Chain` is an unexported xyflow spike with a header comment calling it a "possible
 replacement for react-ui-canvas". Tests: `engine.test.ts`, `geometry.test.ts`.
 
 ### `react-ui-diagram`
+
 Private, no consumers. Neutral `Graph/Node/Edge/Port/Overlay` schemas with `Node.parent`; nodes registered as
 `'node'`/`'container'` to dodge xyflow's built-in group border; explicit `width/height` required because
 `extent: 'parent'` clamps against measured size; each port emits both a source and a target `Handle` because
@@ -111,11 +116,13 @@ xyflow drops mismatched handle types silently. Layout is hand-rolled layered, EL
 `mermaid.test.ts`.
 
 ### `react-ui-graph`
+
 Imperative d3 over SVG; `useZoom` wraps d3-zoom (extent, enable/disable, reset, dblclick); `Scale` owns the
 `ZoomTransform`; `useGrid` derives a multi-resolution grid from the live transform; centred-origin viewBox
 convention differs from every other surface. Cannot host HTML.
 
 ### Plugins
+
 `plugin-conductor` is the only production consumer of the editor (`CanvasArticle.tsx`, 148 lines, with a
 `graphMonitor as any` cast). `plugin-debug` uses the editor headlessly to generate sample boards. `plugin-board`
 writes layout back with `Obj.update(board, b => b.layout.cells = next.items)` and normalises legacy centre-origin
@@ -126,14 +133,14 @@ mirror selection through `shape.meta.object` / `element.customData.object`.
 
 ### Comparison
 
-| Tool | Rendering | Nesting | Semantic zoom / LOD | License |
-|---|---|---|---|---|
-| tldraw 3.x | HTML div layer with CSS camera transform; per-shape div hosting `HTMLContainer` or `SVGContainer` | `parentId`, child coords local to parent, page transform composed per shape (children are NOT DOM-nested); frames clip, groups derive bounds; fractional-index z-order per sibling set | None built in; culled shapes stay in DOM as `display:none` | SDK license: dev only by default; production needs a key (trial / commercial / watermark hobby) |
-| React Flow 12.11 (`@xyflow/react`, MIT) | HTML divs for nodes, SVG for edges, d3-zoom | `parentId` sub-flows, coords relative to parent, `extent: 'parent'`, parents must precede children; nested edges have z-index issues (xyflow#5203) | None; "contextual zoom" example reads `store.transform[2]` in each node (re-render per zoom tick) | MIT |
-| Excalidraw | Canvas2D (roughjs) | Flat array with `frameId` + `groupIds`; absolute coords; children listed before frame | None | MIT |
-| JSON Canvas 1.0 (Obsidian) | n/a (format) | `group` nodes are bounding boxes only, containment is spatial | None | MIT |
-| Figma | WebGL tile renderer, own DOM/compositor/text | Frames nest arbitrarily | Yes (tile-based, internals unpublished) | Proprietary |
-| Muse / Allume | Native Swift, 120 fps | Boards-in-boards, nested board rendered as a live-preview card, depth "haze" | Zoom is navigation: pinch into a card, view snaps to nearest stable zoom level; pinch-out at min zoom returns to parent | Proprietary |
+| Tool                                    | Rendering                                                                                         | Nesting                                                                                                                                                                                | Semantic zoom / LOD                                                                                                     | License                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| tldraw 3.x                              | HTML div layer with CSS camera transform; per-shape div hosting `HTMLContainer` or `SVGContainer` | `parentId`, child coords local to parent, page transform composed per shape (children are NOT DOM-nested); frames clip, groups derive bounds; fractional-index z-order per sibling set | None built in; culled shapes stay in DOM as `display:none`                                                              | SDK license: dev only by default; production needs a key (trial / commercial / watermark hobby) |
+| React Flow 12.11 (`@xyflow/react`, MIT) | HTML divs for nodes, SVG for edges, d3-zoom                                                       | `parentId` sub-flows, coords relative to parent, `extent: 'parent'`, parents must precede children; nested edges have z-index issues (xyflow#5203)                                     | None; "contextual zoom" example reads `store.transform[2]` in each node (re-render per zoom tick)                       | MIT                                                                                             |
+| Excalidraw                              | Canvas2D (roughjs)                                                                                | Flat array with `frameId` + `groupIds`; absolute coords; children listed before frame                                                                                                  | None                                                                                                                    | MIT                                                                                             |
+| JSON Canvas 1.0 (Obsidian)              | n/a (format)                                                                                      | `group` nodes are bounding boxes only, containment is spatial                                                                                                                          | None                                                                                                                    | MIT                                                                                             |
+| Figma                                   | WebGL tile renderer, own DOM/compositor/text                                                      | Frames nest arbitrarily                                                                                                                                                                | Yes (tile-based, internals unpublished)                                                                                 | Proprietary                                                                                     |
+| Muse / Allume                           | Native Swift, 120 fps                                                                             | Boards-in-boards, nested board rendered as a live-preview card, depth "haze"                                                                                                           | Zoom is navigation: pinch into a card, view snaps to nearest stable zoom level; pinch-out at min zoom returns to parent | Proprietary                                                                                     |
 
 infinitecanvas.tools catalogues ~120 apps on four properties (expansiveness, zoom, direct manipulation,
 collaboration) but publishes no architectural facets; the table above is assembled from primary sources.
@@ -144,7 +151,7 @@ collaboration) but publishes no architectural facets; the table above is assembl
    technical reasons. A board's card on its parent is a scaled view of that finite extent.
 2. Cards keep absolute positions **within their board**; crossing a board boundary is a camera transition, not a
    coordinate change. "Linked cards" alias one board from several places.
-3. Data is split into *transactional* (positions, metadata), *blob* (PDF/video, lazy) and *ephemeral* (cursors,
+3. Data is split into _transactional_ (positions, metadata), _blob_ (PDF/video, lazy) and _ephemeral_ (cursors,
    in-progress ink); persisted as a bag of entity-attribute-value-timestamp atoms, LWW, custom sync server.
    Sources: Ink & Switch "Muse" essay, Metamuse ep. 56 "Sync", Wiggins' retrospective.
 

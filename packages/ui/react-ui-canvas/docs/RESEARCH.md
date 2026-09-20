@@ -42,7 +42,7 @@ from primary sources.
 - Culling: `getCulledShapes()` (excludes selected/editing); culled shapes stay in the DOM as `display:none`,
   maintained by a `CullingController` with O(1) subscriptions; `ShapeUtil.canCull()` opts out.
 - Nesting: `parentId` is a page or shape id; child x/y relative to parent; `getShapeLocalTransform ×
-  getShapeParentTransform = getShapePageTransform`; `reparentShapes()` preserves page position by rewriting local
+getShapeParentTransform = getShapePageTransform`; `reparentShapes()` preserves page position by rewriting local
   coords. Frames clip children (arrows exempt) and adopt shapes drawn inside; groups derive bounds, dissolve at one
   child, click-through focus.
 - Z-order: string fractional indexing (`IndexKey`, base-62, jittered), relative to siblings within one parent.
@@ -70,12 +70,12 @@ from primary sources.
 ## 5. Excalidraw and JSON Canvas
 
 - Excalidraw file: `{type, version, source, elements[], appState, files}`. Element base: `id, type, x, y, width,
-  height, angle, stroke…, seed, version, versionNonce, isDeleted, locked, link, customData, boundElements,
-  index (FractionalIndex|null), groupIds (deepest→shallowest), frameId`. Absolute scene coords even inside frames;
+height, angle, stroke…, seed, version, versionNonce, isDeleted, locked, link, customData, boundElements,
+index (FractionalIndex|null), groupIds (deepest→shallowest), frameId`. Absolute scene coords even inside frames;
   frame children must precede the frame in the array. Nesting is flat-with-tags; groups are id-sets.
 - JSON Canvas 1.0 (2024-03-11, MIT, Obsidian): `nodes[]` of `text | file | link | group` with `id, x, y, width,
-  height, color?`; `edges[]` with `id, fromNode, toNode, fromSide?, toSide?, fromEnd?='none', toEnd?='arrow',
-  color?, label?`. Groups are bounding boxes only; containment is spatial. Explicitly extensible.
+height, color?`; `edges[]` with `id, fromNode, toNode, fromSide?, toSide?, fromEnd?='none', toEnd?='arrow',
+color?, label?`. Groups are bounding boxes only; containment is spatial. Explicitly extensible.
 - Verdict: good export targets; neither models nested scenes, local coords, or domain-object refs. Export flattens
   each scene to absolute coords; an extension field can carry a scene ref.
 

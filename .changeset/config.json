@@ -49,6 +49,7 @@
       "@dxos/deus",
       "@dxos/devtools",
       "@dxos/devtools-extension",
+      "@dxos/diagram",
       "@dxos/discord-bot",
       "@dxos/discord-worker",
       "@dxos/display-name",
