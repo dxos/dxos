@@ -173,15 +173,18 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
             data-testid='toolbar-create'
           />
         </Menu.Trigger>
-        <Menu.Content side='bottom' align='start' sideOffset={4}>
-          <Menu.Viewport>
-            {Object.values(nodes).map((def) => (
-              <Menu.Item key={def.type} data-testid={`create-${def.type}`} onSelect={() => actions.create(def.type)}>
-                {def.name}
-              </Menu.Item>
-            ))}
-          </Menu.Viewport>
-        </Menu.Content>
+        {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
+        <Menu.Portal>
+          <Menu.Content side='bottom' align='start' sideOffset={4}>
+            <Menu.Viewport>
+              {Object.values(nodes).map((def) => (
+                <Menu.Item key={def.type} data-testid={`create-${def.type}`} onSelect={() => actions.create(def.type)}>
+                  {def.name}
+                </Menu.Item>
+              ))}
+            </Menu.Viewport>
+          </Menu.Content>
+        </Menu.Portal>
       </Menu.Root>
       <NaturalToolbar.IconButton
         variant='ghost'

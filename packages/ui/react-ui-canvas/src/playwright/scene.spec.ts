@@ -20,8 +20,9 @@ test.describe('SceneView', () => {
   let errors: string[];
 
   test.beforeEach(async ({ browser }) => {
-    ({ page, close } = await setupPage(browser, { url: FREEHAND_URL, viewportSize: { width: 1400, height: 800 } }));
+    // Reset before the page opens, so a launch failure reports itself rather than a stale error list.
     errors = [];
+    ({ page, close } = await setupPage(browser, { url: FREEHAND_URL, viewportSize: { width: 1400, height: 800 } }));
     page.on('pageerror', (error) => errors.push(error.message));
     scene = new SceneManager(page);
     await scene.ready();
