@@ -114,6 +114,46 @@ tab is open" in a way that implied the bytes grow with it; they do not.
 Script source stays flat at 31–33 MB whatever the profile holds, which is what
 makes it the floor rather than the problem.
 
+## What the fix bought
+
+[dxos/dxos#13251](https://github.com/dxos/dxos/pull/13251) put `byteLength` in the
+chunk key beside `lineCount`, so `#evict` computes its retention budget from
+`getAllKeys()` alone and the encoding happens once per chunk at write time
+instead of once per row per sweep. Three runs per arm, each on a pristine copy of
+the same three-space profile, `--journey --settle 90`:
+
+|          | footprint | `<unspecified>` |  sampled | IndexedDB | `getAll` / `getAllKeys` |
+| -------- | --------: | --------------: | -------: | --------: | ----------------------: |
+| before 1 |    737 MB |        232.1 MB | 379.5 MB |  208.1 MB |               531 / 531 |
+| before 2 |    730 MB |        339.7 MB | 446.6 MB |  277.8 MB |               507 / 507 |
+| before 3 |    865 MB |        335.1 MB | 520.8 MB |  351.4 MB |               576 / 577 |
+| after 1  |    614 MB |         77.8 MB | 142.8 MB |    1.9 MB |                  0 / 12 |
+| after 2  |    650 MB |         94.7 MB | 171.0 MB |    1.9 MB |                  0 / 12 |
+| after 3  |    647 MB |         95.4 MB | 173.2 MB |    0.7 MB |                  0 / 11 |
+
+Every after-run sits below every before-run on every column. The mechanism is
+gone rather than reduced: `getAll` to zero, and the IndexedDB category from a
+279 MB mean to 1.5 MB.
+
+**The footprint moved less than the allocation did, and the ratio is the point.**
+287 MB of mean sampled allocation removed yields 140 MB of mean footprint —
+777 MB down to 637 MB, 18%. About half of what the sweep allocated was pages the
+allocator had committed and would have kept either way. That gap between "stops
+allocating" and "gives memory back" is the thing to expect from any fix aimed at
+churn, and it is why the estimate this page carried before the fix landed, which
+put the sweep at roughly a third of the tab, came in about 2x high.
+
+**It also raised a new question.** The after arm's `<unspecified>` floor is
+78-95 MB on a loaded profile against 34.8 MB on an empty one, so roughly 54 MB of
+that block scales with data and has nothing to do with the sweep. The
+empty-profile work could not see it. It is the largest unexplained thing left in
+the block.
+
+One detail worth keeping: `getAllKeys` is 11-12 per run, not zero. A 30-second
+timer alone would fire three times in 90 seconds, so `#writeBatch` still
+re-enters the sweep after every flush — it is merely cheap now. The trigger was
+not what changed.
+
 ## 1. The log store's eviction sweep
 
 [`IdbLogStore#evict`](../../../packages/common/log-store-idb/src/idb-log-store.ts):
@@ -299,11 +339,9 @@ workers were not measured this way and Chromium may host them elsewhere.
 
 ## What this says to do
 
-1. **Fix the log store's eviction sweep.** Store each chunk's byte length in the
-   key next to `lineCount` and sweep with `getAllKeys()` alone; that removes both
-   the `getAll()` payload and the `TextEncoder` copies. Stop re-entering the sweep
-   on every 250 ms flush. ~770 MB of allocation per 90 seconds, up to 124 MB live
-   at once, and the only item here with a control behind it.
+1. ~~**Fix the log store's eviction sweep.**~~ Done in
+   [#13251](https://github.com/dxos/dxos/pull/13251): 287 MB less allocation and
+   140 MB less footprint on a loaded profile. See "What the fix bought" above.
 2. **Drop the `detail` payload from `performance.measure` outside development.**
    Under 1 MB today, retained for the life of the tab, unread in production.
 3. **Ship fewer, larger modules.** 31 MB of decoded source and module-graph
@@ -311,6 +349,9 @@ workers were not measured this way and Chromium may host them elsewhere.
    Composer's code shape at 96.9 MB of footprint.
 4. **Collapse the duplicate automerge instances.** Two Rust binaries plus a
    tab-side replica, 146.6 MB committed once data is open.
+5. **Decompose the `v8` node.** 171 MB on a loaded journey run and never opened,
+   which makes it the largest single thing on this page with no attribution
+   behind it at all. The document data should be in there.
 
 ## What changed in this revision
 
