@@ -1,6 +1,6 @@
 # plugin-canvas — Design
 
-Status: spec for review (2026-09-20, rev 2). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
+Status: spec for review (2026-09-20, rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and the throwaway spike `packages/ui/react-ui-canvas/src/experimental/` (story
 `ui/react-ui-canvas/experimental/SceneView`).
 
@@ -32,6 +32,7 @@ Non-goals for the prototype: freehand drawing, cross-scene links, multiplayer cu
 | 9 | **Links are cells** with `{cell, port?}` endpoints | One map gives ordering, selection, undo and nesting uniformly; a missing port means "automatic". |
 | 10 | **Two live depths max** (root + one nested), further depths as previews | Bounded DOM; verified in the spike. |
 | 11 | **The surface never writes coordinates.** It emits *intents* (move, resize, link, create, delete) to a `Projection`, which owns the drawing model and re-projects | This is what makes variants 1–3 share one surface. |
+| 13 | **The engine is a `Drawing` variant** (`schema 'dxos.org/scene/1'`); illustrator's scene DSL commands are the write API behind the projection seam; the headless model is extracted to `@dxos/diagram` first | §3b: the ECHO envelope, agent operations, dialects and layout engines already exist; a UI package cannot depend on a plugin. |
 | 12 | **Ports come from the cell definition** (`CellDef.ports`), not from the data | Same as anchors in canvas-editor's `ShapeRegistry` and `Port {side, offset}` in react-ui-diagram; shape-specific, not per-instance. |
 
 ## 3. Layered architecture
@@ -80,6 +81,43 @@ one rank pass per axis, equal cell sizes, snapped to the grid.
 
 Mixed scenes are allowed at the cell level in phase 2 (a freehand scene containing a portal to a dynamic scene is
 already supported, since the projection is per scene).
+
+## 3b. Reusing plugin-illustrator's DSL mechanism
+
+`plugin-illustrator` already implements the layered split in §3 for third-party canvases. Its layers, and what
+each one gives the new engine:
+
+| Illustrator layer | What it is | Use in the new canvas |
+|---|---|---|
+| `types/Drawing.ts` | `Drawing {name, canvas: Ref(Canvas)}`; `Canvas {schema, content: Record<id, any>}`, a hidden, opaque, CRDT-merged record map claimed by a renderer via `schema` | **The Scene ECHO type.** A scene *is* a `Canvas` with `schema = 'dxos.org/scene/1'` whose `content` is the cell map (§4). No new ECHO type; name, graph node, create flow, card/article scaffolding and the shared selection model come from the plugin. A portal references a `Drawing` (`Ref`), so nested scenes are first-class documents and Muse "linked cards" are just two portals to one drawing. |
+| `model/scene.ts` | Renderer-neutral DSL: `WorldObject {id, origin, scale, ref, elements}` in object-local units; elements rect/ellipse/diamond/triangle/circle/line/curve/arc/text/arrow; `Arrow {from, to}` bound to `"object/element"` refs; edit `Command`s (`upsert-object`, `upsert-elements`, `remove-*`, `move-object`) | **The write language behind the projection seam.** Intents compile to commands: move → `move-object`, create → `upsert-object`, delete → `remove-object`, link → `upsert-elements` with an `arrow`, resize → `upsert-elements` with the resized box. Bound arrow endpoints that "track their target" are the automatic links of §4. |
+| `model/content.ts` | `ContentHandler {identify, render, read, translate, scaffold?, merge?, prune?}` + `applyCommands(content, commands, handler)`: command semantics over any record map, identity stamped per record | **`SceneHandler`**: identity = `{object: cell.group ?? cell.id, element: cell.id}`; `render` compiles an object's elements into cells (box → rect/text, text → text, arrow → link, `ref` → object cell) with the placement folded into cell centres and a `group` tag; `read` rebuilds world objects from the tag with origin = bbox top-left; `translate` shifts centres. `svg-handler.ts` (DSL as persistence) is the closest template. |
+| `model/builder.ts` | `makeBuilder({schema, handler})` → `{read(canvas), apply(canvas, commands)}` under `Obj.update` | The phase 3 ECHO store: `SceneBuilder = makeBuilder({schema: 'dxos.org/scene/1', handler: SceneHandler})`. The only file in `model/` that imports `@dxos/echo`. |
+| `model/dialect.ts` | `Dialect {id, input, compile → Command[]}` + registry; mermaid, UML class, UML grid and MOSAIC UI dialects own their layout | **Variant 2 (constrained)** is a dialect whose input is the constraint DSL; a `move` intent rewrites the source and recompiles. **Variant 3 (dynamic)** is a dialect whose input is an ECHO graph query. Every existing dialect renders on the new canvas the moment `SceneHandler` exists, and so do the agent operations `DrawingOperation.Edit/Generate`. |
+| `model/layout.ts`, `uml-grid.ts`, `ortho-router.ts`, `uml-rules.ts`, `uml-search.ts`, `uml-engine.ts` (dagre/ELK), `objective.ts`, `diagnostics.ts` | Ranking, uniform-cell grids with ports/channels, A* orthogonal routing, rule-based grouping, scored search, engine adapters, constraint/cost objective | The layout engines for variants 2 and 3, and the `ortho` link route of §7. Illustrator's ports (`uml-grid` spreads terminals along a side) are the same idea as `Port {side, offset}`. |
+| `types/IllustratorCapabilities.ts` | `VariantProvider {id, builder, card, article, createCanvas}`; surface props carry `selection` / `onSelectionChange` / `onActivate` in scene object ids | `plugin-canvas` contributes one `DrawingVariant`; the host owns selection and activation, which matches the per-view atoms in §4. |
+
+Hybrid overrides in variant 3 need no new mechanism: `upsert-object` without `origin` keeps the previous placement
+("omit on upsert to keep the current position"), so re-compiling a dynamic scene preserves user-moved objects and
+`remove-object` drops the ones whose graph nodes vanished.
+
+**Gaps in the DSL** (all additive, each a one-field change):
+
+1. Arrow endpoints have no port: allow `"object/element#port"` in `from`/`to` (or `fromPort`/`toPort`), automatic when absent.
+2. No portal element: add `{kind: 'portal', id, x, y, w, h, ref}` (ref = a `Drawing` DXN), or a `WorldObject.kind: 'scene'` with `ref`.
+3. Z-order is insertion order (`order` in the SVG handler): add an optional fractional `index` on `WorldObject`.
+4. `ref` is a plain string; fine for a DXN, but the scene handler resolves it to `Ref` on the object cell.
+
+**Factoring options:**
+
+| | Option | Consequence |
+|---|---|---|
+| A | **Extract the headless model into `packages/common/diagram` (`@dxos/diagram`)**: `scene`, `content`, `dialect`, `layout`, `uml*`, `mermaid*`, `ui`, `ortho-router`, `objective`, `diagnostics`, `svg-handler` and their tests (deps: `effect`, `@dxos/invariant`, `@dxos/util` only). `builder.ts`, `Drawing.ts`, capabilities and operations stay in the plugin. Update the 14 external `plugin-illustrator/model` import sites (tldraw, excalidraw, markdown, stack, debug, onboarding, assistant-evals, stories-assistant); no compat re-exports. | `react-ui-canvas` can depend on it, so the constrained and dynamic stories use the real dialects and engines. Mechanical move, ~6.5k lines incl. tests, one PR before phase 1. `react-ui-diagram`'s duplicate mermaid projector folds in later. |
+| B | Keep everything in the plugin; the engine declares a structurally identical `ContentHandler` type and `plugin-canvas` does the wiring. | Zero extraction, but the phase 1 stories would need copies of `rank`/routing and the dialects cannot be exercised in storybook. |
+| C | Extract only `scene` + `content` + `dialect` + `layout.rank` now (~600 lines), engines later. | Cheapest first step; a second move for the engines. |
+
+Recommendation: **A**, as "PR 0" of this project. It costs one mechanical PR and removes the copy of `rank`
+planned in §9; the `projections/*` modules become thin dialect wrappers. Decision 13 below records it.
 
 ## 4. Data model
 
@@ -181,7 +219,8 @@ Pointer Events state machine with tools: `select` (default), `hand`, `rect`, `te
 packages/ui/react-ui-canvas/src/scene/
   types.ts          Schema: Scene, Cell, Endpoint, Port, Camera, Intent
   registry.ts       CellDef registry (component, ports, resizable, openable) + default defs
-  projection.ts     Projection seam + intent types
+  projection.ts     Projection seam + intent types; intents → @dxos/diagram Scene.Commands
+  handler.ts        SceneHandler: ContentHandler over the cell map (render/read/identify/translate)
   projections/
     freehand.ts     identity projection over an in-memory (later ECHO) store
     constrained.ts  cardinal-constraint DSL + solver; intents rewrite constraints
@@ -200,11 +239,13 @@ packages/ui/react-ui-canvas/src/scene/
 ```
 
 Exported from the package under `./scene` (not the root barrel) until it replaces `Canvas`. The spike folder
-`src/experimental/` is deleted in the phase 1 PR. Illustrator's `rank` (30 lines) is copied rather than imported
-because a UI package cannot depend on a plugin; the two converge when the layout code moves to a shared package.
+`src/experimental/` is deleted in the phase 1 PR. `projections/*` wrap `@dxos/diagram` dialects and `applyCommands`
+over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from illustrator is copied.
 
 ## 10. Phases
 
+0. **PR 0**: extract `plugin-illustrator/src/model` (minus `builder.ts`) to `packages/common/diagram`
+   (`@dxos/diagram`), update import sites, add the DSL gaps (arrow ports, portal element, `index`).
 1. **Phase 1 (first PR)**: types, registry, projection seam, freehand + constrained + dynamic projections
    (minimal), store, camera, hit testing, ports with automatic pairing, curve routing, fractional index;
    `SceneView` with grid, wheel/pinch/pan, select/marquee, control frame with move + resize, port-drag linking,
@@ -214,11 +255,11 @@ because a UI package cannot depend on a plugin; the two converge when the layout
    unit tests for every pure module.
 2. **Phase 2**: text and object cells with `Surface` + type projectors, ortho routing, snap lines, keyboard nudge,
    undo log, portal thumbnails, external drag-in, mixed-variant scenes.
-3. **Phase 3**: ECHO-backed store (`Scene` as an ECHO type, cells in a mutable record, `Ref` for objects and child
-   scenes), dynamic projection over a real ECHO query, deep links, `plugin-canvas` with article surface and
-   create action.
+3. **Phase 3**: ECHO-backed store via `makeBuilder({schema: 'dxos.org/scene/1', handler: SceneHandler})` over
+   `Drawing.Canvas.content`; portals reference `Drawing`s; dynamic projection over a real ECHO query; deep links;
+   `plugin-canvas` contributes a `VariantProvider` (article + card) instead of its own object type.
 4. **Phase 4**: retrofit `react-ui-canvas-editor` (compute shapes as cell defs), retire the old `Canvas` exports,
-   delete `react-ui-canvas-editor/src/types/schema.ts`; illustrator dialects become constrained projections.
+   delete `react-ui-canvas-editor/src/types/schema.ts`; the tldraw/excalidraw variants keep working unchanged.
 
 ## 11. Testing
 
@@ -235,5 +276,6 @@ because a UI package cannot depend on a plugin; the two converge when the layout
 1. Portal aspect: letterbox (prototype) or stretch?
 2. Default extent of an empty scene: fixed 1600×1000 or viewport-derived?
 3. Palette in the engine or the plugin toolbar (engine ships a minimal one for the stories)?
-4. Constrained DSL surface: reuse illustrator `Scene.Command` verbatim, or a smaller constraint grammar the
-   surface can rewrite unambiguously? The prototype uses the small grammar and maps it to commands later.
+4. Constrained DSL surface: the constraint grammar is a dialect input; its `compile` emits `Scene.Command`s. Open:
+   whether `move` rewrites the grammar (source of truth) or the commands (derived).
+5. Should a portal reference a `Drawing` (listable, named) or a hidden `Canvas`? Prototype: `Drawing`.
