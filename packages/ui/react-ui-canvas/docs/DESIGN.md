@@ -351,35 +351,52 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 ## 9. Package layout
 
 ```
-packages/ui/react-ui-canvas/src/scene/         (phase 1, as built; phase 2+ files marked †)
-  types.ts          Schema: Scene {nodes, links}, Node (rect/ellipse/class/text/scene), Link (line/curve/spline), Endpoint, Port, Camera, Intent, Tool
-  shapes.ts         pure per-type geometry: nodeBounds, resizeNode, DEFAULT_SIZES, createNode, createLink
-  registry.ts       NodeDef / LinkDef registries (name, icon, key, component, ports, resizable, minSize, openable) + defaults
-  projection.ts     Projection seam, reduceIntent (freehand reducer), createFreehandProjection
-  projections/
-    constrained.ts  cardinal constraints → longest-path ranks per axis (Layout.rank); a move rewrites them
-    dynamic.ts      GraphModel → ranked rows + Overlay position overrides; link adds an edge
-  store.ts          SceneStore seam, createMemoryStore, updateScene / putScene
-  camera.ts         zoomAt, panBy, fitBounds, portal mapping, enterPortal/exitPortal, coverage, animateCamera
-  hit.ts            derived sceneBounds, hitTest, cellsIntersecting, bounds helpers
-  ports.ts          default ports, portPoint, sideNormal, pairPorts (automatic pairing)
-  route.ts          linePath, curvePath, splinePath (Catmull-Rom), linkPath by type, insertIndex; ortho later †
-  order.ts          fractional z keys: between, sortByZ, topZ, initialKeys
-  atoms.ts          per-view atoms: camera, path, selection, hover, tool, snap, drag, history
-  hooks.ts          useRegistry, useSceneProjection, useViewport, useWheel
-  SceneView.tsx     root view: grid, camera, pointer state machine, keys, drill-in/out, snap
-  SceneLayer.tsx    one scene under one transform: cell views, link svg, portal tiers, nested live layer
-  ControlFrame.tsx  selection outline, resize handles, ports, spline control points, marquee, rubber band
-  Properties.tsx    schema-driven form over the selected node or link (update intent)
-  MIGRATION.md (docs)  feature map of canvas-editor / canvas-compute against the engine, gaps, migration plan
-  Palette.tsx, Breadcrumbs.tsx
-  builder.ts        SceneBuilder: chainable scene DSL (rect / ellipse / class / text / portal, line / curve / spline, `a#e` port refs)
-  testing.ts        createSceneTree fixture: root diagram plus flow / model / cycle / note child scenes, written with the builder
-  *.test.ts         unit tests for every pure module and projection
-  SceneView.stories.tsx (Freehand, Nested), Constrained.stories.tsx, Dynamic.stories.tsx
-  handler.ts †      SceneHandler: ContentHandler over the cell map (phase 3, ECHO store)
-  aspects.ts †      Aspect projections + reading order (§6b)
-  columns/ †        ColumnStrip, Column, CellRow, AspectTabs (§6b)
+packages/plugins/plugin-canvas/src/            (phase 3: the illustrator drawing variant `dxos.org/scene/1`)
+  model/content.ts  Drawing.Canvas.content encoding: one record per scene, node and link; readScenes / writeScenes
+  model/handler.ts  SceneHandler: illustrator DSL objects ↔ root-scene nodes and links (identity on the records)
+  model/store.ts    bindCanvasStore: SceneStore ↔ canvas records inside Obj.update; createCanvas
+  containers/       CanvasArticle: SceneView over the bound store
+  capabilities/     DrawingVariant (IllustratorCapabilities.VariantProvider), Translations
+
+packages/ui/react-ui-canvas/src/
+  index.ts                 the pre-engine canvas (`./archive`), kept for canvas-editor / canvas-compute / sequencer until phase 4
+  archive/                 old Canvas, CellGrid, FPS, hooks and svg utils, untouched; `Grid` wraps the engine's GridComponent
+  scene/                   the engine, exported as `@dxos/react-ui-canvas/scene` (phase 2+ files marked †)
+    index.ts               barrel over components, hooks, model and utils
+    model/                 what a scene is and how it changes
+      types.ts             Schema: Scene {nodes, links}, Node (rect/ellipse/class/text/scene), NodeStyle, Link (line/curve/spline), Endpoint, Port, Camera, Intent, Tool
+      registry.ts          NodeDef / LinkDef registries (name, icon, key, component, portsPerSide, ports, resizable, minSize, openable) + defaults
+      projection.ts        Projection seam, reduceIntent (freehand reducer), createFreehandProjection
+      projections/
+        constrained.ts     cardinal constraints → longest-path ranks per axis (Layout.rank); a move rewrites them
+        dynamic.ts         GraphModel → ranked rows + Overlay position overrides; link adds an edge
+      store.ts             SceneStore seam, createMemoryStore, updateScene / putScene
+      atoms.ts             per-view atoms: camera, path, selection, hover, point, tool, snap, drag, history, undo, clipboard, editing
+    utils/                 pure functions over the model
+      shapes.ts            per-type geometry: nodeBounds, resizeNode, DEFAULT_SIZES, createNode, createLink
+      camera.ts            zoomAt, panBy, fitBounds, portalFrame, enterPortal / exitPortal, coverage, animateCamera
+      hit.ts               derived sceneBounds, hitTest, nodesIntersecting, bounds helpers
+      ports.ts             sidePorts, nodePorts, portPoint (grid-snapped), sideNormal, pairPorts (automatic pairing)
+      route.ts             linePath, curvePath, splinePath (Catmull-Rom), linkPath by type, insertIndex; ortho later †
+      order.ts             fractional z keys: between, sortByZ, topZ, initialKeys
+      parts.ts             text parts of a node: partText, partValues, isMultiline
+      style.ts             NodeStyle → frame classes (hue fill / text / border, rounded)
+      clipboard.ts         copySelection, pasteFragment (fresh ids, rewired links, one batch intent)
+      undo.ts              per-view snapshot log over the projection: withUndo, undo, redo
+      builder.ts           SceneBuilder: chainable scene DSL (rect / ellipse / class / text / portal, line / curve / spline, `a#e2` port refs)
+      testing.ts           createSceneTree fixture: root diagram plus flow / model / cycle / note child scenes (not exported)
+    hooks/                 useRegistry, useSceneProjection, useViewport, useWheel
+    components/            one folder per component, with its stories
+      SceneView/           root view: grid, camera, pointer state machine, keys, drill-in/out, snap, toolbar, menus; SceneView / Constrained / Dynamic stories
+      SceneLayer/          one scene under one transform: node views, link svg, portal tiers, nested live layer
+      ControlFrame/        selection outline, resize handles, ports, link end and spline handles, marquee, rubber band
+      PartEditor/          TextPart: static text or the in-place react-ui-editor over a node's text part
+      Properties/          schema-driven form over the selected node or link (update intent)
+      Palette/, Breadcrumbs/, Grid/
+    *.test.ts              beside every pure module and projection
+  MIGRATION.md (docs)      feature map of canvas-editor / canvas-compute against the engine, decisions, migration plan
+  aspects.ts †             Aspect projections + reading order (§6b)
+  columns/ †               ColumnStrip, Column, CellRow, AspectTabs (§6b)
 ```
 
 Exported from the package under `./scene` (not the root barrel) until it replaces `Canvas`. The spike folder

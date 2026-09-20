@@ -67,8 +67,19 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Portal frame on the grid: a whole multiple of the portal box, grid-placed near the child's centre; the drilled-in frame is drawn dashed orange.
 - [x] Grid always shown (minor / major / coarse, by on-screen size); the toggle is Snap only. The canvas ignores the pointer while the camera moves (wheel, animation).
 - [x] Class properties: attributes / methods edit as one entry per line (`fieldMap` renderer); a portal being drilled into renders plain (no tint / title).
+- [x] Package layout: the pre-engine canvas moved to `src/archive` (root export unchanged); `src/scene` split into `model/`, `utils/`, `hooks/` and `components/<Name>/` (one folder per component, stories beside it); `GridComponent` now lives in the engine and the archive's `Grid` wraps it.
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
+
+## Phase 3: `@dxos/plugin-canvas` (started 2026-09-20)
+
+Package `packages/plugins/plugin-canvas` (private), registered in Composer's plugin list (labs, off by default).
+
+- [x] Illustrator drawing variant `dxos.org/scene/1`: `Drawing.Canvas.content` holds one record per scene, node and link (`model/content.ts`); `bindCanvasStore` syncs it with the engine's `SceneStore` both ways inside `Obj.update`; `CanvasArticle` renders `SceneView`.
+- [x] DSL bridge (`model/handler.ts`): illustrator objects compile to root-scene nodes and links with their identity stamped on the records (boxes, circles, text, portals as titled boxes, arrows between refs); polylines, curves, arcs and free arrows are dropped; `read` derives the objects back, hand-drawn nodes count as unmanaged.
+- [ ] Nested drawings: a DSL `portal` should become a `scene` node whose child scene is the referenced drawing (cross-object store).
+- [ ] Article chrome: attention / read-only in sections and slides, selection and `onActivate` wiring (`DrawingVariantSurfaceProps`).
+- [ ] End-to-end test through the illustrator operations (as `plugin-tldraw/src/variant.test.ts`).
 
 ### References
 

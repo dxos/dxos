@@ -379,6 +379,9 @@
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-canvas/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
