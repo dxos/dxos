@@ -10,7 +10,7 @@
 import { interpolateZoom } from 'd3';
 
 import { nodeBounds } from './shapes.ts';
-import { type Bounds, type Camera, type Node, type Point, type Size } from './types.ts';
+import { type Bounds, type Camera, MAJOR_GRID, type Node, type Point, type Size } from './types.ts';
 
 export const MIN_ZOOM = 1 / 32;
 export const MAX_ZOOM = 32;
@@ -71,19 +71,27 @@ export const portalScale = (portal: Node, region: Bounds) => {
 };
 
 /**
- * The frame a portal gives its child: the child-space region that maps exactly onto the portal, so it
- * has the portal's aspect, contains the child's derived bounds and shares their centre. Drilling in
- * shows this frame; a portal draws the child centred in it.
+ * The frame a portal gives its child: the child-space region that maps exactly onto the portal. It is
+ * the portal's box scaled by the smallest whole factor that contains the child's derived bounds, placed
+ * on the major grid as near their centre as containing them allows. A whole factor keeps the frame's
+ * edges, and the child's grid seen through the portal, on the parent's grid. Drilling in shows this
+ * frame; a portal draws the child centred in it.
  */
-export const portalFrame = (portal: Node, child: Bounds): Bounds => {
-  const scale = portalScale(portal, child);
+export const portalFrame = (portal: Node, child: Bounds, unit = MAJOR_GRID): Bounds => {
   const { width, height } = nodeBounds(portal);
-  const frame = { width: width / scale, height: height / scale };
+  const factor = Math.max(1, Math.ceil(child.width / width), Math.ceil(child.height / height));
+  const frame = { width: width * factor, height: height * factor };
   return {
-    x: child.x + child.width / 2 - frame.width / 2,
-    y: child.y + child.height / 2 - frame.height / 2,
+    x: place(child.x, child.width, frame.width, unit),
+    y: place(child.y, child.height, frame.height, unit),
     ...frame,
   };
+};
+
+/** The grid-aligned start of a span of `length` centred on `[start, start + inner]` as far as containing it allows. */
+const place = (start: number, inner: number, length: number, unit: number): number => {
+  const centred = Math.round((start + inner / 2 - length / 2) / unit) * unit;
+  return Math.max(Math.min(centred, start), start + inner - length);
 };
 
 /** Child-scene CSS transform inside a portal node whose own origin is the node's top-left. */

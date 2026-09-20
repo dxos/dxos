@@ -1,6 +1,6 @@
 # plugin-canvas — Design
 
-Status: spec for review (2026-09-20, rev 6: typed nodes and links (§4, decision 9), palette and spline editing (§8), `MIGRATION.md`; rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
+Status: spec for review (2026-09-20, rev 7: text parts with in-place editing and node style (§4), grid-aligned portal frame and navigation shield (§5), always-on grid (§7); rev 6: typed nodes and links (§4, decision 9), palette and spline editing (§8), `MIGRATION.md`; rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
 navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and a throwaway spike (deleted once the engine's `Nested` story covered it; its findings are folded
 into §5). Engine: `packages/ui/react-ui-canvas/src/scene/`, stories `ui/react-ui-canvas/scene/SceneView`.
@@ -130,7 +130,8 @@ Camera = { x, y, zoom }      // screen = (scene + {x, y}) * zoom
 
 Scene = { id, name?, nodes: Record<NodeId, Node>, links: Record<LinkId, Link> }   // positioned; the surface's input
 
-NodeBase = { id, type, z: string /* fractional index */, locked?, center: Point, ports?: Port[] }
+NodeBase = { id, type, z: string /* fractional index */, locked?, center: Point, ports?: Port[], style?: NodeStyle }
+NodeStyle = { hue?: Hue /* theme hue: fill, text and border */, rounded?, fill?, border? }   // frame look; absent = default
 Rect     = NodeBase & { type: 'rect', size: Size, label? }
 Ellipse  = NodeBase & { type: 'ellipse', rx, ry, label? }
 Class    = NodeBase & { type: 'class', size: Size, name, attributes: string[], methods: string[] }   // UML
@@ -157,6 +158,16 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
 - **Derived properties**: an `Object` node's displayed props (label, icon, colour, summary, ports) come from a
   `projector(obj) → NodeProps` chosen by the object's type, merged under `node.overrides`. Rendering goes through
   `Surface` so plugins own the card body; the projector only supplies what the frame and ports need.
+- **Text parts** (`parts.ts`): a node type renders its text through `TextPart`s named by the property they edit
+  (`label`, `text`, `name`, `attributes`, `methods`; a UML class has three). Double-clicking a part opens an
+  in-place `react-ui-editor` over the same box: Enter commits (in a multi-line part Enter breaks the line and
+  Mod-Enter commits), Escape rejects, leaving the editor commits; a commit is one `update` intent, a list part
+  writing one entry per line. The editor keeps pointer and key events to itself, so no drag or shortcut fires
+  while typing. Which part was hit is asked of the DOM (`data-part`), the node comes from the model, so a part of
+  a nested live scene never matches the portal over it.
+- **Style** (`style.ts`): `NodeStyle` picks a theme hue (fill `bg-<hue>-surface`, text `text-<hue>-fg`, border
+  `border-<hue>-border`), and toggles rounded corners, fill and border; the frame resolves the classes, the views
+  draw no background of their own. The properties panel renders it as a group with the hue picker.
 - **Ports** come from the node's own `ports` when it carries them (how compute nodes with schema-derived
   inputs/outputs will express them, see `MIGRATION.md`), else the type's `NodeDef.ports(node)`, else
   `portsPerSide` (default 3) ports spread along each side, named `<side><index>` (`e2` is the east centre) and
@@ -206,10 +217,13 @@ Data flow for one gesture: pointer-down hit-tests the positioned scene in scene 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to
   `[1/32, 32]`.
 - **Portal frame**: the child-space region that maps exactly onto the portal, `portalFrame(portal, bounds)`: the
-  portal's aspect, containing the child's derived bounds and sharing their centre, so the child sits centred in the
-  portal and, once drilled in, the dashed frame is the one the parent's portal gave it (the root shows its derived
-  bounds). `s = min(cell.width / frame.width, cell.height / frame.height)`; child point `q` maps to
-  parent point `cellOrigin + (q - bounds.origin) * s` (letterboxed; open question 1).
+  portal's box scaled by the smallest whole factor that contains the child's derived bounds, placed on the major
+  grid as near their centre as containing them allows. A whole factor keeps the frame's edges, and the child's
+  grid seen through the portal, on the parent's grid, so the frame drawn once drilled in (dashed, orange) is the
+  portal's own outline and sits on grid lines; the root shows its derived bounds. `s = 1 / factor`; child point
+  `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
+- **While the camera moves on its own** (wheel zoom or pan, an animation) the canvas ignores the pointer: a shield
+  takes presses and hover is cleared, since nothing under the pointer is where it will be.
 - **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), then swap the root scene
   and re-express the camera in child space (`enterPortal`); **drill-out** is the inverse (`exitPortal`) followed
   by a fit of the parent. Both verified seamless in the spike.
@@ -221,15 +235,15 @@ Data flow for one gesture: pointer-down hit-tests the positioned scene in scene 
 
 ## 6. Navigation
 
-| Gesture                                                                | Effect                                                                       |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Double-click a portal, or Enter with a portal selected                 | Animated drill-in                                                            |
-| Pinch/ctrl+wheel until a portal fills the view                         | Auto drill-in (no animation, camera preserved)                               |
-| Escape, breadcrumb click, "Up", or zooming the root below 30% coverage | Drill-out (breadcrumb jumps several levels)                                  |
-| Alt+← / Alt+→                                                          | Back / forward through a history of `{path, camera}` entries                 |
-| Shift+1 / Shift+2 / Shift+0                                            | Fit scene / fit selection / reset zoom                                       |
-| Double-click a non-portal cell                                         | Opens it (`CellDef.openable`, e.g. text editing, or the ECHO object)         |
-| URL / deep link (phase 3)                                              | `{path, camera}` serialised so a location inside a nested scene is shareable |
+| Gesture                                                                | Effect                                                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Double-click a portal, or Enter with a portal selected                 | Animated drill-in                                                              |
+| Pinch/ctrl+wheel until a portal fills the view                         | Auto drill-in (no animation, camera preserved)                                 |
+| Escape, breadcrumb click, "Up", or zooming the root below 30% coverage | Drill-out (breadcrumb jumps several levels)                                    |
+| Alt+← / Alt+→                                                          | Back / forward through a history of `{path, camera}` entries                   |
+| Shift+1 / Shift+2 / Shift+0                                            | Fit scene / fit selection / reset zoom                                         |
+| Double-click a text part of a node                                     | Edits it in place (§4 text parts); other openable nodes open (the ECHO object) |
+| URL / deep link (phase 3)                                              | `{path, camera}` serialised so a location inside a nested scene is shareable   |
 
 ## 6b. Mobile navigation mode
 
@@ -297,8 +311,9 @@ subscribers are mounted in this mode.
 Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to top:
 
 1. **Grid**: the existing multi-resolution SVG `GridComponent` fed `{scale: zoom, offset: camera × zoom}`,
-   toggled with `g`. It draws a minor grid (`DEFAULT_GRID`, 16 px at zoom 1) and a major grid every
-   `MAJOR_GRID_RATIO` (4) minor lines, dropping lines finer than 16 screen px as the view zooms out. **Snapping
+   always shown. It draws a minor grid (`DEFAULT_GRID`, 16 px at zoom 1), a major grid every
+   `MAJOR_GRID_RATIO` (4) minor lines and a coarse level 4 major cells wide, dropping a level once its cells
+   fall under 6 screen px as the view zooms out. `g` and the Snap button toggle snapping only. **Snapping
    is to the major grid** (`MAJOR_GRID`, 64 scene px): moves and resizes snap edges to it, arrow nudges step by
    it, the derived scene bounds grow outward to it, and the fixture and the solver / layout defaults (pitch,
    size, origin) are multiples of it, so an untouched layout is already snapped and the frame sits on lines.

@@ -36,6 +36,7 @@ import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from './hooks.ts';
 import { between, topZ } from './order.ts';
 import { Palette, toolForKey } from './Palette.tsx';
+import { type PartKey, partKey, partText, partValues } from './parts.ts';
 import { nodePorts, portPoint } from './ports.ts';
 import { type FreehandProjectionOptions, type Projection, reduceIntent } from './projection.ts';
 import { type LinkRegistry, type NodeRegistry, defaultLinkRegistry, defaultNodeRegistry } from './registry.ts';
@@ -153,6 +154,7 @@ export const SceneView = ({
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
   const clipboard = useAtomValue(atoms.clipboard);
+  const editing = useAtomValue(atoms.editing);
   const sceneId = path[path.length - 1];
   const canUndo = undoState.key === sceneId && undoState.past.length > 0;
   const canRedo = undoState.key === sceneId && undoState.future.length > 0;
@@ -313,6 +315,7 @@ export const SceneView = ({
       // The zoom is into the child, so the portal's selection outline and ports go before it starts.
       select([]);
       registry.set(atoms.hover, undefined);
+      registry.set(atoms.editing, undefined);
       const childBounds = portalFrame(portal, sceneBounds(child));
       const swap = (camera: Camera) => {
         const next = enterPortal(camera, portal, childBounds);
@@ -329,7 +332,19 @@ export const SceneView = ({
         swap(registry.get(atoms.camera));
       }
     },
-    [scenes, registry, atoms.path, atoms.camera, atoms.hover, viewport, animateTo, setCamera, select, pushHistory],
+    [
+      scenes,
+      registry,
+      atoms.path,
+      atoms.camera,
+      atoms.hover,
+      atoms.editing,
+      viewport,
+      animateTo,
+      setCamera,
+      select,
+      pushHistory,
+    ],
   );
 
   const drillOut = useCallback(
@@ -1075,21 +1090,47 @@ export const SceneView = ({
     return scene;
   }, [scene, drag]);
 
+  const onPartCommit = useCallback(
+    (node: Node, part: PartKey, text: string) => {
+      registry.set(atoms.editing, undefined);
+      const values = partValues(node, part, text);
+      if (values && capabilities.update && text !== partText(node, part)) {
+        projection.apply({ kind: 'update', id: node.id, values });
+      }
+    },
+    [registry, atoms.editing, capabilities.update, projection],
+  );
+  const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
+
   const handlers = useMemo<ElementHandlers>(
-    () => ({ onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu }),
-    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu],
+    () => ({ onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel }),
+    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick, onLinkContextMenu, onPartCommit, onPartCancel],
   );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
-  // double-click never reaches the node element itself.
+  // double-click never reaches the node element itself. A text part under the pointer opens its editor;
+  // the DOM is asked only which part, and the node comes from the model, so a part of a nested (live)
+  // scene never matches the root node over it.
   const onDoubleClick = useCallback(
     (event: React.MouseEvent) => {
       const node = hitTest(scene, toScene(event));
-      if (node && nodeRegistry[node.type].openable) {
+      if (!node) {
+        return;
+      }
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const partElement = target instanceof Element ? target.closest('[data-part]') : null;
+      const part =
+        partElement?.closest('[data-node-id]')?.getAttribute('data-node-id') === node.id
+          ? partKey(partElement?.getAttribute('data-part'))
+          : undefined;
+      if (part && capabilities.update && partText(node, part) !== undefined) {
+        select([node.id]);
+        registry.set(atoms.editing, { id: node.id, part });
+      } else if (nodeRegistry[node.type].openable) {
         drillIn(node);
       }
     },
-    [scene, toScene, nodeRegistry, drillIn],
+    [scene, toScene, nodeRegistry, drillIn, capabilities.update, select, registry, atoms.editing],
   );
 
   const pointer = useMemo(
@@ -1132,7 +1173,8 @@ export const SceneView = ({
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
         <div
-          className='absolute border border-dashed border-separator pointer-events-none'
+          className='absolute border border-dashed border-orange-border pointer-events-none'
+          data-testid='scene-frame'
           style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
         />
         <div className='pointer-events-auto'>
@@ -1145,6 +1187,7 @@ export const SceneView = ({
             liveDepth={liveDepth}
             selected={selection}
             opening={opening}
+            editing={editing}
             handlers={handlers}
           />
         </div>

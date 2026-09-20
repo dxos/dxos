@@ -10,6 +10,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { HueAnnotationId } from '@dxos/ui-types';
+
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Point = Schema.Schema.Type<typeof Point>;
 
@@ -46,6 +48,16 @@ export type Port = Schema.Schema.Type<typeof Port>;
 // Nodes
 //
 
+/** Presentation choices a node carries; every field is optional and the frame supplies the default look. */
+export const NodeStyle = Schema.Struct({
+  /** One of the theme's hues, colouring fill, text and border together. */
+  hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
+  rounded: Schema.optional(Schema.Boolean),
+  fill: Schema.optional(Schema.Boolean),
+  border: Schema.optional(Schema.Boolean),
+});
+export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
+
 const nodeBase = {
   id: Schema.String,
   /** Fractional z-order key (see `order.ts`). */
@@ -54,6 +66,7 @@ const nodeBase = {
   center: Point,
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
+  style: Schema.optional(NodeStyle),
 };
 
 export const RectNode = Schema.Struct({

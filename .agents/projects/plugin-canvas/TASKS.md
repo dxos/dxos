@@ -60,8 +60,13 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] `SceneBuilder`: chainable scene DSL after illustrator's builders; the fixture's child scenes are distinct simple diagrams (flow, class model, cycle, note).
 - [x] `docs/MIGRATION.md`: feature map of react-ui-canvas-editor and react-ui-canvas-compute against the engine, five design decisions, migration plan M1–M5.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
-- [ ] Inline `react-ui-editor` for text nodes: double-click (`openable`) edits the text in place; Escape / blur commits an `update`.
-- [ ] Multi-part nodes: a node made of parts (e.g. a shape with text areas / compartments), each part with its own bounds, ports and editor within the node's frame.
+- [x] Text parts + in-place editing (`parts.ts`, `PartEditor.tsx`): rect/ellipse label, text body, class name / attributes / methods are `TextPart`s; double-click opens a `react-ui-editor` over the part, Enter (Mod-Enter in multi-line parts) commits an `update`, Escape rejects, blur commits.
+- [ ] Multi-part nodes beyond text: parts with their own bounds and ports (e.g. a shape with several text areas laid out by the model).
+- [x] Node style: `style { hue, rounded, fill, border }` on every node; hue picker + toggles in the properties panel; frame classes from `style.ts`.
+- [x] Ports: `portsPerSide` per type (default 3, ellipse 1), drawn at the major grid line nearest each offset, never at a corner; ids `<side><index>`.
+- [x] Portal frame on the grid: a whole multiple of the portal box, grid-placed near the child's centre; the drilled-in frame is drawn dashed orange.
+- [x] Grid always shown (minor / major / coarse, by on-screen size); the toggle is Snap only. The canvas ignores the pointer while the camera moves (wheel, animation).
+- [x] Class properties: attributes / methods edit as one entry per line (`fieldMap` renderer); a portal being drilled into renders plain (no tint / title).
 - [x] Delete `src/experimental/` once the stories cover the spike.
 - [x] Headless smoke test of the stories (Playwright): Freehand select + snapped move; Nested double-click drill-in, Escape drill-out, link-tool port drag creates a link.
 

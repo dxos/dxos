@@ -34,9 +34,14 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/debug": "workspace:*",
     "@dxos/diagram": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",

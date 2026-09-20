@@ -21,7 +21,13 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-form"
+    },
+    {
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

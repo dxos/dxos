@@ -10,6 +10,7 @@
 
 import { type ComponentType } from 'react';
 
+import { type PartEditing } from './parts.ts';
 import { ClassNodeView, EllipseNodeView, PortalNodeView, RectNodeView, TextNodeView } from './SceneLayer.tsx';
 import { type SceneStore } from './store.ts';
 import { type LinkType, type Node, type NodeType, type Port, type Scene, type Size } from './types.ts';
@@ -28,6 +29,8 @@ export type NodeViewProps = {
   selected: boolean;
   /** The view is being zoomed into: a portal shows its child plainly, as the child will look once entered. */
   opening?: boolean;
+  /** The text part of this node being edited in place, with the editor's callbacks. */
+  editing?: PartEditing;
 };
 
 export type NodeDef = {

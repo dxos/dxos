@@ -15,11 +15,14 @@ import { mx } from '@dxos/ui-theme';
 import { portalFrame, portalScale, portalTransform } from './camera.ts';
 import { sceneBounds } from './hit.ts';
 import { sortByZ } from './order.ts';
+import { TextPart } from './PartEditor.tsx';
+import { type PartEditing, type PartKey } from './parts.ts';
 import { type NodeRegistry, type NodeViewProps } from './registry.ts';
 import { type LinkGeometry, linkGeometry } from './route.ts';
 import { nodeBounds } from './shapes.ts';
 import { type SceneStore } from './store.ts';
-import { type ElementId, type Link, type Node, type Scene } from './types.ts';
+import { frameClasses } from './style.ts';
+import { type ElementId, type Link, type Node, type NodeId, type Scene } from './types.ts';
 
 /** Screen px below which a portal is a solid tile; above `PREVIEW_PX` it mounts the child scene live. */
 export const DOT_PX = 40;
@@ -50,6 +53,9 @@ export type ElementHandlers = {
   onLinkPointerDown?: (link: Link, event: React.PointerEvent) => void;
   onLinkDoubleClick?: (link: Link, event: React.MouseEvent) => void;
   onLinkContextMenu?: (link: Link, event: React.MouseEvent) => void;
+  /** The in-place editor of `part` finished with `text` (commit) or was dismissed (cancel). */
+  onPartCommit?: (node: Node, part: PartKey, text: string) => void;
+  onPartCancel?: () => void;
 };
 
 export type SceneLayerProps = {
@@ -63,12 +69,14 @@ export type SceneLayerProps = {
   selected?: ReadonlySet<ElementId>;
   /** The portal a drill-in is animating into, while it is. */
   opening?: ElementId;
+  /** The text part being edited in place, if any. */
+  editing?: { id: NodeId; part: PartKey };
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
 };
 
 export const SceneLayer = memo(
-  ({ store, scene, registry, zoom, depth, liveDepth, selected, opening, handlers }: SceneLayerProps) => {
+  ({ store, scene, registry, zoom, depth, liveDepth, selected, opening, editing, handlers }: SceneLayerProps) => {
     const nodes = useMemo(() => sortByZ(Object.values(scene.nodes)), [scene.nodes]);
     const links = useMemo(
       () =>
@@ -116,6 +124,7 @@ export const SceneLayer = memo(
             liveDepth={liveDepth}
             selected={selected?.has(node.id) ?? false}
             opening={opening === node.id}
+            editingPart={editing?.id === node.id ? editing.part : undefined}
             handlers={handlers}
           />
         ))}
@@ -126,71 +135,97 @@ export const SceneLayer = memo(
 
 SceneLayer.displayName = 'SceneLayer';
 
-type NodeFrameProps = NodeViewProps & { handlers?: ElementHandlers };
+type NodeFrameProps = Omit<NodeViewProps, 'editing'> & { editingPart?: PartKey; handlers?: ElementHandlers };
 
 /** Positions a node, owns its frame styling and pointer events; the node definition renders the body. */
-const NodeFrame = memo(({ handlers, ...props }: NodeFrameProps) => {
+const NodeFrame = memo(({ handlers, editingPart, ...props }: NodeFrameProps) => {
   const { node, registry, selected } = props;
   const bounds = nodeBounds(node);
   const interactive = handlers !== undefined;
   const Component = registry[node.type].component;
+  const editing = useMemo<PartEditing | undefined>(
+    () =>
+      editingPart && handlers
+        ? {
+            part: editingPart,
+            commit: (text) => handlers.onPartCommit?.(node, editingPart, text),
+            cancel: () => handlers.onPartCancel?.(),
+          }
+        : undefined,
+    [editingPart, handlers, node],
+  );
   return (
     <div
       className={mx(
         'absolute box-border border-2 overflow-hidden',
-        node.type === 'ellipse' ? 'rounded-[50%]' : 'rounded-sm',
-        selected ? 'border-primary-500' : 'border-separator',
+        ...frameClasses(node, selected),
         interactive && !node.locked && 'cursor-grab',
       )}
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       data-node-id={node.id}
       onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
     >
-      <Component {...props} />
+      <Component {...props} editing={editing} />
     </div>
   );
 });
 
 NodeFrame.displayName = 'NodeFrame';
 
-export const RectNodeView = ({ node }: NodeViewProps) => (
-  <div className='dx-fullscreen flex items-center justify-center bg-base-surface'>
-    <span className='text-lg'>{node.type === 'rect' ? node.label : undefined}</span>
-  </div>
-);
+const LabelNodeView = ({ node, editing }: NodeViewProps) => {
+  const label = node.type === 'rect' || node.type === 'ellipse' ? (node.label ?? '') : '';
+  return (
+    <TextPart
+      part='label'
+      text={label}
+      editing={editing}
+      classNames='dx-fullscreen flex items-center justify-center text-lg text-center'
+    >
+      {label}
+    </TextPart>
+  );
+};
 
-export const EllipseNodeView = ({ node }: NodeViewProps) => (
-  <div className='dx-fullscreen flex items-center justify-center bg-base-surface'>
-    <span className='text-lg'>{node.type === 'ellipse' ? node.label : undefined}</span>
-  </div>
-);
+export const RectNodeView = LabelNodeView;
 
-export const ClassNodeView = ({ node }: NodeViewProps) => {
+export const EllipseNodeView = LabelNodeView;
+
+export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
   if (node.type !== 'class') {
     return null;
   }
   return (
-    <div className='dx-fullscreen flex flex-col bg-base-surface text-sm font-mono divide-y divide-separator'>
-      <div className='px-2 py-1 text-center font-bold'>{node.name}</div>
-      <div className='px-2 py-1 flex-1 min-h-4'>
+    <div className='dx-fullscreen flex flex-col text-sm font-mono divide-y divide-separator'>
+      <TextPart part='name' text={node.name} editing={editing} classNames='px-2 py-1 text-center font-bold'>
+        {node.name}
+      </TextPart>
+      <TextPart
+        part='attributes'
+        text={node.attributes.join('\n')}
+        editing={editing}
+        classNames='px-2 py-1 flex-1 min-h-4'
+      >
         {node.attributes.map((attribute, index) => (
           <div key={index}>{attribute}</div>
         ))}
-      </div>
-      <div className='px-2 py-1 flex-1 min-h-4'>
+      </TextPart>
+      <TextPart part='methods' text={node.methods.join('\n')} editing={editing} classNames='px-2 py-1 flex-1 min-h-4'>
         {node.methods.map((method, index) => (
           <div key={index}>{method}</div>
         ))}
-      </div>
+      </TextPart>
     </div>
   );
 };
 
-export const TextNodeView = ({ node }: NodeViewProps) => (
-  <div className='dx-fullscreen p-3 bg-input-surface text-description'>
-    {node.type === 'text' ? node.text : undefined}
-  </div>
-);
+export const TextNodeView = ({ node, editing }: NodeViewProps) => {
+  const text = node.type === 'text' ? node.text : '';
+  return (
+    <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3 text-description'>
+      {text}
+    </TextPart>
+  );
+};
 
 export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, opening }: NodeViewProps) => {
   const child = useAtomValue(store.scene(node.type === 'scene' ? node.scene : ''));

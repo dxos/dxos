@@ -10,6 +10,7 @@
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type Clipboard } from './clipboard.ts';
+import { type PartKey } from './parts.ts';
 import {
   type Bounds,
   type Camera,
@@ -53,6 +54,9 @@ export type HistoryEntry = { path: SceneId[]; camera: Camera };
 
 export type ControlPointRef = { link: LinkId; index: number };
 
+/** The text part being edited in place (`parts.ts`). */
+export type EditingPart = { id: NodeId; part: PartKey };
+
 export type SceneViewAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<SceneId[]>;
@@ -71,6 +75,7 @@ export type SceneViewAtoms = {
   undo: Atom.Writable<UndoState>;
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
+  editing: Atom.Writable<EditingPart | undefined>;
 };
 
 /**
@@ -90,4 +95,5 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
+  editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
 });

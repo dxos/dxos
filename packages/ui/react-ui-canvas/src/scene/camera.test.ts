@@ -90,16 +90,25 @@ describe('camera', () => {
     expect(coverage(camera, { x: -100, y: -100, width: 10, height: 10 }, viewport)).toBe(0);
   });
 
-  test('portalFrame has the portal aspect, contains the child bounds and shares their centre', ({ expect }) => {
+  test('portalFrame is a whole multiple of the portal on the grid, containing the child bounds', ({ expect }) => {
     const frame = portalFrame(portal, child);
-    expect(frame.width / frame.height).toBeCloseTo(portal.size.width / portal.size.height, 6);
+    // 1600 × 1000 needs four 480 × 300 portals across; the frame is 1920 × 1200.
+    expect([frame.width, frame.height]).toEqual([1920, 1200]);
+    expect(Math.abs(frame.x % 64)).toBe(0);
+    expect(Math.abs(frame.y % 64)).toBe(0);
     expect(frame.x).toBeLessThanOrEqual(child.x);
     expect(frame.y).toBeLessThanOrEqual(child.y);
     expect(frame.x + frame.width).toBeGreaterThanOrEqual(child.x + child.width);
     expect(frame.y + frame.height).toBeGreaterThanOrEqual(child.y + child.height);
-    expect(frame.x + frame.width / 2).toBeCloseTo(child.x + child.width / 2, 6);
-    expect(frame.y + frame.height / 2).toBeCloseTo(child.y + child.height / 2, 6);
-    // The frame maps onto the portal at the same scale as the child does.
+    // As near the child's centre as containing it allows.
+    expect(Math.abs(frame.x + frame.width / 2 - (child.x + child.width / 2))).toBeLessThanOrEqual(64);
+    expect(Math.abs(frame.y + frame.height / 2 - (child.y + child.height / 2))).toBeLessThanOrEqual(64);
+    // A frame is its own frame, so drilling in and out is stable.
     expect(portalFrame(portal, frame)).toEqual(frame);
+    // A child smaller than the portal gets the portal's own size.
+    const small = portalFrame(portal, { x: 64, y: 64, width: 128, height: 128 });
+    expect([small.width, small.height]).toEqual([480, 300]);
+    expect(small.x).toBeLessThanOrEqual(64);
+    expect(small.x + small.width).toBeGreaterThanOrEqual(192);
   });
 });
