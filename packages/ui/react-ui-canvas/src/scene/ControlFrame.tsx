@@ -3,8 +3,9 @@
 //
 
 //
-// Overlay in scene coordinates (§7 layer 3): selection outlines, resize handles, ports, the marquee and
-// the link rubber band. Sizes are divided by zoom because the parent transform scales the SVG.
+// Overlay in scene coordinates (§7 layer 3): selection outlines, resize handles, ports, spline control
+// points, the marquee and the link rubber band. Sizes are divided by zoom because the parent
+// transform scales the SVG.
 //
 
 import React, { memo } from 'react';
@@ -12,12 +13,12 @@ import React, { memo } from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type Drag, type Handle } from './atoms.ts';
-import { cellBounds } from './camera.ts';
 import { boundsFromPoints } from './hit.ts';
 import { portPoint } from './ports.ts';
-import { type CellRegistry } from './registry.ts';
+import { type NodeRegistry, nodePorts } from './registry.ts';
 import { curvePath } from './route.ts';
-import { type Bounds, type CellId, type PlacedCell, type Point, type Port, type Scene, isPlaced } from './types.ts';
+import { nodeBounds } from './shapes.ts';
+import { type Bounds, type ElementId, type Node, type Point, type Port, type Scene, type SplineLink } from './types.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 
@@ -40,15 +41,16 @@ const cursorFor = (handle: Handle) =>
 
 export type ControlFrameProps = {
   scene: Scene;
-  registry: CellRegistry;
-  selection: ReadonlySet<CellId>;
-  hover?: CellId;
+  registry: NodeRegistry;
+  selection: ReadonlySet<ElementId>;
+  hover?: ElementId;
   zoom: number;
   drag?: Drag;
-  /** Show every cell's ports (the `link` tool); otherwise only the hovered and selected cells'. */
+  /** Show every node's ports (a link tool); otherwise only the hovered and selected nodes'. */
   showPorts: boolean;
-  onHandlePointerDown?: (cell: PlacedCell, handle: Handle, event: React.PointerEvent) => void;
-  onPortPointerDown?: (cell: PlacedCell, port: Port, event: React.PointerEvent) => void;
+  onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
+  onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
+  onPointPointerDown?: (link: SplineLink, index: number, event: React.PointerEvent) => void;
 };
 
 export const ControlFrame = memo(
@@ -62,35 +64,37 @@ export const ControlFrame = memo(
     showPorts,
     onHandlePointerDown,
     onPortPointerDown,
+    onPointPointerDown,
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
     const handleSize = 8 * unit;
     const portRadius = 5 * unit;
-    const selected = [...selection]
-      .map((id) => scene.cells[id])
-      .filter((cell): cell is PlacedCell => cell !== undefined && isPlaced(cell));
-    const single = selected.length === 1 ? selected[0] : undefined;
-    // With the link tool every cell offers its ports; otherwise only the selection and the hovered cell.
-    const portCells = new Set<PlacedCell>(showPorts ? Object.values(scene.cells).filter(isPlaced) : selected);
-    const hovered = hover ? scene.cells[hover] : undefined;
-    if (hovered && isPlaced(hovered)) {
-      portCells.add(hovered);
+    const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
+    const selectedSplines = [...selection]
+      .map((id) => scene.links[id])
+      .filter((link): link is SplineLink => link?.type === 'spline');
+    const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
+    // With a link tool every node offers its ports; otherwise only the selection and the hovered node.
+    const portNodes = new Set<Node>(showPorts ? Object.values(scene.nodes) : selectedNodes);
+    const hovered = hover ? scene.nodes[hover] : undefined;
+    if (hovered) {
+      portNodes.add(hovered);
     }
     // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.
-    const dropTarget = drag?.kind === 'link' && drag.target ? scene.cells[drag.target.cell] : undefined;
-    if (dropTarget && isPlaced(dropTarget)) {
-      portCells.add(dropTarget);
+    const dropTarget = drag?.kind === 'link' && drag.target ? scene.nodes[drag.target.node] : undefined;
+    if (dropTarget) {
+      portNodes.add(dropTarget);
     }
     const marquee = drag?.kind === 'marquee' ? boundsFromPoints(drag.from, drag.to) : undefined;
     const create = drag?.kind === 'create' ? boundsFromPoints(drag.from, drag.to) : undefined;
 
     return (
       <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
-        {selected.map((cell) => {
-          const bounds = cellBounds(cell);
+        {selectedNodes.map((node) => {
+          const bounds = nodeBounds(node);
           return (
             <rect
-              key={cell.id}
+              key={node.id}
               x={bounds.x}
               y={bounds.y}
               width={bounds.width}
@@ -100,10 +104,10 @@ export const ControlFrame = memo(
             />
           );
         })}
-        {single && registry[single.kind].resizable && !single.locked && (
+        {single && registry[single.type].resizable && !single.locked && (
           <g>
             {HANDLES.map((handle) => {
-              const point = handlePoint(cellBounds(single), handle);
+              const point = handlePoint(nodeBounds(single), handle);
               return (
                 <rect
                   key={handle}
@@ -120,17 +124,17 @@ export const ControlFrame = memo(
             })}
           </g>
         )}
-        {[...portCells].map((cell) => {
-          const bounds = cellBounds(cell);
-          return registry[cell.kind].ports(cell).map((port) => {
+        {[...portNodes].map((node) => {
+          const bounds = nodeBounds(node);
+          return nodePorts(registry, node).map((port) => {
             const point = portPoint(bounds, port);
             const active =
               drag?.kind === 'link' &&
-              ((drag.source.cell === cell.id && drag.source.port === port.id) ||
-                (drag.target?.cell === cell.id && drag.target.port === port.id));
+              ((drag.source.node === node.id && drag.source.port === port.id) ||
+                (drag.target?.node === node.id && drag.target.port === port.id));
             return (
               <circle
-                key={`${cell.id}/${port.id}`}
+                key={`${node.id}/${port.id}`}
                 cx={point.x}
                 cy={point.y}
                 r={portRadius}
@@ -139,10 +143,26 @@ export const ControlFrame = memo(
                   active ? 'fill-primary-500' : 'fill-base-surface',
                 )}
                 strokeWidth={unit}
-                onPointerDown={(event) => onPortPointerDown?.(cell, port, event)}
+                onPointerDown={(event) => onPortPointerDown?.(node, port, event)}
               />
             );
           });
+        })}
+        {selectedSplines.map((link) => {
+          const points = drag?.kind === 'point' && drag.id === link.id ? drag.points : link.points;
+          return points.map((point, index) => (
+            <rect
+              key={`${link.id}/${index}`}
+              x={point.x - handleSize / 2}
+              y={point.y - handleSize / 2}
+              width={handleSize}
+              height={handleSize}
+              transform={`rotate(45 ${point.x} ${point.y})`}
+              className='fill-base-surface stroke-primary-500 pointer-events-auto cursor-move'
+              strokeWidth={unit}
+              onPointerDown={(event) => onPointPointerDown?.(link, index, event)}
+            />
+          ));
         })}
         {drag?.kind === 'link' && (
           <path

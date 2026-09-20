@@ -21,11 +21,11 @@ const model: ConstrainedModel = {
 };
 
 const centerOf = (scene: Scene, id: string) => {
-  const cell = scene.cells[id];
-  if (!cell || cell.kind === 'link') {
-    throw new Error(`no placed cell ${id}`);
+  const node = scene.nodes[id];
+  if (!node) {
+    throw new Error(`no node ${id}`);
   }
-  return cell.center;
+  return node.center;
 };
 
 describe('constrained projection', () => {
@@ -42,7 +42,7 @@ describe('constrained projection', () => {
     expect(d.x).toBeGreaterThan(c.x);
   });
 
-  test('cells sharing a row without an ordering never overlap', ({ expect }) => {
+  test('nodes sharing a row without an ordering never overlap', ({ expect }) => {
     const scene = solve({
       nodes: [{ id: 'X' }, { id: 'Y' }, { id: 'Z' }],
       constraints: [
@@ -54,7 +54,7 @@ describe('constrained projection', () => {
     expect(new Set(xs).size).toBe(3);
   });
 
-  test('a mostly horizontal drop rewrites to east/west + aligned with the nearest cell', ({ expect }) => {
+  test('a mostly horizontal drop rewrites to east/west + aligned with the nearest node', ({ expect }) => {
     const scene = solve(model);
     const a = centerOf(scene, 'A');
     const c = centerOf(scene, 'C');

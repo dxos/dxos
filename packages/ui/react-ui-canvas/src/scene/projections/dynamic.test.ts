@@ -19,11 +19,11 @@ const graph: GraphModel = {
 };
 
 const centerOf = (scene: Scene, id: string) => {
-  const cell = scene.cells[id];
-  if (!cell || cell.kind === 'link') {
-    throw new Error(`no placed cell ${id}`);
+  const node = scene.nodes[id];
+  if (!node) {
+    throw new Error(`no node ${id}`);
   }
-  return cell.center;
+  return node.center;
 };
 
 describe('dynamic projection', () => {
@@ -33,7 +33,7 @@ describe('dynamic projection', () => {
     expect(centerOf(scene, 'leaf').y).toBeGreaterThan(centerOf(scene, 'left').y);
     expect(centerOf(scene, 'left').y).toBe(centerOf(scene, 'right').y);
     expect(centerOf(scene, 'left').x).not.toBe(centerOf(scene, 'right').x);
-    expect(Object.values(scene.cells).filter((cell) => cell.kind === 'link').length).toBe(3);
+    expect(Object.keys(scene.links).length).toBe(3);
   });
 
   test('an override wins over the engine and survives an unrelated graph change', ({ expect }) => {
@@ -47,7 +47,7 @@ describe('dynamic projection', () => {
 
     registry.set(graphAtom, { ...graph, nodes: [...graph.nodes, { id: 'extra' }] });
     expect(centerOf(registry.get(projection.scene), 'right')).toEqual({ x: before.x + 500, y: before.y });
-    expect(registry.get(projection.scene).cells.extra).toBeDefined();
+    expect(registry.get(projection.scene).nodes.extra).toBeDefined();
   });
 
   test('an override is dropped when its node goes', ({ expect }) => {
@@ -63,7 +63,10 @@ describe('dynamic projection', () => {
     const graphAtom = Atom.keepAlive(Atom.make<GraphModel>(graph));
     const overlayAtom = Atom.keepAlive(Atom.make<Overlay>({ positions: {} }));
     const projection = createDynamicProjection({ registry, graph: graphAtom, overlay: overlayAtom });
-    projection.apply({ kind: 'link', id: 'e4', source: { cell: 'right' }, target: { cell: 'leaf' } });
+    projection.apply({
+      kind: 'link',
+      link: { type: 'curve', id: 'e4', z: 'z', source: { node: 'right' }, target: { node: 'leaf' } },
+    });
     expect(registry.get(graphAtom).edges.map(({ id }) => id)).toEqual(['e1', 'e2', 'e3', 'e4']);
     projection.apply({ kind: 'delete', ids: ['left'] });
     expect(registry.get(graphAtom).nodes.map(({ id }) => id)).toEqual(['root', 'right', 'leaf']);

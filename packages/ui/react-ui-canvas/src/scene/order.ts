@@ -4,13 +4,13 @@
 
 //
 // Fractional z-order keys: strings that sort lexicographically, with a key constructible between any
-// two, so a reorder touches one cell instead of renumbering the scene (which would be a conflict
-// magnet once cells live in a CRDT map).
+// two, so a reorder touches one element instead of renumbering the scene (which would be a conflict
+// magnet once elements live in a CRDT map).
 //
 
-import { type Cell } from './types.ts';
-
 const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+export type Ordered = { id: string; z: string };
 
 /**
  * A key strictly between `a` and `b` (each a base-62 fraction in (0, 1) without trailing zeros);
@@ -45,22 +45,22 @@ const midpoint = (a: string, b: string | undefined): string => {
   return DIGITS[digitA] + midpoint(a.slice(1), undefined);
 };
 
-/** Cells in paint order (bottom first). */
-export const sortByZ = <T extends Pick<Cell, 'id' | 'z'>>(cells: readonly T[]): T[] =>
-  [...cells].sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : left.id < right.id ? -1 : 1));
+/** Elements in paint order (bottom first). */
+export const sortByZ = <T extends Ordered>(elements: readonly T[]): T[] =>
+  [...elements].sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : left.id < right.id ? -1 : 1));
 
-/** A key above every cell, so a new cell paints on top. */
-export const topZ = (cells: readonly Pick<Cell, 'id' | 'z'>[]): string => {
+/** A key above every element, so a new one paints on top. */
+export const topZ = (elements: readonly Ordered[]): string => {
   let max: string | undefined;
-  for (const cell of cells) {
-    if (max === undefined || cell.z > max) {
-      max = cell.z;
+  for (const element of elements) {
+    if (max === undefined || element.z > max) {
+      max = element.z;
     }
   }
   return between(max, undefined);
 };
 
-/** Keys for `count` cells in paint order, evenly spread from the open bottom. */
+/** Keys for `count` elements in paint order, evenly spread from the open bottom. */
 export const initialKeys = (count: number): string[] => {
   const keys: string[] = [];
   let previous: string | undefined;

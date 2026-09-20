@@ -10,8 +10,8 @@ import React, { type ReactNode, useMemo, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSceneViewAtoms } from './atoms.ts';
-import { CellProperties } from './CellProperties.tsx';
 import { useSceneProjection } from './hooks.ts';
+import { Properties } from './Properties.tsx';
 import { SceneView } from './SceneView.tsx';
 import { createMemoryStore } from './store.ts';
 import { createSceneTree } from './testing.ts';
@@ -19,11 +19,15 @@ import { createSceneTree } from './testing.ts';
 /**
  * Test:
  * 1. Ctrl/cmd+wheel zooms about the cursor; wheel or hand-tool drag pans; drag on empty canvas draws a marquee.
- * 2. Click selects, shift-click toggles; drag moves the selection (snapped); handles resize a single cell.
- * 3. L (link tool) shows ports; drag from a port onto a cell or port links; onto empty canvas creates a rect and links.
- * 4. R / T / S then drag draws a rect, text or nested scene; Delete removes the selection.
+ * 2. Click selects, shift-click toggles; drag moves the selection (snapped); handles resize a single node.
+ *    Hovering a node shows its ports; drag from a port onto a node or port links (with the last link type picked).
+ * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
+ *    rectangle and links to it. A selected spline shows its control points: drag one, double-click the spline to add
+ *    one, alt-click one to remove it.
+ * 4. R / E / C / T / S then drag draws a rectangle, ellipse, UML class, text or nested scene; Delete removes the
+ *    selection (nodes or links).
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
- * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected cell.
+ * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
  */
 type StoryArgs = { depth: number };
 
@@ -44,7 +48,7 @@ const Editor = ({ store, root }: { store: ReturnType<typeof createMemoryStore>; 
   return (
     <div className='dx-fill grid grid-cols-[1fr_20rem]'>
       <SceneView store={store} root={root} atoms={atoms} />
-      <CellProperties projection={projection} atoms={atoms} classNames='border-l border-separator' />
+      <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
   );
 };

@@ -12,10 +12,10 @@ import React, { type ReactNode, useCallback, useContext, useMemo, useState } fro
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSceneViewAtoms } from './atoms.ts';
-import { CellProperties } from './CellProperties.tsx';
 import { useSceneProjection } from './hooks.ts';
 import { type FreehandProjectionOptions } from './projection.ts';
 import { DYNAMIC_SCENE_ID, type GraphModel, type Overlay, createDynamicProjection } from './projections/dynamic.ts';
+import { Properties } from './Properties.tsx';
 import { SceneView } from './SceneView.tsx';
 import { createMemoryStore } from './store.ts';
 
@@ -23,9 +23,9 @@ import { createMemoryStore } from './store.ts';
  * Test:
  * 1. The graph on the right is laid out by rank (edges point down); links route between automatic ports.
  * 2. Untick a node: it and its edges leave the graph and the layout re-runs; tick it back.
- * 3. Drag a cell: the move is stored as an override (listed on the right) and survives graph changes; untick that
+ * 3. Drag a node: the move is stored as an override (listed on the right) and survives graph changes; untick that
  *    node and the override is dropped.
- * 4. L then drag from a port to another cell adds an edge to the graph; Delete removes a node and its edges.
+ * 4. Drag from a port to another node adds an edge to the graph; Delete removes a node and its edges.
  */
 const ALL: GraphModel = {
   nodes: [
@@ -121,7 +121,7 @@ const DefaultStory = () => {
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
       <SceneView store={store} root={DYNAMIC_SCENE_ID} atoms={atoms} createProjection={createProjection} />
       <GraphPanel graph={graph} overlay={overlay} />
-      <CellProperties projection={projection} atoms={atoms} classNames='border-l border-separator' />
+      <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
   );
 };

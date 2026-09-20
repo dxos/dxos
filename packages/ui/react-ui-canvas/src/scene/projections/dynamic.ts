@@ -16,7 +16,7 @@ import { Layout } from '@dxos/diagram';
 
 import { initialKeys } from '../order.ts';
 import { type Projection } from '../projection.ts';
-import { type Capabilities, type Cell, type Intent, type Point, type Scene, type Size } from '../types.ts';
+import { type Capabilities, type Intent, type Link, type Node, type Point, type Scene, type Size } from '../types.ts';
 
 export type GraphNode = { id: string; label?: string };
 export type GraphEdge = { id: string; from: string; to: string };
@@ -66,11 +66,11 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   }
 
   const keys = initialKeys(graph.nodes.length + graph.edges.length);
-  const cells: Record<string, Cell> = {};
+  const nodes: Record<string, Node> = {};
   graph.nodes.forEach((node, index) => {
     const override = overlay.positions[node.id];
-    cells[node.id] = {
-      kind: 'rect',
+    nodes[node.id] = {
+      type: 'rect',
       id: node.id,
       z: keys[graph.edges.length + index],
       center: override ?? {
@@ -81,18 +81,19 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
       label: node.label ?? node.id,
     };
   });
+  const links: Record<string, Link> = {};
   graph.edges.forEach((edge, index) => {
     if (known.has(edge.from) && known.has(edge.to)) {
-      cells[edge.id] = {
-        kind: 'link',
+      links[edge.id] = {
+        type: 'curve',
         id: edge.id,
         z: keys[index],
-        source: { cell: edge.from },
-        target: { cell: edge.to },
+        source: { node: edge.from },
+        target: { node: edge.to },
       };
     }
   });
-  return { id: DYNAMIC_SCENE_ID, name: 'Dynamic', cells };
+  return { id: DYNAMIC_SCENE_ID, name: 'Dynamic', nodes, links };
 };
 
 /** Drop overrides whose nodes are gone. */
@@ -126,9 +127,9 @@ export const createDynamicProjection = ({
         const current = registry.get(scene);
         const positions = { ...registry.get(overlay).positions };
         for (const id of intent.ids) {
-          const cell = current.cells[id];
-          if (cell && cell.kind !== 'link') {
-            positions[id] = { x: cell.center.x + intent.delta.x, y: cell.center.y + intent.delta.y };
+          const node = current.nodes[id];
+          if (node) {
+            positions[id] = { x: node.center.x + intent.delta.x, y: node.center.y + intent.delta.y };
           }
         }
         registry.set(overlay, { positions });
@@ -136,12 +137,13 @@ export const createDynamicProjection = ({
       }
       case 'link': {
         const model = registry.get(graph);
-        if (model.edges.some((edge) => edge.id === intent.id)) {
+        const { link } = intent;
+        if (model.edges.some((edge) => edge.id === link.id)) {
           return;
         }
         registry.set(graph, {
           ...model,
-          edges: [...model.edges, { id: intent.id, from: intent.source.cell, to: intent.target.cell }],
+          edges: [...model.edges, { id: link.id, from: link.source.node, to: link.target.node }],
         });
         break;
       }
@@ -157,7 +159,7 @@ export const createDynamicProjection = ({
       case 'update': {
         // The label is the graph's; a geometry edit becomes an override like a move would.
         const model = registry.get(graph);
-        if (intent.values.kind === 'rect' && typeof intent.values.label === 'string') {
+        if ('label' in intent.values && typeof intent.values.label === 'string') {
           const label = intent.values.label;
           registry.set(graph, {
             ...model,

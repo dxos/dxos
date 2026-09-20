@@ -4,18 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { cellBounds } from './camera.ts';
 import { solve } from './projections/constrained.ts';
 import { layoutGraph } from './projections/dynamic.ts';
+import { nodeBounds } from './shapes.ts';
 import { createSceneTree } from './testing.ts';
-import { MAJOR_GRID, type Scene, isPlaced } from './types.ts';
+import { MAJOR_GRID, type Scene } from './types.ts';
 
-/** Every edge of every placed cell lies on the grid, which is what move and resize snap to. */
+/** Every edge of every node lies on the grid, which is what move and resize snap to. */
 const offGrid = (scene: Scene): string[] =>
-  Object.values(scene.cells)
-    .filter(isPlaced)
-    .filter((cell) => {
-      const { x, y, width, height } = cellBounds(cell);
+  Object.values(scene.nodes)
+    .filter((node) => {
+      const { x, y, width, height } = nodeBounds(node);
       return [x, y, width, height].some((value) => value % MAJOR_GRID !== 0);
     })
     .map(({ id }) => id);

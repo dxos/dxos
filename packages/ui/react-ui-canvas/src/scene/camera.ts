@@ -9,7 +9,8 @@
 
 import { interpolateZoom } from 'd3';
 
-import { type Bounds, type Camera, type PlacedCell, type Point, type Size } from './types.ts';
+import { nodeBounds } from './shapes.ts';
+import { type Bounds, type Camera, type Node, type Point, type Size } from './types.ts';
 
 export const MIN_ZOOM = 1 / 32;
 export const MAX_ZOOM = 32;
@@ -41,13 +42,6 @@ export const panBy = (camera: Camera, delta: Point): Camera => ({
 
 export const cameraTransform = (camera: Camera) => `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`;
 
-export const cellBounds = (cell: PlacedCell): Bounds => ({
-  x: cell.center.x - cell.size.width / 2,
-  y: cell.center.y - cell.size.height / 2,
-  width: cell.size.width,
-  height: cell.size.height,
-});
-
 export const boundsCenter = (bounds: Bounds): Point => ({
   x: bounds.x + bounds.width / 2,
   y: bounds.y + bounds.height / 2,
@@ -70,23 +64,25 @@ export const fitBounds = (bounds: Bounds, viewport: Size, inset = 0): Camera => 
   };
 };
 
-/** Uniform scale that maps a child scene's derived bounds into the portal cell (letterboxed). */
-export const portalScale = (cell: PlacedCell, child: Bounds) =>
-  Math.min(cell.size.width / child.width, cell.size.height / child.height);
+/** Uniform scale that maps a child scene's derived bounds into the portal node (letterboxed). */
+export const portalScale = (portal: Node, child: Bounds) => {
+  const { width, height } = nodeBounds(portal);
+  return Math.min(width / child.width, height / child.height);
+};
 
-/** Child-scene CSS transform inside a portal cell whose own origin is the cell's top-left. */
-export const portalTransform = (cell: PlacedCell, child: Bounds) => {
-  const scale = portalScale(cell, child);
+/** Child-scene CSS transform inside a portal node whose own origin is the node's top-left. */
+export const portalTransform = (portal: Node, child: Bounds) => {
+  const scale = portalScale(portal, child);
   return `scale(${scale}) translate(${-child.x}px, ${-child.y}px)`;
 };
 
 /**
  * Re-express a parent-space camera in child-scene space so the swap is visually seamless:
- * screen = (parentPoint + cam) * zoom and parentPoint = cellOrigin + (childPoint - childOrigin) * s.
+ * screen = (parentPoint + cam) * zoom and parentPoint = portalOrigin + (childPoint - childOrigin) * s.
  */
-export const enterPortal = (camera: Camera, cell: PlacedCell, child: Bounds): Camera => {
-  const scale = portalScale(cell, child);
-  const origin = cellBounds(cell);
+export const enterPortal = (camera: Camera, portal: Node, child: Bounds): Camera => {
+  const scale = portalScale(portal, child);
+  const origin = nodeBounds(portal);
   return {
     zoom: camera.zoom * scale,
     x: (origin.x - child.x * scale + camera.x) / scale,
@@ -95,9 +91,9 @@ export const enterPortal = (camera: Camera, cell: PlacedCell, child: Bounds): Ca
 };
 
 /** Inverse of `enterPortal`. */
-export const exitPortal = (camera: Camera, cell: PlacedCell, child: Bounds): Camera => {
-  const scale = portalScale(cell, child);
-  const origin = cellBounds(cell);
+export const exitPortal = (camera: Camera, portal: Node, child: Bounds): Camera => {
+  const scale = portalScale(portal, child);
+  const origin = nodeBounds(portal);
   return {
     zoom: camera.zoom / scale,
     x: camera.x * scale - origin.x + child.x * scale,

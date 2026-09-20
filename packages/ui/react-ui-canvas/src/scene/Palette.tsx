@@ -7,38 +7,65 @@ import React from 'react';
 import { IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { type LinkRegistry, type NodeRegistry } from './registry.ts';
 import { type Tool } from './types.ts';
 
-const TOOLS: { tool: Tool; icon: string; label: string; key: string }[] = [
-  { tool: 'select', icon: 'ph--cursor--regular', label: 'Select', key: 'V' },
-  { tool: 'hand', icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
-  { tool: 'rect', icon: 'ph--rectangle--regular', label: 'Rectangle', key: 'R' },
-  { tool: 'text', icon: 'ph--text-t--regular', label: 'Text', key: 'T' },
-  { tool: 'scene', icon: 'ph--frame-corners--regular', label: 'Scene', key: 'S' },
-  { tool: 'link', icon: 'ph--line-segment--regular', label: 'Link', key: 'L' },
+type Entry = { tool: Tool; icon: string; label: string; key: string };
+
+const BASE: Entry[] = [
+  { tool: { kind: 'select' }, icon: 'ph--cursor--regular', label: 'Select', key: 'V' },
+  { tool: { kind: 'hand' }, icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
 ];
 
-export const toolForKey = (key: string): Tool | undefined =>
-  TOOLS.find((entry) => entry.key === key.toUpperCase())?.tool;
+/** Palette entries: the fixed tools, then a shape per node type, then a link per link type. */
+export const paletteEntries = (nodes: NodeRegistry, links: LinkRegistry): Entry[][] => [
+  BASE,
+  Object.values(nodes).map((def) => ({
+    tool: { kind: 'node', type: def.type },
+    icon: def.icon,
+    label: def.name,
+    key: def.key,
+  })),
+  Object.values(links).map((def) => ({
+    tool: { kind: 'link', type: def.type },
+    icon: def.icon,
+    label: def.name,
+    key: def.key,
+  })),
+];
+
+export const sameTool = (left: Tool, right: Tool): boolean =>
+  left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
+
+export const toolForKey = (nodes: NodeRegistry, links: LinkRegistry, key: string): Tool | undefined =>
+  paletteEntries(nodes, links)
+    .flat()
+    .find((entry) => entry.key === key.toUpperCase())?.tool;
 
 export type PaletteProps = {
   tool: Tool;
+  nodes: NodeRegistry;
+  links: LinkRegistry;
   onToolChange: (tool: Tool) => void;
 };
 
 /** Minimal tool palette for the stories; the plugin toolbar owns this in the app (open question 3). */
-export const Palette = ({ tool, onToolChange }: PaletteProps) => (
-  <div className='flex flex-col gap-1 p-1 rounded-sm bg-modal-surface border border-separator'>
-    {TOOLS.map((entry) => (
-      <IconButton
-        key={entry.tool}
-        variant='ghost'
-        iconOnly
-        icon={entry.icon}
-        label={`${entry.label} (${entry.key})`}
-        classNames={mx(tool === entry.tool && 'bg-primary-500/20')}
-        onClick={() => onToolChange(entry.tool)}
-      />
+export const Palette = ({ tool, nodes, links, onToolChange }: PaletteProps) => (
+  <div className='flex flex-col rounded-sm bg-modal-surface border border-separator divide-y divide-separator'>
+    {paletteEntries(nodes, links).map((group, index) => (
+      <div key={index} className='flex flex-col gap-1 p-1'>
+        {group.map((entry) => (
+          <IconButton
+            key={entry.label}
+            variant='ghost'
+            iconOnly
+            icon={entry.icon}
+            label={`${entry.label} (${entry.key})`}
+            classNames={mx(sameTool(tool, entry.tool) && 'bg-primary-500/20')}
+            onClick={() => onToolChange(entry.tool)}
+          />
+        ))}
+      </div>
     ))}
   </div>
 );

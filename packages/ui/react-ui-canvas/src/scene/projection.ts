@@ -11,109 +11,104 @@
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { boundsCenter } from './camera.ts';
-import { topZ } from './order.ts';
+import { resizeNode } from './shapes.ts';
 import { type SceneStore, updateScene } from './store.ts';
-import { type Capabilities, type Cell, type Intent, type Scene, type SceneId, isLink, isPlaced } from './types.ts';
+import { type Capabilities, type Intent, type Link, type Node, type Scene, type SceneId } from './types.ts';
 
 export type Projection = {
-  /** Positioned cells; re-emitted on every model change. */
+  /** Positioned nodes and links; re-emitted on every model change. */
   readonly scene: Atom.Atom<Scene>;
   /** May apply, partially apply, rewrite the model, or reject. */
   apply: (intent: Intent) => void;
   readonly capabilities: Capabilities;
 };
 
-const EMPTY: Scene = { id: '', cells: {} };
+const EMPTY: Scene = { id: '', nodes: {}, links: {} };
 
 /** Freehand semantics as a pure reducer, so it is testable and reusable by other projections. */
 export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
   switch (intent.kind) {
     case 'move': {
-      const cells = { ...scene.cells };
+      const nodes = { ...scene.nodes };
       let changed = false;
       for (const id of intent.ids) {
-        const cell = cells[id];
-        if (cell && isPlaced(cell) && !cell.locked) {
-          cells[id] = {
-            ...cell,
-            center: { x: cell.center.x + intent.delta.x, y: cell.center.y + intent.delta.y },
-          };
+        const node = nodes[id];
+        if (node && !node.locked) {
+          nodes[id] = { ...node, center: { x: node.center.x + intent.delta.x, y: node.center.y + intent.delta.y } };
           changed = true;
         }
       }
-      return changed ? { ...scene, cells } : scene;
+      return changed ? { ...scene, nodes } : scene;
     }
 
     case 'resize': {
-      const cell = scene.cells[intent.id];
-      if (!cell || !isPlaced(cell) || cell.locked) {
+      const node = scene.nodes[intent.id];
+      if (!node || node.locked) {
         return scene;
       }
-      return {
-        ...scene,
-        cells: {
-          ...scene.cells,
-          [intent.id]: {
-            ...cell,
-            center: boundsCenter(intent.bounds),
-            size: { width: intent.bounds.width, height: intent.bounds.height },
-          },
-        },
-      };
+      return { ...scene, nodes: { ...scene.nodes, [intent.id]: resizeNode(node, intent.bounds) } };
     }
 
     case 'link': {
-      const source = scene.cells[intent.source.cell];
-      const target = scene.cells[intent.target.cell];
-      if (!source || !target || !isPlaced(source) || !isPlaced(target) || source.id === target.id) {
+      const { link } = intent;
+      const source = scene.nodes[link.source.node];
+      const target = scene.nodes[link.target.node];
+      if (!source || !target || source.id === target.id) {
         return scene;
       }
-      const link: Cell = {
-        kind: 'link',
-        id: intent.id,
-        z: topZ(Object.values(scene.cells)),
-        source: intent.source,
-        target: intent.target,
-      };
-      return { ...scene, cells: { ...scene.cells, [link.id]: link } };
+      return { ...scene, links: { ...scene.links, [link.id]: link } };
     }
 
     case 'create': {
-      return { ...scene, cells: { ...scene.cells, [intent.cell.id]: intent.cell } };
+      return { ...scene, nodes: { ...scene.nodes, [intent.node.id]: intent.node } };
     }
 
     case 'delete': {
       const ids = new Set(intent.ids);
-      const cells: Record<string, Cell> = {};
-      for (const cell of Object.values(scene.cells)) {
-        if (ids.has(cell.id)) {
-          continue;
+      const nodes: Record<string, Node> = {};
+      for (const node of Object.values(scene.nodes)) {
+        if (!ids.has(node.id)) {
+          nodes[node.id] = node;
         }
-        // A link loses its meaning with either end, so it goes too.
-        if (isLink(cell) && (ids.has(cell.source.cell) || ids.has(cell.target.cell))) {
-          continue;
-        }
-        cells[cell.id] = cell;
       }
-      return { ...scene, cells };
+      const links: Record<string, Link> = {};
+      for (const link of Object.values(scene.links)) {
+        // A link loses its meaning with either end, so it goes too.
+        if (!ids.has(link.id) && !ids.has(link.source.node) && !ids.has(link.target.node)) {
+          links[link.id] = link;
+        }
+      }
+      return { ...scene, nodes, links };
     }
 
     case 'reorder': {
-      const cell = scene.cells[intent.id];
-      if (!cell || cell.z === intent.z) {
-        return scene;
+      const node = scene.nodes[intent.id];
+      if (node) {
+        return node.z === intent.z
+          ? scene
+          : { ...scene, nodes: { ...scene.nodes, [intent.id]: { ...node, z: intent.z } } };
       }
-      return { ...scene, cells: { ...scene.cells, [intent.id]: { ...cell, z: intent.z } } };
+      const link = scene.links[intent.id];
+      if (link) {
+        return link.z === intent.z
+          ? scene
+          : { ...scene, links: { ...scene.links, [intent.id]: { ...link, z: intent.z } } };
+      }
+      return scene;
     }
 
     case 'update': {
-      const cell = scene.cells[intent.id];
-      if (!cell) {
-        return scene;
+      const node = scene.nodes[intent.id];
+      if (node) {
+        const next = Object.assign({}, node, intent.values, { id: node.id, type: node.type });
+        return { ...scene, nodes: { ...scene.nodes, [intent.id]: next } };
       }
-      const next = Object.assign({}, cell, intent.values, { id: cell.id, kind: cell.kind });
-      return { ...scene, cells: { ...scene.cells, [intent.id]: next } };
+      const link = scene.links[intent.id];
+      if (link) {
+        const next = Object.assign({}, link, intent.values, { id: link.id, type: link.type });
+        return { ...scene, links: { ...scene.links, [intent.id]: next } };
+      }
+      return scene;
     }
   }
 };

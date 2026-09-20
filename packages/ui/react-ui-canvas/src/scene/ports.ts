@@ -3,8 +3,8 @@
 //
 
 //
-// Ports come from the cell definition, not the data (decision 12). A link end without a `port` is
-// automatic: the closest pair is chosen from the two cells' ports on every projection, so rearranging
+// Ports come from the node type's definition unless the node carries its own (decision 12). A link end
+// without a `port` is automatic: the closest pair is chosen from the two nodes' ports on every projection, so rearranging
 // the diagram re-attaches its links.
 //
 
@@ -54,7 +54,7 @@ export type PortPair = { source: Port; target: Port };
 const distance2 = (left: Point, right: Point) => (left.x - right.x) ** 2 + (left.y - right.y) ** 2;
 
 /**
- * The port pair joining two cells: pinned ports are honoured, automatic ends take the port that
+ * The port pair joining two nodes: pinned ports are honoured, automatic ends take the port that
  * minimises the distance to the other end (ties broken by port order, so the result is stable).
  */
 export const pairPorts = (source: PortTerminal, target: PortTerminal): PortPair | undefined => {

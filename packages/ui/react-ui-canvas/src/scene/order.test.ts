@@ -33,10 +33,10 @@ describe('order', () => {
   test('initialKeys are ascending and topZ is above them all', ({ expect }) => {
     const keys = initialKeys(5);
     expect([...keys].sort()).toEqual(keys);
-    const cells = keys.map((z, index) => ({ id: `c${index}`, z }));
-    const top = topZ(cells);
-    expect(cells.every((cell) => cell.z < top)).toBe(true);
-    expect(sortByZ([cells[3], cells[0], cells[4]]).map(({ id }) => id)).toEqual(['c0', 'c3', 'c4']);
+    const elements = keys.map((z, index) => ({ id: `c${index}`, z }));
+    const top = topZ(elements);
+    expect(elements.every((element) => element.z < top)).toBe(true);
+    expect(sortByZ([elements[3], elements[0], elements[4]]).map(({ id }) => id)).toEqual(['c0', 'c3', 'c4']);
   });
 
   test('rejects inverted or zero-terminated keys', ({ expect }) => {

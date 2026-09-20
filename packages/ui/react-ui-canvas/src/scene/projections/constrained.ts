@@ -3,10 +3,9 @@
 //
 
 //
-// Constrained projection (§3 variant 2): the model is a set of cardinal constraints between named
-// nodes, solved to a grid by longest-path ranking per axis. A `move` intent never writes a
-// coordinate: it classifies the drop against the nearest neighbour and rewrites the moved node's
-// constraints, then the scene re-solves. Ambiguous drops (no neighbour) are rejected.
+// Variant 2 of §3: the model is a set of cardinal constraints between named nodes; the projection
+// solves them into a positioned scene and a `move` intent rewrites the moved node's constraints
+// against its nearest neighbour, then re-solves. Uses `@dxos/diagram`'s longest-path ranking per axis.
 //
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
@@ -16,7 +15,7 @@ import { Layout } from '@dxos/diagram';
 
 import { initialKeys } from '../order.ts';
 import { type Projection } from '../projection.ts';
-import { type Capabilities, type Cell, type Intent, type Point, type Scene, type Size, isPlaced } from '../types.ts';
+import { type Capabilities, type Intent, type Node, type Point, type Scene, type Size } from '../types.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
 export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
@@ -33,7 +32,7 @@ export type ConstrainedModel = {
 export type ConstrainedOptions = {
   /** Distance between grid slots. */
   pitch?: Size;
-  /** Every cell has the same size (§3: equal cell sizes, snapped to the grid). */
+  /** Every node has the same size (§3: equal sizes, snapped to the grid). */
   size?: Size;
   origin?: Point;
 };
@@ -80,7 +79,7 @@ const rowGroups = (model: ConstrainedModel): Map<string, string> => {
     return top;
   };
   for (const { subject, relation, object } of model.constraints) {
-    if (relation === 'aligned' && parent.has(subject) && parent.has(object)) {
+    if (relation === 'aligned') {
       parent.set(find(subject), find(object));
     }
   }
@@ -92,25 +91,21 @@ export type Solution = {
   columns: Map<string, number>;
 };
 
-/** Ranks per axis: rows from north/south over aligned groups, columns from east/west with id tie-breaks per row. */
+/** Longest-path ranks per axis: `south`/`north` order rows, `east`/`west` order columns within a row. */
 export const solveRanks = (model: ConstrainedModel): Solution => {
   const ids = model.nodes.map(({ id }) => id);
-  const known = new Set(ids);
-  const groupOf = rowGroups(model);
-  const groups = [...new Set(groupOf.values())];
+  const groups = rowGroups(model);
+  const groupIds = [...new Set(groups.values())];
 
   const rowEdges: Edge[] = [];
   const columnEdges: Edge[] = [];
   for (const { subject, relation, object } of model.constraints) {
-    if (!known.has(subject) || !known.has(object)) {
-      continue;
-    }
     switch (relation) {
       case 'south':
-        rowEdges.push({ from: groupOf.get(object) ?? object, to: groupOf.get(subject) ?? subject });
+        rowEdges.push({ from: groups.get(object) ?? object, to: groups.get(subject) ?? subject });
         break;
       case 'north':
-        rowEdges.push({ from: groupOf.get(subject) ?? subject, to: groupOf.get(object) ?? object });
+        rowEdges.push({ from: groups.get(subject) ?? subject, to: groups.get(object) ?? object });
         break;
       case 'east':
         columnEdges.push({ from: object, to: subject });
@@ -118,34 +113,53 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
       case 'west':
         columnEdges.push({ from: subject, to: object });
         break;
-      case 'aligned':
+      default:
         break;
     }
   }
+  // A constraint that would close a cycle is dropped rather than breaking the solve.
+  const acyclic = (edges: Edge[]): Edge[] => {
+    const kept: Edge[] = [];
+    for (const edge of edges) {
+      if (!reaches(kept, edge.to, edge.from)) {
+        kept.push(edge);
+      }
+    }
+    return kept;
+  };
+  const groupRanks = Layout.rank(groupIds, acyclic(rowEdges));
+  const rows = new Map(ids.map((id) => [id, groupRanks.get(groups.get(id) ?? id) ?? 0]));
 
-  const groupRank = Layout.rank(groups, rowEdges);
-  const rows = new Map(ids.map((id) => [id, groupRank.get(groupOf.get(id) ?? id) ?? 0]));
-
-  // Cells sharing a row with no ordering between them are placed by id, as an edge, so ranking keeps
-  // them apart without ever contradicting an explicit constraint.
+  const columns = new Map<string, number>();
   const byRow = new Map<number, string[]>();
   for (const id of ids) {
     const row = rows.get(id) ?? 0;
     byRow.set(row, [...(byRow.get(row) ?? []), id]);
   }
-  const tieEdges: Edge[] = [];
   for (const members of byRow.values()) {
-    const sorted = [...members].sort();
-    for (let index = 1; index < sorted.length; index++) {
-      const previous = sorted[index - 1];
-      const current = sorted[index];
-      const explicit = [...columnEdges, ...tieEdges];
-      if (!reaches(explicit, previous, current) && !reaches(explicit, current, previous)) {
-        tieEdges.push({ from: previous, to: current });
+    const set = new Set(members);
+    const edges = acyclic(columnEdges.filter(({ from, to }) => set.has(from) && set.has(to)));
+    const ranks = Layout.rank(members, edges);
+    // Unconstrained members of a row take the next free column after the constrained ones.
+    const used = new Set<number>();
+    for (const id of members) {
+      if (edges.some(({ from, to }) => from === id || to === id)) {
+        const column = ranks.get(id) ?? 0;
+        columns.set(id, column);
+        used.add(column);
+      }
+    }
+    let free = 0;
+    for (const id of members) {
+      if (!columns.has(id)) {
+        while (used.has(free)) {
+          free++;
+        }
+        columns.set(id, free);
+        used.add(free);
       }
     }
   }
-  const columns = Layout.rank(ids, [...columnEdges, ...tieEdges]);
   return { rows, columns };
 };
 
@@ -154,10 +168,10 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {})
   const { pitch, size, origin } = { ...DEFAULTS, ...options };
   const { rows, columns } = solveRanks(model);
   const keys = initialKeys(model.nodes.length);
-  const cells: Record<string, Cell> = {};
+  const nodes: Record<string, Node> = {};
   model.nodes.forEach((node, index) => {
-    cells[node.id] = {
-      kind: 'rect',
+    nodes[node.id] = {
+      type: 'rect',
       id: node.id,
       z: keys[index],
       center: {
@@ -168,32 +182,32 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {})
       label: node.label ?? node.id,
     };
   });
-  return { id: CONSTRAINED_SCENE_ID, name: 'Constrained', cells };
+  return { id: CONSTRAINED_SCENE_ID, name: 'Constrained', nodes, links: {} };
 };
 
 /**
- * Rewrite the constraints of `id` from where it was dropped: the nearest other cell becomes its
- * reference; a mostly horizontal offset makes it east/west of and aligned with that cell, a mostly
+ * Rewrite the constraints of `id` from where it was dropped: the nearest other node becomes its
+ * reference; a mostly horizontal offset makes it east/west of and aligned with that node, a mostly
  * vertical one north/south of it. Returns the model unchanged when there is no neighbour.
  */
 export const rewriteForDrop = (model: ConstrainedModel, scene: Scene, id: string, delta: Point): ConstrainedModel => {
-  const moved = scene.cells[id];
-  if (!moved || !isPlaced(moved)) {
+  const moved = scene.nodes[id];
+  if (!moved) {
     return model;
   }
   const target = { x: moved.center.x + delta.x, y: moved.center.y + delta.y };
   let nearest: { id: string; dx: number; dy: number } | undefined;
   let best = Infinity;
-  for (const cell of Object.values(scene.cells)) {
-    if (cell.id === id || !isPlaced(cell)) {
+  for (const node of Object.values(scene.nodes)) {
+    if (node.id === id) {
       continue;
     }
-    const dx = target.x - cell.center.x;
-    const dy = target.y - cell.center.y;
+    const dx = target.x - node.center.x;
+    const dy = target.y - node.center.y;
     const distance = dx * dx + dy * dy;
     if (distance < best) {
       best = distance;
-      nearest = { id: cell.id, dx, dy };
+      nearest = { id: node.id, dx, dy };
     }
   }
   if (!nearest) {
@@ -234,14 +248,14 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         break;
       }
       case 'create': {
-        if (intent.cell.kind !== 'rect') {
+        if (intent.node.type !== 'rect') {
           return;
         }
-        const node = { id: intent.cell.id, label: intent.cell.label };
+        const node = { id: intent.node.id, label: intent.node.label };
         const added = { ...current, nodes: [...current.nodes, node] };
         // Constrain the new node as if it had been dropped where it was drawn.
         const solved = registry.get(scene);
-        const provisional: Scene = { ...solved, cells: { ...solved.cells, [node.id]: intent.cell } };
+        const provisional: Scene = { ...solved, nodes: { ...solved.nodes, [node.id]: intent.node } };
         registry.set(model, rewriteForDrop(added, provisional, node.id, { x: 0, y: 0 }));
         break;
       }
@@ -255,7 +269,7 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
       }
       case 'update': {
         // Only the label lives in the model; geometry is solved, so those edits are dropped.
-        if (intent.values.kind === 'rect' && typeof intent.values.label === 'string') {
+        if ('label' in intent.values && typeof intent.values.label === 'string') {
           const label = intent.values.label;
           registry.set(model, {
             ...current,

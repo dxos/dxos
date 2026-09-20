@@ -21,7 +21,6 @@ import { Breadcrumbs } from './Breadcrumbs.tsx';
 import {
   animateCamera,
   cameraTransform,
-  cellBounds,
   coverage,
   enterPortal,
   exitPortal,
@@ -31,31 +30,40 @@ import {
   zoomAt,
 } from './camera.ts';
 import { ControlFrame, handlePoint } from './ControlFrame.tsx';
-import { boundsFromPoints, cellsIntersecting, hitTest, sceneBounds, unionBounds } from './hit.ts';
+import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds } from './hit.ts';
 import { useRegistry, useSceneProjection, useViewport, useWheel } from './hooks.ts';
 import { topZ } from './order.ts';
 import { Palette, toolForKey } from './Palette.tsx';
 import { portPoint } from './ports.ts';
 import { type FreehandProjectionOptions, type Projection, reduceIntent } from './projection.ts';
-import { type CellRegistry, defaultRegistry } from './registry.ts';
-import { type CellHandlers, SceneLayer } from './SceneLayer.tsx';
+import {
+  type LinkRegistry,
+  type NodeRegistry,
+  defaultLinkRegistry,
+  defaultNodeRegistry,
+  nodePorts,
+} from './registry.ts';
+import { insertIndex } from './route.ts';
+import { type ElementHandlers, SceneLayer, linkGeometry } from './SceneLayer.tsx';
+import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from './shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
   type Bounds,
   type Camera,
-  type Cell,
-  type CellId,
   DEFAULT_GRID,
+  type ElementId,
   type Endpoint,
+  type Link,
   MAJOR_GRID_RATIO,
-  type PlacedCell,
+  type Node,
+  type NodeId,
   type Point,
   type Port,
   type Scene,
   type SceneId,
   type Size,
+  type SplineLink,
   type Tool,
-  isPlaced,
 } from './types.ts';
 
 const AUTO_ENTER = 0.85;
@@ -63,7 +71,6 @@ const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
 const FIT_INSET = 40;
 const PORT_SNAP_PX = 16;
-const DEFAULT_CELL: Size = { width: 256, height: 128 };
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -98,7 +105,8 @@ const resizeBounds = (
 export type SceneViewProps = ThemedClassName<{
   store: SceneStore;
   root: SceneId;
-  registry?: CellRegistry;
+  nodes?: NodeRegistry;
+  links?: LinkRegistry;
   /** Projection per scene; freehand (identity) by default. */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
@@ -112,7 +120,8 @@ export const SceneView = ({
   classNames,
   store,
   root,
-  registry: cellRegistry = defaultRegistry,
+  nodes: nodeRegistry = defaultNodeRegistry,
+  links: linkRegistry = defaultLinkRegistry,
   createProjection,
   atoms: atomsProp,
   grid = DEFAULT_GRID,
@@ -207,27 +216,27 @@ export const SceneView = ({
   );
 
   const select = useCallback(
-    (ids: Iterable<CellId>) => registry.set(atoms.selection, new Set(ids)),
+    (ids: Iterable<ElementId>) => registry.set(atoms.selection, new Set(ids)),
     [registry, atoms.selection],
   );
 
   const drillIn = useCallback(
-    (cell: PlacedCell, animate = true) => {
-      const child = cell.kind === 'scene' ? scenes[cell.scene] : undefined;
+    (portal: Node, animate = true) => {
+      const child = portal.type === 'scene' ? scenes[portal.scene] : undefined;
       if (!child) {
         return;
       }
       interactedRef.current = true;
       const childBounds = sceneBounds(child);
       const swap = (camera: Camera) => {
-        const next = enterPortal(camera, cell, childBounds);
+        const next = enterPortal(camera, portal, childBounds);
         registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
         select([]);
         setCamera(next);
         pushHistory({ path: registry.get(atoms.path), camera: next });
       };
       if (animate) {
-        const target = fitBounds(cellBounds(cell), viewport);
+        const target = fitBounds(nodeBounds(portal), viewport);
         animateTo(target, () => swap(target));
       } else {
         swap(registry.get(atoms.camera));
@@ -248,9 +257,7 @@ export const SceneView = ({
         const child = scenes[next[next.length - 1]];
         const parent = scenes[next[next.length - 2]];
         const portal = parent
-          ? Object.values(parent.cells).find(
-              (cell): cell is PlacedCell => cell.kind === 'scene' && cell.scene === child?.id,
-            )
+          ? Object.values(parent.nodes).find((node) => node.type === 'scene' && node.scene === child?.id)
           : undefined;
         if (!child || !portal) {
           break;
@@ -292,9 +299,8 @@ export const SceneView = ({
       return;
     }
     const timer = setTimeout(() => {
-      const portal = Object.values(scene.cells).find(
-        (cell): cell is PlacedCell =>
-          cell.kind === 'scene' && coverage(camera, cellBounds(cell), viewport) >= AUTO_ENTER,
+      const portal = Object.values(scene.nodes).find(
+        (node) => node.type === 'scene' && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
       );
       if (portal) {
         drillIn(portal, false);
@@ -325,7 +331,15 @@ export const SceneView = ({
   );
 
   const setDrag = useCallback((next: Drag | undefined) => registry.set(atoms.drag, next), [registry, atoms.drag]);
-  const setTool = useCallback((next: Tool) => registry.set(atoms.tool, next), [registry, atoms.tool]);
+  const setTool = useCallback(
+    (next: Tool) => {
+      registry.set(atoms.tool, next);
+      if (next.kind === 'link') {
+        registry.set(atoms.linkType, next.type);
+      }
+    },
+    [registry, atoms.tool, atoms.linkType],
+  );
 
   const startDrag = useCallback(
     (next: Drag, event: React.PointerEvent) => {
@@ -344,93 +358,158 @@ export const SceneView = ({
       }
       const currentTool = registry.get(atoms.tool);
       const point = toScene(event);
-      if (event.button === 1 || currentTool === 'hand') {
+      if (event.button === 1 || currentTool.kind === 'hand') {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
-      } else if (currentTool === 'select') {
+      } else if (currentTool.kind === 'node') {
+        if (capabilities.create) {
+          const from = { x: snap(point.x), y: snap(point.y) };
+          startDrag({ kind: 'create', type: currentTool.type, from, to: from }, event);
+        }
+      } else {
         if (!event.shiftKey) {
           select([]);
         }
         startDrag({ kind: 'marquee', from: point, to: point, additive: event.shiftKey }, event);
-      } else if (currentTool === 'rect' || currentTool === 'text' || currentTool === 'scene') {
-        if (capabilities.create) {
-          const from = { x: snap(point.x), y: snap(point.y) };
-          startDrag({ kind: 'create', tool: currentTool, from, to: from }, event);
-        }
       }
     },
     [registry, atoms.tool, toScene, startDrag, select, capabilities.create, snap],
   );
 
-  const onCellPointerDown = useCallback(
-    (cell: PlacedCell, event: React.PointerEvent) => {
+  /** Click selection shared by nodes and links: shift toggles, a plain click on an unselected element replaces. */
+  const clickSelect = useCallback(
+    (id: ElementId, event: React.PointerEvent): Set<ElementId> => {
+      const current = registry.get(atoms.selection);
+      const next = new Set(event.shiftKey ? current : current.has(id) ? current : []);
+      if (event.shiftKey && current.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      select(next);
+      return next;
+    },
+    [registry, atoms.selection, select],
+  );
+
+  const onNodePointerDown = useCallback(
+    (node: Node, event: React.PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
-      if (currentTool !== 'select' || event.button !== 0) {
+      if ((currentTool.kind !== 'select' && currentTool.kind !== 'link') || event.button !== 0) {
         return;
       }
       event.stopPropagation();
-      const current = registry.get(atoms.selection);
-      const next = new Set(event.shiftKey ? current : current.has(cell.id) ? current : []);
-      if (event.shiftKey && current.has(cell.id)) {
-        next.delete(cell.id);
-      } else {
-        next.add(cell.id);
-      }
-      select(next);
-      if (capabilities.move && !cell.locked) {
-        const { x, y } = cellBounds(cell);
-        startDrag(
-          { kind: 'move', ids: [...next], origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 } },
-          event,
-        );
+      const next = clickSelect(node.id, event);
+      if (capabilities.move && !node.locked) {
+        const { x, y } = nodeBounds(node);
+        const ids = [...next].filter((id) => scene.nodes[id] !== undefined);
+        startDrag({ kind: 'move', ids, origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 } }, event);
       }
     },
-    [registry, atoms.tool, atoms.selection, select, capabilities.move, toScene, startDrag],
+    [registry, atoms.tool, clickSelect, capabilities.move, scene.nodes, toScene, startDrag],
+  );
+
+  const onLinkPointerDown = useCallback(
+    (link: Link, event: React.PointerEvent) => {
+      const currentTool = registry.get(atoms.tool);
+      if (currentTool.kind === 'hand' || event.button !== 0) {
+        return;
+      }
+      event.stopPropagation();
+      clickSelect(link.id, event);
+    },
+    [registry, atoms.tool, clickSelect],
   );
 
   const onHandlePointerDown = useCallback(
-    (cell: PlacedCell, handle: Handle, event: React.PointerEvent) => {
+    (node: Node, handle: Handle, event: React.PointerEvent) => {
       if (event.button !== 0 || !capabilities.resize) {
         return;
       }
       event.stopPropagation();
-      const start = cellBounds(cell);
-      startDrag({ kind: 'resize', id: cell.id, handle, start, bounds: start }, event);
+      const start = nodeBounds(node);
+      startDrag({ kind: 'resize', id: node.id, handle, start, bounds: start }, event);
     },
     [capabilities.resize, startDrag],
   );
 
   const onPortPointerDown = useCallback(
-    (cell: PlacedCell, port: Port, event: React.PointerEvent) => {
+    (node: Node, port: Port, event: React.PointerEvent) => {
       if (event.button !== 0 || !capabilities.link) {
         return;
       }
       event.stopPropagation();
-      const from = portPoint(cellBounds(cell), port);
-      startDrag({ kind: 'link', source: { cell: cell.id, port: port.id }, from, to: from }, event);
+      const from = portPoint(nodeBounds(node), port);
+      const currentTool = registry.get(atoms.tool);
+      const type = currentTool.kind === 'link' ? currentTool.type : registry.get(atoms.linkType);
+      startDrag({ kind: 'link', type, source: { node: node.id, port: port.id }, from, to: from }, event);
     },
-    [capabilities.link, startDrag],
+    [capabilities.link, registry, atoms.tool, atoms.linkType, startDrag],
   );
 
-  /** The drop target for a link end: a port within reach pins it; a cell body leaves it automatic. */
+  /** A spline's control point: drag moves it, alt-click removes it. */
+  const onPointPointerDown = useCallback(
+    (link: SplineLink, index: number, event: React.PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update) {
+        return;
+      }
+      event.stopPropagation();
+      if (event.altKey) {
+        projection.apply({
+          kind: 'update',
+          id: link.id,
+          values: { points: link.points.filter((_, i) => i !== index) },
+        });
+        return;
+      }
+      startDrag({ kind: 'point', id: link.id, index, points: [...link.points] }, event);
+    },
+    [capabilities.update, projection, startDrag],
+  );
+
+  /** Double-click on a spline adds a control point there; other link types have no points to edit. */
+  const onLinkDoubleClick = useCallback(
+    (link: Link, event: React.MouseEvent) => {
+      if (link.type !== 'spline' || !capabilities.update) {
+        return;
+      }
+      event.stopPropagation();
+      const geometry = linkGeometry(scene, nodeRegistry, link);
+      if (!geometry) {
+        return;
+      }
+      const point = toScene(event);
+      const index = insertIndex(geometry.source.point, link.points, geometry.target.point, point);
+      const points = [
+        ...link.points.slice(0, index),
+        { x: snap(point.x), y: snap(point.y) },
+        ...link.points.slice(index),
+      ];
+      projection.apply({ kind: 'update', id: link.id, values: { points } });
+      select([link.id]);
+    },
+    [capabilities.update, scene, nodeRegistry, toScene, snap, projection, select],
+  );
+
+  /** The drop target for a link end: a port within reach pins it; a node body leaves it automatic. */
   const linkTarget = useCallback(
-    (point: Point, source: CellId): Endpoint | undefined => {
-      const cell = hitTest(scene, point);
-      if (!cell || cell.id === source) {
+    (point: Point, source: NodeId): Endpoint | undefined => {
+      const node = hitTest(scene, point);
+      if (!node || node.id === source) {
         return undefined;
       }
-      const boundsOf = cellBounds(cell);
+      const boundsOf = nodeBounds(node);
       const reach = PORT_SNAP_PX / registry.get(atoms.camera).zoom;
-      const port = cellRegistry[cell.kind]
-        .ports(cell)
-        .find((candidate) => Math.hypot(...distance(portPoint(boundsOf, candidate), point)) <= reach);
-      return port ? { cell: cell.id, port: port.id } : { cell: cell.id };
+      const port = nodePorts(nodeRegistry, node).find(
+        (candidate) => Math.hypot(...distance(portPoint(boundsOf, candidate), point)) <= reach,
+      );
+      return port ? { node: node.id, port: port.id } : { node: node.id };
     },
-    [scene, registry, atoms.camera, cellRegistry],
+    [scene, registry, atoms.camera, nodeRegistry],
   );
 
-  // Hover comes from the model with a margin, not from the cell element, so it survives the pointer
+  // Hover comes from the model with a margin, not from the node element, so it survives the pointer
   // crossing onto a port that sits on the frame edge.
   const updateHover = useCallback(
     (point: Point | undefined) => {
@@ -466,7 +545,7 @@ export const SceneView = ({
           break;
         }
         case 'move': {
-          // Snap the pressed cell's top-left to the grid; the selection moves by the same offset.
+          // Snap the pressed node's top-left to the grid; the selection moves by the same offset.
           const point = toScene(event);
           const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
@@ -482,17 +561,21 @@ export const SceneView = ({
           const point = toScene(event);
           const anchor = handlePoint(current.start, current.handle);
           const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
-          const cell = scene.cells[current.id];
-          const minSize = (cell && isPlaced(cell) && cellRegistry[cell.kind].minSize) || {
-            width: major,
-            height: major,
-          };
+          const node = scene.nodes[current.id];
+          const minSize = (node && nodeRegistry[node.type].minSize) || { width: major, height: major };
           setDrag({ ...current, bounds: resizeBounds(current.start, current.handle, delta, minSize, snap) });
           break;
         }
         case 'link': {
           const point = toScene(event);
-          setDrag({ ...current, to: point, target: linkTarget(point, current.source.cell) });
+          setDrag({ ...current, to: point, target: linkTarget(point, current.source.node) });
+          break;
+        }
+        case 'point': {
+          const point = toScene(event);
+          const points = [...current.points];
+          points[current.index] = { x: snap(point.x), y: snap(point.y) };
+          setDrag({ ...current, points });
           break;
         }
       }
@@ -505,8 +588,8 @@ export const SceneView = ({
       setDrag,
       toScene,
       snap,
-      scene.cells,
-      cellRegistry,
+      scene.nodes,
+      nodeRegistry,
       major,
       linkTarget,
       updateHover,
@@ -521,7 +604,7 @@ export const SceneView = ({
     setDrag(undefined);
     switch (current.kind) {
       case 'marquee': {
-        const hits = cellsIntersecting(scene, boundsFromPoints(current.from, current.to)).map(({ id }) => id);
+        const hits = nodesIntersecting(scene, boundsFromPoints(current.from, current.to)).map(({ id }) => id);
         select(current.additive ? [...registry.get(atoms.selection), ...hits] : hits);
         break;
       }
@@ -538,51 +621,64 @@ export const SceneView = ({
       case 'link': {
         let target = current.target;
         if (!target && capabilities.create) {
-          // Dropping on empty canvas creates a rect there and links to it (canvas-editor behaviour);
+          // Dropping on empty canvas creates a rectangle there and links to it (canvas-editor behaviour);
           // its top-left is what snaps, so the edges land on the grid.
-          const cell: Cell = {
-            kind: 'rect',
+          const size = DEFAULT_SIZES.rect;
+          const node = createNode({
+            type: 'rect',
             id: createId('rect'),
-            z: topZ(Object.values(scene.cells)),
+            z: topZ(Object.values(scene.nodes)),
             center: {
-              x: snap(current.to.x - DEFAULT_CELL.width / 2) + DEFAULT_CELL.width / 2,
-              y: snap(current.to.y - DEFAULT_CELL.height / 2) + DEFAULT_CELL.height / 2,
+              x: snap(current.to.x - size.width / 2) + size.width / 2,
+              y: snap(current.to.y - size.height / 2) + size.height / 2,
             },
-            size: DEFAULT_CELL,
-          };
-          projection.apply({ kind: 'create', cell });
-          target = { cell: cell.id };
+          });
+          projection.apply({ kind: 'create', node });
+          target = { node: node.id };
         }
         if (target) {
-          projection.apply({ kind: 'link', id: createId('link'), source: current.source, target });
+          const link = createLink({
+            type: current.type,
+            id: createId(current.type),
+            z: topZ(Object.values(scene.links)),
+            source: current.source,
+            target,
+            midpoint: { x: snap((current.from.x + current.to.x) / 2), y: snap((current.from.y + current.to.y) / 2) },
+          });
+          projection.apply({ kind: 'link', link });
         }
         break;
       }
       case 'create': {
         const drawn = boundsFromPoints(current.from, current.to);
-        // A click without a drag places a default-sized cell with its top-left at the click.
+        // A click without a drag places a default-sized node with its top-left at the click.
         const clicked = drawn.width < major || drawn.height < major;
-        const size = clicked ? DEFAULT_CELL : { width: drawn.width, height: drawn.height };
+        const size = clicked ? DEFAULT_SIZES[current.type] : { width: drawn.width, height: drawn.height };
         const center = clicked
-          ? { x: current.from.x + DEFAULT_CELL.width / 2, y: current.from.y + DEFAULT_CELL.height / 2 }
+          ? { x: current.from.x + size.width / 2, y: current.from.y + size.height / 2 }
           : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
-        const id = createId(current.tool);
-        const z = topZ(Object.values(scene.cells));
-        const cell: Cell =
-          current.tool === 'rect'
-            ? { kind: 'rect', id, z, center, size, label: 'Untitled' }
-            : current.tool === 'text'
-              ? { kind: 'text', id, z, center, size, text: 'Text' }
-              : { kind: 'scene', id, z, center, size, scene: createId('scene') };
-        if (cell.kind === 'scene') {
+        const id = createId(current.type);
+        const node = createNode({
+          type: current.type,
+          id,
+          z: topZ(Object.values(scene.nodes)),
+          center,
+          size,
+          scene: current.type === 'scene' ? createId('scene') : undefined,
+        });
+        if (node.type === 'scene') {
           registry.set(store.scenes, {
             ...registry.get(store.scenes),
-            [cell.scene]: { id: cell.scene, name: 'Untitled', cells: {} },
+            [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
           });
         }
-        projection.apply({ kind: 'create', cell });
+        projection.apply({ kind: 'create', node });
         select([id]);
-        setTool('select');
+        setTool({ kind: 'select' });
+        break;
+      }
+      case 'point': {
+        projection.apply({ kind: 'update', id: current.id, values: { points: current.points } });
         break;
       }
       case 'pan':
@@ -606,6 +702,7 @@ export const SceneView = ({
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       const selected = [...registry.get(atoms.selection)];
+      const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
       if (event.key === 'Escape') {
         if (registry.get(atoms.drag)) {
           setDrag(undefined);
@@ -618,19 +715,14 @@ export const SceneView = ({
         projection.apply({ kind: 'delete', ids: selected });
         select([]);
       } else if (event.key === 'Enter' && selected.length === 1) {
-        const cell = scene.cells[selected[0]];
-        if (cell && isPlaced(cell) && cellRegistry[cell.kind].openable) {
-          drillIn(cell);
+        const node = scene.nodes[selected[0]];
+        if (node && nodeRegistry[node.type].openable) {
+          drillIn(node);
         }
       } else if (event.shiftKey && event.key === '!') {
         animateTo(fitBounds(bounds, viewport, FIT_INSET));
-      } else if (event.shiftKey && event.key === '@' && selected.length > 0) {
-        const union = unionBounds(
-          selected
-            .map((id) => scene.cells[id])
-            .filter((cell): cell is PlacedCell => !!cell && isPlaced(cell))
-            .map(cellBounds),
-        );
+      } else if (event.shiftKey && event.key === '@' && selectedNodes.length > 0) {
+        const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
         if (union) {
           animateTo(fitBounds(union, viewport, FIT_INSET));
         }
@@ -638,25 +730,21 @@ export const SceneView = ({
         animateTo(zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, 1));
       } else if (event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
         goHistory(event.key === 'ArrowLeft' ? -1 : 1);
-      } else if (event.key.startsWith('Arrow') && selected.length > 0 && capabilities.move) {
+      } else if (event.key.startsWith('Arrow') && selectedNodes.length > 0 && capabilities.move) {
         const step = major * (event.shiftKey ? MAJOR_GRID_RATIO : 1);
         const delta = {
           x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
           y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
         };
-        projection.apply({ kind: 'move', ids: selected, delta });
+        projection.apply({ kind: 'move', ids: selectedNodes, delta });
         event.preventDefault();
       } else if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
-        select(
-          Object.values(scene.cells)
-            .filter(isPlaced)
-            .map(({ id }) => id),
-        );
+        select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
         event.preventDefault();
       } else if (event.key === 'g' && !event.metaKey && !event.ctrlKey && !event.altKey) {
         toggleSnap();
       } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
-        const next = toolForKey(event.key);
+        const next = toolForKey(nodeRegistry, linkRegistry, event.key);
         if (next) {
           setTool(next);
         }
@@ -673,8 +761,9 @@ export const SceneView = ({
       drillIn,
       capabilities,
       projection,
-      scene.cells,
-      cellRegistry,
+      scene,
+      nodeRegistry,
+      linkRegistry,
       animateTo,
       bounds,
       viewport,
@@ -697,21 +786,27 @@ export const SceneView = ({
     if (drag?.kind === 'resize') {
       return reduceIntent(scene, { kind: 'resize', id: drag.id, bounds: drag.bounds });
     }
+    if (drag?.kind === 'point') {
+      return reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } });
+    }
     return scene;
   }, [scene, drag]);
 
-  const handlers = useMemo<CellHandlers>(() => ({ onPointerDown: onCellPointerDown }), [onCellPointerDown]);
+  const handlers = useMemo<ElementHandlers>(
+    () => ({ onNodePointerDown, onLinkPointerDown, onLinkDoubleClick }),
+    [onNodePointerDown, onLinkPointerDown, onLinkDoubleClick],
+  );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
-  // double-click never reaches the cell element itself.
+  // double-click never reaches the node element itself.
   const onDoubleClick = useCallback(
     (event: React.MouseEvent) => {
-      const cell = hitTest(scene, toScene(event));
-      if (cell && cellRegistry[cell.kind].openable) {
-        drillIn(cell);
+      const node = hitTest(scene, toScene(event));
+      if (node && nodeRegistry[node.type].openable) {
+        drillIn(node);
       }
     },
-    [scene, toScene, cellRegistry, drillIn],
+    [scene, toScene, nodeRegistry, drillIn],
   );
 
   const pointer = useMemo(
@@ -725,8 +820,8 @@ export const SceneView = ({
       tabIndex={0}
       className={mx(
         'relative dx-fill overflow-hidden bg-base-surface outline-none touch-none select-none',
-        tool === 'hand' && 'cursor-grab',
-        (tool === 'rect' || tool === 'text' || tool === 'scene') && 'cursor-crosshair',
+        tool.kind === 'hand' && 'cursor-grab',
+        tool.kind === 'node' && 'cursor-crosshair',
         classNames,
       )}
       style={{ contain: 'strict' }}
@@ -759,7 +854,7 @@ export const SceneView = ({
           <SceneLayer
             store={store}
             scene={displayScene}
-            registry={cellRegistry}
+            registry={nodeRegistry}
             zoom={camera.zoom}
             depth={0}
             selected={selection}
@@ -768,14 +863,15 @@ export const SceneView = ({
         </div>
         <ControlFrame
           scene={displayScene}
-          registry={cellRegistry}
+          registry={nodeRegistry}
           selection={selection}
           hover={hover}
           zoom={camera.zoom}
           drag={drag}
-          showPorts={tool === 'link'}
+          showPorts={tool.kind === 'link'}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
+          onPointPointerDown={onPointPointerDown}
         />
       </div>
 
@@ -803,7 +899,7 @@ export const SceneView = ({
       </div>
       {showPalette && (
         <div className='absolute top-14 left-2'>
-          <Palette tool={tool} onToolChange={setTool} />
+          <Palette tool={tool} nodes={nodeRegistry} links={linkRegistry} onToolChange={setTool} />
         </div>
       )}
     </div>

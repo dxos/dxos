@@ -15,12 +15,12 @@ import {
   screenToScene,
   zoomAt,
 } from './camera.ts';
-import { type Bounds, type Camera, type PortalCell } from './types.ts';
+import { type Bounds, type Camera, type PortalNode } from './types.ts';
 
 const viewport = { width: 800, height: 600 };
 
-const portal: PortalCell = {
-  kind: 'scene',
+const portal: PortalNode = {
+  type: 'scene',
   id: 'p',
   z: 'V',
   center: { x: 640, y: 620 },

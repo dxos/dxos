@@ -12,19 +12,19 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSceneViewAtoms } from './atoms.ts';
-import { CellProperties } from './CellProperties.tsx';
 import { useSceneProjection } from './hooks.ts';
 import { type FreehandProjectionOptions } from './projection.ts';
 import { CONSTRAINED_SCENE_ID, type ConstrainedModel, createConstrainedProjection } from './projections/constrained.ts';
+import { Properties } from './Properties.tsx';
 import { SceneView } from './SceneView.tsx';
 import { createMemoryStore } from './store.ts';
 
 /**
  * Test:
- * 1. Cells are placed by the constraints listed on the right; there are no stored coordinates.
- * 2. Drag a cell next to another: its constraints are rewritten (east/west + aligned, or north/south of the
- *    nearest cell) and the scene re-solves. A drop with no neighbour snaps back.
- * 3. R then drag draws a rect that is constrained relative to where it was drawn; Delete removes a cell and
+ * 1. Nodes are placed by the constraints listed on the right; there are no stored coordinates.
+ * 2. Drag a node next to another: its constraints are rewritten (east/west + aligned, or north/south of the
+ *    nearest node) and the scene re-solves. A drop with no neighbour snaps back.
+ * 3. R then drag draws a rect that is constrained relative to where it was drawn; Delete removes a node and
  *    its constraints. Resize and link are unavailable: the projection does not offer them.
  */
 const INITIAL: ConstrainedModel = {
@@ -84,7 +84,7 @@ const DefaultStory = () => {
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
       <SceneView store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection} />
       <ConstraintList model={model} />
-      <CellProperties projection={projection} atoms={atoms} classNames='border-l border-separator' />
+      <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
   );
 };
