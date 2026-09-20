@@ -43,12 +43,16 @@ console.error(`ready; settling ${settleS}s ...`);
 await page.waitForTimeout(settleS * 1000);
 
 const { result: coverage } = await cdp.send('Profiler.takePreciseCoverage');
-const preloaded = new Set(
-  await page.evaluate(() =>
-    [...document.querySelectorAll('link[rel=modulepreload]')].map((l) => l.href.split('/').pop()),
+await browser.close();
+
+// From index.html on disk, NOT the live DOM: vite's preload helper injects `modulepreload` links
+// when a dynamic import fires, so a DOM query reports chunks the boot graph never named and
+// reads as an eager-cost regression that `check-boot-budget` does not see.
+const bootPreloaded = new Set(
+  [...readFileSync(path.join(distDir, 'index.html'), 'utf8').matchAll(/rel="modulepreload"[^>]*href="([^"]+)"/g)].map(
+    (m) => m[1].split('/').pop(),
   ),
 );
-await browser.close();
 
 // Executed bytes per script (ranges nest, so this over-counts consistently; used only as a ratio).
 const execByName = new Map();
@@ -108,7 +112,7 @@ for (const [name, executed] of execByName) {
     size: info.size,
     executed,
     ratio: info.size > 0 ? Math.min(1, executed / info.size) : 0,
-    preloaded: preloaded.has(name),
+    bootPreloaded: bootPreloaded.has(name),
     sources: info.sources,
     hits: [...info.hits.entries()].map(([needle, v]) => ({ needle, files: v.files, bytes: Math.round(v.bytes) })),
   });
@@ -124,7 +128,7 @@ for (const r of rows) {
   const attributed = r.hits.map((h) => `${h.needle}: ${h.files} files, ~${KB(h.bytes)}KB`).join('; ');
   console.log(
     `\n  ${r.chunk}\n    chunk ${KB(r.size)}KB, ${r.sources} sources, executed ~${(r.ratio * 100).toFixed(0)}%` +
-      `, preloaded=${r.preloaded}\n    ${attributed}`,
+      `, in boot preload set=${r.bootPreloaded}\n    ${attributed}`,
   );
 }
 writeFileSync(out, JSON.stringify({ url, settleS, needles, rows, scriptCount: execByName.size }, null, 2));
