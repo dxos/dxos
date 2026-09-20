@@ -111,6 +111,11 @@ export const pruneOverlay = (graph: GraphModel, overlay: Overlay): Overlay => {
   return Object.keys(positions).length === Object.keys(overlay.positions).length ? overlay : { positions };
 };
 
+type DynamicSnapshot = { graph: GraphModel; overlay: Overlay };
+
+const isDynamicSnapshot = (value: unknown): value is DynamicSnapshot =>
+  typeof value === 'object' && value !== null && 'graph' in value && 'overlay' in value;
+
 export const dynamicCapabilities: Capabilities = { move: true, link: true, delete: true, update: true };
 
 export type DynamicProjectionOptions = {
@@ -184,5 +189,17 @@ export const createDynamicProjection = ({
         break;
     }
   };
-  return { scene, apply, capabilities: dynamicCapabilities };
+  return {
+    scene,
+    apply,
+    capabilities: dynamicCapabilities,
+    // Both atoms in one value, so an undo restores the layout and the overrides together.
+    snapshot: () => ({ graph: registry.get(graph), overlay: registry.get(overlay) }),
+    restore: (snapshot) => {
+      if (isDynamicSnapshot(snapshot)) {
+        registry.set(graph, snapshot.graph);
+        registry.set(overlay, snapshot.overlay);
+      }
+    },
+  };
 };

@@ -53,6 +53,8 @@ Engine lives in `packages/ui/react-ui-canvas/src/scene/`, exported as `@dxos/rea
 - [x] Properties panel (`Properties`): schema-driven `Form` over the selected node or link's own schema, edits as `update` intents; `useSceneProjection` shares the projection between the view and its panels; all four stories carry it on the right.
 - [x] Major grid: snapping, nudges, created nodes, the fixture, the projection defaults and the derived scene bounds align to `MAJOR_GRID` (64 px); ports show on hover under every tool; camera fitted before the first paint.
 - [x] Typed nodes and links (decision 9): `Scene {nodes, links}`; node types rect / ellipse / class (UML) / text / scene with a centre plus per-type properties and optional per-node ports; link types line / curve / spline (control points: drag, double-click to add, alt-click to remove); `shapes.ts` pure geometry; `NodeDef` / `LinkDef` registries generate the palette (R E C T S / L K P); links are selectable and deletable.
+- [x] Link editing: end handles re-attach either end (drop lands on the nearest port, previewed as created while hovering), control points selectable with Delete and a right-click menu, splines perpendicular at the ports, ports fill on hover.
+- [x] Undo / redo: per-view snapshot log over the projection seam (`undo.ts`), ⌘Z / ⇧⌘Z and toolbar buttons.
 - [x] `docs/MIGRATION.md`: feature map of react-ui-canvas-editor and react-ui-canvas-compute against the engine, five design decisions, migration plan M1–M5.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
 - [x] Delete `src/experimental/` once the stories cover the spike.

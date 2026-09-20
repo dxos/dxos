@@ -12,7 +12,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, Menu, type ThemedClassName } from '@dxos/react-ui';
+import { Button, IconButton, Menu, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { GridComponent } from '../components/Grid/index.ts';
@@ -59,6 +59,7 @@ import {
   type SplineLink,
   type Tool,
 } from './types.ts';
+import { redo, undo } from './undo.ts';
 
 const AUTO_ENTER = 0.85;
 const AUTO_EXIT = 0.3;
@@ -139,6 +140,10 @@ export const SceneView = ({
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
   const drag = useAtomValue(atoms.drag);
+  const undoState = useAtomValue(atoms.undo);
+  const sceneId = path[path.length - 1];
+  const canUndo = undoState.key === sceneId && undoState.past.length > 0;
+  const canRedo = undoState.key === sceneId && undoState.future.length > 0;
 
   const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
   const bounds = useMemo(() => sceneBounds(scene), [scene]);
@@ -219,6 +224,18 @@ export const SceneView = ({
     },
     [registry, atoms.selection, atoms.point],
   );
+
+  // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
+  const onUndo = useCallback(() => {
+    if (undo(projection, registry, atoms.undo, sceneId)) {
+      select([]);
+    }
+  }, [projection, registry, atoms.undo, sceneId, select]);
+  const onRedo = useCallback(() => {
+    if (redo(projection, registry, atoms.undo, sceneId)) {
+      select([]);
+    }
+  }, [projection, registry, atoms.undo, sceneId, select]);
 
   const drillIn = useCallback(
     (portal: Node, animate = true) => {
@@ -808,6 +825,13 @@ export const SceneView = ({
         };
         projection.apply({ kind: 'move', ids: selectedNodes, delta });
         event.preventDefault();
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+        if (event.shiftKey) {
+          onRedo();
+        } else {
+          onUndo();
+        }
+        event.preventDefault();
       } else if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
         select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
         event.preventDefault();
@@ -843,6 +867,8 @@ export const SceneView = ({
       major,
       setTool,
       toggleSnap,
+      onUndo,
+      onRedo,
     ],
   );
 
@@ -1005,6 +1031,24 @@ export const SceneView = ({
         >
           Grid
         </Button>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--arrow-u-up-left--regular'
+          label='Undo (⌘Z)'
+          disabled={!canUndo}
+          data-testid='undo'
+          onClick={onUndo}
+        />
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--arrow-u-up-right--regular'
+          label='Redo (⇧⌘Z)'
+          disabled={!canRedo}
+          data-testid='redo'
+          onClick={onRedo}
+        />
         <span className='text-description font-mono'>
           {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
           {path.length - 1}

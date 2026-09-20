@@ -8,12 +8,13 @@
 // `freehand` is the identity projection: intents write coordinates straight into the scene.
 //
 
+import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { resizeNode } from './shapes.ts';
-import { type SceneStore, updateScene } from './store.ts';
-import { type Capabilities, type Intent, type Link, type Node, type Scene, type SceneId } from './types.ts';
+import { type SceneStore, putScene, updateScene } from './store.ts';
+import { type Capabilities, type Intent, type Link, type Node, Scene, type SceneId } from './types.ts';
 
 export type Projection = {
   /** Positioned nodes and links; re-emitted on every model change. */
@@ -21,6 +22,12 @@ export type Projection = {
   /** May apply, partially apply, rewrite the model, or reject. */
   apply: (intent: Intent) => void;
   readonly capabilities: Capabilities;
+  /**
+   * The model as an opaque immutable value, identical (`===`) when nothing changed, so the view can
+   * keep an undo log without knowing what the model is (`undo.ts`).
+   */
+  snapshot: () => unknown;
+  restore: (snapshot: unknown) => void;
 };
 
 const EMPTY: Scene = { id: '', nodes: {}, links: {} };
@@ -133,4 +140,10 @@ export const createFreehandProjection = ({ registry, store, sceneId }: FreehandP
   scene: Atom.keepAlive(Atom.make((get) => get(store.scene(sceneId)) ?? EMPTY)),
   apply: (intent) => updateScene(registry, store, sceneId, (scene) => reduceIntent(scene, intent)),
   capabilities: freehandCapabilities,
+  snapshot: () => registry.get(store.scene(sceneId)),
+  restore: (snapshot) => {
+    if (Schema.is(Scene)(snapshot)) {
+      putScene(registry, store, snapshot);
+    }
+  },
 });

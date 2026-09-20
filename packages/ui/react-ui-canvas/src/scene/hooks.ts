@@ -10,6 +10,7 @@ import { type SceneViewAtoms } from './atoms.ts';
 import { type FreehandProjectionOptions, type Projection, createFreehandProjection } from './projection.ts';
 import { type SceneStore } from './store.ts';
 import { type Size } from './types.ts';
+import { withUndo } from './undo.ts';
 
 /** The view's atom registry; components read atoms through `useAtomValue` and write through this. */
 export const useRegistry = () => useContext(RegistryContext);
@@ -20,7 +21,10 @@ export type UseSceneProjectionOptions = {
   createProjection?: (options: FreehandProjectionOptions) => Projection;
 };
 
-/** The projection of the scene at the head of the view's path; shared by the view and its panels. */
+/**
+ * The projection of the scene at the head of the view's path, recording into the view's undo log;
+ * shared by the view and its panels so every edit is undoable.
+ */
 export const useSceneProjection = ({
   store,
   atoms,
@@ -29,7 +33,10 @@ export const useSceneProjection = ({
   const registry = useRegistry();
   const path = useAtomValue(atoms.path);
   const sceneId = path[path.length - 1];
-  return useMemo(() => createProjection({ registry, store, sceneId }), [createProjection, registry, store, sceneId]);
+  return useMemo(
+    () => withUndo(createProjection({ registry, store, sceneId }), registry, atoms.undo, sceneId),
+    [createProjection, registry, store, sceneId, atoms.undo],
+  );
 };
 
 /**

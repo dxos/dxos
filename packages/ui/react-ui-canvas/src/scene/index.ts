@@ -16,6 +16,7 @@ export * from './route.ts';
 export * from './shapes.ts';
 export * from './store.ts';
 export * from './types.ts';
+export * from './undo.ts';
 export * from './Breadcrumbs.tsx';
 export * from './Properties.tsx';
 export * from './ControlFrame.tsx';

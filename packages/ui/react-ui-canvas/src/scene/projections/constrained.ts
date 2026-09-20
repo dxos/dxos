@@ -245,6 +245,9 @@ export const labelOf = (values: object): string | undefined => {
   return undefined;
 };
 
+const isConstrainedModel = (value: unknown): value is ConstrainedModel =>
+  typeof value === 'object' && value !== null && 'nodes' in value && 'constraints' in value;
+
 export const constrainedCapabilities: Capabilities = { move: true, create: true, delete: true, update: true };
 
 export type ConstrainedProjectionOptions = {
@@ -303,5 +306,15 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         break;
     }
   };
-  return { scene, apply, capabilities: constrainedCapabilities };
+  return {
+    scene,
+    apply,
+    capabilities: constrainedCapabilities,
+    snapshot: () => registry.get(model),
+    restore: (snapshot) => {
+      if (isConstrainedModel(snapshot)) {
+        registry.set(model, snapshot);
+      }
+    },
+  };
 };

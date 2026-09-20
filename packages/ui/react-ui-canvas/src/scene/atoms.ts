@@ -23,6 +23,7 @@ import {
   type Side,
   type Tool,
 } from './types.ts';
+import { type UndoState, emptyUndo } from './undo.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
@@ -65,6 +66,8 @@ export type SceneViewAtoms = {
   snap: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
+  /** Projection snapshots for undo and redo (`undo.ts`). */
+  undo: Atom.Writable<UndoState>;
 };
 
 /**
@@ -82,4 +85,5 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
+  undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
 });
