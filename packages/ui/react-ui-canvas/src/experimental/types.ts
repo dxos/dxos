@@ -3,7 +3,7 @@
 //
 
 // THROWAWAY SPIKE: validates the multi-depth scene model for the infinite canvas design
-// (.agents/projects/plugin-canvas/DESIGN.md). Not exported from the package; delete when the real engine lands.
+// (docs/DESIGN.md). Not exported from the package; delete when the real engine lands.
 
 export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };

@@ -13,7 +13,7 @@ projects:
     created: 2026-09-20
     summary: 'Infinite, multi-depth canvas: scenes (ECHO objects) contain cells (rect, link, nested scene) positioned in scene-local coordinates; zooming into a scene cell drills to the child scene. Hybrid SVG/canvas + HTML islands; react-ui-canvas-editor becomes a first consumer.'
     tasks: .agents/projects/plugin-canvas/TASKS.md
-    design: .agents/projects/plugin-canvas/DESIGN.md
+    design: packages/ui/react-ui-canvas/docs/DESIGN.md
     prs: []
     resume: 'Phase 0: audit (AUDIT.md) + design spec + throwaway depth-zoom spike story; then phase 1 PR = infinite zoomable canvas with grid + rect/link/scene palette.'
   - name: plugin-markdown

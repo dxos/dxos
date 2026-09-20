@@ -1,7 +1,7 @@
 # plugin-canvas — Design
 
 Status: spec for review (2026-09-20). Inputs: `AUDIT.md` (existing surfaces),
-`agents/superpowers/specs/2026-09-20-infinite-canvas-research.md` (external landscape), and the throwaway spike
+`RESEARCH.md` (external landscape), and the throwaway spike
 `packages/ui/react-ui-canvas/src/experimental/` (story `ui/react-ui-canvas/experimental/SceneView`).
 
 ## 1. Goal

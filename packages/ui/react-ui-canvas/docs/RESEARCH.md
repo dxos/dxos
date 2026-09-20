@@ -1,6 +1,6 @@
 # Infinite-canvas research notes (2026-09-20)
 
-Web survey supporting `.agents/projects/plugin-canvas/AUDIT.md` §5 and `DESIGN.md`. Verified facts cite sources
+Web survey supporting `AUDIT.md` §5 and `DESIGN.md`. Verified facts cite sources
 inline; unverifiable items are flagged at the end.
 
 ## 1. infinitecanvas.tools

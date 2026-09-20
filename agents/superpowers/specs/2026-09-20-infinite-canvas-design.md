@@ -1,5 +1,5 @@
 # Infinite canvas — design spec (pointer)
 
-The canonical spec lives with the project ledger: `.agents/projects/plugin-canvas/DESIGN.md` (decisions, data
-model, coordinate system, rendering, interaction, phases). Research notes: `2026-09-20-infinite-canvas-research.md`.
-Audit of existing surfaces: `.agents/projects/plugin-canvas/AUDIT.md`.
+The canonical spec lives with the project ledger: `packages/ui/react-ui-canvas/docs/DESIGN.md` (decisions, data
+model, coordinate system, rendering, interaction, phases). Research notes: `packages/ui/react-ui-canvas/docs/RESEARCH.md`.
+Audit of existing surfaces: `packages/ui/react-ui-canvas/docs/AUDIT.md`.

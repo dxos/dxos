@@ -184,4 +184,4 @@ cursor; multi-move rewrites each member's local coords; snap in scene coords; co
 edge stores `{node, side}`; shift+1 fit, shift+2 selection, shift+0 reset; drill-in on double-click or pinch past
 threshold on a scene cell, pinch-out at min zoom returns to parent.
 
-Full research notes with sources: `agents/superpowers/specs/2026-09-20-infinite-canvas-research.md`.
+Full research notes with sources: `RESEARCH.md`.
