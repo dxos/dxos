@@ -47,6 +47,7 @@ alongside any number:
 | `memory-dump.mjs`        | Per-allocator ledger from two `memory-infra` dumps, with the delta between them       |
 | `parse-trace-stream.mjs` | The same ledger from a trace captured in a real browser (`chrome://tracing`, category `disabled-by-default-memory-infra`); streams, since these run to hundreds of MB |
 | `boot-census.mjs`        | What a tab loads and executes: bytes per package via sourcemaps, execution ratio via precise coverage, and the module-activation roster split into boot and idle waves |
+| `zod-residency.mjs`      | Whether a named package's chunks LOAD and EXECUTE at all — reads V8 precise coverage for every script, not just the modulepreload set, so it sees chunks `boot-census.mjs` never lists |
 | `snapshot-diff.mjs`      | Which constructors grew between two points — the way to find an accumulator          |
 | `retainers.mjs`          | Retainer chains for the largest strings in a snapshot — the way to find who holds them |
 
