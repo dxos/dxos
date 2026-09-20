@@ -3,6 +3,7 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -51,21 +52,21 @@ describe('IdentityService.deleteIdentity', () => {
   const createIdentity = () => EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
 
   /**
-   * Row counts per table, so an assertion can name which subsystem still holds data. Takes the
-   * client rather than resolving it per call: a reset tears the stack down, and the SQLite runtime
-   * behind it outlives that.
+   * Row counts per table, so an assertion can name which subsystem still holds data. Runs on the
+   * context's SQLite runtime rather than the stack, which a reset tears down.
    */
-  const countRows = async (
-    sql: SqlClient.SqlClient,
-    tables: readonly string[],
-  ): Promise<Record<string, number>> => {
-    const counts: Record<string, number> = {};
-    for (const table of tables) {
-      const rows = await EffectEx.runPromise(sql.unsafe<{ count: number }>(`SELECT COUNT(*) AS count FROM ${table}`));
-      counts[table] = Number(rows[0].count);
-    }
-    return counts;
-  };
+  const countRows = async (tables: readonly string[]): Promise<Record<string, number>> =>
+    serviceContext.runSql(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const counts: Record<string, number> = {};
+        for (const table of tables) {
+          const rows = yield* sql.unsafe<{ count: number }>(`SELECT COUNT(*) AS count FROM ${table}`);
+          counts[table] = Number(rows[0].count);
+        }
+        return counts;
+      }),
+    );
 
   const allZero = (tables: readonly string[]) =>
     Object.fromEntries(tables.map((table) => [table, 0])) as Record<string, number>;
@@ -134,8 +135,7 @@ describe('IdentityService.deleteIdentity', () => {
     const dataSpaceManager = serviceContext.dataSpaceManager ?? failedInvariant();
     await dataSpaceManager.createSpace(new Context());
 
-    const sql = EffectContext.get(serviceContext.stack, SqlClient.SqlClient);
-    const written = await countRows(sql, [...STORAGE_TABLES.automerge, ...STORAGE_TABLES.keyring]);
+    const written = await countRows([...STORAGE_TABLES.automerge, ...STORAGE_TABLES.keyring]);
     // Guards the assertion below: an empty store would pass the wipe check for the wrong reason.
     expect(written.automerge_chunks).to.be.greaterThan(0);
     expect(written.keyring).to.be.greaterThan(0);
@@ -145,6 +145,6 @@ describe('IdentityService.deleteIdentity', () => {
     await serviceContext.reset();
 
     const tables = Object.values(STORAGE_TABLES).flat();
-    expect(await countRows(sql, tables)).to.deep.equal(allZero(tables));
+    expect(await countRows(tables)).to.deep.equal(allZero(tables));
   });
 });

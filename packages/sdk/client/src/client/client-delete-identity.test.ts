@@ -57,7 +57,7 @@ describe('Client.halo.deleteIdentity', () => {
 
     expect(client.halo.identity.get()).to.be.null;
     // Wiping storage leaves the client closed, exactly as `client.reset()` does.
-    expect(client.initialized).to.be.false;
+    expect(client.resetting).to.be.true;
   });
 
   test('a fresh client over the same storage sees no identity, spaces or objects', { timeout: 30_000 }, async () => {
