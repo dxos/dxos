@@ -25,6 +25,13 @@ import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxP
  */
 export type WorkerHandle = {
   readonly port: MessagePort;
+  /**
+   * Settles when the thread dies, with why if it died badly.
+   *
+   * A worker that fails before it can report — a bad entry module, a crash during setup — would
+   * otherwise leave the host waiting for its whole budget and then blame a timeout it never hit.
+   */
+  readonly stopped: Promise<string | undefined>;
   /** Stops the thread outright, whatever it is running. */
   readonly terminate: () => void;
 };
@@ -119,7 +126,19 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
         () => Effect.promise(() => server.close()),
       );
 
-      const evaluation = Deferred.await(settled);
+      // The worker dying is the other way this ends: whichever happens first is the answer.
+      const evaluation = Effect.race(
+        Deferred.await(settled),
+        Effect.promise(() => handle.stopped).pipe(
+          Effect.flatMap((reason) =>
+            Effect.fail(
+              new Sandbox.EvaluationError({
+                message: `The worker stopped without reporting a result${reason === undefined ? '' : `: ${reason}`}.`,
+              }),
+            ),
+          ),
+        ),
+      );
       return yield* timeout === undefined
         ? evaluation
         : evaluation.pipe(
@@ -215,10 +234,17 @@ const spawnNodeWorker = async (entry: URL, init: SandboxInit): Promise<WorkerHan
     workerData: { init, port: channel.port2 },
     transferList: [channel.port2],
   });
+
+  let announce: (reason: string | undefined) => void = () => {};
+  const stopped = new Promise<string | undefined>((resolve) => {
+    announce = resolve;
+  });
+  instance.on('error', (error) => announce(describe(error)));
+  instance.on('exit', (code) => announce(code === 0 ? undefined : `it exited with code ${code}`));
   // Nothing waits on this thread at exit: the host terminates it, and until then the evaluation it
   // is running is what holds the turn open.
   instance.unref();
-  return { port: toMessagePort(channel.port1), terminate: () => void instance.terminate() };
+  return { port: toMessagePort(channel.port1), stopped, terminate: () => void instance.terminate() };
 };
 
 /**

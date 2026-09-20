@@ -3,9 +3,11 @@
 //
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -43,7 +45,8 @@ const DIALECTS: Record<string, Dialect> = {
 
 const { port, init } = WorkerThreads.workerData as { port: MessagePort; init: SandboxInit };
 
-const main = Effect.gen(function* () {
+/** The channel home. Until this exists there is no way to report anything, so it stands alone. */
+const connect = Effect.gen(function* () {
   // The same transport `Rpc.makeClient` builds, taken directly so the client is typed by the group
   // rather than by an assertion; neither end applies the timing middleware.
   const protocol = yield* Layer.build(
@@ -51,79 +54,104 @@ const main = Effect.gen(function* () {
       Layer.provide(BrowserWorker.layer(() => port)),
     ),
   );
-  const client = yield* RpcClient.make(SandboxRpcs, { disableTracing: true }).pipe(Effect.provide(protocol));
+  return yield* RpcClient.make(SandboxRpcs, { disableTracing: true }).pipe(Effect.provide(protocol));
+});
 
-  const echo = new EchoClient({});
-  // The worker is simply another client of the host's services — the same connection the tab makes.
-  echo.connectToService({ dataService: client, queryService: client });
-  yield* Effect.promise(() => echo.open());
+/** The client both halves of the protocol are reached through. */
+type SandboxClient = Effect.Success<typeof connect>;
 
-  // A registered type is a class, which cannot cross a thread; its schema can, so the worker
-  // rebuilds each one and registers it. Queries and `make` then name types exactly as on the host.
-  //
-  // Rebuilt through the effect schema rather than by `makeObjectFromJsonSchema`, which returns a
-  // STORED schema entity — one the registry holds but `Type.isObject` rejects, so `make` would not
-  // find a type to construct from.
-  yield* Effect.promise(async () => {
-    await echo.graph.registry.add(
-      init.types.map(({ typename, version, jsonSchema }) =>
-        Type.makeObject(DXN.make(typename, version))(JsonSchema.toEffectSchema(jsonSchema)),
-      ),
+/** Everything from connecting ECHO to running the model's code; its outcome is what the host waits on. */
+const evaluate = (client: SandboxClient) =>
+  Effect.gen(function* () {
+    const echo = new EchoClient({});
+    // The worker is simply another client of the host's services — the same connection the tab makes.
+    echo.connectToService({ dataService: client, queryService: client });
+    yield* Effect.promise(() => echo.open());
+
+    // A registered type is a class, which cannot cross a thread; its schema can, so the worker
+    // rebuilds each one and registers it. Queries and `make` then name types exactly as on the host.
+    //
+    // Rebuilt through the effect schema rather than by `makeObjectFromJsonSchema`, which returns a
+    // STORED schema entity — one the registry holds but `Type.isObject` rejects, so `make` would not
+    // find a type to construct from.
+    yield* Effect.promise(async () => {
+      await echo.graph.registry.add(
+        init.types.map(({ typename, version, jsonSchema }) =>
+          Type.makeObject(DXN.make(typename, version))(JsonSchema.toEffectSchema(jsonSchema)),
+        ),
+      );
+    });
+
+    const db = echo.constructDatabase({
+      spaceId: SpaceId.make(init.space.spaceId),
+      spaceKey: PublicKey.from(init.space.spaceKey),
+    });
+    yield* Effect.promise(() => db.setSpaceRoot(init.space.rootUrl));
+    yield* Effect.promise(() => db.open());
+
+    const invokeOperation = (key: string, input: unknown) =>
+      client['Sandbox.invokeOperation']({ key, input }).pipe(
+        Effect.flatMap((outcome) =>
+          outcome._tag === 'Ok' ? Effect.succeed(outcome.value) : Effect.die(new Error(outcome.message)),
+        ),
+        Effect.orDie,
+      );
+
+    // No `definition`: an operation's definition is code, and rebuilding one here would only let a
+    // dialect believe it holds the real thing. What crosses is the call — `invoke` reaches the
+    // handler on the host, where the conversation it belongs to lives.
+    const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters }) => ({
+      name,
+      description,
+      parameters,
+      invoke: (input: unknown) => invokeOperation(key, input),
+    }));
+
+    const runtime = Context.make(Database.Service, { db }).pipe(
+      Context.add(Operation.Service, operationsAreNotAmbientHere),
+    );
+
+    const dialect = DIALECTS[init.dialect];
+    if (dialect === undefined) {
+      // Named rather than left to fail as `undefined.bindings`, since the host chose this value.
+      return yield* Effect.fail(new ModelCodeFailed({ message: `Unknown dialect: ${init.dialect}` }));
+    }
+    const bindings = dialect.bindings({
+      runtime,
+      operations,
+      // Sent as it happens rather than batched with the result, so output survives a worker that is
+      // killed for outrunning its budget.
+      print: (...values: unknown[]) => {
+        Effect.runFork(client['Sandbox.print']({ values }));
+      },
+    });
+
+    const names = Object.keys(bindings);
+    return yield* Effect.tryPromise({
+      try: () => new AsyncFunction(...names, `'use strict';\n${init.code}`)(...names.map((name) => bindings[name])),
+      catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
+    }).pipe(
+      Effect.match({
+        onSuccess: (value: unknown) => ({ value, failure: null }),
+        onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
+      }),
     );
   });
 
-  const db = echo.constructDatabase({
-    spaceId: SpaceId.make(init.space.spaceId),
-    spaceKey: PublicKey.from(init.space.spaceKey),
-  });
-  yield* Effect.promise(() => db.setSpaceRoot(init.space.rootUrl));
-  yield* Effect.promise(() => db.open());
-
-  const invokeOperation = (key: string, input: unknown) =>
-    client['Sandbox.invokeOperation']({ key, input }).pipe(
-      Effect.flatMap((outcome) =>
-        outcome._tag === 'Ok' ? Effect.succeed(outcome.value) : Effect.die(new Error(outcome.message)),
-      ),
-      Effect.orDie,
-    );
-
-  // No `definition`: an operation's definition is code, and rebuilding one here would only let a
-  // dialect believe it holds the real thing. What crosses is the call — `invoke` reaches the
-  // handler on the host, where the conversation it belongs to lives.
-  const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters }) => ({
-    name,
-    description,
-    parameters,
-    invoke: (input: unknown) => invokeOperation(key, input),
-  }));
-
-  const runtime = Context.make(Database.Service, { db }).pipe(
-    Context.add(Operation.Service, operationsAreNotAmbientHere),
+/**
+ * One report per evaluation, whatever happened.
+ *
+ * The host is waiting on `Sandbox.complete` and has no other way to learn the worker got nowhere:
+ * a setup failure that never reported would leave it waiting for its whole budget and then blame a
+ * timeout. A failure BEFORE the channel exists cannot be reported at all, so it exits non-zero and
+ * the host reads that from the thread instead.
+ */
+const main = Effect.gen(function* () {
+  const client = yield* connect;
+  const exit = yield* Effect.exit(evaluate(client));
+  yield* client['Sandbox.complete'](
+    Exit.isSuccess(exit) ? exit.value : { value: undefined, failure: Cause.pretty(exit.cause) },
   );
-
-  const dialect = DIALECTS[init.dialect];
-  const bindings = dialect.bindings({
-    runtime,
-    operations,
-    // Sent as it happens rather than batched with the result, so output survives a worker that is
-    // killed for outrunning its budget.
-    print: (...values: unknown[]) => {
-      Effect.runFork(client['Sandbox.print']({ values }));
-    },
-  });
-
-  const names = Object.keys(bindings);
-  const outcome = yield* Effect.tryPromise({
-    try: () => new AsyncFunction(...names, `'use strict';\n${init.code}`)(...names.map((name) => bindings[name])),
-    catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
-  }).pipe(
-    Effect.match({
-      onSuccess: (value: unknown) => ({ value, failure: null }),
-      onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
-    }),
-  );
-
-  yield* client['Sandbox.complete'](outcome);
 });
 
 /**
@@ -147,4 +175,15 @@ const describe = (error: unknown): string => {
   return text.length > 0 && text !== '[object Object]' ? text : 'Unknown failure.';
 };
 
-Effect.runFork(Effect.scoped(main).pipe(Scope.provide(Effect.runSync(Scope.make()))));
+Effect.runFork(
+  Effect.scoped(main).pipe(
+    Effect.tapCause((cause) =>
+      Effect.sync(() => {
+        // Nothing here can reach the host, so the exit code is the message.
+        console.error('code-mode worker failed before it could report:', Cause.pretty(cause));
+        process.exitCode = 1;
+      }),
+    ),
+    Scope.provide(Effect.runSync(Scope.make())),
+  ),
+);

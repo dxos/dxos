@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { PlainDialect } from './dialect-plain.ts';
-import type { SandboxOperation } from './Dialect.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
 import * as WorkerSandbox from './WorkerSandbox.ts';
 
@@ -58,51 +58,6 @@ const noAmbientOperations: Operation.OperationService = {
   invoke: () => Effect.die(new Error('not used')),
   schedule: () => Effect.die(new Error('not used')),
   invokePromise: () => Promise.resolve({ error: new Error('not used') }),
-};
-
-const setup = async () => {
-  const builder = new EchoTestBuilder();
-  await builder.open();
-  onTestFinished(async () => void (await builder.close()));
-
-  const peer = await builder.createPeer({ types: [Task] });
-  const db = await peer.createDatabase();
-
-  const sandbox = WorkerSandbox.make({
-    entry: BUILT_ENTRY,
-    echo: () => ({
-      DataService: peer.host.dataService,
-      QueryService: peer.host.queryService,
-      space: { spaceId: String(db.spaceId), spaceKey: db.spaceKey.toHex(), rootUrl: db.rootUrl! },
-    }),
-  });
-
-  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, noAmbientOperations));
-
-  /** Runs `code` in a worker exactly as a turn would, returning what it printed. */
-  const run = (code: string, timeout?: Duration.Input) =>
-    EffectEx.runPromise(
-      Effect.gen(function* () {
-        const toolkit = makeEvalToolkit({
-          dialect: PlainDialect,
-          sandbox,
-          runtime,
-          operations: [ScoreOperation],
-          timeout,
-        });
-        const result = yield* callTool(yield* toolkit.handlers, {
-          _tag: 'toolCall',
-          toolCallId: 'test',
-          name: EVAL_TOOL_NAME,
-          input: JSON.stringify({ code }),
-          providerExecuted: false,
-        });
-        expect(result.error).toBeUndefined();
-        return JSON.parse(String(result.result)).output as string;
-      }),
-    );
-
-  return { db, run };
 };
 
 describe('worker sandbox', () => {
@@ -155,6 +110,15 @@ describe('worker sandbox', () => {
     expect(await run("throw new Error('boom');")).toEqual('Error: boom');
   }, 60_000);
 
+  test('reports a setup failure instead of waiting out the budget', async () => {
+    const { runWith } = await setup();
+    // An unknown dialect fails in the worker BEFORE it can run anything. Without a report the host
+    // would wait for the whole timeout and then blame one, so the message is the assertion.
+    const output = await runWith({ ...PlainDialect, name: 'no-such-dialect' }, 'print("unreachable");');
+    expect(output).toContain('Unknown dialect: no-such-dialect');
+    expect(output).not.toContain('killed');
+  }, 60_000);
+
   test('kills a worker whose code never finishes', async () => {
     const { run } = await setup();
     // A synchronous loop: the case the in-process sandbox cannot even observe, let alone stop,
@@ -162,3 +126,50 @@ describe('worker sandbox', () => {
     expect(await run('while (true) {}', '2 seconds')).toContain('the worker was killed');
   }, 60_000);
 });
+
+const setup = async () => {
+  const builder = new EchoTestBuilder();
+  await builder.open();
+  onTestFinished(async () => void (await builder.close()));
+
+  const peer = await builder.createPeer({ types: [Task] });
+  const db = await peer.createDatabase();
+
+  const sandbox = WorkerSandbox.make({
+    entry: BUILT_ENTRY,
+    echo: () => ({
+      DataService: peer.host.dataService,
+      QueryService: peer.host.queryService,
+      space: { spaceId: String(db.spaceId), spaceKey: db.spaceKey.toHex(), rootUrl: db.rootUrl! },
+    }),
+  });
+
+  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, noAmbientOperations));
+
+  /** Runs `code` in a worker exactly as a turn would, returning what it printed. */
+  const run = (code: string, timeout?: Duration.Input) => runWith(PlainDialect, code, timeout);
+
+  const runWith = (dialect: Dialect, code: string, timeout?: Duration.Input) =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const toolkit = makeEvalToolkit({
+          dialect,
+          sandbox,
+          runtime,
+          operations: [ScoreOperation],
+          timeout,
+        });
+        const result = yield* callTool(yield* toolkit.handlers, {
+          _tag: 'toolCall',
+          toolCallId: 'test',
+          name: EVAL_TOOL_NAME,
+          input: JSON.stringify({ code }),
+          providerExecuted: false,
+        });
+        expect(result.error).toBeUndefined();
+        return JSON.parse(String(result.result)).output as string;
+      }),
+    );
+
+  return { db, run, runWith };
+};
