@@ -383,10 +383,20 @@ export class EntityManager implements IDatabaseBinding {
   async close(): Promise<void> {
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
+    // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
+    // creates a core for every inline object in the directory — so cores and handles surviving the
+    // close would be re-created over themselves.
     this.#closed = true;
     // Dropped before the proxy closes, so a change delivered during teardown cannot trigger a load
     // against a closed proxy.
     this._unsubscribeFromHandles();
+    this._clearHandleReferences();
+    this._objects.clear();
+    this._unavailableObjects.clear();
+    this._objectsPendingDocumentLoad.clear();
+    this._currentlyLoadingObjects.clear();
+    this._objectsForNextDbUpdate.clear();
+    this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
   }
 
@@ -398,6 +408,13 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+    // A closed database has an empty working set, and every caller of this synchronous read already
+    // treats an absent core as unresolved — whereas throwing reaches the fire-and-forget query
+    // paths that outlive the close (index hydration recomputing a result) as an unhandled
+    // rejection. The throw below stays for a database that was never opened, which is a caller bug.
+    if (this.#closed) {
+      return undefined;
+    }
     if (!this._spaceRootDocHandle) {
       throw new Error('Database is not ready.');
     }
