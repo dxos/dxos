@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 // SSEClientTransport is marked @deprecated in the SDK in favor of StreamableHTTP, but the
 // SDK itself notes that clients should keep supporting both while servers migrate.
 // `connectWithFallback` below tries the configured protocol first, then the other on 405.
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
@@ -155,11 +155,28 @@ const connectWithFallback = (
     );
   });
 
+/**
+ * The SDK builds 152 zod schemas at module scope, so merely importing it allocates before any
+ * server is dialed. `AiSession` reaches this module through the `@dxos/assistant` barrel, which
+ * every Composer boot evaluates, while `connectMcpServers` returns early when no server is
+ * configured — which is the common case. Loading on first connect keeps the cost with the
+ * connection that needs it.
+ */
+const sdk = () =>
+  Promise.all([
+    import('@modelcontextprotocol/sdk/client/index.js'),
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    import('@modelcontextprotocol/sdk/client/sse.js'),
+    import('@modelcontextprotocol/sdk/client/streamableHttp.js'),
+  ]);
+
 const connectClient = (url: string, protocol: Options['protocol'], apiKey?: string) =>
-  Effect.tryPromise(() => {
+  Effect.tryPromise(async () => {
+    const [{ Client }, sse, http] = await sdk();
     const client = new Client(CLIENT_INFO);
-    const transport = createTransport(url, protocol, apiKey);
-    return client.connect(transport).then(() => client);
+    const transport = createTransport({ url, protocol, apiKey, sse, http });
+    await client.connect(transport);
+    return client;
   });
 
 /** Longest message a connection error carries: a challenge page in the body would otherwise be it. */
@@ -177,21 +194,30 @@ export const formatCause = (error: unknown): string => {
   return message.length > MESSAGE_LIMIT ? `${message.slice(0, MESSAGE_LIMIT)}…` : message;
 };
 
+type TransportOptions = Options & {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  sse: typeof import('@modelcontextprotocol/sdk/client/sse.js');
+  http: typeof import('@modelcontextprotocol/sdk/client/streamableHttp.js');
+};
+
 /**
- * Creates a transport for the given MCP server URL and protocol.
+ * Creates a transport for the given MCP server URL and protocol. The transport constructors are
+ * passed in rather than imported: see `sdk` above.
  */
-const createTransport = (
-  url: string,
-  protocol: Options['protocol'],
-  apiKey?: string,
-): SSEClientTransport | StreamableHTTPClientTransport => {
+const createTransport = ({
+  url,
+  protocol,
+  apiKey,
+  sse,
+  http,
+}: TransportOptions): SSEClientTransport | StreamableHTTPClientTransport => {
   const urlObj = new URL(url);
   const requestInit: RequestInit | undefined = apiKey ? { headers: { Authorization: `Bearer ${apiKey}` } } : undefined;
   switch (protocol) {
     case 'sse':
-      return new SSEClientTransport(urlObj, { requestInit });
+      return new sse.SSEClientTransport(urlObj, { requestInit });
     case 'http':
-      return new StreamableHTTPClientTransport(urlObj, { requestInit });
+      return new http.StreamableHTTPClientTransport(urlObj, { requestInit });
     default: {
       const _exhaustive: never = protocol;
       return invariant(false, `Unsupported MCP transport protocol: ${_exhaustive}`) as never;
