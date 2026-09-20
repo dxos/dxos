@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc"
   },
-  "dependencies": {
+  "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -24,9 +24,7 @@
     "@dxos/plugin-jmap": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/shell": "workspace:*",
-    "@dxos/test-utils": "workspace:*"
-  },
-  "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
     "@playwright/test": "catalog:"
   },
   "publishConfig": {

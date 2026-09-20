@@ -7302,7 +7302,7 @@ importers:
         version: 4.5.0
 
   packages/e2e/composer-e2e:
-    dependencies:
+    devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7327,7 +7327,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
-    devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
