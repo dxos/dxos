@@ -12,6 +12,7 @@ import {
   type BuiltinNode,
   type Endpoint,
   type Link,
+  type LinkEnds,
   type Node,
   type Point,
   type Scene,
@@ -24,13 +25,17 @@ export type Box = { x: number; y: number; width: number; height: number };
 
 const center = ({ x, y, width, height }: Box): Point => ({ x: x + width / 2, y: y + height / 2 });
 
-/** `node` or `node#port`. */
+/** `node`, `node#port`, or a free end `@x,y`. */
 const endpoint = (ref: string): Endpoint => {
+  if (ref.startsWith('@')) {
+    const [x, y] = ref.slice(1).split(',').map(Number);
+    return { point: { x, y } };
+  }
   const [node, port] = ref.split('#');
   return port ? { node, port } : { node };
 };
 
-export type LinkOptions = { directed?: boolean };
+export type LinkOptions = { directed?: boolean; ends?: LinkEnds };
 
 /** `Omit` over each member of a union, not over their intersection. */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
@@ -100,8 +105,8 @@ export class SceneBuilder {
     return this.#link({ type: 'curve', id, source: endpoint(from), target: endpoint(to), ...options });
   }
 
-  spline(id: string, from: string, to: string, points: Point[]): this {
-    return this.#link({ type: 'spline', id, source: endpoint(from), target: endpoint(to), points });
+  spline(id: string, from: string, to: string, points: Point[], options: LinkOptions = {}): this {
+    return this.#link({ type: 'spline', id, source: endpoint(from), target: endpoint(to), points, ...options });
   }
 
   /** Nodes and links in call order, each with its own z key. */

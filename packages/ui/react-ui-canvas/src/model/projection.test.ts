@@ -54,9 +54,23 @@ describe('freehand projection', () => {
       }) as const;
     const next = reduceIntent(scene, { kind: 'link', link: link('l', 'scene:r/b', 'scene:r/c') });
     expect(next.links.l?.type).toBe('spline');
-    expect(next.links.l?.source.port).toBe('e');
+    expect(next.links.l?.source).toEqual({ node: 'scene:r/b', port: 'e' });
     expect(reduceIntent(scene, { kind: 'link', link: link('x', 'scene:r/a', 'scene:r/a') })).toBe(scene);
     expect(reduceIntent(scene, { kind: 'link', link: link('x', 'scene:r/a', 'nope') })).toBe(scene);
+  });
+
+  test('a free end needs no node and outlives the deletion of the other end', ({ expect }) => {
+    const free = {
+      type: 'line',
+      id: 'f',
+      z: 'z',
+      source: { node: 'scene:r/a' },
+      target: { point: { x: 10, y: 10 } },
+    } as const;
+    const next = reduceIntent(fixture(), { kind: 'link', link: free });
+    expect(next.links.f?.target).toEqual({ point: { x: 10, y: 10 } });
+    expect(reduceIntent(next, { kind: 'delete', ids: ['scene:r/b'] }).links.f).toBeDefined();
+    expect(reduceIntent(next, { kind: 'delete', ids: ['scene:r/a'] }).links.f).toBeUndefined();
   });
 
   test('update merges properties of nodes and links but never the id or type', ({ expect }) => {

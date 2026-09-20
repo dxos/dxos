@@ -20,6 +20,7 @@ import {
   type TextNode,
   between,
   createLink,
+  endpointNode,
   isClassNode,
   isEllipseNode,
   isRectNode,
@@ -223,9 +224,14 @@ export const SceneHandler: ContentHandler = {
             });
           }
         } else {
-          const from = refTo(content, record.link.source.node, id);
-          const to = refTo(content, record.link.target.node, id);
-          elements.push({ kind: 'arrow', id: element, from, to });
+          const sourceNode = endpointNode(record.link.source);
+          const targetNode = endpointNode(record.link.target);
+          // The DSL's arrows join elements; a link with a free end has no DSL form.
+          if (sourceNode !== undefined && targetNode !== undefined) {
+            const from = refTo(content, sourceNode, id);
+            const to = refTo(content, targetNode, id);
+            elements.push({ kind: 'arrow', id: element, from, to });
+          }
         }
       }
       objects.push({

@@ -146,6 +146,24 @@ export const pairPorts = (source: PortTerminal, target: PortTerminal): PortPair 
   return best;
 };
 
+/** The port of `terminal` closest to `point` among those taking `direction`, for a link whose other end is free. */
+export const nearestPort = (
+  terminal: PortTerminal,
+  point: Point,
+  direction: Exclude<PortDirection, 'any'>,
+): Port | undefined => {
+  let best: Port | undefined;
+  let bestDistance = Infinity;
+  for (const port of candidates(terminal, direction)) {
+    const value = distance2(portPoint(terminal.bounds, port), point);
+    if (value < bestDistance) {
+      bestDistance = value;
+      best = port;
+    }
+  }
+  return best;
+};
+
 /** The ports an end may use: those accepting its direction, narrowed to the pinned one when it is among them. */
 const candidates = ({ ports, port }: PortTerminal, direction: Exclude<PortDirection, 'any'>): readonly Port[] => {
   const allowed = ports.filter((candidate) => portAccepts(candidate, direction));

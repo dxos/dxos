@@ -15,6 +15,7 @@ describe('SceneBuilder', () => {
       .class('c', { x: 0, y: 300, width: 200, height: 150 }, 'C', ['id: string'])
       .line('ab', 'a#e2', 'b#w2')
       .spline('bc', 'b', 'c', [{ x: 300, y: 250 }])
+      .line('free', '@10,20', 'a', { ends: { start: 'circle', end: 'arrow' } })
       .build();
 
     expect(scene.name).toBe('Sample');
@@ -26,6 +27,8 @@ describe('SceneBuilder', () => {
     expect(scene.links.ab.target).toEqual({ node: 'b', port: 'w2' });
     expect(scene.links.bc.source).toEqual({ node: 'b' });
     expect(scene.links.bc.type === 'spline' && scene.links.bc.points).toEqual([{ x: 300, y: 250 }]);
+    expect(scene.links.free.source).toEqual({ point: { x: 10, y: 20 } });
+    expect(scene.links.free.ends).toEqual({ start: 'circle', end: 'arrow' });
     const zs = [scene.nodes.a.z, scene.nodes.b.z, scene.nodes.c.z, scene.links.ab.z, scene.links.bc.z];
     expect([...zs].sort()).toEqual(zs);
   });

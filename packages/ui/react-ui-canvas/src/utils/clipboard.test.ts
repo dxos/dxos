@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { reduceIntent } from '../model/projection.ts';
-import { type Scene } from '../model/types.ts';
+import { type Link, type Scene, endpointNode } from '../model/types.ts';
 import { copySelection, pasteFragment } from './clipboard.ts';
 import { createSceneTree } from './testing.ts';
 
@@ -48,9 +48,34 @@ describe('clipboard', () => {
     expect(next.nodes['ellipse-1'].center).toEqual({ x: 768, y: 256 });
     const spline = next.links['spline-3'];
     expect(spline.type === 'spline' && spline.points).toEqual([{ x: 704, y: 576 }]);
-    expect(spline.source.node).toBe('ellipse-1');
-    expect(spline.target.node).toBe('class-2');
+    expect(endpointNode(spline.source)).toBe('ellipse-1');
+    expect(endpointNode(spline.target)).toBe('class-2');
     // The originals are untouched.
     expect(next.nodes['scene:r/b'].center).toEqual(scene.nodes['scene:r/b'].center);
+  });
+
+  test('a free end is copied with its node and moves with the paste', ({ expect }) => {
+    const scene = fixture();
+    const free: Link = {
+      type: 'line',
+      id: 'f',
+      z: 'z',
+      source: { node: 'scene:r/a' },
+      target: { point: { x: 0, y: 0 } },
+    };
+    const withFree = { ...scene, links: { ...scene.links, f: free } };
+    const clipboard = copySelection(withFree, ['scene:r/a']);
+    expect(clipboard?.links.map(({ id }) => id)).toEqual(['f']);
+    if (!clipboard) {
+      throw new Error('nothing copied');
+    }
+    const { intent } = pasteFragment({
+      clipboard,
+      offset: { x: 64, y: 32 },
+      createId: (prefix) => `${prefix}-x`,
+      nodeZ: () => 'n',
+      linkZ: () => 'l',
+    });
+    expect(reduceIntent(withFree, intent).links['line-x']?.target).toEqual({ point: { x: 64, y: 32 } });
   });
 });

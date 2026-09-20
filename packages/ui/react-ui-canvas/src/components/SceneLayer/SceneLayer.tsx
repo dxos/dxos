@@ -17,6 +17,7 @@ import { type SceneStore } from '../../model/store.ts';
 import {
   type ElementId,
   type Link,
+  type Marker,
   type Node,
   type NodeId,
   type Scene,
@@ -25,6 +26,7 @@ import {
   isPortalNode,
   isRectNode,
   isTextNode,
+  linkMarkers,
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
 import { sceneBounds } from '../../utils/hit.ts';
@@ -97,25 +99,16 @@ export const SceneLayer = memo(
       [scene, registry],
     );
     const unit = 1 / Math.max(zoom, 0.05);
-    // One arrowhead marker per layer, sized in scene units so it scales with the stroke.
+    // One set of end markers per layer, sized in scene units so they scale with the stroke.
     const markerId = useId();
+    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end') =>
+      marker ? `url(#${markerId}-${marker}-${end})` : undefined;
 
     return (
       <>
         <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
           <defs>
-            <marker
-              id={markerId}
-              viewBox='0 0 10 10'
-              refX={9}
-              refY={5}
-              markerWidth={6 * unit}
-              markerHeight={6 * unit}
-              markerUnits='userSpaceOnUse'
-              orient='auto'
-            >
-              <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
-            </marker>
+            <Markers id={markerId} unit={unit} />
           </defs>
           {links.map(({ link, path }) => (
             <g key={link.id}>
@@ -135,7 +128,8 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
                 strokeWidth={2 * unit}
-                markerEnd={link.directed ? `url(#${markerId})` : undefined}
+                markerStart={markerUrl(linkMarkers(link).start, 'start')}
+                markerEnd={markerUrl(linkMarkers(link).end, 'end')}
               />
             </g>
           ))}
@@ -162,6 +156,45 @@ export const SceneLayer = memo(
 );
 
 SceneLayer.displayName = 'SceneLayer';
+
+/** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
+const Markers = ({ id, unit }: { id: string; unit: number }) => {
+  const size = 6 * unit;
+  const ends = ['start', 'end'] as const;
+  return (
+    <>
+      {ends.map((end) => (
+        <marker
+          key={`arrow-${end}`}
+          id={`${id}-arrow-${end}`}
+          viewBox='0 0 10 10'
+          refX={9}
+          refY={5}
+          markerWidth={size}
+          markerHeight={size}
+          markerUnits='userSpaceOnUse'
+          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
+        >
+          <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
+        </marker>
+      ))}
+      {ends.map((end) => (
+        <marker
+          key={`circle-${end}`}
+          id={`${id}-circle-${end}`}
+          viewBox='0 0 10 10'
+          refX={5}
+          refY={5}
+          markerWidth={size}
+          markerHeight={size}
+          markerUnits='userSpaceOnUse'
+        >
+          <circle cx={5} cy={5} r={4} className='fill-neutral-500' />
+        </marker>
+      ))}
+    </>
+  );
+};
 
 type NodeFrameProps = Omit<NodeViewProps, 'editing'> & { editingPart?: PartKey; handlers?: ElementHandlers };
 

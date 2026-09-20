@@ -11,11 +11,13 @@
 import {
   type Bounds,
   type ElementId,
+  type Endpoint,
   type Intent,
   type Link,
   type Node,
   type Point,
   type Scene,
+  isPointEndpoint,
 } from '../model/types.ts';
 import { unionBounds } from './hit.ts';
 import { nodeBounds } from './shapes.ts';
@@ -33,9 +35,9 @@ export const copySelection = (scene: Scene, selection: Iterable<ElementId>): Cli
   const ids = new Set(selection);
   const nodes = Object.values(scene.nodes).filter((node) => ids.has(node.id));
   const nodeIds = new Set(nodes.map(({ id }) => id));
-  const links = Object.values(scene.links).filter(
-    (link) => nodeIds.has(link.source.node) && nodeIds.has(link.target.node),
-  );
+  // A free end travels with the fragment; a node end must be in it.
+  const inFragment = (end: Endpoint) => isPointEndpoint(end) || nodeIds.has(end.node);
+  const links = Object.values(scene.links).filter((link) => inFragment(link.source) && inFragment(link.target));
   return nodes.length > 0 ? { nodes, links, pasted: 0 } : undefined;
 };
 
@@ -67,10 +69,9 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ }: Pas
   const links: Link[] = clipboard.links.map((link, index) => {
     const id = createId(link.type);
     idMap.set(link.id, id);
-    const ends = {
-      source: { ...link.source, node: idMap.get(link.source.node) ?? link.source.node },
-      target: { ...link.target, node: idMap.get(link.target.node) ?? link.target.node },
-    };
+    const remap = (end: Endpoint): Endpoint =>
+      isPointEndpoint(end) ? { point: shift(end.point) } : { ...end, node: idMap.get(end.node) ?? end.node };
+    const ends = { source: remap(link.source), target: remap(link.target) };
     return link.type === 'spline'
       ? { ...link, id, z: linkZ(index), ...ends, points: link.points.map(shift) }
       : { ...link, id, z: linkZ(index), ...ends };

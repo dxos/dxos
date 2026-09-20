@@ -49,6 +49,8 @@ import {
   type Size,
   type SplineLink,
   type Tool,
+  endpointNode,
+  isPointEndpoint,
   isPortalNode,
 } from '../../model/types.ts';
 import {
@@ -68,7 +70,7 @@ import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds 
 import { between, topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
-import { insertIndex, linkGeometry } from '../../utils/route.ts';
+import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
 import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { Breadcrumbs } from '../Breadcrumbs/Breadcrumbs.tsx';
@@ -96,6 +98,9 @@ const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).sli
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
 const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
+    if (isPointEndpoint(end)) {
+      return false;
+    }
     const node = scene.nodes[end.node];
     const port = node && nodePorts(registry, node).find((candidate) => candidate.id === end.port);
     return port !== undefined && port.accepts !== undefined && port.accepts !== 'any';
@@ -490,6 +495,15 @@ export const SceneView = ({
           const from = { x: snap(point.x), y: snap(point.y) };
           startDrag({ kind: 'create', type: currentTool.type, from, to: from }, event);
         }
+      } else if (currentTool.kind === 'link') {
+        // A link tool on empty canvas draws a free-ended link (decision 3); dropping on a node attaches that end.
+        if (capabilities.link) {
+          const from = { x: snap(point.x), y: snap(point.y) };
+          startDrag(
+            { kind: 'link', type: currentTool.type, source: { point: from }, from, fromSide: 'e', to: from },
+            event,
+          );
+        }
       } else {
         if (!event.shiftKey) {
           select([]);
@@ -497,7 +511,7 @@ export const SceneView = ({
         startDrag({ kind: 'marquee', from: point, to: point, additive: event.shiftKey }, event);
       }
     },
-    [registry, atoms.tool, toScene, startDrag, select, capabilities.create, snap],
+    [registry, atoms.tool, toScene, startDrag, select, capabilities.create, capabilities.link, snap],
   );
 
   /** Click selection shared by nodes and links: shift toggles, a plain click on an unselected element replaces. */
@@ -748,7 +762,7 @@ export const SceneView = ({
    * among those that accept the end (`in` for a target, `out` for a source); a node with none takes no drop.
    */
   const linkTarget = useCallback(
-    (point: Point, exclude: NodeId, direction: 'in' | 'out'): Endpoint | undefined => {
+    (point: Point, exclude: NodeId | undefined, direction: 'in' | 'out'): Endpoint | undefined => {
       const reach = PORT_SNAP_PX / registry.get(atoms.camera).zoom;
       const node = hitTest(scene, point, reach);
       if (!node || node.id === exclude) {
@@ -830,7 +844,11 @@ export const SceneView = ({
         }
         case 'link': {
           const point = toScene(event);
-          setDrag({ ...current, to: point, target: linkTarget(point, current.source.node, 'in') });
+          const target = linkTarget(point, endpointNode(current.source), 'in');
+          // Over free space the band follows the pointer; a free source keeps facing the far end.
+          const to = target ? point : { x: snap(point.x), y: snap(point.y) };
+          const fromSide = isPointEndpoint(current.source) ? sideToward(current.from, to) : current.fromSide;
+          setDrag({ ...current, to, fromSide, target });
           break;
         }
         case 'point': {
@@ -843,12 +861,9 @@ export const SceneView = ({
         case 'end': {
           const point = toScene(event);
           const link = scene.links[current.id];
-          const other = link ? (current.end === 'source' ? link.target.node : link.source.node) : '';
-          setDrag({
-            ...current,
-            to: point,
-            target: linkTarget(point, other, current.end === 'source' ? 'out' : 'in'),
-          });
+          const other = link ? endpointNode(current.end === 'source' ? link.target : link.source) : undefined;
+          const target = linkTarget(point, other, current.end === 'source' ? 'out' : 'in');
+          setDrag({ ...current, to: target ? point : { x: snap(point.x), y: snap(point.y) }, target });
           break;
         }
       }
@@ -894,9 +909,14 @@ export const SceneView = ({
       }
       case 'link': {
         let target = current.target;
-        if (!target && capabilities.create) {
-          // Dropping on empty canvas creates a rectangle there and links to it (canvas-editor behaviour);
-          // its top-left is what snaps, so the edges land on the grid.
+        if (!target && isPointEndpoint(current.source)) {
+          // A free-ended link that never reached a node ends free too; a click without a drag draws nothing.
+          if (current.to.x !== current.from.x || current.to.y !== current.from.y) {
+            target = { point: current.to };
+          }
+        } else if (!target && capabilities.create) {
+          // Dropping a port drag on empty canvas creates a rectangle there and links to it (canvas-editor
+          // behaviour); its top-left is what snaps, so the edges land on the grid.
           const size = DEFAULT_SIZES.rect;
           const node = createNode({
             type: 'rect',
@@ -956,10 +976,9 @@ export const SceneView = ({
         break;
       }
       case 'end': {
-        // Dropped on nothing: the end stays where it was.
-        if (current.target) {
-          projection.apply({ kind: 'update', id: current.id, values: { [current.end]: current.target } });
-        }
+        // Dropped on a node it attaches there; dropped on empty canvas it becomes a free end at that point.
+        const end: Endpoint = current.target ?? { point: current.to };
+        projection.apply({ kind: 'update', id: current.id, values: { [current.end]: end } });
         break;
       }
       case 'pan':
@@ -1099,22 +1118,22 @@ export const SceneView = ({
     if (drag?.kind === 'point') {
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } });
     }
-    if (drag?.kind === 'link' && drag.target) {
+    if (drag?.kind === 'link' && (drag.target || isPointEndpoint(drag.source))) {
+      // A port drag previews once it reaches a target; a free-ended link previews as it will land.
       const link = createLink({
         type: drag.type,
         id: PREVIEW_LINK_ID,
         z: topZ(Object.values(scene.links)),
         source: drag.source,
-        target: drag.target,
+        target: drag.target ?? { point: drag.to },
         midpoint: { x: (drag.from.x + drag.to.x) / 2, y: (drag.from.y + drag.to.y) / 2 },
       });
       return reduceIntent(scene, { kind: 'link', link });
     }
     if (drag?.kind === 'end') {
-      // Over a target the link is drawn re-attached; over free space only the rubber band shows.
-      return drag.target
-        ? reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: drag.target } })
-        : reduceIntent(scene, { kind: 'delete', ids: [drag.id] });
+      // The link is drawn as it will land: re-attached over a target, free-ended over empty canvas.
+      const end: Endpoint = drag.target ?? { point: drag.to };
+      return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
     }
     return scene;
   }, [scene, drag]);

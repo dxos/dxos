@@ -4,8 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { defaultNodeRegistry } from '../model/registry.ts';
 import { type Link } from '../model/types.ts';
-import { insertIndex, linkPath, splinePath } from './route.ts';
+import { SceneBuilder } from './builder.ts';
+import { insertIndex, linkGeometry, linkPath, sideToward, splinePath } from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -45,6 +47,23 @@ describe('route', () => {
     expect(insertIndex(from.point, points, to.point, { x: 50, y: 40 })).toBe(0);
     expect(insertIndex(from.point, points, to.point, { x: 150, y: 110 })).toBe(1);
     expect(insertIndex(from.point, points, to.point, { x: 260, y: 40 })).toBe(2);
+  });
+
+  test('a free end faces the other end, and a node end facing it takes its nearest port', ({ expect }) => {
+    const scene = SceneBuilder.create('s')
+      .rect('a', { x: 0, y: 0, width: 256, height: 128 })
+      .line('free', '@-200,64', '@-100,64')
+      .line('half', '@640,64', 'a')
+      .build();
+    expect(sideToward({ x: 0, y: 0 }, { x: 10, y: 3 })).toBe('e');
+    expect(sideToward({ x: 0, y: 0 }, { x: -3, y: 10 })).toBe('s');
+    const free = linkGeometry(scene, defaultNodeRegistry, scene.links.free);
+    expect(free?.path).toBe('M -200 64 L -100 64');
+    expect([free?.source.side, free?.target.side]).toEqual(['e', 'w']);
+    // The rectangle's east centre is the port nearest a point off to its right.
+    const half = linkGeometry(scene, defaultNodeRegistry, scene.links.half);
+    expect(half?.target).toEqual({ point: { x: 256, y: 64 }, side: 'e' });
+    expect(half?.source.side).toBe('w');
   });
 
   test('a spline leaves and enters its ports along the side normals', ({ expect }) => {

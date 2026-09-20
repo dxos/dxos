@@ -17,12 +17,15 @@ import { type NodeRegistry } from '../../model/registry.ts';
 import {
   type Bounds,
   type ElementId,
+  type Endpoint,
   type Link,
   type Node,
   type Point,
   type Port,
   type Scene,
   type SplineLink,
+  endpointNode,
+  isPointEndpoint,
 } from '../../model/types.ts';
 import { boundsFromPoints } from '../../utils/hit.ts';
 import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
@@ -96,20 +99,19 @@ export const ControlFrame = memo(
       portNodes.add(hovered);
     }
     // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.
-    const dropTarget =
-      (drag?.kind === 'link' || drag?.kind === 'end') && drag.target ? scene.nodes[drag.target.node] : undefined;
+    const dropNode = (drag?.kind === 'link' || drag?.kind === 'end') && drag.target && endpointNode(drag.target);
+    const dropTarget = dropNode ? scene.nodes[dropNode] : undefined;
     if (dropTarget) {
       portNodes.add(dropTarget);
     }
     const marquee = drag?.kind === 'marquee' ? boundsFromPoints(drag.from, drag.to) : undefined;
     const create = drag?.kind === 'create' ? boundsFromPoints(drag.from, drag.to) : undefined;
-    // Over a drop target the layer already draws the provisional link; the band only reaches free space.
+    // The layer draws every provisional link that will land (over a target, or free-ended); the band is only
+    // a port drag over free space, where dropping would create a node rather than a free end.
     const band =
-      drag?.kind === 'link' && !drag.target
+      drag?.kind === 'link' && !drag.target && !isPointEndpoint(drag.source)
         ? { from: { point: drag.from, side: drag.fromSide }, to: drag.to }
-        : drag?.kind === 'end' && !drag.target
-          ? { from: { point: drag.fixed, side: drag.fixedSide }, to: drag.to }
-          : undefined;
+        : undefined;
 
     return (
       <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
@@ -152,11 +154,11 @@ export const ControlFrame = memo(
           return nodePorts(registry, node).map((port) => {
             const point = portPoint(bounds, port);
             // Filled while it is an end of the drag in progress: the source, or the port it would drop on.
+            const isEnd = (end: Endpoint | undefined) =>
+              end !== undefined && !isPointEndpoint(end) && end.node === node.id && end.port === port.id;
             const active =
-              (drag?.kind === 'link' && drag.source.node === node.id && drag.source.port === port.id) ||
-              ((drag?.kind === 'link' || drag?.kind === 'end') &&
-                drag.target?.node === node.id &&
-                drag.target.port === port.id);
+              (drag?.kind === 'link' && isEnd(drag.source)) ||
+              ((drag?.kind === 'link' || drag?.kind === 'end') && isEnd(drag.target));
             return (
               <circle
                 key={`${node.id}/${port.id}`}

@@ -10,8 +10,17 @@
 //
 
 import { type NodeRegistry } from '../model/registry.ts';
-import { type Link, type Point, type Scene, type Side } from '../model/types.ts';
-import { nodePorts, pairPorts, portPoint, sideNormal } from './ports.ts';
+import {
+  type Endpoint,
+  type Link,
+  type Point,
+  type Port,
+  type PortEndpoint,
+  type Scene,
+  type Side,
+  isPointEndpoint,
+} from '../model/types.ts';
+import { type PortTerminal, nearestPort, nodePorts, pairPorts, portPoint, sideNormal } from './ports.ts';
 import { nodeBounds } from './shapes.ts';
 
 const MIN_TANGENT = 40;
@@ -100,25 +109,74 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd): string => {
 
 export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };
 
-/** Resolve a link's ends to ports (automatic pairing unless pinned) and route it by its type. */
+/** The side of a free end: the one facing the other end, so the route leaves it toward that end. */
+export const sideToward = (from: Point, to: Point): Side => {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  return Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'e' : 'w') : dy >= 0 ? 's' : 'n';
+};
+
+/** A node end as the port picker sees it, or nothing when the node is gone. */
+const terminalOf = (scene: Scene, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+  const node = scene.nodes[end.node];
+  return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
+};
+
+const routeEnd = (terminal: PortTerminal, port: Port): RouteEnd => ({
+  point: portPoint(terminal.bounds, port),
+  side: port.side,
+});
+
+/**
+ * Resolve a link's ends and route it by its type: two node ends take the automatic (or pinned) port pair,
+ * a node end facing a free point takes the port nearest that point, and two free points face each other.
+ */
 export const linkGeometry = (scene: Scene, registry: NodeRegistry, link: Link): LinkGeometry | undefined => {
-  const source = scene.nodes[link.source.node];
-  const target = scene.nodes[link.target.node];
-  if (!source || !target) {
+  const ends = resolveEnds(scene, registry, link.source, link.target);
+  if (!ends) {
     return undefined;
   }
-  const sourceBounds = nodeBounds(source);
-  const targetBounds = nodeBounds(target);
-  const pair = pairPorts(
-    { bounds: sourceBounds, ports: nodePorts(registry, source), port: link.source.port },
-    { bounds: targetBounds, ports: nodePorts(registry, target), port: link.target.port },
-  );
-  if (!pair) {
-    return undefined;
-  }
-  const from = { point: portPoint(sourceBounds, pair.source), side: pair.source.side };
-  const to = { point: portPoint(targetBounds, pair.target), side: pair.target.side };
+  const [from, to] = ends;
   return { link, path: linkPath(link, from, to), source: from, target: to };
+};
+
+const resolveEnds = (
+  scene: Scene,
+  registry: NodeRegistry,
+  source: Endpoint,
+  target: Endpoint,
+): [RouteEnd, RouteEnd] | undefined => {
+  if (isPointEndpoint(source)) {
+    if (isPointEndpoint(target)) {
+      return [
+        { point: source.point, side: sideToward(source.point, target.point) },
+        { point: target.point, side: sideToward(target.point, source.point) },
+      ];
+    }
+    const terminal = terminalOf(scene, registry, target);
+    const port = terminal && nearestPort(terminal, source.point, 'in');
+    if (!terminal || !port) {
+      return undefined;
+    }
+    const to = routeEnd(terminal, port);
+    return [{ point: source.point, side: sideToward(source.point, to.point) }, to];
+  }
+  if (isPointEndpoint(target)) {
+    const terminal = terminalOf(scene, registry, source);
+    const port = terminal && nearestPort(terminal, target.point, 'out');
+    if (!terminal || !port) {
+      return undefined;
+    }
+    const from = routeEnd(terminal, port);
+    return [from, { point: target.point, side: sideToward(target.point, from.point) }];
+  }
+  const sourceTerminal = terminalOf(scene, registry, source);
+  const targetTerminal = terminalOf(scene, registry, target);
+  const pair = sourceTerminal && targetTerminal && pairPorts(sourceTerminal, targetTerminal);
+  if (!sourceTerminal || !targetTerminal || !pair) {
+    return undefined;
+  }
+  return [routeEnd(sourceTerminal, pair.source), routeEnd(targetTerminal, pair.target)];
 };
 
 /** Index at which a new control point at `point` keeps the polyline `ends`+`points` in order. */

@@ -14,7 +14,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { resizeNode } from '../utils/shapes.ts';
 import { type SceneStore, putScene, updateScene } from './store.ts';
-import { type Capabilities, type Intent, type Link, type Node, Scene, type SceneId } from './types.ts';
+import { type Capabilities, type Intent, type Link, type Node, Scene, type SceneId, endpointNode } from './types.ts';
 
 export type Projection = {
   /** Positioned nodes and links; re-emitted on every model change. */
@@ -58,9 +58,12 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
 
     case 'link': {
       const { link } = intent;
-      const source = scene.nodes[link.source.node];
-      const target = scene.nodes[link.target.node];
-      if (!source || !target || source.id === target.id) {
+      // Every node end must exist, and a link never joins a node to itself; free ends need nothing.
+      const nodes = [link.source, link.target].map(endpointNode);
+      if (nodes.some((id) => id !== undefined && scene.nodes[id] === undefined)) {
+        return scene;
+      }
+      if (nodes[0] !== undefined && nodes[0] === nodes[1]) {
         return scene;
       }
       return { ...scene, links: { ...scene.links, [link.id]: link } };
@@ -81,7 +84,11 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
       const links: Record<string, Link> = {};
       for (const link of Object.values(scene.links)) {
         // A link loses its meaning with either end, so it goes too.
-        if (!ids.has(link.id) && !ids.has(link.source.node) && !ids.has(link.target.node)) {
+        if (
+          !ids.has(link.id) &&
+          !ids.has(endpointNode(link.source) ?? '') &&
+          !ids.has(endpointNode(link.target) ?? '')
+        ) {
           links[link.id] = link;
         }
       }

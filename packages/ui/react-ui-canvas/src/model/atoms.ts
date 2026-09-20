@@ -41,7 +41,10 @@ export type Drag =
   | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
-  /** Rubber band from a port; `target` is set while hovering a valid drop, and the link is then previewed as created. */
+  /**
+   * Rubber band from a port, or from a free point under a link tool; `target` is set while hovering a
+   * valid drop, and the link is then previewed as created.
+   */
   | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
   /** Drawing a new node with a tool. */
   | { kind: 'create'; type: NodeType; from: Point; to: Point }

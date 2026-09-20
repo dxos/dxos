@@ -26,6 +26,7 @@ import {
   type Point,
   type Scene,
   type Size,
+  endpointNode,
 } from '../types.ts';
 import { labelOf } from './constrained.ts';
 
@@ -151,13 +152,13 @@ export const createDynamicProjection = ({
       case 'link': {
         const model = registry.get(graph);
         const { link } = intent;
-        if (model.edges.some((edge) => edge.id === link.id)) {
+        const from = endpointNode(link.source);
+        const to = endpointNode(link.target);
+        // The graph has edges between nodes only; a free-ended link has no place in it.
+        if (from === undefined || to === undefined || model.edges.some((edge) => edge.id === link.id)) {
           return;
         }
-        registry.set(graph, {
-          ...model,
-          edges: [...model.edges, { id: link.id, from: link.source.node, to: link.target.node }],
-        });
+        registry.set(graph, { ...model, edges: [...model.edges, { id: link.id, from, to }] });
         break;
       }
       case 'delete': {

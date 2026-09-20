@@ -65,6 +65,10 @@ export const NodeStyle = Schema.Struct({
   rounded: Schema.optional(Schema.Boolean),
   fill: Schema.optional(Schema.Boolean),
   border: Schema.optional(Schema.Boolean),
+  /** A guide: drawn dashed and unfilled, an annotation rather than content. */
+  guide: Schema.optional(Schema.Boolean),
+  /** Extra classes on the frame, for a host's own look. */
+  className: Schema.optional(Schema.String),
 });
 export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
 
@@ -149,12 +153,34 @@ export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES
 // Links
 //
 
-/** A link end; no `port` means automatic (the closest appropriate pair, recomputed on every projection). */
-export const Endpoint = Schema.Struct({
+/** A link end on a node; no `port` means automatic (the closest appropriate pair, recomputed on every projection). */
+export const PortEndpoint = Schema.Struct({
   node: Schema.String,
   port: Schema.optional(Schema.String),
 });
+export type PortEndpoint = Schema.Schema.Type<typeof PortEndpoint>;
+
+/** A free link end at a scene point (decision 3): an arrow or path that starts or ends on nothing. */
+export const PointEndpoint = Schema.Struct({ point: Point });
+export type PointEndpoint = Schema.Schema.Type<typeof PointEndpoint>;
+
+export const Endpoint = Schema.Union([PortEndpoint, PointEndpoint]);
 export type Endpoint = Schema.Schema.Type<typeof Endpoint>;
+
+export const isPointEndpoint = (end: Endpoint): end is PointEndpoint => 'point' in end;
+/** The node an end is attached to; a free end has none. */
+export const endpointNode = (end: Endpoint): NodeId | undefined => ('node' in end ? end.node : undefined);
+
+/** What is drawn at a link end. */
+export const Marker = Schema.Literals(['arrow', 'circle']);
+export type Marker = Schema.Schema.Type<typeof Marker>;
+
+/** Markers at the source (`start`) and target (`end`) of a link. */
+export const LinkEnds = Schema.Struct({
+  start: Schema.optional(Marker),
+  end: Schema.optional(Marker),
+});
+export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
 
 const linkBase = {
   id: Schema.String,
@@ -162,8 +188,10 @@ const linkBase = {
   locked: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
-  /** Drawn with an arrowhead at the target; ports with `accepts` constrain which end lands where. */
+  /** Shorthand for `ends: { end: 'arrow' }`; ports with `accepts` constrain which end lands where. */
   directed: Schema.optional(Schema.Boolean),
+  /** Explicit end markers; when present they replace what `directed` implies. */
+  ends: Schema.optional(LinkEnds),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -187,6 +215,9 @@ export type LinkType = Link['type'];
 export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline'];
 
 export type Element = Node | Link;
+
+/** The markers a link draws: its explicit `ends`, else an arrowhead at the target when it is `directed`. */
+export const linkMarkers = (link: Link): LinkEnds => link.ends ?? (link.directed ? { end: 'arrow' } : {});
 
 export const isNode = (element: Element): element is Node => 'center' in element;
 export const isLink = (element: Element): element is Link => 'source' in element;

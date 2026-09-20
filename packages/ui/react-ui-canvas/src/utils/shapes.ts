@@ -14,6 +14,7 @@ import {
   type BuiltinNodeType,
   type Endpoint,
   type Link,
+  type LinkEnds,
   type LinkType,
   type Node,
   type Point,
@@ -105,11 +106,12 @@ export type CreateLinkProps = {
   /** Where a new spline gets its first control point; ignored by the other types. */
   midpoint?: Point;
   directed?: boolean;
+  ends?: LinkEnds;
 };
 
 /** A new link of `type`; a spline starts with one control point so it is editable at once. */
-export const createLink = ({ type, id, z, source, target, midpoint, directed }: CreateLinkProps): Link => {
-  const base = { id, z, source, target, ...(directed ? { directed } : {}) };
+export const createLink = ({ type, id, z, source, target, midpoint, directed, ends }: CreateLinkProps): Link => {
+  const base = { id, z, source, target, ...(directed ? { directed } : {}), ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
     case 'curve':
