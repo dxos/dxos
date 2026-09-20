@@ -177,10 +177,15 @@ export const PreviewComponent = ({
     } else if (unavailable && !unresolved) {
       next.unresolved = true;
     }
+    // A section takes its reservation back should the same link have been a card before (a plugin
+    // that adds the section surface came up later); the card effect below only ever sets the flag.
+    if (mode === 'section' && intrinsic) {
+      next.intrinsic = false;
+    }
     if (Object.keys(next).length > 0) {
       queueMicrotask(() => setLinkWidgetState(view, id, next));
     }
-  }, [view, id, unavailable, unresolved, mode]);
+  }, [view, id, unavailable, unresolved, mode, intrinsic]);
 
   // A card sizes itself: the pin is released on the mounted placeholder rather than by rebuilding
   // the widget (a redraw under a click swapped the element being clicked), and recorded so the next
