@@ -25,7 +25,13 @@ export type GridProps = ThemedClassName<{
   scale?: number;
   offset?: Point;
   showAxes?: boolean;
+  /** Grid levels as multiples of `size`, finest first. */
+  ratios?: readonly number[];
+  /** On-screen cell size (px) outside which a level is not drawn. */
+  range?: readonly [min: number, max: number];
 }>;
+
+const defaultRange = [defaultGridSize, 128] as const;
 
 // TODO(burdon): Use id of parent canvas.
 export const Grid = (props: GridProps) => {
@@ -35,19 +41,28 @@ export const Grid = (props: GridProps) => {
 
 export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
   (
-    { size: gridSize = defaultGridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames },
+    {
+      size: gridSize = defaultGridSize,
+      scale = 1,
+      offset = defaultOffset,
+      showAxes = true,
+      ratios = gridRatios,
+      range = defaultRange,
+      classNames,
+    },
     forwardedRef,
   ) => {
     const svgRef = useForwardedRef(forwardedRef);
     const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
 
     const instanceId = useId();
+    const [min, max] = range;
     const grids = useMemo(
       () =>
-        gridRatios
+        ratios
           .map((ratio) => ({ id: ratio, size: ratio * gridSize * scale }))
-          .filter(({ size }) => size >= gridSize && size <= 128),
-      [gridSize, scale],
+          .filter(({ size }) => size >= min && size <= max),
+      [ratios, gridSize, scale, min, max],
     );
 
     return (

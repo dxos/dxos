@@ -66,7 +66,13 @@ import { redo, undo } from './undo.ts';
 const AUTO_ENTER = 0.85;
 const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
+/** Quiet time after the last wheel step before the canvas takes pointer events again. */
+const NAVIGATION_SETTLE_MS = 150;
 const FIT_INSET = 40;
+/** Minor, major and a coarse level so a far zoom-out still shows a grid. */
+const GRID_LEVELS = [1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2] as const;
+/** Minor cells under 6px are noise; the major grid has no upper bound. */
+const GRID_RANGE = [6, Infinity] as const;
 const PORT_SNAP_PX = 16;
 /** Id of the link drawn while a link drag hovers a drop target; never reaches the model. */
 const PREVIEW_LINK_ID = 'preview';
@@ -189,21 +195,52 @@ export const SceneView = ({
   const cancelRef = useRef<() => void>(undefined);
   // The portal a drill-in is zooming into; it renders as the plain child scene until the root swaps.
   const [opening, setOpening] = useState<ElementId>();
+  // While the camera moves on its own (wheel zoom or pan, an animation) the canvas ignores the pointer:
+  // nothing under it is where it will be, so hover and presses would land on passing content.
+  const [navigating, setNavigating] = useState(false);
+  const navigatingRef = useRef(false);
+  const settleRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const setNavigation = useCallback(
+    (active: boolean) => {
+      clearTimeout(settleRef.current);
+      settleRef.current = undefined;
+      if (navigatingRef.current !== active) {
+        navigatingRef.current = active;
+        setNavigating(active);
+        if (active) {
+          registry.set(atoms.hover, undefined);
+        }
+      }
+    },
+    [registry, atoms.hover],
+  );
+  /** Navigation that ends on its own: stays active until no wheel step arrives for a beat. */
+  const touchNavigation = useCallback(() => {
+    setNavigation(true);
+    settleRef.current = setTimeout(() => setNavigation(false), NAVIGATION_SETTLE_MS);
+  }, [setNavigation]);
+  useEffect(() => () => clearTimeout(settleRef.current), []);
+
   const cancelAnimation = useCallback(() => {
-    cancelRef.current?.();
-    cancelRef.current = undefined;
+    if (cancelRef.current) {
+      cancelRef.current();
+      cancelRef.current = undefined;
+      setNavigation(false);
+    }
     setOpening(undefined);
-  }, []);
+  }, [setNavigation]);
 
   const animateTo = useCallback(
     (target: Camera, done?: () => void) => {
       cancelAnimation();
+      setNavigation(true);
       cancelRef.current = animateCamera(registry.get(atoms.camera), target, viewport, setCamera, () => {
         cancelRef.current = undefined;
+        setNavigation(false);
         done?.();
       });
     },
-    [registry, atoms.camera, viewport, setCamera, cancelAnimation],
+    [registry, atoms.camera, viewport, setCamera, cancelAnimation, setNavigation],
   );
 
   // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
@@ -222,13 +259,14 @@ export const SceneView = ({
       (event, pointer) => {
         interactedRef.current = true;
         cancelAnimation();
+        touchNavigation();
         if (event.ctrlKey || event.metaKey) {
           setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.01)));
         } else {
           setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
         }
       },
-      [setCamera, cancelAnimation],
+      [setCamera, cancelAnimation, touchNavigation],
     ),
   );
 
@@ -708,7 +746,9 @@ export const SceneView = ({
     (event: React.PointerEvent) => {
       const current = registry.get(atoms.drag);
       if (!current) {
-        updateHover(toScene(event));
+        if (!navigatingRef.current) {
+          updateHover(toScene(event));
+        }
         return;
       }
       switch (current.kind) {
@@ -1078,14 +1118,15 @@ export const SceneView = ({
       onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
     >
-      {snapEnabled && (
-        <GridComponent
-          size={grid}
-          scale={camera.zoom}
-          offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
-          showAxes={false}
-        />
-      )}
+      {/* Minor and major grid, always; the minor one goes when its cells get too small to read. */}
+      <GridComponent
+        size={grid}
+        scale={camera.zoom}
+        offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
+        showAxes={false}
+        ratios={GRID_LEVELS}
+        range={GRID_RANGE}
+      />
       <div
         className={mx('absolute pointer-events-none', !measured && 'invisible')}
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
@@ -1123,6 +1164,8 @@ export const SceneView = ({
           onPointContextMenu={onPointContextMenu}
         />
       </div>
+      {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
+      {navigating && <div className='dx-fullscreen' data-testid='navigation-shield' />}
       <span
         ref={menuAnchorRef}
         className='absolute size-0 pointer-events-none'
@@ -1190,10 +1233,10 @@ export const SceneView = ({
           variant='ghost'
           density='sm'
           classNames={mx(snapEnabled && 'bg-primary-500/20')}
-          title='Grid (G): show the grid and snap moves and resizes to it'
+          title='Snap (G): snap moves, resizes and new nodes to the major grid'
           onClick={toggleSnap}
         >
-          Grid
+          Snap
         </Button>
         <IconButton
           variant='ghost'
