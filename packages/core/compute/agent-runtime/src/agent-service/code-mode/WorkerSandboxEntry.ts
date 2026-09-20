@@ -4,6 +4,7 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as Context from 'effect/Context';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
@@ -31,6 +32,9 @@ import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+
+/** Whatever the model's code threw, named so the error channel carries more than `unknown`. */
+class ModelCodeFailed extends Data.TaggedError('ModelCodeFailed')<{ readonly message: string }> {}
 
 const DIALECTS: Record<string, Dialect> = {
   [PlainDialect.name]: PlainDialect,
@@ -111,11 +115,11 @@ const main = Effect.gen(function* () {
   const names = Object.keys(bindings);
   const outcome = yield* Effect.tryPromise({
     try: () => new AsyncFunction(...names, `'use strict';\n${init.code}`)(...names.map((name) => bindings[name])),
-    catch: (error: unknown) => error,
+    catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
   }).pipe(
     Effect.match({
       onSuccess: (value: unknown) => ({ value, failure: null }),
-      onFailure: (error: unknown) => ({ value: undefined, failure: describe(error) }),
+      onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
     }),
   );
 
