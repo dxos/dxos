@@ -64,6 +64,56 @@ probe reaches a worker after it has started, so it misses the earliest calls;
 `api-census.mjs`, which pauses each realm before its first script, counts roughly
 190 per worker over the same 90 seconds.
 
+## What it costs once there is data in it
+
+Everything above and below this section is an empty tab on a fresh profile,
+which is not the state anyone complains about.
+[`seed-profile.mjs`](../../../packages/apps/composer-app/scripts/memory/seed-profile.mjs)
+builds a persistent profile from the nightly's own fixture — here three spaces,
+600 tasks and 9 documents of 400 paragraphs each — and `native-heap.mjs
+--profile <dir> --journey` boots on it and opens a project's tasks and a document
+in every space before measuring.
+
+| profile                | footprint | `<unspecified>` | sampled | IndexedDB | `performance.measure` |
+| ---------------------- | --------: | --------------: | ------: | --------: | --------------------: |
+| empty, nothing open    |    259 MB |         36.3 MB |   66 MB |    0.2 MB |                0.7 MB |
+| empty, nothing open    |    357 MB |        111.8 MB |  174 MB |    113 MB |                0.9 MB |
+| 3 spaces, nothing open |    363 MB |        195.9 MB |  253 MB |    190 MB |                2.2 MB |
+| 3 spaces, nothing open |    471 MB |        264.7 MB |  383 MB |    294 MB |               24.0 MB |
+| 3 spaces, all opened   |    796 MB |        401.5 MB |  447 MB |    302 MB |               52.0 MB |
+| 3 spaces, all opened   |    814 MB |        305.7 MB |  401 MB |    238 MB |               72.4 MB |
+
+**The tab reaches 800 MB, and the log store's sweep is still most of it.** The
+reason it scales so hard is the store's own cap: on a seeded profile the log
+database is 44.3 MB at boot and hits its 50 MB limit within a minute of use, so
+every sweep now reads 50 MB rather than the 2.4 MB an empty profile had. The JS
+census counts 399 `getAll` pairs on `composer-logs` during one journey run, and
+no other bulk IndexedDB read in any realm.
+
+**And `TextEncoder.encode` charges twice for it.** Of the 447 MB sampled in the
+first journey run:
+
+- **141.2 MB** in `ArrayBufferContents` under `TextEncoder::encode` — the output
+  `Uint8Array` per row, which is discarded after `.length` is read.
+- **101.0 MB** in `ToBlinkString` under `NativeValueTraits<IDLUSVStringBase>` —
+  Blink copying the JS string into its own heap to satisfy the binding's
+  `USVString` parameter, before any encoding happens. Both have the same two JS
+  frames beneath them.
+
+That is **242 MB, 54% of everything the profiler sampled**, from one line that
+wants a number it could have stored in the key.
+
+**`performance.measure` is churn, not a leak.** It rises to 24–72 MB once there is
+data to query and index, but the retained detail payloads across 1,871 entries
+total ~0.1 MB: the bytes are serialization buffers in flight during a burst of
+ECHO queries, not entries piling up. The entry count does grow without bound —
+1,332 after boot, still climbing three passes later — but that costs kilobytes,
+not megabytes. An earlier revision of this page said it "grows for as long as the
+tab is open" in a way that implied the bytes grow with it; they do not.
+
+Script source stays flat at 31–33 MB whatever the profile holds, which is what
+makes it the floor rather than the problem.
+
 ## 1. The log store's eviction sweep
 
 [`IdbLogStore#evict`](../../../packages/common/log-store-idb/src/idb-log-store.ts):

@@ -21,6 +21,11 @@
  *
  * Usage: node native-heap.mjs <url> [--settle 90] [--rate 10000] [--json out.json]
  *        [--electron <Electron.app>] [--symbols <Electron Framework.sym>]
+ *        [--profile <dir>] [--journey]
+ *
+ * `--profile` reuses a persistent profile instead of a throwaway one, and `--journey`
+ * then opens the objects `seed-profile.mjs` recorded in it. An empty tab is not the
+ * state anyone complains about.
  */
 
 import { spawn } from 'node:child_process';
@@ -39,6 +44,12 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
+
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+
+/** Restated rather than imported: `plugin-projects` does not export its `paths` module. */
+const getProjectPath = (spaceId, projectId) =>
+  GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.ai, 'org.dxos.type.project', projectId);
 
 // Installed alongside the native profiler so a run that catches a spike can say which JS
 // call produced it: the native stack names the C++ frame, and below that it is all JIT
@@ -98,6 +109,12 @@ const jsonOut = arg('--json', null);
 const electronRoot = arg('--electron', process.env.ELECTRON_APP ?? './tmp/electron/Electron.app');
 const symFile = arg('--symbols', process.env.ELECTRON_SYMBOLS ?? null);
 const port = parseInt(process.env.NATIVE_HEAP_PORT ?? '9402', 10);
+const persistentProfile = arg('--profile', null);
+const journey = process.argv.includes('--journey');
+if (journey && !persistentProfile) {
+  console.error("--journey needs --profile: the objects to open come from that profile's fixture.json");
+  process.exit(1);
+}
 const MB = (bytes) => +(bytes / (1024 * 1024)).toFixed(2);
 // A realm whose event loop is busy never answers `collectGarbage`, and a missed collection
 // costs precision while a hung one costs the whole run.
@@ -314,6 +331,7 @@ writeFileSync(
 writeFileSync(
   path.join(appDir, 'main.js'),
   `const { app, BrowserWindow } = require('electron');
+if (process.env.PROBE_PROFILE) { app.setPath('userData', process.env.PROBE_PROFILE); }
 app.commandLine.appendSwitch('remote-debugging-port', process.env.PROBE_PORT);
 app.commandLine.appendSwitch('renderer-process-limit', '8');
 app.commandLine.appendSwitch('enable-precise-memory-info');
@@ -331,7 +349,11 @@ app.on('window-all-closed', () => app.quit());
 
 const child = spawn(electronBin, [appDir], {
   stdio: ['ignore', 'pipe', 'pipe'],
-  env: { ...process.env, PROBE_PORT: String(port) },
+  env: {
+    ...process.env,
+    PROBE_PORT: String(port),
+    ...(persistentProfile ? { PROBE_PROFILE: path.resolve(persistentProfile) } : {}),
+  },
 });
 let childLog = '';
 child.stdout.on('data', (chunk) => (childLog += chunk));
@@ -354,6 +376,7 @@ const shutdown = async () => {
   child.kill('SIGKILL');
   rmSync(appDir, { force: true, recursive: true });
 };
+// The persistent profile is an input, never removed: only the generated app dir is scratch.
 // Without a listener a failed exec throws out of band, past the try/finally below.
 child.on('error', (error) => {
   console.error(`could not run ${electronBin}: ${error.message}`);
@@ -422,6 +445,37 @@ try {
   await cdp.send('Page.navigate', { url });
   console.error(`navigated; settling ${settleS}s ...`);
   await new Promise((resolve) => setTimeout(resolve, settleS * 1000));
+
+  if (journey) {
+    const manifest = JSON.parse(readFileSync(path.join(path.resolve(persistentProfile), 'fixture.json'), 'utf8'));
+    // Driven through the operation registry rather than the UI: a click needs Playwright,
+    // and Playwright is the ~130 MB this script exists to keep out of the measurement.
+    const invoke = async (key, input) => {
+      const { exceptionDetails } = await cdp.send('Runtime.evaluate', {
+        awaitPromise: true,
+        expression: `globalThis.composer.invoke(${JSON.stringify(key)}, ${JSON.stringify(input)})`,
+        returnByValue: true,
+      });
+      if (exceptionDetails) {
+        throw new Error(`${key}: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
+      }
+    };
+    for (const fixture of manifest.fixtures) {
+      console.error(`  opening ${fixture.spaceId} ...`);
+      await invoke('org.dxos.operation.appToolkit.switchWorkspace', { subject: `root/${fixture.spaceId}` });
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await invoke('org.dxos.operation.appToolkit.open', {
+        subject: [getProjectPath(fixture.spaceId, fixture.projectIds[0])],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+      await invoke('org.dxos.operation.appToolkit.open', {
+        subject: [GraphPath.getCollectionsPath(fixture.spaceId, fixture.documentIds[0])],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 8000));
+    }
+    console.error(`  opened ${manifest.fixtures.length} spaces; settling 30s ...`);
+    await new Promise((resolve) => setTimeout(resolve, 30_000));
+  }
 
   // The sampler drops a sample when its allocation is freed, so a collection first is what
   // makes the result retention rather than churn. Each realm has its own isolate.
