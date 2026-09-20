@@ -918,11 +918,24 @@ export const SceneView = ({
   const commitCreated = useCallback(
     (node: Node) => {
       pendingRef.current = undefined;
+      // A new portal opens onto a fresh scene of its own, whichever path created it.
+      if (isPortalNode(node)) {
+        registry.set(store.scenes, {
+          ...registry.get(store.scenes),
+          [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
+        });
+      }
       projection.apply({ kind: 'create', node });
       select([node.id]);
     },
-    [projection, select],
+    [projection, select, registry, store],
   );
+
+  /** A gesture abandoned (Escape, a drag leaving the canvas): its pending node is dropped with it. */
+  const cancelDrag = useCallback(() => {
+    pendingRef.current = undefined;
+    setDrag(undefined);
+  }, [setDrag]);
 
   const onPointerUp = useCallback(() => {
     const current = registry.get(atoms.drag);
@@ -996,13 +1009,6 @@ export const SceneView = ({
         if (!node) {
           break;
         }
-        // A new portal opens onto a fresh scene of its own.
-        if (isPortalNode(node)) {
-          registry.set(store.scenes, {
-            ...registry.get(store.scenes),
-            [node.scene]: { id: node.scene, name: 'Untitled', nodes: {}, links: {} },
-          });
-        }
         commitCreated(node);
         setTool({ kind: 'select' });
         break;
@@ -1043,7 +1049,7 @@ export const SceneView = ({
       const point = registry.get(atoms.point);
       if (event.key === 'Escape') {
         if (registry.get(atoms.drag)) {
-          setDrag(undefined);
+          cancelDrag();
         } else if (point) {
           registry.set(atoms.point, undefined);
         } else if (selected.length > 0) {
@@ -1119,6 +1125,7 @@ export const SceneView = ({
       atoms.point,
       removePoint,
       setDrag,
+      cancelDrag,
       select,
       drillOut,
       drillIn,
@@ -1256,10 +1263,10 @@ export const SceneView = ({
           setDrag(dragAt(type, location.current.input));
         }
       },
-      onDragLeave: () => setDrag(undefined),
+      onDragLeave: cancelDrag,
       onDrop: () => onPointerUpRef.current(),
     });
-  }, [capabilities.create, toScene, snap, setDrag]);
+  }, [capabilities.create, toScene, snap, setDrag, cancelDrag]);
 
   const pointer = useMemo(
     () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),

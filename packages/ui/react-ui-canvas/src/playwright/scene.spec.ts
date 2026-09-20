@@ -141,6 +141,12 @@ test.describe('SceneView', () => {
     await page.getByTestId('toolbar-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
     await expect(page.getByTestId('toolbar-layout')).toBeDisabled();
+    // A portal made from the toolbar gets its child scene, so Enter opens it.
+    await page.getByTestId('toolbar-create').click();
+    await page.getByTestId('create-scene').click();
+    await scene.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
   test('the properties panel edits the selected class', async () => {
