@@ -32,8 +32,8 @@ Non-goals for the prototype: freehand drawing, cross-scene links, multiplayer cu
 | 9 | **Links are cells** with `{cell, port?}` endpoints | One map gives ordering, selection, undo and nesting uniformly; a missing port means "automatic". |
 | 10 | **Two live depths max** (root + one nested), further depths as previews | Bounded DOM; verified in the spike. |
 | 11 | **The surface never writes coordinates.** It emits *intents* (move, resize, link, create, delete) to a `Projection`, which owns the drawing model and re-projects | This is what makes variants 1–3 share one surface. |
-| 13 | **The engine is a `Drawing` variant** (`schema 'dxos.org/scene/1'`); illustrator's scene DSL commands are the write API behind the projection seam; the headless model is extracted to `@dxos/diagram` first | §3b: the ECHO envelope, agent operations, dialects and layout engines already exist; a UI package cannot depend on a plugin. |
 | 12 | **Ports come from the cell definition** (`CellDef.ports`), not from the data | Same as anchors in canvas-editor's `ShapeRegistry` and `Port {side, offset}` in react-ui-diagram; shape-specific, not per-instance. |
+| 13 | **The engine is a `Drawing` variant** (`schema 'dxos.org/scene/1'`); illustrator's scene DSL commands are the write API behind the projection seam; the headless model is extracted to `@dxos/diagram` first | §3b: the ECHO envelope, agent operations, dialects and layout engines already exist; a UI package cannot depend on a plugin. |
 
 ## 3. Layered architecture
 
