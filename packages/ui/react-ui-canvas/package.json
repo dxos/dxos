@@ -17,6 +17,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./scene": {
+      "source": "./src/scene/index.ts",
+      "types": "./dist/types/src/scene/index.d.ts",
+      "import": "./dist/lib/scene.mjs"
+    },
     "./types": {
       "source": "./src/types.ts",
       "types": "./dist/types/src/types.d.ts",
