@@ -69,8 +69,6 @@ export const linkGeometry = (scene: Scene, registry: CellRegistry, link: LinkCel
 
 export type CellHandlers = {
   onPointerDown?: (cell: PlacedCell, event: React.PointerEvent) => void;
-  onPointerEnter?: (cell: PlacedCell) => void;
-  onPointerLeave?: (cell: PlacedCell) => void;
 };
 
 export type SceneLayerProps = {
@@ -146,8 +144,6 @@ const CellFrame = memo(({ handlers, ...props }: CellFrameProps) => {
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       data-cell-id={cell.id}
       onPointerDown={interactive ? (event) => handlers.onPointerDown?.(cell, event) : undefined}
-      onPointerEnter={interactive ? () => handlers.onPointerEnter?.(cell) : undefined}
-      onPointerLeave={interactive ? () => handlers.onPointerLeave?.(cell) : undefined}
     >
       <Component {...props} />
     </div>

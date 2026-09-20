@@ -9,10 +9,10 @@
 
 import { cellBounds } from './camera.ts';
 import { sortByZ } from './order.ts';
-import { type Bounds, type PlacedCell, type Point, type Scene, isPlaced } from './types.ts';
+import { type Bounds, MAJOR_GRID, type PlacedCell, type Point, type Scene, isPlaced } from './types.ts';
 
-export const DEFAULT_EXTENT: Bounds = { x: 0, y: 0, width: 1600, height: 1000 };
-export const BOUNDS_PADDING = 80;
+export const DEFAULT_EXTENT: Bounds = { x: 0, y: 0, width: 1600, height: 1024 };
+export const BOUNDS_PADDING = MAJOR_GRID;
 
 export const containsPoint = (bounds: Bounds, point: Point) =>
   point.x >= bounds.x &&
@@ -60,20 +60,33 @@ export const boundsFromPoints = (from: Point, to: Point): Bounds => ({
 
 export const placedCells = (scene: Scene): PlacedCell[] => Object.values(scene.cells).filter(isPlaced);
 
-/**
- * Derived scene bounds (decision 6): the union of placed cells plus padding; an empty scene gets a
- * default extent so a portal to it still has something to map.
- */
-export const sceneBounds = (scene: Scene, padding = BOUNDS_PADDING): Bounds => {
-  const union = unionBounds(placedCells(scene).map(cellBounds));
-  return union ? padBounds(union, padding) : DEFAULT_EXTENT;
+/** Grow `bounds` outward to the nearest multiples of `unit`. */
+export const alignBounds = (bounds: Bounds, unit: number): Bounds => {
+  const x = Math.floor(bounds.x / unit) * unit;
+  const y = Math.floor(bounds.y / unit) * unit;
+  return {
+    x,
+    y,
+    width: Math.ceil((bounds.x + bounds.width) / unit) * unit - x,
+    height: Math.ceil((bounds.y + bounds.height) / unit) * unit - y,
+  };
 };
 
-/** Topmost placed cell under `point`, or none. */
-export const hitTest = (scene: Scene, point: Point): PlacedCell | undefined => {
+/**
+ * Derived scene bounds (decision 6): the union of placed cells plus padding, grown to the major grid so
+ * the frame sits on grid lines; an empty scene gets a default extent so a portal to it still has
+ * something to map.
+ */
+export const sceneBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds => {
+  const union = unionBounds(placedCells(scene).map(cellBounds));
+  return union ? alignBounds(padBounds(union, padding), unit) : DEFAULT_EXTENT;
+};
+
+/** Topmost placed cell under `point`, or none; `margin` widens every cell, e.g. to reach its ports. */
+export const hitTest = (scene: Scene, point: Point, margin = 0): PlacedCell | undefined => {
   const cells = sortByZ(placedCells(scene));
   for (let index = cells.length - 1; index >= 0; index--) {
-    if (containsPoint(cellBounds(cells[index]), point)) {
+    if (containsPoint(padBounds(cellBounds(cells[index]), margin), point)) {
       return cells[index];
     }
   }

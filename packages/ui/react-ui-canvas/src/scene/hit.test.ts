@@ -25,14 +25,20 @@ describe('hit', () => {
     expect(hitTest(scene, { x: 900, y: 900 })).toBeUndefined();
   });
 
+  test('hitTest margin reaches just outside a cell', ({ expect }) => {
+    expect(hitTest(scene, { x: 205, y: 100 })).toBeUndefined();
+    expect(hitTest(scene, { x: 205, y: 100 }, 8)?.id).toBe('b');
+  });
+
   test('cellsIntersecting uses intersection, not containment', ({ expect }) => {
     const ids = cellsIntersecting(scene, boundsFromPoints({ x: 190, y: 90 }, { x: 210, y: 110 })).map(({ id }) => id);
     expect(ids).toEqual(['b']);
     expect(cellsIntersecting(scene, boundsFromPoints({ x: 0, y: 0 }, { x: 600, y: 600 })).length).toBe(3);
   });
 
-  test('sceneBounds is the padded union of placed cells, or the default extent', ({ expect }) => {
-    expect(sceneBounds(scene, 10)).toEqual({ x: 40, y: 40, width: 495, height: 480 });
+  test('sceneBounds is the padded union of placed cells grown to the grid, or the default extent', ({ expect }) => {
+    expect(sceneBounds(scene, 10, 1)).toEqual({ x: 40, y: 40, width: 495, height: 480 });
+    expect(sceneBounds(scene, 10)).toEqual({ x: 0, y: 0, width: 576, height: 576 });
     expect(sceneBounds({ id: 'empty', cells: {} })).toEqual(DEFAULT_EXTENT);
   });
 });

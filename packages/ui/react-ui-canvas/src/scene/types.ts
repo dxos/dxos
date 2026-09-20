@@ -131,5 +131,11 @@ export type Capabilities = {
 
 export type Tool = 'select' | 'hand' | 'rect' | 'text' | 'scene' | 'link';
 
-/** Grid spacing and snap unit in scene px; fixtures and layout defaults are multiples of it. */
+/** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
 export const DEFAULT_GRID = 16;
+
+/** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
+export const MAJOR_GRID_RATIO = 4;
+
+/** Snap unit: objects, layout defaults and scene bounds align to it. */
+export const MAJOR_GRID = DEFAULT_GRID * MAJOR_GRID_RATIO;

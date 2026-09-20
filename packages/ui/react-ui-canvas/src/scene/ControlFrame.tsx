@@ -45,7 +45,7 @@ export type ControlFrameProps = {
   hover?: CellId;
   zoom: number;
   drag?: Drag;
-  /** Show every port of the hovered and selected cells (the `link` tool). */
+  /** Show every cell's ports (the `link` tool); otherwise only the hovered and selected cells'. */
   showPorts: boolean;
   onHandlePointerDown?: (cell: PlacedCell, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (cell: PlacedCell, port: Port, event: React.PointerEvent) => void;
@@ -75,6 +75,11 @@ export const ControlFrame = memo(
     const hovered = hover ? scene.cells[hover] : undefined;
     if (hovered && isPlaced(hovered)) {
       portCells.add(hovered);
+    }
+    // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.
+    const dropTarget = drag?.kind === 'link' && drag.target ? scene.cells[drag.target.cell] : undefined;
+    if (dropTarget && isPlaced(dropTarget)) {
+      portCells.add(dropTarget);
     }
     const marquee = drag?.kind === 'marquee' ? boundsFromPoints(drag.from, drag.to) : undefined;
     const create = drag?.kind === 'create' ? boundsFromPoints(drag.from, drag.to) : undefined;
@@ -115,31 +120,30 @@ export const ControlFrame = memo(
             })}
           </g>
         )}
-        {(showPorts || drag?.kind === 'link') &&
-          [...portCells].map((cell) => {
-            const bounds = cellBounds(cell);
-            return registry[cell.kind].ports(cell).map((port) => {
-              const point = portPoint(bounds, port);
-              const active =
-                drag?.kind === 'link' &&
-                ((drag.source.cell === cell.id && drag.source.port === port.id) ||
-                  (drag.target?.cell === cell.id && drag.target.port === port.id));
-              return (
-                <circle
-                  key={`${cell.id}/${port.id}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r={portRadius}
-                  className={mx(
-                    'stroke-primary-500 pointer-events-auto cursor-crosshair',
-                    active ? 'fill-primary-500' : 'fill-base-surface',
-                  )}
-                  strokeWidth={unit}
-                  onPointerDown={(event) => onPortPointerDown?.(cell, port, event)}
-                />
-              );
-            });
-          })}
+        {[...portCells].map((cell) => {
+          const bounds = cellBounds(cell);
+          return registry[cell.kind].ports(cell).map((port) => {
+            const point = portPoint(bounds, port);
+            const active =
+              drag?.kind === 'link' &&
+              ((drag.source.cell === cell.id && drag.source.port === port.id) ||
+                (drag.target?.cell === cell.id && drag.target.port === port.id));
+            return (
+              <circle
+                key={`${cell.id}/${port.id}`}
+                cx={point.x}
+                cy={point.y}
+                r={portRadius}
+                className={mx(
+                  'stroke-primary-500 pointer-events-auto cursor-crosshair',
+                  active ? 'fill-primary-500' : 'fill-base-surface',
+                )}
+                strokeWidth={unit}
+                onPointerDown={(event) => onPortPointerDown?.(cell, port, event)}
+              />
+            );
+          });
+        })}
         {drag?.kind === 'link' && (
           <path
             d={curvePath({ point: drag.from, side: 'e' }, { point: drag.to, side: 'w' })}

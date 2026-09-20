@@ -47,6 +47,7 @@ import {
   type CellId,
   DEFAULT_GRID,
   type Endpoint,
+  MAJOR_GRID_RATIO,
   type PlacedCell,
   type Point,
   type Port,
@@ -62,8 +63,7 @@ const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
 const FIT_INSET = 40;
 const PORT_SNAP_PX = 16;
-/** Half of each side is a grid multiple, so snapping the centre also snaps the edges. */
-const DEFAULT_CELL: Size = { width: 160, height: 96 };
+const DEFAULT_CELL: Size = { width: 256, height: 128 };
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -103,7 +103,7 @@ export type SceneViewProps = ThemedClassName<{
   createProjection?: (options: FreehandProjectionOptions) => Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: SceneViewAtoms;
-  /** Grid spacing in scene px; also the snap unit. */
+  /** Minor grid spacing in scene px; snapping uses the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   showPalette?: boolean;
 }>;
@@ -309,9 +309,10 @@ export const SceneView = ({
   // Pointer state machine.
   //
 
+  const major = grid * MAJOR_GRID_RATIO;
   const snap = useCallback(
-    (value: number) => (snapEnabled ? Math.round(value / grid) * grid : value),
-    [snapEnabled, grid],
+    (value: number) => (snapEnabled ? Math.round(value / major) * major : value),
+    [snapEnabled, major],
   );
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toScene = useCallback(
@@ -429,10 +430,24 @@ export const SceneView = ({
     [scene, registry, atoms.camera, cellRegistry],
   );
 
+  // Hover comes from the model with a margin, not from the cell element, so it survives the pointer
+  // crossing onto a port that sits on the frame edge.
+  const updateHover = useCallback(
+    (point: Point | undefined) => {
+      const zoom = registry.get(atoms.camera).zoom;
+      const next = point ? hitTest(scene, point, PORT_SNAP_PX / zoom)?.id : undefined;
+      if (registry.get(atoms.hover) !== next) {
+        registry.set(atoms.hover, next);
+      }
+    },
+    [registry, atoms.camera, atoms.hover, scene],
+  );
+
   const onPointerMove = useCallback(
     (event: React.PointerEvent) => {
       const current = registry.get(atoms.drag);
       if (!current) {
+        updateHover(toScene(event));
         return;
       }
       switch (current.kind) {
@@ -468,7 +483,10 @@ export const SceneView = ({
           const anchor = handlePoint(current.start, current.handle);
           const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
           const cell = scene.cells[current.id];
-          const minSize = (cell && isPlaced(cell) && cellRegistry[cell.kind].minSize) || { width: grid, height: grid };
+          const minSize = (cell && isPlaced(cell) && cellRegistry[cell.kind].minSize) || {
+            width: major,
+            height: major,
+          };
           setDrag({ ...current, bounds: resizeBounds(current.start, current.handle, delta, minSize, snap) });
           break;
         }
@@ -489,8 +507,9 @@ export const SceneView = ({
       snap,
       scene.cells,
       cellRegistry,
-      grid,
+      major,
       linkTarget,
+      updateHover,
     ],
   );
 
@@ -519,12 +538,16 @@ export const SceneView = ({
       case 'link': {
         let target = current.target;
         if (!target && capabilities.create) {
-          // Dropping on empty canvas creates a rect there and links to it (canvas-editor behaviour).
+          // Dropping on empty canvas creates a rect there and links to it (canvas-editor behaviour);
+          // its top-left is what snaps, so the edges land on the grid.
           const cell: Cell = {
             kind: 'rect',
             id: createId('rect'),
             z: topZ(Object.values(scene.cells)),
-            center: { x: snap(current.to.x), y: snap(current.to.y) },
+            center: {
+              x: snap(current.to.x - DEFAULT_CELL.width / 2) + DEFAULT_CELL.width / 2,
+              y: snap(current.to.y - DEFAULT_CELL.height / 2) + DEFAULT_CELL.height / 2,
+            },
             size: DEFAULT_CELL,
           };
           projection.apply({ kind: 'create', cell });
@@ -537,14 +560,12 @@ export const SceneView = ({
       }
       case 'create': {
         const drawn = boundsFromPoints(current.from, current.to);
-        const size =
-          drawn.width < grid || drawn.height < grid
-            ? DEFAULT_CELL
-            : { width: Math.max(drawn.width, grid), height: Math.max(drawn.height, grid) };
-        const center =
-          drawn.width < grid || drawn.height < grid
-            ? current.from
-            : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
+        // A click without a drag places a default-sized cell with its top-left at the click.
+        const clicked = drawn.width < major || drawn.height < major;
+        const size = clicked ? DEFAULT_CELL : { width: drawn.width, height: drawn.height };
+        const center = clicked
+          ? { x: current.from.x + DEFAULT_CELL.width / 2, y: current.from.y + DEFAULT_CELL.height / 2 }
+          : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
         const id = createId(current.tool);
         const z = topZ(Object.values(scene.cells));
         const cell: Cell =
@@ -577,7 +598,7 @@ export const SceneView = ({
     projection,
     capabilities.create,
     snap,
-    grid,
+    major,
     store,
     setTool,
   ]);
@@ -618,7 +639,7 @@ export const SceneView = ({
       } else if (event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
         goHistory(event.key === 'ArrowLeft' ? -1 : 1);
       } else if (event.key.startsWith('Arrow') && selected.length > 0 && capabilities.move) {
-        const step = grid * (event.shiftKey ? 10 : 1);
+        const step = major * (event.shiftKey ? MAJOR_GRID_RATIO : 1);
         const delta = {
           x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
           y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
@@ -658,7 +679,7 @@ export const SceneView = ({
       bounds,
       viewport,
       goHistory,
-      grid,
+      major,
       setTool,
       toggleSnap,
     ],
@@ -679,14 +700,7 @@ export const SceneView = ({
     return scene;
   }, [scene, drag]);
 
-  const handlers = useMemo<CellHandlers>(
-    () => ({
-      onPointerDown: onCellPointerDown,
-      onPointerEnter: (cell) => registry.set(atoms.hover, cell.id),
-      onPointerLeave: () => registry.set(atoms.hover, undefined),
-    }),
-    [onCellPointerDown, registry, atoms.hover],
-  );
+  const handlers = useMemo<CellHandlers>(() => ({ onPointerDown: onCellPointerDown }), [onCellPointerDown]);
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
   // double-click never reaches the cell element itself.
@@ -721,6 +735,7 @@ export const SceneView = ({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onPointerLeave={() => updateHover(undefined)}
       onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
     >

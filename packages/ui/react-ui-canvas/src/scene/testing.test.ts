@@ -8,7 +8,7 @@ import { cellBounds } from './camera.ts';
 import { solve } from './projections/constrained.ts';
 import { layoutGraph } from './projections/dynamic.ts';
 import { createSceneTree } from './testing.ts';
-import { DEFAULT_GRID, type Scene, isPlaced } from './types.ts';
+import { MAJOR_GRID, type Scene, isPlaced } from './types.ts';
 
 /** Every edge of every placed cell lies on the grid, which is what move and resize snap to. */
 const offGrid = (scene: Scene): string[] =>
@@ -16,11 +16,11 @@ const offGrid = (scene: Scene): string[] =>
     .filter(isPlaced)
     .filter((cell) => {
       const { x, y, width, height } = cellBounds(cell);
-      return [x, y, width, height].some((value) => value % DEFAULT_GRID !== 0);
+      return [x, y, width, height].some((value) => value % MAJOR_GRID !== 0);
     })
     .map(({ id }) => id);
 
-describe('initial layouts conform to the grid', () => {
+describe('initial layouts conform to the major grid', () => {
   test('scene tree fixture', ({ expect }) => {
     for (const scene of createSceneTree(3).scenes) {
       expect(offGrid(scene)).toEqual([]);

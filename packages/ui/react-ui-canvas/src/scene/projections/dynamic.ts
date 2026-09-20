@@ -37,11 +37,11 @@ export type DynamicOptions = {
   origin?: Point;
 };
 
-/** Multiples of the default grid, so a laid-out graph is already snapped. */
+/** Multiples of the major grid, so a laid-out graph is already snapped. */
 const DEFAULTS: Required<DynamicOptions> = {
-  pitch: { width: 240, height: 176 },
-  size: { width: 160, height: 96 },
-  origin: { x: 112, y: 80 },
+  pitch: { width: 256, height: 192 },
+  size: { width: 192, height: 128 },
+  origin: { x: 160, y: 128 },
 };
 
 export const DYNAMIC_SCENE_ID = 'dynamic';
