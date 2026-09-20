@@ -14,9 +14,9 @@ import {
   type Identity,
   type Scene,
   applyCommands as applyContentCommands,
-  makeBuilder,
   nextIndex,
 } from '@dxos/diagram';
+import { makeBuilder } from '@dxos/plugin-illustrator/model';
 
 import { Tldraw } from '#types';
 
