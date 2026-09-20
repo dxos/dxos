@@ -187,8 +187,10 @@ The 2D camera is replaced, not shrunk. Below the `md` breakpoint or when the pri
 renders the current scene as **columns**: a horizontally paged strip of full-height panels, one per **aspect**.
 The `columns` mode reads the same positioned `Scene` from the same `Projection`; it adds no model state.
 
-**Aspect** = a named, ordered, read-only projection of one scene into a vertical list. The engine ships these
-and a `CellDef` may contribute more (`CellDef.aspects?: (cell) => Aspect[]`):
+**Aspect** = a named, ordered, read-only projection of one scene into a vertical list. **Reading order** is the
+key `(row, x, index, id)`, where `row` is the cell centre's y snapped to the grid, so cells on one line read
+left to right and exact ties fall back to the fractional `index`, then the id: total and deterministic. The
+engine ships these aspects and a `CellDef` may contribute more (`CellDef.aspects?: (cell) => Aspect[]`):
 
 | Aspect         | Column contents                                                                                                                           | Order                                                                                                  |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -199,20 +201,34 @@ and a `CellDef` may contribute more (`CellDef.aspects?: (cell) => Aspect[]`):
 | `scene:<path>` | a nested scene, i.e. the `overview` of the child, reached from a portal row                                                               | pushed on drill-in                                                                                     |
 
 Aspects form a **strip** `Aspect[]`; the view keeps `{path, strip, column}` in the per-view atoms next to the
-2D `{path, camera}` and both survive a mode switch, so rotating a phone or docking a tablet moves between the
-2D camera and the column the user was reading (the column's first visible row maps to a camera fit on that
-cell; a camera maps to the `overview` column scrolled to the first fully visible cell).
+2D `{path, camera}` and both survive a mode switch, so rotating a phone or docking a tablet keeps the place the
+user was reading. The switch goes through one **anchor**, `{path, cellId?}`, computed deterministically:
+
+| From                              | Anchor                                                                                                                                                   |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2D camera                         | `path` = the 2D scene path; `cellId` = the first fully visible cell in reading order, else the cell nearest the viewport centre, else none (empty scene) |
+| `overview`, `cells:<kind>` column | `path` = the column's scene; `cellId` = the first fully visible row, else the row nearest the column's vertical centre                                   |
+| `links` column                    | as above, taking the **source** cell of that row                                                                                                         |
+| `cell:<id>` column                | `path` = the scene that owns the cell; `cellId` = `id`                                                                                                   |
+| `scene:<path>` column             | `path` = that nested path; `cellId` from its `overview` rows as above                                                                                    |
+
+Restoring: **anchor → 2D** sets the path and fits the camera on the cell (fit scene when `cellId` is absent);
+**anchor → columns** sets the strip to the breadcrumb's `scene:` columns for `path` (root first) followed by
+that scene's `overview`, with the last column current and scrolled so the anchor row is the first fully visible
+one. Pushed `cell:` and `links` columns are not restored: a switch always lands on `overview`. "First fully
+visible" is the one rule everywhere; the fallbacks make the anchor total, so `2D → columns → 2D` fits the same
+cell and `columns → 2D → columns` scrolls to the same row.
 
 Navigation:
 
-| Gesture                                                               | Effect                                                                                                                                             |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Horizontal swipe, or the tab bar above the strip                      | Previous / next column in the strip                                                                                                                |
-| Tap a row                                                             | Push a `cell:<id>` column after the current one and page to it; selection follows                                                                  |
-| Tap a portal row, or the "open" affordance on a `scene` row           | Drill-in: push `scene:<path>` (its `overview`); the breadcrumb grows                                                                               |
-| Back (swipe from the edge, breadcrumb tap, hardware back via history) | Pop the pushed columns to that point; drill-out is popping past a `scene:` column                                                                  |
-| Long-press a row                                                      | Context menu: open, select, delete (the same intents as §8)                                                                                        |
-| Reorder rows by drag (`overview` and `cells:` only)                   | A `move` intent that keeps the cell's x and moves it to the dropped neighbour's y; the projection decides what it means, exactly as on the 2D view |
+| Gesture                                                               | Effect                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Horizontal swipe, or the tab bar above the strip                      | Previous / next column in the strip                                                                                                                                                                                                                                                                           |
+| Tap a row                                                             | Push a `cell:<id>` column after the current one and page to it; selection follows                                                                                                                                                                                                                             |
+| Tap a portal row, or the "open" affordance on a `scene` row           | Drill-in: push `scene:<path>` (its `overview`); the breadcrumb grows                                                                                                                                                                                                                                          |
+| Back (swipe from the edge, breadcrumb tap, hardware back via history) | Pop the pushed columns to that point; drill-out is popping past a `scene:` column                                                                                                                                                                                                                             |
+| Long-press a row                                                      | Context menu: open, select, delete (the same intents as §8)                                                                                                                                                                                                                                                   |
+| Reorder rows by drag (`overview` and `cells:` only)                   | A `move` intent to the **insertion slot**: y = the neighbour's y and x = the neighbour's x ∓ one grid unit (before / after), so the cell's reading-order key `(y, x)` lands between the rows it was dropped between even when they share a y; the projection decides what it means, exactly as on the 2D view |
 
 Editing on mobile is deliberately thin in phase 2: create (palette in the column header: rect, text, scene),
 delete, rename, reorder; linking, resizing and free placement stay 2D. The intents are the same, so the
@@ -318,9 +334,11 @@ over the in-memory cell map through `SceneHandler` (`handler.ts`); nothing from 
 - Storybook: the four stories above; a scripted story exercising drill-in/out, linking and drag via Playwright in a
   later phase; `Columns` (phase 2) at a phone viewport, plus a mode-toggle story asserting the 2D ↔ columns state
   mapping.
-- `aspects.ts` is pure: reading order is stable under a move that does not cross another cell, every link's ends
-  resolve to rows, a `scene:` column of a portal equals the child's `overview`, and the camera ↔ column mapping
-  round-trips to the same first visible cell.
+- `aspects.ts` is pure: reading order is total and stable under a move that does not cross another cell, a
+  reorder drop between two rows on one line lands between them, every link's ends resolve to rows, a `scene:`
+  column of a portal equals the child's `overview`, and the anchor mapping round-trips (`2D → columns → 2D` fits
+  the same cell; `columns → 2D → columns` makes the same row the first fully visible one) for every aspect kind,
+  including an empty scene.
 - Manual test script on each story (numbered).
 
 ## 12. Open questions
