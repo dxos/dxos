@@ -71,7 +71,6 @@ export type CellHandlers = {
   onPointerDown?: (cell: PlacedCell, event: React.PointerEvent) => void;
   onPointerEnter?: (cell: PlacedCell) => void;
   onPointerLeave?: (cell: PlacedCell) => void;
-  onDoubleClick?: (cell: PlacedCell) => void;
 };
 
 export type SceneLayerProps = {
@@ -149,7 +148,6 @@ const CellFrame = memo(({ handlers, ...props }: CellFrameProps) => {
       onPointerDown={interactive ? (event) => handlers.onPointerDown?.(cell, event) : undefined}
       onPointerEnter={interactive ? () => handlers.onPointerEnter?.(cell) : undefined}
       onPointerLeave={interactive ? () => handlers.onPointerLeave?.(cell) : undefined}
-      onDoubleClick={interactive ? () => handlers.onDoubleClick?.(cell) : undefined}
     >
       <Component {...props} />
     </div>

@@ -70,7 +70,8 @@ export const ControlFrame = memo(
       .map((id) => scene.cells[id])
       .filter((cell): cell is PlacedCell => cell !== undefined && isPlaced(cell));
     const single = selected.length === 1 ? selected[0] : undefined;
-    const portCells = new Set<PlacedCell>(selected);
+    // With the link tool every cell offers its ports; otherwise only the selection and the hovered cell.
+    const portCells = new Set<PlacedCell>(showPorts ? Object.values(scene.cells).filter(isPlaced) : selected);
     const hovered = hover ? scene.cells[hover] : undefined;
     if (hovered && isPlaced(hovered)) {
       portCells.add(hovered);

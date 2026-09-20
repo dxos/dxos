@@ -308,7 +308,7 @@ export const SceneView = ({
 
   const snap = useCallback((value: number) => Math.round(value / grid) * grid, [grid]);
   const toScene = useCallback(
-    (event: React.PointerEvent): Point => {
+    (event: { clientX: number; clientY: number }): Point => {
       const rect = rootRef.current?.getBoundingClientRect();
       const camera = registry.get(atoms.camera);
       return screenToScene(camera, { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) });
@@ -665,13 +665,20 @@ export const SceneView = ({
       onPointerDown: onCellPointerDown,
       onPointerEnter: (cell) => registry.set(atoms.hover, cell.id),
       onPointerLeave: () => registry.set(atoms.hover, undefined),
-      onDoubleClick: (cell) => {
-        if (cellRegistry[cell.kind].openable) {
-          drillIn(cell);
-        }
-      },
     }),
-    [onCellPointerDown, registry, atoms.hover, cellRegistry, drillIn],
+    [onCellPointerDown, registry, atoms.hover],
+  );
+
+  // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
+  // double-click never reaches the cell element itself.
+  const onDoubleClick = useCallback(
+    (event: React.MouseEvent) => {
+      const cell = hitTest(scene, toScene(event));
+      if (cell && cellRegistry[cell.kind].openable) {
+        drillIn(cell);
+      }
+    },
+    [scene, toScene, cellRegistry, drillIn],
   );
 
   const pointer = useMemo(
@@ -695,6 +702,7 @@ export const SceneView = ({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
     >
       <GridComponent
