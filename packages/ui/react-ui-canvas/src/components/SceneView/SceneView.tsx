@@ -13,7 +13,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, IconButton, Menu, type ThemedClassName } from '@dxos/react-ui';
+import { Menu, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
@@ -76,11 +76,11 @@ import { resizeBounds } from '../../utils/resize.ts';
 import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
 import { DEFAULT_SIZES, createLink, createNode, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
-import { Breadcrumbs } from '../Breadcrumbs/Breadcrumbs.tsx';
 import { ControlFrame, type LinkEnd, handlePoint } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { Palette, toolForKey } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
+import { Toolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 
 const AUTO_ENTER = 0.85;
 const AUTO_EXIT = 0.3;
@@ -88,6 +88,8 @@ const AUTO_DRILL_MS = 150;
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
 const NAVIGATION_SETTLE_MS = 150;
 const FIT_INSET = 40;
+/** Zoom factor of one toolbar step. */
+const ZOOM_STEP = 1.25;
 /** Minor, major and a coarse level so a far zoom-out still shows a grid. */
 const GRID_LEVELS = [1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2] as const;
 /** Minor cells under 6px are noise; the major grid has no upper bound. */
@@ -124,6 +126,7 @@ export type SceneViewProps = ThemedClassName<{
   /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
   liveDepth?: number;
   showPalette?: boolean;
+  showToolbar?: boolean;
 }>;
 
 export const SceneView = ({
@@ -137,6 +140,7 @@ export const SceneView = ({
   grid = DEFAULT_GRID,
   liveDepth = MAX_LIVE_DEPTH,
   showPalette = true,
+  showToolbar = true,
 }: SceneViewProps) => {
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
@@ -1233,6 +1237,91 @@ export const SceneView = ({
     [camera, viewport],
   );
 
+  const zoomBy = useCallback(
+    (factor: number) => {
+      interactedRef.current = true;
+      const centre = { x: viewport.width / 2, y: viewport.height / 2 };
+      animateTo(zoomAt(registry.get(atoms.camera), centre, registry.get(atoms.camera).zoom * factor));
+    },
+    [viewport, animateTo, registry, atoms.camera],
+  );
+
+  const deleteSelection = useCallback(() => {
+    const ids = [...registry.get(atoms.selection)];
+    if (ids.length > 0 && capabilities.delete) {
+      projection.apply({ kind: 'delete', ids });
+      select([]);
+    }
+  }, [registry, atoms.selection, capabilities.delete, projection, select]);
+
+  /** A default-sized node of `type` centred in the view, its top-left on the grid. */
+  const createAtCentre = useCallback(
+    (type: NodeType) => {
+      const def = nodeRegistry[type];
+      if (!def || !capabilities.create) {
+        return;
+      }
+      const size = def.defaultSize;
+      const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
+      const node = createdNode({ kind: 'create', type, from, to: from }, createId(type));
+      if (node) {
+        projection.apply({ kind: 'create', node });
+        select([node.id]);
+      }
+    },
+    [nodeRegistry, capabilities.create, snap, pointer, createdNode, projection, select],
+  );
+
+  const toolbarActions = useMemo<ToolbarActions>(
+    () => ({
+      path,
+      nameOf,
+      onPath: (index) => drillOut(path.length - 1 - index),
+      fit: () => animateTo(fitBounds(bounds, viewport, FIT_INSET)),
+      zoomIn: () => zoomBy(ZOOM_STEP),
+      zoomOut: () => zoomBy(1 / ZOOM_STEP),
+      snap: snapEnabled,
+      toggleSnap,
+      debug,
+      toggleDebug,
+      canUndo,
+      canRedo,
+      undo: onUndo,
+      redo: onRedo,
+      hasSelection: selection.size > 0,
+      hasClipboard: clipboard !== undefined,
+      cut,
+      copy,
+      paste: () => paste(),
+      delete: deleteSelection,
+      create: createAtCentre,
+    }),
+    [
+      path,
+      nameOf,
+      drillOut,
+      animateTo,
+      bounds,
+      viewport,
+      zoomBy,
+      snapEnabled,
+      toggleSnap,
+      debug,
+      toggleDebug,
+      canUndo,
+      canRedo,
+      onUndo,
+      onRedo,
+      selection.size,
+      clipboard,
+      cut,
+      copy,
+      paste,
+      deleteSelection,
+      createAtCentre,
+    ],
+  );
+
   return (
     <div
       ref={rootRef}
@@ -1362,73 +1451,17 @@ export const SceneView = ({
         </Menu.Content>
       </Menu.Root>
 
-      <div className='absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded-sm bg-modal-surface border border-separator text-sm'>
-        <Button variant='ghost' density='sm' disabled={path.length < 2} onClick={() => drillOut()}>
-          Up
-        </Button>
-        <Breadcrumbs path={path} nameOf={nameOf} onSelect={(index) => drillOut(path.length - 1 - index)} />
-        <Button variant='ghost' density='sm' onClick={() => animateTo(fitBounds(bounds, viewport, FIT_INSET))}>
-          Fit
-        </Button>
-        <Button
-          variant='ghost'
-          density='sm'
-          classNames={mx(snapEnabled && 'bg-primary-500/20')}
-          title='Snap (G): snap moves, resizes and new nodes to the major grid'
-          onClick={toggleSnap}
+      {showToolbar && (
+        <Toolbar
+          classNames='absolute top-2 left-2'
+          actions={toolbarActions}
+          nodes={nodeRegistry}
+          capabilities={capabilities}
         >
-          Snap
-        </Button>
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--arrow-u-up-left--regular'
-          label='Undo (⌘Z)'
-          disabled={!canUndo}
-          data-testid='undo'
-          onClick={onUndo}
-        />
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--arrow-u-up-right--regular'
-          label='Redo (⇧⌘Z)'
-          disabled={!canRedo}
-          data-testid='redo'
-          onClick={onRedo}
-        />
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--scissors--regular'
-          label='Cut (⌘X)'
-          disabled={selection.size === 0 || !capabilities.delete}
-          data-testid='cut'
-          onClick={cut}
-        />
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--copy--regular'
-          label='Copy (⌘C)'
-          disabled={selection.size === 0}
-          data-testid='copy'
-          onClick={copy}
-        />
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--clipboard-text--regular'
-          label='Paste (⌘V)'
-          disabled={!clipboard || !capabilities.create}
-          data-testid='paste'
-          onClick={() => paste()}
-        />
-        <span className='text-description font-mono'>
           {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
           {path.length - 1}
-        </span>
-      </div>
+        </Toolbar>
+      )}
       {showPalette && (
         <div className='absolute top-14 left-2'>
           <Palette

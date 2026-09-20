@@ -18,6 +18,9 @@
       "path": "../../common/diagram"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../react-ui"
     },
     {

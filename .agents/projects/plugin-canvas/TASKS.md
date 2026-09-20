@@ -84,7 +84,8 @@ Package `packages/plugins/plugin-canvas` (private), registered in Composer's plu
 ## Phase 4: migration M1–M5 (`docs/MIGRATION.md` §4; started 2026-09-20 after #13249 landed)
 
 - [x] M1: `NodeBase` with `size`, open `Node` + built-in guards, `NodeDef.schema` / `create` / `defaultSize` / `group`, `createSceneSchema`; `Port.accepts` in pairing and drops; `Link.directed` arrowheads; palette groups; tests.
-- [ ] M2: editor parity (free endpoints and `ends` markers, hover border, ghost drags, symmetric resize, `Toolbar`, e2e).
+- [x] M2: editor parity: `{point}` endpoints and `ends` markers, `guide` / `className` style, hover border and selected-on-top, ghost create preview and pdnd palette drops, `resize.ts` (symmetric, `maxSize`, tests), alt-subtract marquee, `debug` atom (D), optional `Toolbar` + story, Home, Playwright `e2e` over the Freehand story (PR #13254).
+- [ ] M3: canvas-compute on the engine (compute node type, `Box` / `FunctionBody` under `NodeViewProps`, compute projection, bullets, diagnostics, circuits as stories).
 
 ### References
 

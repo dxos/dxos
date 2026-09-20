@@ -1,0 +1,100 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Locator, type Page } from '@playwright/test';
+
+type Box = { x: number; y: number; width: number; height: number };
+
+/** Drives a `SceneView` story through the DOM: pointer gestures in screen space, state read from test ids. */
+export class SceneManager {
+  readonly root: Locator;
+
+  constructor(readonly page: Page) {
+    this.root = page.getByTestId('scene-view');
+  }
+
+  async ready(): Promise<void> {
+    await this.root.waitFor({ state: 'visible', timeout: 45_000 });
+    // The camera fits before the first paint; a beat lets storybook's first compile settle.
+    await this.page.waitForTimeout(500);
+  }
+
+  async box(locator: Locator): Promise<Box> {
+    const box = await locator.boundingBox();
+    if (!box) {
+      throw new Error('element has no box');
+    }
+    return box;
+  }
+
+  node(id: string): Locator {
+    return this.page.locator(`[data-node-id="${id}"]`);
+  }
+
+  nodeCount(): Promise<number> {
+    return this.page.locator('[data-node-id]').count();
+  }
+
+  /** Ids of the nodes whose frame shows the selection border. */
+  selectedNodes(): Promise<string[]> {
+    return this.page.evaluate(() =>
+      Array.from(document.querySelectorAll<HTMLElement>('[data-node-id]'))
+        .filter((element) => element.className.includes('border-primary-500 '))
+        .map((element) => element.dataset.nodeId ?? ''),
+    );
+  }
+
+  /** The `<g>` groups of the link layer, one per routed link. */
+  linkCount(): Promise<number> {
+    return this.page.locator('[data-testid="scene-view"] > div > div > svg g').count();
+  }
+
+  async clickNode(id: string): Promise<void> {
+    const box = await this.box(this.node(id));
+    await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  }
+
+  /** Focus the canvas without changing the selection. */
+  async focus(): Promise<void> {
+    await this.root.focus();
+  }
+
+  /** Press at `from`, move to `to` in steps, release; `modifier` is held for the whole gesture. */
+  async drag(from: { x: number; y: number }, to: { x: number; y: number }, modifier?: string): Promise<void> {
+    if (modifier) {
+      await this.page.keyboard.down(modifier);
+    }
+    await this.page.mouse.move(from.x, from.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2, { steps: 4 });
+    await this.page.mouse.move(to.x, to.y, { steps: 4 });
+    await this.page.mouse.up();
+    if (modifier) {
+      await this.page.keyboard.up(modifier);
+    }
+    await this.page.waitForTimeout(200);
+  }
+
+  /** The resize handle of the single selected node on `side` (`e`, `w`, `n`, `s`). */
+  async handle(nodeId: string, side: 'e' | 'w' | 'n' | 's'): Promise<Box> {
+    const node = await this.box(this.node(nodeId));
+    const cursor = side === 'e' || side === 'w' ? 'ew-resize' : 'ns-resize';
+    const handles = await this.page.locator(`[data-testid="scene-view"] svg rect[style*="${cursor}"]`).all();
+    for (const handle of handles) {
+      const box = await this.box(handle);
+      const beyond =
+        side === 'e'
+          ? box.x > node.x + node.width / 2
+          : side === 'w'
+            ? box.x < node.x + node.width / 2
+            : side === 's'
+              ? box.y > node.y + node.height / 2
+              : box.y < node.y + node.height / 2;
+      if (beyond) {
+        return box;
+      }
+    }
+    throw new Error(`no ${side} handle`);
+  }
+}
