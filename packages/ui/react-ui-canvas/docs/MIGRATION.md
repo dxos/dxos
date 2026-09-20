@@ -138,24 +138,25 @@ of this document.
 | `createComputeGraph.test.ts` (11 circuits, ownership)     | n/a                                                   | M3: same tests over the compute projection                                             |
 | No E2E                                                    | Playwright smoke scripts (not yet in CI)              | M2: promote the smoke scripts to `e2e`                                                 |
 
-## 3. Gaps that need a design decision
+## 3. Design decisions (settled 2026-09-20)
 
-1. **Open shape types.** The engine's `Node` is a closed Effect union so the properties panel and the ECHO type are
-   exact. Compute needs ~30 types owned by another package. Options: (a) one `extension` node type
-   `{type: 'extension', subtype, size, data}` whose registry entry is keyed by `subtype`; (b) the host composes the
-   schema union from its registry (`Schema.Union(defs.map(d => d.schema))`) and the engine is generic over it.
-   (b) keeps every type exact and is what compute already does with `ComputeShape.mapFields`; recommended.
-2. **Port direction.** Compute links are directional (output → input) and the drop rules depend on it. Adding
-   `accepts` to `Port` is small; the alternative (direction on the link) loses the drop-time validation.
-3. **Free paths and markers.** The editor's `PathShape` is a drawn path with optional arrowheads that may be bound
-   to shapes at either end. A spline link with fixed-point endpoints and `ends` markers covers it; a separate
-   `path` node would duplicate the link routing. Recommended: endpoints `{node, port?} | {point}`.
-4. **Auto layout engine.** `@antv/layout` + `@antv/graphlib` + `flubber` are pulled into Composer's bundle by the
-   editor. `@dxos/diagram` already carries dagre and ELK adapters; the migration can drop `@antv` if the four
-   layouts (force, circular, radial, grid) are not needed as such. Grid and layered come free; force / radial
-   would need d3-force (already a dependency) or ELK's `stress` / `radial`.
-5. **Where the palette lives.** Open question 3 in `DESIGN.md`: the engine ships a minimal palette; conductor
-   shows tools and no toolbar today. Recommended: the engine owns both as optional components, the plugin decides.
+1. **Open shape types → host-composed union.** Each `NodeDef` carries its own Effect schema and the host builds the
+   scene schema as `Schema.Union(defs.map((def) => def.schema))`; the engine is generic over that union, so the
+   properties panel and the ECHO type stay exact for every host type. This is what compute already does with
+   `ComputeShape.mapFields`. No `extension` escape hatch.
+2. **Port direction → both.** `Port.accepts?: 'in' | 'out' | 'any'` (default `any`) validates at drop time and lets
+   the router prefer a matching pair; `Link.directed?: boolean` renders the arrowhead. Undirected diagrams change
+   nothing.
+3. **Free paths and markers → free endpoints on links.** `Endpoint = { node, port? } | { point }`, so a link (spline
+   in practice) may start or end at a fixed point, with `ends` markers (`arrow`, `triangle`, `circle`, `none`) at
+   either end; the markers double as the rendering of decision 2. No separate `path` node: one routing and hit
+   testing path for everything.
+4. **Auto layout → drop `@antv`.** Grid and layered layouts come from `@dxos/diagram` (dagre, ELK); force and
+   radial from d3-force, or ELK's `stress` / `radial` where fidelity matters. `@antv/layout`, `@antv/graphlib` and
+   `flubber` leave Composer's bundle.
+5. **Palette and toolbar → the engine owns both, optionally.** `Palette` and the toolbar stay in
+   `@dxos/react-ui-canvas/scene` as optional, registry-generated components (`showPalette`, `showToolbar`, slots);
+   a host with thirty node types gets its palette for free and the plugin decides what to show.
 
 ## 4. Migration plan
 
@@ -166,12 +167,13 @@ for M1–M3.
 - **M1: registry openness (engine).** Host-composed node schema union (decision 1 above), `NodeDef.group?` for
   palette groups, `Port.accepts?` and its use in `pairPorts` / `linkTarget` (decision 2). Tests for both.
   Unblocks canvas-compute without changing any behaviour of the stories.
-- **M2: editor parity (engine).** Link `ends` markers and `{point}` endpoints (decision 3); `style?` (guide,
-  className) on elements; hover border and selected-on-top; ghost preview for palette drags and a pdnd drop target
-  for palette / external drops; shift-symmetric resize and `maxSize`; alt-subtract marquee; `debug` atom; `Toolbar`
-  component (grid, snap, fit, zoom in/out, delete, create, layout placeholder); cut / copy / paste with id
-  regeneration; `Home`; `resizeBounds` unit tests; the smoke scripts promoted to `e2e`. After M2 the engine is a
-  superset of canvas-editor's UI minus auto layout and undo.
+- **M2: editor parity (engine).** Link `ends` markers and `{point}` endpoints (decision 3); `Link.directed`;
+  `guide` / `className` on the existing `NodeStyle`; hover border and selected-on-top; ghost preview for palette
+  drags and a pdnd drop target for palette / external drops; shift-symmetric resize and `maxSize`; alt-subtract
+  marquee; `debug` atom; the toolbar as an optional `Toolbar` component with zoom in/out, delete, create and a
+  layout placeholder (decision 5); `Home`; `resizeBounds` unit tests; the smoke scripts promoted to `e2e`. Node
+  style, cut / copy / paste, undo and in-place text editing already landed in phase 1. After M2 the engine is a
+  superset of canvas-editor's UI minus auto layout.
 - **M3: canvas-compute on the engine (compute package).** A `compute` node schema (`Polygon & {node}`) per shape
   type registered through M1; `Box` / `FunctionBody` / every shape component moved verbatim under `NodeViewProps`;
   `computeNodeDef.ports(node)` from the schema and `node.ports` written from runtime meta; `createComputeProjection`
