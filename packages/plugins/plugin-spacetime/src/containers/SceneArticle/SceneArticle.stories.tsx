@@ -19,7 +19,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Model, Scene } from '#types';
 
-import { SpacetimeArticle } from './SpacetimeArticle.tsx';
+import { SceneArticle } from './SceneArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -36,11 +36,11 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <SpacetimeArticle role='article' subject={scene} attendableId='story' />;
+  return <SceneArticle role='article' subject={scene} attendableId='story' />;
 };
 
 const meta = {
-  title: 'plugins/plugin-spacetime/containers/SpacetimeArticle',
+  title: 'plugins/plugin-spacetime/containers/SceneArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),

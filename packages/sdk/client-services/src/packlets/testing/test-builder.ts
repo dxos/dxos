@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Trigger } from '@dxos/async';
 import { type ClientServicesHandlers, makeInProcessClientServicesRpc } from '@dxos/client-protocol';
@@ -227,6 +228,14 @@ export class ServiceContext {
 
   async close(_ctx?: Context): Promise<void> {
     await this.#closeStack();
+  }
+
+  /**
+   * Runs an effect against the SQLite runtime backing this context's storage. The runtime outlives
+   * the stack, so a test can still inspect what a reset left behind.
+   */
+  async runSql<A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>): Promise<A> {
+    return this.#sql.runPromise(effect);
   }
 
   /** Resets through the in-process RPC bridge, as a client does. */

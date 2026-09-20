@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
@@ -13,9 +13,11 @@ import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type WidgetProps } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isTruthy } from '@dxos/util';
 
 import { parseEmbedLabel } from './parse-embed-label.ts';
 
@@ -52,6 +54,8 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
 
 export type PreviewComponentProps = WidgetProps<{
   db?: Database.Database;
+  /** The containing editor's attendable id; the embed nests under it as `<attendableId>/<object id>`. */
+  attendableId?: string;
   eid: string;
   label: string;
   block?: boolean;
@@ -62,12 +66,14 @@ export type PreviewComponentProps = WidgetProps<{
 }>;
 
 /**
- * Registry-backed block widget for URL-scheme preview slots.
- * Replaces the addBlockContainer callback pattern.
- * Used as the `image` widget of `objectLinks()`.
+ * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
+ * The embed is an attendable nested under the editor: inert until clicked, so the wheel and keys
+ * reach the document; attended, its surface takes input, nothing leaks out, and Escape returns
+ * focus to the editor.
  */
 export const PreviewComponent = ({
   db,
+  attendableId: parentAttendableId,
   eid,
   label: labelProp,
   view,
@@ -103,11 +109,17 @@ export const PreviewComponent = ({
   // the handle then measures the rendered box and switches to an explicit height.
   const [size, setSize] = useState<Size>(height != null ? height / remSize : 'min-content');
 
+  // Nested under the editor's id (slash-qualified, like a section in a stack) so attending the embed
+  // keeps the document an ancestor; the object id rather than the URI, whose slashes would split.
+  const attendableId = object ? [parentAttendableId, object.id].filter(isTruthy).join('/') : undefined;
+  const attentionAttributes = useAttentionAttributes(attendableId);
+  const { hasAttention } = useAttention(attendableId);
+
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject ? { subject, attendableId: eid, extrinsic } : undefined),
-    [subject, eid, extrinsic],
+    () => (subject && attendableId ? { subject, attendableId, extrinsic } : undefined),
+    [subject, attendableId, extrinsic],
   );
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
@@ -155,6 +167,54 @@ export const PreviewComponent = ({
     [view, range, eid, remSize],
   );
 
+  // Focus lands on the container itself: the surface is inert until attended, so the click cannot
+  // reach anything focusable inside it. Attention follows from the focus event.
+  const handleMouseDown = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!hasAttention && event.currentTarget === event.target) {
+        event.currentTarget.focus();
+      }
+    },
+    [hasAttention],
+  );
+
+  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch).
+  // Escape is layered: a surface that consumes it (`preventDefault`, e.g. a task list clearing its
+  // selection) keeps that press, and the next one hands attention back to the document by focusing
+  // the editor.
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (!hasAttention) {
+        return;
+      }
+      event.stopPropagation();
+      if (event.key === 'Escape' && !event.defaultPrevented && view) {
+        event.preventDefault();
+        view.focus();
+      }
+    },
+    [hasAttention, view],
+  );
+
+  const handleKeyUp = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
+  );
+
+  // Shared by both previews: the container takes focus for the embed and hosts the attention id.
+  const frameProps = {
+    'tabIndex': 0,
+    'data-testid': 'markdown.embed',
+    ...attentionAttributes,
+    'onMouseDown': handleMouseDown,
+    'onKeyDown': handleKeyDown,
+    'onKeyUp': handleKeyUp,
+  };
+
   const handleOpen = useCallback(
     (event: MouseEvent) => {
       if (!uri || !object) {
@@ -184,14 +244,25 @@ export const PreviewComponent = ({
     if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
       return (
         <div
-          className='relative grid scroll-mt-16'
+          className='relative grid scroll-mt-16 outline-hidden'
           style={sizeStyle(size, 'vertical')}
+          {...frameProps}
           {...resizeAttributes}
           ref={containerRef}
         >
           {/* The row is capped at the box (`minmax(0, 1fr)`): with the default `auto` row the section
-              keeps its intrinsic height and only its overflow is clipped, so it never scrolls. */}
-          <div className='grid grid-rows-[minmax(0,1fr)] overflow-hidden border border-subdued-separator rounded-md'>
+              keeps its intrinsic height and only its overflow is clipped, so it never scrolls.
+              Inert until attended: an unfocused embed must not swallow the wheel (the page scrolls,
+              not the sketch) or take focus from a click, which lands on the container instead.
+              `overscroll-contain` on this (overflow-hidden) box ends the scroll chain here, so an
+              attended embed scrolled to its end does not start scrolling the document. */}
+          <div
+            className={mx(
+              'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
+              hasAttention ? 'border-focus-ring-subtle' : 'border-subdued-separator',
+            )}
+            inert={hasAttention ? undefined : true}
+          >
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
@@ -227,16 +298,19 @@ export const PreviewComponent = ({
     // Card preview.
     if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
       return (
-        <div>
-          <Card.Root>
-            <Card.Header>
-              <Card.Block />
-              <Card.Title>{objectLabel}</Card.Title>
-            </Card.Header>
-            <Card.Body>
-              <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-            </Card.Body>
-          </Card.Root>
+        <div className='outline-hidden' {...frameProps}>
+          {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
+          <div inert={hasAttention ? undefined : true}>
+            <Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
+              <Card.Header>
+                <Card.Block />
+                <Card.Title>{objectLabel}</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+              </Card.Body>
+            </Card.Root>
+          </div>
         </div>
       );
     }

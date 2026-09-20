@@ -34,6 +34,8 @@ import { computeActiveUpdates } from './set-active.ts';
 export type NavigationIntent = {
   /** The plank this write focuses; an intent that names none declines the focus outright. */
   scrollIntoView?: string;
+  /** Where that focus lands; unset means the plank itself. */
+  focus?: boolean | 'content';
   /** Run the write as the update step of a view transition, so the content region crossfades. */
   transition?: boolean;
 };
@@ -85,7 +87,9 @@ export const applyActive = Effect.fnUntraced(function* (
       registry.set(ephemeralAtom, {
         ...ephemeral,
         open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
-        ...(scrollIntoView !== undefined ? { scrollIntoView: { id: scrollIntoView } } : {}),
+        ...(scrollIntoView !== undefined
+          ? { scrollIntoView: { id: scrollIntoView, ...(intent?.focus !== undefined ? { focus: intent.focus } : {}) } }
+          : {}),
       });
     }
     const stored = registry.get(stateAtom).decks[workspace];

@@ -138,18 +138,26 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     [attendableId, invokePromise],
   );
 
-  const handleDelete = useCallback((object: Obj.Unknown) => {
-    Obj.getDatabase(object)?.remove(object);
-  }, []);
+  // Both deletes go through the operation, whose undo mapping puts the objects back (a direct
+  // `db.remove` would be silent and final); a removed object also leaves the selection.
+  const removeObjects = useCallback(
+    (removed: Obj.Unknown[]) => {
+      if (removed.length === 0) {
+        return;
+      }
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: removed }, { spaceId: space.id });
+      const removedIds = new Set(removed.map((object) => object.id));
+      setSelectedObjects(selectedIds.filter((id) => !removedIds.has(id)));
+    },
+    [selectedIds, invokePromise, space.id, setSelectedObjects],
+  );
 
-  // Undoable removal of every checked row, so a mis-click on a multi-row delete is recoverable.
-  const handleDeleteSelected = useCallback(() => {
-    const selected = objects.filter((object) => selectedIds.includes(object.id));
-    if (selected.length > 0) {
-      void invokePromise(SpaceOperation.RemoveObjects, { objects: selected }, { spaceId: space.id });
-      setSelectedObjects([]);
-    }
-  }, [objects, selectedIds, invokePromise, space.id, setSelectedObjects]);
+  const handleDelete = useCallback((object: Obj.Unknown) => removeObjects([object]), [removeObjects]);
+
+  const handleDeleteSelected = useCallback(
+    () => removeObjects(objects.filter((object) => selectedIds.includes(object.id))),
+    [objects, selectedIds, removeObjects],
+  );
 
   // Stable identity: `DynamicTable` rebuilds its model whenever `features` changes, so an inline
   // literal here would discard and re-seed the table's selection on every render.

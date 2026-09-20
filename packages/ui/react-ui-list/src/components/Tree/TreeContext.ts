@@ -107,7 +107,13 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
 }>;
 
 /** Keys held for a row activation; `meta` covers ctrl on non-Mac keyboards. */
-export type SelectModifiers = { option: boolean; shift: boolean; meta: boolean };
+export type SelectModifiers = {
+  option: boolean;
+  shift: boolean;
+  meta: boolean;
+  /** Activated from the keyboard (Enter) rather than the pointer, so a consumer can move focus on. */
+  keyboard?: boolean;
+};
 
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
