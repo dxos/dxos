@@ -1021,8 +1021,11 @@ export const SceneView = ({
       });
       return reduceIntent(scene, { kind: 'link', link });
     }
-    if (drag?.kind === 'end' && drag.target) {
-      return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: drag.target } });
+    if (drag?.kind === 'end') {
+      // Over a target the link is drawn re-attached; over free space only the rubber band shows.
+      return drag.target
+        ? reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: drag.target } })
+        : reduceIntent(scene, { kind: 'delete', ids: [drag.id] });
     }
     return scene;
   }, [scene, drag]);
