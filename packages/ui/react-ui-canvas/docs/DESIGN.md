@@ -201,7 +201,10 @@ Data flow for one gesture: pointer-down hit-tests the positioned scene in scene 
 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to
   `[1/32, 32]`.
-- **Portal mapping**: `s = min(cell.width / bounds.width, cell.height / bounds.height)`; child point `q` maps to
+- **Portal frame**: the child-space region that maps exactly onto the portal, `portalFrame(portal, bounds)`: the
+  portal's aspect, containing the child's derived bounds and sharing their centre, so the child sits centred in the
+  portal and, once drilled in, the dashed frame is the one the parent's portal gave it (the root shows its derived
+  bounds). `s = min(cell.width / frame.width, cell.height / frame.height)`; child point `q` maps to
   parent point `cellOrigin + (q - bounds.origin) * s` (letterboxed; open question 1).
 - **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), then swap the root scene
   and re-express the camera in child space (`enterPortal`); **drill-out** is the inverse (`exitPortal`) followed

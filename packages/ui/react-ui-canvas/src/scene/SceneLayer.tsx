@@ -12,7 +12,7 @@ import React, { memo, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { portalScale, portalTransform } from './camera.ts';
+import { portalFrame, portalScale, portalTransform } from './camera.ts';
 import { sceneBounds } from './hit.ts';
 import { sortByZ } from './order.ts';
 import { type NodeRegistry, type NodeViewProps } from './registry.ts';
@@ -188,7 +188,7 @@ export const TextNodeView = ({ node }: NodeViewProps) => (
 export const PortalNodeView = ({ node, store, registry, zoom, depth }: NodeViewProps) => {
   const child = useAtomValue(store.scene(node.type === 'scene' ? node.scene : ''));
   const tier = child ? tierFor(node, zoom, depth) : 'dot';
-  const bounds = useMemo(() => (child ? sceneBounds(child) : undefined), [child]);
+  const bounds = useMemo(() => (child ? portalFrame(node, sceneBounds(child)) : undefined), [node, child]);
   return (
     <div className={mx('dx-fullscreen bg-hover-surface', tier === 'dot' && 'bg-primary-500/40')}>
       {tier === 'preview' && child && (

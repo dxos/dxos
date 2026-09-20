@@ -11,6 +11,7 @@ import {
   enterPortal,
   exitPortal,
   fitBounds,
+  portalFrame,
   sceneToScreen,
   screenToScene,
   zoomAt,
@@ -87,5 +88,18 @@ describe('camera', () => {
     const camera = { x: 0, y: 0, zoom: 1 };
     expect(coverage(camera, { x: 0, y: 0, width: 10, height: 10 }, { width: 0, height: 0 })).toBe(0);
     expect(coverage(camera, { x: -100, y: -100, width: 10, height: 10 }, viewport)).toBe(0);
+  });
+
+  test('portalFrame has the portal aspect, contains the child bounds and shares their centre', ({ expect }) => {
+    const frame = portalFrame(portal, child);
+    expect(frame.width / frame.height).toBeCloseTo(portal.size.width / portal.size.height, 6);
+    expect(frame.x).toBeLessThanOrEqual(child.x);
+    expect(frame.y).toBeLessThanOrEqual(child.y);
+    expect(frame.x + frame.width).toBeGreaterThanOrEqual(child.x + child.width);
+    expect(frame.y + frame.height).toBeGreaterThanOrEqual(child.y + child.height);
+    expect(frame.x + frame.width / 2).toBeCloseTo(child.x + child.width / 2, 6);
+    expect(frame.y + frame.height / 2).toBeCloseTo(child.y + child.height / 2, 6);
+    // The frame maps onto the portal at the same scale as the child does.
+    expect(portalFrame(portal, frame)).toEqual(frame);
   });
 });

@@ -26,6 +26,7 @@ import {
   exitPortal,
   fitBounds,
   panBy,
+  portalFrame,
   screenToScene,
   zoomAt,
 } from './camera.ts';
@@ -148,7 +149,26 @@ export const SceneView = ({
   const canRedo = undoState.key === sceneId && undoState.future.length > 0;
 
   const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
-  const bounds = useMemo(() => sceneBounds(scene), [scene]);
+  /** The portal in `parent` that shows `childId`, if any. */
+  const portalTo = useCallback(
+    (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
+      const parent = parentId ? scenes[parentId] : undefined;
+      return parent
+        ? Object.values(parent.nodes).find((node) => node.type === 'scene' && node.scene === childId)
+        : undefined;
+    },
+    [scenes],
+  );
+  /** The frame of the scene at the head of `path`: the parent portal's frame, or the derived bounds at the root. */
+  const frameOf = useCallback(
+    (scenePath: SceneId[], current: Scene): Bounds => {
+      const derived = sceneBounds(current);
+      const portal = portalTo(scenePath[scenePath.length - 2], current.id);
+      return portal ? portalFrame(portal, derived) : derived;
+    },
+    [portalTo],
+  );
+  const bounds = useMemo(() => frameOf(path, scene), [frameOf, path, scene]);
   const capabilities = projection.capabilities;
 
   //
@@ -246,7 +266,7 @@ export const SceneView = ({
         return;
       }
       interactedRef.current = true;
-      const childBounds = sceneBounds(child);
+      const childBounds = portalFrame(portal, sceneBounds(child));
       const swap = (camera: Camera) => {
         const next = enterPortal(camera, portal, childBounds);
         registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
@@ -281,7 +301,7 @@ export const SceneView = ({
         if (!child || !portal) {
           break;
         }
-        camera = exitPortal(camera, portal, sceneBounds(child));
+        camera = exitPortal(camera, portal, portalFrame(portal, sceneBounds(child)));
         next = next.slice(0, -1);
       }
       registry.set(atoms.path, next);
@@ -289,11 +309,11 @@ export const SceneView = ({
       setCamera(camera);
       const parent = scenes[next[next.length - 1]];
       if (animate && parent) {
-        animateTo(fitBounds(sceneBounds(parent), viewport, FIT_INSET));
+        animateTo(fitBounds(frameOf(next, parent), viewport, FIT_INSET));
       }
       pushHistory({ path: next, camera });
     },
-    [registry, atoms.path, atoms.camera, scenes, viewport, animateTo, setCamera, select, pushHistory],
+    [registry, atoms.path, atoms.camera, scenes, viewport, animateTo, setCamera, select, pushHistory, frameOf],
   );
 
   const goHistory = useCallback(

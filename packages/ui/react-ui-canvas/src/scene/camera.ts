@@ -64,16 +64,32 @@ export const fitBounds = (bounds: Bounds, viewport: Size, inset = 0): Camera => 
   };
 };
 
-/** Uniform scale that maps a child scene's derived bounds into the portal node (letterboxed). */
-export const portalScale = (portal: Node, child: Bounds) => {
+/** Uniform scale that maps a child-space region into the portal node (letterboxed). */
+export const portalScale = (portal: Node, region: Bounds) => {
   const { width, height } = nodeBounds(portal);
-  return Math.min(width / child.width, height / child.height);
+  return Math.min(width / region.width, height / region.height);
+};
+
+/**
+ * The frame a portal gives its child: the child-space region that maps exactly onto the portal, so it
+ * has the portal's aspect, contains the child's derived bounds and shares their centre. Drilling in
+ * shows this frame; a portal draws the child centred in it.
+ */
+export const portalFrame = (portal: Node, child: Bounds): Bounds => {
+  const scale = portalScale(portal, child);
+  const { width, height } = nodeBounds(portal);
+  const frame = { width: width / scale, height: height / scale };
+  return {
+    x: child.x + child.width / 2 - frame.width / 2,
+    y: child.y + child.height / 2 - frame.height / 2,
+    ...frame,
+  };
 };
 
 /** Child-scene CSS transform inside a portal node whose own origin is the node's top-left. */
-export const portalTransform = (portal: Node, child: Bounds) => {
-  const scale = portalScale(portal, child);
-  return `scale(${scale}) translate(${-child.x}px, ${-child.y}px)`;
+export const portalTransform = (portal: Node, frame: Bounds) => {
+  const scale = portalScale(portal, frame);
+  return `scale(${scale}) translate(${-frame.x}px, ${-frame.y}px)`;
 };
 
 /**
