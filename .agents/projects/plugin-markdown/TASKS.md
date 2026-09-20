@@ -1,6 +1,6 @@
 # plugin-markdown — Tasks
 
-_Resume: PR #13237 landing (auto-merge). Uncommitted: none. Last: changeset rewritten from the whole diff, 2026-09-19._
+_Resume: land PR #13239. Uncommitted: none. Last: PR opened 2026-09-20._
 
 ## Phase 1: focusable inline object embeds
 
@@ -42,6 +42,13 @@ that must be clicked to take events.
       re-render on colour-mode switch; **plugin-tldraw** follows the app theme (not
       `prefers-color-scheme`); **plugin-space** single-card delete routed through `RemoveObjects`
       (undoable).
+
+## Phase 2: deleted embed targets
+
+- [x] **Unresolved embeds** — `setLinkWidgetState` round trip in ui-editor; an unresolved link keeps its
+      editable source with an inline "Object not found" chip; card embeds report `intrinsic` (no
+      reserved height); the stub no longer adopts a replaced widget's element or pin.
+      `MarkdownArticle › DeletedEmbed` play test.
 
 ### Follow-ups
 

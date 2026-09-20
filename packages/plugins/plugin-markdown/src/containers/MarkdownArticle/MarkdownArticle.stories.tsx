@@ -72,6 +72,8 @@ type StoryArgs = {
   title: string;
   content: string;
   objects?: boolean;
+  /** Delete the sketch after the document embeds it, so its embed points at nothing. */
+  deleted?: boolean;
 };
 
 const DefaultStory = () => {
@@ -101,88 +103,99 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin.make({}),
-        MarkdownExtensionsPlugin(),
-        IllustratorPlugin.make(),
-        TldrawPlugin.make(),
-        ClientPlugin.make({
-          types: [
-            Markdown.Document,
-            Text.Text,
-            Person.Person,
-            Organization.Organization,
-            Drawing.Drawing,
-            Drawing.Canvas,
-          ],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+    withPluginManager<StoryArgs>(
+      ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false } }) => ({
+        plugins: [
+          ...corePlugins(),
+          StorybookPlugin.make({}),
+          MarkdownExtensionsPlugin(),
+          IllustratorPlugin.make(),
+          TldrawPlugin.make(),
+          ClientPlugin.make({
+            types: [
+              Markdown.Document,
+              Text.Text,
+              Person.Person,
+              Organization.Organization,
+              Drawing.Drawing,
+              Drawing.Canvas,
+            ],
+            onClientInitialized: ({ client }) =>
+              Effect.gen(function* () {
+                const { defaultSpace } = yield* initializeIdentity(client);
 
-              let objects: Obj.Any[] = [];
-              if (showObjects) {
-                const createObjects = createObjectFactory(defaultSpace.db, generator);
-                objects = yield* Effect.promise(() =>
-                  createObjects([
-                    {
-                      type: Organization.Organization,
-                      count: 1,
-                    },
-                    {
-                      type: Person.Person,
-                      count: 1,
-                    },
-                  ]),
-                );
+                let objects: Obj.Any[] = [];
+                if (showObjects) {
+                  const createObjects = createObjectFactory(defaultSpace.db, generator);
+                  objects = yield* Effect.promise(() =>
+                    createObjects([
+                      {
+                        type: Organization.Organization,
+                        count: 1,
+                      },
+                      {
+                        type: Person.Person,
+                        count: 1,
+                      },
+                    ]),
+                  );
 
-                objects.push(
-                  Drawing.make({
-                    name: 'Test Sketch',
-                    canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: SKETCH_CONTENT }),
-                  }),
-                  // A document embeds as a section preview, whose content outgrows the resize box.
+                  objects.push(
+                    Drawing.make({
+                      name: 'Test Sketch',
+                      canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: SKETCH_CONTENT }),
+                    }),
+                    // A document embeds as a section preview, whose content outgrows the resize box.
+                    Markdown.make({
+                      name: EMBEDDED_NOTES,
+                      content: Array.from({ length: 40 }, (_, line) => `Line ${line + 1} of the embedded notes.`).join(
+                        '\n\n',
+                      ),
+                    }),
+                  );
+
+                  objects.forEach((object) => defaultSpace.db.add(object));
+                  yield* Effect.promise(() => defaultSpace.db.flush());
+                }
+
+                defaultSpace.db.add(
                   Markdown.make({
-                    name: EMBEDDED_NOTES,
-                    content: Array.from({ length: 40 }, (_, line) => `Line ${line + 1} of the embedded notes.`).join(
-                      '\n\n',
-                    ),
+                    name: title,
+                    content: [
+                      `# ${title}`,
+                      content,
+                      objects
+                        .map((object, i) => [
+                          'This is object #' + (i + 1),
+                          `![${Obj.getLabel(object)}|300](${Obj.getURI(object)})`,
+                        ])
+                        .flat()
+                        .join('\n\n'),
+                      'This is the end of the document.',
+                    ].join('\n\n'),
                   }),
                 );
 
-                objects.forEach((object) => defaultSpace.db.add(object));
-                yield* Effect.promise(() => defaultSpace.db.flush());
-              }
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
-              defaultSpace.db.add(
-                Markdown.make({
-                  name: title,
-                  content: [
-                    `# ${title}`,
-                    content,
-                    objects
-                      .map((object, i) => [
-                        'This is object #' + (i + 1),
-                        `![${Obj.getLabel(object)}|300](${Obj.getURI(object)})`,
-                      ])
-                      .flat()
-                      .join('\n\n'),
-                    'This is the end of the document.',
-                  ].join('\n\n'),
-                }),
-              );
+                // Removed only once the document references it, the way a user deletes an embedded object.
+                if (deleted) {
+                  const sketch = objects.find((object) => Obj.instanceOf(Drawing.Drawing, object));
+                  if (sketch) {
+                    defaultSpace.db.remove(sketch);
+                    yield* Effect.promise(() => defaultSpace.db.flush());
+                  }
+                }
+              }),
+          }),
 
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
-            }),
-        }),
-
-        // Contributes the versioning-state atom consumed by useVersioning.
-        SpacePlugin({}),
-        MarkdownPlugin(),
-        PreviewPlugin.make(),
-      ],
-    })),
+          // Contributes the versioning-state atom consumed by useVersioning.
+          SpacePlugin({}),
+          MarkdownPlugin(),
+          PreviewPlugin.make(),
+        ],
+      }),
+    ),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -222,6 +235,33 @@ export const WithObjects: Story = {
 };
 
 /**
+ * Test:
+ * 1. The sketch embed shows an error chip on a single line: no reserved height, no bare box.
+ * 2. Click into the error line: the raw `![Car|390](echo://…)` source is editable.
+ */
+export const DeletedEmbed: Story = {
+  args: {
+    title: 'Testing with a deleted object',
+    content: 'The sketch below was deleted after being embedded:',
+    objects: true,
+    deleted: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The embed settles on "missing" only after the ref's load attempt, well past the default timeout.
+    const chip = await canvas.findByText('Object not found', {}, { timeout: 15_000 });
+    // Inline after the source, not a block standing in for it: the link text is back and editable.
+    const line = chip.closest('.cm-line');
+    await expect(line).not.toBeNull();
+    await expect(line?.textContent).toMatch(/!\[Test Sketch\|300\]\(echo:/);
+    // No placeholder pinned at the label's height around it.
+    await expect(chip.closest('[style*="height"]')).toBeNull();
+    // The other embeds are untouched.
+    await expect(canvas.getAllByTestId('markdown.embed').length).toBeGreaterThanOrEqual(1);
+  },
+};
+
+/**
  * An embed is inert until clicked, keeps key events to itself while attended, and is inert again
  * once Escape hands focus back to the editor.
  */
@@ -230,16 +270,14 @@ export const EmbedFocus: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The client/space initialize and the embeds resolve well past testing-library's default timeout.
-    const embeds = await waitFor(
-      async () => {
-        const elements = canvas.getAllByTestId('markdown.embed');
-        await expect(elements.length).toBeGreaterThanOrEqual(2);
-        return elements;
-      },
-      { timeout: 15_000 },
-    );
+    await waitFor(async () => expect(canvas.getAllByTestId('markdown.embed').length).toBeGreaterThanOrEqual(2), {
+      timeout: 15_000,
+    });
+    // Let the load-time rebuilds (parse completion, the cards' height release) land first: a block
+    // redrawn under the click would be a fresh element, and the click's focus would go with the old one.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
     // The first embed is a card preview; the gate is the same for section previews.
-    const [embed] = embeds;
+    const [embed] = canvas.getAllByTestId('markdown.embed');
     const surface = embed.firstElementChild;
     await expect(surface).toBeInstanceOf(HTMLElement);
     await expect(surface).toHaveAttribute('inert');
