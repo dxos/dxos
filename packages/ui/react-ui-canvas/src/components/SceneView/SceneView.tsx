@@ -11,7 +11,7 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Menu, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -127,6 +127,8 @@ export type SceneViewProps = ThemedClassName<{
   liveDepth?: number;
   showPalette?: boolean;
   showToolbar?: boolean;
+  /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
+  overlay?: ReactNode;
 }>;
 
 export const SceneView = ({
@@ -141,6 +143,7 @@ export const SceneView = ({
   liveDepth = MAX_LIVE_DEPTH,
   showPalette = true,
   showToolbar = true,
+  overlay,
 }: SceneViewProps) => {
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
@@ -1393,6 +1396,7 @@ export const SceneView = ({
           onPointPointerDown={onPointPointerDown}
           onPointContextMenu={onPointContextMenu}
         />
+        {overlay}
       </div>
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
       {navigating && <div className='dx-fullscreen' data-testid='navigation-shield' />}

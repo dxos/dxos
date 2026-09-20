@@ -154,6 +154,7 @@ export const SceneLayer = memo(
                 d={path}
                 className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
                 strokeWidth={2 * unit}
+                data-link-id={link.id}
                 markerStart={markerUrl(linkMarkers(link).start, 'start')}
                 markerEnd={markerUrl(linkMarkers(link).end, 'end')}
               />

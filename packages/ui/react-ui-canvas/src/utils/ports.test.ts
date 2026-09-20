@@ -53,6 +53,11 @@ describe('ports', () => {
       x: 32,
       y: 0,
     });
+    // A port that opts out of snapping sits exactly at its offset, however small the side.
+    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, { id: 'w', side: 'w', offset: 0.3, snap: false })).toEqual({
+      x: 0,
+      y: 19.2,
+    });
     expect(portPoint(left, { id: 'e2', side: 'e', offset: 0.5 }, 1)).toEqual({ x: 256, y: 128 });
   });
 

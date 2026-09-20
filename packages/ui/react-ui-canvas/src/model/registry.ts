@@ -62,8 +62,8 @@ export type NodeDef = {
   type: NodeType;
   name: string;
   icon: string;
-  /** Palette shortcut. */
-  key: string;
+  /** Palette shortcut; a registry of many types leaves most without one. */
+  key?: string;
   /** Palette group; types without one share the default group. */
   group?: string;
   /** The type's schema; the host's scene schema is the union of its registry's (`createSceneSchema`). */

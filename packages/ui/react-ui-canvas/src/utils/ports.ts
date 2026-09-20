@@ -62,20 +62,24 @@ export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =
 
 /**
  * A port's point on the frame: its offset along the side, snapped to the nearest major grid line inside
- * the side. A side too short to contain one puts every port at its centre; a port is never at a corner.
+ * the side unless the port opts out. A side too short to contain a grid line puts every snapped port at
+ * its centre; a snapped port is never at a corner.
  */
 export const portPoint = (bounds: Bounds, port: Port, unit = MAJOR_GRID): Point => {
+  const place = port.snap === false ? exact : along;
   switch (port.side) {
     case 'n':
-      return { x: along(bounds.x, bounds.width, port.offset, unit), y: bounds.y };
+      return { x: place(bounds.x, bounds.width, port.offset, unit), y: bounds.y };
     case 's':
-      return { x: along(bounds.x, bounds.width, port.offset, unit), y: bounds.y + bounds.height };
+      return { x: place(bounds.x, bounds.width, port.offset, unit), y: bounds.y + bounds.height };
     case 'w':
-      return { x: bounds.x, y: along(bounds.y, bounds.height, port.offset, unit) };
+      return { x: bounds.x, y: place(bounds.y, bounds.height, port.offset, unit) };
     case 'e':
-      return { x: bounds.x + bounds.width, y: along(bounds.y, bounds.height, port.offset, unit) };
+      return { x: bounds.x + bounds.width, y: place(bounds.y, bounds.height, port.offset, unit) };
   }
 };
+
+const exact = (origin: number, length: number, offset: number): number => origin + length * offset;
 
 const along = (origin: number, length: number, offset: number, unit: number): number => {
   const position = origin + length * offset;

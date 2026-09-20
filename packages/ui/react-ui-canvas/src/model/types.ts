@@ -51,6 +51,8 @@ export const Port = Schema.Struct({
   side: Side,
   offset: Schema.Number,
   accepts: Schema.optional(PortDirection),
+  /** `false` keeps the exact offset instead of the nearest major grid line, e.g. for ports stacked per row. */
+  snap: Schema.optional(Schema.Boolean),
 });
 export type Port = Schema.Schema.Type<typeof Port>;
 

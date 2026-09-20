@@ -12,7 +12,7 @@ import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type Tool } from '../../model/types.ts';
 import { nodeDragData } from '../../utils/dnd.ts';
 
-type Entry = { tool: Tool; icon: string; label: string; key: string };
+type Entry = { tool: Tool; icon: string; label: string; key?: string };
 
 const BASE: Entry[] = [
   { tool: { kind: 'select' }, icon: 'ph--cursor--regular', label: 'Select', key: 'V' },
@@ -61,7 +61,7 @@ export const toolForKey = (
 ): Tool | undefined =>
   paletteEntries(nodes, links, capabilities)
     .flat()
-    .find((entry) => entry.key === key.toUpperCase())?.tool;
+    .find((entry) => entry.key !== undefined && entry.key === key.toUpperCase())?.tool;
 
 export type PaletteProps = {
   tool: Tool;
@@ -118,9 +118,9 @@ const PaletteButton = ({
       variant='ghost'
       iconOnly
       icon={entry.icon}
-      label={`${entry.label} (${entry.key})`}
+      label={entry.key ? `${entry.label} (${entry.key})` : entry.label}
       classNames={mx(active && 'bg-primary-500/20')}
-      data-testid={`palette-${entry.key}`}
+      data-testid={`palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`}
       onClick={() => onToolChange(entry.tool)}
     />
   );
