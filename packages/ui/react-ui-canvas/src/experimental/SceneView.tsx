@@ -176,7 +176,7 @@ const CellView = memo(({ store, cell, zoom, depth, selected, handlers }: CellVie
           onDoubleClick={interactive ? () => handlers.onDoubleClick?.(cell) : undefined}
         >
           {tier === 'preview' && child && (
-            <div className='absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none'>
+            <div className='dx-fullscreen flex flex-col items-center justify-center gap-1 pointer-events-none'>
               <span className='text-2xl'>{child.name}</span>
               <span className='text-description'>{Object.keys(child.cells).length} cells</span>
             </div>
@@ -447,7 +447,7 @@ export const SceneView = ({ store: initialStore, root }: SceneViewProps) => {
     <div
       ref={rootRef}
       tabIndex={0}
-      className='relative w-full h-full overflow-hidden bg-base-surface outline-none touch-none select-none'
+      className='relative dx-fill overflow-hidden bg-base-surface outline-none touch-none select-none'
       style={{ contain: 'strict' }}
       onPointerDown={onBackgroundPointerDown}
       onPointerMove={onPointerMove}
