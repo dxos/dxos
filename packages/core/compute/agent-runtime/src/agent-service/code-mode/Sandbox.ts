@@ -32,11 +32,11 @@ export type EvaluateParams = {
  * Runs model-authored code.
  *
  * Injected rather than inlined because where the code runs is expected to change: the in-process
- * implementation below is the cheapest one and NOT a security boundary (see its note), while a
- * worker thread (so a long evaluation cannot stall the turn's thread) or a Cloudflare
- * worker-loader isolate can actually contain and terminate what they run. `node:vm` is not one of
- * those: it shares the host realm and its own documentation says it must not be used to run
- * untrusted code.
+ * implementation below is the cheapest one and NOT a security boundary (see its note), while
+ * `WorkerSandbox` runs the code on a worker thread and can therefore terminate it, and a
+ * Cloudflare worker-loader isolate would go further and contain it. `node:vm` is not one of those:
+ * it shares the host realm and its own documentation says it must not be used to run untrusted
+ * code.
  *
  * NOTE: `bindings` are live JavaScript values, which an in-process implementation passes through
  * directly. An out-of-process implementation cannot: it has to marshal them, so it can carry

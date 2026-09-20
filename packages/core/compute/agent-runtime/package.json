@@ -22,6 +22,11 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./code-mode/worker-entry": {
+      "source": "./src/agent-service/code-mode/WorkerSandboxEntry.ts",
+      "types": "./dist/types/src/agent-service/code-mode/WorkerSandboxEntry.d.ts",
+      "import": "./dist/lib/WorkerSandboxEntry.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,6 +55,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform-node": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
