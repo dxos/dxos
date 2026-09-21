@@ -293,6 +293,15 @@ describe('McpServer', () => {
       expect(failureOf(await result).message).to.include('queryOperations');
       expect(invocations).to.have.length(0);
     });
+
+    // Dropping it silently leaves the declared fields undefined, and a handler reading that as
+    // "no filter given" answers a misspelled search with everything it has, as a success.
+    test('a property the schema does not declare is rejected rather than dropped', async ({ expect }) => {
+      const { result, invocations } = runInvoke({ input: { title: 'x', titel: 'x' }, spaceId: SPACE_A });
+      expect(failureOf(await result).code).to.equal('invalid_request');
+      expect(failureOf(await result).message).to.include('titel');
+      expect(invocations).to.have.length(0);
+    });
   });
 
   describe('queryOperations', () => {

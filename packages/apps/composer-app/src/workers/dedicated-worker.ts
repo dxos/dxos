@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { IdentityManagerService } from '@dxos/client-services';
 import { runDedicatedWorker } from '@dxos/client/worker';
@@ -45,7 +45,9 @@ runDedicatedWorker({
   onStart: async (stack) => {
     const instance = await observability;
     if (instance) {
-      const identityManager = Context.get(stack, IdentityManagerService);
+      const identityManager = await EffectEx.runPromise(
+        stack.getServiceResolver().resolve(IdentityManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+      );
       await EffectEx.runPromise(
         instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),
       );

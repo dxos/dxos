@@ -348,7 +348,10 @@ const encodeInput = (
     return Effect.succeed(arguments_);
   }
 
-  return Schema.decodeUnknownEffect(codec.decode)(arguments_).pipe(
+  // The published schema says `additionalProperties: false`, and the default `ignore` policy drops
+  // an undeclared property instead: a misspelled `text` left `space-query-objects` with no search
+  // term at all and its handler answered with the whole space, as a success.
+  return Schema.decodeUnknownEffect(codec.decode, { onExcessProperty: 'error', errors: 'all' })(arguments_).pipe(
     Effect.flatMap(Schema.encodeUnknownEffect(codec.encode)),
     Effect.mapError((error) =>
       failure(

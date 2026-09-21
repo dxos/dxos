@@ -22,7 +22,7 @@ import { type SpaceStateManager } from './space-state-manager.ts';
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
-  updateIndexes: () => Promise<void>;
+  updateIndexes: (request: DataService.UpdateIndexesRequest) => Promise<void>;
   getSpaceStats: (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   runGarbageCollection: (
     spaceId: SpaceId,
@@ -50,7 +50,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
-  private readonly '_updateIndexes': () => Promise<void>;
+  private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
     spaceId: SpaceId,
@@ -204,10 +204,10 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.updateIndexes'](): Effect.Effect<void, Error> {
+  ['DataService.updateIndexes'](request: DataService.UpdateIndexesRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
-        await this._updateIndexes();
+        await this._updateIndexes(request);
       },
       catch: toServiceError,
     });

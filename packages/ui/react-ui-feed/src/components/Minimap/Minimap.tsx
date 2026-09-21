@@ -58,7 +58,7 @@ export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: 
           {/* Mounted rows: where content actually exists. Should always contain the viewport — if it
               does not, the reader is looking at rows nobody has rendered. */}
           <div
-            className='absolute inset-x-0 bg-accent-fill/30'
+            className='absolute inset-x-0 bg-accent-bg/30'
             style={{ top: scale(state.geometry.window.start), height: scale(state.geometry.window.extent) }}
             data-testid='minimap.mounted'
           />
@@ -72,7 +72,7 @@ export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: 
           ))}
           {/* The viewport, which is the reader. */}
           <div
-            className='absolute inset-x-0 border-y border-accent-bg bg-accent-fill/70'
+            className='absolute inset-x-0 border-y border-accent-bg bg-accent-bg/70'
             style={{ top: scale(state.geometry.scroll), height: scale(state.geometry.viewport) }}
             data-testid='minimap.viewport'
           />
