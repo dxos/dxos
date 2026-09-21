@@ -103,6 +103,13 @@ export const isVisibleSpace = (space: Space): boolean =>
 export const getSpaceTemplateId = (space: Space): string | undefined =>
   Annotation.get(space.properties, AppAnnotation.SpaceTemplateAnnotation).pipe(Option.getOrUndefined);
 
+/** Record which template produced `space`. Pairs with {@link getSpaceTemplateId}. */
+export const setSpaceTemplateId = (space: Space, templateId: string): void => {
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, templateId);
+  });
+};
+
 /**
  * The first space created from `templateId`, skipping any whose properties are not yet readable.
  *
@@ -113,6 +120,32 @@ export const findSpaceFromTemplate = (client: { spaces: { get(): Space[] } }, te
   client.spaces
     .get()
     .find((space) => space.state.get() === SpaceState.SPACE_READY && getSpaceTemplateId(space) === templateId);
+
+/**
+ * Stamps {@link AppAnnotation.SpaceTemplateAnnotation} on the space a profile onboarded with before
+ * templates recorded their own provenance, so one read answers "which template made this" for every
+ * space regardless of when it was created.
+ *
+ * The tag itself cannot be removed — it rides the space's admission credential — and
+ * {@link isVisibleSpace} still reads it, but only to decide that it does not make a space internal.
+ *
+ * Idempotent, and skips a space whose properties are not yet readable: nothing user-facing depends
+ * on the stamp landing in a particular session, so an unopened space is stamped on a later launch.
+ * Returns the ids it stamped.
+ */
+export const migrateLegacyOnboardingSpaces = (client: { spaces: { get(): Space[] } }, templateId: string): string[] =>
+  client.spaces
+    .get()
+    .filter(
+      (space) =>
+        space.state.get() === SpaceState.SPACE_READY &&
+        isLegacyOnboardingSpace(space) &&
+        getSpaceTemplateId(space) === undefined,
+    )
+    .map((space) => {
+      setSpaceTemplateId(space, templateId);
+      return space.id;
+    });
 
 //
 // Default space designation.

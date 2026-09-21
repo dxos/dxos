@@ -83,6 +83,34 @@ describe('settings space resolution', () => {
  * A stand-in carrying only the fields the tag predicates read. Cast here rather than widening the
  * predicates, so production code sees a real `Space` and the fake stays contained to the test.
  */
+describe('space templates', () => {
+  const LEGACY_TAG = 'org.dxos.space.exemplar';
+  const TEMPLATE_ID = 'org.dxos.plugin.onboarding.template.bramble';
+  const client = (spaces: Space[]) => ({ spaces: { get: () => spaces } });
+
+  test('stamps the template a legacy onboarding space came from', ({ expect }) => {
+    const space = makeReadySpace('a', [LEGACY_TAG]);
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual(['a']);
+    expect(AppSpace.getSpaceTemplateId(space)).toBe(TEMPLATE_ID);
+    // Found by the same lookup as a space created from the template today.
+    expect(AppSpace.findSpaceFromTemplate(client([space]), TEMPLATE_ID)).toBe(space);
+  });
+
+  test('re-running stamps nothing, so a later template wins over the tag', ({ expect }) => {
+    const space = makeReadySpace('a', [LEGACY_TAG]);
+    AppSpace.setSpaceTemplateId(space, 'com.example.template.other');
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual([]);
+    expect(AppSpace.getSpaceTemplateId(space)).toBe('com.example.template.other');
+  });
+
+  test('skips spaces that are untagged or not yet readable', ({ expect }) => {
+    const untagged = makeReadySpace('a', []);
+    const closed = makeClosedSpace('b', [LEGACY_TAG]);
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([untagged, closed]), TEMPLATE_ID)).toEqual([]);
+    expect(AppSpace.getSpaceTemplateId(untagged)).toBeUndefined();
+  });
+});
+
 const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unknown as Space;
 
 /** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */

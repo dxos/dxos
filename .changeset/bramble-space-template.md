@@ -29,8 +29,12 @@ the same escape hatch `RoutineCapabilities.Template` has.
 A space created from a template records which one in `AppAnnotation.SpaceTemplateAnnotation`, and
 `AppSpace.findSpaceFromTemplate` reads it back. That replaces the tag the onboarding space carried:
 a tag takes a space out of the user-facing lists, so every reader needed an exception for it.
-`AppSpace.SAMPLE_SPACE_TAG` and `isSampleSpace` are gone; profiles that onboarded earlier keep the
-persisted tag and stay visible.
+`AppSpace.SAMPLE_SPACE_TAG` and `isSampleSpace` are gone.
+
+Profiles that onboarded before this get the annotation stamped on their demo space once their
+spaces are ready, so one read answers "which template made this" for every space whenever it was
+created. The tag itself stays — it rides the space's admission credential and cannot be removed —
+and `isVisibleSpace` still reads it, but only to decide that it does not make a space internal.
 
 First launch builds Bramble through its template instead of importing
 `plugin-onboarding/src/content/sample/space.dx.json`, which is deleted along with the script that

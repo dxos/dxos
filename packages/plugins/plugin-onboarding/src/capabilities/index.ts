@@ -33,6 +33,16 @@ export const DefaultContent = Capability.lazyModule(
   },
   () => import('./default-content.ts'),
 );
+export const MigrateDemoSpace = Capability.lazyModule(
+  'MigrateDemoSpace',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    // Runtime event: the spaces this reads are only observable once the space list has settled.
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./migrate-demo-space.ts'),
+);
 export const OAuthRecoveryRedirect = Capability.lazyModule(
   'OAuthRecoveryRedirect',
   { provides: [] },

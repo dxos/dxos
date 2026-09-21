@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Obj } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -55,9 +54,7 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSpaceFromTempla
         const client = yield* Capability.get(ClientCapabilities.Client);
         // What `Create` records when it applies a template itself, written here for the path that
         // does not — a space's origin should not depend on which caller filled it.
-        Obj.update(space.properties, (properties) => {
-          Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, template.id);
-        });
+        AppSpace.setSpaceTemplateId(space, template.id);
         yield* Effect.tryPromise({
           try: () => template.apply({ client, space }),
           catch: (cause) => new SpaceTemplateApplyError({ context: { id: template.id }, cause }),
