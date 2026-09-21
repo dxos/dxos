@@ -259,12 +259,12 @@ describe('Spaces', () => {
     await space1.waitUntilReady();
 
     const dataSpaceManager1 = await EffectEx.runPromise(
-      services1.stack.resolve(DataSpaceManagerService).pipe(Effect.orDie),
+      services1.stack.getServiceResolver().resolve(DataSpaceManagerService, {}).pipe(Effect.orDie, Effect.scoped),
     );
     const dataSpace1 = dataSpaceManager1.spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
     const hypercoreStore1 = await EffectEx.runPromise(
-      services1.stack.resolve(HypercoreStoreService).pipe(Effect.orDie),
+      services1.stack.getServiceResolver().resolve(HypercoreStoreService, {}).pipe(Effect.orDie, Effect.scoped),
     );
     const feed1 = hypercoreStore1.getHypercore(feedKey!)!;
 
@@ -290,7 +290,7 @@ describe('Spaces', () => {
 
     await waitForSpace(client2, space1.key, { ready: true });
     const hypercoreStore2 = await EffectEx.runPromise(
-      services2.stack.resolve(HypercoreStoreService).pipe(Effect.orDie),
+      services2.stack.getServiceResolver().resolve(HypercoreStoreService, {}).pipe(Effect.orDie, Effect.scoped),
     );
     const feed2 = hypercoreStore2.getHypercore(feedKey!)!;
 

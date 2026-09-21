@@ -85,7 +85,9 @@ describe('Client.fatalError', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = await EffectEx.runPromise(services.stack.resolve(SystemService.Tag).pipe(Effect.orDie));
+    const system = await EffectEx.runPromise(
+      services.stack.getServiceResolver().resolve(SystemService.Tag, {}).pipe(Effect.orDie, Effect.scoped),
+    );
     const lost = new Trigger();
     const failure = new Error('status stream failed');
     vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
@@ -111,7 +113,9 @@ describe('Client.fatalError', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = await EffectEx.runPromise(services.stack.resolve(SystemService.Tag).pipe(Effect.orDie));
+    const system = await EffectEx.runPromise(
+      services.stack.getServiceResolver().resolve(SystemService.Tag, {}).pipe(Effect.orDie, Effect.scoped),
+    );
     const lost = new Trigger();
     vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
       Stream.make({ status: SystemStatus.ACTIVE }).pipe(
@@ -140,7 +144,9 @@ describe('Client.reset', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = await EffectEx.runPromise(services.stack.resolve(SystemService.Tag).pipe(Effect.orDie));
+    const system = await EffectEx.runPromise(
+      services.stack.getServiceResolver().resolve(SystemService.Tag, {}).pipe(Effect.orDie, Effect.scoped),
+    );
     vi.spyOn(system, 'SystemService.reset').mockImplementation(() => Effect.fail(new RpcClosedError()));
 
     const client = new Client({ services });

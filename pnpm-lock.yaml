@@ -18572,6 +18572,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../client-services
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -18727,6 +18730,9 @@ importers:
         specifier: 'catalog:'
         version: 3.1.3
     devDependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store

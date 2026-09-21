@@ -8,7 +8,8 @@ import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { type ClientServicesStack, makeWorkerRuntime } from '@dxos/client-services';
+import { makeWorkerRuntime } from '@dxos/client-services';
+import { LayerStack } from '@dxos/compute-runtime';
 import { Config } from '@dxos/config';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -21,7 +22,7 @@ export type RunDedicatedWorkerOptions = {
   /** Called with the worker config before the runtime starts. Use to e.g. initialize observability in the worker. */
   onBeforeStart?: (config: Config) => Promise<void>;
   /** Runs once the runtime has started, with the effect context of the stack it serves. */
-  onStart?: (stack: ClientServicesStack) => Promise<void>;
+  onStart?: (stack: LayerStack.LayerStack) => Promise<void>;
   /** Storage for the runtime; OPFS-backed SQLite by default. */
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };

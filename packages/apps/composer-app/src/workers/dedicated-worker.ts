@@ -45,7 +45,9 @@ runDedicatedWorker({
   onStart: async (stack) => {
     const instance = await observability;
     if (instance) {
-      const identityManager = await EffectEx.runPromise(stack.resolve(IdentityManagerService).pipe(Effect.orDie));
+      const identityManager = await EffectEx.runPromise(
+        stack.getServiceResolver().resolve(IdentityManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+      );
       await EffectEx.runPromise(
         instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),
       );

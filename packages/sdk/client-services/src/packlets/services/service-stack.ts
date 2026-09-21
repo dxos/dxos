@@ -13,6 +13,8 @@ import { type AutomergeReplicator, EchoHostLayer, EchoHostService, runSqliteHeal
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { SqliteKeyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
+import { type SignalManager } from '@dxos/messaging';
+import { type TransportFactory } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 
@@ -53,11 +55,14 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
   connectionLog?: boolean;
   autoConnect?: boolean;
   /**
-   * Whether the embedder supplies the edge clients, which it does only with an endpoint configured.
-   * An edge feature can be enabled in config without one, so the feature flag alone does not say
-   * whether an edge-dependent spec can be built.
+   * Whether an edge endpoint is configured. An edge feature can be enabled in config without one,
+   * so the feature flag alone does not say whether an edge-dependent spec can be built.
    */
   edgeAvailable?: boolean;
+  /** Overrides the config-derived signal manager; tests pass an in-memory one. */
+  signalManager?: SignalManager;
+  /** Overrides the WebRTC transport; tests pass the in-memory transport. */
+  transportFactory?: TransportFactory;
 };
 
 /**

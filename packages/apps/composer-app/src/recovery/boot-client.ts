@@ -89,7 +89,10 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
     throw new Error('Client not booted');
   }
   const devtoolsHost = await EffectEx.runPromise(
-    (bootedClient.services as LocalClientServices).stack.resolve(DevtoolsHostService).pipe(Effect.orDie),
+    (bootedClient.services as LocalClientServices).stack
+      .getServiceResolver()
+      .resolve(DevtoolsHostService, {})
+      .pipe(Effect.orDie, Effect.scoped),
   );
   return devtoolsHost.exportSqliteDatabase();
 };

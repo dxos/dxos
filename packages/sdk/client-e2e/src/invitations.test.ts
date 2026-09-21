@@ -34,6 +34,7 @@ import {
 import { InvitationsProxy } from '@dxos/client/invitations';
 import { type LocalClientServices } from '@dxos/client/local';
 import { TestBuilder } from '@dxos/client/testing';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -130,15 +131,20 @@ type InvitationPeer = Pick<
 const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
   const { stack } = client.services as LocalClientServices;
   const services = await EffectEx.runPromise(
-    stack
-      .resolveAll(
+    ServiceResolver.resolveAll(
+      [
         InvitationsHandlerService,
         InvitationsManagerService,
         SwarmNetworkManagerService,
         DataSpaceManagerService,
         IdentityManagerService,
-      )
-      .pipe(Effect.orDie),
+      ],
+      {},
+    ).pipe(
+      Effect.provideService(ServiceResolver.ServiceResolver, stack.getServiceResolver()),
+      Effect.orDie,
+      Effect.scoped,
+    ),
   );
   return {
     invitations: EffectContext.getUnsafe(services, InvitationsHandlerService),

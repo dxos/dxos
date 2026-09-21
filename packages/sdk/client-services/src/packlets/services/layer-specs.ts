@@ -8,7 +8,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RegisterService } from '@dxos/client-protocol';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { ConfigService } from '@dxos/config';
+import { ConfigService, resolveTelemetryTag } from '@dxos/config';
 import {
   EchoEdgeSubductionReplicatorLayer,
   EchoHostService,
@@ -16,7 +16,13 @@ import {
   MeshEchoReplicatorLayer,
   MeshEchoReplicatorService,
 } from '@dxos/echo-host';
-import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
+import {
+  EdgeClient,
+  EdgeConnectionService,
+  EdgeHttpClient,
+  EdgeHttpClientService,
+  createStubEdgeIdentity,
+} from '@dxos/edge-client';
 import { Hook } from '@dxos/effect';
 import {
   HypercoreFactoryLayer,
@@ -26,8 +32,13 @@ import {
   HypercoreStoreService,
 } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyringLayer } from '@dxos/keyring';
-import { SignalManagerService } from '@dxos/messaging';
-import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import {
+  EdgeSignalManager,
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  SignalManagerService,
+} from '@dxos/messaging';
+import { SwarmNetworkManagerService, createIceProvider, createRtcTransportFactory } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import {
   ContactsService,
@@ -103,8 +114,6 @@ import {
 import { HypercoreStorageDirectoryLayer, SqliteStorageLayer, SqliteStorageService } from './sqlite-storage.ts';
 import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
 
-const application = 'application' as const;
-
 /**
  * Subduction needs the edge clients as well as the feature flag: the flag is set in config profiles
  * that configure no edge endpoint, and requiring a tag nothing provides would prune the specs that
@@ -151,32 +160,110 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
  */
 
 //
+// Platform inputs. These were a layer the embedder provided beneath the stack; as specs the edge
+// clients are conditional like any other spec rather than an ambient service that may or may not be
+// there, which is what lets the stack declare its ambient requirements as tags.
+//
+
+/** Only included with a configured endpoint, so the tags exist exactly when the clients do. */
+export const EdgeClientsSpec = LayerSpec.make(
+  { affinity: 'application', requires: [ConfigService], provides: [EdgeConnectionService, EdgeHttpClientService] },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const config = yield* ConfigService;
+        const endpoint = config.get('runtime.services.edge.url')!;
+        const clientTag = resolveTelemetryTag(config);
+        return Layer.mergeAll(
+          // Dialing is driven by `NetworkingEnabled` rather than open, so boot RPCs are not competing
+          // with the outbound connection.
+          Layer.sync(
+            EdgeConnectionService,
+            () => new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag, deferConnect: true }),
+          ),
+          Layer.sync(EdgeHttpClientService, () => new EdgeHttpClient(endpoint, { clientTag })),
+        );
+      }),
+    ),
+);
+
+export const SignalManagerSpec = (options: ServiceStackServices) => {
+  const signalManager = options.signalManager;
+  if (signalManager) {
+    return LayerSpec.make({ affinity: 'application', requires: [], provides: [SignalManagerService] }, () =>
+      Layer.succeed(SignalManagerService, signalManager),
+    );
+  }
+  // Edge is the only real signaling transport; without it there is no cross-process signaling, so
+  // the spec takes the edge connection exactly when one will exist.
+  const edgeSignaling = !!options.edgeFeatures?.signaling && !!options.edgeAvailable;
+  return LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: edgeSignaling ? [EdgeConnectionService] : [],
+      provides: [SignalManagerService],
+    },
+    () =>
+      edgeSignaling
+        ? Layer.effect(
+            SignalManagerService,
+            Effect.map(EdgeConnectionService, (edgeConnection) => new EdgeSignalManager({ edgeConnection })),
+          )
+        : Layer.sync(SignalManagerService, () => new MemorySignalManager(new MemorySignalManagerContext())),
+  );
+};
+
+export const TransportFactorySpec = (options: ServiceStackServices) => {
+  const transportFactory = options.transportFactory;
+  if (transportFactory) {
+    return LayerSpec.make({ affinity: 'application', requires: [], provides: [TransportFactoryService] }, () =>
+      Layer.succeed(TransportFactoryService, transportFactory),
+    );
+  }
+  return LayerSpec.make(
+    { affinity: 'application', requires: [ConfigService], provides: [TransportFactoryService] },
+    () =>
+      Layer.effect(
+        TransportFactoryService,
+        Effect.gen(function* () {
+          const config = yield* ConfigService;
+          const iceProviders = config.get('runtime.services.iceProviders');
+          return createRtcTransportFactory(
+            { iceServers: config.get('runtime.services.ice') },
+            iceProviders && createIceProvider(iceProviders),
+          );
+        }),
+      ),
+  );
+};
+
+//
 // Storage.
 //
 
 export const SqliteStorageSpec = LayerSpec.make(
-  { affinity: application, requires: [SqlClient.SqlClient], provides: [SqliteStorageService] },
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [SqliteStorageService] },
   () => SqliteStorageLayer(),
 );
 
 export const HypercoreStorageDirectorySpec = LayerSpec.make(
-  { affinity: application, requires: [SqliteStorageService], provides: [HypercoreStorageDirectoryService] },
+  { affinity: 'application', requires: [SqliteStorageService], provides: [HypercoreStorageDirectoryService] },
   () => HypercoreStorageDirectoryLayer(),
 );
 
 export const KeyringSpec = LayerSpec.make(
-  { affinity: application, requires: [SqlClient.SqlClient], provides: [KeyringApiService] },
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [KeyringApiService] },
   () => SqliteKeyringLayer(),
 );
 
 export const MetadataStoreSpec = LayerSpec.make(
-  { affinity: application, requires: [SqlClient.SqlClient], provides: [IMetadataStoreService] },
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [IMetadataStoreService] },
   () => SqliteMetadataStoreLayer(),
 );
 
 export const HypercoreFactorySpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [KeyringApiService, HypercoreStorageDirectoryService],
     provides: [HypercoreFactoryService],
   },
@@ -184,18 +271,18 @@ export const HypercoreFactorySpec = LayerSpec.make(
 );
 
 export const HypercoreStoreSpec = LayerSpec.make(
-  { affinity: application, requires: [HypercoreFactoryService], provides: [HypercoreStoreService] },
+  { affinity: 'application', requires: [HypercoreFactoryService], provides: [HypercoreStoreService] },
   () => HypercoreStoreLayer(),
 );
 
 export const StorageMigrationSpec = LayerSpec.make(
-  { affinity: application, requires: [SqlClient.SqlClient], provides: [StorageMigrationService] },
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [StorageMigrationService] },
   () => storageMigrationLayer,
 );
 
 export const StorageLifecycleSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [SqlClient.SqlClient, StorageMigrationService, IMetadataStoreService, Hook.Controller],
     provides: [],
     eager: true,
@@ -208,14 +295,14 @@ export const StorageLifecycleSpec = LayerSpec.make(
 //
 
 export const StackReadinessSpec = LayerSpec.make(
-  { affinity: application, requires: [Hook.Controller], provides: [StackReadinessService] },
+  { affinity: 'application', requires: [Hook.Controller], provides: [StackReadinessService] },
   () => StackReadinessLayer,
 );
 
 export const SwarmNetworkManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [SignalManagerService, TransportFactoryService],
       provides: [SwarmNetworkManagerService],
     },
@@ -225,7 +312,7 @@ export const SwarmNetworkManagerSpec = (options: ServiceStackServices) =>
 export const NetworkLifecycleSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [Hook.Controller, SwarmNetworkManagerService, IdentityManagerService, SignalManagerService],
       provides: [],
       eager: true,
@@ -240,7 +327,7 @@ export const NetworkLifecycleSpec = (options: ServiceStackServices) =>
 export const SpaceManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [Hook.Controller, HypercoreStoreService, SwarmNetworkManagerService, IMetadataStoreService],
       provides: [SpaceManagerService],
     },
@@ -250,7 +337,7 @@ export const SpaceManagerSpec = (options: ServiceStackServices) =>
 export const IdentityManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [Hook.Controller, IMetadataStoreService, KeyringApiService, HypercoreStoreService, SpaceManagerService],
       provides: [IdentityManagerService],
     },
@@ -264,13 +351,13 @@ export const IdentityManagerSpec = (options: ServiceStackServices) =>
   );
 
 export const IdentityProviderSpec = LayerSpec.make(
-  { affinity: application, requires: [IdentityManagerService], provides: [IdentityProviderService] },
+  { affinity: 'application', requires: [IdentityManagerService], provides: [IdentityProviderService] },
   () => identityProviderLayer,
 );
 
 export const EdgeIdentityRecoverySpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [KeyringApiService, IdentityManagerService],
     provides: [EdgeIdentityRecoveryManagerService],
   },
@@ -279,7 +366,7 @@ export const EdgeIdentityRecoverySpec = LayerSpec.make(
 
 export const IdentityLifecycleSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [Hook.Controller, IdentityManagerService, EdgeIdentityRecoveryManagerService],
     provides: [IdentityLifecycleService],
   },
@@ -287,19 +374,19 @@ export const IdentityLifecycleSpec = LayerSpec.make(
 );
 
 export const SigningContextProviderSpec = LayerSpec.make(
-  { affinity: application, requires: [IdentityProviderService], provides: [SigningContextProviderService] },
+  { affinity: 'application', requires: [IdentityProviderService], provides: [SigningContextProviderService] },
   () => SigningContextProviderLayer,
 );
 
 export const InvitationsHandlerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
-    { affinity: application, requires: [SwarmNetworkManagerService], provides: [InvitationsHandlerService] },
+    { affinity: 'application', requires: [SwarmNetworkManagerService], provides: [InvitationsHandlerService] },
     () => InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps }),
   );
 
 export const InvitationsManagerSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [Hook.Controller, InvitationsHandlerService, IMetadataStoreService],
     provides: [InvitationsManagerService],
   },
@@ -309,7 +396,7 @@ export const InvitationsManagerSpec = LayerSpec.make(
 export const EchoHostSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [IdentityManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
@@ -319,7 +406,7 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
 export const DataSpaceManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [
         Hook.Controller,
         SpaceManagerService,
@@ -340,7 +427,7 @@ export const DataSpaceManagerSpec = (options: ServiceStackServices) =>
 
 export const InvitationFactoriesSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [
       InvitationsManagerService,
       IdentityManagerService,
@@ -358,7 +445,7 @@ export const InvitationFactoriesSpec = LayerSpec.make(
 export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
-      affinity: application,
+      affinity: 'application',
       requires: [Hook.Controller, DataSpaceManagerService, IdentityProviderService],
       provides: [EdgeAgentManagerService],
     },
@@ -368,7 +455,7 @@ export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
 // Eager: nothing asks for its tag — it exists to subscribe to space changes across devices.
 export const CrossDeviceSpaceSynchronizerSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [Hook.Controller, DataSpaceManagerService],
     provides: [CrossDeviceSpaceSynchronizerService],
     eager: true,
@@ -383,13 +470,13 @@ export const CrossDeviceSpaceSynchronizerSpec = LayerSpec.make(
 //
 
 export const MeshReplicatorSpec = LayerSpec.make(
-  { affinity: application, requires: [], provides: [MeshEchoReplicatorService] },
+  { affinity: 'application', requires: [], provides: [MeshEchoReplicatorService] },
   () => MeshEchoReplicatorLayer(),
 );
 
 export const MeshReplicatorRegistrationSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [MeshEchoReplicatorService, EchoHostService, Hook.Controller],
     provides: [],
     eager: true,
@@ -399,7 +486,7 @@ export const MeshReplicatorRegistrationSpec = LayerSpec.make(
 
 export const EdgeSubductionReplicatorSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [EdgeConnectionService, EdgeHttpClientService],
     provides: [EdgeAutomergeReplicatorService],
   },
@@ -408,7 +495,7 @@ export const EdgeSubductionReplicatorSpec = LayerSpec.make(
 
 export const EdgeSubductionReplicatorRegistrationSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [EdgeAutomergeReplicatorService, EchoHostService, Hook.Controller],
     provides: [],
     eager: true,
@@ -418,7 +505,7 @@ export const EdgeSubductionReplicatorRegistrationSpec = LayerSpec.make(
 
 export const FeedSyncerSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
     provides: [FeedSyncerService],
     eager: true,
@@ -436,13 +523,13 @@ export const FeedSyncerSpec = LayerSpec.make(
 //
 
 export const RpcRouterSpec = LayerSpec.make(
-  { affinity: application, requires: [], provides: [RpcRouter.RpcRouter] },
+  { affinity: 'application', requires: [], provides: [RpcRouter.RpcRouter] },
   () => RpcRouter.layer,
 );
 
 export const SystemServiceSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [
       RpcRouter.RpcRouter,
       ConfigService,
@@ -457,13 +544,13 @@ export const SystemServiceSpec = LayerSpec.make(
 );
 
 export const SystemServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [SystemService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [SystemService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(SystemService.Rpcs, SystemService.Tag),
 );
 
 export const IdentityServiceSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [
       Hook.Controller,
       IdentityManagerService,
@@ -479,13 +566,13 @@ export const IdentityServiceSpec = LayerSpec.make(
 );
 
 export const IdentityServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [IdentityService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [IdentityService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(IdentityService.Rpcs, IdentityService.Tag),
 );
 
 export const ContactsServiceSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [IdentityManagerService, SpaceManagerService, DataSpaceManagerService, StackReadinessService],
     provides: [ContactsService.Tag],
   },
@@ -493,33 +580,33 @@ export const ContactsServiceSpec = LayerSpec.make(
 );
 
 export const ContactsServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [ContactsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [ContactsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(ContactsService.Rpcs, ContactsService.Tag),
 );
 
 export const InvitationsServiceSpec = LayerSpec.make(
-  { affinity: application, requires: [InvitationsManagerService], provides: [InvitationsService.Tag] },
+  { affinity: 'application', requires: [InvitationsManagerService], provides: [InvitationsService.Tag] },
   () => InvitationsServiceLayer,
 );
 
 export const InvitationsServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [InvitationsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [InvitationsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(InvitationsService.Rpcs, InvitationsService.Tag),
 );
 
 export const DevicesServiceSpec = LayerSpec.make(
-  { affinity: application, requires: [IdentityManagerService], provides: [DevicesService.Tag] },
+  { affinity: 'application', requires: [IdentityManagerService], provides: [DevicesService.Tag] },
   () => DevicesServiceLayer,
 );
 
 export const DevicesServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [DevicesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [DevicesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(DevicesService.Rpcs, DevicesService.Tag),
 );
 
 export const SpacesServiceSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [
       IdentityManagerService,
       SpaceManagerService,
@@ -533,13 +620,13 @@ export const SpacesServiceSpec = LayerSpec.make(
 );
 
 export const SpacesServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [SpacesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [SpacesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(SpacesService.Rpcs, SpacesService.Tag),
 );
 
 export const NetworkServiceSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [SwarmNetworkManagerService, SignalManagerService],
     provides: [NetworkService.Tag],
   },
@@ -547,13 +634,13 @@ export const NetworkServiceSpec = LayerSpec.make(
 );
 
 export const NetworkServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [NetworkService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [NetworkService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(NetworkService.Rpcs, NetworkService.Tag),
 );
 
 export const EdgeAgentServiceSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [EdgeAgentManagerService, StackReadinessService],
     provides: [EdgeAgentService.Tag],
   },
@@ -561,7 +648,7 @@ export const EdgeAgentServiceSpec = LayerSpec.make(
 );
 
 export const EdgeAgentServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [EdgeAgentService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [EdgeAgentService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
 );
 
@@ -570,7 +657,7 @@ export const EdgeAgentServiceRegistrationSpec = LayerSpec.make(
 //
 
 export const DataServiceSpec = LayerSpec.make(
-  { affinity: application, requires: [EchoHostService], provides: [DataService.Tag] },
+  { affinity: 'application', requires: [EchoHostService], provides: [DataService.Tag] },
   () =>
     Layer.effect(
       DataService.Tag,
@@ -579,12 +666,12 @@ export const DataServiceSpec = LayerSpec.make(
 );
 
 export const DataServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [DataService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [DataService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(DataService.Rpcs, DataService.Tag),
 );
 
 export const QueryServiceSpec = LayerSpec.make(
-  { affinity: application, requires: [EchoHostService], provides: [QueryService.Tag] },
+  { affinity: 'application', requires: [EchoHostService], provides: [QueryService.Tag] },
   () =>
     Layer.effect(
       QueryService.Tag,
@@ -593,12 +680,12 @@ export const QueryServiceSpec = LayerSpec.make(
 );
 
 export const QueryServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [QueryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [QueryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(QueryService.Rpcs, QueryService.Tag),
 );
 
 export const FeedServiceSpec = LayerSpec.make(
-  { affinity: application, requires: [EchoHostService], provides: [FeedService.Tag] },
+  { affinity: 'application', requires: [EchoHostService], provides: [FeedService.Tag] },
   () =>
     Layer.effect(
       FeedService.Tag,
@@ -607,23 +694,23 @@ export const FeedServiceSpec = LayerSpec.make(
 );
 
 export const FeedServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [FeedService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [FeedService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(FeedService.Rpcs, FeedService.Tag),
 );
 
 export const LoggingServiceSpec = LayerSpec.make(
-  { affinity: application, requires: [], provides: [LoggingService.Tag] },
+  { affinity: 'application', requires: [], provides: [LoggingService.Tag] },
   () => LoggingServiceLayer,
 );
 
 export const LoggingServiceRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [LoggingService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [LoggingService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(LoggingService.Rpcs, LoggingService.Tag),
 );
 
 export const DevtoolsHostSpec = LayerSpec.make(
   {
-    affinity: application,
+    affinity: 'application',
     requires: [
       ConfigService,
       KeyringApiService,
@@ -643,7 +730,7 @@ export const DevtoolsHostSpec = LayerSpec.make(
 );
 
 export const DevtoolsHostRegistrationSpec = LayerSpec.make(
-  { affinity: application, requires: [DevtoolsHost.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  { affinity: 'application', requires: [DevtoolsHost.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
 );
 
@@ -651,6 +738,10 @@ export const DevtoolsHostRegistrationSpec = LayerSpec.make(
  * Every spec the client stack is built from, with the option-driven ones applied.
  */
 export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.LayerSpec[] => [
+  ...(options.edgeAvailable ? [EdgeClientsSpec] : []),
+  SignalManagerSpec(options),
+  TransportFactorySpec(options),
+
   SqliteStorageSpec,
   HypercoreStorageDirectorySpec,
   KeyringSpec,

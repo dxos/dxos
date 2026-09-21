@@ -14,6 +14,8 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Trigger } from '@dxos/async';
 import { type ClientServicesRpc, makeClientServicesRpcFromRouter } from '@dxos/client-protocol';
+import { LayerStack } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
@@ -65,12 +67,7 @@ import {
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { Closing, Opening, StackOpened, WipingStorage } from '../services/events.ts';
-import {
-  type ClientServicesStack,
-  type ServiceContextRuntimeProps,
-  StackReadinessService,
-  makeClientServicesStack,
-} from '../services/index.ts';
+import { type ServiceContextRuntimeProps, StackReadinessService, layerClientServices } from '../services/index.ts';
 import { SqliteStorage, wipeSqliteStorage } from '../services/sqlite-storage.ts';
 import { SpaceManager, SpaceManagerService } from '../space/index.ts';
 import {
@@ -120,7 +117,7 @@ const EXPOSED_TAGS = [
 ] as const;
 
 /**
- * A client services runtime for tests: the stack built from {@link makeClientServicesStack} over an
+ * A client services runtime for tests: the stack built from {@link layerClientServices} over an
  * in-memory SQLite runtime, plus the system service, with the components exposed as properties
  * while open.
  */
@@ -133,7 +130,7 @@ export class ServiceContext {
   readonly #busScope = Effect.runSync(Scope.make());
   /** Scope of the built stack; closed by `#closeStack`. */
   #stackScope?: Scope.Closeable;
-  #stack?: ClientServicesStack;
+  #stack?: LayerStack.LayerStack;
   /** The tags this test surface exposes, resolved once the stack is open so the getters stay sync. */
   #services?: EffectContext.Context<never>;
   #ctx?: Context;
@@ -167,7 +164,7 @@ export class ServiceContext {
     );
   }
 
-  get stack(): ClientServicesStack {
+  get stack(): LayerStack.LayerStack {
     return this.#stack ?? failUndefined();
   }
 
@@ -240,29 +237,33 @@ export class ServiceContext {
     const scope = Effect.runSync(Scope.make());
     this.#stackScope = scope;
     try {
-      // Built into the stack's scope rather than provided to the effect: a scoped layer provided to
-      // an effect is torn down when that effect returns, taking the database with it.
-      const sqlContext = await EffectEx.runPromise(
-        Layer.build(RuntimeProvider.toLayer(this.#sql.contextEffect)).pipe(Scope.provide(scope)),
+      // Building the layer also builds its eager specs, so the rpc registrations are in place
+      // before the lifecycle events below run.
+      const stackContext = await EffectEx.runPromise(
+        Layer.build(
+          layerClientServices({
+            runtimeProps: {
+              invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+              ...this.#options.runtimeProps,
+            },
+            signalManager: this.#options.signalManager,
+            transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
+          }).pipe(
+            Layer.provide(RuntimeProvider.toLayer(this.#sql.contextEffect)),
+            Layer.provide(Layer.succeed(ConfigService, this.#config)),
+            Layer.provide(Layer.succeed(Hook.Controller, this.#controller)),
+          ),
+        ).pipe(Scope.provide(scope)),
       );
-      const stack = await EffectEx.runPromise(
-        makeClientServicesStack({
-          runtimeProps: {
-            invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
-            ...this.#options.runtimeProps,
-          },
-          signalManager: this.#options.signalManager,
-          transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
-        }).pipe(
-          Effect.provide(sqlContext),
-          Effect.provideService(ConfigService, this.#config),
-          Effect.provideService(Hook.Controller, this.#controller),
+      const stack = EffectContext.get(stackContext, LayerStack.Service);
+      this.#stack = stack;
+      this.#services = await EffectEx.runPromise(
+        ServiceResolver.resolveAll(EXPOSED_TAGS, {}).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, stack.getServiceResolver()),
+          Effect.orDie,
           Scope.provide(scope),
         ),
       );
-      this.#stack = stack;
-      await EffectEx.runPromise(stack.open().pipe(Effect.orDie));
-      this.#services = await EffectEx.runPromise(stack.resolveAll(...EXPOSED_TAGS).pipe(Effect.orDie));
       await EffectEx.runPromise(
         EffectEx.withContext(ctx)(openChain).pipe(Effect.provideService(Hook.Controller, this.#controller)),
       );

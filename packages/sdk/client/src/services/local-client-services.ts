@@ -18,11 +18,8 @@ import {
   makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import {
-  type ClientServicesStack,
-  type ClientServicesStackOptions,
-  type ServiceContextRuntimeProps,
-} from '@dxos/client-services';
+import { type ClientServicesStackOptions, type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx, Hook } from '@dxos/effect';
@@ -207,7 +204,7 @@ const sqliteLayerFromParams = ({
 };
 
 /**
- * Runs the client services in-process: the stack from {@link makeClientServicesStack} over a SQLite
+ * Runs the client services in-process: the stack from {@link layerClientServices} over a SQLite
  * layer chosen by config, served to the client without a wire hop.
  */
 export class LocalClientServices implements ClientServicesProvider {
@@ -219,7 +216,7 @@ export class LocalClientServices implements ClientServicesProvider {
   private _controllerScope?: Scope.Closeable;
   /** Scope of the built stack; closing it disposes the stack and the SQLite layer beneath it. */
   private _stackScope?: Scope.Closeable;
-  private _stack?: ClientServicesStack;
+  private _stack?: LayerStack.LayerStack;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -260,7 +257,7 @@ export class LocalClientServices implements ClientServicesProvider {
   /**
    * The running stack; resolve a tag to reach a component or RPC handler. Present while open.
    */
-  get stack(): ClientServicesStack {
+  get stack(): LayerStack.LayerStack {
     invariant(this._stack, 'Client services not open');
     return this._stack;
   }
@@ -271,7 +268,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { makeClientServicesStack, HostEvents, wipeSqliteStorage } = await import('@dxos/client-services');
+    const { layerClientServices, HostEvents, wipeSqliteStorage } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     const config = this._params.config ?? new Config();
@@ -279,27 +276,24 @@ export class LocalClientServices implements ClientServicesProvider {
     this._stackScope = stackScope;
     const controller = this._controller;
     try {
-      // Built into the stack's scope rather than provided to the effect: a scoped layer provided to
-      // an effect is torn down when that effect returns, taking the database with it.
-      const sqlContext = await EffectEx.runPromise(
-        Layer.build(sqliteLayerFromParams(this._params).pipe(Layer.orDie)).pipe(Scope.provide(stackScope)),
+      // Building the layer also builds its eager specs, so the rpc registrations are in place
+      // before the lifecycle events below run.
+      const stackContext = await EffectEx.runPromise(
+        Layer.build(
+          layerClientServices({
+            runtimeProps: this._params.runtimeProps,
+            signalManager: this._params.signalManager,
+            transportFactory: this._params.transportFactory,
+            connectionLog: this._params.connectionLog,
+            autoConnect: this._params.autoConnect,
+          }).pipe(
+            Layer.provide(sqliteLayerFromParams(this._params).pipe(Layer.orDie)),
+            Layer.provide(Layer.succeed(ConfigService, config)),
+            Layer.provide(Layer.succeed(Hook.Controller, controller)),
+          ),
+        ).pipe(Scope.provide(stackScope)),
       );
-      this._stack = await EffectEx.runPromise(
-        makeClientServicesStack({
-          runtimeProps: this._params.runtimeProps,
-          signalManager: this._params.signalManager,
-          transportFactory: this._params.transportFactory,
-          connectionLog: this._params.connectionLog,
-          autoConnect: this._params.autoConnect,
-        }).pipe(
-          Effect.provide(sqlContext),
-          Effect.provideService(ConfigService, config),
-          Effect.provideService(Hook.Controller, controller),
-          Scope.provide(stackScope),
-        ),
-      );
-      // Builds the eager specs (registrations, lifecycle subscriptions) the events below drive.
-      await EffectEx.runPromise(this._stack.open().pipe(Effect.orDie));
+      this._stack = EffectContext.get(stackContext, LayerStack.Service);
       // `StackOpened` resolves once every handler the cascade triggered has run.
       await EffectEx.runPromise(
         EffectEx.withContext(this._ctx)(
@@ -330,7 +324,9 @@ export class LocalClientServices implements ClientServicesProvider {
       // surface (no wire hop), then derive the deprecated Promise/Stream shaped services from it for
       // consumers not yet on the effect surface.
       this._serviceScope = Effect.runSync(Scope.make());
-      const router = await EffectEx.runPromise(this.stack.resolve(RpcRouter.RpcRouter).pipe(Effect.orDie));
+      const router = await EffectEx.runPromise(
+        this.stack.getServiceResolver().resolve(RpcRouter.RpcRouter, {}).pipe(Effect.orDie, Effect.scoped),
+      );
       this._rpc = await EffectEx.runPromise(
         makeClientServicesRpcFromRouter.pipe(
           Effect.provideService(RpcRouter.RpcRouter, router),
