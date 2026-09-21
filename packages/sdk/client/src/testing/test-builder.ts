@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { ClientRpcServer } from '@dxos/client-protocol';
+import { Rpc } from '@dxos/client-protocol';
 import { type ServiceContextRuntimeProps } from '@dxos/client-services';
 import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
@@ -27,6 +28,7 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
+import { RpcRouter } from '@dxos/rpc';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
@@ -124,13 +126,12 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, ClientRpcServer] {
+  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, Rpc.GroupServer] {
     const channel = new MessageChannel();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
-    const server = new ClientRpcServer({
-      services: () => host.services,
-      port: channel.port2,
-    });
+    // Served straight off the host's router, as a worker session serves a tab; resolved on open so
+    // a host opened after this call is served.
+    const server = Rpc.serveRouterOnPort(() => EffectContext.get(host.stack, RpcRouter.RpcRouter), channel.port2);
 
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());
