@@ -18,6 +18,7 @@ import { GitHubOperation } from '#types';
 import { GitHubRepoInaccessibleError } from '../../errors.ts';
 import { parsePullRequestReference } from '../../extensions/index.ts';
 import { useOpenObject } from '../../hooks/index.ts';
+import { GitHubApi } from '../../services/index.ts';
 
 const ImportPullRequestForm = Schema.Struct({
   reference: Schema.String.pipe(
@@ -72,7 +73,15 @@ export const ImportPullRequestDialog = () => {
 
       const pullRequest = data?.pullRequest.target;
       if (error || !pullRequest) {
-        log.warn('pull request import failed', { reference, error });
+        // A minified build serialises the invoker's error as a bare, headerless stack, so the name and
+        // the HTTP status it carries are logged explicitly — without them a feedback bundle names the
+        // failure without saying what it was.
+        log.warn('pull request import failed', {
+          reference,
+          errorName: error?.name,
+          status: GitHubApi.responseStatus(error),
+          err: error,
+        });
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.profile.key}.import-pull-request`,
           icon: 'ph--warning--regular',
