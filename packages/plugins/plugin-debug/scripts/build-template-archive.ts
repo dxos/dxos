@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { PipelineTemplate, TidepoolTemplate } from '../src/templates/index.ts';
+import { PipelineSpace, TidepoolSpace } from '../src/samples/index.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -58,7 +58,7 @@ await EffectEx.runPromise(
   Effect.gen(function* () {
     yield* Effect.log(`building ${space}…`);
     const { json, objectCount } =
-      space === 'crm' ? yield* buildArchive(PipelineTemplate.make()) : yield* buildArchive(TidepoolTemplate.make());
+      space === 'crm' ? yield* buildArchive(PipelineSpace.make()) : yield* buildArchive(TidepoolSpace.make());
 
     yield* Effect.promise(() => writeFile(out, json + '\n', 'utf8'));
     yield* Effect.log(`wrote ${out} (${json.length} bytes, ${objectCount} objects)`);

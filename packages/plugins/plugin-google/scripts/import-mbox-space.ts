@@ -30,7 +30,7 @@ import { writeFile } from 'node:fs/promises';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
+import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { Database, Feed, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -72,22 +72,20 @@ export type ImportResult = { imported: number; skipped: number };
 /**
  * Builds the Mailbox, then streams the mbox file, appending parsed messages in bounded batches.
  *
- * This is the one phase that appends to its feed eagerly rather than through `SpaceTemplate.Feeds`:
+ * This is the one phase that appends to its feed eagerly rather than through `SampleSpace.Feeds`:
  * queuing every message until the end of the build would hold a multi-GB mailbox in memory, which
  * is the whole thing the streaming import exists to avoid. It therefore owns the single flush that
  * gives the feed and tag index their DXNs.
  */
-const MboxMailbox = (options: Options): SpaceTemplate.Phase<ImportResult> =>
-  SpaceTemplate.phase('mailbox', {
+const MboxMailbox = (options: Options): SampleSpace.Phase<ImportResult> =>
+  SampleSpace.phase('mailbox', {
     schemas: [Feed.Feed, Message.Message, Mailbox.Mailbox, TagIndex.TagIndex, Tag.Tag],
     run: () =>
       Effect.gen(function* () {
         const mailbox = yield* Database.add(Mailbox.make({ name: options.name }));
         const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
         if (!feed) {
-          return yield* Effect.fail(
-            new SpaceTemplate.SpaceTemplateError({ context: { reason: 'mailbox-feed-missing' } }),
-          );
+          return yield* Effect.fail(new SampleSpace.SampleSpaceError({ context: { reason: 'mailbox-feed-missing' } }));
         }
         // Feed objects need DXNs before append, and the tag index must be resolvable before tagging.
         yield* Database.flush();
@@ -99,7 +97,7 @@ const MboxMailbox = (options: Options): SpaceTemplate.Phase<ImportResult> =>
         // up to the next batch as a read-then-break loop would.
         const messages = Stream.fromAsyncIterable(
           streamMboxMessages(options.in),
-          (error) => new SpaceTemplate.SpaceTemplateError({ context: { reason: 'mbox-read-failed', error } }),
+          (error) => new SampleSpace.SampleSpaceError({ context: { reason: 'mbox-read-failed', error } }),
         );
         const batches = (options.limit === undefined ? messages : Stream.take(messages, options.limit)).pipe(
           Stream.grouped(BATCH_SIZE),
@@ -114,10 +112,10 @@ const MboxMailbox = (options: Options): SpaceTemplate.Phase<ImportResult> =>
               feed,
               mapped.map(({ message }) => message),
             );
-            // `SpaceTemplate.Tags` resolves each distinct label once — `Tag.findOrCreate` without a
+            // `SampleSpace.Tags` resolves each distinct label once — `Tag.findOrCreate` without a
             // foreign key scans every Tag in the space, so resolving per message-label pair turns
             // tagging into the dominant, ever-growing cost over a large import.
-            yield* SpaceTemplate.tagBatch(
+            yield* SampleSpace.tagBatch(
               mapped.flatMap(({ message, labels }) => labels.map((label) => ({ object: message, key: label }))),
               { index: mailbox.tags.target },
             );
@@ -133,7 +131,7 @@ const MboxMailbox = (options: Options): SpaceTemplate.Phase<ImportResult> =>
 
 const mboxSpace = (options: Options) => {
   const phases = { mailbox: MboxMailbox(options) };
-  return SpaceTemplate.make<typeof phases, ImportResult>({
+  return SampleSpace.make<typeof phases, ImportResult>({
     space: { name: `${basename(options.in)} (mbox)`, icon: 'ph--tray--regular', hue: 'rose' },
     phases,
     build: (phases) => phases.mailbox(),

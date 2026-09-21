@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { CapabilityNotFoundError } from '@dxos/app-framework';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
+import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
@@ -16,7 +16,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EchoError from '@dxos/echo/Error';
 import type { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as WeatherTemplate from '@dxos/plugin-debug/WeatherTemplate';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -132,7 +132,7 @@ export const seed = ({
   instructions: Instructions.Instructions;
 }): Effect.Effect<
   SeedResult,
-  SeedError | CapabilityNotFoundError | EchoError.EntityNotFoundError | SpaceTemplate.SpaceTemplateError,
+  SeedError | CapabilityNotFoundError | EchoError.EntityNotFoundError | SampleSpace.SampleSpaceError,
   Database.Service | Capabilities.ProcessManagerRuntimeServices
 > =>
   Effect.gen(function* () {
@@ -141,7 +141,7 @@ export const seed = ({
     if (!space) {
       return yield* new SeedError({ message: `Space not found: ${spaceId}` });
     }
-    yield* SpaceTemplate.applyTo(WeatherTemplate.make(), space);
+    yield* SampleSpace.applyTo(WeatherSpace.make(), space);
 
     const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
     if (!project?.taskSet || !project.instructions) {

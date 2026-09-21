@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 import { type IncomingMessage, type ServerResponse } from 'node:http';
 
-import * as WeatherTemplate from '@dxos/plugin-debug/WeatherTemplate';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 
 import { listenLoopback, loopbackUrl } from '../../loopback-server.ts';
 
@@ -66,7 +66,7 @@ type JsonRpcRequest = {
 
 /** The upstream URL with the caller's coordinates substituted for the template's Berlin ones. */
 export const forecastUrl = ({ latitude, longitude }: Coordinates): string =>
-  WeatherTemplate.FORECAST_URL.replace(/latitude=[^&]*/, `latitude=${latitude}`).replace(
+  WeatherSpace.FORECAST_URL.replace(/latitude=[^&]*/, `latitude=${latitude}`).replace(
     /longitude=[^&]*/,
     `longitude=${longitude}`,
   );

@@ -9,5 +9,5 @@ export * from './app-graph/index.ts';
 export * from './echo/index.ts';
 export * from './errors.ts';
 export * from './operations/index.ts';
-export * from './template/index.ts';
+export * from './sample/index.ts';
 export * from './types/index.ts';

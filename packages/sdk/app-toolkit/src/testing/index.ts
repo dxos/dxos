@@ -33,4 +33,4 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
     effect,
   );
 
-export * from './SpaceTemplateBuilder.ts';
+export * from './SampleSpaceBuilder.ts';

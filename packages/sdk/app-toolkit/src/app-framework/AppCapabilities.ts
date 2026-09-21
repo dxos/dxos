@@ -282,7 +282,7 @@ export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framewo
  *
  * `apply` is a bound closure rather than a definition, so a consumer needs only "put this content in
  * that space" without dragging the builder, its phase map and Effect into the dialog that lists it.
- * Build the entry with `SpaceTemplate.preset`.
+ * Build one with `SampleSpace.makeTemplate`.
  */
 export type SpaceTemplate = Readonly<{
   /** Stable id, namespaced by the owning plugin; the value the create form carries. */
