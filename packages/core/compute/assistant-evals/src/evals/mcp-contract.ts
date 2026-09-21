@@ -9,32 +9,40 @@ import { Database, Ref, Type } from '@dxos/echo';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { type Turn } from '@dxos/test-utils/claude-agent';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { findObject } from '../assertions.ts';
-import { runClaudeEval } from '../claude-harness.ts';
-import * as McpCall from '../McpCall.ts';
+import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
 import * as McpTarget from '../McpTarget.ts';
+import * as McpTranscript from '../McpTranscript.ts';
 import * as Scorer from '../Scorer.ts';
 
 //
-// The contract half of the MCP eval: what the surface owes a caller, asked directly rather than
-// through a model.
+// The contract half of the MCP eval: what the surface owes a caller, asked through the same Claude
+// Code client as the scenario next door and graded from what came back.
 //
-// The scored scenario next door (`mcp-server.eval.ts`) drives a real agent and grades what reached
-// the database, which is the right shape for "can a client get work done here" and the wrong one for
-// "is the answer it got correct". An agent picks its own arguments, so the call that would expose a
-// defect may simply never be made; and where the defect is that a wrong answer arrives as a
-// successful one — a search that widens instead of narrowing, a misspelled input silently becoming
-// "list everything", a page capped without saying so — a turn that reads the result and reports
-// success is exactly what the defect produces. Every dimension below therefore issues its own call
-// with its own arguments and asserts the payload.
+// `mcp-server.eval.ts` gives an agent a goal and grades what reached the database. That is the right
+// shape for "can a client get work done here" and cannot establish "was the answer it got correct":
+// where the defect is that a wrong answer arrives as a successful one — a search that widens instead
+// of narrowing, a misspelled input silently becoming "list everything", a page capped without saying
+// so — a turn that reads the result and reports success is exactly what the defect produces.
+//
+// So what differs here is the prompt and the grading, not the client. The agent is told which
+// operation to call and with which arguments, and every dimension is read out of its own
+// stream-json transcript (`McpTranscript`): the call it actually made, and the payload the server
+// actually returned. Reading the transcript rather than the reply is what closes the gap — a model
+// summarizing its own tool results is the one witness a contract cannot use.
+//
+// The prompts forbid retrying or correcting a call, which is load-bearing rather than pedantic: two
+// of the dimensions below are about what a WRONG call must do, and a helpful agent that quietly
+// fixes the argument would report the contract as held without ever testing it.
 //
 // The four faults reproduced at unit level in dxos#13264 are what the set is drawn from; these are
-// the same faults one altitude up, where a caller actually meets them.
+// the same faults one altitude up, where a caller meets them.
 //
 
-/** The project that carries the ledger; the other two exist to give a typename filter something to be wrong about. */
+/** The project that carries the ledger; the other two give a typename filter something to be wrong about. */
 const LEDGER_PROJECT = 'Harbour';
 
 const PROJECT_NAMES = [LEDGER_PROJECT, 'Jetty', 'Quay'] as const;
@@ -46,7 +54,9 @@ const PROJECT_NAMES = [LEDGER_PROJECT, 'Jetty', 'Quay'] as const;
 const ALPHA_TERM = 'alphaterm';
 const BETA_TERM = 'betaterm';
 
-/** One task carrying both terms, and one carrying each — the only shape that tells AND from OR. */
+const PHRASE = `${ALPHA_TERM} ${BETA_TERM}`;
+
+/** One task carrying both terms and one carrying each — the only shape that tells AND from OR. */
 const BOTH_TERMS = `${LEDGER_PROJECT} ${ALPHA_TERM} ${BETA_TERM} rollout`;
 const ALPHA_ONLY = `${LEDGER_PROJECT} ${ALPHA_TERM} rehearsal`;
 const BETA_ONLY = `${LEDGER_PROJECT} ${BETA_TERM} rehearsal`;
@@ -90,16 +100,20 @@ const idOf = (dxn: string | undefined): string | undefined => dxn?.split(/[:/]/)
  * Tolerant of a version suffix, because what a filter must not do is return a DIFFERENT type — the
  * registration a typename resolves to is not this dimension's subject.
  */
-const isType = (row: McpCall.Row, typename: string): boolean =>
+const isType = (row: McpTranscript.Row, typename: string): boolean =>
   row.typename === typename || (row.typename ?? '').startsWith(`${typename}:`);
 
-/** Whether the rows are exactly the objects with these labels, in any order. */
-const labelledExactly = (outcome: McpCall.Outcome, labels: readonly string[]): boolean => {
-  const found = McpCall.rows(outcome).map((row) => row.label ?? '');
-  return found.length === labels.length && labels.every((label) => found.includes(label));
+/** Whether a listing returned exactly the objects with these labels, in any order. */
+const labelledExactly = (call: McpTranscript.Call | undefined, expected: readonly string[]): boolean => {
+  const found = McpTranscript.labels(call);
+  return found.length === expected.length && expected.every((label) => found.includes(label));
 };
 
-/** The milestone a task is filed under, read outside the surface that set it. */
+/** Whether a reference argument the agent built addresses `id`. */
+const addresses = (value: unknown, id: string): boolean =>
+  typeof value === 'object' && value !== null && Object.values(value).some((part) => String(part).includes(id));
+
+/** The milestone a task is filed under, read from the database rather than from the agent's reply. */
 const milestoneIdOf = (title: string) =>
   Effect.gen(function* () {
     const task = yield* findObject(Task.Task, (candidate) => candidate.title === title);
@@ -139,50 +153,52 @@ const scorers = (held: Held): Scorer.Any[] => [
   Scorer.make({
     name: 'search-finds',
     description:
-      'The control for the two search dimensions: a single-term search returns exactly the two ' +
-      'tasks whose titles carry that term, so a narrowing result below cannot be an empty index.',
+      'Control for the two search dimensions: the single-term search the agent was told to make ' +
+      'returned exactly the two tasks carrying that term, so a narrow result below cannot be an ' +
+      'empty index.',
     score: Effect.succeed(held.found),
   }),
   Scorer.make({
     name: 'search-narrows',
     description:
-      'A two-word search returns only the task carrying both words. OR-ing the terms returns a ' +
-      'superset that still contains the right answer, which is why a scored turn passes on it.',
+      'The two-word search returned only the task carrying both words. OR-ing the terms returns a ' +
+      'superset that still contains the right answer, which is why a goal-driven turn passes on it.',
     score: Effect.succeed(held.narrowed),
   }),
   Scorer.make({
     name: 'unknown-input-rejected',
     description:
-      'A misspelled input property is refused rather than dropped. Dropped, the filter is gone and ' +
-      'the handler falls through to listing the whole space — returned as a success a caller ' +
-      'cannot tell from a real result set.',
+      'The deliberately misspelled input property came back as an error. Dropped instead, the ' +
+      'filter is gone and the handler falls through to listing the whole space — returned as a ' +
+      'success a caller cannot tell from a real result set.',
     score: Effect.succeed(held.rejected),
   }),
   Scorer.make({
     name: 'truncation-reported',
     description:
-      'A page capped by the limit says so, and a read the whole ledger fits inside says it was ' +
+      'The page capped by the limit said so, and the read the whole ledger fits inside said it was ' +
       'not capped. This is the silent-partial class itself: a capped page read as the whole set.',
     score: Effect.succeed(held.reported),
   }),
   Scorer.make({
     name: 'listing-scoped-to-filter',
-    description: 'A typename-filtered listing returns every object of that type and nothing of any other.',
+    description: 'Each typename-filtered listing returned every object of that type and nothing of any other.',
     score: Effect.succeed(held.scoped),
   }),
   Scorer.make({
     name: 'listed-objects-loadable',
     description:
-      'Every object a listing returned loads through a verb that takes it by reference. The read ' +
-      'path and the write path resolve objects differently, so a listing can name one that no ' +
-      'write verb will accept.',
+      'Every project the listing returned loaded back through a verb that takes it by reference, ' +
+      'as the id it answered with. The read path and the write path resolve objects differently, ' +
+      'so a listing can name one no write verb will accept.',
     score: Effect.succeed(held.loadable),
   }),
   Scorer.make({
     name: 'ref-field-set',
     description:
-      'A nullable reference field accepts a reference. Declared `optional(NullOr(Ref))` so a patch ' +
-      'can clear it, such a field decodes `null` but not a reference: it can be cleared and never set.',
+      'A nullable reference field accepted a reference, and the database shows it. Declared ' +
+      '`optional(NullOr(Ref))` so a patch can clear it, such a field decodes `null` but not a ' +
+      'reference: it can be cleared and never set.',
     score: Effect.succeed(held.refSet),
   }),
 ];
@@ -203,23 +219,46 @@ export const CONTRACT_NAME = `MCP server contract (${TARGET}) — the surface an
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
 export const CONTRACT_SCORERS = SEEDED ? scorers(NOTHING_HELD) : unseededScorers(false);
 
+/** The server's own tools and nothing else, so no prompt here can be satisfied off the surface. */
+const ALLOWED_TOOLS = [tool('queryOperations'), tool('invokeOperation'), tool('loadSkill')];
+
+const PREFIX = `mcp__${SERVER}__`;
+
 /**
- * A space this process cannot see: the fixtures are not ours, so only the dimension that asserts a
- * refusal is still meaningful — a malformed call must be refused whatever the space holds.
+ * The clause that makes a wrong call stay wrong.
+ *
+ * Two dimensions are about what a MALFORMED call must do, and the model's instinct is to notice the
+ * mistake and fix it — which would report the contract as held by never testing it.
+ */
+const VERBATIM =
+  'Make exactly these calls, in this order, with exactly these inputs. Do not repeat a call, do ' +
+  'not change an argument, and do not correct or work around a call that fails: an error is a ' +
+  'result I want reported, not a problem to solve.';
+
+/** How the agent is told to name the tool and the operation, in the form it will pass them. */
+const invoking = (key: string, spaceId: string): string =>
+  `Call the ${SERVER} tool \`invokeOperation\` with \`key\` "${key}" and \`spaceId\` "${spaceId}".`;
+
+/**
+ * A deployed worker over a space this process cannot see. The fixtures are not ours, so only the
+ * dimension asserting a refusal is still meaningful — a malformed call must be refused whatever the
+ * space holds.
  */
 const unseededTask = () =>
-  runClaudeEval({ skills: [], target: TARGET }, async ({ spaceId, call, score }) => {
-    const session = await call();
-    try {
-      const misspelled = await session.invoke(QUERY_OBJECTS, { query: ALPHA_TERM, limit: PAGE }, spaceId);
-      const scores = await score(unseededScorers(misspelled.isError));
-      return {
-        scores,
-        calls: [{ label: 'unknown-input-rejected', isError: misspelled.isError, text: misspelled.text }],
-      };
-    } finally {
-      await session.close();
-    }
+  runClaudeEval({ skills: [], target: TARGET, allowedTools: ALLOWED_TOOLS }, async ({ spaceId, send, score }) => {
+    const turn = await send(
+      `${invoking(QUERY_OBJECTS, spaceId)} Pass exactly this \`input\`: ` +
+        `{"query": "${ALPHA_TERM}", "limit": ${PAGE}}. ${VERBATIM} Reply with whether it errored ` +
+        'and what it said.',
+    );
+    const made = McpTranscript.calls(turn, PREFIX);
+    const misspelled = McpTranscript.find(made, QUERY_OBJECTS, (input) => input.query === ALPHA_TERM);
+    const scores = await score(unseededScorers(misspelled?.isError === true));
+    return {
+      scores,
+      calls: made.map(({ operation, input, isError, text }) => ({ operation, input, isError, text })),
+      turns: [turn].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+    };
   });
 
 const seededTask = () =>
@@ -229,8 +268,7 @@ const seededTask = () =>
       skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
       plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
       types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
-      // No agent turn is sent, so no tool is allowed: every call below is the eval's own client.
-      allowedTools: [],
+      allowedTools: ALLOWED_TOOLS,
       seed: () =>
         Effect.gen(function* () {
           const milestone = yield* Database.add(Milestone.make({ name: MILESTONE_NAME }));
@@ -241,14 +279,14 @@ const seededTask = () =>
             TaskSet.make({
               name: `${LEDGER_PROJECT} ledger`,
               tasks: tasks.map((entry) => Ref.make(entry)),
-              // The milestone has to be the set's own: `tasks.update` refuses one that belongs to
-              // another set, and the dimension would then pass its refusal off as the decode fault.
+              // The milestone has to be the set's own: `tasks.update` refuses one belonging to
+              // another set, and the dimension would then pass that refusal off as the decode fault.
               milestones: [Ref.make(milestone)],
             }),
           );
-          // Every project gets a task set of its own, added here: `Project.make` materializes one
-          // for a project that arrives without, and a fixture whose objects were created as a side
-          // effect is a fixture nothing in this file can state the contents of.
+          // Every project gets a task set added here: `Project.make` materializes one for a project
+          // that arrives without, and a fixture whose objects were created as a side effect is a
+          // fixture nothing in this file can state the contents of.
           yield* Effect.forEach(PROJECT_NAMES, (name) =>
             Effect.gen(function* () {
               const set =
@@ -260,106 +298,120 @@ const seededTask = () =>
           );
         }),
     },
-    async ({ spaceId, query, score, call }) => {
-      const session = await call();
-      try {
-        // The control first: a single term must find both tasks carrying it. Without it a narrowing
-        // result below is indistinguishable from an index that returns nothing at all.
-        const single = await session.invoke(QUERY_OBJECTS, { text: ALPHA_TERM, limit: WHOLE_LEDGER }, spaceId);
-        const found = !single.isError && labelledExactly(single, [BOTH_TERMS, ALPHA_ONLY]);
+    async ({ spaceId, send, query, score }) => {
+      // Turn 1 — the three searches, including the misspelled one. Together rather than one turn
+      // each because the contrast is the point: one agent, one operation, three inputs.
+      const searchTurn = await send(
+        `${invoking(QUERY_OBJECTS, spaceId)} Make three such calls, passing exactly these \`input\` ` +
+          'values in order:\n' +
+          `1. {"text": "${ALPHA_TERM}", "limit": ${WHOLE_LEDGER}}\n` +
+          `2. {"text": "${PHRASE}", "limit": ${WHOLE_LEDGER}}\n` +
+          `3. {"query": "${ALPHA_TERM}", "limit": ${WHOLE_LEDGER}}\n` +
+          `${VERBATIM} Reply with, for each call, its number and either the titles it returned or ` +
+          'the error it returned.',
+      );
+      const searches = McpTranscript.calls(searchTurn, PREFIX);
+      const single = McpTranscript.find(searches, QUERY_OBJECTS, (input) => input.text === ALPHA_TERM);
+      const phrase = McpTranscript.find(searches, QUERY_OBJECTS, (input) => input.text === PHRASE);
+      const misspelled = McpTranscript.find(searches, QUERY_OBJECTS, (input) => input.query === ALPHA_TERM);
 
-        // Adding a word must remove results, not add them.
-        const phrase = await session.invoke(
-          QUERY_OBJECTS,
-          { text: `${ALPHA_TERM} ${BETA_TERM}`, limit: WHOLE_LEDGER },
-          spaceId,
-        );
-        const narrowed = !phrase.isError && labelledExactly(phrase, [BOTH_TERMS]);
+      const found = single?.isError === false && labelledExactly(single, [BOTH_TERMS, ALPHA_ONLY]);
+      const narrowed = phrase?.isError === false && labelledExactly(phrase, [BOTH_TERMS]);
+      // The misspelling has to reach the server: a turn that never made the call establishes
+      // nothing, which `find` returning `undefined` already scores as a failure.
+      const rejected = misspelled?.isError === true;
 
-        // `query` rather than `text`, which is what the tool's own description calls the field — the
-        // misspelling a caller actually makes, and the one that turns a search into "list everything".
-        const misspelled = await session.invoke(QUERY_OBJECTS, { query: ALPHA_TERM, limit: WHOLE_LEDGER }, spaceId);
-        const rejected = misspelled.isError;
+      // Turn 2 — the listings, and a load of each project the listing named. The agent takes the
+      // dxn out of one result and passes it back as a reference, which is the round trip a client
+      // makes and no fixed argument could stand in for.
+      const listTurn = await send(
+        `${invoking(QUERY_OBJECTS, spaceId)} Make three such calls, passing exactly these \`input\` ` +
+          'values in order:\n' +
+          `1. {"limit": ${PAGE}}\n` +
+          `2. {"typename": "${TASK_TYPENAME}", "limit": ${WHOLE_LEDGER}}\n` +
+          `3. {"typename": "${PROJECT_TYPENAME}", "limit": ${WHOLE_LEDGER}}\n` +
+          `Then, for EACH row the third call returned, ${invoking(GET_PROJECT, spaceId)} Pass ` +
+          '`input` {"project": {"/": "<that row\'s dxn>"}}, using that row\'s own dxn verbatim. ' +
+          `${VERBATIM} Reply with how many rows each of the three calls returned, what each ` +
+          'reported for `truncated`, and whether every project loaded.',
+      );
+      const listings = McpTranscript.calls(listTurn, PREFIX);
+      const capped = McpTranscript.find(
+        listings,
+        QUERY_OBJECTS,
+        (input) => input.limit === PAGE && input.typename === undefined && input.text === undefined,
+      );
+      const ledger = McpTranscript.find(listings, QUERY_OBJECTS, (input) => input.typename === TASK_TYPENAME);
+      const projects = McpTranscript.find(listings, QUERY_OBJECTS, (input) => input.typename === PROJECT_TYPENAME);
+      const projectRows = McpTranscript.rows(projects);
 
-        const capped = await session.invoke(QUERY_OBJECTS, { limit: PAGE }, spaceId);
-        const ledger = await session.invoke(QUERY_OBJECTS, { typename: TASK_TYPENAME, limit: WHOLE_LEDGER }, spaceId);
-        const reported =
-          !capped.isError &&
-          McpCall.rows(capped).length === PAGE &&
-          capped.structured.truncated === true &&
-          !ledger.isError &&
-          McpCall.rows(ledger).length === LEDGER_SIZE &&
-          // The negative case too: a flag that is always true reports nothing.
-          ledger.structured.truncated === false;
+      const reported =
+        capped?.isError === false &&
+        McpTranscript.rows(capped).length === PAGE &&
+        capped.output.truncated === true &&
+        ledger?.isError === false &&
+        McpTranscript.rows(ledger).length === LEDGER_SIZE &&
+        // The negative case too: a flag that is always true reports nothing.
+        ledger.output.truncated === false;
 
-        const projects = await session.invoke(
-          QUERY_OBJECTS,
-          { typename: PROJECT_TYPENAME, limit: WHOLE_LEDGER },
-          spaceId,
-        );
-        const projectRows = McpCall.rows(projects);
-        const scoped =
-          !projects.isError &&
-          projectRows.length === PROJECT_NAMES.length &&
-          projectRows.every((row) => isType(row, PROJECT_TYPENAME)) &&
-          !ledger.isError &&
-          McpCall.rows(ledger).every((row) => isType(row, TASK_TYPENAME));
+      const scoped =
+        projects?.isError === false &&
+        projectRows.length === PROJECT_NAMES.length &&
+        projectRows.every((row) => isType(row, PROJECT_TYPENAME)) &&
+        ledger?.isError === false &&
+        McpTranscript.rows(ledger).every((row) => isType(row, TASK_TYPENAME));
 
-        // Each listed project loaded back through a verb that takes it by reference, addressed by
-        // what the listing said rather than by what this process knows.
-        const loads = await Promise.all(
-          projectRows.map(async (row) => {
-            const id = idOf(row.dxn);
-            if (id === undefined) {
-              return false;
-            }
-            const loaded = await session.invoke(GET_PROJECT, { project: McpCall.ref(spaceId, id) }, spaceId);
-            // The id it answers with, not merely that it answered: a verb that resolved some other
-            // project would satisfy a bare success check and hide the very mismatch this asks about.
-            return !loaded.isError && loaded.structured.id === id;
-          }),
-        );
-        const loadable = projectRows.length === PROJECT_NAMES.length && loads.every(Boolean);
+      // Matched by the id the listing gave, and asserted against the id the load answered with: a
+      // verb that resolved some other project would satisfy a bare success check and hide the very
+      // mismatch this asks about.
+      const loadable =
+        projectRows.length === PROJECT_NAMES.length &&
+        projectRows.every((row) => {
+          const id = idOf(row.dxn);
+          if (id === undefined) {
+            return false;
+          }
+          const loaded = McpTranscript.find(listings, GET_PROJECT, (input) => addresses(input.project, id));
+          return loaded?.isError === false && loaded.output.id === id;
+        });
 
-        const milestone = await query(
-          findObject(Milestone.Milestone, (candidate) => candidate.name === MILESTONE_NAME),
-        );
-        const target = await query(findObject(Task.Task, (candidate) => candidate.title === MILESTONE_TARGET));
-        let refSet = false;
-        if (milestone && target) {
-          const filed = await session.invoke(
-            UPDATE_TASK,
-            { task: McpCall.ref(spaceId, target.id), milestone: McpCall.ref(spaceId, milestone.id) },
-            spaceId,
-          );
-          // Read back from the database, not from the operation's own output: the write is the
-          // claim, and an echo of the argument is not evidence that it landed.
-          refSet = !filed.isError && (await query(milestoneIdOf(MILESTONE_TARGET))) === milestone.id;
-        }
+      // Turn 3 — the nullable reference. Named by title and by milestone name rather than by
+      // address, so the agent resolves both and builds the envelopes itself, which is the decode
+      // path the defect lives on.
+      const milestone = await query(findObject(Milestone.Milestone, (candidate) => candidate.name === MILESTONE_NAME));
+      const refTurn = await send(
+        `In space ${spaceId}, file the task titled "${MILESTONE_TARGET}" under the milestone named ` +
+          `"${MILESTONE_NAME}". ${invoking(UPDATE_TASK, spaceId)} Pass \`input\` with \`task\` set to ` +
+          "that task's reference and `milestone` set to that milestone's reference, both as " +
+          `{"/": "<dxn>"} envelopes. Look up whatever addresses you need first. ${VERBATIM} Reply ` +
+          'with whether the update call errored and what it said.',
+      );
+      const filed = McpTranscript.find(McpTranscript.calls(refTurn, PREFIX), UPDATE_TASK, (input) => !!input.milestone);
+      // Read back from the database, not from the operation's own output: the write is the claim,
+      // and an echo of the argument is not evidence that it landed.
+      const refSet =
+        filed?.isError === false &&
+        milestone != null &&
+        (await query(milestoneIdOf(MILESTONE_TARGET))) === milestone.id;
 
-        const held: Held = { found, narrowed, rejected, reported, scoped, loadable, refSet };
-        const scores = await score(scorers(held));
-        return {
-          scores,
-          held,
-          // The payloads themselves, so a red dimension can be read without re-running the scenario.
-          calls: [
-            { label: 'search-finds', rows: McpCall.rows(single).map((row) => row.label) },
-            { label: 'search-narrows', rows: McpCall.rows(phrase).map((row) => row.label) },
-            { label: 'unknown-input-rejected', isError: misspelled.isError, text: misspelled.text },
-            {
-              label: 'truncation-reported',
-              capped: McpCall.rows(capped).length,
-              cappedTruncated: capped.structured.truncated,
-              ledger: McpCall.rows(ledger).length,
-              ledgerTruncated: ledger.structured.truncated,
-            },
-            { label: 'listing-scoped-to-filter', projects: projectRows.map((row) => row.typename) },
-          ],
-        };
-      } finally {
-        await session.close();
-      }
+      const held: Held = { found, narrowed, rejected, reported, scoped, loadable, refSet };
+      const scores = await score(scorers(held));
+      const turns: Turn[] = [searchTurn, listTurn, refTurn];
+      return {
+        scores,
+        held,
+        // Every call with its arguments and its payload, so a red dimension can be read without
+        // re-running the model — including the case where the agent called something else entirely.
+        calls: turns.flatMap((turn) =>
+          McpTranscript.calls(turn, PREFIX).map(({ operation, input, isError, text }) => ({
+            operation,
+            input,
+            isError,
+            text: text.slice(0, 2_000),
+          })),
+        ),
+        turns: turns.map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+      };
     },
   );
 
