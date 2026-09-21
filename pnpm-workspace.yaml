@@ -788,7 +788,6 @@ peerDependencyRules:
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
-    # @effect/platform-node declares it for its Redis integration, which nothing here uses.
     - redis
     - stage-js
     - webpack
