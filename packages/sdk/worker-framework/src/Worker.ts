@@ -84,6 +84,11 @@ export type Options = {
    */
   displaceChannel?: string;
   /**
+   * Ends the worker the way terminating its agent would: a pending storage-lock request is dropped
+   * and a running worker shuts down. For hosts that run the loop in-process (tests, a native shell).
+   */
+  signal?: AbortSignal;
+  /**
    * Builds the runtime after receiving init config from the leader. The provided scope is the
    * runtime's lifetime: it stays open until the worker shuts down (displaced by a newer worker, or
    * `requestShutdown` called), and every session scope is a child of it, so shutdown closes the
@@ -118,9 +123,22 @@ export const run = ({
   endpoint = defaultEndpoint(),
   storageLockKey,
   displaceChannel = displaceChannelFor(storageLockKey),
+  signal,
   createRuntime,
 }: Options): void => {
-  void navigator.locks.request(storageLockKey, async () => {
+  // Set once the storage lock is held; a lock stolen from under this worker ends it through here.
+  let shutdownOnLockLost: (() => Promise<void>) | undefined;
+  const onLockLost = (lockName: string) => (err: unknown) => {
+    if (signal?.aborted) {
+      return;
+    }
+    // A holder whose lock was stolen keeps running, but its storage is no longer its own to serve.
+    log.warn('worker lock lost, shutting down', { lockName, err });
+    void shutdownOnLockLost?.();
+  };
+  // Aborting a granted request leaves the lock held, so a running worker is shut down explicitly.
+  signal?.addEventListener('abort', () => void shutdownOnLockLost?.());
+  const storageLock = navigator.locks.request(storageLockKey, { signal }, async () => {
     log('lock acquired');
 
     let runtime: RuntimeHandle | undefined;
@@ -148,10 +166,11 @@ export const run = ({
       releaseLivenessLock = resolve;
     });
     const livenessLockGranted = new Trigger();
-    void navigator.locks.request(livenessLockKey, async () => {
+    const livenessLock = navigator.locks.request(livenessLockKey, async () => {
       livenessLockGranted.wake();
       await livenessLockHeld;
     });
+    void livenessLock.catch(onLockLost(livenessLockKey));
 
     let shuttingDown = false;
     const shutdown = async () => {
@@ -166,6 +185,7 @@ export const run = ({
       releaseLivenessLock();
       releaseStorageLock();
     };
+    shutdownOnLockLost = shutdown;
     // Installed in the same synchronous block as the channel, so no displacement can land in a gap:
     // BroadcastChannel queues a delivery task and never replays it to a listener attached after an
     // await, which would leave this worker holding the storage lock a displacer is waiting on.
@@ -232,6 +252,12 @@ export const run = ({
             log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
             break;
           }
+          // Heartbeat-driven re-requests keep arriving while the runtime tears down, and a session
+          // forked from the closing scope would hand out ports nobody serves.
+          if (shuttingDown) {
+            log('ignoring start-session while shutting down', { clientId: message.clientId });
+            break;
+          }
           // A newer attempt means the tab gave up on the session it already holds — its connect failed
           // after we handed out ports, so nothing on that side will ever close it. Tear it down here
           // or the clientId stays claimed for the worker's lifetime and every retry is discarded.
@@ -252,6 +278,7 @@ export const run = ({
               clientToWorker: clientToWorkerChannel.port1,
               workerToClient: workerToClientChannel.port1,
               clientId: message.clientId,
+              attempt,
               isOwner: message.clientId === owningClientId,
             } satisfies WorkerProtocol.DedicatedWorkerMessage,
             [clientToWorkerChannel.port1, workerToClientChannel.port1],
@@ -285,6 +312,13 @@ export const run = ({
           } catch (err) {
             log.catch(err);
             await closeSession();
+            log('dedicated-worker: reporting failed session', { clientId: message.clientId, attempt });
+            endpoint.postMessage({
+              type: 'session-failed',
+              clientId: message.clientId,
+              attempt,
+              error: WorkerProtocol.encodeError(err),
+            } satisfies WorkerProtocol.DedicatedWorkerMessage);
             break;
           }
 
@@ -325,4 +359,5 @@ export const run = ({
     await storageLockHeld;
     endpoint.removeEventListener('message', handleMessage);
   });
+  void storageLock.catch(onLockLost(storageLockKey));
 };

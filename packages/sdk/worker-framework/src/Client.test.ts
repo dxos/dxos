@@ -5,174 +5,22 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
 import * as Client from './Client.ts';
 import { WorkerConnectionError } from './errors.ts';
 import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
-import * as Worker from './Worker.ts';
-import * as WorkerProtocol from './WorkerProtocol.ts';
-
-/**
- * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
- * traffic to every connected tab and routes `provide-port` to the requesting tab. Unlike the real
- * coordinator it can be told to drop a tab's first `request-port`, modelling a lost/raced message.
- */
-const createHub = () => {
-  type Entry = { onMessage: Event<WorkerProtocol.CoordinatorMessage> };
-  const entries = new Set<Entry>();
-  const portsByClient = new Map<string, Entry>();
-  const dropOnceFor = new Set<string>();
-
-  const connect = (): WorkerProtocol.WorkerCoordinator => {
-    const onMessage = new Event<WorkerProtocol.CoordinatorMessage>();
-    const entry: Entry = { onMessage };
-    entries.add(entry);
-    return {
-      onMessage,
-      sendMessage: (message: WorkerProtocol.CoordinatorMessage) => {
-        if (message.type === 'request-port') {
-          portsByClient.set(message.clientId, entry);
-          if (dropOnceFor.has(message.clientId)) {
-            dropOnceFor.delete(message.clientId);
-            return; // Simulate the leader never receiving this request.
-          }
-        }
-        if (message.type === 'provide-port') {
-          const target = portsByClient.get(message.clientId);
-          setTimeout(() => target?.onMessage.emit(message));
-          return;
-        }
-        for (const peer of entries) {
-          setTimeout(() => peer.onMessage.emit(message));
-        }
-      },
-    };
-  };
-
-  return {
-    connect,
-    /** Drop the next `request-port` from the given client, forcing recovery via heartbeat re-request. */
-    dropNextRequestPort: (clientId: string) => dropOnceFor.add(clientId),
-  };
-};
-
-/**
- * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop, with a no-op
- * runtime unless one is given — exercises leader election and port exchange without a service runtime.
- */
-const createWorkerFactory =
-  (
-    storageLockKey: string,
-    {
-      started = Promise.resolve(),
-      onClose,
-      createRuntime = () => Effect.succeed({ createSession: () => Effect.never }),
-    }: { started?: Promise<void>; onClose?: () => void; createRuntime?: Worker.Options['createRuntime'] } = {},
-  ) =>
-  () => {
-    const channel = new MessageChannel();
-    channel.port1.start();
-    // A worker closed before it starts never runs, as a terminated one would not.
-    let closed = false;
-    const markClosed = () => {
-      if (!closed) {
-        closed = true;
-        onClose?.();
-      }
-    };
-    // Recorded from both ends' `close` calls: browsers do not reliably fire a port's `close` event.
-    const closeClientEnd = channel.port2.close.bind(channel.port2);
-    channel.port2.close = () => {
-      closeClientEnd();
-      markClosed();
-    };
-    void started.then(() => {
-      if (closed) {
-        return;
-      }
-      Worker.run({
-        endpoint: {
-          postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
-          addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
-          removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-          close: () => {
-            channel.port1.close();
-            markClosed();
-          },
-        },
-        storageLockKey,
-        createRuntime,
-      });
-    });
-    return channel.port2 as WorkerProtocol.WorkerOrPort;
-  };
-
-/** Reads the diagnostics the connection merges into a failure. */
-const diagnosticsOf = (error: unknown): Record<string, unknown> =>
-  error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
-    ? { ...error.context }
-    : {};
-
-/**
- * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
- * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
- * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
- */
-const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
-  onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
-  sendMessage: () => {},
-});
-
-type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
-
-const makeConnection = (
-  hub: ReturnType<typeof createHub>,
-  keys: { leaderLockKey: string; storageLockKey: string },
-  leaderTimeouts: Client.LeaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
-  options: {
-    maxLeaderFailures?: number;
-    createWorker?: () => WorkerProtocol.WorkerOrPort;
-    createCoordinator?: () => WorkerProtocol.WorkerCoordinator;
-  } = {},
-) => {
-  const connectedTrigger = new Trigger<Connected>();
-  const failures: unknown[] = [];
-  const connection = new Client.Connection({
-    createWorker: options.createWorker ?? createWorkerFactory(keys.storageLockKey),
-    createCoordinator: options.createCoordinator ?? (() => hub.connect()),
-    leaderLockKey: keys.leaderLockKey,
-    leaderTimeouts,
-    maxLeaderFailures: options.maxLeaderFailures,
-    onPersistentFailure: (error) => failures.push(error),
-    onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
-      postRunnerReady(workerToClient);
-      connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
-      return { close: async () => {} };
-    },
-  });
-  return { connection, connected: connectedTrigger.wait(), failures };
-};
-
-/**
- * Stands in for the tab's rpc runner by posting the ready frame effect's worker protocol sends on
- * start-up (`@effect/platform-browser`'s `BrowserWorkerRunner`, a bare `[0]`).
- *
- * The worker's client transport over the reverse port awaits that frame uninterruptibly, so without
- * it a session scope cannot close (DESIGN.md D18). Read it as protocol, not as a magic number: if
- * effect changes the frame, sessions stop closing and nothing points back here.
- */
-const postRunnerReady = (port: MessagePort): void => {
-  port.start();
-  port.postMessage([0]);
-};
-
-const uniqueKeys = () => {
-  const id = crypto.randomUUID();
-  return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };
-};
+import {
+  createBrokenCoordinator,
+  createHub,
+  createRecordingWorker,
+  createWorkerFactory,
+  diagnosticsOf,
+  makeConnection,
+  uniqueKeys,
+} from './testing/harness.ts';
 
 describe('Connection multi-client', () => {
   test('leader and a late-joining follower both connect', async () => {
@@ -712,85 +560,6 @@ describe('Connection multi-client', () => {
     ).toThrow('maxLeaderFailures must be a positive integer');
   });
 });
-
-/**
- * A worker whose runtime records the lifetime of every scope the framework hands it: the runtime
- * scope and one scope per session.
- */
-const createRecordingWorker = (storageLockKey: string) => {
-  const sessionsOpened: string[] = [];
-  const sessionsClosed: string[] = [];
-  const sessionOpenedEvent = new Event<string>();
-  const sessionClosedEvent = new Event<string>();
-  const runtimeClosed = new Trigger();
-  let shutdown: (() => void) | undefined;
-
-  const createWorker = () => {
-    const channel = new MessageChannel();
-    channel.port1.start();
-    Worker.run({
-      endpoint: {
-        postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
-        addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
-        removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-        close: () => channel.port1.close(),
-      },
-      storageLockKey,
-      createRuntime: ({ requestShutdown }) =>
-        Effect.gen(function* () {
-          shutdown = requestShutdown;
-          yield* Effect.addFinalizer(() => Effect.sync(() => runtimeClosed.wake()));
-          return {
-            // Acquires into the session scope and returns; the framework decides when it ends.
-            createSession: ({ clientId }) =>
-              Effect.gen(function* () {
-                sessionsOpened.push(clientId);
-                sessionOpenedEvent.emit(clientId);
-                yield* Effect.addFinalizer(() =>
-                  Effect.sync(() => {
-                    sessionsClosed.push(clientId);
-                    sessionClosedEvent.emit(clientId);
-                  }),
-                );
-              }),
-          };
-        }),
-    });
-    return channel.port2 as WorkerProtocol.WorkerOrPort;
-  };
-
-  return {
-    createWorker,
-    sessionsOpened,
-    sessionsClosed,
-    // The worker posts the session ports before it builds the session, so a connected tab does not
-    // imply the runtime has recorded the session yet.
-    sessionOpened: (clientId: string) =>
-      sessionsOpened.includes(clientId)
-        ? Promise.resolve()
-        : new Promise<void>((resolve) => {
-            const off = sessionOpenedEvent.on((opened) => {
-              if (opened === clientId) {
-                off();
-                resolve();
-              }
-            });
-          }),
-    sessionClosed: (clientId: string) =>
-      sessionsClosed.includes(clientId)
-        ? Promise.resolve()
-        : new Promise<void>((resolve) => {
-            const off = sessionClosedEvent.on((closed) => {
-              if (closed === clientId) {
-                off();
-                resolve();
-              }
-            });
-          }),
-    runtimeClosed: () => runtimeClosed.wait(),
-    requestShutdown: () => shutdown?.(),
-  };
-};
 
 describe('Worker session lifetime', () => {
   test('a session stays open while its tab is connected', async () => {
