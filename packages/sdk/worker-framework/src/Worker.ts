@@ -189,7 +189,9 @@ export const run = ({
       // A newer worker broadcast while this one queued: it is waiting behind us on the storage lock,
       // and serving here would strand it for the leader session's whole budget.
       log('displaced while waiting for the storage lock, not serving');
-      channel.close();
+      // Through `shutdown` rather than closing the channel alone, so the liveness lock is released:
+      // clients watch that key to detect termination and would otherwise see this worker as alive.
+      await shutdown();
       return;
     }
 

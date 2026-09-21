@@ -859,39 +859,6 @@ describe('Worker session lifetime', () => {
   });
 });
 
-/**
- * Runs the real worker loop over a MessageChannel, exposing the two protocol milestones the
- * displacement handshake turns on: `listening` (this worker holds the storage lock and serves) and
- * the endpoint closing (it stood down).
- */
-const startBareWorker = (storageLockKey: string) => {
-  const channel = new MessageChannel();
-  channel.port1.start();
-  channel.port2.start();
-  const listening = new Trigger();
-  const closed = new Trigger();
-  // The worker's end is port1, so its protocol messages surface on port2.
-  channel.port2.addEventListener('message', (event) => {
-    if ((event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data.type === 'listening') {
-      listening.wake();
-    }
-  });
-  Worker.run({
-    endpoint: {
-      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
-      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
-      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-      close: () => {
-        channel.port1.close();
-        closed.wake();
-      },
-    },
-    storageLockKey,
-    createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
-  });
-  return { listening: listening.wait(), closed: closed.wait() };
-};
-
 describe('Worker displacement', () => {
   test('a worker starting while a previous one holds the storage lock displaces it', async () => {
     const { storageLockKey } = uniqueKeys();
@@ -926,3 +893,36 @@ describe('Worker displacement', () => {
     await asyncTimeout(stranded.closed, 5_000);
   }, 40_000);
 });
+
+/**
+ * Runs the real worker loop over a MessageChannel, exposing the two protocol milestones the
+ * displacement handshake turns on: `listening` (this worker holds the storage lock and serves) and
+ * the endpoint closing (it stood down).
+ */
+const startBareWorker = (storageLockKey: string) => {
+  const channel = new MessageChannel();
+  channel.port1.start();
+  channel.port2.start();
+  const listening = new Trigger();
+  const closed = new Trigger();
+  // The worker's end is port1, so its protocol messages surface on port2.
+  channel.port2.addEventListener('message', (event) => {
+    if ((event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data.type === 'listening') {
+      listening.wake();
+    }
+  });
+  Worker.run({
+    endpoint: {
+      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+      close: () => {
+        channel.port1.close();
+        closed.wake();
+      },
+    },
+    storageLockKey,
+    createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
+  });
+  return { listening: listening.wait(), closed: closed.wait() };
+};
