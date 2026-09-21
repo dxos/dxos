@@ -2,7 +2,8 @@
 '@dxos/echo': minor
 ---
 
-`Tree` takes a `virtualize` prop, which renders a row's heading and columns only while the row is
-on screen and holds its measured height in their place. Every row stays in the DOM, so focus, drag
-targets and the keymap are unchanged. A task list turns it on, so a project's backlog builds the
-rows a reader can see rather than all of them.
+`Tree` takes a `virtualize` prop, which mounts only the rows in view using `@dxos/react-ui-virtual`
+— the same windowing the trace timeline and the message feed use — and an optional `scrollerRef`
+naming the element that scrolls it. A task list turns it on, so a project's backlog renders the
+rows a reader can see rather than all of them. A tree with disclosable branches, or one that
+addresses an item at two paths, renders whole.

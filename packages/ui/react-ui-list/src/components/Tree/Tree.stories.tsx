@@ -40,7 +40,7 @@ const DefaultStory = ({
   groups?: boolean;
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
-  /** Render a long list in a short scroller, with row contents rendered only on screen. */
+  /** Render a long list in a short scroller, windowed to what is in view. */
   virtualize?: boolean;
 }) => {
   const rootTree = virtualize ? longTree : emptyBranches ? emptyTree : groups ? groupsTree : tree;
@@ -290,36 +290,36 @@ export const EmptyBranch: Story = {
 };
 
 /**
- * A long list renders every row but fills in only the ones on screen.
+ * A long list mounts only the rows in view, and the mounted range travels with the scroll.
  *
- * The rows stay in the DOM — they are the machine's focus targets and the drag's drop targets — so
- * what this asserts is the split: every row present, most of them empty, and an empty one filling
- * once it is scrolled to.
+ * The scrollbar is the whole list's — the sizer carries the extent of the rows that are not
+ * mounted — so what this asserts is that the two stay consistent: a slice in the DOM, the full
+ * height under the thumb, and the slice moving rather than growing as the reader scrolls.
  */
-export const TestVirtualizedRowsFillOnScroll: Story = {
+export const TestWindowMountsAVisibleSlice: Story = {
   args: { virtualize: true },
   play: async ({ canvasElement }) => {
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
-    // Keyed off the heading rather than the row's text: an empty row still holds the disclosure
-    // toggle, whose accessible name is text of its own.
-    const isFilled = (row: HTMLElement) => row.querySelector('[data-testid="treeItem.heading"]') !== null;
-    const filled = () => rows().filter(isFilled);
+    const indices = () => rows().map((row) => Number(row.dataset.index));
 
-    await waitFor(async () => expect(rows().length).toEqual(120), { timeout: 5_000 });
-    // The eager window covers the first paint; everything past it waits for the observer.
-    await waitFor(async () => expect(filled().length).toBeLessThan(rows().length), { timeout: 5_000 });
+    // Only the rows in view exist: the rest are extent in the sizer, not elements.
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await waitFor(async () => expect(rows().length).toBeLessThan(120), { timeout: 5_000 });
 
-    const last = rows()[rows().length - 1];
-    await expect(isFilled(last)).toBe(false);
-    // Its height is held, so the row is somewhere to scroll to rather than collapsed against the end.
-    await expect(last.getBoundingClientRect().height).toBeGreaterThan(0);
+    // The scrollbar is scaled to the whole list, not to what is mounted.
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight * 4);
 
-    last.scrollIntoView();
-    await waitFor(async () => expect(isFilled(rows()[rows().length - 1])).toBe(true), { timeout: 5_000 });
+    const before = indices();
+    await expect(before[0]).toEqual(0);
 
-    // And the rows left behind empty again, so the window travels rather than accumulating.
+    // Scrolling moves the mounted range rather than adding to it.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(indices()[0]).toBeGreaterThan(before[0]), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(120);
+    await expect(indices()[indices().length - 1]).toEqual(119);
+
     scroller.scrollTo({ top: 0 });
-    await waitFor(async () => expect(isFilled(rows()[rows().length - 1])).toBe(false), { timeout: 5_000 });
+    await waitFor(async () => expect(indices()[0]).toEqual(0), { timeout: 5_000 });
   },
 };
