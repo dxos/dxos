@@ -138,7 +138,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, []);
 
     const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
-      return item.properties.selectable ?? true;
+      // A node with no data (a synthetic section such as Collections) is dropped by `handleSelect`,
+      // so the tree is told up front: such a row discloses on click and offers no pointer.
+      return !!item.data && (item.properties.selectable ?? true);
     }, []);
 
     const handleSelect = useCallback(

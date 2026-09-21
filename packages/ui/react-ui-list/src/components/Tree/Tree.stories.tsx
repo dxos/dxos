@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
@@ -32,11 +32,14 @@ const DefaultStory = ({
   draggable,
   groups,
   emptyBranches,
+  unselectableBranches,
 }: {
   draggable?: boolean;
   groups?: boolean;
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
+  /** Refuse selection of every branch, as a model does for a section that is only a container. */
+  unselectableBranches?: boolean;
 }) => {
   const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
@@ -160,14 +163,29 @@ const DefaultStory = ({
     [getOrCreateStateAtom, registry],
   );
 
+  // One current row at a time, as a real single-selection model keeps it: per-path state with no
+  // such rule left the previous row current too, and a tree showing two current rows is not the
+  // tree the component is written against.
+  const currentPathRef = useRef<string | null>(null);
   const handleSelect = useCallback(
     ({ path: pathProp, current }: { path: string[]; current: boolean }) => {
       const path = Path.create(...pathProp);
+      const previous = currentPathRef.current;
+      if (current && previous && previous !== path) {
+        const previousAtom = getOrCreateStateAtom(previous);
+        registry.set(previousAtom, { ...registry.get(previousAtom), current: false });
+      }
       const atom = getOrCreateStateAtom(path);
       const prev = registry.get(atom);
       registry.set(atom, { ...prev, current });
+      currentPathRef.current = current ? path : null;
     },
     [getOrCreateStateAtom, registry],
+  );
+
+  const handleCanSelect = useCallback(
+    ({ item }: { item: TestItem }) => !unselectableBranches || (item.items?.length ?? 0) === 0,
+    [unselectableBranches],
   );
 
   useEffect(() => {
@@ -213,6 +231,7 @@ const DefaultStory = ({
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      canSelect={handleCanSelect}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -271,5 +290,61 @@ export const EmptyBranch: Story = {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(branch).toHaveAttribute('data-state', 'closed');
     await expect(tree.getBoundingClientRect().height).toBe(height);
+  },
+};
+
+/**
+ * Selection and disclosure never share a click: a branch the model refuses to select discloses when
+ * clicked, and a selectable one only ever selects — the row the reader just chose must not push
+ * everything below it down.
+ */
+export const UnselectableBranches: Story = {
+  args: { draggable: true, unselectableBranches: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [branch] = await canvas.findAllByRole('button', { expanded: false });
+
+    await userEvent.click(branch);
+    await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+    await expect(branch).not.toHaveAttribute('data-selected');
+
+    // The second click closes it again: an unselectable row has nothing else a click can mean.
+    await userEvent.click(branch);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+  },
+};
+
+/**
+ * Collapse is one gesture: the chevron follows the click at once, the rows animate out under a row
+ * that already reads closed, and a click arriving mid-animation reopens rather than being eaten.
+ * Each of those was a separate symptom of holding the close back until the animation ended.
+ */
+export const Collapse: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [toggle] = await canvas.findAllByTestId('treeItem.toggle');
+    const branch = toggle.closest('[data-part="branch"]')!;
+    const height = () => branch.querySelector('[data-part="branch-content"]')?.getBoundingClientRect().height ?? 0;
+
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+
+    // The row reads closed from the first frame, not once the rows have finished leaving — and the
+    // rows are still on screen at that point, which is the collapse animating rather than snapping.
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(height()).toBeGreaterThan(0);
+    await waitFor(() => expect(height()).toBe(0));
+
+    // Reopened while the conceal is still running: the branch ends open, with its rows back.
+    await userEvent.click(toggle);
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+    toggle.click();
+    toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
   },
 };

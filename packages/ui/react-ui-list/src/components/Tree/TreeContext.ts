@@ -142,15 +142,13 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
   focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
-  selectNode: (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current?: boolean) => void;
+  selectNode: (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current: boolean) => void;
+  /** Whether a row's activation selects it; a branch that cannot be selected discloses instead. */
+  canSelectNode: (node: TreeNodeEntry<T>) => boolean;
   /** In `multiple` mode a plain click selects the row alone and a meta-click toggles it. */
   selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
-  /** Branch values currently running their conceal animation before the close commits. */
-  closingValues: ReadonlySet<string>;
-  /** Commits the model close for a branch once its conceal animation ends. */
-  commitClose: (node: TreeNodeEntry) => void;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
