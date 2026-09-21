@@ -80,11 +80,24 @@ export interface DedicatedWorkerStartSessionMessage {
 export interface DedicatedWorkerSessionMessage {
   type: 'session';
   clientId: string;
+  /** The connect attempt this session serves, echoed from `start-session`; absent from a worker that predates it. */
+  attempt?: number;
   /** Client → worker RPC channel (tab runs the client, worker runs the server). */
   clientToWorker: MessagePort;
   /** Worker → client RPC channel (worker runs the client, tab runs the server). */
   workerToClient: MessagePort;
   isOwner: boolean;
+}
+
+/**
+ * Worker -> Leader Client when a session whose ports were already handed out could not be built;
+ * the tab holding those ports would otherwise only learn of it from its handshake timeout.
+ */
+export interface DedicatedWorkerSessionFailedMessage {
+  type: 'session-failed';
+  clientId: string;
+  attempt?: number;
+  error: SerializedError;
 }
 
 export type DedicatedWorkerMessage =
@@ -93,7 +106,8 @@ export type DedicatedWorkerMessage =
   | DedicatedWorkerReadyMessage
   | DedicatedWorkerInitFailedMessage
   | DedicatedWorkerStartSessionMessage
-  | DedicatedWorkerSessionMessage;
+  | DedicatedWorkerSessionMessage
+  | DedicatedWorkerSessionFailedMessage;
 
 export type CoordinatorMessage =
   | {
@@ -118,10 +132,21 @@ export type CoordinatorMessage =
       type: 'provide-port';
       leaderId: string;
       clientId: string;
+      /** See {@link DedicatedWorkerSessionMessage.attempt}; a tab ignores a reply for an attempt it abandoned. */
+      attempt?: number;
       clientToWorker: MessagePort;
       workerToClient: MessagePort;
       livenessLockKey: string;
       isOwner: boolean;
+    }
+  | {
+      // The session behind an earlier `provide-port` could not be built; see
+      // {@link DedicatedWorkerSessionFailedMessage}. Broadcast (it is cloneable), so a coordinator that
+      // predates it still delivers it.
+      type: 'session-failed';
+      clientId: string;
+      attempt?: number;
+      error: SerializedError;
     };
 
 export type WorkerOrPort = Worker | MessagePort;
@@ -190,5 +215,10 @@ export interface WorkerEndpoint {
  */
 export interface WorkerCoordinator {
   readonly onMessage: Event<CoordinatorMessage>;
+  /**
+   * Fires when the link itself has failed, e.g. the coordinator worker's script did not load. Nothing
+   * sent or awaited on this coordinator will complete afterwards.
+   */
+  readonly onError?: Event<Error>;
   sendMessage(message: CoordinatorMessage): void;
 }
