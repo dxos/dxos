@@ -35,13 +35,44 @@ export const displaceChannelFor = (storageLockKey: string): string => `${storage
  * does it to free the lock, and must still wait for the lock itself — this only asks.
  */
 export const displace = (storageLockKey: string, displaceChannel = displaceChannelFor(storageLockKey)): void => {
-  const channel = new BroadcastChannel(displaceChannel);
+  const channel = new DisplaceChannel(displaceChannel);
   try {
-    channel.postMessage(DISPLACE_MESSAGE);
+    channel.postStop();
   } finally {
     channel.close();
   }
 };
+
+/**
+ * The worker-to-worker displacement channel, expressed as actions rather than raw messages: a starting
+ * worker posts `stop` so whichever worker owns the same storage lock tears down and releases it.
+ */
+class DisplaceChannel {
+  readonly #channel: BroadcastChannel;
+
+  /**
+   * Called when another worker posts `stop`. Assignable because what a stop means to this worker
+   * changes as it starts up — before the storage lock is granted there is nothing to stand down from.
+   */
+  onStop: () => void = () => {};
+
+  constructor(channelName: string) {
+    this.#channel = new BroadcastChannel(channelName);
+    this.#channel.onmessage = (event) => {
+      if (event.data?.action === DISPLACE_MESSAGE.action) {
+        this.onStop();
+      }
+    };
+  }
+
+  postStop(): void {
+    this.#channel.postMessage(DISPLACE_MESSAGE);
+  }
+
+  close(): void {
+    this.#channel.close();
+  }
+}
 
 const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePort) =>
   Layer.merge(
@@ -120,6 +151,18 @@ export const run = ({
   displaceChannel = displaceChannelFor(storageLockKey),
   createRuntime,
 }: Options): void => {
+  // Displacement is a worker-to-worker handshake, so the channel listens and the stop signal goes out
+  // before this worker queues on the storage lock: the incumbent releases that lock only when it is
+  // displaced, and a signal broadcast after the grant can never reach the worker being waited on.
+  const channel = new DisplaceChannel(displaceChannel);
+  // Replaced by `shutdown` the moment the lock is granted; until then a displace only records that a
+  // newer worker exists, since a worker serving nothing has nothing to stand down from.
+  let displaced = false;
+  channel.onStop = () => {
+    displaced = true;
+  };
+  channel.postStop();
+
   void navigator.locks.request(storageLockKey, async () => {
     log('lock acquired');
 
@@ -135,10 +178,6 @@ export const run = ({
     const storageLockHeld = new Promise<void>((resolve) => {
       releaseStorageLock = resolve;
     });
-
-    // Displace any previously-running worker for this storage lock, and shut down if displaced.
-    const channel = new BroadcastChannel(displaceChannel);
-    channel.postMessage(DISPLACE_MESSAGE);
 
     // Hold a dedicated liveness lock for the worker's whole lifetime. Clients watch this key to detect
     // termination, so it must be held before `ready` is advertised — hence the awaited grant below.
@@ -166,15 +205,21 @@ export const run = ({
       releaseLivenessLock();
       releaseStorageLock();
     };
-    // Installed in the same synchronous block as the channel, so no displacement can land in a gap:
-    // BroadcastChannel queues a delivery task and never replays it to a listener attached after an
-    // await, which would leave this worker holding the storage lock a displacer is waiting on.
-    channel.onmessage = (event) => {
-      if (event.data?.action === DISPLACE_MESSAGE.action) {
-        log('displaced by newer worker, shutting down');
-        void shutdown();
-      }
+    // Set before the first await, so a displace arriving while this worker starts up cannot land in a
+    // gap and leave it holding the storage lock a displacer is waiting on.
+    channel.onStop = () => {
+      log('displaced by newer worker, shutting down');
+      void shutdown();
     };
+    if (displaced) {
+      // A newer worker broadcast while this one queued: it is waiting behind us on the storage lock,
+      // and serving here would strand it for the leader session's whole budget.
+      log('displaced while waiting for the storage lock, not serving');
+      // Through `shutdown` rather than closing the channel alone, so the liveness lock is released:
+      // clients watch that key to detect termination and would otherwise see this worker as alive.
+      await shutdown();
+      return;
+    }
 
     await livenessLockGranted.wait();
     if (shuttingDown) {

@@ -492,10 +492,13 @@ export class Connection extends Resource {
           unsubscribe();
           resolve(LEADER_TIMEOUT);
         }, this.#leaderPortTimeout);
-        // Remove the coordinator listener if the context is disposed before provide-port/timeout,
-        // otherwise interrupted reconnect cycles accumulate listeners on the coordinator.
-        ctx.onDispose(() => clearTimeout(timer));
-        ctx.onDispose(() => unsubscribe());
+        // Settled on disposal as well, since `close()` joins the connect task: a run left awaiting a
+        // port that no longer has a timer would never finish, hanging the tab's shutdown for good.
+        ctx.onDispose(() => {
+          clearTimeout(timer);
+          unsubscribe();
+          resolve(LEADER_TIMEOUT);
+        });
 
         this.#coordinator.sendMessage({
           type: 'request-port',
@@ -504,6 +507,10 @@ export class Connection extends Resource {
           sessionLockKey,
         });
       });
+
+      if (ctx.disposed) {
+        return;
+      }
 
       if (result === LEADER_TIMEOUT) {
         this.#connectPhase = 'port-timeout';
