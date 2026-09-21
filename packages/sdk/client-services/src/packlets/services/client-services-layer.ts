@@ -4,10 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as EffectRpc from 'effect/unstable/rpc/Rpc';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { RegisterService, type ServiceDefinition } from '@dxos/client-protocol';
+import { RegisterService } from '@dxos/client-protocol';
 import { ConfigService } from '@dxos/config';
 import { EchoHostService } from '@dxos/echo-host';
 import { type Hook } from '@dxos/effect';
@@ -134,16 +133,29 @@ export const ClientServicesRpcLayer: Layer.Layer<
   RegisterService(SpacesService.Rpcs, SpacesService.Tag),
   RegisterService(NetworkService.Rpcs, NetworkService.Tag),
   RegisterService(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
+  RegisterService(DataService.Rpcs, DataService.Tag),
+  RegisterService(QueryService.Rpcs, QueryService.Tag),
+  RegisterService(FeedService.Rpcs, FeedService.Tag),
+  RegisterService(LoggingService.Rpcs, LoggingService.Tag),
+  RegisterService(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
 ).pipe(
-  Layer.provideMerge(dataServiceLayer),
-  Layer.provideMerge(queryServiceLayer),
-  Layer.provideMerge(feedServiceLayer),
-  Layer.provideMerge(LoggingServiceLayer),
-  Layer.provideMerge(DevtoolsHostLayer),
-  Layer.provideMerge(SystemServiceLayer),
-  Layer.provideMerge(EdgeAgentServiceLayer),
-  Layer.provideMerge(DevicesServiceLayer),
-  Layer.provideMerge(SpacesServiceLayer),
-  Layer.provideMerge(NetworkServiceLayer),
-  Layer.provideMerge(RpcRouter.RpcRouter),
+  // Handler creation and registration are separate layers: the registrations take each service's
+  // tag from the handler layers beneath them, which stay in the built context for callers.
+  Layer.provideMerge(
+    Layer.mergeAll(
+      SystemServiceLayer,
+      IdentityServiceLayer,
+      ContactsServiceLayer,
+      InvitationsServiceLayer,
+      DevicesServiceLayer,
+      SpacesServiceLayer,
+      NetworkServiceLayer,
+      EdgeAgentServiceLayer,
+      dataServiceLayer,
+      queryServiceLayer,
+      feedServiceLayer,
+      LoggingServiceLayer,
+      DevtoolsHostLayer,
+    ),
+  ),
 );

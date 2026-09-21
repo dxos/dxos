@@ -53,12 +53,7 @@ const counterHandlers = CounterRpcs.toLayer(
   }),
 );
 
-const makeInProcessEcho = (reply: string) =>
-  RpcTest.makeClient(EchoRpcs).pipe(Effect.provide(echoHandlers(reply))) as Effect.Effect<
-    RpcRouter.Client,
-    never,
-    Scope.Scope
-  >;
+const makeInProcessEcho = (reply: string) => RpcTest.makeClient(EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
 
 const serveEcho = (reply: string) => RpcRouter.serve('Echo.', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
 const serveCatchAll = (reply: string) => RpcRouter.serve('', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));

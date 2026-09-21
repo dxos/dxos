@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import type * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
@@ -23,13 +24,14 @@ export type ServerOptions = NonNullable<Parameters<typeof RpcServer.make>[1]>;
 /** An in-process rpc client surface: handlers keyed by their full (prefixed) rpc tag. */
 export type Client = Record<string, (...args: any[]) => unknown>;
 
-export type ServeOptions = ServerOptions & {
+export type ServeOptions<ClientRpcs extends Rpc.Any = Rpc.Any> = ServerOptions & {
   /**
    * The group's in-process client, exposed through {@link Service.client} for consumers that call
-   * the handlers directly (no transport, no codec). Supplied by the caller because the served group
-   * may carry server middleware an in-process client does not.
+   * the handlers directly (no transport, no codec). Typed by its own rpcs rather than the served
+   * group's, because the caller supplies it for the group as defined while the transport serves
+   * that group under middleware.
    */
-  readonly inProcessClient?: Effect.Effect<Client, never, Scope.Scope>;
+  readonly inProcessClient?: Effect.Effect<RpcClient.RpcClient<ClientRpcs>, never, Scope.Scope>;
 };
 
 /**
@@ -43,10 +45,10 @@ export interface Service {
    * every attached transport. Longest prefix wins, so a `''` route is the catch-all. A prefix can
    * be served once at a time.
    */
-  serve<Rpcs extends Rpc.Any>(
+  serve<Rpcs extends Rpc.Any, ClientRpcs extends Rpc.Any = Rpcs>(
     prefix: string,
     group: RpcGroup.RpcGroup<Rpcs>,
-    options?: ServeOptions,
+    options?: ServeOptions<ClientRpcs>,
   ): Effect.Effect<void, never, Scope.Scope | Rpc.ToHandler<Rpcs> | Rpc.Middleware<Rpcs> | Rpc.ServicesServer<Rpcs>>;
 
   /** Serves every registered group over `protocol` until the current scope closes. */
@@ -65,10 +67,10 @@ export class RpcRouter extends Context.Service<RpcRouter, Service>()('@dxos/rpc/
  * Serves `group` for request tags starting with `prefix` on the ambient {@link RpcRouter}, over
  * every transport attached to it, until the current scope closes.
  */
-export const serve = <Rpcs extends Rpc.Any>(
+export const serve = <Rpcs extends Rpc.Any, ClientRpcs extends Rpc.Any = Rpcs>(
   prefix: string,
   group: RpcGroup.RpcGroup<Rpcs>,
-  options?: ServeOptions,
+  options?: ServeOptions<ClientRpcs>,
 ): Effect.Effect<
   void,
   never,
@@ -294,7 +296,11 @@ export const make: Effect.Effect<Service> = Effect.sync(() => {
   const transports = new Set<Transport>();
 
   return {
-    serve: <Rpcs extends Rpc.Any>(prefix: string, group: RpcGroup.RpcGroup<Rpcs>, options?: ServeOptions) =>
+    serve: <Rpcs extends Rpc.Any, ClientRpcs extends Rpc.Any = Rpcs>(
+      prefix: string,
+      group: RpcGroup.RpcGroup<Rpcs>,
+      options?: ServeOptions<ClientRpcs>,
+    ) =>
       Effect.gen(function* () {
         // Captured here so the registration carries the handlers (and middleware) its provider
         // supplied, rather than the router resolving them from whatever serves the transport.
@@ -310,7 +316,9 @@ export const make: Effect.Effect<Service> = Effect.sync(() => {
               Effect.provideService(RpcServer.Protocol, protocol),
               Effect.provide(context),
             ),
-          inProcessClient,
+          // The registry holds registrations of every group behind one type, so a client typed by
+          // its own rpc tags is stored as the tag-keyed record those tags describe.
+          inProcessClient: inProcessClient as Effect.Effect<Client, never, Scope.Scope> | undefined,
         };
         registrations.add(registration);
         yield* Effect.addFinalizer(() =>

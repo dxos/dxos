@@ -221,15 +221,6 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
- * A client service's rpc definitions and the tag its handlers are registered under — what
- * {@link RegisterService} needs to serve it.
- */
-export type ServiceDefinition<Rpcs extends EffectRpc.Any, Identifier> = {
-  readonly Rpcs: RpcGroup.RpcGroup<Rpcs>;
-  readonly Tag: Context.Key<Identifier, RpcGroup.HandlersFrom<Rpcs>>;
-};
-
-/**
  * The rpc tag prefix a group was defined with (e.g. `DataService.`), read off its requests so a
  * registration carries no second copy of the service name.
  */
@@ -250,12 +241,14 @@ const servicePrefix = <Rpcs extends EffectRpc.Any>(group: RpcGroup.RpcGroup<Rpcs
 export const RegisterService = <Rpcs extends EffectRpc.Any, Identifier>(
   rpc: RpcGroup.RpcGroup<Rpcs>,
   tag: Context.Key<Identifier, RpcGroup.HandlersFrom<Rpcs>>,
-) =>
+): Layer.Layer<never, never, Identifier | RpcRouter.RpcRouter | EffectRpc.ServicesServer<Rpc.Served<Rpcs>>> =>
   Layer.effectDiscard(
     Effect.gen(function* () {
       const handlers = normalizeHandlers(rpc, yield* tag);
-      yield* Rpc.serveOnRouter(servicePrefix(rpc), rpc, rpc.toLayer(handlers), {
-        inProcessClient: makeInProcessClient(rpc, handlers) as Effect.Effect<RpcRouter.Client, never, Scope.Scope>,
+      yield* Rpc.serveOnRouter(servicePrefix(rpc), rpc, handlers, {
+        // The in-process surface calls the handlers directly, so it is built from the group as
+        // defined rather than from the middleware-wrapped one the transport serves.
+        inProcessClient: makeInProcessClient(rpc, handlers),
       });
     }),
   );

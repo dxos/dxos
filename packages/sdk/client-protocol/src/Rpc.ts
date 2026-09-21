@@ -42,11 +42,6 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 // in @effect/rpc's type parameter; runtime dispatch accepts any RpcGroup instance.
 const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] => group as Parameters<typeof RpcClient.make>[0];
 
-// A middleware-wrapped group serves the same rpcs under the same tags, but no longer satisfies the
-// type parameter the caller's handlers were built for.
-const asServedGroup = <Rpcs extends Rpc.Any>(group: unknown): RpcGroup.RpcGroup<Rpcs> =>
-  group as RpcGroup.RpcGroup<Rpcs>;
-
 // Server-only: the client never sees this middleware, so it does not change the wire contract.
 class DefectLogMiddleware extends RpcMiddleware.Service<DefectLogMiddleware>()('DxosRpcDefectLogMiddleware') {}
 
@@ -129,27 +124,28 @@ export const serverLayer = <Rpcs extends Rpc.Any, R>(
   options?: ServeOptions,
 ): Layer.Layer<never, never, RpcServer.Protocol | R> => makeServerLayer(group, handlers, options);
 
+/** The group as it goes on the wire: `Rpcs` under the standard server middleware. */
+export type Served<Rpcs extends Rpc.Any> = Rpc.AddMiddleware<
+  Rpc.AddMiddleware<Rpcs, typeof RpcTiming.Middleware>,
+  typeof DefectLogMiddleware
+>;
+
 /**
  * Serves `group` with `handlers` over the ambient {@link RpcRouter.RpcRouter} for the current scope,
  * under the standard server middleware. Registration is per group, so nothing has to enumerate the
  * services a transport carries; {@link RpcRouter.layerTransport} serves whatever is registered.
  */
-export const serveOnRouter = <Rpcs extends Rpc.Any, R>(
+export const serveOnRouter = <Rpcs extends Rpc.Any>(
   prefix: string,
   group: RpcGroup.RpcGroup<Rpcs>,
-  handlers: Layer.Layer<Rpc.ToHandler<Rpcs>, never, R>,
-  options?: ServeOptions & Pick<RpcRouter.ServeOptions, 'inProcessClient'>,
-): Effect.Effect<
-  void,
-  never,
-  RpcRouter.RpcRouter | Scope.Scope | R | Rpc.ServicesServer<Rpcs> | Rpc.Middleware<Rpcs>
-> => {
+  handlers: RpcGroup.HandlersFrom<Rpcs>,
+  options?: ServeOptions & Pick<RpcRouter.ServeOptions<Rpcs>, 'inProcessClient'>,
+): Effect.Effect<void, never, RpcRouter.RpcRouter | Scope.Scope | Rpc.ServicesServer<Served<Rpcs>>> => {
   // Timing is unconditional here: the middleware is `requiredForClient` and every client of a
   // router-served transport (the tab) applies it, so a group served without it would reject
   // every request.
-  const timedGroup = RpcTiming.applyMiddleware(group);
-  const rpcGroup = asServedGroup<Rpcs>(timedGroup.middleware(DefectLogMiddleware));
-  return RpcRouter.serve(prefix, rpcGroup, {
+  const served = RpcTiming.applyMiddleware(group).middleware(DefectLogMiddleware);
+  return RpcRouter.serve(prefix, served, {
     disableTracing: options?.disableTracing ?? true,
     concurrency: options?.concurrency ?? 'unbounded',
     // A defect fails only its own request; fatal defects fail every request and stream on the connection.
@@ -157,10 +153,27 @@ export const serveOnRouter = <Rpcs extends Rpc.Any, R>(
     inProcessClient: options?.inProcessClient,
   }).pipe(
     Effect.provide(
-      Layer.mergeAll(handlers, defectLogLayer, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing))),
+      Layer.mergeAll(
+        handlerLayer(group, handlers),
+        defectLogLayer,
+        RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)),
+      ),
     ),
   );
 };
+
+/**
+ * `group`'s handlers as the handlers of {@link Served} — the same group under middleware.
+ *
+ * `Rpc.ToHandler` keys off an rpc's `_tag` alone and `AddMiddleware` preserves it, so both are the
+ * same services; a middleware only widens what a handler MAY require. TypeScript cannot reduce
+ * `AddMiddleware` through a generic parameter, so the equality is stated rather than inferred.
+ */
+const handlerLayer = <Rpcs extends Rpc.Any>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  handlers: RpcGroup.HandlersFrom<Rpcs>,
+): Layer.Layer<Rpc.ToHandler<Served<Rpcs>>> =>
+  group.toLayer(handlers) as unknown as Layer.Layer<Rpc.ToHandler<Served<Rpcs>>>;
 
 export type GroupServer = {
   open(): Promise<void>;
