@@ -45,7 +45,7 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import { RowHeights, useRowOcclusion } from './row-occlusion.ts';
+import { RowHeights, RowObserver, useRowOcclusion } from './row-occlusion.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -332,6 +332,8 @@ export const Tree = <T extends { id: string } = any>({
   // rows that start empty render before anything is measured and have to be asked again.
   const [, setRowEstimate] = useState<number>();
   const rowHeights = useMemo(() => new RowHeights(setRowEstimate), []);
+  const rowObserver = useMemo(() => new RowObserver(), []);
+  useEffect(() => () => rowObserver.disconnect(), [rowObserver]);
   // Every tree sharing a path root is one drag scope, which is what a monitor claims: the navtree
   // mounts a `Tree` per workspace tab, and a scope per tab would leave its own drops unclaimed.
   const treeId = treePath[0];
@@ -615,6 +617,7 @@ export const Tree = <T extends { id: string } = any>({
       commitClose: onCommitClose,
       virtualize,
       rowHeights,
+      rowObserver,
       mountedRef,
     }),
     [
@@ -640,6 +643,7 @@ export const Tree = <T extends { id: string } = any>({
       onCommitClose,
       virtualize,
       rowHeights,
+      rowObserver,
     ],
   );
 
@@ -889,6 +893,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     focusNode,
     virtualize,
     rowHeights,
+    rowObserver,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const openRef = useRef(false);
@@ -900,7 +905,14 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const { id, value, item, path, level, branch, open, last, current, props } = node;
   // The top-level position stands in for the row's own: a nested row is rendered eagerly when the
   // subtree it belongs to is, which is the granularity the first paint needs.
-  const { rendered, reservedHeight } = useRowOcclusion(rowRef, value, node.indexPath[0] ?? 0, virtualize, rowHeights);
+  const { rendered, reservedHeight } = useRowOcclusion(
+    rowRef,
+    value,
+    node.indexPath[0] ?? 0,
+    virtualize,
+    rowHeights,
+    rowObserver,
+  );
   // `expanded` only applies to a branch that is actually showing children: the mode exists to drop
   // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded

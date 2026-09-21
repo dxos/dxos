@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
 import { type Density } from '@dxos/ui-types';
 
-import { type RowHeights } from './row-occlusion.ts';
+import { type RowHeights, type RowObserver } from './row-occlusion.ts';
 import { type TreeData } from './tree-data.ts';
 
 // Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
@@ -156,6 +156,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   virtualize: boolean;
   /** Heights of the rows that have been rendered, so an unrendered one can hold its space. */
   rowHeights: RowHeights;
+  /** The tree's single intersection observer, which every row registers its element with. */
+  rowObserver: RowObserver;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);

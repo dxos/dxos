@@ -78,6 +78,59 @@ export type RowOcclusion = {
 };
 
 /**
+ * One observer for a whole tree, rather than one per row.
+ *
+ * An `IntersectionObserver` costs the same to create whether it watches one element or a thousand,
+ * and a list that virtualizes has hundreds of rows — so a per-row observer spends on the first
+ * paint exactly what virtualizing is meant to save. Rows register their element and take it back
+ * when they unmount.
+ */
+export class RowObserver {
+  #observer: IntersectionObserver | undefined;
+  readonly #callbacks = new Map<Element, (onScreen: boolean) => void>();
+
+  #ensure(): IntersectionObserver | undefined {
+    // No observer (a test DOM, an old browser) means every row renders, which is the behaviour
+    // without this hook rather than a broken list.
+    if (typeof IntersectionObserver === 'undefined') {
+      return undefined;
+    }
+
+    return (this.#observer ??= new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          this.#callbacks.get(entry.target)?.(entry.isIntersecting);
+        }
+      },
+      { rootMargin: VIEWPORT_MARGIN },
+    ));
+  }
+
+  /** Watches the element until the returned function is called. */
+  observe(element: Element, onChange: (onScreen: boolean) => void): () => void {
+    const observer = this.#ensure();
+    if (!observer) {
+      // Nothing will report, so say so once and leave the row rendered.
+      onChange(true);
+      return () => {};
+    }
+
+    this.#callbacks.set(element, onChange);
+    observer.observe(element);
+    return () => {
+      this.#callbacks.delete(element);
+      observer.unobserve(element);
+    };
+  }
+
+  disconnect(): void {
+    this.#observer?.disconnect();
+    this.#observer = undefined;
+    this.#callbacks.clear();
+  }
+}
+
+/**
  * Renders a row's contents only while the row is on screen.
  *
  * A list of two hundred rows must not build two hundred rows' worth of controls to show twenty, and
@@ -92,23 +145,18 @@ export const useRowOcclusion = (
   index: number,
   enabled: boolean,
   heights: RowHeights,
+  observer: RowObserver,
 ): RowOcclusion => {
   const [onScreen, setOnScreen] = useState(index < EAGER_ROWS);
 
   useEffect(() => {
     const element = ref.current;
-    // No observer (a test DOM, an old browser) means every row renders, which is the behaviour
-    // without this hook rather than a broken list.
-    if (!enabled || !element || typeof IntersectionObserver === 'undefined') {
+    if (!enabled || !element) {
       return;
     }
 
-    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), {
-      rootMargin: VIEWPORT_MARGIN,
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [ref, enabled]);
+    return observer.observe(element, setOnScreen);
+  }, [ref, enabled, observer]);
 
   const rendered = !enabled || onScreen;
 
