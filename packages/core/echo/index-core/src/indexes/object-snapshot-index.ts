@@ -12,26 +12,17 @@ import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { chunkArray } from '../utils.ts';
-import type { DerivedIndex, Index, IndexerObject } from './interface.ts';
+import type { Index, IndexerObject } from './interface.ts';
 
 /**
  * The JSON of every indexed object, keyed by its `objectMeta` record id.
  *
  * This is the row store: every query that reads object data reads it here, so it is written on the
- * indexing pass itself and is never behind the data source. Indexes derived from it — currently
- * the full-text index — are marked dirty in the same transaction and rebuild on their own
- * schedule, which is what lets an expensive one lag without a reader observing a stale row.
+ * indexing pass itself and is never behind the data source. The full-text index is a second step
+ * over it (see {@link FtsIndex}), which is what lets that expensive rebuild lag without a reader
+ * observing a stale row.
  */
 export class ObjectSnapshotIndex implements Index {
-  readonly #derived: readonly DerivedIndex[];
-
-  /**
-   * @param derived Indexes rebuilt from this store, notified of every row this pass writes.
-   */
-  constructor(derived: readonly DerivedIndex[] = []) {
-    this.#derived = derived;
-  }
-
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -85,9 +76,8 @@ export class ObjectSnapshotIndex implements Index {
 
   update = Effect.fn('ObjectSnapshotIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen({ self: this }, function* () {
+      Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const written: number[] = [];
 
         yield* Effect.forEach(
           objects,
@@ -128,14 +118,9 @@ export class ObjectSnapshotIndex implements Index {
                 INSERT INTO objectSnapshot (recordId, snapshot) VALUES (${recordId}, ${JSON.stringify(stored)})
                 ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
               `;
-              written.push(recordId);
             }),
           { discard: true },
         );
-
-        // Marked in the same transaction as the write it describes; a crash in between would leave
-        // a derived index stale with nothing left to re-present the record.
-        yield* Effect.forEach(this.#derived, (index) => index.markDirty(written), { discard: true });
       }),
   );
 }

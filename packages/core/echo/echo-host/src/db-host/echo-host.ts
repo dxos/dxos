@@ -68,7 +68,7 @@ const CLOSURE_YIELD_INTERVAL = 32;
 const AUTOMATIC_GARBAGE_COLLECTION = false;
 
 /**
- * Idle window before the records `ObjectSnapshotIndex` marked dirty are re-tokenized, and the
+ * Idle window before the second indexing step re-tokenizes what the first one wrote, and the
  * ceiling an unbroken write stream cannot push it past. A typing burst then costs one rebuild
  * rather than one per save; nothing a query reads depends on either number, since text search
  * flushes for itself and every other read comes from the snapshot store.

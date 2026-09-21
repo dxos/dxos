@@ -78,19 +78,3 @@ export interface Index {
    */
   update: (objects: IndexerObject[]) => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
 }
-
-/**
- * An index built from another index's rows rather than from a data source.
- *
- * It keeps a dirty set in place of a cursor: the store it derives from marks the records it wrote
- * in the same transaction as the write, and the derived index catches up on its own schedule.
- * That is what lets an expensive index lag the data source without any reader of the store
- * observing stale rows.
- */
-export interface DerivedIndex {
-  /**
-   * Records the given rows as needing to be rebuilt.
-   * Idempotent.
-   */
-  markDirty: (recordIds: readonly number[]) => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
-}

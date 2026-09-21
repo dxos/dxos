@@ -586,10 +586,9 @@ describe('EntityMetaIndex', () => {
 
       expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toEqual([]);
       expect(yield* tracker.queryCursors({ indexName: 'reverseRef' })).toEqual([]);
-      // `fts6` survives the retirement and is renamed: its leg became the snapshot store, whose
-      // rows the split backfilled, so its progress carries over rather than being re-presented.
+      // `fts6` is retired too: that leg became the object snapshot store, and re-presenting every
+      // document under the new name is what fills the new table.
       expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toEqual([]);
-      expect(yield* tracker.queryCursors({ indexName: 'objectSnapshot' })).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 

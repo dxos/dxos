@@ -114,14 +114,14 @@ client-side** (in the client worker) — there is no server/edge indexer.
 
 `IndexEngine` ([`index-engine.ts`](../../../core/echo/index-core/src/index-engine.ts))
 owns five stores. Three are fed from a data source and implement the `Index`
-interface (`migrate()` + `update(objects)`); `FtsIndex` is derived from the
-snapshot store instead and implements `DerivedIndex` (`markDirty(recordIds)`):
+interface (`migrate()` + `update(objects)`); `FtsIndex` is a second step over what
+those write, sourced from the index itself:
 
 | Index                 | Backing                                       | Purpose                                                              |
 | --------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
 | `EntityMetaIndex`     | `objectMeta` table                            | type / id / timestamp / relation / hierarchy queries — the workhorse |
 | `ObjectSnapshotIndex` | `objectSnapshot` table                        | the JSON row store every reader hydrates from                        |
-| **`FtsIndex`**        | **FTS5 virtual table** (`tokenize='trigram'`) | full-text index over the snapshot store, plus `ftsIndexDirty`        |
+| **`FtsIndex`**        | **FTS5 virtual table** (`tokenize='trigram'`) | full-text index over the snapshot store                              |
 | `ReverseRefIndex`     | `reverseRef` table                            | incoming-reference traversal                                         |
 | `IndexTracker`        | `indexCursor` table                           | per-source incremental cursors (Automerge heads / queue positions)   |
 
@@ -132,11 +132,13 @@ hint after each pass. The join key across tables is `objectMeta.recordId ==
 objectSnapshot.recordId == ftsIndex.rowid == reverseRef.recordId`.
 
 The snapshot store is written on the indexing pass; the trigram index is not.
-`ObjectSnapshotIndex.update` marks the record in `ftsIndexDirty` — in the same
-transaction as the write — and `FtsIndex.flushPending` rebuilds it later, before
-any `MATCH` and on an idle moment after a burst of writes, because FTS5 cannot
-update a row in place and re-tokenizing a large object on every keystroke was the
-dominant cost of editing.
+`EntityMetaIndex.update` stamps every indexed object with a monotonic
+`objectMeta.version`, and `FtsIndex.flushPending` re-tokenizes everything past its
+own cursor over that counter — an ordinary `indexCursor` row, `sourceName='index'`
+— before any `MATCH` and on an idle moment after a burst of writes. FTS5 cannot
+update a row in place, so re-tokenizing a large object on every keystroke was the
+dominant cost of editing; a burst now moves the counter many times and is caught
+up once.
 
 ### 2.2 Full-text: what works and what doesn't
 
@@ -149,7 +151,7 @@ dominant cost of editing.
 - The whole object JSON is indexed as one `snapshot` column — **no per-field
   text indexing**, so matches can hit structural/key text, not just user content.
 - The `LIKE` fallback scans `objectSnapshot`, so it sees writes the trigram index
-  has not caught up with; `MATCH` flushes the dirty set first and so does too.
+  has not caught up with; `MATCH` flushes first and so does too.
 
 Query path: `Filter.text(...)` → `text-search` AST node → a `TextSelector`
 **SelectStep** that calls `IndexEngine.queryText` → `FtsIndex.query` (BM25). Queue

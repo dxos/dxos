@@ -12,6 +12,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { IndexTracker } from '../index-tracker.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import { FtsIndex } from './fts-index.ts';
 import type { IndexerObject } from './interface.ts';
@@ -30,8 +31,10 @@ describe('FtsIndex', () => {
   it.effect(
     'should create an FTS5 table on migrate',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
 
@@ -47,9 +50,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should insert snapshots and query them via MATCH',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -94,9 +99,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should upsert objects on update',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -160,9 +167,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should handle non-sequential recordIds',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -240,9 +249,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should query from one space only',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -319,9 +330,11 @@ describe('FtsIndex', () => {
   it.effect(
     'partial word matches',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -406,9 +419,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should query from specific queues',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -490,9 +505,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should query with includeAllQueues',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -558,9 +575,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should OR space and queue constraints',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -637,9 +656,11 @@ describe('FtsIndex', () => {
   it.effect(
     'should scope matches by typeDxns',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex([index]);
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -707,9 +728,13 @@ describe('FtsIndex', () => {
   );
 
   describe('deferred re-tokenization', () => {
-    /** One indexed object, with the metadata row its record id comes from. */
-    const indexed = Effect.fnUntraced(function* (index: FtsIndex, store: ObjectSnapshotIndex, title: string) {
+    /** A migrated index stack holding one object, with the metadata row its record id comes from. */
+    const indexed = Effect.fnUntraced(function* (title: string) {
+      const tracker = new IndexTracker();
+      const index = new FtsIndex(tracker);
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
+      yield* tracker.migrate();
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -727,15 +752,13 @@ describe('FtsIndex', () => {
       yield* metaIndex.update([object]);
       yield* metaIndex.lookupRecordIds([object]);
       yield* store.update([object]);
-      return object;
+      return { index, store, metaIndex, object };
     });
 
     it.effect(
       'leaves the index behind the snapshot store until flushed',
       Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const store = new ObjectSnapshotIndex([index]);
-        const object = yield* indexed(index, store, 'Deferred Tokenization');
+        const { index, store, object } = yield* indexed('Deferred Tokenization');
 
         expect(yield* index.pendingCount()).toBe(1);
 
@@ -754,11 +777,26 @@ describe('FtsIndex', () => {
     );
 
     it.effect(
+      'resumes from its cursor, so a later flush re-tokenizes only what is new',
+      Effect.fnUntraced(function* () {
+        const { index, store, metaIndex, object } = yield* indexed('Echo');
+
+        expect(yield* index.flushPending()).toBe(1);
+
+        const second: IndexerObject = { ...object, recordId: null, data: { ...object.data, id: EntityId.random() } };
+        yield* metaIndex.update([second]);
+        yield* metaIndex.lookupRecordIds([second]);
+        yield* store.update([second]);
+
+        expect(yield* index.flushPending()).toBe(1);
+        expect(yield* index.pendingCount()).toBe(0);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
       'coalesces repeated writes into a single re-tokenization',
       Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const store = new ObjectSnapshotIndex([index]);
-        const object = yield* indexed(index, store, 'Alpha');
+        const { index, store, object } = yield* indexed('Alpha');
 
         for (const title of ['Bravo', 'Charlie', 'Delta']) {
           object.data.title = title;
@@ -778,9 +816,7 @@ describe('FtsIndex', () => {
     it.effect(
       'matches a term below the trigram minimum against an unflushed write',
       Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const store = new ObjectSnapshotIndex([index]);
-        yield* indexed(index, store, 'ab cd');
+        const { index } = yield* indexed('ab cd');
 
         // The LIKE fallback reads the snapshot store, so it owes nothing to the pending flush.
         const match = yield* index.query({ query: 'ab', spaceId: null, includeAllQueues: false, queues: null });
@@ -792,9 +828,7 @@ describe('FtsIndex', () => {
     it.effect(
       'flushes before matching, so a search never sees a stale index',
       Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const store = new ObjectSnapshotIndex([index]);
-        yield* indexed(index, store, 'Unflushed Content');
+        const { index } = yield* indexed('Unflushed Content');
 
         const match = yield* index.query({
           query: 'Unflushed',
@@ -808,14 +842,14 @@ describe('FtsIndex', () => {
     );
 
     it.effect(
-      'does not resurrect a record deleted while its re-tokenization was pending',
+      'does not resurrect a record collected before its re-tokenization ran',
       Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const store = new ObjectSnapshotIndex([index]);
-        const object = yield* indexed(index, store, 'Collected Soon');
+        const { index, store, metaIndex, object } = yield* indexed('Collected Soon');
 
+        // The cascade `IndexEngine.deleteObjects` performs, in the order it performs it.
         yield* index.deleteByRecordIds([object.recordId!]);
         yield* store.deleteByRecordIds([object.recordId!]);
+        yield* metaIndex.deleteByRecordIds([object.recordId!]);
         expect(yield* index.pendingCount()).toBe(0);
         expect(yield* index.flushPending()).toBe(0);
 

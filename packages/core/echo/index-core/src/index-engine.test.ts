@@ -97,9 +97,9 @@ describe('IndexEngine', () => {
     yield* tracker.migrate();
     const metaIndex = new EntityMetaIndex();
     yield* metaIndex.migrate();
-    const ftsIndex = new FtsIndex();
+    const ftsIndex = new FtsIndex(tracker);
     yield* ftsIndex.migrate();
-    const objectSnapshotIndex = new ObjectSnapshotIndex([ftsIndex]);
+    const objectSnapshotIndex = new ObjectSnapshotIndex();
     yield* objectSnapshotIndex.migrate();
     const reverseRefIndex = new ReverseRefIndex();
     yield* reverseRefIndex.migrate();

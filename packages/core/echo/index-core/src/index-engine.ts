@@ -139,7 +139,7 @@ export interface IndexEngineParams {
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
 
-  /** Defaults to one wired to `ftsIndex`; inject only together with the index derived from it. */
+  /** Defaults to a fresh store; injectable for tests. */
   objectSnapshotIndex?: ObjectSnapshotIndex;
 
   /** Defaults to a fresh store; injectable for tests. */
@@ -157,8 +157,8 @@ export class IndexEngine {
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
-    this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
-    this.#objectSnapshotIndex = params?.objectSnapshotIndex ?? new ObjectSnapshotIndex([this.#ftsIndex]);
+    this.#ftsIndex = params?.ftsIndex ?? new FtsIndex(this.#tracker);
+    this.#objectSnapshotIndex = params?.objectSnapshotIndex ?? new ObjectSnapshotIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
     this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
   }
@@ -167,7 +167,6 @@ export class IndexEngine {
     return Effect.gen({ self: this }, function* () {
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
-      // Before the snapshot store, whose first migration seeds itself from `ftsIndex`.
       yield* this.#ftsIndex.migrate();
       yield* this.#objectSnapshotIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
@@ -218,9 +217,9 @@ export class IndexEngine {
   }
 
   /**
-   * Rebuilds the full-text index for the records {@link update} marked dirty (see
-   * {@link FtsIndex}). Text search does this for itself; callers drive it so the backlog does not
-   * accumulate unbounded between searches.
+   * Runs the second indexing step: re-tokenizes everything {@link update} has indexed since it last
+   * ran (see {@link FtsIndex}). Text search does this for itself; callers drive it so the backlog
+   * does not accumulate unbounded between searches.
    *
    * @returns Number of records re-indexed.
    */
@@ -378,8 +377,8 @@ export class IndexEngine {
         spaceId: opts.spaceId ?? undefined,
       });
 
-      // The full-text index has no leg of its own: it is rebuilt from the snapshot store, which
-      // marks the records this pass wrote (see `ObjectSnapshotIndex`).
+      // The full-text index is not a leg of this pass: it is a second step over what this one
+      // writes, tracking `objectMeta.version` rather than the data source (see `FtsIndex`).
       const {
         updated: updatedSnapshotIndex,
         done: doneSnapshotIndex,

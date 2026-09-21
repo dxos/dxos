@@ -5,11 +5,9 @@
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import init from './0001_init.sql?raw';
-import deferredReindex from './0002_deferred_reindex.sql?raw';
 
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
-  '0002_deferred_reindex': SqlMigrations.apply(deferredReindex),
 };
 
 /** Own history table per store, since many stores share the client database. */

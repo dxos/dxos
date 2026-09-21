@@ -7,8 +7,9 @@
 -- save — and because the same table was also the row store every query hydrated from, the index
 -- could not be allowed to lag. Splitting them is what makes the expensive half deferrable.
 --
--- Seeded from the index so no object has to be re-read from its document; `ftsIndex` is created by
--- the `fts` store, which `IndexEngine.migrate` runs first for exactly this reason.
+-- Filled by re-indexing rather than copied out of `ftsIndex`: the store indexes under a cursor name
+-- of its own, which is how this table gets populated on an existing database (see
+-- `migrations/tracker/0004_retire_fts_cursor.sql`).
 --
 -- Immutable: recorded in `object_snapshot_migrations` and never re-run.
 --
@@ -16,5 +17,3 @@ CREATE TABLE IF NOT EXISTS objectSnapshot (
   recordId INTEGER PRIMARY KEY,
   snapshot TEXT NOT NULL
 );
-
-INSERT OR REPLACE INTO objectSnapshot (recordId, snapshot) SELECT rowid, snapshot FROM ftsIndex;

@@ -7,13 +7,11 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { EntityMetaIndex } from './entity-meta-index.ts';
-import { FtsIndex } from './fts-index.ts';
 import type { IndexerObject } from './interface.ts';
 import { ObjectSnapshotIndex } from './object-snapshot-index.ts';
 
@@ -23,16 +21,10 @@ const TestLayer = SqliteClient.layer({
   filename: ':memory:',
 }).pipe(Layer.provideMerge(Reactivity.layer));
 
-/**
- * Both halves of the split, migrated in the order `IndexEngine.migrate` uses: the store seeds
- * itself from `ftsIndex`, so the full-text index has to exist first.
- */
 const migrated = Effect.fnUntraced(function* () {
-  const index = new FtsIndex();
-  const store = new ObjectSnapshotIndex([index]);
-  yield* index.migrate();
+  const store = new ObjectSnapshotIndex();
   yield* store.migrate();
-  return { index, store };
+  return { store };
 });
 
 describe('ObjectSnapshotIndex', () => {
@@ -146,24 +138,6 @@ describe('ObjectSnapshotIndex', () => {
       for (const id of recordIds) {
         expect(returnedIds.has(id)).toBe(true);
       }
-    }, Effect.provide(TestLayer)),
-  );
-
-  it.effect(
-    'backfills the snapshot store from an index written before the split',
-    Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // A database as it stood before `objectSnapshot` existed: `ftsIndex` held the snapshots.
-      yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize = 'trigram')`;
-      yield* sql`INSERT INTO ftsIndex (rowid, snapshot) VALUES (7, '{"id":"legacy","title":"Carried Over"}')`;
-
-      const { index, store } = yield* migrated();
-
-      const snapshots = yield* store.querySnapshotsJSON([7]);
-      expect(snapshots).toHaveLength(1);
-      expect((snapshots[0].snapshot as any).title).toBe('Carried Over');
-      // Nothing is marked dirty: the rows the old index carried are already tokenized.
-      expect(yield* index.pendingCount()).toBe(0);
     }, Effect.provide(TestLayer)),
   );
 });
