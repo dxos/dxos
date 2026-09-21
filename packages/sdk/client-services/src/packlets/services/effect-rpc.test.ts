@@ -431,7 +431,9 @@ describe('session server (RpcRouter)', () => {
   const sessionLayer = (port: MessagePort, handlers: SystemService.Handlers) =>
     Layer.mergeAll(
       RpcRouter.layerTransport,
-      RegisterService(SystemService).pipe(Layer.provide(Layer.succeed(SystemService.Tag, handlers))),
+      RegisterService(SystemService.Rpcs, SystemService.Tag).pipe(
+        Layer.provide(Layer.succeed(SystemService.Tag, handlers)),
+      ),
     ).pipe(
       Layer.provide(RpcRouter.layer),
       Layer.provide(
