@@ -62,7 +62,9 @@ describe('feed object retention', { tags: ['memory'] }, () => {
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
     // Evicted before the baseline is taken: the writing path materializes a core per appended
     // object, so without this A would carry the whole working set and measure the writer rather
     // than the reader.
@@ -100,7 +102,9 @@ describe('feed object retention', { tags: ['memory'] }, () => {
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
     await db.evictFeedHandle(feed);
     await capture('A: data on disk, handle evicted', checkpoints, db);
 

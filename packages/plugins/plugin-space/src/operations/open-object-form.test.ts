@@ -63,7 +63,10 @@ describe('SpaceOperation.OpenObjectForm', () => {
     const { harness, db } = await setup((handle) => {
       handle.dismiss();
       handle.retain();
-      setTimeout(() => handle.settle(object), 10);
+      // A later task, not a synchronous one: the draft object is only ready after the
+      // dismiss/retain dance settles, same as it would be in the real flow. A microtask defers it
+      // deterministically, without racing `dismiss`'s own internal (already-cleared) timer.
+      queueMicrotask(() => handle.settle(object));
     });
     await using _harness = harness;
 

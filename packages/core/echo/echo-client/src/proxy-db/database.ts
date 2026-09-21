@@ -1062,6 +1062,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.areStrongDepsSatisfied(core);
   }
 
+  areStrongDepsResolved(core: Parameters<EntityManager['areStrongDepsResolved']>[0]) {
+    return this._entityManager.areStrongDepsResolved(core);
+  }
+
   getDocumentHeads() {
     return this._entityManager.getDocumentHeads();
   }

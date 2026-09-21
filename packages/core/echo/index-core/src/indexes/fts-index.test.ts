@@ -15,6 +15,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import { FtsIndex } from './fts-index.ts';
 import type { IndexerObject } from './interface.ts';
+import { ObjectSnapshotIndex } from './object-snapshot-index.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
@@ -30,7 +31,9 @@ describe('FtsIndex', () => {
     'should create an FTS5 table on migrate',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       yield* index.migrate();
+      yield* store.migrate();
 
       const sql = yield* SqlClient.SqlClient;
       const result = yield* sql`SELECT sql FROM sqlite_master WHERE name = 'ftsIndex'`;
@@ -45,8 +48,10 @@ describe('FtsIndex', () => {
     'should insert snapshots and query them via MATCH',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -70,6 +75,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update(objects);
       yield* metaIndex.lookupRecordIds(objects);
+      yield* store.update(objects);
       yield* index.update(objects);
 
       const match = yield* index.query({ query: 'Effect', spaceId: null, includeAllQueues: false, queues: null });
@@ -90,8 +96,10 @@ describe('FtsIndex', () => {
     'should upsert objects on update',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -114,6 +122,7 @@ describe('FtsIndex', () => {
       };
       yield* metaIndex.update([obj1]);
       yield* metaIndex.lookupRecordIds([obj1]);
+      yield* store.update([obj1]);
       yield* index.update([obj1]);
 
       let match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queues: null });
@@ -138,6 +147,7 @@ describe('FtsIndex', () => {
       // recordId is persistent.
       yield* metaIndex.update([obj2]);
       yield* metaIndex.lookupRecordIds([obj2]);
+      yield* store.update([obj2]);
       yield* index.update([obj2]);
 
       // Old content should be gone.
@@ -154,8 +164,10 @@ describe('FtsIndex', () => {
     'should handle non-sequential recordIds',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -206,6 +218,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update(objects);
       yield* metaIndex.lookupRecordIds(objects);
+      yield* store.update(objects);
       yield* index.update(objects);
 
       // All documents should be queryable.
@@ -232,8 +245,10 @@ describe('FtsIndex', () => {
     'should query from one space only',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const space1 = SpaceId.random();
@@ -271,6 +286,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update([obj1, obj2]);
       yield* metaIndex.lookupRecordIds([obj1, obj2]);
+      yield* store.update([obj1, obj2]);
       yield* index.update([obj1, obj2]);
 
       // Query without spaceId should return both (if term matches both) or specific one
@@ -309,8 +325,10 @@ describe('FtsIndex', () => {
     'partial word matches',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -349,6 +367,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update(objects);
       yield* metaIndex.lookupRecordIds(objects);
+      yield* store.update(objects);
       yield* index.update(objects);
 
       const defaultQuery = { spaceId: null, includeAllQueues: false, queues: null } as const;
@@ -394,8 +413,10 @@ describe('FtsIndex', () => {
     'should query from specific queues',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -449,6 +470,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update([spaceObj, queue1Obj, queue2Obj]);
       yield* metaIndex.lookupRecordIds([spaceObj, queue1Obj, queue2Obj]);
+      yield* store.update([spaceObj, queue1Obj, queue2Obj]);
       yield* index.update([spaceObj, queue1Obj, queue2Obj]);
 
       // Query specific queue only.
@@ -476,8 +498,10 @@ describe('FtsIndex', () => {
     'should query with includeAllQueues',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -515,6 +539,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update([spaceObj, queueObj]);
       yield* metaIndex.lookupRecordIds([spaceObj, queueObj]);
+      yield* store.update([spaceObj, queueObj]);
       yield* index.update([spaceObj, queueObj]);
 
       // Query space without includeAllQueues - should only return space object.
@@ -542,8 +567,10 @@ describe('FtsIndex', () => {
     'should OR space and queue constraints',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const space1 = SpaceId.random();
@@ -597,6 +624,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update([space1Obj, space2Obj, queueObj]);
       yield* metaIndex.lookupRecordIds([space1Obj, space2Obj, queueObj]);
+      yield* store.update([space1Obj, space2Obj, queueObj]);
       yield* index.update([space1Obj, space2Obj, queueObj]);
 
       // Query space1 OR specific queue in space2 - should return space1 object and queue object.
@@ -619,8 +647,10 @@ describe('FtsIndex', () => {
     'should scope matches by typeDxns',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const store = new ObjectSnapshotIndex();
       const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
+      yield* store.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -655,6 +685,7 @@ describe('FtsIndex', () => {
 
       yield* metaIndex.update([person, task]);
       yield* metaIndex.lookupRecordIds([person, task]);
+      yield* store.update([person, task]);
       yield* index.update([person, task]);
 
       const defaultQuery = { query: 'Shared', spaceId: null, includeAllQueues: false, queues: null } as const;
@@ -684,122 +715,4 @@ describe('FtsIndex', () => {
       expect(none).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
-
-  describe('querySnapshotsJSON', () => {
-    it.effect(
-      'returns snapshots for all present recordIds',
-      Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const metaIndex = new EntityMetaIndex();
-        yield* index.migrate();
-        yield* metaIndex.migrate();
-
-        const spaceId = SpaceId.random();
-        const objects: IndexerObject[] = [
-          {
-            spaceId,
-            queueId: EntityId.random(),
-            queueNamespace: 'data',
-            documentId: null,
-            recordId: null,
-            createdAt: null,
-            updatedAt: Date.now(),
-            data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
-          },
-          {
-            spaceId,
-            queueId: EntityId.random(),
-            queueNamespace: 'data',
-            documentId: null,
-            recordId: null,
-            createdAt: null,
-            updatedAt: Date.now(),
-            data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
-          },
-        ];
-
-        yield* metaIndex.update(objects);
-        yield* metaIndex.lookupRecordIds(objects);
-        yield* index.update(objects);
-
-        const recordIds = objects.map((o) => o.recordId!);
-        const snapshots = yield* index.querySnapshotsJSON(recordIds);
-
-        expect(snapshots).toHaveLength(2);
-        const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
-        expect((snapshotMap.get(objects[0].recordId!) as any).value).toBe('alpha');
-        expect((snapshotMap.get(objects[1].recordId!) as any).value).toBe('beta');
-      }, Effect.provide(TestLayer)),
-    );
-
-    it.effect(
-      'omits stale recordIds not present in FTS index',
-      Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const metaIndex = new EntityMetaIndex();
-        yield* index.migrate();
-        yield* metaIndex.migrate();
-
-        const spaceId = SpaceId.random();
-        const object: IndexerObject = {
-          spaceId,
-          queueId: EntityId.random(),
-          queueNamespace: 'data',
-          documentId: null,
-          recordId: null,
-          createdAt: null,
-          updatedAt: Date.now(),
-          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
-        };
-
-        yield* metaIndex.update([object]);
-        yield* metaIndex.lookupRecordIds([object]);
-        yield* index.update([object]);
-
-        // Query with the real id plus a stale/non-existent id.
-        const staleId = 99999;
-        const snapshots = yield* index.querySnapshotsJSON([object.recordId!, staleId]);
-
-        expect(snapshots).toHaveLength(1);
-        expect(snapshots[0].recordId).toBe(object.recordId!);
-        expect((snapshots[0].snapshot as any).value).toBe('present');
-      }, Effect.provide(TestLayer)),
-    );
-
-    it.effect(
-      'handles more than 999 recordIds without exceeding SQLite variable limit',
-      Effect.fnUntraced(function* () {
-        const index = new FtsIndex();
-        const metaIndex = new EntityMetaIndex();
-        yield* index.migrate();
-        yield* metaIndex.migrate();
-
-        const spaceId = SpaceId.random();
-        const count = 1100;
-        const objects: IndexerObject[] = Array.from({ length: count }, (_, i) => ({
-          spaceId,
-          queueId: EntityId.random(),
-          queueNamespace: 'data',
-          documentId: null,
-          recordId: null,
-          createdAt: null,
-          updatedAt: Date.now(),
-          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
-        }));
-
-        yield* metaIndex.update(objects);
-        yield* metaIndex.lookupRecordIds(objects);
-        yield* index.update(objects);
-
-        const recordIds = objects.map((o) => o.recordId!);
-        const snapshots = yield* index.querySnapshotsJSON(recordIds);
-
-        expect(snapshots).toHaveLength(count);
-        const returnedIds = new Set(snapshots.map((s) => s.recordId));
-        for (const id of recordIds) {
-          expect(returnedIds.has(id)).toBe(true);
-        }
-      }, Effect.provide(TestLayer)),
-    );
-  });
 });

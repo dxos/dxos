@@ -98,6 +98,12 @@ export type FlushOptions = {
   indexes?: boolean;
 
   /**
+   * Also wait for the secondary indexes (full text), which lag the primary pass by design.
+   * @default false
+   */
+  secondaryIndexes?: boolean;
+
+  /**
    * Flush pending updates to objects and queries.
    * @default false
    */

@@ -28,10 +28,22 @@ export class Service extends Context.Service<Service, Monitor>()('@dxos/compute-
 
 /**
  * Empty remote trace source for local-only deployments (no swarm subscription).
+ *
+ * Exported by identity so a consumer can tell it apart from a real monitor: an EMPTY live source is
+ * not the same as NO live source, and a reader that treats this one as live ends its subscription
+ * the moment the empty stream completes.
  */
-export const layerNoop: Layer.Layer<Service> = Layer.succeed(Service, {
+export const noopMonitor: Monitor = {
   subscribeToTraceMessages: () => Stream.empty,
-});
+};
+
+/**
+ * True for the monitor {@link layerNoop} provides, which carries no live source at all — consumers
+ * fall back to whatever they do when the tag is unset rather than subscribing to it.
+ */
+export const isNoop = (monitor: Monitor): boolean => monitor === noopMonitor;
+
+export const layerNoop: Layer.Layer<Service> = Layer.succeed(Service, noopMonitor);
 
 /**
  * One received swarm broadcast: the `google.protobuf.Any.value` bytes of a `dxos.compute.TraceMessage`

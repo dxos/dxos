@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { Client } from '@dxos/client';
 import { DevtoolsHostService } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { initAutomergeWasm } from '../util/automerge-wasm.ts';
@@ -87,7 +88,12 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
   if (!bootedClient) {
     throw new Error('Client not booted');
   }
-  const devtoolsHost = Context.get((bootedClient.services as LocalClientServices).stack, DevtoolsHostService);
+  const devtoolsHost = await EffectEx.runPromise(
+    (bootedClient.services as LocalClientServices).stack
+      .getServiceResolver()
+      .resolve(DevtoolsHostService, {})
+      .pipe(Effect.orDie, Effect.scoped),
+  );
   return devtoolsHost.exportSqliteDatabase();
 };
 

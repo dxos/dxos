@@ -143,7 +143,7 @@ const describeBinding = (value: unknown): string => {
  * or an unregistered subject type instead of staring at a blank cell.
  */
 const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> }) => (
-  <div className='grid place-items-center p-2 text-xs text-warning'>
+  <div className='grid place-items-center p-2 text-xs text-warning-text'>
     <div className='grid gap-1 rounded-sm border border-dashed border-separator p-2 font-mono'>
       <div className='font-medium'>⚠ No surface matched this binding</div>
       <div>role: {role}</div>

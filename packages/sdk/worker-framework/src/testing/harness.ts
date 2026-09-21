@@ -151,6 +151,13 @@ export type WorkerHandle = {
   /** Delivers everything queued while paused, in order. */
   resume(): void;
   readonly paused: boolean;
+  /**
+   * Wedges the worker for good: nothing is delivered into it again, its displacement channel
+   * included. A paused worker still services the `BroadcastChannel` the displacement handshake runs
+   * on — a blocked event loop does not, which is the state forced termination exists for.
+   */
+  wedge(): void;
+  readonly wedged: boolean;
   /** True once the worker's endpoint closed (shutdown) or the leader terminated it. */
   readonly closed: boolean;
 };
@@ -161,6 +168,13 @@ type WorkerFactoryOptions = {
   onClose?: () => void;
   onCreate?: (handle: WorkerHandle) => void;
   createRuntime?: Worker.Options['createRuntime'];
+  /** Grace before a worker queued on the storage lock escalates to the incumbent's tab. */
+  displaceGraceTimeout?: number;
+  /**
+   * Whether the handle carries `terminate()`, as a real `Worker` does. A bare `MessagePort` handle is
+   * a supported production configuration and cannot stop the worker, so tests can opt out.
+   */
+  terminable?: boolean;
 };
 
 /**
@@ -175,6 +189,8 @@ export const createWorkerFactory =
       onClose,
       onCreate,
       createRuntime = () => Effect.succeed({ createSession: () => Effect.never }),
+      displaceGraceTimeout,
+      terminable = true,
     }: WorkerFactoryOptions = {},
   ) =>
   () => {
@@ -199,9 +215,12 @@ export const createWorkerFactory =
     };
 
     let paused = false;
+    let wedged = false;
     const outbox: Array<() => void> = [];
     const inbox: Array<() => void> = [];
     const listeners = new Map<(ev: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => void, EventListener>();
+    // The channel `Worker.run` builds for displacement, captured below; wedging silences it.
+    const displaceChannels: BroadcastChannel[] = [];
     const handle: WorkerHandle = {
       pause: () => {
         paused = true;
@@ -218,6 +237,15 @@ export const createWorkerFactory =
       get paused() {
         return paused;
       },
+      wedge: () => {
+        wedged = true;
+        for (const displaceChannel of displaceChannels) {
+          displaceChannel.onmessage = null;
+        }
+      },
+      get wedged() {
+        return wedged;
+      },
       get closed() {
         return closed;
       },
@@ -228,49 +256,65 @@ export const createWorkerFactory =
       if (closed) {
         return;
       }
-      Worker.run({
-        endpoint: {
-          postMessage: (message, transfer) => {
-            const send = () => channel.port1.postMessage(message, transfer ? { transfer } : undefined);
-            if (paused) {
-              outbox.push(send);
-            } else {
-              send();
-            }
-          },
-          addEventListener: (type, listener) => {
-            const wrapped: EventListener = (event) => {
-              if (!(event instanceof MessageEvent)) {
-                return;
-              }
-              const deliver = () => listener(event);
+      // `Worker.run` builds its displacement channel synchronously, so this window captures that one
+      // channel and nothing else — there is no handle on it otherwise.
+      const OriginalBroadcastChannel = globalThis.BroadcastChannel;
+      globalThis.BroadcastChannel = class extends OriginalBroadcastChannel {
+        constructor(name: string) {
+          super(name);
+          displaceChannels.push(this);
+        }
+      };
+      try {
+        Worker.run({
+          endpoint: {
+            postMessage: (message, transfer) => {
+              const send = () => channel.port1.postMessage(message, transfer ? { transfer } : undefined);
               if (paused) {
-                inbox.push(deliver);
+                outbox.push(send);
               } else {
-                deliver();
+                send();
               }
-            };
-            listeners.set(listener, wrapped);
-            channel.port1.addEventListener(type, wrapped);
+            },
+            addEventListener: (type, listener) => {
+              const wrapped: EventListener = (event) => {
+                if (!(event instanceof MessageEvent) || wedged) {
+                  return;
+                }
+                const deliver = () => listener(event);
+                if (paused) {
+                  inbox.push(deliver);
+                } else {
+                  deliver();
+                }
+              };
+              listeners.set(listener, wrapped);
+              channel.port1.addEventListener(type, wrapped);
+            },
+            removeEventListener: (type, listener) => {
+              const wrapped = listeners.get(listener);
+              if (wrapped) {
+                listeners.delete(listener);
+                channel.port1.removeEventListener(type, wrapped);
+              }
+            },
+            close: () => {
+              channel.port1.close();
+              markClosed();
+            },
           },
-          removeEventListener: (type, listener) => {
-            const wrapped = listeners.get(listener);
-            if (wrapped) {
-              listeners.delete(listener);
-              channel.port1.removeEventListener(type, wrapped);
-            }
-          },
-          close: () => {
-            channel.port1.close();
-            markClosed();
-          },
-        },
-        storageLockKey,
-        signal: terminated.signal,
-        createRuntime,
-      });
+          storageLockKey,
+          displaceGraceTimeout,
+          signal: terminated.signal,
+          createRuntime,
+        });
+      } finally {
+        globalThis.BroadcastChannel = OriginalBroadcastChannel;
+      }
     });
-    return channel.port2;
+    // Stands in for `Worker.terminate()`: closing the leader's end aborts the worker's signal, which
+    // stands it down and releases its Web Locks without needing it to service its event loop.
+    return terminable ? Object.assign(channel.port2, { terminate: () => channel.port2.close() }) : channel.port2;
   };
 
 /**
@@ -284,6 +328,22 @@ export const createWorkerFactory =
 export const postRunnerReady = (port: MessagePort): void => {
   port.start();
   port.postMessage([0]);
+};
+
+/** Hands the tab the pair of ports a real worker returns for `start-session`, so its connect completes. */
+export const postStubSession = (workerEnd: MessagePort, clientId: string): void => {
+  const clientToWorker = new MessageChannel();
+  const workerToClient = new MessageChannel();
+  workerEnd.postMessage(
+    {
+      type: 'session',
+      clientId,
+      clientToWorker: clientToWorker.port2,
+      workerToClient: workerToClient.port2,
+      isOwner: true,
+    } satisfies WorkerProtocol.DedicatedWorkerMessage,
+    [clientToWorker.port2, workerToClient.port2],
+  );
 };
 
 export const uniqueKeys = () => {

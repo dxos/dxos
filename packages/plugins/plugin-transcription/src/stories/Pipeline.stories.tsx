@@ -329,7 +329,8 @@ const meta = {
               yield* enableQueryIndexes(client.services.services);
               yield* Effect.promise(() => seedTestData(defaultSpace));
               defaultSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
         SpacePlugin({}),
