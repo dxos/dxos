@@ -60,9 +60,10 @@ export type HeapReading = {
   /**
    * Wasm linear memory this realm holds, from `@dxos/util`'s instantiation probe.
    *
-   * Its own reading because no JS-heap figure counts it: `usedBytes` is the V8 heap, and a wasm
-   * module's linear memory lives outside it. Before this, the only instrument that saw automerge's
-   * and SQLite's memory at all was `peakRssBytes`, which is the whole browser process tree.
+   * Its own reading because the two figures that already contain it cannot isolate it: `usedBytes`
+   * excludes it outright, and `backingBytes` counts a `WebAssembly.Memory` and an `ArrayBuffer` of
+   * the same size identically, so neither says whether a realm grew because a wasm heap expanded
+   * or because buffers piled up.
    *
    * Absent when the realm published no probe, which is a different fact from holding no wasm —
    * `wasmInstances` is what tells them apart.

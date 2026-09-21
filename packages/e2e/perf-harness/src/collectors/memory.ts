@@ -59,8 +59,9 @@ const readWasmMemory = async (target: Attached): Promise<{ bytes: number; instan
  * reasons, and a single total hides which one grew.
  *
  * Wasm is read here rather than in its own pass because it belongs to the same realm and the same
- * boundary — and it is a quantity the JS-heap figures are silent about, so a reader comparing
- * `usedBytes` across a run is looking at a fraction of what the realm holds.
+ * boundary — and it is a quantity `usedBytes` is silent about and `backingStorageSize` counts
+ * without distinguishing from an `ArrayBuffer`, so neither says whether a realm grew because a
+ * wasm heap expanded or because buffers piled up.
  */
 export const readHeap = async (targets: Attached[]): Promise<HeapReading[]> => {
   const readings: HeapReading[] = [];
@@ -111,9 +112,10 @@ export const readDomCounters = async (page: Attached | undefined): Promise<DomCo
 /**
  * Resident set size summed over the browser's process tree.
  *
- * The quantity that matches what a user sees in Chrome's tab list, and the only one that counts
- * wasm linear memory — where automerge documents live, outside every JS-heap reading, never
- * returned to the OS. For a flow whose subject is a large space this is the column that moves.
+ * The quantity that matches what a user sees in Chrome's tab list: the only one that reaches past
+ * the attached realms to the renderer, GPU and browser processes, and the only one that sees
+ * memory neither the JS heap nor a realm's backing stores account for. For a flow whose subject is
+ * a large space this is the column that moves.
  *
  * `ps` rather than `/proc`, so the same reading works on a developer's macOS machine and on CI.
  */

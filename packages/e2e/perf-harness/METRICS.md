@@ -140,17 +140,25 @@ One entry per attached realm (page, each worker), each from `Runtime.getHeapUsag
 **three-pass forced GC** — one pass leaves `FinalizationRegistry` callbacks and `WeakRef` clears
 pending, so a single collection under-reports what is actually garbage.
 
-| Field           | Source                 | Meaning                                                                                                    |
-| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                          |
-| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                            |
-| `backingBytes`  | `backingStorageSize`   | External backing stores — `ArrayBuffer`s and friends, which is where automerge's buffers sit.              |
-| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                                   |
-| `wasmBytes`     | `@dxos/util` probe     | Wasm linear memory this realm holds — automerge, subduction and SQLite. Counted by nothing else per realm. |
-| `wasmInstances` | `@dxos/util` probe     | Memories counted. The integrity column: absent fields mean an uninstrumented realm, `0` means no wasm.     |
+| Field           | Source                 | Meaning                                                                                                |
+| --------------- | ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                      |
+| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                        |
+| `backingBytes`  | `backingStorageSize`   | Every external backing store: `ArrayBuffer`s **and** wasm linear memory, indistinguishably.            |
+| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                               |
+| `wasmBytes`     | `@dxos/util` probe     | The wasm share of `backingBytes` — automerge, subduction and SQLite. The only column that isolates it. |
+| `wasmInstances` | `@dxos/util` probe     | Memories counted. The integrity column: absent fields mean an uninstrumented realm, `0` means no wasm. |
 
 The gap between the two matters. At `open-tasks` the dedicated worker holds **29 MB `usedBytes`
 against 135 MB `backingBytes`** — the JS heap is small, the buffers are not.
+
+`backingBytes` and `wasmBytes` overlap by design, and the subtraction is the point:
+`backingBytes - wasmBytes` is what the realm holds in `ArrayBuffer`s alone. Measured over CDP
+against a page that allocates each in turn, `backingStorageSize` moves by exactly the allocation in
+both cases and `usedSize` by neither — a 32 MB `WebAssembly.Memory`, a 32 MB `Uint8Array` and a
+32 MB `memory.grow()` are three identical +32 MB steps. So the total is free and already collected,
+but it cannot say whether a realm grew because a wasm heap expanded or because buffers piled up,
+and those have different fixes.
 
 `wasmBytes` comes from `installWasmMemoryProbe()` (`@dxos/util`), which wraps
 `WebAssembly.instantiate`/`instantiateStreaming` and keeps a weak set of every memory an instance
@@ -174,10 +182,10 @@ Peak resident set size over the browser **process tree**, sampled through the st
 spike that is freed before the boundary still counts.
 
 This is the trended memory figure because it is what a user's machine actually feels: it counts
-every realm, wasm included, plus everything Chrome itself holds. It used to be the only number that
-saw wasm at all, and could not attribute it; `wasmBytes` now splits that per realm, and the two
-answer different questions — RSS says what the machine feels, `wasmBytes` says which realm is
-holding it.
+every realm, wasm included, plus everything Chrome itself holds — and, unlike the per-realm
+columns, the renderer, GPU and browser processes too. It is the coarsest of the three views of
+wasm: RSS says what the machine feels, `backingBytes` says how much of it is external buffers of
+some kind, and `wasmBytes` says how much of that is wasm and in which realm.
 
 Expect it to dwarf the heap. Our run: 1.2–2.3 GB RSS against an 87–323 MB JS heap.
 

@@ -46,8 +46,8 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciHeapUsedBytes*`                                        | bytes         | same four suffixes, plus `ciHeapUsedTotalBytes`                                     |
 | `ciLagP95Ms*` / `ciLagMaxMs*`                             | ms            | same four suffixes, plus the pooled `ciLagP95Ms` / `ciLagMaxMs`                     |
 | `ciLagSamples*`                                           | count         | **read this before a zero above**: `0` means the drift probe produced nothing       |
-| `ciHeapBackingBytes*`                                     | bytes         | same four suffixes — `ArrayBuffer` backing stores, where automerge's buffers sit    |
-| `ciWasmBytes*`                                            | bytes         | same four suffixes, plus `ciWasmBytesTotal`; counted by no heap column              |
+| `ciHeapBackingBytes*`                                     | bytes         | same four suffixes — every backing store: `ArrayBuffer`s **and** wasm memory        |
+| `ciWasmBytes*`                                            | bytes         | same four suffixes, plus `ciWasmBytesTotal`; the wasm share of the row above        |
 | `ciWasmRealms`                                            | count         | realms that published the wasm probe; `0` means uninstrumented, not "no wasm"       |
 | `ciRpcQueueWaitP95Ms*` / `ciRpcQueueWaitMaxMs*`           | ms            | same four suffixes — time a request waited for that realm's event loop              |
 | `ciRpcServiceMaxMs*`                                      | ms            | same four suffixes — worst handler duration in the realm that served it             |
@@ -168,6 +168,12 @@ optimizing the JS heap cannot move the memory number.
 One honest caveat, recorded in the tile's SQL: the RSS peak and the heap peak need not occur at the
 same instant within a phase, so the total is exact and the boundary between the two segments is
 approximate.
+
+Its `Wasm + native` segment is a remainder, not a measurement, and it is the segment to split next.
+`ciHeapBackingBytes{realm}` and `ciWasmBytes{realm}` now publish the two quantities it lumps
+together, so the stack can become tab heap / worker heap / wasm / other backing stores / native.
+The edit waits for data: the columns are null on every row written before they existed, and a null
+inside the segment arithmetic empties the whole tile rather than drawing a zero.
 
 ### Edge traffic, and what it took to measure it
 
