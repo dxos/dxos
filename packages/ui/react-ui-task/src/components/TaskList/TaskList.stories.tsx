@@ -762,6 +762,9 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
     const first = rows()[0];
     first.click();
     await waitFor(async () => expect(title().value).not.toEqual(''));
+    // The row's own state, not just the pane's: the pane follows the selection a commit earlier, and
+    // `Escape` is answered by the list, so pressing it before the row reports selected does nothing.
+    await waitFor(async () => expect(first.getAttribute('aria-selected')).toEqual('true'));
     first.focus();
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await waitFor(async () => expect(title().value).toEqual(''));
@@ -1048,5 +1051,51 @@ export const Test: Story = {
 
     // The row spans the full width, so trailing actions sit at the far edge.
     await expect(row.getBoundingClientRect().width).toBeGreaterThan(create.getBoundingClientRect().width * 0.9);
+  },
+};
+
+/**
+ * A row's status picker builds its menu on the first click rather than with the row, so a list of
+ * 200 rows does not build 200 menu machines for menus nobody opens. The gesture has to survive that:
+ * nothing exists until the click, the click offers every status, and picking one writes it.
+ */
+export const TestStatusPickerBuildsOnFirstClick: Story = {
+  args: {
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+    // Queried against the document, not the canvas: the menu's content is portalled out of the list.
+    const options = () => Array.from(document.querySelectorAll<HTMLElement>('[role="menuitemradio"]'));
+    const first = rows()[0];
+    // Re-read rather than held: building the menu re-parents the trigger under it, so the node that
+    // took the first click is gone by the time the menu is open.
+    const trigger = () => first.querySelector<HTMLElement>('[data-testid="taskList.item.status"]')!;
+
+    // Nothing is built for a row at rest.
+    await expect(options()).toHaveLength(0);
+
+    await userEvent.click(trigger());
+    await waitFor(async () => expect(options()).toHaveLength(Task.StatusOptions.length), { timeout: 5_000 });
+    // One option is checked, so the options the click built carry the task's state and not just labels.
+    await expect(options().filter((option) => option.getAttribute('aria-checked') === 'true')).toHaveLength(1);
+
+    // Picking another status closes the menu and writes the value, which the next open reports.
+    const next = options().find((option) => option.getAttribute('aria-checked') !== 'true')!;
+    const nextLabel = next.textContent;
+    await userEvent.click(next);
+    await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
+
+    await userEvent.click(trigger());
+    await waitFor(async () => expect(options()).toHaveLength(Task.StatusOptions.length), { timeout: 5_000 });
+    const checked = options().find((option) => option.getAttribute('aria-checked') === 'true');
+    await expect(checked?.textContent).toEqual(nextLabel);
+
+    // The row's other pickers defer the same way, and the priority one is the picker whose absence
+    // from the tree row changed when the row commits — so it is opened here rather than assumed.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
+    await userEvent.click(first.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!);
+    await waitFor(async () => expect(options()).toHaveLength(Task.PriorityOptions.length + 1), { timeout: 5_000 });
   },
 };
