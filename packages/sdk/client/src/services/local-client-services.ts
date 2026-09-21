@@ -6,7 +6,6 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -16,14 +15,11 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   type ClientServicesRpc,
-  makeInProcessClientServicesRpc,
+  makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import {
-  type ClientServicesLayerOptions,
-  type ClientServicesStackContext,
-  type ServiceContextRuntimeProps,
-} from '@dxos/client-services';
+import { type ClientServicesStackOptions, type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx, Hook } from '@dxos/effect';
@@ -32,6 +28,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
+import { RpcRouter } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -78,7 +75,7 @@ export type LocalClientServicesParams = {
   signalManager?: SignalManager;
   connectionLog?: boolean;
   callbacks?: { onReset?: () => Promise<void> };
-  /** See {@link ClientServicesLayerOptions.autoConnect}. */
+  /** See {@link ClientServicesStackOptions.autoConnect}. */
   autoConnect?: boolean;
   runtimeProps?: ServiceContextRuntimeProps;
   createOpfsWorker?: () => Worker;
@@ -207,7 +204,7 @@ const sqliteLayerFromParams = ({
 };
 
 /**
- * Runs the client services in-process: the stack from {@link ClientServicesLayer} over a SQLite
+ * Runs the client services in-process: the stack from {@link layerClientServices} over a SQLite
  * layer chosen by config, served to the client without a wire hop.
  */
 export class LocalClientServices implements ClientServicesProvider {
@@ -217,8 +214,9 @@ export class LocalClientServices implements ClientServicesProvider {
   /** Outlives the stack: the reset chain runs on it after the stack is gone. */
   private readonly _controller = Hook.makeController();
   private _controllerScope?: Scope.Closeable;
-  private _runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
-  private _stack?: EffectContext.Context<ClientServicesStackContext>;
+  /** Scope of the built stack; closing it disposes the stack and the SQLite layer beneath it. */
+  private _stackScope?: Scope.Closeable;
+  private _stack?: LayerStack.LayerStack;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -257,9 +255,9 @@ export class LocalClientServices implements ClientServicesProvider {
   }
 
   /**
-   * Effect context of the running stack: every component and RPC handler. Present while open.
+   * The running stack; resolve a tag to reach a component or RPC handler. Present while open.
    */
-  get stack(): EffectContext.Context<ClientServicesStackContext> {
+  get stack(): LayerStack.LayerStack {
     invariant(this._stack, 'Client services not open');
     return this._stack;
   }
@@ -270,36 +268,40 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { ClientServicesLayer, HostEvents, handlersFromStack, wipeSqliteStorage } =
-      await import('@dxos/client-services');
+    const { layerClientServices, HostEvents, wipeSqliteStorage } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     const config = this._params.config ?? new Config();
-    const runtime = ManagedRuntime.make(
-      ClientServicesLayer({
-        runtimeProps: this._params.runtimeProps,
-        signalManager: this._params.signalManager,
-        transportFactory: this._params.transportFactory,
-        connectionLog: this._params.connectionLog,
-        autoConnect: this._params.autoConnect,
-      }).pipe(
-        Layer.provideMerge(sqliteLayerFromParams(this._params)),
-        Layer.provide(Layer.succeed(ConfigService, config)),
-        Layer.provide(Layer.succeed(Hook.Controller, this._controller)),
-        Layer.orDie,
-      ),
-    );
-    this._runtime = runtime;
+    const stackScope = Effect.runSync(Scope.make());
+    this._stackScope = stackScope;
+    const controller = this._controller;
     try {
-      this._stack = await runtime.context();
+      // Building the layer also builds its eager specs, so the rpc registrations are in place
+      // before the lifecycle events below run.
+      const stackContext = await EffectEx.runPromise(
+        Layer.build(
+          layerClientServices({
+            runtimeProps: this._params.runtimeProps,
+            signalManager: this._params.signalManager,
+            transportFactory: this._params.transportFactory,
+            connectionLog: this._params.connectionLog,
+            autoConnect: this._params.autoConnect,
+          }).pipe(
+            Layer.provide(sqliteLayerFromParams(this._params).pipe(Layer.orDie)),
+            Layer.provide(Layer.succeed(ConfigService, config)),
+            Layer.provide(Layer.succeed(Hook.Controller, controller)),
+          ),
+        ).pipe(Scope.provide(stackScope)),
+      );
+      this._stack = EffectContext.get(stackContext, LayerStack.Service);
       // `StackOpened` resolves once every handler the cascade triggered has run.
-      await runtime.runPromise(
+      await EffectEx.runPromise(
         EffectEx.withContext(this._ctx)(
           Effect.gen(function* () {
             yield* Hook.emit(HostEvents.Opening, undefined);
             yield* Hook.emit(HostEvents.StackOpened, undefined);
           }),
-        ),
+        ).pipe(Effect.provideService(Hook.Controller, controller)),
       );
 
       // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
@@ -318,13 +320,18 @@ export class LocalClientServices implements ClientServicesProvider {
           );
         }).pipe(Effect.provideService(Hook.Controller, this._controller), Scope.provide(this._controllerScope)),
       );
-      const handlers = handlersFromStack(this._stack);
-
-      // Bridge the in-process Handlers to the effect-rpc client surface (no wire hop), then derive
-      // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
+      // Bridge the handlers the stack's services registered with its router to the effect-rpc client
+      // surface (no wire hop), then derive the deprecated Promise/Stream shaped services from it for
+      // consumers not yet on the effect surface.
       this._serviceScope = Effect.runSync(Scope.make());
+      const router = await EffectEx.runPromise(
+        this.stack.getServiceResolver().resolve(RpcRouter.RpcRouter, {}).pipe(Effect.orDie, Effect.scoped),
+      );
       this._rpc = await EffectEx.runPromise(
-        makeInProcessClientServicesRpc(() => handlers).pipe(Scope.provide(this._serviceScope)),
+        makeClientServicesRpcFromRouter.pipe(
+          Effect.provideService(RpcRouter.RpcRouter, router),
+          Scope.provide(this._serviceScope),
+        ),
       );
       this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
     } catch (err) {
@@ -370,9 +377,11 @@ export class LocalClientServices implements ClientServicesProvider {
    * Disposes the stack runtime, and with it the SQLite layer and its worker. Idempotent.
    */
   private async _closeStack(): Promise<void> {
-    const runtime = this._runtime;
-    this._runtime = undefined;
+    const scope = this._stackScope;
+    this._stackScope = undefined;
     this._stack = undefined;
-    await runtime?.dispose();
+    if (scope) {
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
+    }
   }
 }

@@ -7,12 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { asyncTimeout } from '@dxos/async';
 import { getFirstStreamValue } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesHandlers,
-  makeInProcessClientServicesRpc,
-  makeServicesFromRpc,
-} from '@dxos/client-protocol';
+import { type ClientServices, makeClientServicesRpcFromRouter, makeServicesFromRpc } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
@@ -41,6 +36,7 @@ import {
 import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
 import { DXOS_VERSION } from '../../version.ts';
 import { IdentityManagerService } from '../identity/index.ts';
@@ -93,18 +89,18 @@ export type SpaceStats = {
 };
 
 /**
- * {@link createDiagnostics} over the effect-rpc handlers an embedder serves, bridged in-process for
- * the duration of the collection.
+ * {@link createDiagnostics} over the services registered with a stack's {@link RpcRouter.RpcRouter},
+ * bridged in-process for the duration of the collection.
  */
-export const createDiagnosticsFromHandlers = (
-  handlers: () => Partial<ClientServicesHandlers>,
+export const createDiagnosticsFromRouter = (
+  router: RpcRouter.Service,
   stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
   config: Config,
 ): Promise<Diagnostics['services']> =>
   EffectEx.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
-        const rpc = yield* makeInProcessClientServicesRpc(handlers);
+        const rpc = yield* makeClientServicesRpcFromRouter.pipe(Effect.provideService(RpcRouter.RpcRouter, router));
         return yield* Effect.promise(() =>
           createDiagnostics(makeServicesFromRpc(rpc, EffectContext.empty()), stack, config),
         );
