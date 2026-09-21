@@ -22,10 +22,45 @@ const settle = async (target: Attached): Promise<void> => {
 };
 
 /**
- * Live JS heap of every attached target, after a forced GC.
+ * Global `@dxos/util`'s wasm probe publishes its counters under.
+ *
+ * Duplicated from `WASM_MEMORY_GLOBAL` rather than imported, as the SQLite and RPC globals are:
+ * the name crosses a process boundary as text in the expression below.
+ */
+const WASM_MEMORY_GLOBAL = '__dxosWasmMemory';
+
+const WASM_EXPRESSION = `(() => {
+  const read = globalThis['${WASM_MEMORY_GLOBAL}'];
+  return typeof read === 'function' ? JSON.stringify(read()) : null;
+})()`;
+
+/** Wasm linear memory a realm holds, or `undefined` where the realm published no probe. */
+const readWasmMemory = async (target: Attached): Promise<{ bytes: number; instances: number } | undefined> => {
+  const response = await target.cdp.trySend<{ result?: { value?: unknown } }>('Runtime.evaluate', {
+    expression: WASM_EXPRESSION,
+    returnByValue: true,
+  });
+  const serialized = response?.result?.value;
+  if (typeof serialized !== 'string') {
+    return undefined;
+  }
+  try {
+    const stats: { bytes?: number; instances?: number } = JSON.parse(serialized);
+    return { bytes: stats.bytes ?? 0, instances: stats.instances ?? 0 };
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Live memory of every attached target, after a forced GC.
  *
  * Per target rather than summed at the source: the page and the shared worker move for different
  * reasons, and a single total hides which one grew.
+ *
+ * Wasm is read here rather than in its own pass because it belongs to the same realm and the same
+ * boundary — and it is a quantity the JS-heap figures are silent about, so a reader comparing
+ * `usedBytes` across a run is looking at a fraction of what the realm holds.
  */
 export const readHeap = async (targets: Attached[]): Promise<HeapReading[]> => {
   const readings: HeapReading[] = [];
@@ -40,6 +75,7 @@ export const readHeap = async (targets: Attached[]): Promise<HeapReading[]> => {
     if (!usage) {
       continue;
     }
+    const wasm = await readWasmMemory(target);
     readings.push({
       kind: target.kind,
       name: target.name,
@@ -47,6 +83,7 @@ export const readHeap = async (targets: Attached[]): Promise<HeapReading[]> => {
       totalBytes: usage.totalSize,
       ...(usage.backingStorageSize != null ? { backingBytes: usage.backingStorageSize } : {}),
       ...(usage.embedderHeapUsedSize != null ? { embedderBytes: usage.embedderHeapUsedSize } : {}),
+      ...(wasm ? { wasmBytes: wasm.bytes, wasmInstances: wasm.instances } : {}),
     });
   }
   return readings;
