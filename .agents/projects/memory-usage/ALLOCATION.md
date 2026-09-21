@@ -205,11 +205,35 @@ One caveat on the module column. The probe names a memory by the script on the
 stack that created it, and a bundle chunk can carry more than one wasm binary —
 `boot-9` contains both. So read the binary names as indicative and the realm
 split and the sizes as solid: three separate linear memories, one in the page and
-two in the worker, ~35, ~31 and ~27 MB. Which package owns each is worth
-confirming before anyone acts on it. `echo-host` depends on both
-`@automerge/automerge` and `@automerge/automerge-subduction`, so two binaries in
-the worker is expected by construction; two binaries each holding tens of
-megabytes of corpus is the part that is not obviously necessary.
+two in the worker, ~35, ~31 and ~27 MB.
+
+Ownership, confirmed from source rather than from the probe:
+
+- **The page heap is `@automerge/automerge`, not subduction.** The tab's
+  automerge is `@dxos/echo-client`, whose `DocHandleProxy` and `RepoProxy` call
+  `A.load` / `A.loadIncremental` on byte dumps the worker ships over RPC;
+  `echo-client` has no subduction dependency. `initAutomergeWasm` in
+  `composer-app` does instantiate both binaries in every realm, but nothing in
+  the page constructs a `Subduction`, so that heap stays at its initial size and
+  the probe's label on the 35 MB is wrong.
+- **The two worker heaps hold different things.** The subduction fork of
+  `automerge-repo` (`2.6.0-subduction.48`) materializes documents through
+  `@automerge/automerge` — its `SubductionSource` imports `automerge/slim` and
+  calls `loadIncremental` — and hands the `Subduction` wasm class only opaque
+  commit and fragment bytes plus sedimentree ids. So one heap is the document
+  corpus and the other is the sync engine's commit graphs and blob cache for the
+  same documents. Persisted blobs go through `SubductionStorageBridge` to
+  `SqliteStorageAdapter`, so the second heap is working state, not storage.
+- **Eviction never reaches the second heap.** `AutomergeHost._evictDocument`
+  calls `Repo.removeFromCache`, which calls `source.detach(documentId)` on every
+  source, and `SubductionSource.detach` is an empty method
+  (`src/subduction/source.ts:880`). The binding exposes `removeSedimentree`;
+  nothing in the fork or in `echo-host` calls it. `MIN_RESIDENT_DOCUMENTS`
+  therefore bounds the `automerge_wasm` heap and not the subduction one, which
+  keeps every sedimentree touched since the worker started.
+
+How much of the ~27-31 MB is the un-evicted set is unmeasured. The probe would
+need a sedimentree count beside the byte count to say.
 
 Committed is not resident: a `WebAssembly.Memory` reports the pages it has
 reserved, and the footprint only counts the ones touched. Read the 110-113 MB as
