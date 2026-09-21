@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
@@ -127,8 +127,6 @@ export class IndexEngine {
   readonly #reverseRefIndex: ReverseRefIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
   readonly #indexedObjectSource = new IndexedObjectSource();
-  /** Covers reads the engine drives itself; a source over the index holds no per-pass resources. */
-  readonly #ctx = Context.default();
 
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
@@ -152,14 +150,13 @@ export class IndexEngine {
 
   /**
    * Query text index and return full object metadata with rank.
+   *
+   * Reads the index as it stands: this is a query, not an indexing pass. A caller that has just
+   * written and needs its own write matched drains first, via `Database.flush({ secondaryIndexes:
+   * true })`.
    */
   queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen({ self: this }, function* () {
-      // Matching reads the index rather than the snapshot store, so it is the one read that has to
-      // wait for the deferred re-tokenization.
-      yield* this.#drainSecondaryIndexes();
-      return yield* this.#ftsIndex.query(query);
-    });
+    return this.#ftsIndex.query(query);
   }
 
   queryReverseRef(query: ReverseRefQuery) {
@@ -220,18 +217,6 @@ export class IndexEngine {
 
       return result as IndexingResult;
     }).pipe(Effect.withSpan('IndexEngine.updateSecondaryIndexes'));
-  }
-
-  /** Drains {@link updateSecondaryIndexes} so a reader of a secondary index never sees a stale one. */
-  #drainSecondaryIndexes(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen({ self: this }, function* () {
-      for (;;) {
-        const { done } = yield* this.updateSecondaryIndexes(this.#ctx);
-        if (done) {
-          return;
-        }
-      }
-    });
   }
 
   /**

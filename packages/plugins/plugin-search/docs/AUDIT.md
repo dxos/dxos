@@ -137,10 +137,11 @@ a _secondary_ index, fed by `IndexEngine.updateSecondaryIndexes` from
 monotonic `objectMeta.version` that `EntityMetaIndex.update` stamps on everything
 the primary pass writes. Its cursor over that counter is an ordinary `indexCursor`
 row (`sourceName='index'`), so it is retired and rebuilt like any other. The pass
-runs before any `MATCH`, on an idle moment after a burst of writes, and on
-`Database.flush({ secondaryIndexes: true })`. FTS5 cannot update a row in place, so
-re-tokenizing a large object on every keystroke was the dominant cost of editing; a
-burst now moves the counter many times and is caught up once.
+runs on an idle moment after a burst of writes and on
+`Database.flush({ secondaryIndexes: true })`; a query never runs one, so a caller
+that needs its own write matched flushes first. FTS5 cannot update a row in place,
+so re-tokenizing a large object on every keystroke was the dominant cost of editing;
+a burst now moves the counter many times and is caught up once.
 
 ### 2.2 Full-text: what works and what doesn't
 

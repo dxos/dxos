@@ -160,6 +160,7 @@ describe('IndexEngine', () => {
       expect(results1[0].version).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
+      yield* engine.updateSecondaryIndexes(Context.default());
       const ftsResults1 = yield* engine.queryText({
         query: 'Hello',
         spaceId: null,
@@ -192,6 +193,7 @@ describe('IndexEngine', () => {
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
 
+      yield* engine.updateSecondaryIndexes(Context.default());
       const ftsResults2 = yield* engine.queryText({
         query: 'World',
         spaceId: null,
@@ -272,6 +274,7 @@ describe('IndexEngine', () => {
       const resultsB = yield* metaIndex.query({ spaceId, typeDXN: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
+      yield* engine.updateSecondaryIndexes(Context.default());
       const ftsResults = yield* engine.queryText({
         query: 'TypeA',
         spaceId: null,
@@ -531,7 +534,7 @@ describe('IndexEngine', () => {
     );
 
     it.effect(
-      'drains the backlog before matching, so a search never sees a stale index',
+      'matching reads the index as it stands rather than indexing at query time',
       Effect.fnUntraced(function* () {
         const { indexEngine } = yield* setup;
         const dataSource = new MockIndexDataSource();
@@ -539,14 +542,12 @@ describe('IndexEngine', () => {
         dataSource.push([makeObject(spaceId, 'doc-1', 'Unflushed Content')]);
         yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
 
-        const match = yield* indexEngine.queryText({
-          query: 'Unflushed',
-          spaceId: null,
-          includeAllQueues: false,
-          queues: null,
-        });
-        expect(match).toHaveLength(1);
-        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).done).toBe(true);
+        const query = { query: 'Unflushed', spaceId: null, includeAllQueues: false, queues: null };
+        expect(yield* indexEngine.queryText(query)).toHaveLength(0);
+
+        // Draining is the caller's to do — `Database.flush({ secondaryIndexes: true })` in the app.
+        yield* indexEngine.updateSecondaryIndexes(Context.default());
+        expect(yield* indexEngine.queryText(query)).toHaveLength(1);
       }, Effect.provide(TestLayer)),
     );
 

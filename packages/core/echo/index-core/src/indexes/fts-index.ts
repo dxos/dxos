@@ -106,8 +106,10 @@ const escapeFts5Query = (text: string): string => {
  *
  * Deferring it matters because re-tokenizing is what made editing expensive: FTS5 cannot update a
  * row in place and a trigram tokenizer emits one token per 3-character window, so one changed
- * property rewrote hundreds of kilobytes. Nothing but `MATCH` reads this table, and
- * `IndexEngine.queryText` drains the backlog before matching, so a search never sees a stale index.
+ * property rewrote hundreds of kilobytes. Nothing but `MATCH` reads this table — every other read,
+ * the sub-trigram `LIKE` fallback included, goes to the snapshot store, which is never behind. A
+ * caller that needs its own write matched drains first, via `Database.flush({ secondaryIndexes:
+ * true })`.
  */
 export class FtsIndex implements Index {
   /**
