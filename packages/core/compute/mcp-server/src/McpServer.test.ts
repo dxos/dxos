@@ -626,7 +626,11 @@ describe('McpServer', () => {
     });
 
     test('passes an ambiguous or unparseable stream through unchanged', async ({ expect }) => {
-      for (const body of [frames(listChanged, discover, { ...discover, id: 2 }), `data: {"jsonrpc":\n\n`]) {
+      for (const body of [
+        frames(listChanged, discover, { ...discover, id: 2 }),
+        frames({ ...discover, error: { code: -32603, message: 'boom' } }),
+        `data: {"jsonrpc":\n\n`,
+      ]) {
         const response = await McpServer.normalizeResponse(eventStream(body), { request: post() });
         expect(response.headers.get('content-type')).to.equal('text/event-stream');
         expect(await response.text()).to.equal(body);

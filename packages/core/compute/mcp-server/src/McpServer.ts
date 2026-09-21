@@ -639,7 +639,8 @@ const messageKind = (data: string): 'response' | 'notification' | undefined => {
   if ('method' in message) {
     return 'id' in message ? undefined : 'notification';
   }
-  return 'id' in message && ('result' in message || 'error' in message) ? 'response' : undefined;
+  // Exactly one outcome: a message carrying both is malformed, and the stream is left alone.
+  return 'id' in message && 'result' in message !== 'error' in message ? 'response' : undefined;
 };
 
 /** Rebuilds a response around a new body, which no upstream `Content-Length` describes. */
