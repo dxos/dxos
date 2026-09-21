@@ -40,7 +40,9 @@ describe('toPosthogEvent', () => {
     for (const [key, value] of Object.entries(event.properties)) {
       expect(['string', 'number', 'boolean'], `${key} is not a scalar`).toContain(typeof value);
     }
-    expect(event.properties.peakRssBytes).toBe(900_000_000);
+    expect(event.properties.appFootprintBytes).toBe(420_000_000);
+    // Chrome's own processes are reported, and reported separately.
+    expect(event.properties.chromeFootprintBytes).toBe(80_000_000);
     expect(event.properties.wallMs).toBe(1234);
     expect(event.properties.domNodes).toBe(24_000);
   });
@@ -139,7 +141,12 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     },
   ],
   heapUsedTotalBytes: 170_000_000,
-  peakRssBytes: 900_000_000,
+  footprint: [
+    { pid: 10, process: 'Renderer', bytes: 300_000_000 },
+    { pid: 11, process: 'Renderer', bytes: 120_000_000 },
+    { pid: 12, process: 'GPU Process', bytes: 80_000_000 },
+  ],
+  appFootprintBytes: 420_000_000,
   domNodes: 24_000,
   domListeners: 3_100,
   domDocuments: 2,

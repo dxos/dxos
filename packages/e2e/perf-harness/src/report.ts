@@ -244,12 +244,24 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
 
       ...(row.cpuMsByRealm ? { cpuMsWorkers, ...cpuByRealm } : {}),
 
-      peakRssBytes: row.peakRssBytes,
+      appFootprintBytes: row.appFootprintBytes,
+      // Beside the app's own figure rather than folded into it: Chrome's browser, GPU and service
+      // processes are ~218 MB that has nothing to do with the app, and hiding them in the total is
+      // what made the quantity this replaces unusable.
+      chromeFootprintBytes: row.footprint.reduce(
+        (total, reading) => total + (reading.process === 'Renderer' ? 0 : reading.bytes),
+        0,
+      ),
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByRealm,
       ...backingByRealm,
       ...wasmByRealm,
-      wasmBytesTotal: row.heap.reduce((total, reading) => total + (reading.wasmBytes ?? 0), 0),
+      // Shared memory subtracted from the per-realm sum and added back once: a growable
+      // `SharedArrayBuffer`-backed memory is visible in every realm it was posted to, so adding the
+      // realm columns counts one allocation once per realm.
+      wasmBytesTotal:
+        row.heap.reduce((total, reading) => total + (reading.wasmBytes ?? 0) - (reading.wasmSharedBytes ?? 0), 0) +
+        row.heap.reduce((largest, reading) => Math.max(largest, reading.wasmSharedBytes ?? 0), 0),
       // Published so a zero byte count is readable as "nothing instrumented" rather than "no wasm",
       // the same role `sqliteRealms` plays below.
       wasmRealms: row.heap.filter((reading) => reading.wasmBytes !== undefined).length,

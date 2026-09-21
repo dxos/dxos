@@ -54,7 +54,8 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciRpcRoundTripP95Ms*` / `ciRpcRoundTripMaxMs*`           | ms            | same four suffixes, attributed to the realm that ISSUED the call                    |
 | `ciRpcCalls*`                                             | count         | same four suffixes, plus `ciRpcCallsTotal`                                          |
 | `ciRpcSamples`, `ciRpcRealms`                             | count         | `ciRpcCallsTotal` above `ciRpcSamples` means the percentiles cover the stage's tail |
-| `ciPeakRssBytes`                                          | bytes         | — (browser process tree)                                                            |
+| `ciAppFootprintBytes`                                     | bytes         | — private footprint of the RENDERER processes: the app, wasm included               |
+| `ciChromeFootprintBytes`                                  | bytes         | — browser, GPU and service processes: Chrome's own cost, beside the app's           |
 | `ciDomNodes`, `ciDomListeners`                            | count         | —                                                                                   |
 | `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                           |
 | `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                         |
@@ -109,7 +110,7 @@ elsewhere. See "The two stacked tiles" below.
 | 2   | Total CPU per run — all processes     | `ciCpuMsTotal`       | sum     |
 | 3   | Total CPU per run — tab               | `ciCpuMsTab`         | sum     |
 | 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`      | sum     |
-| 5   | Peak RSS per run                      | `ciPeakRssBytes`     | max     |
+| 5   | Peak app footprint per run            | `ciAppFootprintBytes` | max    |
 | 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`      | max     |
 | 7   | Peak heap per run — tab               | `ciHeapUsedBytesTab` | max     |
 | 8   | Total app code transferred per run    | `ciCodeBytes`        | sum     |

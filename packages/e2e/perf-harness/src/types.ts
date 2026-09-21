@@ -62,13 +62,37 @@ export type HeapReading = {
    *
    * Its own reading because no JS-heap figure counts it: `usedBytes` is the V8 heap, and a wasm
    * module's linear memory lives outside it. Before this, the only instrument that saw automerge's
-   * and SQLite's memory at all was `peakRssBytes`, which is the whole browser process tree.
+   * and SQLite's memory at all was the footprint of the renderer processes, which cannot say
+   * which realm holds it — a dedicated worker shares its creator's renderer.
    *
    * Absent when the realm published no probe, which is a different fact from holding no wasm —
    * `wasmInstances` is what tells them apart.
    */
   wasmBytes?: number;
+  /**
+   * The subset of `wasmBytes` backed by a `SharedArrayBuffer`.
+   *
+   * One shared memory is visible in every realm it was posted to, so a cross-realm total that adds
+   * `wasmBytes` counts that allocation once per realm. `wasmBytesTotal` subtracts this.
+   */
+  wasmSharedBytes?: number;
   wasmInstances?: number;
+  /** Bytes per creating script. NDJSON only — a module-keyed PostHog column would mint a series per bundle rename. */
+  wasmByModule?: Record<string, number>;
+};
+
+/**
+ * One browser process's private footprint, from a memory-infra dump.
+ *
+ * Private rather than resident: RSS counts the shared pages a process maps, so RSS summed over
+ * Chrome's process tree multi-counts and is not a quantity. Footprints are disjoint, so the
+ * renderers' can be added.
+ */
+export type FootprintReading = {
+  pid: number;
+  /** Chrome's own process name: `Browser`, `GPU Process`, `Renderer`, `Service: …`. */
+  process: string;
+  bytes: number;
 };
 
 /**
@@ -291,8 +315,10 @@ export type StageRow = {
 
   heap: HeapReading[];
   heapUsedTotalBytes: number;
-  /** Peak RSS across the browser process tree during the stage. The headline memory number. */
-  peakRssBytes: number;
+  /** Private footprint of every browser process at the stage's end. Empty if the read failed. */
+  footprint: FootprintReading[];
+  /** Footprint of the renderers, which is the app. The headline memory number. */
+  appFootprintBytes: number;
   domNodes: number;
   domListeners: number;
   domDocuments: number;

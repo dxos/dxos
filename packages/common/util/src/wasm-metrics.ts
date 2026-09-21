@@ -11,7 +11,22 @@
  */
 export type WasmMemoryStats = {
   bytes: number;
+  /**
+   * The subset of `bytes` backed by a `SharedArrayBuffer`.
+   *
+   * A growable shared memory is visible in every realm it is posted to, so summing `bytes` across
+   * realms counts one allocation once per realm. Reported separately so a cross-realm total can
+   * subtract it rather than silently inflating.
+   */
+  sharedBytes: number;
   instances: number;
+  /**
+   * Bytes per creating script, for the NDJSON row only.
+   *
+   * Deliberately not a PostHog property: a module-keyed column mints a new permanent series on
+   * every bundle rename, which is the mistake `REALM_SUFFIX` exists to avoid.
+   */
+  byModule: Record<string, number>;
 };
 
 /**
@@ -24,19 +39,47 @@ export type WasmMemoryStats = {
 export const WASM_MEMORY_GLOBAL = '__dxosWasmMemory';
 
 // Weak, because holding a memory alive would make the probe the reason a realm never releases it.
-const memories = new Set<WeakRef<WebAssembly.Memory>>();
+const memories = new Set<{ where: string; ref: WeakRef<WebAssembly.Memory> }>();
 
 let installed = false;
 
-const track = (memory: WebAssembly.Memory): void => {
-  memories.add(new WeakRef(memory));
+/**
+ * The script that created a memory, taken from the stack.
+ *
+ * `document.currentScript` is unavailable in a worker, which is the realm that matters here, so
+ * the creating module is read off the first frame carrying a URL.
+ */
+const origin = (): string => {
+  const frames = (new Error().stack ?? '').split('\n').slice(2);
+  for (const frame of frames) {
+    const match = frame.match(/https?:\/\/[^\s)]+/);
+    if (match) {
+      return match[0].split('/').pop()!.split('?')[0];
+    }
+  }
+  return 'unknown';
+};
+
+/**
+ * Records a memory once, whatever route reached it.
+ *
+ * Deduped by identity rather than by insertion: a memory constructed in JS and then passed into a
+ * module's imports is seen by two hooks, and counting it twice inflates the realm by its size.
+ */
+const track = (memory: WebAssembly.Memory, where: string): void => {
+  for (const entry of memories) {
+    if (entry.ref.deref() === memory) {
+      return;
+    }
+  }
+  memories.add({ where, ref: new WeakRef(memory) });
 };
 
 /** Every `WebAssembly.Memory` an instance exports — where a wasm-bindgen or Emscripten build keeps it. */
-const trackExports = (instance: WebAssembly.Instance): void => {
+const trackExports = (instance: WebAssembly.Instance, where: string): void => {
   for (const exported of Object.values(instance.exports)) {
     if (exported instanceof WebAssembly.Memory) {
-      track(exported);
+      track(exported, where);
     }
   }
 };
@@ -48,11 +91,11 @@ const trackExports = (instance: WebAssembly.Instance): void => {
  * and that memory is never visible on `instance.exports`, so tracking exports alone would report
  * zero bytes for a module holding hundreds of megabytes.
  */
-const trackImports = (imports?: WebAssembly.Imports): void => {
+const trackImports = (imports: WebAssembly.Imports | undefined, where: string): void => {
   for (const module of Object.values(imports ?? {})) {
     for (const imported of Object.values(module)) {
       if (imported instanceof WebAssembly.Memory) {
-        track(imported);
+        track(imported, where);
       }
     }
   }
@@ -67,17 +110,24 @@ const trackImports = (imports?: WebAssembly.Imports): void => {
  */
 export const getWasmMemoryStats = (): WasmMemoryStats => {
   let bytes = 0;
+  let sharedBytes = 0;
   let instances = 0;
-  for (const ref of memories) {
-    const memory = ref.deref();
+  const byModule: Record<string, number> = {};
+  for (const entry of memories) {
+    const memory = entry.ref.deref();
     if (memory === undefined) {
-      memories.delete(ref);
+      memories.delete(entry);
       continue;
     }
-    bytes += memory.buffer.byteLength;
+    const size = memory.buffer.byteLength;
+    bytes += size;
     instances += 1;
+    byModule[entry.where] = (byModule[entry.where] ?? 0) + size;
+    if (typeof SharedArrayBuffer !== 'undefined' && memory.buffer instanceof SharedArrayBuffer) {
+      sharedBytes += size;
+    }
   }
-  return { bytes, instances };
+  return { bytes, sharedBytes, instances, byModule };
 };
 
 /**
@@ -115,12 +165,13 @@ export const installWasmMemoryProbe = (): void => {
     source: BufferSource | WebAssembly.Module,
     imports?: WebAssembly.Imports,
   ): Promise<WebAssembly.WebAssemblyInstantiatedSource | WebAssembly.Instance> {
-    trackImports(imports);
+    const where = origin();
+    trackImports(imports, where);
     const result =
       source instanceof WebAssembly.Module
         ? await originalInstantiate(source, imports)
         : await originalInstantiate(source, imports);
-    trackExports(result instanceof WebAssembly.Instance ? result : result.instance);
+    trackExports(result instanceof WebAssembly.Instance ? result : result.instance, where);
     return result;
   }
 
@@ -128,14 +179,26 @@ export const installWasmMemoryProbe = (): void => {
     source: Response | PromiseLike<Response>,
     imports?: WebAssembly.Imports,
   ): Promise<WebAssembly.WebAssemblyInstantiatedSource> => {
-    trackImports(imports);
+    const where = origin();
+    trackImports(imports, where);
     const result = await originalInstantiateStreaming(source, imports);
-    trackExports(result.instance);
+    trackExports(result.instance, where);
     return result;
   };
 
+  // The constructor too, because a memory built in JS and handed to a module through its imports
+  // is the one route neither instantiation hook sees on its own — an Emscripten pthreads build
+  // does exactly that, and its memory is never on `instance.exports`.
+  const memory = new Proxy(WebAssembly.Memory, {
+    construct: (target, args: [WebAssembly.MemoryDescriptor]) => {
+      const constructed = Reflect.construct(target, args);
+      track(constructed, origin());
+      return constructed;
+    },
+  });
+
   // `Object.assign` because both names are properties of a namespace object, which cannot be
   // assigned through the ambient declaration.
-  Object.assign(WebAssembly, { instantiate, instantiateStreaming });
+  Object.assign(WebAssembly, { instantiate, instantiateStreaming, Memory: memory });
   Object.assign(globalThis, { [WASM_MEMORY_GLOBAL]: getWasmMemoryStats });
 };

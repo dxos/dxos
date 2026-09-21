@@ -18,7 +18,7 @@ import {
 } from './collectors/cpu.ts';
 import { diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
-import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collectors/memory.ts';
+import { readDomCounters, readHeap, readProcessFootprint, sumAppFootprint, sumHeapUsed } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
@@ -61,8 +61,6 @@ export type RunnerOptions = {
   page: Page;
   /** Browser-level CDP target — the only one that answers `SystemInfo.getProcessInfo`. */
   browserCdp: Cdp;
-  /** Root pid of the browser process tree, for the RSS reading. */
-  browserPid: number;
   debugPort: number;
   network: () => NetworkMetrics;
   comparability: Comparability;
@@ -168,7 +166,7 @@ export class StageRunner {
 
   /** Runs one stage, bracketing `body` with the boundary reads. */
   async stage(id: string, body: () => Promise<void>): Promise<StageRow> {
-    const { page, browserCdp, browserPid, debugPort, network, mode } = this.#options;
+    const { page, browserCdp, debugPort, network, mode } = this.#options;
 
     this.#targets = await refreshTargets(debugPort, this.#targets);
     const pageTarget = this.#targets.find((target) => target.kind === 'page');
@@ -192,7 +190,6 @@ export class StageRunner {
       disk: await readDisk(this.#targets),
       rpc: await readRpc(this.#targets),
     };
-    const stopRss = trackPeakRss(browserPid);
 
     let ok = true;
     let error: string | undefined;
@@ -208,7 +205,9 @@ export class StageRunner {
 
     await this.#mark(id, 'end');
     const wallMs = Date.now() - before.at;
-    const peakRssBytes = stopRss();
+    // At the boundary rather than sampled: the read costs ~100 ms, and a peak over the stage was
+    // what made the quantity it replaces noisy rather than informative.
+    const footprint = await readProcessFootprint(browserCdp);
     const cpu = diffProcessCpu(before.cpu, await readProcessCpu(browserCdp));
     const thread = pageTarget
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
@@ -269,7 +268,8 @@ export class StageRunner {
       ...(profiled ? { cpuMsByRealm: profiled.cpu } : {}),
       heap,
       heapUsedTotalBytes: sumHeapUsed(heap),
-      peakRssBytes,
+      footprint,
+      appFootprintBytes: sumAppFootprint(footprint),
       domNodes: domCounters.nodes,
       domListeners: domCounters.listeners,
       domDocuments: domCounters.documents,

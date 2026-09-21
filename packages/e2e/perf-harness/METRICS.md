@@ -168,20 +168,35 @@ the coordinator worker from the observability worker.
 Sum of `usedBytes` across realms. Convenient, and lossy: it hides which realm grew, and still
 excludes wasm — `wasmBytesTotal` is the companion column. Use `heap[]` when a number moves.
 
-### `peakRssBytes` — the trended one
+### `appFootprintBytes` — the trended one
 
-Peak resident set size over the browser **process tree**, sampled through the stage with `ps` so a
-spike that is freed before the boundary still counts.
+Private footprint of the **renderer** processes at the stage's end, from a `light` memory-infra
+dump. It counts wasm linear memory, where automerge documents live, outside every JS-heap reading
+and never returned to the OS.
 
-This is the trended memory figure because it is what a user's machine actually feels: it counts
-every realm, wasm included, plus everything Chrome itself holds. It used to be the only number that
-saw wasm at all, and could not attribute it; `wasmBytes` now splits that per realm, and the two
-answer different questions — RSS says what the machine feels, `wasmBytes` says which realm is
-holding it.
+It replaced a peak of `ps` RSS summed over the browser's process tree, which was not a quantity.
+Every process's RSS counts the shared pages it maps, so the sum multi-counts: an empty headless
+Chromium sums to 1,335 MB that way against 408 MB of actual footprint. Private footprints are
+disjoint per process, which is what makes adding the renderers legitimate.
 
-Expect it to dwarf the heap. Our run: 1.2–2.3 GB RSS against an 87–323 MB JS heap.
+It is the figure closest to what a user's machine feels, and it counts wasm linear memory, which no
+JS-heap column does. It cannot ATTRIBUTE that memory: a dedicated worker is allocated in its
+creating context's renderer and a shared worker takes the creator's `SiteInstance`, so no
+process-level reading can separate ECHO's worker from the tab that spawned it. `wasmBytes` and
+`heapBackingBytes` are the per-realm answers; this is the whole-app one.
 
-**Linux/macOS only** (it shells out to `ps`).
+Renderers only, by Chrome's own process name. The browser, GPU and service processes measured
+218 MB in a probe — Chrome's cost, not the app's — and they are reported separately as
+`chromeFootprintBytes` rather than hidden in the total. `Extension Renderer` and
+`WebUI Top Renderer` carry their own names and are excluded with them.
+
+A boundary read rather than a sampler: memory-infra delivers through the tracing stream, so each
+reading starts and ends a short trace around one dump, measured at 93-131 ms. A `light` dump costs
+19-24 ms against `detailed`'s 122 ms and carries `process_totals`, which is all this reads.
+
+`boot` is the exception. CDP records one trace at a time and the CPU trace is still running when
+boot's boundary arrives, so boot's reading is backfilled once that trace ends — a few seconds late,
+by the same offset every run.
 
 ### `domNodes`, `domListeners`, `domDocuments`
 
