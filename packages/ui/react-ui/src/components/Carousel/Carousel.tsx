@@ -17,7 +17,13 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { useTranslation } from '../../providers/index.ts';
-import { type ThemedClassName, animationsDisabled, composable, composableProps } from '../../util/index.ts';
+import {
+  type ThemedClassName,
+  animationsDisabled,
+  composable,
+  composableProps,
+  useReducedMotion,
+} from '../../util/index.ts';
 import { IconButton } from '../Button/index.ts';
 import { type MediaKind, MediaPlayer } from '../MediaPlayer/index.ts';
 
@@ -31,7 +37,7 @@ export type CarouselRootProps = PropsWithChildren<{
   /**
    * Auto-advance interval in milliseconds. A positive value advances slides on its own until the user
    * interacts with a control; omit (or `0`) to disable. `VITE_DX_DISABLE_ANIMATIONS=true` disables
-   * it globally.
+   * it globally, as does the reader's `prefers-reduced-motion` setting.
    */
   autoAdvance?: number;
   defaultIndex?: number;
@@ -47,6 +53,7 @@ const CarouselRoot = ({
   continuous = false,
 }: CarouselRootProps) => {
   const { t } = useTranslation(translationKey);
+  const reducedMotion = useReducedMotion();
 
   // The machine names its own controls in English; the app names them in the reader's language.
   const translations = useMemo(
@@ -62,8 +69,9 @@ const CarouselRoot = ({
     return null;
   }
 
-  // Auto-advance is unattended motion, which defeats the still-frame culling of agent recordings.
-  const autoplay = autoAdvance > 0 && !animationsDisabled();
+  // Auto-advance is unattended motion: the reader never asked for it, and it defeats the
+  // still-frame culling of agent recordings.
+  const autoplay = autoAdvance > 0 && !reducedMotion && !animationsDisabled();
 
   return (
     <CarouselPrimitive.Root
