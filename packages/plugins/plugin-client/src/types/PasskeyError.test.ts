@@ -8,22 +8,6 @@ import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as PasskeyError from './PasskeyError.ts';
 
-/** Collect the log entries `body` emits, so a test can assert on the level a code path reports at. */
-const captureLogEntries = (body: () => void): LogEntry[] => {
-  const entries: LogEntry[] = [];
-  const processor: LogProcessor = (_config, entry) => {
-    entries.push(entry);
-  };
-  const remove = log.addProcessor(processor);
-  try {
-    body();
-  } finally {
-    remove();
-  }
-
-  return entries;
-};
-
 describe('passkey errors', () => {
   // The native (Tauri) bridge rejects with a plain string rather than a DOMException, and
   // ASAuthorization spells it "canceled" while the web spells it "cancelled".
@@ -68,3 +52,19 @@ describe('passkey errors', () => {
     },
   );
 });
+
+/** Collect the log entries `body` emits, so a test can assert on the level a code path reports at. */
+const captureLogEntries = (body: () => void): LogEntry[] => {
+  const entries: LogEntry[] = [];
+  const processor: LogProcessor = (_config, entry) => {
+    entries.push(entry);
+  };
+  const remove = log.addProcessor(processor);
+  try {
+    body();
+  } finally {
+    remove();
+  }
+
+  return entries;
+};

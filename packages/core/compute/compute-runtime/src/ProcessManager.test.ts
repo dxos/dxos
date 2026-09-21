@@ -979,18 +979,6 @@ describe('ManagerImpl', () => {
     /** The two messages a settled FAILED transition reports under, so the debug lifecycle chatter is ignored. */
     const LIFECYCLE_OUTCOMES = new Set(['lifecycle: failed', 'lifecycle: cancelled']);
 
-    // A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
-    // DOMException sits on `cause` rather than being the failing value itself.
-    const failWith = (key: string, error: Error) =>
-      Process.make({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
-        Effect.succeed({
-          onSpawn: () => Effect.sync(() => ctx.fail(error)),
-          onInput: () => Effect.void,
-          onAlarm: () => Effect.void,
-          onChildEvent: () => Effect.void,
-        }),
-      );
-
     it.effect(
       'a user-dismissed prompt reports below error level (DX-1281)',
       Effect.fn(function* ({ expect }) {
@@ -2419,3 +2407,15 @@ const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.
     const remove = log.addProcessor(processor);
     return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
   });
+
+// A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
+// DOMException sits on `cause` rather than being the failing value itself.
+const failWith = (key: string, error: Error) =>
+  Process.make({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.sync(() => ctx.fail(error)),
+      onInput: () => Effect.void,
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );
