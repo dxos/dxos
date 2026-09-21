@@ -185,7 +185,9 @@ op submitIssue
     context travel the same way as submitReport, and the flushed logs are
     tagged with the report id the service mints. The service refuses any
     identity the hub does not know as an internal account, so this is the
-    team's path; the debug console's `report` command invokes it by key.
+    team's path; the debug console's `report` command invokes it by key and
+    tags the report with the `Composer Feedback Form` label — the same label
+    the PostHog submissions sync under — unless `--label` overrides it.
 
 op submitReport
   key: org.dxos.operation.support.submitReport
