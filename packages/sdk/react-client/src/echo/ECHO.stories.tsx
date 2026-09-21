@@ -9,15 +9,14 @@ import { Config } from '@dxos/client';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { DataTypes } from '@dxos/schema';
+import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
-import { TestSchema } from '../testing/index.ts';
-import { DataTypes } from '../types/index.ts';
+import { useClient } from '../client/index.ts';
+import { withClientProvider } from '../testing/index.ts';
 
 random.seed(1);
 
@@ -102,7 +101,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'sdk/schema/ECHO',
+  title: 'sdk/react-client/ECHO',
   render: DefaultStory,
   decorators: [
     withTheme(),
