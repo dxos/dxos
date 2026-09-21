@@ -37,32 +37,48 @@ export const fetchPullRequestWithFallback = (
     repo: string,
     number: number,
   ) => GitHubApi.GitHubEffect<GitHubApi.GitHubPull> = GitHubApi.fetchPullRequest,
-) => {
-  const fetchAs = (token: string) =>
-    fetch(owner, repo, number).pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })));
+) =>
+  // Suspended so each run starts with its own `tokenRejected`, which the fallback sets as it runs.
+  Effect.suspend(() => {
+    const fetchAs = (token: string) =>
+      fetch(owner, repo, number).pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })));
 
-  return fetchAs(token).pipe(
-    Effect.catchIf(
-      (error) => token !== '' && GitHubApi.responseStatus(error) === 401,
-      () => fetchAs(''),
-    ),
-    // Out of reach anonymously too (GitHub answers 404 for a private repository seen without
-    // credentials): a typed failure lets the dialog name the connection rather than the reference.
-    Effect.catchIf(
-      (error) => {
-        const status = GitHubApi.responseStatus(error);
-        return status === 401 || status === 403 || status === 404;
-      },
-      (error) =>
-        Effect.die(
-          new GitHubRepoInaccessibleError({
-            context: { owner, repo, number, status: GitHubApi.responseStatus(error) },
-          }),
-        ),
-    ),
-    Effect.orDie,
-  );
-};
+    // GitHub rejected the credential itself rather than the repository, which is the one failure the
+    // user fixes by reconnecting rather than by asking for access.
+    let tokenRejected = false;
+
+    return fetchAs(token).pipe(
+      Effect.catchIf(
+        (error) => token !== '' && GitHubApi.responseStatus(error) === 401,
+        () => {
+          tokenRejected = true;
+          return fetchAs('');
+        },
+      ),
+      // Out of reach anonymously too (GitHub answers 404 for a private repository seen without
+      // credentials): a typed failure lets the dialog name the connection rather than the reference.
+      Effect.catchIf(
+        (error) => {
+          const status = GitHubApi.responseStatus(error);
+          return status === 401 || status === 403 || status === 404;
+        },
+        (error) =>
+          Effect.die(
+            new GitHubRepoInaccessibleError({
+              context: {
+                owner,
+                repo,
+                number,
+                status: GitHubApi.responseStatus(error),
+                connected: token !== '',
+                tokenRejected,
+              },
+            }),
+          ),
+      ),
+      Effect.orDie,
+    );
+  });
 
 /**
  * Import a pull request the user named, as the space's GitHub connection or anonymously.
