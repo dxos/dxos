@@ -453,16 +453,18 @@ export class EchoHost extends Resource {
     if (this._ctx.disposed) {
       return;
     }
-    if (!this._indexInputsChanged && this._indexesUpToDate) {
-      await this._updateIndexes.join();
-    } else {
-      do {
-        this.#noteIndexRunReason(reason);
-        await this._updateIndexes.runBlocking();
-        if (this._ctx.disposed) {
-          return;
-        }
-      } while (!this._indexesUpToDate);
+    // A pass in flight may schedule a continuation (it indexes in batches) or a change may land
+    // while it runs; both re-arm the flag, so the check repeats after every wait until it holds.
+    while (this._indexInputsChanged || !this._indexesUpToDate) {
+      this.#noteIndexRunReason(reason);
+      await this._updateIndexes.runBlocking();
+      if (this._ctx.disposed) {
+        return;
+      }
+    }
+    await this._updateIndexes.join();
+    if (this._indexInputsChanged || !this._indexesUpToDate) {
+      return this.updateIndexes({ secondaryIndexes, reason });
     }
 
     if (secondaryIndexes) {

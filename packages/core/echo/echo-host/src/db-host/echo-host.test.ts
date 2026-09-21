@@ -21,25 +21,27 @@ const setup = async () => {
   });
 
   const spaceId = SpaceId.random();
-  const saveDoc = async () => {
-    await host.createDoc<DatabaseDirectory>({
-      version: SpaceDocVersion.CURRENT,
-      access: { spaceId },
-      objects: {},
-      links: {},
-    });
+  const saveDocs = async (count = 1) => {
+    for (let i = 0; i < count; i++) {
+      await host.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceId },
+        objects: {},
+        links: {},
+      });
+    }
     await host.flush(Context.default());
   };
 
-  return { host, saveDoc };
+  return { host, saveDocs };
 };
 
 describe('EchoHost.updateIndexes', () => {
   test('runs a pass only when something was saved since the last one', async () => {
-    const { host, saveDoc } = await setup();
+    const { host, saveDocs } = await setup();
     const update = vi.spyOn(host.indexEngine, 'update');
 
-    await saveDoc();
+    await saveDocs();
     await host.updateIndexes();
     const passes = update.mock.calls.length;
     expect(passes).toBeGreaterThan(0);
@@ -48,7 +50,7 @@ describe('EchoHost.updateIndexes', () => {
     await host.updateIndexes();
     expect(update.mock.calls.length).toBe(passes);
 
-    await saveDoc();
+    await saveDocs();
     await host.updateIndexes();
     expect(update.mock.calls.length).toBeGreaterThan(passes);
   });
