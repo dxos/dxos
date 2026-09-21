@@ -158,6 +158,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       void invokePromise(LayoutOperation.Open, {
         subject: [getProjectChatPath(db.spaceId, subject.id, chat.id)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
@@ -175,6 +176,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       void invokePromise(LayoutOperation.Open, {
         subject: [GraphPath.getObjectPathFromObject(object)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
