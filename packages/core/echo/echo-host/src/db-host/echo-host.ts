@@ -445,6 +445,8 @@ export class EchoHost extends Resource {
    * Entities no connected client carries any more are reclaimed from the index, including — on the
    * first push of a session — rows a previous session left behind. Resolves once the pushed
    * entities are queryable, so a caller that pushes and then queries does not race the indexer.
+   * A releasing client is the exception: it carries no entities and is closing, so it gets the
+   * reclamation but not the wait.
    */
   async updateRegistry(
     clientId: string,
@@ -463,6 +465,14 @@ export class EchoHost extends Resource {
     // indexing.
     if (changed) {
       this.#scheduleIndexRun('registry-update');
+    }
+
+    // A releasing client is closing and will never query, so it does not wait the pass out — the
+    // deferred task above runs it either way. Waiting here would hold the client's teardown open
+    // for as long as the host's indexer is busy, which is long enough to reorder the rest of its
+    // shutdown.
+    if (opts?.releasing) {
+      return;
     }
 
     // Awaited even when nothing changed: an identical snapshot can land between another client's

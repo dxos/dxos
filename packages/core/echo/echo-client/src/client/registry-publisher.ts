@@ -123,6 +123,10 @@ export class RegistryPublisher {
   /**
    * Withdraws this client's claim on its registry entries, so it no longer counts as an owner for
    * the rest of the host's session. The rows stay: they are a cache the next session re-adopts.
+   *
+   * Resolves once the host has recorded the withdrawal, not once it has re-indexed what the
+   * withdrawal freed — this runs inside the client's teardown, which must not block on the host's
+   * indexer.
    */
   async release(): Promise<void> {
     await this.#send([], { releasing: true });
