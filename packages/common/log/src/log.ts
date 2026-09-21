@@ -160,7 +160,8 @@ export const createLog = (): LogImp => {
      * NOTE: Preserves any processors that were already added to this logger instance
      * unless an explicit processor option is provided.
      */
-    config: ({ processor, ...options } = {}) => {
+    config: (options = {}) => {
+      const { processor } = options;
       const config = createConfig(options);
       // TODO(burdon): This could be buggy since the behavior is not reentrant.
       const processors = processor ? config.processors : log._config.processors;

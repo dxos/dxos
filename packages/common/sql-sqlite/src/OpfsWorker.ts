@@ -194,7 +194,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
           // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
           log('sqlite error', { error: e, sql: lastSql, params: lastParams });
           const message = 'message' in e ? e.message : String(e);
-          options.port.postMessage([messageId!, message, undefined]);
+          // The client classifies SqlError reasons from `code`, which a bare string would drop.
+          const error = typeof e.code === 'number' ? { message, code: e.code } : message;
+          options.port.postMessage([messageId!, error, undefined]);
         }
       };
       options.port.addEventListener('message', onMessage);

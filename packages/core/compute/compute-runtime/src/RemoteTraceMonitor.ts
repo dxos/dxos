@@ -18,6 +18,12 @@ import * as Trace from '@dxos/compute/Trace';
  */
 export interface Monitor {
   /**
+   * Whether the monitor has a live source; readers of a monitor without one poll the host instead of
+   * waiting on a stream that will never deliver.
+   */
+  readonly hasLiveSource: boolean;
+
+  /**
    * Stream remote ephemeral trace messages matching `filter`. Implementations derive a coarse swarm
    * subscription tag from the filter and re-apply the exact filter to decoded messages.
    */
@@ -30,6 +36,7 @@ export class Service extends Context.Service<Service, Monitor>()('@dxos/compute-
  * Empty remote trace source for local-only deployments (no swarm subscription).
  */
 export const layerNoop: Layer.Layer<Service> = Layer.succeed(Service, {
+  hasLiveSource: false,
   subscribeToTraceMessages: () => Stream.empty,
 });
 
@@ -57,6 +64,7 @@ export interface SwarmRemoteTraceMonitorOptions {
  * tags), and re-applies the exact filter.
  */
 export const createSwarmRemoteTraceMonitor = ({ subscribe }: SwarmRemoteTraceMonitorOptions): Monitor => ({
+  hasLiveSource: true,
   subscribeToTraceMessages: (filter) => {
     const tag = Trace.subscriptionTagForFilter(filter);
     return subscribe(tag ? [tag] : []).pipe(

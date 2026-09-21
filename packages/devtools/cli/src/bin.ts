@@ -22,7 +22,7 @@ import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
-import { LogLevel, levels, log } from '@dxos/log';
+import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
@@ -59,12 +59,22 @@ if (!process.env.DX_KEEP_WARNINGS) {
   installStderrFilter();
 }
 
+/** True for `dx mcp serve`, with or without `--watch`: stdout carries the MCP protocol. */
+const isMcpServe = (argv: readonly string[]): boolean => {
+  const serve = argv.indexOf('serve');
+  return serve > 0 && argv[serve - 1] === 'mcp';
+};
+
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
 if (level) {
   filter = levels[level] ?? LogLevel.ERROR;
 }
-log.config({ filter });
+// Chosen before plugins boot, since activation logs ahead of any command handler.
+log.config({
+  filter,
+  ...(isMcpServe(process.argv.slice(2)) ? { processor: LogProcessorType.CONSOLE_STDERR } : {}),
+});
 
 // Before any command can create a space: an unset `Migrations.targetVersion` stamps no version, and
 // Composer then reports the space as pending migration.
@@ -117,10 +127,9 @@ const isWatchSupervisor = (argv: readonly string[]): boolean => {
   if (argv.includes('--help') || argv.includes('-h')) {
     return false;
   }
-  const serve = argv.indexOf('serve');
   // Bare `--watch` only: `--watch=false` means watch OFF, and any `--watch=…` form is left to the
   // real parser — a miss costs a slow start via `serve.ts`'s own branch, never wrong behavior.
-  return serve > 0 && argv[serve - 1] === 'mcp' && argv.includes('--watch');
+  return isMcpServe(argv) && argv.includes('--watch');
 };
 
 const program = Effect.gen(function* () {

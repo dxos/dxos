@@ -207,7 +207,9 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // From the start of the log, matching the local handle: it replays buffered ephemeral events
     // before streaming new ones, which is what lets a UI attach mid-turn and still render it.
     const remoteTrace = this.#remoteTrace;
-    if (remoteTrace === undefined) {
+    // Polling the ring is the only delivery a monitor without a live source has: its stream ends at
+    // once, which would cut the subscription down to the replay.
+    if (remoteTrace === undefined || !remoteTrace.hasLiveSource) {
       return this.#readEvents(0).pipe(
         Stream.filter((event) => event._tag === 'trace'),
         Stream.map((event) => event.message),
