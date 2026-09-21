@@ -98,10 +98,14 @@ const NAVIGATION_SETTLE_MS = 150;
 const FIT_INSET = 40;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
-/** Minor, major and a coarse level so a far zoom-out still shows a grid. */
-const GRID_LEVELS = [1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2] as const;
-/** Minor cells under 6px are noise; the major grid has no upper bound. */
-const GRID_RANGE = [6, Infinity] as const;
+/**
+ * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels
+ * on screen depend on the zoom alone: a child scene seen at a quarter scale draws the same lines as its
+ * parent, and a far zoom-out still shows a grid.
+ */
+const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2, MAJOR_GRID_RATIO ** 3] as const;
+/** Cells under 6px are noise; past 2048px a level is a line or two across the view. */
+const GRID_RANGE = [6, 2048] as const;
 const PORT_SNAP_PX = 16;
 /** Ids of the link and node drawn as previews during a drag; neither reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
