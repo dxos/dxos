@@ -8,12 +8,20 @@
 // from them. Implementations are contributed via `IllustratorCapabilities.VariantProvider`.
 //
 
+import {
+  type ApplyResult,
+  type ContentHandler,
+  type ContentMap,
+  type ReadResult,
+  type Scene,
+  SVG_SCHEMA,
+  SvgHandler,
+  applyCommands,
+} from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import * as Drawing from '../types/Drawing.ts';
-import { type ApplyResult, type ContentHandler, type ContentMap, type ReadResult, applyCommands } from './content.ts';
-import type * as Scene from './scene.ts';
 
 /**
  * Maps the scene DSL onto a canvas. Geometry is derived from the live records — not a stored
@@ -47,3 +55,6 @@ export const makeBuilder = ({ schema, handler }: { schema: string; handler: Cont
     return result;
   },
 });
+
+/** Scene builder for the SVG variant — a peer of `TldrawBuilder`. */
+export const SvgBuilder = makeBuilder({ schema: SVG_SCHEMA, handler: SvgHandler });

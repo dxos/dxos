@@ -127,6 +127,9 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
+      "path": "packages/common/diagram/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -374,6 +377,9 @@
     },
     {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-canvas/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-chess/tsconfig.json"

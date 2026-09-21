@@ -10,6 +10,8 @@ import { Connection } from '@dxos/link';
 
 import { ConnectorOperation } from '#types';
 
+import { ConnectorCommandError } from '../commands/errors.ts';
+
 const handler: Operation.WithHandler<typeof ConnectorOperation.CreateConnection> =
   ConnectorOperation.CreateConnection.pipe(
     Operation.withHandler(
@@ -20,7 +22,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.CreateConnection>
         const accessTokenObj = accessToken.target;
         const db = accessTokenObj ? Obj.getDatabase(accessTokenObj) : undefined;
         if (!db) {
-          return yield* Effect.fail(new Error('No database for accessToken ref'));
+          return yield* Effect.fail(new ConnectorCommandError({ message: 'No database for accessToken ref' }));
         }
 
         return yield* Effect.gen(function* () {

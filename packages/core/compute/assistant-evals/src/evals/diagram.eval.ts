@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import { Diagnostics, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { Diagnostics, SVG_SCHEMA, SvgBuilder } from '@dxos/plugin-illustrator/model';
+import { SvgBuilder } from '@dxos/plugin-illustrator/model';
 import { UmlSkill } from '@dxos/plugin-illustrator/skills';
 import { trim } from '@dxos/util';
 

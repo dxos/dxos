@@ -106,7 +106,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                         const node = AppGraph.getConnections(
                           graph,
                           lookupId,
-                          AppGraphNode.actionRelation('inbound'),
+                          AppGraph.inverseRelation(AppGraphNode.action),
                         )[0];
                         if (node && AppGraphNode.isAction(action)) {
                           void runAction(action, { parent: node, caller: KEY_BINDING });

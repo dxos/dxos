@@ -24,6 +24,7 @@ import {
   importSqliteInRecovery,
   installDxosGlobals,
   isRecoveryClientBooted,
+  repairRemoteHeads,
   resetComposerStorage,
   runRecoveryDiagnostics,
   runSqlStorageDiagnostics,
@@ -45,6 +46,7 @@ print('');
 print('Footer actions (left → right):');
 print('  Boot    — try opening full Composer at /');
 print('  Reset   — wipe all data for this origin (export first!)');
+print('  Repair  — clean up stale sync heads (a common cause of a profile that freezes on load)');
 print('  Export  — download .dxprofile backup (SQLite + origin metadata)');
 print('  Import  — restore .dxprofile or raw .sqlite into this origin');
 print('  Logs    — download NDJSON logs for debugging');
@@ -54,6 +56,7 @@ print('Header: Diagnostics — OPFS storage first, then client identity and spac
 print('');
 print('Typical flows:');
 print("  App won't boot → Export → offline forensics → Import");
+print('  Freezes while loading → Repair → Boot');
 print('  Need agent help → Debug Port → copy session id from log when it appears');
 print('');
 print(`Debug port server: ${debugOrigin}`);
@@ -128,6 +131,29 @@ const recoveryHelpers: RecoveryHelpers = {
     hasClient: Boolean(getDxos().client),
   }),
   inspectOpfsPool: OpfsPool.listFiles,
+  deleteRemoteHeads: async () => {
+    if (isRecoveryClientBooted()) {
+      print('Stopping recovery client before the repair…');
+      await destroyRecoveryClient();
+      mountDevtoolsHooks({});
+    }
+    print('Deleting sync heads stored for remote peers…');
+    const started = performance.now();
+    const { deleted } = await repairRemoteHeads((progress) =>
+      print(
+        `  ${progress.deleted.toLocaleString()} / ${progress.total.toLocaleString()} ` +
+          `(${((performance.now() - started) / 1000).toFixed(0)} s)`,
+      ),
+    );
+    const elapsedMs = Math.round(performance.now() - started);
+    print(
+      deleted > 0
+        ? `Deleted ${deleted.toLocaleString()} record(s) in ${elapsedMs} ms — Boot to reopen Composer.`
+        : 'No stored sync heads — nothing to delete.',
+    );
+    attachRecoveryHelpers(recoveryHelpers);
+    return { deleted, elapsedMs };
+  },
   compactDocuments: async (options) => {
     print('Compacting linked Automerge documents (epoch migration)…');
     const started = performance.now();
@@ -209,6 +235,20 @@ const actions: Record<RecoveryAction, () => void> = {
       return;
     }
     void runAction('Reset', () => recoveryHelpers.reset());
+  },
+
+  'repair': () => {
+    if (
+      !confirm(
+        'Delete the sync heads this profile stored for remote peers?\n\nThey are bookkeeping only: no documents are touched, and Composer re-learns them on the next sync. A profile that freezes on load is usually full of them.\n\nContinue?',
+      )
+    ) {
+      print('Repair aborted.');
+      return;
+    }
+    void runAction('Repair', async () => {
+      await recoveryHelpers.deleteRemoteHeads();
+    });
   },
 
   'export': () =>

@@ -40,7 +40,8 @@ export type FocusGroupTabBehavior =
 /** Arrow-key axes. `grid` and `both` move through items in DOM order on all four arrows. */
 export type FocusGroupAxis = 'vertical' | 'horizontal' | 'grid' | 'grid-linear' | 'both';
 
-const FOCUSABLE_SELECTOR = [
+/** Things that are controls in their own right, whatever their `tabindex`. */
+const CONTROL_SELECTORS = [
   'a[href]',
   // `:disabled` rather than `[disabled]`: a control inside a disabled `<fieldset>` carries no
   // attribute of its own, but the browser still refuses to focus it — so an attribute test makes it
@@ -49,12 +50,14 @@ const FOCUSABLE_SELECTOR = [
   'input:not(:disabled)',
   'select:not(:disabled)',
   'textarea:not(:disabled)',
-  '[tabindex]',
   '[contenteditable="true"]',
   'details > summary',
   'audio[controls]',
   'video[controls]',
-].join(',');
+];
+
+const CONTROL_SELECTOR = CONTROL_SELECTORS.join(',');
+const FOCUSABLE_SELECTOR = [...CONTROL_SELECTORS, '[tabindex]'].join(',');
 
 const isSentinel = (element: Element): boolean => element.hasAttribute(FOCUS_SENTINEL_ATTR);
 
@@ -122,6 +125,58 @@ const search = (parent: Element, backward: boolean): HTMLElement | null => {
  */
 export const findFirstFocusable = (container: HTMLElement | null | undefined): HTMLElement | null =>
   container ? search(container, false) : null;
+
+/**
+ * Marks the element a container wants focus to land on when focus is handed to it as a whole — a
+ * document's editor rather than the toolbar button that happens to come first in the DOM. The
+ * marked element may be the target itself or a wrapper around it.
+ */
+export const INITIAL_FOCUS_ATTRIBUTE = 'data-initial-focus';
+
+const searchBy = (parent: Element, matches: (element: HTMLElement) => boolean): HTMLElement | null => {
+  for (const child of Array.from(parent.children) as HTMLElement[]) {
+    if (isSentinel(child) || isExcluded(child)) {
+      continue;
+    }
+    if (matches(child)) {
+      return child;
+    }
+    const nested = searchBy(child, matches);
+    if (nested) {
+      return nested;
+    }
+  }
+  return null;
+};
+
+/**
+ * First control inside `parent`, in DOM order, tabbable or not — a control a wrapper keeps out of
+ * the tab order (an editor's contenteditable) counts. Elements focusable only by `tabindex` come
+ * second: an editor's scroll container carries `tabindex=-1` and precedes its content in the DOM,
+ * and landing there puts no caret anywhere.
+ */
+export const findFocusableDescendant = (parent: Element): HTMLElement | null =>
+  searchBy(parent, (element) => element.tabIndex >= -1 && element.matches(CONTROL_SELECTOR) && isRendered(element)) ??
+  searchBy(parent, (element) => element.tabIndex >= -1 && element.matches(FOCUSABLE_SELECTOR) && isRendered(element));
+
+/**
+ * Where focus should land when `container` is entered as a whole: the first focusable inside the
+ * element it marks with {@link INITIAL_FOCUS_ATTRIBUTE}, else that element itself, else the
+ * container's first tabbable descendant. Inside-first, and focusable rather than tabbable, because
+ * the mark usually sits on a wrapper that is the tab stop, around a control a library created and
+ * kept out of the tab order (an editor's contenteditable) that is where the caret has to go.
+ */
+export const findInitialFocusable = (container: HTMLElement | null | undefined): HTMLElement | null => {
+  const marked = container?.querySelector<HTMLElement>(`[${INITIAL_FOCUS_ATTRIBUTE}]`);
+  if (marked) {
+    return findFocusableDescendant(marked) ?? (isTabbable(marked) ? marked : null) ?? findFirstFocusable(container);
+  }
+  return findFirstFocusable(container);
+};
+
+/** Whether `container` has declared where focus should land (see {@link INITIAL_FOCUS_ATTRIBUTE}). */
+export const hasInitialFocusTarget = (container: HTMLElement | null | undefined): boolean =>
+  !!container?.querySelector(`[${INITIAL_FOCUS_ATTRIBUTE}]`);
 
 /** Last tabbable descendant of `container`, in DOM order. */
 export const findLastFocusable = (container: HTMLElement | null | undefined): HTMLElement | null =>

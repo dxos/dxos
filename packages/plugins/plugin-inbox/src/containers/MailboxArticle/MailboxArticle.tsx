@@ -53,6 +53,7 @@ import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants.ts';
+import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
 import { messageMatchesQuery } from '../../util/index.ts';
 import { InitializeMailbox } from './InitializeMailbox.tsx';
 import {
@@ -91,9 +92,10 @@ export const MailboxArticle = ({
 }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
-  const id = attendableId ?? Obj.getURI(mailbox);
-  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
+  // The mailbox view's graph node id: messages open as its children and it roots their level chain.
+  const id = attendableId ?? (db ? getMailboxPath(db.spaceId, mailbox.id) : Obj.getURI(mailbox));
+  const currentId = useSelection(id, 'single');
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
@@ -299,7 +301,7 @@ export const MailboxArticle = ({
       // keeps whatever is already there.
       void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
       void invokePromise(LayoutOperation.Open, {
-        subject: [`${id}/${message.id}`],
+        subject: [getFeedObjectPath(id, message.id)],
         ...(newPlank ? {} : { root: id, level: 'message' }),
         pivotId: id,
         disposition: 'add',

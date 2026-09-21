@@ -527,12 +527,15 @@ export const Tree = <T extends { id: string } = any>({
   );
 
   /**
-   * `Enter`/`Space` on the current branch toggles it.
+   * `Space` discloses the focused branch; `Enter` activates the focused row.
    *
-   * The machine emits a selection change only when the selected value actually changes, so
-   * activating the row that is already selected reached nothing — the gesture that toggles by
-   * pointer did nothing by keyboard. Gated on `current` so it mirrors the pointer exactly: the
-   * first activation selects, the second discloses.
+   * Both are handled here rather than left to the machine. The machine emits a selection change
+   * only when the selected value actually changes, so `Enter` on the row that is already selected
+   * reached nothing — and a consumer cannot tell a keyboard activation from a click, though only
+   * the former should carry focus on into what it opened. `Enter` therefore reports through
+   * `onSelect` with `keyboard` set, whether or not the row was already current, and never toggles:
+   * disclosure is `Space`'s, on any branch, so the two keys do not share a meaning that depends on
+   * which row happens to be current.
    */
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -547,12 +550,22 @@ export const Tree = <T extends { id: string } = any>({
       }
       const focused = focusedValueRef.current;
       const entry = focused ? byValue.get(focused) : undefined;
-      if (entry?.branch && entry.current) {
-        event.preventDefault();
-        toggleOpen(entry);
+      if (!entry) {
+        return;
+      }
+      if (event.key === ' ') {
+        if (entry.branch) {
+          event.preventDefault();
+          toggleOpen(entry);
+        }
+        return;
+      }
+      event.preventDefault();
+      if (canSelect?.({ item: entry.item, path: entry.path }) ?? true) {
+        onSelect?.({ item: entry.item, path: entry.path, current: entry.current, ...NO_MODIFIERS, keyboard: true });
       }
     },
-    [onKeyDown, byValue, toggleOpen],
+    [onKeyDown, byValue, toggleOpen, canSelect, onSelect],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted

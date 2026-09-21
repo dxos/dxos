@@ -89,10 +89,10 @@ elsewhere. See "The two stacked tiles" below.
 
 ### The two reducers, and why a tile has the one it has
 
-| reducer               | tiles                                       | why                                                                                                                                                   |
-| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                          |
-| `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing ten peaks reports memory never simultaneously resident, and summing ten p95s is a number with no interpretation. |
+| reducer               | tiles                                       | why                                                                                                                                                         |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                                |
+| `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing eleven peaks reports memory never simultaneously resident, and summing eleven p95s is a number with no interpretation. |
 
 | #   | tile                                  | measure              | reducer |
 | --- | ------------------------------------- | -------------------- | ------- |
@@ -145,14 +145,14 @@ distributions say whether the run got slower; this says **where**, and a regress
 path).
 
 It uses `avg`, not `median`, and that is load-bearing: the mean of a sum is the sum of the means, so
-its ten segments add up to the mean on the wall-time distribution tile. Per-phase medians would not
-sum to the total median, and a stacked chart whose segments do not add up to a number shown
+its eleven segments add up to the mean on the wall-time distribution tile. Per-phase medians would
+not sum to the total median, and a stacked chart whose segments do not add up to a number shown
 elsewhere on the same dashboard is worse than no chart.
 
 **Peak memory composition (mean, stacked)** is the memory counterpart, and it stacks by
 **composition, not by phase** — deliberately. Time is additive, so phases stack; memory is a level,
-so stacking ten phases' peaks would draw ~40 GB that never existed at any instant. What genuinely
-sums is JS heap plus everything else = peak RSS, which puts the finding on the page: ~250 MB of heap
+so stacking eleven phases' peaks would draw ~40 GB that never existed at any instant. What
+genuinely sums is JS heap plus everything else = peak RSS, which puts the finding on the page: ~250 MB of heap
 inside ~4 GB of RSS, so ~15x of this app's memory is wasm linear memory and native allocation and
 optimizing the JS heap cannot move the memory number.
 
@@ -186,17 +186,30 @@ tile. Earlier revisions of this file called it "the only machine-independent mea
 for regressions"; that claim is gone rather than the tile being restored, because a dashboard is
 not obliged to carry every field the harness records.
 
-### Every aggregate tile requires a COMPLETE iteration
+### No aggregate tile requires a COMPLETE iteration, and that is a defect
 
-`writePosthogBatch` drops a failed stage, so an iteration that lost one publishes nine rows rather
-than ten. A run total summed over nine phases is smaller than one summed over ten, and nothing
-about the number says so — a partial iteration would enter the distribution looking like a fast
-one and drag the whole box down.
+`writePosthogBatch` drops a failed stage, so an iteration that lost one publishes ten rows rather
+than eleven. A run total summed over ten phases is smaller than one summed over eleven, and nothing
+about the number says so — a partial iteration enters the distribution looking like a fast one and
+drags the whole box down.
 
-Each distribution and stacked query therefore reduces an iteration only if it has all ten stages
-(`HAVING count() = 10` on the per-iteration group). The partial rows stay in the store and in the
-runs table, where the `stages` column is what makes them legible; they are excluded from the
-aggregates alone.
+Earlier revisions of this file said each distribution and stacked query reduces an iteration only
+if it has every stage (`HAVING count() = …` on the per-iteration group). **It does not, and no
+version of the dashboard ever did.** All fifteen insights were read on 2026-09-18: not one carries
+a `HAVING` clause or any other completeness filter, and the only literal count in their HogQL is
+the `count() > 1` guard that keeps `stddevSamp` from returning NaN on a single-iteration night.
+
+Two consequences follow, and both are live:
+
+- A partial iteration is silently in every box, undersized by whatever its missing stages cost. The
+  `stages` column of the runs table is the only place it is visible, which is why that column is
+  worth reading before any other number on the page.
+- A change to the STAGE SET moves every run total on the night it lands, because the totals sum
+  whatever rows an iteration published rather than a fixed set. Adding `await-replication` is
+  exactly that, so run totals do not compare across 2026-09-18.
+
+Adding the gate is a dashboard edit rather than a repo one; until someone makes it, this section
+describes what the tiles do rather than what they should do.
 
 ### Shared-worker panels are deliberately absent
 
@@ -216,9 +229,15 @@ spread down a run's ten rows _is_ the box, available as numbers when the picture
 it is also how a point that looks wrong gets traced back to a commit and a Depot run id.
 
 Its `stages` column is the integrity check, and worth reading before any other number on the page.
-The flow has **ten** stages and `writePosthogBatch` drops failed ones, so a row showing fewer than
-ten is a partial iteration whose totals are not comparable to a complete one. The aggregate tiles
-exclude it (`HAVING count() = 10`), so this table and the stored rows are the only place it shows.
+The flow has **eleven** stages and `writePosthogBatch` drops failed ones, so a row showing fewer
+than eleven is a partial iteration whose totals are not comparable to a complete one — and since
+nothing filters it out, that iteration is inside every box above. This table is where you catch it.
+
+`await-replication` is the eleventh, added after the per-stage I/O spread was traced to setup: the
+fixture's writes were still replicating through whichever stage happened to be running. Its own
+columns are therefore setup's cost rather than the app's, and it is the one phase to read as an
+absorber rather than a measurement — it is nonetheless summed into the run totals, so a run
+compared across the change it was added in moves on every total.
 
 ## Two things to know before reading a tile
 

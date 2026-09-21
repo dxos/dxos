@@ -13,6 +13,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
+import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Space } from '@dxos/react-client/echo';
@@ -35,23 +36,22 @@ export const ActiveSpacePanel = ({ role, Panel }: ActiveSpacePanelProps) => {
   return space ? <Panel role={role} space={space} /> : null;
 };
 
-export const SpaceListSurface = ({ role }: { role?: string }) => {
-  const { invokePromise } = useOperationInvoker();
-  const handleSelect = useCallback(
-    () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
-    [invokePromise],
-  );
+export type NavigableSurfaceProps = {
+  role?: string;
+  onNavigate: DebugSurface.PageData['onNavigate'];
+};
+
+/** The space list; selecting a space shows its page in the debug panel. */
+export const SpaceListSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
+  const handleSelect = useCallback(() => onNavigate(Devtools.getNodePath(Devtools.Echo.Space)), [onNavigate]);
 
   return <SpaceListArticle role={role} onSelect={handleSelect} />;
 };
 
-export const SpaceInfoSurface = ({ role }: { role?: string }) => {
+/** The active space; selecting a feed or pipeline shows the feeds page in the debug panel. */
+export const SpaceInfoSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
   const space = useActiveSpace();
-  const { invokePromise } = useOperationInvoker();
-  const handleSelect = useCallback(
-    () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
-    [invokePromise],
-  );
+  const handleSelect = useCallback(() => onNavigate(Devtools.getNodePath(Devtools.Echo.Feeds)), [onNavigate]);
   if (!space) {
     return null;
   }

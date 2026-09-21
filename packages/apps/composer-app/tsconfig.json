@@ -82,6 +82,9 @@
       "path": "../../core/compute/agent-claude"
     },
     {
+      "path": "../../core/echo/echo-host"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -122,6 +125,9 @@
     },
     {
       "path": "../../plugins/plugin-calls"
+    },
+    {
+      "path": "../../plugins/plugin-canvas"
     },
     {
       "path": "../../plugins/plugin-chess"

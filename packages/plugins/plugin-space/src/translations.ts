@@ -161,15 +161,6 @@ export const translations = [
         'duplicate-object.label': 'Duplicate object',
         'object-deleted.label': 'Object deleted',
         'objects-deleted.label': 'Objects deleted',
-        'go-to-object.alt': 'Open',
-        'go-to-object.label': 'Open object',
-        'found-object.label': 'Ready.',
-        'found-object.description': 'The requested object is now available.',
-        'waiting-for-object.label': 'Loading…',
-        'waiting-for-object.description': 'The requested object is still being synchronized.',
-        'object-not-found.label': 'Nothing found.',
-        'object-not-found.description':
-          'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'missing-object.message': 'Object not available.',
         'missing-object.description':
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',

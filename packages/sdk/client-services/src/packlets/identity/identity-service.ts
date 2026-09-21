@@ -6,12 +6,15 @@ import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
+import { toServiceError } from '@dxos/protocols';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Identity as IdentityProto,
@@ -27,6 +30,8 @@ import {
 import { IdentityService } from '@dxos/protocols/rpc';
 
 import { ProfileUpdated } from '../services/events.ts';
+import { wipeSqliteStorage } from '../services/sqlite-storage.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 import { IdentityLifecycleService } from './identity-lifecycle.ts';
 import { type CreateIdentityOptions, type IdentityManager, IdentityManagerService } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
@@ -37,6 +42,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     private readonly _identityManager: IdentityManager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
     private readonly _keyring: KeyringApi,
+    private readonly _dataSpaceManager: DataSpaceManager,
+    private readonly _wipeStorage: () => Promise<void>,
     private readonly _createIdentity: (params: CreateIdentityOptions, ctx?: Context) => Promise<Identity>,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {
@@ -45,7 +52,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
   ['IdentityService.createIdentity'](
     request: IdentityService.CreateIdentityRequest,
-  ): Effect.Effect<IdentityProto, Error> {
+  ): Effect.Effect<IdentityProto, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -58,7 +65,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         );
         return this._getIdentity()!;
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -77,7 +84,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
-  ['IdentityService.updateProfile'](profile: ProfileDocument): Effect.Effect<IdentityProto, Error> {
+  ['IdentityService.updateProfile'](profile: ProfileDocument): Effect.Effect<IdentityProto, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         invariant(this._identityManager.identity, 'Identity not initialized.');
@@ -85,25 +92,25 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
         return this._getIdentity()!;
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
   ['IdentityService.createRecoveryCredential'](
     request: IdentityService.CreateRecoveryCredentialRequest,
-  ): Effect.Effect<IdentityService.CreateRecoveryCredentialResponse, Error> {
+  ): Effect.Effect<IdentityService.CreateRecoveryCredentialResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.createRecoveryCredential(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
   ['IdentityService.revokeRecoveryCredential'](
     request: IdentityService.RevokeRecoveryCredentialRequest,
-  ): Effect.Effect<void, Error> {
+  ): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.revokeRecoveryCredential(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -113,11 +120,11 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   > {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.requestRecoveryChallenge(Context.default()),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['IdentityService.recoverIdentity'](request: RecoverIdentityRequest): Effect.Effect<IdentityProto, Error> {
+  ['IdentityService.recoverIdentity'](request: RecoverIdentityRequest): Effect.Effect<IdentityProto, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -141,14 +148,35 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
         return this._getIdentity()!;
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
+    });
+  }
+
+  /**
+   * Closes and deletes every space, closes and deletes the identity, then removes the persisted
+   * bytes they leave behind: the automerge documents, the hypercore files, the feed store, the
+   * index tables and the keyring. The stack stays open throughout, so the client is left exactly as
+   * it was before an identity existed and `createIdentity` can run straight afterwards.
+   */
+  ['IdentityService.deleteIdentity'](): Effect.Effect<void, BaseError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const ctx = Context.default();
+        // Spaces first: their teardown leaves the swarm and flushes through the identity's HALO,
+        // which the identity teardown below closes.
+        await this._dataSpaceManager.deleteAllSpaces(ctx);
+        await this._identityManager.deleteIdentity(ctx);
+        // Last, so nothing still holds the rows it removes.
+        await this._wipeStorage();
+      },
+      catch: toServiceError,
     });
   }
 
   // TODO(burdon): Rename createPresentation?
   ['IdentityService.signPresentation'](
     request: IdentityService.SignPresentationRequest,
-  ): Effect.Effect<Presentation, Error> {
+  ): Effect.Effect<Presentation, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const { presentation, nonce } = request;
@@ -162,11 +190,11 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
           nonce,
         });
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['IdentityService.createAuthCredential'](): Effect.Effect<Credential, Error> {
+  ['IdentityService.createAuthCredential'](): Effect.Effect<Credential, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const identity = this._identityManager.identity;
@@ -182,7 +210,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
           signer: this._keyring,
         });
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -207,12 +235,18 @@ export const IdentityServiceLayer = Layer.effect(
     const identityManager = yield* IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
+    const dataSpaceManager = yield* DataSpaceManagerService;
     const identityLifecycle = yield* IdentityLifecycleService;
     const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
+    // The stack's own SQLite runtime: the wipe runs under the live stack rather than the reset
+    // chain, which tears it down.
+    const sqlRuntime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
     const service = new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
+      dataSpaceManager,
+      () => RuntimeProvider.runPromise(sqlRuntime)(wipeSqliteStorage.pipe(Effect.orDie)),
       (params, ctx) => identityLifecycle.createIdentity(params, ctx),
       (profile) =>
         profile ? RuntimeProvider.runPromise(runtime)(Hook.emit(ProfileUpdated, { profile })) : Promise.resolve(),

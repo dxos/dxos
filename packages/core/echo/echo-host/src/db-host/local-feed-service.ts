@@ -12,10 +12,11 @@ import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
-import { FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol, toServiceError } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
 /**
@@ -38,10 +39,12 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     this.#syncFeed = options?.syncFeed;
   }
 
-  ['FeedService.queryFeed'](request: FeedService.QueryFeedRequest): Effect.Effect<FeedService.FeedQueryResult, Error> {
+  ['FeedService.queryFeed'](
+    request: FeedService.QueryFeedRequest,
+  ): Effect.Effect<FeedService.FeedQueryResult, BaseError> {
     return Effect.tryPromise({
       try: () => this.#queryFeedImpl(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -92,7 +95,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     );
   }
 
-  ['FeedService.insertIntoFeed'](request: FeedService.InsertIntoFeedRequest): Effect.Effect<void, Error> {
+  ['FeedService.insertIntoFeed'](request: FeedService.InsertIntoFeedRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const { subspaceTag, spaceId, feedId, objects } = request;
@@ -115,11 +118,11 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           }),
         );
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['FeedService.deleteFromFeed'](request: FeedService.DeleteFromFeedRequest): Effect.Effect<void, Error> {
+  ['FeedService.deleteFromFeed'](request: FeedService.DeleteFromFeedRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const { subspaceTag, spaceId, feedId, objectIds } = request;
@@ -142,25 +145,25 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           }),
         );
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['FeedService.syncFeed'](request: FeedService.SyncFeedRequest): Effect.Effect<void, Error> {
+  ['FeedService.syncFeed'](request: FeedService.SyncFeedRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.#syncFeed?.(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
   ['FeedService.getSyncState'](
     request: FeedService.GetSyncStateRequest,
-  ): Effect.Effect<FeedService.GetSyncStateResponse, Error> {
+  ): Effect.Effect<FeedService.GetSyncStateResponse, BaseError> {
     return Effect.tryPromise({
       try: () => this.#getSyncStateImpl(request),
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 

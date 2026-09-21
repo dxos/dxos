@@ -12,7 +12,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/diagram"
+    },
+    {
       "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
     },
     {
       "path": "../../../common/keys"

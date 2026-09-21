@@ -14,7 +14,19 @@ import {
   composable,
   composableProps,
   stepCount,
+  useTranslation,
 } from '@dxos/react-ui';
+
+import { translationKey } from '#translations';
+
+/**
+ * Long enough that a run which finishes almost immediately never shows a meter at all, short enough
+ * that a real one still feels responsive.
+ */
+const DEFAULT_DELAY = 500;
+
+/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
+const DEFAULT_MIN_DURATION = 1_000;
 
 export type ProgressMeterProps = ThemedClassName<
   Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
@@ -35,15 +47,6 @@ export type ProgressMeterProps = ThemedClassName<
 >;
 
 /**
- * Long enough that a run which finishes almost immediately never shows a meter at all, short enough
- * that a real one still feels responsive.
- */
-const DEFAULT_DELAY = 500;
-
-/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
-const DEFAULT_MIN_DURATION = 1_000;
-
-/**
  * Shows the meter for a run, or nothing when there is none.
  *
  * The two bounds are why this wrapper exists rather than a bare `state && <meter/>`: a run that
@@ -61,7 +64,11 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
       held.current = state;
     }
 
-    const visible = useDeferredVisible(Boolean(state), delay, minDuration);
+    // Counted from when the run started, not from when this meter mounted: a run that has already
+    // lasted `delay` is worth reporting the moment a surface opens on it, and a popover that opened
+    // on such runs was otherwise empty for the whole delay.
+    const startedAt = state?.startedAt ? Date.parse(state.startedAt) : undefined;
+    const visible = useDeferredVisible(Boolean(state), delay, minDuration, startedAt);
     if (!visible || !held.current) {
       return null;
     }
@@ -72,16 +79,20 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
 
 ProgressMeter.displayName = 'ProgressMeter';
 
+/** How much of `delay` is still to run, given when the thing became present. */
+const remainingDelay = (delay: number, since: number | undefined): number =>
+  since === undefined ? delay : Math.max(0, delay - (Date.now() - since));
+
 /**
  * Whether a thing that is `present` should be shown, given a delay before it appears and a minimum
- * time it stays once it has.
+ * time it stays once it has. `since` is when it became present, if that predates the mount.
  *
  * Both bounds exist because a surface that flashes is worse than one that is slightly late: a
  * readout appearing and vanishing inside a few frames reads as a fault, and one that appears at all
  * should stay long enough to be read.
  */
-const useDeferredVisible = (present: boolean, delay: number, minDuration: number): boolean => {
-  const [visible, setVisible] = useState(present && delay === 0);
+const useDeferredVisible = (present: boolean, delay: number, minDuration: number, since?: number): boolean => {
+  const [visible, setVisible] = useState(present && remainingDelay(delay, since) === 0);
   // When it became visible, so `minDuration` counts from the render rather than from the moment
   // `present` flipped — a meter held back by `delay` has not been on screen at all yet.
   const shownAt = useRef<number | undefined>(visible ? Date.now() : undefined);
@@ -92,10 +103,13 @@ const useDeferredVisible = (present: boolean, delay: number, minDuration: number
         return;
       }
 
-      const timer = setTimeout(() => {
-        shownAt.current = Date.now();
-        setVisible(true);
-      }, delay);
+      const timer = setTimeout(
+        () => {
+          shownAt.current = Date.now();
+          setVisible(true);
+        },
+        remainingDelay(delay, since),
+      );
       return () => clearTimeout(timer);
     }
 
@@ -116,7 +130,7 @@ const useDeferredVisible = (present: boolean, delay: number, minDuration: number
       setVisible(false);
     }, remaining);
     return () => clearTimeout(timer);
-  }, [present, visible, delay, minDuration]);
+  }, [present, visible, delay, minDuration, since]);
 
   return visible;
 };
@@ -135,6 +149,7 @@ type InnerProgressMeterProps = ProgressMeterProps & { state: ProgressModel.TaskP
  */
 export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterProps>(
   ({ state, selected, onSelect, onCancel, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const { current = 0, total, label, name, status, note, error } = state;
     // Derived here rather than supplied: `deriveEta` projects from the task's own elapsed time, so
     // every producer gets the same estimate without computing one.
@@ -157,6 +172,10 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
     // meters would say what each is doing and never which task it is.
     const lines = useNotes(label ?? name, note, state.startedAt);
 
+    // A zero-work run is complete, as the bar's fraction already says; dividing by it would read NaN.
+    const progress = (current: number, total: number) =>
+      total === 0 ? '100%' : `${Math.round((current / total) * 100)}%`;
+
     return (
       <div
         {...composableProps(props, {
@@ -176,11 +195,15 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <TextCrawl classNames='min-w-0 flex-1' textClassNames='text-xs text-description' lines={lines} greedy />
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
-            <span className='font-mono'>
-              {indeterminate ? (active ? formatDuration(elapsedMs) : '') : `${current} / ${total}`}
+            <span className='tabular-nums'>
+              {indeterminate
+                ? active && elapsedMs >= SECOND_MS
+                  ? formatDuration(elapsedMs)
+                  : ''
+                : progress(current, total)}
             </span>
-            {!indeterminate && etaMs !== undefined && status === 'running' && (
-              <span className='text-description'>{formatDuration(etaMs)} left</span>
+            {!indeterminate && etaMs !== undefined && etaMs >= SECOND_MS && status === 'running' && (
+              <span className='text-description'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
               <IconButton
@@ -190,7 +213,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
                 icon='ph--x--regular'
                 iconOnly
                 disabled={!cancellable}
-                label={failed ? 'Dismiss' : 'Cancel'}
+                label={t(failed ? 'progress-meter.dismiss.label' : 'progress-meter.cancel.label')}
                 onClick={onCancel}
               />
             )}
@@ -279,6 +302,9 @@ const useNotes = (label: string | undefined, note: string | undefined, startedAt
 //
 // Util
 //
+
+/** A duration under this rounds to `0s`, which reads as done or stuck; the readout waits for a whole second. */
+const SECOND_MS = 1_000;
 
 /** Compact human duration (e.g. `12s`, `3m 05s`, `1h 02m`). */
 export const formatDuration = (ms: number): string => {

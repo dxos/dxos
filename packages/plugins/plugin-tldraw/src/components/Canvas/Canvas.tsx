@@ -15,7 +15,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';
@@ -75,6 +75,11 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
   ) => {
     const adapter = useStoreAdapter(canvas);
     const [editor, setEditor] = useState<Editor>();
+    // The app's colour mode, not `prefers-color-scheme`: the two differ whenever the theme is set
+    // by hand (a dark storybook on a light OS), and tldraw would then draw light-theme black on a
+    // dark canvas.
+    const { themeMode } = useThemeContext();
+    const colorScheme = themeMode === 'dark' ? 'dark' : 'light';
 
     // Focus.
     useEffect(() => {
@@ -163,6 +168,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
         editor.user.updateUserPreferences({
           // TODO(burdon): Adjust snap threshold.
           isSnapMode: true,
+          colorScheme,
         });
         editor.updateInstanceState({
           isGridMode: settings?.showGrid !== false && !hideUi,
@@ -172,7 +178,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           editor.setCurrentTool('hand');
         }
       }
-    }, [editor, settings, hideUi, readonly]);
+    }, [editor, settings, hideUi, readonly, colorScheme]);
 
     // Zoom to fit.
     const { ref: resizeRef, width = 0, height } = useResizeDetector();
@@ -304,7 +310,6 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           key={`${Obj.getURI(canvas)}:${adapter.store.id}`}
           store={adapter.store}
           hideUi={hideUi}
-          inferDarkMode
           className='outline-hidden!'
           maxAssetSize={1024 * 1024}
           assetUrls={assetUrls}

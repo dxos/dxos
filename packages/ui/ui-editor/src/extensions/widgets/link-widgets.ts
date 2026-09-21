@@ -3,15 +3,18 @@
 //
 
 import { type EditorState, type Extension, Facet } from '@codemirror/state';
-import { Decoration } from '@codemirror/view';
+import { Decoration, type EditorView } from '@codemirror/view';
 
 import {
   type WidgetDef,
   type WidgetMatcher,
   type WidgetProps,
   createWidget,
+  getWidgetState,
   widgetMatchersFacet,
+  widgetRebuildEffect,
   widgetsCore,
+  widgetUpdateEffect,
 } from './widgets.ts';
 
 /** Decides whether a link's URL is one of this matcher's. */
@@ -62,9 +65,20 @@ export const matchPattern =
     return pattern.test(url);
   };
 
+/** What a link widget can report back about its target (see {@link setLinkWidgetState}). */
+export type LinkWidgetState = {
+  /**
+   * The target cannot be resolved (deleted, or never reachable): the link is rendered as its
+   * source text, editable, with the widget inline after it instead of replacing it.
+   */
+  unresolved?: boolean;
+  /** The widget sizes itself; no reserved height is applied to the block. */
+  intrinsic?: boolean;
+};
+
 /** Props of a widget standing in for `[label](url)` or `![label](url)`. */
 export type LinkWidgetProps<TContext = unknown> = WidgetProps<
-  {
+  LinkWidgetState & {
     id: string;
     label: string;
     url: string;
@@ -73,6 +87,34 @@ export type LinkWidgetProps<TContext = unknown> = WidgetProps<
   },
   TContext
 >;
+
+/**
+ * Reports a link widget's target state: an `unresolved` block becomes an inline widget after
+ * editable source, and `intrinsic` builds without a reserved height. With `rebuild` (the default)
+ * the decorations are rebuilt so it takes effect now; without it the state applies at the next
+ * rebuild, for a change the widget applies to its own element meanwhile (see
+ * {@link releaseBlockHeight}) — a redraw under the user's pointer can swap the element they are
+ * clicking. Idempotent: a report that changes nothing is skipped, so a widget may call it from a
+ * render effect.
+ */
+export const setLinkWidgetState = (
+  view: EditorView,
+  id: string,
+  state: LinkWidgetState,
+  { rebuild = true }: { rebuild?: boolean } = {},
+): void => {
+  const current = getWidgetState(view.state, id) ?? {};
+  const keys = Object.keys(state) as (keyof LinkWidgetState)[];
+  if (keys.every((key) => (current[key] ?? false) === state[key])) {
+    return;
+  }
+  view.dispatch({
+    effects: [
+      widgetUpdateEffect.of({ id, value: (prev) => ({ ...prev, ...state }) }),
+      ...(rebuild ? [widgetRebuildEffect.of(null)] : []),
+    ],
+  });
+};
 
 export type LinkWidgetsOptions<TProps extends LinkWidgetProps = LinkWidgetProps> = {
   /** Which URLs are this matcher's. */
@@ -140,12 +182,31 @@ export function linkWidgets({ match, link, image, props: toProps }: LinkWidgetsO
         ...widgetStateMap[id],
       };
       const props = toProps ? toProps(linkProps) : linkProps;
+      const signature = state.sliceDoc(range.from, range.to);
+      // An unresolved target: the source stays, editable, and the widget follows it inline.
+      if (linkProps.unresolved) {
+        const widget = createWidget({
+          def: { ...def, block: false, estimatedHeight: undefined },
+          id,
+          props,
+          notifier,
+          signature,
+        });
+        if (!widget) {
+          return undefined;
+        }
+        return {
+          from: range.to,
+          to: range.to,
+          decoration: Decoration.widget({ widget, side: 1, tag: props._tag }),
+        };
+      }
       const widget = createWidget({
-        def: { ...def, block: isBlock },
+        def: { ...def, block: isBlock, estimatedHeight: linkProps.intrinsic ? undefined : def.estimatedHeight },
         id,
         props,
         notifier,
-        signature: state.sliceDoc(range.from, range.to),
+        signature,
       });
       if (!widget) {
         return undefined;

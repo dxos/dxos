@@ -429,8 +429,7 @@ describe('ManagerImpl', () => {
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
         expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -447,8 +446,7 @@ describe('ManagerImpl', () => {
         const span = spaceSpans.find(({ name }) => name === 'Handler.span');
         expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans)))),
     ),
   );
 
@@ -473,8 +471,7 @@ describe('ManagerImpl', () => {
         expect(span).toBeUndefined();
         expect(ancestry).toEqual(['Alarm.handler', 'Process.alarm']);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans)))),
     ),
   );
 
@@ -489,8 +486,7 @@ describe('ManagerImpl', () => {
 
         expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -515,8 +511,7 @@ describe('ManagerImpl', () => {
         );
         expect(handler).toBeDefined();
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -544,8 +539,7 @@ describe('ManagerImpl', () => {
         expect(recordedSpans.map(({ name }) => name)).toContain('ChildEvent.handler');
         yield* parent.terminate();
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -564,8 +558,7 @@ describe('ManagerImpl', () => {
           'ProcessOperationInvoker.invoke',
         ]);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans)))),
     ),
   );
 
@@ -587,8 +580,9 @@ describe('ManagerImpl', () => {
         ]);
         expect(unusedRuntimeSpans).toEqual([]);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      Effect.provide(
+        Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      ),
     ),
   );
 
@@ -979,6 +973,58 @@ describe('ManagerImpl', () => {
         expect(failures.length).toBeGreaterThanOrEqual(1);
         expect(failures.every((entry) => entry.level === LogLevel.ERROR)).toBe(true);
         expect(failures[0].computedError).toContain('Test Error');
+      }, Effect.provide(TestLayer)),
+    );
+
+    /** The two messages a settled FAILED transition reports under, so the debug lifecycle chatter is ignored. */
+    const LIFECYCLE_OUTCOMES = new Set(['lifecycle: failed', 'lifecycle: cancelled']);
+
+    it.effect(
+      'a user-dismissed prompt reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const dismissed = new Error('No passkey was presented', {
+          cause: new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError'),
+        });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.dismissed', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports).toHaveLength(1);
+        expect(reports[0].level).toEqual(LogLevel.INFO);
+        expect(reports[0].computedError).toContain('No passkey was presented');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'an aborted ceremony reports below error level, other DOMExceptions do not (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const aborted = new Error('aborted', { cause: new DOMException('signal aborted', 'AbortError') });
+        const unsupported = new Error('unsupported', {
+          cause: new DOMException('no authenticator', 'NotSupportedError'),
+        });
+
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            yield* manager.spawn(failWith('test.aborted', aborted));
+            yield* manager.spawn(failWith('test.unsupported', unsupported));
+          }),
+        );
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO, LogLevel.ERROR]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a domain error that declares itself a cancellation reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        // Mirrors `PasskeyError.Dismissed`, which the platform can raise without any DOMException.
+        const dismissed = Object.assign(new Error('No passkey was presented'), { cancellation: true as const });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.marked', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO]);
       }, Effect.provide(TestLayer)),
     );
   });
@@ -1878,8 +1924,9 @@ describe('durability', () => {
 
         expect(rearmSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
-      Effect.provide(DurabilityTestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      Effect.provide(
+        Layer.provideMerge(DurabilityTestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      ),
     ),
   );
 
@@ -2360,3 +2407,15 @@ const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.
     const remove = log.addProcessor(processor);
     return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
   });
+
+// A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
+// DOMException sits on `cause` rather than being the failing value itself.
+const failWith = (key: string, error: Error) =>
+  Process.make({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.sync(() => ctx.fail(error)),
+      onInput: () => Effect.void,
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );

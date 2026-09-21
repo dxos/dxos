@@ -9,7 +9,7 @@
 // are separate text elements marked with `part: 'label'` and folded back on read.
 //
 
-import { type Scene } from '@dxos/plugin-illustrator/model';
+import { Scene } from '@dxos/diagram';
 
 import { toFontSize, toStyle } from './style.ts';
 
@@ -175,8 +175,8 @@ export const renderObject = (
     ...extra,
   });
 
-  // Refs are element ids within this object, or `objectId/elementId` across objects.
-  const ref = (value: string) => (value.includes('/') ? value : `${object.id}/${value}`);
+  // Excalidraw binds to the element outline, so an endpoint's `#port` is dropped.
+  const ref = (value: string) => Scene.resolveRef(value, object.id);
   // Bounding boxes of elements rendered so far plus pre-existing canvas elements.
   const box = (handle: string): ExternalBox | undefined => {
     const record = content[handle];

@@ -3,7 +3,7 @@
 //
 
 import { type Virtualizer } from '@tanstack/react-virtual';
-import { type MutableRefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { type GetId } from '@dxos/react-ui-dnd';
 
@@ -129,11 +129,11 @@ const isBlankBelow = (geometry: EdgeGeometry): boolean =>
 
 /** Per-direction dedup/throttle state for `evaluateTriggers`, independent of item type. */
 type TriggerState = {
-  lastNextRequestedItemsRef: MutableRefObject<unknown>;
-  lastPreviousRequestedItemsRef: MutableRefObject<unknown>;
-  lastGetNextScrollRef: MutableRefObject<number | null>;
-  lastGetPreviousScrollRef: MutableRefObject<number | null>;
-  paginationRef: MutableRefObject<VirtualizerPaginationController | undefined>;
+  lastNextRequestedItemsRef: RefObject<unknown>;
+  lastPreviousRequestedItemsRef: RefObject<unknown>;
+  lastGetNextScrollRef: RefObject<number | null>;
+  lastGetPreviousScrollRef: RefObject<number | null>;
+  paginationRef: RefObject<VirtualizerPaginationController | undefined>;
 };
 
 /** Not fired at this exact scroll offset since the edge was last left, unless blank re-arms it. */
