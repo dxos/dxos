@@ -56,7 +56,7 @@ export interface Sandbox {
 }
 
 /** The ambient {@link Sandbox}, so a deployment chooses the execution seam without touching the producer. */
-export class Service extends Context.Service<Service, Sandbox>()('@dxos/agent-runtime/Sandbox') {}
+export class Service extends Context.Service<Service, Sandbox>()('@dxos/agent-code-mode/Sandbox') {}
 
 /** `AsyncFunction` is not a global binding, so it is reached through an async function's prototype. */
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;

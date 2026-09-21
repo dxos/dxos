@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",
+    "@dxos/agent-code-mode": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",

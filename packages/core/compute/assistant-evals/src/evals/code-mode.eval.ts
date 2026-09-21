@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { CodeMode, type MakeTurnProducer } from '@dxos/agent-runtime';
+import { EffectDialect, makeCodeModeTurnProducer } from '@dxos/agent-code-mode';
+import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -25,10 +26,10 @@ import * as Scorer from '../Scorer.ts';
 const ENGINES: { name: string; input: { makeTurnProducer?: MakeTurnProducer } }[] = [
   // No producer: the default `AiSession`, where every action is its own tool call.
   { name: 'tools', input: {} },
-  { name: 'code-mode-plain', input: { makeTurnProducer: CodeMode.makeCodeModeTurnProducer() } },
+  { name: 'code-mode-plain', input: { makeTurnProducer: makeCodeModeTurnProducer() } },
   {
     name: 'code-mode-effect',
-    input: { makeTurnProducer: CodeMode.makeCodeModeTurnProducer({ dialect: CodeMode.EffectDialect }) },
+    input: { makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
   },
 ];
 

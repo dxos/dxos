@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Tool from 'effect/unstable/ai/Tool';
 
+import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { callTool } from '@dxos/ai';
 import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
@@ -16,7 +17,6 @@ import { Database, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { ContentBlock, Message } from '@dxos/types';
 
-import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '../turn-producer.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
 import { makeEvalToolkit } from './eval-tool.ts';

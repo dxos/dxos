@@ -7,6 +7,9 @@
       "path": "packages/core/compute/agent-claude/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/agent-code-mode/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {

@@ -105,6 +105,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../agent-code-mode"
+    },
+    {
       "path": "../agent-runtime"
     },
     {

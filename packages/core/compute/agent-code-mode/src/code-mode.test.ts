@@ -8,6 +8,8 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
+import { AgentService } from '@dxos/agent-runtime';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { callTool } from '@dxos/ai';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,8 +20,6 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../../testing/index.ts';
-import * as AgentService from '../AgentService.ts';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';

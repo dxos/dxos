@@ -34,7 +34,7 @@ class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
  * The worker runs the BUILT entry, not the source beside it: it imports `@dxos/echo-client` to be
  * an ECHO client of its own, which is far past what Node's type stripping can load.
  */
-const BUILT_ENTRY = new URL('../../../dist/lib/WorkerSandboxEntry.mjs', import.meta.url);
+const BUILT_ENTRY = new URL('../dist/lib/WorkerSandboxEntry.mjs', import.meta.url);
 
 /** Stands in for a skill-bound tool. Its handler stays here, which is the point of the call home. */
 const scored: string[] = [];

@@ -3974,14 +3974,63 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  packages/core/compute/agent-runtime:
+  packages/core/compute/agent-code-mode:
     dependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)
+      effect:
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
+    devDependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.115(effect@4.0.0-rc.115)(vitest@4.1.10)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/core/compute/agent-runtime:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
@@ -4012,9 +4061,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/platform-browser':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.115(effect@4.0.0-rc.115)
       effect:
         specifier: 4.0.0-rc.115
         version: 4.0.0-rc.115
@@ -4272,6 +4318,9 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
+      '@dxos/agent-code-mode':
+        specifier: workspace:*
+        version: link:../agent-code-mode
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
