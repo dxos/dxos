@@ -803,6 +803,25 @@ describe('FtsIndex', () => {
     );
   });
 
+  it.effect(
+    'backfills the snapshot store from an index written before the split',
+    Effect.fnUntraced(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // A database as it stood before `objectSnapshot` existed: `ftsIndex` held the snapshots.
+      yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize = 'trigram')`;
+      yield* sql`INSERT INTO ftsIndex (rowid, snapshot) VALUES (7, '{"id":"legacy","title":"Carried Over"}')`;
+
+      const index = new FtsIndex();
+      yield* index.migrate();
+
+      const snapshots = yield* index.querySnapshotsJSON([7]);
+      expect(snapshots).toHaveLength(1);
+      expect((snapshots[0].snapshot as any).title).toBe('Carried Over');
+      // Nothing is queued: the rows the old index carried are already tokenized.
+      expect(yield* index.pendingCount()).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
+
   describe('deferred re-tokenization', () => {
     /** One indexed object, with the metadata row its record id comes from. */
     const indexed = Effect.fnUntraced(function* (index: FtsIndex, title: string) {
