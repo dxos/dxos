@@ -138,12 +138,14 @@ module WorkerProtocol
   api:
     WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; onError?: Event<Error>; sendMessage(msg): void }.
     CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port | session-failed.
-    DedicatedWorkerMessage: union        # listening | init | ready | init-failed | start-session | session | session-failed.
+    DedicatedWorkerMessage: union        # listening | init | ready | ping | pong | init-failed | start-session | session | session-failed.
     SerializedError: {...}               # name, message, stack?, cause?, errors? — an error that survives postMessage.
     encodeError: (error: unknown) => SerializedError   # keeps name, cause chain, and AggregateError.errors.
     decodeError: (error: SerializedError) => Error     # rebuilds it as a plain Error / AggregateError.
     WorkerEndpoint: interface            # postMessage / add + removeEventListener('message') / close?.
     WorkerOrPort: Worker | MessagePort   # worker handle usable from a leader tab or a test port.
+    TerminableWorker: interface          # { terminate(): void } — a handle that can stand its worker down without cooperation.
+    isTerminable: (worker: WorkerOrPort) => worker is WorkerOrPort & TerminableWorker
 ```
 
 ## Features

@@ -865,6 +865,8 @@ class LeaderSession extends Resource {
   #livenessLockKey!: string;
   #workerId!: string;
   #displaceChannel: DisplaceChannel | undefined;
+  /** In-flight termination check, so concurrent escalations resolve into one. */
+  #terminationCheck: Promise<void> | undefined;
   #startFailure: Error | undefined;
 
   constructor(
@@ -1031,7 +1033,18 @@ class LeaderSession extends Resource {
    * and it does not answer a probe, which is what being wedged means and what keeps the lock. Every
    * healthy bystander answers, so at most the wedged worker is terminated however many tabs listen.
    */
-  async #onTerminateRequest({ issuerId, storageLockKey, graceTimeout }: TerminateRequest): Promise<void> {
+  #onTerminateRequest(request: TerminateRequest): Promise<void> {
+    // Two queued workers can each escalate over the same incumbent, and the channel does not await
+    // this handler: without serialization both probes run, both kill, and one incident is reported
+    // and closed twice. A check already in flight is about this same worker, so the later request
+    // has nothing to add.
+    this.#terminationCheck ??= this.#runTerminationCheck(request).finally(() => {
+      this.#terminationCheck = undefined;
+    });
+    return this.#terminationCheck;
+  }
+
+  async #runTerminationCheck({ issuerId, storageLockKey, graceTimeout }: TerminateRequest): Promise<void> {
     // Our own worker raised the escalation while queued behind someone else's; terminating here
     // would have every new leader kill the worker it just started, which is the kill loop.
     if (issuerId === this.#workerId) {
@@ -1040,11 +1053,17 @@ class LeaderSession extends Resource {
     if (!(await isLockHeld(this.#livenessLockKey))) {
       return;
     }
+    if (!this.isOpen) {
+      return;
+    }
     if (await this.#isWorkerResponsive()) {
       log('leader-session: escalation is not about our worker, it is still servicing messages', {
         leaderId: this.#leaderId,
         issuerId,
       });
+      return;
+    }
+    if (!this.isOpen) {
       return;
     }
     const context = {

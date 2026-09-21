@@ -177,13 +177,19 @@ export const run = ({
   };
   // Aborting a granted request leaves the lock held, so a running worker is shut down explicitly; a
   // worker that never got the lock only has its channel to release.
-  signal?.addEventListener('abort', () => {
-    if (shutdownOnLockLost) {
-      void shutdownOnLockLost();
-    } else {
-      channel.close();
-    }
-  });
+  signal?.addEventListener(
+    'abort',
+    () => {
+      // The channel is about to close, and posting an escalation on a closed BroadcastChannel throws.
+      clearTimeout(escalation);
+      if (shutdownOnLockLost) {
+        void shutdownOnLockLost();
+      } else {
+        channel.close();
+      }
+    },
+    { once: true },
+  );
   const storageLock = navigator.locks.request(storageLockKey, { signal }, async () => {
     log('lock acquired');
     clearTimeout(escalation);
@@ -416,5 +422,9 @@ export const run = ({
     await storageLockHeld;
     endpoint.removeEventListener('message', handleMessage);
   });
-  void storageLock.catch(onLockLost(storageLockKey));
+  void storageLock.catch((err) => {
+    // The request ended without ever entering its callback, so nothing else disarms the escalation.
+    clearTimeout(escalation);
+    onLockLost(storageLockKey)(err);
+  });
 };
