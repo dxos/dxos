@@ -18,15 +18,26 @@ import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
  * credential. Stamping the annotation is what lets everything else read a space's origin one way,
  * rather than checking the annotation and then falling back to a retired tag.
  *
+ * Subscribed rather than run once: `SpacesReady` fires when spaces become OBSERVABLE, and a space's
+ * properties are unreadable until it is open, so a single pass at that moment would almost always
+ * find the demo space still opening and stamp nothing — every launch. The space list re-emits on
+ * each space's state change, which is the transition being waited for.
+ *
  * Imports the id, not the template: the world behind it stays in its own chunk.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
-    const migrated = AppSpace.migrateLegacyOnboardingSpaces(client, BRAMBLE_TEMPLATE_ID);
-    if (migrated.length > 0) {
-      log.info('recorded the demo space template', { spaces: migrated });
-    }
+    const migrate = () => {
+      const migrated = AppSpace.migrateLegacyOnboardingSpaces(client, BRAMBLE_TEMPLATE_ID);
+      if (migrated.length > 0) {
+        log.info('recorded the demo space template', { spaces: migrated });
+      }
+    };
+
+    const subscription = client.spaces.subscribe(() => migrate());
+    yield* Effect.addFinalizer(() => Effect.sync(() => subscription.unsubscribe()));
+    migrate();
 
     return [];
   }),

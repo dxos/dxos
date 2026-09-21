@@ -41,15 +41,18 @@ describe('space visibility', () => {
     expect(AppSpace.isVisibleSpace(makeSpace([]))).toBe(true);
   });
 
-  test('pre-migration onboarding and personal spaces stay visible', ({ expect }) => {
-    // Both tags are retired, and both are still persisted in profiles that onboarded before that.
-    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
+  test('spaces the app keeps for itself are hidden', ({ expect }) => {
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.FILESYSTEM_MIRROR_SPACE_TAG]))).toBe(false);
+    // Hidden by one internal tag among several, not by being tagged at all.
+    expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned', AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
   });
 
-  test('spaces the app manages on the user behalf are hidden', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
-    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.filesystem-mirror']))).toBe(false);
+  test('every other tagged space belongs to the user, including tags this list has not heard of', ({ expect }) => {
+    // Both retired tags are still persisted in profiles that onboarded before they were retired.
+    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
+    expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned']))).toBe(true);
   });
 });
 

@@ -31,10 +31,17 @@ A space created from a template records which one in `AppAnnotation.SpaceTemplat
 a tag takes a space out of the user-facing lists, so every reader needed an exception for it.
 `AppSpace.SAMPLE_SPACE_TAG` and `isSampleSpace` are gone.
 
-Profiles that onboarded before this get the annotation stamped on their demo space once their
-spaces are ready, so one read answers "which template made this" for every space whenever it was
-created. The tag itself stays — it rides the space's admission credential and cannot be removed —
-and `isVisibleSpace` still reads it, but only to decide that it does not make a space internal.
+Profiles that onboarded before this get the annotation stamped on their demo space once it opens,
+so one read answers "which template made this" for every space whenever it was created. The tag
+itself stays — it rides the space's admission credential and cannot be removed — but nothing reads
+it any more except the migration that records what it meant.
+
+`AppSpace.isVisibleSpace` now names the tags it hides (`SETTINGS_SPACE_TAG`,
+`FILESYSTEM_MIRROR_SPACE_TAG`) instead of hiding every tagged space and excepting the ones that turn
+out to be the user's. A space carrying an unrecognized tag is now visible rather than hidden: a tag
+this list has not heard of is far more likely to be a marker someone hung on their own space than a
+new internal space type, and a space wrongly hidden is unreachable while one wrongly shown is
+merely untidy.
 
 First launch builds Bramble through its template instead of importing
 `plugin-onboarding/src/content/sample/space.dx.json`, which is deleted along with the script that

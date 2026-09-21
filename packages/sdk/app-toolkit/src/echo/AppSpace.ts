@@ -31,15 +31,30 @@ import * as AppAnnotation from './AppAnnotation.ts';
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
 /**
+ * Space tag for a mirror of a local filesystem directory.
+ *
+ * Nothing in this repo creates one yet; the tag is listed so the predicate that hides internal
+ * spaces names every tag it hides, rather than hiding whatever it does not recognize.
+ */
+export const FILESYSTEM_MIRROR_SPACE_TAG = 'org.dxos.space.filesystem-mirror';
+
+/**
  * Tag the onboarding space carried before it was created from a space template.
  *
  * Nothing writes it any more — a templated space records its origin in
- * {@link AppAnnotation.SpaceTemplateAnnotation} instead — but every profile that onboarded before
- * that has it persisted, and a tagged space is internal unless something says otherwise. Read only
- * by {@link isVisibleSpace}, which is what keeps those spaces in the user's lists. Dropping it
- * needs a tag migration, not an edit here.
+ * {@link AppAnnotation.SpaceTemplateAnnotation} instead — and it is read in exactly one place,
+ * {@link migrateLegacyOnboardingSpaces}, which records what it meant. Every profile that onboarded
+ * before that has it persisted; it rides the space's admission credential, so it cannot be removed.
  */
 const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
+
+/**
+ * Tags marking a space the app keeps for itself. Everything else belongs to the user, including a
+ * tag this list has never heard of: an unknown tag is far more likely to be a marker someone hung
+ * on their own space than a new internal space type, and a space wrongly hidden is unreachable
+ * while a space wrongly shown is merely untidy.
+ */
+const INTERNAL_SPACE_TAGS: readonly string[] = [SETTINGS_SPACE_TAG, FILESYSTEM_MIRROR_SPACE_TAG];
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -49,9 +64,6 @@ type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefi
 
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
-
-/** Check if a space carries the retired onboarding tag. See {@link LEGACY_ONBOARDING_SPACE_TAG}. */
-const isLegacyOnboardingSpace = (space: Space): boolean => hasTag(space, LEGACY_ONBOARDING_SPACE_TAG);
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
@@ -88,12 +100,11 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
- * Tags mark spaces the app manages on the user's behalf — the settings space, filesystem mirrors —
- * so anything tagged is internal, except the two tags pre-migration profiles still carry: the
- * onboarding space's and the personal space's.
+ * Hidden spaces are named, in {@link INTERNAL_SPACE_TAGS}. The inverse — anything tagged is hidden
+ * unless excepted — is what this used to be, and it grew an exception per tag that turned out to be
+ * the user's: the legacy personal space's, then the onboarding space's.
  */
-export const isVisibleSpace = (space: Space): boolean =>
-  space.tags.length === 0 || isLegacyOnboardingSpace(space) || isLegacyDefaultSpace(space);
+export const isVisibleSpace = (space: Space): boolean => !space.tags.some((tag) => INTERNAL_SPACE_TAGS.includes(tag));
 
 //
 // Space templates.
@@ -126,8 +137,8 @@ export const findSpaceFromTemplate = (client: { spaces: { get(): Space[] } }, te
  * templates recorded their own provenance, so one read answers "which template made this" for every
  * space regardless of when it was created.
  *
- * The tag itself cannot be removed — it rides the space's admission credential — and
- * {@link isVisibleSpace} still reads it, but only to decide that it does not make a space internal.
+ * The tag itself cannot be removed — it rides the space's admission credential — but nothing else
+ * reads it: {@link isVisibleSpace} names the tags it hides, and this is not one of them.
  *
  * Idempotent, and skips a space whose properties are not yet readable: nothing user-facing depends
  * on the stamp landing in a particular session, so an unopened space is stamped on a later launch.
@@ -139,7 +150,7 @@ export const migrateLegacyOnboardingSpaces = (client: { spaces: { get(): Space[]
     .filter(
       (space) =>
         space.state.get() === SpaceState.SPACE_READY &&
-        isLegacyOnboardingSpace(space) &&
+        hasTag(space, LEGACY_ONBOARDING_SPACE_TAG) &&
         getSpaceTemplateId(space) === undefined,
     )
     .map((space) => {
