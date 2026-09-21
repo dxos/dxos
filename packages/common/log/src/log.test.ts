@@ -8,7 +8,7 @@ import { beforeEach, describe, test } from 'vitest';
 import { LogLevel, LogProcessorType } from './config.ts';
 import { shouldLog } from './context.ts';
 import { type Log, createLog } from './log.ts';
-import { CONSOLE_STDERR_PROCESSOR } from './processors/index.ts';
+import { NOOP_PROCESSOR } from './processors/index.ts';
 
 class LogError extends Error {
   constructor(
@@ -74,11 +74,11 @@ describe('log', () => {
 
   test('an explicit processor replaces the processors, and later config keeps it', ({ expect }) => {
     const log = createLog();
-    log.config({ processor: LogProcessorType.CONSOLE_STDERR });
-    expect(log.runtimeConfig.processors).toEqual([CONSOLE_STDERR_PROCESSOR]);
+    log.config({ processor: LogProcessorType.NOOP });
+    expect(log.runtimeConfig.processors).toEqual([NOOP_PROCESSOR]);
 
     log.config({ filter: LogLevel.ERROR });
-    expect(log.runtimeConfig.processors).toEqual([CONSOLE_STDERR_PROCESSOR]);
+    expect(log.runtimeConfig.processors).toEqual([NOOP_PROCESSOR]);
   });
 
   test('throws an error', () => {

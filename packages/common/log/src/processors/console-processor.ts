@@ -86,40 +86,33 @@ export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => 
 // TODO(burdon): Config option.
 const formatter = DEFAULT_FORMATTER;
 
-const createConsoleProcessor =
-  (write: (line: string) => void): LogProcessor =>
-  (config, entry) => {
-    const { level, message, meta, error } = entry;
-    if (!shouldLog(entry, config.filters)) {
-      return;
-    }
+export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
+  const { level, message, meta, error } = entry;
+  if (!shouldLog(entry, config.filters)) {
+    return;
+  }
 
-    const { filename, line: lineNumber } = entry.computedMeta;
-    const parts: FormatParts = {
-      level,
-      message,
-      error,
-      path: filename,
-      line: lineNumber,
-      scope: meta?.S,
-      context: undefined,
-    };
-
-    const context = getContextFromEntry(entry);
-    if (context) {
-      // Remove undefined fields.
-      // https://nodejs.org/api/util.html#utilinspectobject-options
-      parts.context = inspect(
-        pickBy(context, (value?: unknown) => value !== undefined),
-        { depth: config.options.depth, colors: true, maxArrayLength: 8, sorted: false },
-      );
-    }
-
-    const line = formatter(config, parts).filter(Boolean).join(' ');
-    write(line);
+  const { filename, line: lineNumber } = entry.computedMeta;
+  const parts: FormatParts = {
+    level,
+    message,
+    error,
+    path: filename,
+    line: lineNumber,
+    scope: meta?.S,
+    context: undefined,
   };
 
-export const CONSOLE_PROCESSOR: LogProcessor = createConsoleProcessor((line) => console.log(line));
+  const context = getContextFromEntry(entry);
+  if (context) {
+    // Remove undefined fields.
+    // https://nodejs.org/api/util.html#utilinspectobject-options
+    parts.context = inspect(
+      pickBy(context, (value?: unknown) => value !== undefined),
+      { depth: config.options.depth, colors: true, maxArrayLength: 8, sorted: false },
+    );
+  }
 
-/** Console output on stderr, for processes whose stdout carries a protocol. */
-export const CONSOLE_STDERR_PROCESSOR: LogProcessor = createConsoleProcessor((line) => console.error(line));
+  const line = formatter(config, parts).filter(Boolean).join(' ');
+  console.log(line);
+};

@@ -90,7 +90,9 @@ if (level) {
 // Chosen before plugins boot, since activation logs ahead of any command handler.
 log.config({
   filter,
-  ...(isMcpServe(process.argv.slice(2)) ? { processor: LogProcessorType.CONSOLE_STDERR } : {}),
+  // `dx mcp serve` writes the protocol to stdout, so it logs only through the processors
+  // observability installs.
+  ...(isMcpServe(process.argv.slice(2)) ? { processor: LogProcessorType.NOOP } : {}),
 });
 
 // Before any command can create a space: an unset `Migrations.targetVersion` stamps no version, and

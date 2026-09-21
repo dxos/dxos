@@ -7,16 +7,16 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { type LogConfig, type LogFilter, LogLevel, type LogOptions, LogProcessorType, levels } from './config.ts';
 import { type LogProcessor } from './context.ts';
 import { loadOptions } from './platform/index.ts';
-import { BROWSER_PROCESSOR, CONSOLE_PROCESSOR, CONSOLE_STDERR_PROCESSOR, DEBUG_PROCESSOR } from './processors/index.ts';
+import { BROWSER_PROCESSOR, CONSOLE_PROCESSOR, DEBUG_PROCESSOR, NOOP_PROCESSOR } from './processors/index.ts';
 
 /**
  * Processor variants.
  */
 export const processors: Record<string, LogProcessor> = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
-  [LogProcessorType.CONSOLE_STDERR]: CONSOLE_STDERR_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
+  [LogProcessorType.NOOP]: NOOP_PROCESSOR,
 };
 
 const browser =
