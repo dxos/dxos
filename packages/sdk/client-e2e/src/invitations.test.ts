@@ -127,26 +127,40 @@ type InvitationPeer = Pick<
 >;
 
 /** The invitation components of a client running its services in-process. */
-const peerFromClient = (client: Client): InvitationPeer => {
+const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
   const { stack } = client.services as LocalClientServices;
+  const services = await EffectEx.runPromise(
+    stack
+      .resolveAll(
+        InvitationsHandlerService,
+        InvitationsManagerService,
+        SwarmNetworkManagerService,
+        DataSpaceManagerService,
+        IdentityManagerService,
+      )
+      .pipe(Effect.orDie),
+  );
   return {
-    invitations: EffectContext.get(stack, InvitationsHandlerService),
-    invitationsManager: EffectContext.get(stack, InvitationsManagerService),
-    networkManager: EffectContext.get(stack, SwarmNetworkManagerService),
-    dataSpaceManager: EffectContext.get(stack, DataSpaceManagerService),
-    identityManager: EffectContext.get(stack, IdentityManagerService),
+    invitations: EffectContext.getUnsafe(services, InvitationsHandlerService),
+    invitationsManager: EffectContext.getUnsafe(services, InvitationsManagerService),
+    networkManager: EffectContext.getUnsafe(services, SwarmNetworkManagerService),
+    dataSpaceManager: EffectContext.getUnsafe(services, DataSpaceManagerService),
+    identityManager: EffectContext.getUnsafe(services, IdentityManagerService),
   };
 };
 
-const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [InvitationPeer, InvitationPeer]) => {
+const testSuite = (
+  getProps: () => PerformInvitationProps,
+  getPeers: () => Promise<[InvitationPeer, InvitationPeer]>,
+) => {
   test('no auth', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('already joined', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
     const [_, result] = performInvitation(getProps());
@@ -154,7 +168,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('with shared secret', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -167,7 +181,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('with shared keypair', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     const guestKeypair = createAdmissionKeypair();
     const [hostResult, guestResult] = await Promise.all(
@@ -219,7 +233,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('with target', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -232,7 +246,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('invalid auth code', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     let attempt = 1;
     const [hostResult, guestResult] = await Promise.all(
@@ -340,7 +354,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('network error', async () => {
-    const [, guest] = getPeers();
+    const [, guest] = await getPeers();
     const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -384,7 +398,7 @@ describe('Invitations', () => {
           guest,
           options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(space.key) },
         }),
-        () => [host, guest],
+        async () => [host, guest],
       );
     });
 
@@ -401,7 +415,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest, options: { kind: Invitation_Kind.DEVICE } }),
-        () => [host, guest],
+        async () => [host, guest],
       );
     });
   });
@@ -645,7 +659,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest }),
-        () => [hostContext, guestContext],
+        async () => [hostContext, guestContext],
       );
     });
 
@@ -671,7 +685,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest }),
-        () => [hostContext, guestContext],
+        async () => [hostContext, guestContext],
       );
     });
   });
@@ -700,7 +714,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: host.halo, guest: guest.halo }),
-      () => [peerFromClient(host), peerFromClient(guest)],
+      async () => [await peerFromClient(host), await peerFromClient(guest)],
     );
   });
 
@@ -730,7 +744,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: space, guest: guest.spaces }),
-      () => [peerFromClient(host), peerFromClient(guest)],
+      async () => [await peerFromClient(host), await peerFromClient(guest)],
     );
   });
 });
