@@ -33,6 +33,7 @@ const DefaultStory = ({
   groups,
   emptyBranches,
   unselectableBranches,
+  disabledRows,
   selectionMode = 'single',
 }: {
   draggable?: boolean;
@@ -40,6 +41,8 @@ const DefaultStory = ({
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
   unselectableBranches?: boolean;
+  /** Disable the first row, as a model does for one nothing can be done with yet. */
+  disabledRows?: boolean;
   selectionMode?: 'single' | 'multiple';
 }) => {
   const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
@@ -113,6 +116,7 @@ const DefaultStory = ({
             label: parent.name,
             icon: parent.icon,
             disposition: parent.disposition,
+            disabled: disabledRows && id === rootTree.items?.[0]?.id,
             ...(((parent.items?.length ?? 0) > 0 || emptyBranches) && {
               parentOf: parent.items!.map(({ id }) => id),
               count: parent.items!.length,
@@ -122,7 +126,7 @@ const DefaultStory = ({
           };
         }).pipe(Atom.keepAlive);
       }),
-    [itemMap, emptyBranches],
+    [itemMap, emptyBranches, disabledRows, rootTree],
   );
 
   const itemOpenFamily = useMemo(
@@ -412,5 +416,27 @@ export const MultipleSelection: Story = {
 
     await userEvent.click(rows[2].querySelector<HTMLElement>('span[data-tooltip]')!);
     await expect(selected()).toBe('0010');
+  },
+};
+
+/** A disabled row answers nothing: it neither selects nor discloses, by pointer or by key. */
+export const DisabledRows: Story = {
+  args: { disabledRows: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [row] = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const branch = row.closest('[data-part="branch"]')!;
+
+    await userEvent.click(row.querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(row).not.toHaveAttribute('data-selected');
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+
+    row.focus();
+    await userEvent.keyboard(' ');
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.keyboard('{Enter}');
+    await expect(row).not.toHaveAttribute('data-selected');
   },
 };

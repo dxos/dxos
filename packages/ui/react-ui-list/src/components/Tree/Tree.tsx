@@ -510,7 +510,9 @@ export const Tree = <T extends { id: string } = any>({
         return;
       }
       if (event.key === ' ') {
-        if (entry.branch) {
+        // The machine refuses every disclosure path it owns for a disabled branch — the chevron's
+        // click and both arrows — and `Space` is the one it leaves to us.
+        if (entry.branch && !entry.props.disabled) {
           event.preventDefault();
           toggleOpen(entry);
         }
