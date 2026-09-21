@@ -322,6 +322,26 @@ PartitionAlloc until the realm dies. That is why PartitionAlloc drops 78 MB and
 was this. The remaining entries on the gated build are the mark-based ones
 (`module:*`, `plugin-load:*`) that carry no detail.
 
+The same six runs in the columns of "The map after the fix", so the two maps
+line up:
+
+| run       | footprint |    v8 | malloc |    PA | Oilpan |  live | slack | tab old | wkr old |  wasm |
+| --------- | --------: | ----: | -----: | ----: | -----: | ----: | ----: | ------: | ------: | ----: |
+| control 1 |     727.7 | 181.2 |  210.3 | 150.0 |   75.6 | 239.3 | 196.6 |   106.7 |    23.8 | 111.2 |
+| control 2 |     709.6 | 180.3 |  208.7 | 145.7 |   74.2 | 235.0 | 193.7 |   105.8 |    22.6 | 113.7 |
+| control 3 |     738.1 | 181.2 |  209.9 | 149.2 |   76.6 | 243.3 | 192.4 |   106.8 |    23.2 | 112.1 |
+| gated 1   |     533.8 | 174.0 |  148.9 |  70.9 |   57.0 | 133.1 | 143.8 |    99.3 |    22.8 | 113.5 |
+| gated 2   |     534.4 | 177.3 |  145.5 |  69.9 |   58.2 | 132.9 | 140.7 |   103.8 |    22.4 | 112.8 |
+| gated 3   |     563.8 | 177.0 |  149.8 |  70.2 |   61.1 | 130.0 | 151.1 |   103.2 |    23.0 | 112.8 |
+| ctrl mean |     725.1 | 180.9 |  209.6 | 148.3 |   75.5 | 239.2 | 194.2 |   106.4 |    23.2 | 112.3 |
+| gate mean |     544.0 | 176.1 |  148.1 |  70.3 |   58.8 | 132.0 | 145.2 |   102.1 |    22.7 | 113.0 |
+
+Live objects fall by 107 MB and slack by 49 MB; V8, the tab's old space and the
+wasm heaps do not move, which is what a fix confined to Blink-side clones should
+look like. What is left is 145 MB of slack, 132 MB of live native objects, 176 MB
+of V8 and 113 MB of wasm, and the wasm and V8 items are now the two largest
+things the map names.
+
 Two cautions on reading it. The control here is 80 MB above the five-run map
 above on the same build, because both arms now start without the profile's
 service-worker precache and fetch the bundle over the network; the arms are
