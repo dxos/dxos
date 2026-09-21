@@ -53,7 +53,8 @@ const testRuntime = Effect.never;
 
 /**
  * Real but never-opened QueryExecutor dependencies, shared across the fixtures below. The index
- * engine holds a client, so it gets a real in-memory one — no query in this file reaches it.
+ * engine holds a client, so it gets an in-memory one — no query in this file reaches it, and the
+ * connection lives as long as the module rather than being disposed per test.
  */
 const testDeps = {
   indexEngine: new IndexEngine(RuntimeProvider.getService(createTestSqliteRuntime().runtime, SqlClient.SqlClient)),
