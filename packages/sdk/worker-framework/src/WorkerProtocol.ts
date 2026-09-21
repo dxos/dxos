@@ -58,6 +58,24 @@ export interface DedicatedWorkerReadyMessage {
 }
 
 /**
+ * Leader Client -> Worker to ask whether the worker is still servicing its event loop, which is what
+ * separates the wedged incumbent from every other worker on a storage lock when one is displaced.
+ */
+export interface DedicatedWorkerPingMessage {
+  type: 'ping';
+  /** Echoed back, so a reply to a superseded probe cannot answer the current one. */
+  nonce: string;
+}
+
+/**
+ * Worker -> Leader Client in reply to {@link DedicatedWorkerPingMessage}.
+ */
+export interface DedicatedWorkerPongMessage {
+  type: 'pong';
+  nonce: string;
+}
+
+/**
  * Worker -> Leader Client when the runtime failed to start; the worker shuts down after sending it.
  */
 export interface DedicatedWorkerInitFailedMessage {
@@ -103,6 +121,8 @@ export type DedicatedWorkerMessage =
   | DedicatedWorkerListeningMessage
   | DedicatedWorkerInitMessage
   | DedicatedWorkerReadyMessage
+  | DedicatedWorkerPingMessage
+  | DedicatedWorkerPongMessage
   | DedicatedWorkerInitFailedMessage
   | DedicatedWorkerStartSessionMessage
   | DedicatedWorkerSessionMessage;
@@ -137,6 +157,20 @@ export type CoordinatorMessage =
     };
 
 export type WorkerOrPort = Worker | MessagePort;
+
+/**
+ * A worker handle the tab can stop from the outside, releasing every Web Lock the worker held.
+ *
+ * A bare `MessagePort` is not one: `close()` detaches the channel and leaves `Worker.run` running
+ * with its storage and liveness locks, so forced displacement cannot be expressed through it.
+ */
+export interface TerminableWorker {
+  terminate(): void;
+}
+
+/** Whether this handle can stand its worker down without the worker's cooperation. */
+export const isTerminable = (worker: WorkerOrPort): worker is WorkerOrPort & TerminableWorker =>
+  'terminate' in worker && typeof worker.terminate === 'function';
 
 /**
  * Postable form of an error; structured clone drops a custom `name` and, on some engines, the `cause` chain.

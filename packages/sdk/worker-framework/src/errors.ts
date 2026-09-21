@@ -26,3 +26,14 @@ export class WorkerTerminationError extends BaseError.extend(
   'WorkerTerminationError',
   'Worker forcefully terminated after ignoring displacement',
 ) {}
+
+/**
+ * A worker ignored displacement and the tab owning it could not kill it, because its handle exposes
+ * no termination capability (a bare `MessagePort`: closing it leaves the worker holding both locks).
+ * Reported at error level and kept distinct from {@link WorkerTerminationError} because the outcome
+ * is the opposite one — the storage lock is still held and the successor will still fail.
+ */
+export class WorkerNotTerminableError extends BaseError.extend(
+  'WorkerNotTerminableError',
+  'Wedged worker could not be terminated: its handle cannot be terminated',
+) {}

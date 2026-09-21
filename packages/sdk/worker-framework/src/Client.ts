@@ -9,11 +9,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import { WorkerTerminationError } from './errors.ts';
-import { DisplaceChannel } from './internal/displace-channel.ts';
+import { WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
   isAbortError,
+  isLockHeld,
   lockOrRpcTimeoutError,
   requestExclusiveLock,
   waitWithLockOrRpcTimeout,
@@ -76,6 +77,11 @@ export interface LeaderTimeouts {
    * tight loop.
    */
   retryBackoff?: number;
+  /**
+   * Time the tab gives its own worker to answer the liveness probe it sends when another worker
+   * escalates, before accepting that the worker is wedged and terminating it.
+   */
+  workerProbeTimeout?: number;
 }
 
 export type Handle = {
@@ -131,6 +137,10 @@ const MAX_LEADER_RETRY_BACKOFF = 30_000;
 // Consecutive failures before onPersistentFailure fires — late enough to skip transient races,
 // early enough that a user staring at a boot spinner gets a signal within a few seconds.
 const DEFAULT_MAX_LEADER_FAILURES = 4;
+// Time a worker gets to answer the probe that decides whether it is the wedged incumbent. Generous
+// for a main-thread round trip, and small against the ~5s the escalating worker's own leader session
+// has left after its grace period, which is what the terminate still has to fit inside.
+const DEFAULT_WORKER_PROBE_TIMEOUT = 1_000;
 
 /**
  * Manages leader election, coordinator port exchange, and worker lifecycle for dedicated workers.
@@ -148,6 +158,7 @@ export class Connection extends Resource {
   readonly #leaderStaleTimeout: number;
   readonly #leaderPortTimeout: number;
   readonly #leaderRetryBackoff: number;
+  readonly #workerProbeTimeout: number;
   readonly #maxLeaderFailures: number;
   readonly #onPersistentFailure: ((error: unknown) => void) | undefined;
 
@@ -207,6 +218,7 @@ export class Connection extends Resource {
     this.#leaderStaleTimeout = options.leaderTimeouts?.staleTimeout ?? DEFAULT_LEADER_STALE_TIMEOUT;
     this.#leaderPortTimeout = options.leaderTimeouts?.portTimeout ?? DEFAULT_LEADER_PORT_TIMEOUT;
     this.#leaderRetryBackoff = options.leaderTimeouts?.retryBackoff ?? DEFAULT_LEADER_RETRY_BACKOFF;
+    this.#workerProbeTimeout = options.leaderTimeouts?.workerProbeTimeout ?? DEFAULT_WORKER_PROBE_TIMEOUT;
     this.#maxLeaderFailures = options.maxLeaderFailures ?? DEFAULT_MAX_LEADER_FAILURES;
     // The escalation fires on exact equality with the failure count, so any non-positive-integer
     // value would silently disable it.
@@ -308,6 +320,7 @@ export class Connection extends Resource {
               this.#coordinator,
               this.#config,
               this.#clientId,
+              this.#workerProbeTimeout,
             );
             const done = new Trigger();
             this.#leaderDone = done;
@@ -655,7 +668,10 @@ class LeaderSession extends Resource {
   readonly #coordinator: WorkerProtocol.WorkerCoordinator;
   readonly #config: Record<string, any> | undefined;
   readonly #ownerClientId: string;
+  readonly #workerProbeTimeout: number;
   readonly #leaderId = `leader-${crypto.randomUUID()}`;
+  /** Nonces the worker has echoed back, matched against the probe that is waiting for one. */
+  readonly #probeReplies = new Event<string>();
 
   #worker!: WorkerProtocol.WorkerOrPort;
   #livenessLockKey!: string;
@@ -668,12 +684,14 @@ class LeaderSession extends Resource {
     coordinator: WorkerProtocol.WorkerCoordinator,
     config: Record<string, any> | undefined,
     ownerClientId: string,
+    workerProbeTimeout: number,
   ) {
     super();
     this.#createWorker = createWorker;
     this.#coordinator = coordinator;
     this.#config = config;
     this.#ownerClientId = ownerClientId;
+    this.#workerProbeTimeout = workerProbeTimeout;
   }
 
   readonly onClose = new Event<Error | undefined>();
@@ -696,6 +714,9 @@ class LeaderSession extends Resource {
           break;
         case 'ready':
           ready.wake(event.data);
+          break;
+        case 'pong':
+          this.#probeReplies.emit(event.data.nonce);
           break;
         case 'init-failed':
           this.#startFailure = WorkerProtocol.decodeError(event.data.error);
@@ -747,32 +768,16 @@ class LeaderSession extends Resource {
     // Second-level displacement (DX-1293): a worker wedged enough to ignore the cooperative stop
     // signal holds the storage lock until the tab owning its handle terminates it, and this tab is
     // the only party that holds that handle.
-    this.#displaceChannel = new DisplaceChannel(readyMessage.displaceChannel);
-    this.#displaceChannel.onTerminate = ({ issuerId, storageLockKey, graceTimeout }) => {
-      // Our own worker raised the escalation while queued behind someone else's; terminating here
-      // would have every new leader kill the worker it just started, which is the kill loop.
-      if (issuerId === this.#workerId) {
-        return;
-      }
-      // Reported from the side that actually kills the worker, and only there: the escalating
-      // worker runs in a thread with no observability processor attached, and a second event per
-      // incident would only split the incident in the error stream.
-      const error = new WorkerTerminationError({
-        context: {
-          storageLockKey,
-          terminatedWorkerId: this.#workerId,
-          issuerId,
-          graceTimeout,
-          raisedBy: 'tab',
-          leaderId: this.#leaderId,
-        },
+    if (readyMessage.workerId && readyMessage.displaceChannel) {
+      this.#displaceChannel = new DisplaceChannel(readyMessage.displaceChannel);
+      this.#displaceChannel.onTerminate = (request) => void this.#onTerminateRequest(request);
+    } else {
+      // A worker from a build that predates these fields cannot be escalated against, but it still
+      // displaces cooperatively, so the session runs on rather than failing the tab's connection.
+      log.warn('leader-session: worker predates forced displacement, escalation unavailable', {
+        leaderId: this.#leaderId,
       });
-      log.catch(error);
-      this.#closeWorker();
-      if (this.isOpen) {
-        this.onClose.emit(error);
-      }
-    };
+    }
 
     void navigator.locks.request(this.#livenessLockKey, () => {
       log('leader-session: worker terminated');
@@ -816,10 +821,89 @@ class LeaderSession extends Resource {
     this.#closeWorker();
   }
 
+  /**
+   * Acts on an escalation only when the worker this tab owns is the one holding up the storage lock.
+   *
+   * The escalation is broadcast to every tab on that lock, and the issuer cannot name the incumbent
+   * — nothing tells a queued worker who holds the lock — so with three or more tabs an issuer-only
+   * check has every bystander kill its own worker (F-3.5). Two local facts identify the culprit
+   * instead: its liveness lock is still held, which `Worker.run` does over exactly the interval it
+   * holds the storage lock, so a worker that already stood down is not killed twice nor reported;
+   * and it does not answer a probe, which is what being wedged means and what keeps the lock. Every
+   * healthy bystander answers, so at most the wedged worker is terminated however many tabs listen.
+   */
+  async #onTerminateRequest({ issuerId, storageLockKey, graceTimeout }: TerminateRequest): Promise<void> {
+    // Our own worker raised the escalation while queued behind someone else's; terminating here
+    // would have every new leader kill the worker it just started, which is the kill loop.
+    if (issuerId === this.#workerId) {
+      return;
+    }
+    if (!(await isLockHeld(this.#livenessLockKey))) {
+      return;
+    }
+    if (await this.#isWorkerResponsive()) {
+      log('leader-session: escalation is not about our worker, it is still servicing messages', {
+        leaderId: this.#leaderId,
+        issuerId,
+      });
+      return;
+    }
+    const context = {
+      storageLockKey,
+      terminatedWorkerId: this.#workerId,
+      issuerId,
+      graceTimeout,
+      raisedBy: 'tab',
+      leaderId: this.#leaderId,
+    };
+    if (!this.#terminateWorker()) {
+      // The handle cannot stop the worker, so the locks stay held and the successor still fails;
+      // reported rather than left as a silent no-op.
+      log.catch(new WorkerNotTerminableError({ context }));
+      return;
+    }
+    // Reported from the side that actually kills the worker, and only there: the escalating
+    // worker runs in a thread with no observability processor attached, and a second event per
+    // incident would only split the incident in the error stream.
+    const error = new WorkerTerminationError({ context });
+    log.catch(error);
+    if (this.isOpen) {
+      this.onClose.emit(error);
+    }
+  }
+
+  /** Whether the worker still drains its message queue; a wedged one never answers. */
+  async #isWorkerResponsive(): Promise<boolean> {
+    const nonce = crypto.randomUUID();
+    const replied = new Trigger();
+    // Matched on the nonce, so a reply to an earlier probe cannot vouch for the worker now.
+    const unsubscribe = this.#probeReplies.on((received) => {
+      if (received === nonce) {
+        replied.wake();
+      }
+    });
+    try {
+      this.#sendMessage({ type: 'ping', nonce });
+      await asyncTimeout(replied.wait(), this.#workerProbeTimeout);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      unsubscribe();
+    }
+  }
+
+  /** Stands the worker down without its cooperation; `false` when the handle cannot do that. */
+  #terminateWorker(): boolean {
+    if (!WorkerProtocol.isTerminable(this.#worker)) {
+      return false;
+    }
+    this.#worker.terminate();
+    return true;
+  }
+
   #closeWorker() {
-    if (isWorker(this.#worker)) {
-      this.#worker.terminate();
-    } else if (this.#worker instanceof MessagePort) {
+    if (!this.#terminateWorker() && this.#worker instanceof MessagePort) {
       this.#worker.close();
     }
   }

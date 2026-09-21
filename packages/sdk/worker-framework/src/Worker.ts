@@ -258,6 +258,12 @@ export const run = ({
           } satisfies WorkerProtocol.DedicatedWorkerMessage);
           break;
         }
+        case 'ping': {
+          // Answered from the message loop itself, so the reply is proof that this worker is still
+          // draining its queue — the one thing that distinguishes it from a wedged incumbent.
+          endpoint.postMessage({ type: 'pong', nonce: message.nonce } satisfies WorkerProtocol.DedicatedWorkerMessage);
+          break;
+        }
         case 'start-session': {
           // Absent on a client that predates the field; 0 then reproduces the old first-wins de-dupe.
           const attempt = message.attempt ?? 0;

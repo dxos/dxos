@@ -92,7 +92,7 @@ module Client
     Connection: class extends Resource  # ctor(Options); open()/close(); clientId; onReconnect(cb); closed + reconnected events.
     Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, onConnect.
     Handle: { close(): Promise }        # per-connection handle returned by Options.onConnect.
-    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?.
+    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?, workerProbeTimeout?.
 ```
 
 ### `@dxos/worker-framework/worker`
@@ -105,7 +105,8 @@ module Worker
     Entrypoint: @dxos/worker-framework/worker.
   api:
     run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`).
-    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, createRuntime.
+    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, displaceGraceTimeout?, createRuntime.
+    DEFAULT_DISPLACE_GRACE_TIMEOUT: number  # grace before a queued worker escalates to the incumbent's tab.
     RuntimeHandle: {...}                # createSession({ clientId, isOwner, onClose }) + optional idempotent stop().
 ```
 
@@ -221,14 +222,30 @@ feat F-3: Worker lifecycle and displacement
     when: a starting worker is still queued on the storage lock after its displacement
           grace period, i.e. the incumbent never serviced the stop signal
     then: it escalates once on the same channel with a `terminate` action naming itself,
-          the storage lock and the grace period it allowed, and the tab owning the
-          incumbent's handle terminates it — unless the escalation names that tab's own
-          worker
+          the storage lock and the grace period it allowed
 
   req F-3.6:
+    when: a tab receives an escalation over the displacement channel
+    then: it acts only on an escalation raised by another worker, whose own worker still
+          holds its liveness lock and does not answer a `ping` within the probe timeout,
+          so however many tabs share the storage lock only the wedged incumbent is
+          terminated; a malformed message is discarded before any of this
+
+  req F-3.7:
+    when: a worker is asked `ping`
+    then: it replies `pong` with the same nonce from its message loop, which is what tells
+          its tab that it is not the wedged worker an escalation is aimed at
+
+  req F-3.8:
     when: a tab terminates a worker that ignored displacement
     then: it reports a `WorkerTerminationError` at error level, so the forced kill reaches
           error telemetry, and closes the session with that same error
+
+  req F-3.9:
+    when: the wedged worker's handle exposes no `terminate()` (a bare `MessagePort`, whose
+          `close()` leaves the worker holding both locks)
+    then: the tab reports a `WorkerNotTerminableError` at error level and leaves the session
+          open, since nothing was killed and the storage lock is still held
 ```
 
 ```mdl
