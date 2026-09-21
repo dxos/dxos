@@ -45,7 +45,7 @@ import {
   SystemService,
 } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
-import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
@@ -186,7 +186,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LayerSpec.make(
     {
       affinity: application,
-      requires: [Hook.Controller, SwarmNetworkManagerService, IdentityManagerService],
+      requires: [Hook.Controller, SwarmNetworkManagerService, IdentityManagerService, SignalManagerService],
       provides: [],
       eager: true,
     },
@@ -262,7 +262,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LayerSpec.make(
     {
       affinity: application,
-      requires: [IdentityManagerService, SpaceManagerService],
+      requires: [IdentityManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
     () => echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator }),
@@ -388,11 +388,13 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
     {
       affinity: application,
       requires: [
+        Hook.Controller,
         IdentityManagerService,
         IdentityLifecycleService,
         EdgeIdentityRecoveryManagerService,
         KeyringApiService,
         DataSpaceManagerService,
+        SqlClient.SqlClient,
       ],
       provides: [IdentityService.Tag],
     },
@@ -539,6 +541,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
         SignalManagerService,
         SwarmNetworkManagerService,
         SqlClient.SqlClient,
+        SqlExport.SqlExport,
       ],
       provides: [DevtoolsHost.Tag, DevtoolsHostService],
     },
