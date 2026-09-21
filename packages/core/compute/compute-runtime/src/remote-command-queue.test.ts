@@ -73,17 +73,14 @@ describe('RemoteCommandQueue', () => {
   );
 
   it.effect(
-    'attempts accumulate per command, and the first failure time is pinned',
+    'attempts accumulate per command, which is what the backoff reads',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const queue = new RemoteCommandQueue(kv);
       yield* queue.enqueue({ id: 'c1', localPid: PID_A, payload: spawn() });
-      const first = yield* queue.recordAttempt('c1');
-      expect(first.attempts).toEqual(1);
-      expect(yield* queue.recordAttempt('c1')).toMatchObject({ attempts: 2, firstFailedAt: first.firstFailedAt });
+      expect(yield* queue.recordAttempt('c1')).toEqual({ attempts: 1 });
+      expect(yield* queue.recordAttempt('c1')).toEqual({ attempts: 2 });
       expect((yield* queue.list())[0].attempts).toEqual(2);
-      // Pinned at the FIRST failure: how long it has been failing is what the flusher gives up on.
-      expect((yield* queue.list())[0].firstFailedAt).toEqual(first.firstFailedAt);
     }, Effect.provide(KeyValueStore.layerMemory)),
   );
 

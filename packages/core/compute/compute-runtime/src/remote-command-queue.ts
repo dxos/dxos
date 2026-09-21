@@ -56,14 +56,6 @@ export const Command = Schema.Struct({
   localPid: Process.ID,
   /** Delivery attempts made so far — what the retry backoff is computed from. */
   attempts: Schema.Number,
-  /**
-   * When this command first failed to deliver (epoch ms), or absent while it never has.
-   *
-   * How long it has been failing, rather than how often, is what separates a host that keeps
-   * rejecting a command from one that is merely unreachable: the retry backoff caps out, so an
-   * attempt count is really a measure of elapsed time with the units filed off.
-   */
-  firstFailedAt: Schema.optional(Schema.Number),
   payload: CommandPayload,
 });
 export type Command = Schema.Schema.Type<typeof Command>;
@@ -138,18 +130,11 @@ export class RemoteCommandQueue {
     return this.#modify((commands) => [commands.filter((entry) => entry.id !== id), undefined]).pipe(Effect.asVoid);
   }
 
-  /**
-   * Records a failed delivery, and returns the attempt count (which the backoff is a function of)
-   * with the time the command first failed (which is what giving up on it is a function of).
-   */
-  recordAttempt(id: string): Effect.Effect<{ attempts: number; firstFailedAt: number }> {
+  /** Records a failed delivery and returns the attempt count, which the backoff is a function of. */
+  recordAttempt(id: string): Effect.Effect<{ attempts: number }> {
     return this.#modify((commands) => {
-      const now = Date.now();
-      const next = commands.map((entry) =>
-        entry.id === id ? { ...entry, attempts: entry.attempts + 1, firstFailedAt: entry.firstFailedAt ?? now } : entry,
-      );
-      const entry = next.find((command) => command.id === id);
-      return [next, { attempts: entry?.attempts ?? 0, firstFailedAt: entry?.firstFailedAt ?? now }];
+      const next = commands.map((entry) => (entry.id === id ? { ...entry, attempts: entry.attempts + 1 } : entry));
+      return [next, { attempts: next.find((command) => command.id === id)?.attempts ?? 0 }];
     });
   }
 

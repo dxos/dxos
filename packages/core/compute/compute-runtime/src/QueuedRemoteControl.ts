@@ -44,20 +44,19 @@ const DEFAULT_BACKOFF: Backoff = { initial: Duration.seconds(1), max: Duration.m
 const IDLE_POLL = Duration.seconds(5);
 
 /**
- * How long one command may keep failing before it, and its process, are given up on.
+ * Ordering is per PROCESS, not across the whole queue.
  *
- * The queue is strictly ordered, so a command the host will never accept — a process it has dropped,
- * a key it does not host — would otherwise hold every later command, for every OTHER process, behind
- * it forever. `Control` reports a rejection and an outage identically (both are defects), so the
- * only thing left to separate them is how long it has gone on.
+ * A command the host will never accept — a process it has dropped, a key it does not host — retries
+ * forever, because `Control` reports a rejection and an outage identically (both are defects) and
+ * nothing here can tell them apart. What must not happen is that command holding OTHER processes'
+ * commands behind it, so the flusher skips a process that is waiting out its backoff and delivers
+ * for another one instead.
  *
- * A day, because the cost of the two mistakes is not symmetric: giving up too early discards work a
- * user asked for, while giving up late merely leaves a queue stalled somewhat longer. No outage a
- * client is expected to ride out — a closed laptop, a flight, an edge deploy — comes close, and an
- * attempt count would not do: the backoff caps out, so counting attempts is measuring elapsed time
- * with the units filed off (twelve attempts is six minutes, not the hours it looks like).
+ * The alternative — discarding a command that has failed for long enough — was tried and is worse:
+ * any cutoff long enough not to fire during an outage is also long enough that firing means silently
+ * dropping work a user asked for, and the threshold is a guess about the network rather than
+ * anything the host actually said.
  */
-const DEFAULT_GIVE_UP_AFTER = Duration.hours(24);
 
 export interface Options {
   /** Transport to the host. Its failures are defects, which is what marks a command for retry. */
@@ -66,8 +65,6 @@ export interface Options {
   readonly kvStore: KeyValueStore.KeyValueStore;
   readonly prefix?: string;
   readonly backoff?: Backoff;
-  /** How long a command may keep failing before it is abandoned; see {@link DEFAULT_GIVE_UP_AFTER}. */
-  readonly giveUpAfter?: Duration.Duration;
   /** Injectable so a test can make command ids deterministic. */
   readonly newId?: () => string;
 }
@@ -119,7 +116,7 @@ export interface Queued extends RemoteProcessManager.Control {
  */
 export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope> =>
   Effect.gen(function* () {
-    const { control, kvStore, prefix, backoff = DEFAULT_BACKOFF, giveUpAfter = DEFAULT_GIVE_UP_AFTER } = options;
+    const { control, kvStore, prefix, backoff = DEFAULT_BACKOFF } = options;
     const newId = options.newId ?? (() => globalThis.crypto.randomUUID());
     const queue = new RemoteCommandQueue(kvStore, prefix);
 
@@ -134,8 +131,23 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
 
     let wake = yield* Deferred.make<void>();
 
-    /** Wakes the flusher: completes the current latch and installs a fresh one. */
+    /**
+     * Earliest time each process's next delivery may be attempted, by local pid.
+     *
+     * In memory rather than durable: it is a backoff, so losing it on reload costs one early retry
+     * and nothing else. Keyed by process because that is the granularity ordering needs.
+     */
+    const retryAt = new Map<Process.ID, number>();
+
+    /**
+     * Wakes the flusher: completes the current latch and installs a fresh one.
+     *
+     * Clears the per-process backoffs too. They are a guess that the host is still unreachable, and
+     * a wake-up is news to the contrary — without this, `connected` would end the flusher's sleep
+     * only for it to find every process still cooling off and go back to sleep.
+     */
     const signal = Effect.gen(function* () {
+      retryAt.clear();
       const current = wake;
       wake = yield* Deferred.make<void>();
       yield* Deferred.succeed(current, undefined);
@@ -290,45 +302,36 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       // Captured before the read, so a command enqueued while this fiber is between the two does not
       // signal an old latch and leave the flusher asleep.
       const latch = wake;
-      const [command] = yield* queue.list();
-      if (command === undefined) {
+      const commands = yield* queue.list();
+      if (commands.length === 0) {
         return yield* waitFor(latch, IDLE_POLL);
+      }
+      const now = Date.now();
+      // The first command whose process is not waiting out a backoff. Scanning in queue order is
+      // what keeps ONE process's commands in order while letting another's overtake them.
+      const command = commands.find((entry) => (retryAt.get(entry.localPid) ?? 0) <= now);
+      if (command === undefined) {
+        // Everything queued belongs to a process that is cooling off; sleep until the first is due.
+        const earliest = Math.min(...commands.map((entry) => retryAt.get(entry.localPid) ?? 0));
+        return yield* waitFor(latch, Duration.millis(Math.max(0, earliest - now)));
       }
       const exit = yield* deliver(command).pipe(Effect.exit);
       if (Exit.isSuccess(exit)) {
+        retryAt.delete(command.localPid);
         return yield* queue.complete(command.id);
       }
-      const { attempts, firstFailedAt } = yield* queue.recordAttempt(command.id);
-      if (Date.now() - firstFailedAt >= Duration.toMillis(giveUpAfter)) {
-        // See {@link DEFAULT_GIVE_UP_AFTER}: the whole GROUP goes, not just this command, since the
-        // ones behind it address a process that is never going to exist.
-        log.error('remote command abandoned after failing for too long', {
-          command: command.payload._tag,
-          id: command.id,
-          pid: command.localPid,
-          attempts,
-          failingForMs: Date.now() - firstFailedAt,
-        });
-        const snapshot = overlay.get(command.localPid);
-        // Reported as FAILED rather than dropped silently: a caller waiting on this process has to
-        // learn that it is never going to run.
-        if (snapshot !== undefined) {
-          overlay.set(command.localPid, {
-            ...snapshot,
-            state: Process.State.FAILED,
-            completedAt: Option.some(Date.now()),
-          });
-        }
-        return yield* queue.purgeProcess(command.localPid);
-      }
+      const { attempts } = yield* queue.recordAttempt(command.id);
       const delay = backoffFor(attempts);
+      // The process waits; the flusher does not. It comes straight back round and delivers for some
+      // other process, which is the whole point of the per-process backoff.
+      retryAt.set(command.localPid, Date.now() + Duration.toMillis(delay));
       log.warn('remote command delivery failed; will retry', {
         command: command.payload._tag,
         id: command.id,
+        pid: command.localPid,
         attempts,
         delay: Duration.toMillis(delay),
       });
-      yield* waitFor(latch, delay);
     });
 
     yield* Effect.forkScoped(Effect.forever(step));
