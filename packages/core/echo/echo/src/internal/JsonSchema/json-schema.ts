@@ -25,7 +25,12 @@ import {
   EntityKindSchema,
   getStaticTypeSchema,
 } from '../common/types/index.ts';
-import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref/index.ts';
+import {
+  JSON_SCHEMA_ECHO_REF_ID,
+  type JsonSchemaReferenceInfo,
+  createEchoReferenceSchema,
+  isRefIdentifier,
+} from '../Ref/index.ts';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations.ts';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
@@ -159,9 +164,9 @@ const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType>
     onExcessProperty: 'error',
     // The default policy hoists anything carrying an `identifier` into `$defs` and leaves a `$ref`
     // in its place, which would strip a ref property of the inline `reference` annotation readers
-    // key off. `Ref` carries an identifier so its rejection messages name the target type, so
-    // only genuinely recursive candidates (which get a synthetic name) may be extracted here.
-    referencePolicy: () => undefined,
+    // key off. `Ref` carries an identifier so its rejection messages name the target type, so only
+    // refs are declined here; every other named schema keeps the name it had.
+    referencePolicy: ({ identifier }) => (isRefIdentifier(identifier) ? undefined : identifier),
   });
   const jsonSchema = {
     ...schema,

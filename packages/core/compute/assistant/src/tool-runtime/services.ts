@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import type * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import * as Stream from 'effect/Stream';
 import * as Tool from 'effect/unstable/ai/Tool';
 import type * as Toolkit from 'effect/unstable/ai/Toolkit';
@@ -287,13 +288,17 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 };
 
 /**
- * Keeps a named schema inline rather than hoisting it into `$defs`.
+ * Keeps refs inline rather than hoisting them into `$defs`.
  *
  * The default policy extracts anything carrying an `identifier`, and `Ref` carries one so its
  * rejection messages can name the target type. Without this a ref parameter reaches the model as a
- * `$ref` into `$defs` instead of the described string it used to be.
+ * `$ref` into `$defs` instead of the described URI string it used to be. Only refs are declined, so
+ * a recursive parameter keeps the name it was recorded under.
  */
-const REFERENCES_INLINE = { referencePolicy: () => undefined } as const;
+const REFERENCES_INLINE = {
+  referencePolicy: ({ identifier }: SchemaRepresentation.ReferencePolicyInput) =>
+    Ref.isRefIdentifier(identifier) ? undefined : identifier,
+} as const;
 
 /**
  * Emits the JSON Schema the model is shown for a tool's parameters.

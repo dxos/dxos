@@ -755,8 +755,13 @@ const validateOperationInput = <const Op extends Operation.Definition.Any>(
       cause,
     });
 
+  // Invoking with no arguments is how a skill template and the trigger dispatcher call an operation
+  // whose fields are all optional, so a nullish payload is validated as the empty object it stands
+  // for rather than rejected outright; a schema that does require fields still names them.
+  const payload = input ?? (SchemaAST.isObjects(typeAst) ? {} : input);
+
   return Effect.suspend(() => {
-    const undeclared = undeclaredTopLevelKeys(typeAst, input);
+    const undeclared = undeclaredTopLevelKeys(typeAst, payload);
     if (undeclared.length > 0) {
       return Effect.die(
         fail(`unexpected ${undeclared.length === 1 ? 'property' : 'properties'} ${undeclared.join(', ')}`),
@@ -764,7 +769,7 @@ const validateOperationInput = <const Op extends Operation.Definition.Any>(
     }
 
     return Effect.try({
-      try: () => Schema.decodeUnknownSync(Schema.toType(op.input), { reportInput: true, errors: 'all' })(input),
+      try: () => Schema.decodeUnknownSync(Schema.toType(op.input), { reportInput: true, errors: 'all' })(payload),
       catch: (error: any) => fail(error?.message ?? String(error), error),
     }).pipe(Effect.asVoid, Effect.orDie);
   });

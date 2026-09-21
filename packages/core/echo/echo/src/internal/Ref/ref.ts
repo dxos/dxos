@@ -338,6 +338,18 @@ export type JsonSchemaReferenceInfo = {
 const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String }) as unknown as Schema.Codec<EncodedReference> &
   Schema.Struct<{ readonly '/': Schema.String }>;
 
+/** The `identifier` annotation every ref declaration carries, naming the type it points at. */
+const refIdentifier = (target: string): string => `Ref<${target}>`;
+
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`, which would replace a ref property with a `$ref` and strip the annotations readers key
+ * off; generators use this to keep refs inline while still naming genuinely recursive schemas.
+ */
+export const isRefIdentifier = (identifier: string | undefined): boolean => identifier?.startsWith('Ref<') ?? false;
+
 /**
  * @internal
  */
@@ -370,7 +382,7 @@ export const createEchoReferenceSchema = (
       // and would overwrite whatever the field's own annotations say. Built from the same value as
       // `$ref` so it survives a JSON-schema round trip, which reconstructs the schema from `echoUri`
       // where the original had only a typename.
-      identifier: `Ref<${referenceInfo.schema.$ref}>`,
+      identifier: refIdentifier(referenceInfo.schema.$ref),
     })
     .pipe(
       Schema.encodeTo(
