@@ -76,7 +76,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
         <iframe
           src={url}
           title={name ?? 'Attachment'}
-          className={mx('dx-fill min-h-96 border-0 bg-baseSurface', classNames)}
+          className={mx('dx-fill min-h-96 border-0 bg-base-surface', classNames)}
           sandbox=''
           data-testid='attachment.text'
         />

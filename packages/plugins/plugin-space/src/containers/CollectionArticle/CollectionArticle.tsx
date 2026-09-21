@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -83,9 +85,17 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
  * Combined hook to get collection items with search/filter support.
  */
 const useCollectionItems = (collection: Collection.Collection, attendableId?: string) => {
-  const objects = useMemo(
-    () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
-    [collection.objects],
+  const objects = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make((get) =>
+          (get(Obj.atomProperty(collection, 'objects')) ?? []).flatMap((ref) => {
+            const value = get(ref.atom);
+            return value ? [value] : [];
+          }),
+        ),
+      [collection],
+    ),
   );
 
   const items = useMemo(
