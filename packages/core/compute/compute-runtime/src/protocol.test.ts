@@ -274,6 +274,21 @@ describe('ref decoding through the input schema', () => {
   test('clears a nullable ref field', async ({ expect }) => {
     await expect(invokeWithEnvelope(OptionalNullable, { milestone: null })).resolves.toEqual({ decoded: false });
   });
+
+  // The message is the whole diagnostic a remote caller gets: it cannot see its own payload in our
+  // logs, so a rejection naming neither the expected type nor the value it sent is unactionable.
+  test('names the expected type and the rejected value when a ref field is malformed', async ({ expect }) => {
+    const error = await invokeWithEnvelope(Optional, { milestone: 42 }).then(
+      () => undefined,
+      (err: any) => err,
+    );
+
+    expect(error).toBeDefined();
+    expect(error.message).toContain('Ref<');
+    expect(error.message).toContain('com.example.type.target');
+    expect(error.message).toContain('42');
+    expect(error.message).toContain('["milestone"]');
+  });
 });
 
 //

@@ -62,9 +62,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
 
 export default handler;
 
-/** Every term must match, so the words of a phrase narrow the result rather than widening it. */
-const fullText = (text: string): Query.Any =>
-  Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
+/**
+ * Every term must match, so the words of a phrase narrow the result rather than widening it.
+ *
+ * The phrase goes to the index whole, which is what ANDs the terms. Splitting it here and combining
+ * the parts with `Query.all` built a `{ type: 'union' }` node instead, so the terms were OR-ed and
+ * each extra word a caller typed brought back more unrelated objects.
+ */
+const fullText = (text: string): Query.Any => Query.select(Filter.text(text, { type: 'full-text' }));
 
 /**
  * The filter for a caller-supplied typename: a bare-typename DXN, which is what `Filter.type`

@@ -157,6 +157,11 @@ const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType>
     // contract states a struct as closed, and an open tool schema would let a model pass keys the
     // handler never declared.
     onExcessProperty: 'error',
+    // The default policy hoists anything carrying an `identifier` into `$defs` and leaves a `$ref`
+    // in its place, which would strip a ref property of the inline `reference` annotation readers
+    // key off. `Ref` carries an identifier so its rejection messages name the target type, so
+    // only genuinely recursive candidates (which get a synthetic name) may be extracted here.
+    referencePolicy: () => undefined,
   });
   const jsonSchema = {
     ...schema,

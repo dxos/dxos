@@ -361,8 +361,17 @@ export const createEchoReferenceSchema = (
 
   // Effect 4 splits what v3's three-parameter `declare` did into two steps: `declare` states the
   // decoded type, `encodeTo` attaches the wire form and the transformation between them.
-  // TODO(dmaretskyi): Add name and description.
   const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
+    .annotate({
+      // Without an `identifier` Effect renders every rejection of a ref field as the placeholder
+      // `Expected <Declaration>`, which names neither the target type nor that a reference was
+      // wanted; `InvalidOperationInput` interpolates that message verbatim to remote callers.
+      // `identifier` only, since `title` and `description` travel into the generated JSON schema
+      // and would overwrite whatever the field's own annotations say. Built from the same value as
+      // `$ref` so it survives a JSON-schema round trip, which reconstructs the schema from `echoUri`
+      // where the original had only a typename.
+      identifier: `Ref<${referenceInfo.schema.$ref}>`,
+    })
     .pipe(
       Schema.encodeTo(
         // The JSON-schema keys live on the encoded node: `toJsonSchemaDocument` serializes the

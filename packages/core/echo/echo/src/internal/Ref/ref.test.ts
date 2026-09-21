@@ -89,37 +89,36 @@ describe('Ref', () => {
     expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
   });
 
-  // `Ref` is a `Schema.declare` carrying no identifier or title annotation (see the
-  // `TODO(dmaretskyi): Add name and description.` above `createEchoReferenceSchema`), so Effect
-  // renders it with its placeholder for an unnamed declaration. Every rejection of a ref field —
-  // and `InvalidOperationInput` interpolates this message verbatim — therefore says only what shape
-  // it is not, never which type was expected nor what arrived.
+  // A rejection message is what a remote caller gets back: `InvalidOperationInput` interpolates it
+  // verbatim, and the caller cannot see its own payload in our logs.
   describe('rejection diagnostics', () => {
-    const rejectionMessage = (value: unknown): string => {
+    const rejectionMessage = (value: unknown, options?: { readonly reportInput: true }): string => {
       try {
-        Schema.decodeUnknownSync(Schema.toType(Schema.Struct({ tasks: Ref(Task) })))({ tasks: value } as any);
+        Schema.decodeUnknownSync(Schema.toType(Schema.Struct({ tasks: Ref(Task) })))({ tasks: value } as any, options);
       } catch (err: any) {
         return err.message;
       }
       throw new Error('expected the decode to fail');
     };
 
-    test('names the expected type', ({ expect }) => {
+    test('names the expected type and the field', ({ expect }) => {
       const message = rejectionMessage(42);
 
-      // The path is reported, and that part is fine.
       expect(message).toContain('["tasks"]');
 
-      // The type is not. A caller correcting its input needs to know a reference was expected.
+      // Without an `identifier` annotation Effect renders a declaration as `<Declaration>`, which
+      // tells a caller only what shape its value is not.
       expect(message).not.toContain('<Declaration>');
-      expect(message.toLowerCase()).toContain('ref');
+      expect(message).toContain('Ref<');
+      expect(message).toContain(Type.getTypename(Task));
     });
 
-    test('reports the offending value', ({ expect }) => {
-      // The value is what distinguishes "you passed a number" from "you passed an unresolvable
-      // envelope" — the two mistakes a remote caller actually makes, currently indistinguishable.
-      expect(rejectionMessage(42)).toContain('42');
-      expect(rejectionMessage({ '/': 'not-a-uri' })).toContain('not-a-uri');
+    test('reports the offending value under `reportInput`', ({ expect }) => {
+      // The value distinguishes "you passed a number" from "you passed an unresolvable envelope" —
+      // the two mistakes a remote caller actually makes. Operation input validation turns this on;
+      // see `validateOperationInput` in `@dxos/compute`.
+      expect(rejectionMessage(42, { reportInput: true })).toContain('42');
+      expect(rejectionMessage({ '/': 'not-a-uri' }, { reportInput: true })).toContain('not-a-uri');
     });
   });
 });
