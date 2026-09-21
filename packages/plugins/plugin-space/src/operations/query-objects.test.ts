@@ -175,7 +175,8 @@ describe('SpaceOperation.QueryObjects', () => {
         const both = yield* Database.add(Obj.make(TestObject, { name: 'alphaterm betaterm' }));
         yield* Database.add(Obj.make(TestObject, { name: 'alphaterm only' }));
         yield* Database.add(Obj.make(TestObject, { name: 'betaterm only' }));
-        yield* Database.flush();
+        // A text query reads the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
 
         const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
           text: 'alphaterm betaterm',
