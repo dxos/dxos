@@ -115,4 +115,12 @@ const main = () => {
   }
 };
 
-main();
+// The step runs under `always()`, so a throw from the setup work outside `main`'s own try — arg
+// parsing, creating the report directory, writing the batch — would fail a run it only observes.
+try {
+  main();
+} catch (err) {
+  warn(
+    `publishing e2e results failed: ${err instanceof Error ? err.message : String(err)}; the run itself is unaffected.`,
+  );
+}

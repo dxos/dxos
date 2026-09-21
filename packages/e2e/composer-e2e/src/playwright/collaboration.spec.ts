@@ -97,7 +97,7 @@ test.describe('Collaboration tests', () => {
       await host.createSpace();
       await host.createObject({ type: 'Document' });
 
-      // Focus on host's textbox and wait for it to be ready
+      // Focus on host's textbox and wait for it to be ready.
       const hostPlank = host.deck.plank();
       const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
       await hostTextbox.waitFor();
