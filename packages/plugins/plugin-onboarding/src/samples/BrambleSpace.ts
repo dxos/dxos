@@ -6,9 +6,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
+import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 // Raw imports keep the two welcome documents as Markdown files that render in editors and diff cleanly.
 import ABOUT_MD from '../content/bramble/ABOUT.md?raw';
 import TOUR_MD from '../content/bramble/README.md?raw';
@@ -87,4 +89,12 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
           Ref.make(sheets.priceList),
         ]);
       }),
+  });
+
+/** Offered in the create dialog, and what a new identity's first launch applies. */
+export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
+  SampleSpace.makeTemplate({
+    id: BRAMBLE_TEMPLATE_ID,
+    description: 'A coffee roastery mid-launch: its people, mail, calendar, tasks, notes and roast logs.',
+    definition: make(),
   });

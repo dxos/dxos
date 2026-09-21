@@ -428,12 +428,13 @@ export const applyTo = <Phases extends PhaseMap, A>(
  *
  * The two are different layers. A sample space is content and the recipe for it; a template is an
  * entry in the create dialog, which needs neither the definition nor Effect — hence the flat record
- * with a bound `apply`. Icon and hue come from the definition's own `space` options unless
- * overridden, so the template a user picks is styled the way its author described it.
+ * with a bound `apply`. Name, icon and hue come from the definition's own `space` options unless
+ * overridden, so the template a user picks is the space its author described.
  */
 export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   readonly id: string;
-  readonly label: string;
+  /** Defaults to the definition's space name, which is what the created space is called. */
+  readonly label?: string;
   readonly description?: string;
   readonly icon?: string;
   readonly hue?: string;
@@ -453,7 +454,7 @@ export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   }) => Promise<void>;
 } => ({
   id: options.id,
-  label: options.label,
+  label: options.label ?? options.definition.space.name,
   description: options.description,
   icon: options.icon ?? options.definition.space.icon,
   hue: options.hue ?? options.definition.space.hue,

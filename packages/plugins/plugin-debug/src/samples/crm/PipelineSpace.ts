@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
 import { Accounts, Contacts } from './accounts.ts';
@@ -41,4 +42,12 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
         yield* phases.pipeline(accounts);
         yield* phases.inbox();
       }),
+  });
+
+/** Offered in the create dialog; the label, icon and hue are the space's own. */
+export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
+  SampleSpace.makeTemplate({
+    id: 'org.dxos.plugin-debug.template.pipeline',
+    description: 'Seven accounts across the pipeline stages, a contact each, and the mail behind them.',
+    definition: make(),
   });

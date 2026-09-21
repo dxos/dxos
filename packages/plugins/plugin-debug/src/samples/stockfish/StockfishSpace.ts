@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
@@ -58,4 +59,13 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
         // types, so they live directly in the space DB and surface through their own containers.
         yield* SampleSpace.collection('Documents', [Ref.make(docs.brief)]);
       }),
+  });
+
+/** Offered in the create dialog; the label, icon and hue are the space's own. */
+export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
+  SampleSpace.makeTemplate({
+    id: 'org.dxos.plugin-debug.template.stockfish',
+    description:
+      'A brief, a five-stage plan as a task tree, a position to test against, and the skill for building it in a sandbox.',
+    definition: make(),
   });

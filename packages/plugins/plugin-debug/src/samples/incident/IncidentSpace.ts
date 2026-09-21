@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
@@ -50,4 +51,12 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
           Ref.make(docs.notes.sam),
         ]);
       }),
+  });
+
+/** Offered in the create dialog; the label, icon and hue are the space's own. */
+export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
+  SampleSpace.makeTemplate({
+    id: 'org.dxos.plugin-debug.template.incident',
+    description: "A status log, four people's notes, and the four tasks that turn them into a filed retro.",
+    definition: make(),
   });

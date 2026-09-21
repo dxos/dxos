@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
 import { ProjectPhase } from './project.ts';
@@ -45,4 +46,12 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
         // No root collection: the root holds collections only, and this space seeds no documents —
         // the project and its tasks surface through their own containers.
       }),
+  });
+
+/** Offered in the create dialog; the label, icon and hue are the space's own. */
+export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
+  SampleSpace.makeTemplate({
+    id: 'org.dxos.plugin-debug.template.worker',
+    description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
+    definition: make(),
   });

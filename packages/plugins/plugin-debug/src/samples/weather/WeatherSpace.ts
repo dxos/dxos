@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
 import { ProjectPhase } from './project.ts';
@@ -47,4 +48,13 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
         // No root collection: this space seeds no documents — the project, its tasks and the skill
         // surface through their own containers.
       }),
+  });
+
+/** Offered in the create dialog; the label, icon and hue are the space's own. */
+export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
+  SampleSpace.makeTemplate({
+    id: 'org.dxos.plugin-debug.template.weather',
+    description:
+      'Four tasks an agent runs alone: a one-tool MCP server over a weather API, deployed to a temporary Worker and called from the chat.',
+    definition: make(),
   });
