@@ -48,7 +48,6 @@ export const displace = (storageLockKey: string, displaceChannel = displaceChann
   }
 };
 
-
 const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePort) =>
   Layer.merge(
     RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(clientToWorker))),
