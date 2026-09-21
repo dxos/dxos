@@ -16,6 +16,7 @@ import {
   REGISTRY_SPACE_ID,
   contentHash,
 } from '@dxos/index-core';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 /**
@@ -36,16 +37,59 @@ export type RegistryDataSourceOptions = {
   ) => Effect.Effect<Map<string, string | null>, SqlError.SqlError, SqlClient.SqlClient>;
 };
 
-type BufferedEntry = {
-  key: string;
+/** One client's registration of a key. */
+type Contribution = {
   json: string;
   hash: string;
   data: ObjectJSON;
   /** Registration order within this session; the cursor names a value of this sequence. */
   seq: number;
   updatedAt: number;
-  /** Clients whose latest snapshot carries this key; the entry lives while any of them does. */
-  owners: Set<string>;
+};
+
+/**
+ * A key's registrations, one per client that carries it.
+ *
+ * Kept per client rather than as a single value with an owner set: two clients may register
+ * different content under one key, and collapsing them would leave the loser's content indexed
+ * after the winner unregisters, with no client left that could correct it.
+ */
+type BufferedEntry = {
+  key: string;
+  /** Keyed by client id; the entry lives while any contribution remains. */
+  contributions: Map<string, Contribution>;
+  /** The contribution currently indexed — the one registered last. */
+  active: Contribution;
+};
+
+/** The contribution with the highest sequence — the one registered last wins. */
+const latestContribution = (contributions: Iterable<Contribution>): Contribution | undefined => {
+  let latest: Contribution | undefined;
+  for (const contribution of contributions) {
+    if (latest === undefined || contribution.seq > latest.seq) {
+      latest = contribution;
+    }
+  }
+  return latest;
+};
+
+/**
+ * Whether a parsed registry snapshot is shaped like an entity the indexer can file.
+ *
+ * `objectJson` crosses the wire as an opaque string, so the RPC schema cannot check its contents,
+ * and `ObjectJSON` is a structural interface with an open index signature — there is no Effect
+ * schema to decode it against. The indexer only ever reads the entity id and the `@`-prefixed
+ * attributes, so an id it can key a row by is what has to hold.
+ */
+const isIndexableObject = (value: unknown): value is ObjectJSON => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  if (!('id' in value)) {
+    return false;
+  }
+  const id: unknown = value.id;
+  return typeof id === 'string' && EntityId.isValid(id);
 };
 
 /**
@@ -112,40 +156,78 @@ export class RegistryDataSource implements IndexDataSource {
     const seen = new Set<string>();
     let changed = 0;
     for (const entry of entries) {
+      // An empty key marks an ordinary row in `objectMeta`, so one here would address the whole
+      // non-registry index. The RPC schema rejects it too; this is the host's own guard.
+      if (entry.key === '') {
+        log.warn('Ignoring registry entry with an empty key', { clientId });
+        continue;
+      }
       seen.add(entry.key);
       const hash = contentHash(entry.objectJson);
       const existing = this.#entries.get(entry.key);
-      if (existing?.hash === hash) {
-        existing.owners.add(clientId);
+      if (existing?.contributions.get(clientId)?.hash === hash) {
         continue;
       }
-      let data: ObjectJSON;
+
+      let parsed: unknown;
       try {
-        data = JSON.parse(entry.objectJson) as ObjectJSON;
+        parsed = JSON.parse(entry.objectJson);
       } catch (err) {
         log.warn('Failed to parse registry entry for indexing', { key: entry.key, err });
         continue;
       }
-      this.#entries.set(entry.key, {
-        key: entry.key,
+      if (!isIndexableObject(parsed)) {
+        log.warn('Ignoring registry entry that is not a well-formed object', { key: entry.key });
+        continue;
+      }
+
+      const contribution: Contribution = {
         json: entry.objectJson,
         hash,
-        data,
+        data: parsed,
         seq: ++this.#seq,
         updatedAt: Date.now(),
-        owners: (existing?.owners ?? new Set<string>()).add(clientId),
-      });
+      };
+      if (existing === undefined) {
+        this.#entries.set(entry.key, {
+          key: entry.key,
+          contributions: new Map([[clientId, contribution]]),
+          active: contribution,
+        });
+      } else {
+        existing.contributions.set(clientId, contribution);
+        existing.active = contribution;
+      }
+      // The persisted digest read for this key describes the row as it was before this write, and
+      // a later push may return the key to exactly that content — a comparison against the stale
+      // reading would then skip a change the row does not yet carry.
+      this.#persistedHashes.delete(entry.key);
       changed++;
     }
 
     const removed: string[] = [];
     for (const [key, entry] of this.#entries) {
-      if (seen.has(key)) {
+      if (seen.has(key) || !entry.contributions.has(clientId)) {
         continue;
       }
-      entry.owners.delete(clientId);
-      if (entry.owners.size === 0) {
+      entry.contributions.delete(clientId);
+      const survivor = latestContribution(entry.contributions.values());
+      if (survivor === undefined) {
         removed.push(key);
+        continue;
+      }
+      if (survivor !== entry.active) {
+        // The client that had registered last is gone, so the newest remaining registration takes
+        // over. It needs a fresh sequence: its own is behind every cursor that already passed it.
+        const promoted: Contribution = { ...survivor, seq: ++this.#seq };
+        for (const [owner, contribution] of entry.contributions) {
+          if (contribution === survivor) {
+            entry.contributions.set(owner, promoted);
+          }
+        }
+        entry.active = promoted;
+        this.#persistedHashes.delete(key);
+        changed++;
       }
     }
     for (const key of removed) {
@@ -168,7 +250,9 @@ export class RegistryDataSource implements IndexDataSource {
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
     return Effect.gen({ self: this }, function* () {
       const from = this.#readCursor(cursors);
-      const pending = [...this.#entries.values()].filter((entry) => entry.seq > from).sort((a, b) => a.seq - b.seq);
+      const pending = [...this.#entries.values()]
+        .filter((entry) => entry.active.seq > from)
+        .sort((left, right) => left.active.seq - right.active.seq);
       if (pending.length === 0) {
         return { objects: [], cursors: [this.#makeCursor(this.#seq)] };
       }
@@ -190,13 +274,20 @@ export class RegistryDataSource implements IndexDataSource {
       // the entries behind it.
       const limit = opts?.limit ?? Infinity;
       const objects: IndexerObject[] = [];
-      let lastExamined = pending[0].seq;
+      let lastExamined = pending[0].active.seq;
       for (const entry of pending) {
         if (objects.length >= limit) {
           break;
         }
-        lastExamined = entry.seq;
-        if (this.#persistedHashes.get(entry.key) === entry.hash) {
+        // Re-read through the map: the digest probe above suspends, and a snapshot arriving in that
+        // window can unregister a key or promote another client's registration. Emitting the
+        // superseded object would write a row that the pass that deleted it can no longer reclaim.
+        const live = this.#entries.get(entry.key);
+        if (live === undefined || live.active !== entry.active) {
+          continue;
+        }
+        lastExamined = entry.active.seq;
+        if (this.#persistedHashes.get(entry.key) === entry.active.hash) {
           continue;
         }
         objects.push({
@@ -205,11 +296,11 @@ export class RegistryDataSource implements IndexDataSource {
           queueNamespace: null,
           documentId: null,
           registryKey: entry.key,
-          contentHash: entry.hash,
+          contentHash: entry.active.hash,
           recordId: null,
-          data: entry.data,
+          data: entry.active.data,
           createdAt: null,
-          updatedAt: entry.updatedAt,
+          updatedAt: entry.active.updatedAt,
         });
       }
 

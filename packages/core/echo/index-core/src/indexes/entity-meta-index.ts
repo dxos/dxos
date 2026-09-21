@@ -457,13 +457,16 @@ export class EntityMetaIndex implements Index {
           const rows = yield* rowsFor(sql`registryKey != ''`);
           return rows.map((row) => ({ ...row, deleted: !!row.deleted }));
         }
-        if (query.keys.length === 0) {
+        // The empty key is the marker for a row that did NOT come from the registry, so it
+        // addresses every ordinary row rather than nothing; never let one reach the WHERE clause.
+        const keys = query.keys.filter((key) => key !== '');
+        if (keys.length === 0) {
           return [];
         }
 
         // Two bound variables per key (exact plus LIKE prefix), so halve the chunk budget.
         const results: EntityMeta[] = [];
-        for (const chunk of chunkArray(query.keys, Math.floor(SQL_CHUNK_SIZE / 2))) {
+        for (const chunk of chunkArray(keys, Math.floor(SQL_CHUNK_SIZE / 2))) {
           const condition = sql.or(
             chunk.map((key) =>
               splitRegistryKey(key) === undefined
@@ -476,7 +479,11 @@ export class EntityMetaIndex implements Index {
         }
         // Chunking splits one ordering into several; restore the global newest-first order so the
         // caller's "first row per key is the primary" reading holds across chunk boundaries.
-        return results.sort((left, right) => right.version - left.version);
+        // Deduplicated first: an unversioned key matches the same row as its versioned sibling, so
+        // a pair split across chunks would otherwise come back twice.
+        return [...new Map(results.map((row) => [row.recordId, row])).values()].sort(
+          (left, right) => right.version - left.version,
+        );
       }),
   );
 
@@ -509,12 +516,15 @@ export class EntityMetaIndex implements Index {
   selectRegistryRecordIds = Effect.fn('EntityMetaIndex.selectRegistryRecordIds')(
     (keys: readonly string[]): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (keys.length === 0) {
+        // An empty key marks an ordinary row, so admitting one here would select — and let the
+        // caller delete — the whole non-registry index.
+        const registryKeys = keys.filter((key) => key !== '');
+        if (registryKeys.length === 0) {
           return [];
         }
         const sql = yield* SqlClient.SqlClient;
         const recordIds: number[] = [];
-        for (const chunk of chunkArray(keys)) {
+        for (const chunk of chunkArray(registryKeys)) {
           const rows = yield* sql<{
             recordId: number;
           }>`SELECT recordId FROM objectMeta WHERE ${sql.in('registryKey', chunk)}`;

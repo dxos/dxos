@@ -62,8 +62,9 @@ export type RegistryPublisherParams = {
  */
 export class RegistryPublisher {
   readonly #registry: Registry.Registry;
-  readonly #service: QueryService.Client;
   readonly #runtime: EffectContext.Context<never>;
+  /** Replaced on reconnection; a captured client would address a host that is no longer serving. */
+  #service: QueryService.Client;
   /** Identifies this client's contribution to the host's union of registries. */
   readonly #clientId = PublicKey.random().toHex();
 
@@ -77,17 +78,49 @@ export class RegistryPublisher {
 
   /** Publishes the current registry and keeps publishing as it changes, until `ctx` is disposed. */
   open(ctx: Context): void {
-    this.#publish = new DeferredTask(ctx, () => this.#push());
+    // A background push only logs a failure: it is driven by a registry change no caller is
+    // waiting on, and letting it reject would surface as an unhandled rejection in the task.
+    this.#publish = new DeferredTask(ctx, () =>
+      this.#push().catch((err) => log.warn('Failed to publish registry', { err })),
+    );
     this.#registry.changed.on(ctx, () => this.#publish.schedule());
     this.#publish.schedule();
   }
 
-  /** Publishes now and resolves once the host has indexed the snapshot. */
+  /**
+   * Point the publisher at a reconnected service and re-publish, since the new host has never seen
+   * this client's registry. Keeps the client id, so the host recognises the snapshot as replacing
+   * this client's previous contribution rather than adding a second one.
+   */
+  setService(service: QueryService.Client): void {
+    this.#service = service;
+    this.#publish.schedule();
+  }
+
+  /**
+   * Publishes now and resolves once the host has indexed the snapshot.
+   *
+   * Rejects if the push fails: a caller that awaits this and then queries would otherwise read
+   * under a completion guarantee the host never gave.
+   */
   async flush(): Promise<void> {
-    await this.#publish.runBlocking();
+    await this.#push();
+  }
+
+  /**
+   * Withdraws this client's claim on its registry entries, so it no longer counts as an owner for
+   * the rest of the host's session. The rows stay: they are a cache the next session re-adopts.
+   */
+  async release(): Promise<void> {
+    await this.#send([], { releasing: true });
   }
 
   async #push(): Promise<void> {
+    await this.#send(this.#collect());
+  }
+
+  /** The registry as indexable entries, skipping anything that cannot be keyed or serialized. */
+  #collect(): QueryService.RegistryEntry[] {
     const entries: QueryService.RegistryEntry[] = [];
     for (const entity of this.#registry.list()) {
       // Keying and serialization both read the entity's own metadata, which a malformed entry can
@@ -103,16 +136,19 @@ export class RegistryPublisher {
         log.warn('Failed to prepare registry entity for indexing', { err });
       }
     }
+    return entries;
+  }
 
-    try {
-      await EffectEx.runPromise(
-        Effect.provideContext(
-          this.#service['QueryService.updateRegistry']({ clientId: this.#clientId, entries }),
-          this.#runtime,
-        ),
-      );
-    } catch (err) {
-      log.warn('Failed to publish registry to host', { entries: entries.length, err });
-    }
+  #send(entries: readonly QueryService.RegistryEntry[], opts?: { releasing?: boolean }): Promise<void> {
+    return EffectEx.runPromise(
+      Effect.provideContext(
+        this.#service['QueryService.updateRegistry']({
+          clientId: this.#clientId,
+          entries: [...entries],
+          ...(opts?.releasing ? { releasing: true } : {}),
+        }),
+        this.#runtime,
+      ),
+    );
   }
 }

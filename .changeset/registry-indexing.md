@@ -11,6 +11,8 @@ An `EchoClient` mirrors its registry to the host over the new `QueryService.upda
 
 Registry rows belong to no space, and every space- or queue-scoped read excludes them — `IndexEngine.queryRegistry` (and `EchoHost.queryIndexedRegistry`) is the only way to read them back. Existing query behaviour is therefore unchanged.
 
-Entry identity is the registered key, version included: `dxn:<nsid>:0.1.0` and `dxn:<nsid>:0.2.0` are separate entries, while re-registering one version replaces that entry — the object registered last is primary, and an unversioned lookup returns the versions newest-registration-first. Unchanged re-pushes are recognised by a content digest, so a restart, which re-pushes the whole registry, costs one query rather than a re-index. The host keeps the union of its clients' registries, so an entry is reclaimed only once no client carries it.
+Entry identity is the registered key, version included: `dxn:<nsid>:0.1.0` and `dxn:<nsid>:0.2.0` are separate entries, while re-registering one version replaces that entry — the object registered last is primary, and an unversioned lookup returns the versions newest-registration-first. Unchanged re-pushes are recognised by a content digest, so a restart, which re-pushes the whole registry, costs one query rather than a re-index.
+
+The host keeps the union of its clients' registries, holding each client's own value for a shared key, so an entry is reclaimed only once no client carries it and the surviving registration takes over when the last registrant unregisters. A client releases its claim on close without reclaiming the rows, which the next session re-adopts by digest.
 
 `objectMeta` gains `registryKey` and `contentHash` via migration `0008_registry`; both default to empty/null on existing rows, so no reindex is required.

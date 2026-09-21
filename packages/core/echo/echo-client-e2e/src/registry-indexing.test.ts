@@ -50,6 +50,10 @@ describe('registry indexing', () => {
 
   const rowsFor = (keys: readonly string[]) => peer.host.queryIndexedRegistry({ keys });
 
+  /** Pushes entries straight at the host, bypassing the client's own keying and serialization. */
+  const pushRaw = (entries: readonly { key: string; objectJson: string }[]) =>
+    peer.host.updateRegistry('test-client', entries);
+
   const only = async (keys: readonly string[]): Promise<EntityMeta> => {
     const rows = await rowsFor(keys);
     expect(rows).toHaveLength(1);
@@ -257,6 +261,43 @@ describe('registry indexing', () => {
       expect(await rowsFor([`dxn:${KEY}:1.0.0`])).toHaveLength(0);
     });
 
+    test('a client that closes stops counting as an owner', async () => {
+      const second = await peer.createClient();
+      const shared = makeKeyed(KEY, '1.0.0', { label: 'shared' });
+      client.graph.registry.add([shared]);
+      second.graph.registry.add([shared]);
+      await publish();
+      await second.flushRegistry();
+
+      // Closing withdraws the claim but keeps the rows — they are a cache the next session
+      // re-adopts, so a clean shutdown must not re-index the whole registry at the next boot.
+      await second.close();
+      expect(await rowsFor([`dxn:${KEY}:1.0.0`])).toHaveLength(1);
+
+      // With the closed client no longer an owner, the remaining client's unregister is the last
+      // one and reclaims the row; a phantom owner would have kept it indexed.
+      client.graph.registry.remove(shared.id);
+      await publish();
+      expect(await rowsFor([`dxn:${KEY}:1.0.0`])).toHaveLength(0);
+    });
+
+    test("a shared key keeps the surviving client's own value when the last registrant leaves", async () => {
+      const second = await peer.createClient();
+      client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'from first' })]);
+      await publish();
+      second.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'from second' })]);
+      await second.flushRegistry();
+      expect(await only([`dxn:${KEY}:1.0.0`])).toMatchObject({ registryKey: `dxn:${KEY}:1.0.0` });
+
+      // The second client registered last, so its value is the indexed one; when it leaves, the
+      // first client's value has to come back rather than the second's staying behind.
+      await second.close();
+      await publish();
+      const row = await only([`dxn:${KEY}:1.0.0`]);
+      const snapshots = await peer.runtime.runPromise(peer.host.indexEngine.querySnapshotsJSON([row.recordId]));
+      expect((snapshots[0].snapshot as { label?: string }).label).toBe('from first');
+    });
+
     test('a row a previous session left behind is reclaimed on the next push', async () => {
       client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'stale' })]);
       await publish();
@@ -268,6 +309,35 @@ describe('registry indexing', () => {
       client = peer.client;
       await publish();
       expect(await rowsFor([`dxn:${KEY}:1.0.0`])).toHaveLength(0);
+    });
+  });
+
+  describe('validation', () => {
+    test('an entry with an empty key cannot reach the index', async () => {
+      db.add(Obj.make(TestSchema.Expando, { label: 'in space' }));
+      await db.flush();
+      const before = await db.query(Query.select(Filter.everything())).run();
+      expect(before).toHaveLength(1);
+
+      // The empty string is what marks an ordinary row, so a push carrying it — and the removal
+      // that would follow — must not be able to address the whole non-registry index.
+      await pushRaw([{ key: '', objectJson: JSON.stringify({ id: '01M320W59PG8EVVGGQKVX90G6D' }) }]);
+      await pushRaw([]);
+
+      expect(await db.query(Query.select(Filter.everything())).run()).toHaveLength(1);
+    });
+
+    test('a malformed entity is dropped without failing the snapshot', async () => {
+      await pushRaw([
+        { key: 'dxn:com.example.op.bad:1.0.0', objectJson: '[1,2,3]' },
+        {
+          key: 'dxn:com.example.op.good:1.0.0',
+          objectJson: JSON.stringify(Obj.toJSON(makeKeyed('com.example.op.good', '1.0.0', { label: 'ok' }))),
+        },
+      ]);
+
+      expect(await rowsFor(['dxn:com.example.op.bad:1.0.0'])).toHaveLength(0);
+      expect(await rowsFor(['dxn:com.example.op.good:1.0.0'])).toHaveLength(1);
     });
   });
 

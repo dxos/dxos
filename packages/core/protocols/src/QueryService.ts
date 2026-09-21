@@ -113,8 +113,12 @@ export const RegistryEntry = Schema.Struct({
    * Canonical entry key the entity is registered under — a versioned DXN (`dxn:<nsid>:<version>`)
    * where the entity carries a version, its bare DXN or identifier EID otherwise. Two versions of
    * one entity are two keys, and so two index entries; a re-registration of one key replaces it.
+   *
+   * Rejected when empty: the host files the key in `objectMeta.registryKey`, where the empty
+   * string is what marks a row as NOT coming from the registry, so an empty key would address
+   * every ordinary row in the index.
    */
-  key: Schema.String,
+  key: Schema.NonEmptyString,
   /**
    * The entity in the ECHO JSON object format.
    */
@@ -135,6 +139,14 @@ export const RegistryUpdateRequest = Schema.Struct({
    */
   clientId: Schema.String,
   entries: mutableArray(RegistryEntry),
+  /**
+   * The client is going away, so this empty snapshot withdraws its claim rather than unregistering
+   * the entities. The host drops the client's ownership but keeps the rows: they are a durable
+   * cache that the next session re-adopts by digest, and reclaiming them on every clean shutdown
+   * would re-index the whole registry at each boot. Rows no client re-adopts are reclaimed by the
+   * reconciliation on the first snapshot of the next host session.
+   */
+  releasing: Schema.optional(Schema.Boolean),
 });
 export interface RegistryUpdateRequest extends Schema.Schema.Type<typeof RegistryUpdateRequest> {}
 

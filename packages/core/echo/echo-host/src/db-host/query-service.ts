@@ -40,7 +40,11 @@ export type QueryServiceProps = {
    * Hands the client's registry snapshot to the host's registry data source and brings the index
    * up to date over it. Resolves once the pushed entities are queryable.
    */
-  updateRegistry: (clientId: string, entries: readonly QueryService.RegistryEntry[]) => Promise<void>;
+  updateRegistry: (
+    clientId: string,
+    entries: readonly QueryService.RegistryEntry[],
+    opts?: { releasing?: boolean },
+  ) => Promise<void>;
 };
 
 /**
@@ -153,7 +157,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 
   ['QueryService.updateRegistry'](request: QueryService.RegistryUpdateRequest): Effect.Effect<void, Error> {
-    return Effect.promise(() => this._params.updateRegistry(request.clientId, request.entries));
+    return Effect.promise(() =>
+      this._params.updateRegistry(request.clientId, request.entries, { releasing: request.releasing }),
+    );
   }
 
   ['QueryService.execQuery'](

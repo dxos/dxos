@@ -145,6 +145,16 @@ export class EchoClient extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Withdraw this client's registry before dropping the publisher: the host reclaims an entry
+    // only when no client still carries it, and it learns that this one is gone from a snapshot —
+    // a reopened client is a new client id, so nothing else would ever release these entries
+    // within the host's session. Best-effort: the service may already be torn down, and a failure
+    // here must not block the close.
+    try {
+      await this._registryPublisher?.release();
+    } catch (err) {
+      log.warn('Failed to release registry on close', { err });
+    }
     this._registryPublisher = undefined;
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
@@ -235,6 +245,9 @@ export class EchoClient extends Resource {
         graph: this._graph,
       });
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+      // The publisher keeps its client id so the host treats the re-published snapshot as this
+      // client's, replacing its previous contribution rather than adding a second one.
+      this._registryPublisher?.setService(this._queryService);
     }
 
     // Update all databases with new services.

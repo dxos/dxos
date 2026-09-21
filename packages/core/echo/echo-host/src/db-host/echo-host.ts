@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
+import { DeferredTask, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -238,7 +238,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
       updateIndexes: () => this.updateIndexes(),
-      updateRegistry: (clientId, entries) => this.updateRegistry(clientId, entries),
+      updateRegistry: (clientId, entries, opts) => this.updateRegistry(clientId, entries, opts),
     });
 
     this._dataService = new DataServiceImpl({
@@ -430,16 +430,28 @@ export class EchoHost extends Resource {
    * Entities no connected client carries any more are reclaimed from the index, including — on the
    * first push of a session — rows a previous session left behind. Resolves once the pushed
    * entities are queryable, so a caller that pushes and then queries does not race the indexer.
+   *
+   * Serialized across clients: the buffer update and the deletions it implies have to reach the
+   * index as one step, or a second snapshot could reclaim a key while the first snapshot's pass
+   * still holds it and is about to write it back.
    */
-  async updateRegistry(clientId: string, entries: readonly RegistryEntry[]): Promise<void> {
+  @synchronized
+  async updateRegistry(
+    clientId: string,
+    entries: readonly RegistryEntry[],
+    opts?: { releasing?: boolean },
+  ): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
 
     const { removed, changed } = this._registryDataSource.submit(clientId, entries);
-    const stale = new Set(removed);
-    if (!this._registryReconciled) {
-      this._registryReconciled = true;
+    // A releasing client is withdrawing its claim, not unregistering its entities: the rows stay
+    // for the next session to re-adopt by digest, and the reconciliation below reclaims whatever
+    // no client comes back for.
+    const stale = new Set(opts?.releasing ? [] : removed);
+    const reconciling = !this._registryReconciled;
+    if (reconciling) {
       const live = this._registryDataSource.keys;
       const indexed = await this._indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
       for (const row of indexed) {
@@ -455,6 +467,13 @@ export class EchoHost extends Resource {
         .pipe(RuntimeProvider.runPromise(this._runtime));
       log('reclaimed registry entries', { keys: stale.size, rows: deleted });
       this._queryService.invalidateQueries();
+    }
+
+    // Recorded only once the query and the deletions it produced have both landed: a throw in
+    // either leaves the previous session's rows in place, and a flag set up front would mean no
+    // later snapshot ever retries them.
+    if (reconciling) {
+      this._registryReconciled = true;
     }
 
     if (changed === 0 && stale.size === 0) {
