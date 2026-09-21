@@ -318,7 +318,7 @@ const presentService = <Self, Service>(tag: EffectContext.Key<Self, Service>): E
  * Attaches the replicator behind `tag`, when one is wired beneath, to the echo host once networking
  * is up. Each replicator registers itself through this; the stack does not enumerate them.
  */
-const registerReplicator = <Self>(
+export const registerReplicator = <Self>(
   tag: EffectContext.Key<Self, AutomergeReplicator>,
 ): Layer.Layer<never, never, EchoHostService | Hook.Controller> =>
   Layer.unwrap(
@@ -348,7 +348,7 @@ const meshReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService, never, Ec
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
  */
-const identityProviderLayer = Layer.effect(
+export const identityProviderLayer = Layer.effect(
   IdentityProviderService,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;
@@ -361,7 +361,7 @@ const identityProviderLayer = Layer.effect(
  * do not depend on store instance state, so they are extracted from throwaway instances to keep the
  * store layers individual.
  */
-const storageMigrationLayer = Layer.effect(
+export const storageMigrationLayer = Layer.effect(
   StorageMigrationService,
   Effect.gen(function* () {
     const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
@@ -381,7 +381,7 @@ const storageMigrationLayer = Layer.effect(
  * health check run in this order inside one handler, since a `serial` event would order them by
  * subscription instead.
  */
-const storageLifecycleLayer = Layer.effectDiscard(
+export const storageLifecycleLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
     const migrate = yield* StorageMigrationService;
@@ -426,7 +426,7 @@ const storageLayer = Layer.empty.pipe(
  * open/close is owned by the layer scope: it opens when the stack is built and closes when the
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle is driven by the events.
  */
-const echoHostLayer = (options: { useSubduction?: boolean }) =>
+export const echoHostLayer = (options: { useSubduction?: boolean }) =>
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
