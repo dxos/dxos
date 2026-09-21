@@ -160,17 +160,26 @@ export class FeedStore {
   /**
    * Ensures cursor token exists for a space and returns it.
    */
+  /** A space's token is written once and never changes, so one read per store instance serves every poll. */
+  readonly #cursorTokens = new Map<string, string>();
+
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen({ self: this }, function* () {
+        const cached = this.#cursorTokens.get(spaceId);
+        if (cached !== undefined) {
+          return cached;
+        }
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
         if (rows.length > 0) {
+          this.#cursorTokens.set(spaceId, rows[0].token);
           return rows[0].token;
         }
 
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
+        this.#cursorTokens.set(spaceId, token);
         return token;
       }).pipe(Effect.withSpan('FeedStore.ensureCursorToken'), SpanAttributes.annotateSpace(spaceId)),
   );

@@ -81,7 +81,17 @@ const FTS_FLUSH_MAX_DELAY_MS = 10_000;
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
  */
-export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+export type IndexRunReason =
+  | 'open'
+  | 'feed-blocks'
+  | 'documents-saved'
+  | 'batch-continuation'
+  | 'rpc-update-indexes'
+  | 'feed-query-open'
+  | 'epoch';
+
+/** Requests that drive the indexer directly, as opposed to the events that schedule it. */
+export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 'feed-query-open' | 'epoch'>;
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -164,6 +174,13 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
+  /**
+   * Set by every event the indexer's data sources read behind (saved documents, feed blocks,
+   * an unfinished batch) and cleared when a pass starts. An `updateIndexes` request that finds it
+   * clear has nothing to index: the pass in flight, if any, began after the last change.
+   */
+  private _indexInputsChanged = true;
+
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
@@ -231,7 +248,7 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      updateIndexes: () => this.updateIndexes(),
+      updateIndexes: () => this.updateIndexes({ reason: 'feed-query-open' }),
     });
 
     this._dataService = new DataServiceImpl({
@@ -429,17 +446,24 @@ export class EchoHost extends Resource {
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
    */
-  async updateIndexes({ secondaryIndexes = false }: { secondaryIndexes?: boolean } = {}): Promise<void> {
+  async updateIndexes({
+    secondaryIndexes = false,
+    reason = 'rpc-update-indexes',
+  }: { secondaryIndexes?: boolean; reason?: IndexRequestReason } = {}): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
-    do {
-      this.#noteIndexRunReason('rpc-update-indexes');
-      await this._updateIndexes.runBlocking();
-      if (this._ctx.disposed) {
-        return;
-      }
-    } while (!this._indexesUpToDate);
+    if (!this._indexInputsChanged && this._indexesUpToDate) {
+      await this._updateIndexes.join();
+    } else {
+      do {
+        this.#noteIndexRunReason(reason);
+        await this._updateIndexes.runBlocking();
+        if (this._ctx.disposed) {
+          return;
+        }
+      } while (!this._indexesUpToDate);
+    }
 
     if (secondaryIndexes) {
       await this.updateSecondaryIndexes();
@@ -1131,6 +1155,7 @@ export class EchoHost extends Resource {
   }
 
   #scheduleIndexRun(reason: IndexRunReason): void {
+    this._indexInputsChanged = true;
     this.#noteIndexRunReason(reason);
     this._updateIndexes.schedule();
   }
@@ -1187,6 +1212,8 @@ export class EchoHost extends Resource {
     // parenting those on `this._ctx` is an unbounded leak.
     const passCtx = this._ctx.derive();
     try {
+      // Cleared before the pass reads, so a change landing mid-pass re-arms the next request.
+      this._indexInputsChanged = false;
       // Drained here rather than inside the pass so the span can report what triggered it.
       await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
     } finally {
