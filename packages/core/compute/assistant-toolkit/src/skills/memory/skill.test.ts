@@ -76,6 +76,8 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
             content: 'Discussed project timeline with Alice.',
           }),
         );
+        // The skill searches the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
         const agent = yield* AgentService.createSession({
           skills: [MemorySkill.make()],
         });
@@ -98,6 +100,8 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
             content: 'The sky is green.',
           }),
         );
+        // The skill searches the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
         const agent = yield* AgentService.createSession({
           skills: [MemorySkill.make()],
         });
