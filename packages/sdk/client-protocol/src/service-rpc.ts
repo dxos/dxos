@@ -247,19 +247,15 @@ const servicePrefix = <Rpcs extends EffectRpc.Any>(group: RpcGroup.RpcGroup<Rpcs
  * registration stay separate layers: a provider merges this with the layer that supplies its tag,
  * and no list of services is needed anywhere else.
  */
-export const RegisterService = <Rpcs extends EffectRpc.Any, Identifier>(service: ServiceDefinition<Rpcs, Identifier>) =>
+export const RegisterService = <Rpcs extends EffectRpc.Any, Identifier>(
+  rpc: RpcGroup.RpcGroup<Rpcs>,
+  tag: Context.Key<Identifier, RpcGroup.HandlersFrom<Rpcs>>,
+) =>
   Layer.effectDiscard(
     Effect.gen(function* () {
-      const handlers = normalizeHandlers(service.Rpcs, yield* service.Tag);
-      yield* Rpc.serveOnRouter(servicePrefix(service.Rpcs), service.Rpcs, service.Rpcs.toLayer(handlers), {
-        // The in-process surface calls the handlers directly, so it is built from the group as
-        // defined rather than from the middleware-wrapped one the transport serves; the router
-        // holds it dynamically, keyed by the same rpc tags it is typed by.
-        inProcessClient: makeInProcessClient(service.Rpcs, handlers) as Effect.Effect<
-          RpcRouter.Client,
-          never,
-          Scope.Scope
-        >,
+      const handlers = normalizeHandlers(rpc, yield* tag);
+      yield* Rpc.serveOnRouter(servicePrefix(rpc), rpc, rpc.toLayer(handlers), {
+        inProcessClient: makeInProcessClient(rpc, handlers) as Effect.Effect<RpcRouter.Client, never, Scope.Scope>,
       });
     }),
   );

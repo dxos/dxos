@@ -60,6 +60,8 @@ import { StackReadinessService } from './stack-readiness.ts';
 // IdentityLifecycleService and the StackReadinessService gate.
 //
 
+// TODO(dmaretskyi): Fold this into bigger later stack
+
 /**
  * Union of every client RPC service tag resolved from the stack.
  */
@@ -78,15 +80,6 @@ export type ClientServicesRpcContext =
   | DevtoolsHost.Tag
   | SystemService.Tag
   | DevtoolsHostService;
-
-/**
- * Keeps a handler layer and its RPC registration separate: the returned layer still exposes the
- * service's tag, and registering it with the router is what makes it reachable over a transport.
- */
-const withRpc = <Provided, ErrorType, RequirementsType, Rpcs extends EffectRpc.Any, Identifier extends Provided>(
-  layer: Layer.Layer<Provided, ErrorType, RequirementsType>,
-  service: ServiceDefinition<Rpcs, Identifier>,
-) => RegisterService(service).pipe(Layer.provideMerge(layer));
 
 // The Data/Query/Feed services are thin projections of {@link EchoHostService} properties rather
 // than package-local ServiceImpl classes, so their layers stay here as trivial maps.
@@ -133,17 +126,24 @@ export const ClientServicesRpcLayer: Layer.Layer<
   | SqlClient.SqlClient
   | SqlExport.SqlExport
 > = Layer.mergeAll(
-  withRpc(SystemServiceLayer, SystemService),
-  withRpc(IdentityServiceLayer, IdentityService),
-  withRpc(ContactsServiceLayer, ContactsService),
-  withRpc(InvitationsServiceLayer, InvitationsService),
-  withRpc(DevicesServiceLayer, DevicesService),
-  withRpc(SpacesServiceLayer, SpacesService),
-  withRpc(NetworkServiceLayer, NetworkService),
-  withRpc(EdgeAgentServiceLayer, EdgeAgentService),
-  withRpc(dataServiceLayer, DataService),
-  withRpc(queryServiceLayer, QueryService),
-  withRpc(feedServiceLayer, FeedService),
-  withRpc(LoggingServiceLayer, LoggingService),
-  withRpc(DevtoolsHostLayer, DevtoolsHost),
+  RegisterService(SystemService.Rpcs, SystemService.Tag),
+  RegisterService(IdentityService.Rpcs, IdentityService.Tag),
+  RegisterService(ContactsService.Rpcs, ContactsService.Tag),
+  RegisterService(InvitationsService.Rpcs, InvitationsService.Tag),
+  RegisterService(DevicesService.Rpcs, DevicesService.Tag),
+  RegisterService(SpacesService.Rpcs, SpacesService.Tag),
+  RegisterService(NetworkService.Rpcs, NetworkService.Tag),
+  RegisterService(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
+).pipe(
+  Layer.provideMerge(dataServiceLayer),
+  Layer.provideMerge(queryServiceLayer),
+  Layer.provideMerge(feedServiceLayer),
+  Layer.provideMerge(LoggingServiceLayer),
+  Layer.provideMerge(DevtoolsHostLayer),
+  Layer.provideMerge(SystemServiceLayer),
+  Layer.provideMerge(EdgeAgentServiceLayer),
+  Layer.provideMerge(DevicesServiceLayer),
+  Layer.provideMerge(SpacesServiceLayer),
+  Layer.provideMerge(NetworkServiceLayer),
+  Layer.provideMerge(RpcRouter.RpcRouter),
 );

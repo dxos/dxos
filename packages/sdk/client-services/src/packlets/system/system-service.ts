@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
 
 import { Event, MulticastObservable } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
