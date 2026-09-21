@@ -101,6 +101,14 @@ alongside any number:
 - **Instrumentation.** An attached CDP client (including DevTools) makes Blink
   retain response bodies, which reads as linear growth. `plain-soak.mjs` is the
   control for that.
+- **Which build the profile runs.** A seeded profile keeps the service worker
+  and precache of the build that seeded it, and serves that bundle on every later
+  run until the app's own update cycle replaces it, which a fresh copy per run
+  never reaches. Three runs of a rebuilt bundle measured the previous one that
+  way. `native-heap.mjs --profile` now clears the origin's service worker and
+  cache storage before navigating (IndexedDB and OPFS stay), and its JSON records
+  chunk names under `wasmByModule` and `measureCalls`, so check those against
+  `out/composer/assets` before comparing two arms.
 
 ## Scripts
 
@@ -110,7 +118,7 @@ alongside any number:
 | `ledger.mjs --by-code`   | JS allocation per workspace package, from V8's sampling heap profiler resolved through the build's sourcemaps; needs `--dist`                                                                                                                                                                                                                                |
 | `seed-profile.mjs`       | Builds a persistent profile holding several spaces of fixture data, so the other scripts can measure a loaded tab; `native-heap.mjs --profile <dir> --journey` then boots on it and opens what it recorded                                                                                                                                                   |
 | `api-census.mjs`         | Which application code calls `TextEncoder.encode` and IndexedDB's bulk reads, per realm, with the JS stack — the caller-side half of `native-heap.mjs`, and the only one that reaches dedicated workers                                                                                                                                                      |
-| `native-heap.mjs`        | The C++ call sites behind `malloc` and `partition_alloc` together, with byte totals and a rollup by mechanism — the naming that memory-infra's `<unspecified>` cannot give. Reports committed wasm per module per realm alongside them, which with `--journey` is the only reading taken while documents are open. macOS only; run `fetch-electron.sh` first |
+| `native-heap.mjs`        | The C++ call sites behind `malloc` and `partition_alloc` together, with byte totals and a rollup by mechanism — the naming that memory-infra's `<unspecified>` cannot give. Reports committed wasm per module per realm alongside them, which with `--journey` is the only reading taken while documents are open, and a `performance.measure` census per realm (calls and `detail` bytes per JS call site), since the native stack under a measure entry is only the clone. macOS only; run `fetch-electron.sh` first |
 | `fetch-electron.sh`      | Downloads the Electron build and breakpad symbols `native-heap.mjs` symbolizes against and checks their UUIDs match: ~250 MB of downloads, ~1.5 GB on disk                                                                                                                                                                                                   |
 | `cost-fixtures.mjs`      | Generates the single-variable pages behind the per-unit cost table in `.agents/projects/memory-usage/ALLOCATION.md`; measure each pair with `ledger.mjs --detached --ready none`                                                                                                                                                                             |
 | `probes.mjs`             | The shims two of these install into a measured realm (the `WebAssembly.Memory` census). Shared rather than copied: they run as strings in realms reached only over CDP, so a drifted copy is invisible until two instruments disagree about one run                                                                                                          |

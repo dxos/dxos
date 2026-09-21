@@ -76,6 +76,26 @@ const IDB_PROBE = `(() => {
   }
 })()`;
 
+// The native stack under \`PerformanceMeasure::Create\` is the structured clone of \`detail\`
+// and nothing JS-side, so the same trick names the caller and weighs what it passed.
+const MEASURE_PROBE = `(() => {
+  if (globalThis.__measureProbe || typeof performance?.measure !== 'function') { return; }
+  const calls = {};
+  globalThis.__measureProbe = calls;
+  const original = performance.measure.bind(performance);
+  performance.measure = function (name, ...rest) {
+    const detail = rest[0] && typeof rest[0] === 'object' ? rest[0].detail : undefined;
+    let bytes = 0;
+    if (detail !== undefined) { try { bytes = JSON.stringify(detail).length; } catch { bytes = -1; } }
+    const frames = (new Error().stack || '').split('\\n').slice(2, 6).map((line) => line.trim()).join(' | ');
+    const key = String(name).slice(0, 40) + ' @ ' + frames;
+    const entry = (calls[key] ??= { count: 0, detailBytes: 0 });
+    entry.count += 1;
+    entry.detailBytes += Math.max(bytes, 0);
+    return original(name, ...rest);
+  };
+})()`;
+
 const url = process.argv[2]?.startsWith('--') ? 'http://localhost:4173' : (process.argv[2] ?? 'http://localhost:4173');
 const arg = (name, dflt) => {
   const i = process.argv.indexOf(name);
@@ -430,6 +450,7 @@ try {
     }
     workerSessions.set(sessionId, targetInfo.type);
     void cdp.trySend('Runtime.evaluate', { expression: IDB_PROBE, returnByValue: true }, { sessionId });
+    void cdp.trySend('Runtime.evaluate', { expression: MEASURE_PROBE, returnByValue: true }, { sessionId });
     void cdp.trySend('Runtime.evaluate', { expression: WASM_PROBE, returnByValue: true }, { sessionId });
     // Re-armed on the new session, because auto-attach covers a session's own children
     // only. Composer's client worker creates the observability worker that runs the log
@@ -444,9 +465,20 @@ try {
   await cdp.send('Target.setAutoAttach', { autoAttach: true, flatten: true, waitForDebuggerOnStart: false });
   await cdp.send('Page.enable');
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: IDB_PROBE });
+  await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: MEASURE_PROBE });
   // Linear memory appears in no allocator node, so this is the only instrument that
   // names the modules behind the residual — and the journey is when automerge grows.
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: WASM_PROBE });
+  if (persistentProfile) {
+    // A seeded profile holds the service worker and precache of the build it was seeded
+    // with, and a later build never runs until the app itself updates: three runs measured
+    // the previous bundle that way. Drop those two stores only; the data stays in IndexedDB
+    // and OPFS, which is what makes the profile a loaded one.
+    await cdp.send('Storage.clearDataForOrigin', {
+      origin: new URL(url).origin,
+      storageTypes: 'service_workers,cache_storage',
+    });
+  }
   await cdp.send('Memory.startSampling', { samplingInterval: rate, suppressRandomness: false });
   await cdp.send('Page.navigate', { url });
   console.error(`navigated; settling ${settleS}s ...`);
@@ -506,6 +538,7 @@ try {
   // Read before the dump, so a spike in the IndexedDB category can be matched to the JS
   // that issued the reads in the same run.
   const idbCalls = new Map();
+  const measureCalls = new Map();
   const wasmByModule = new Map();
   for (const sessionId of [undefined, ...workerSessions.keys()]) {
     // Which realm holds a memory is the question the module name alone cannot answer: the
@@ -519,6 +552,14 @@ try {
     );
     for (const [key, count] of Object.entries(JSON.parse(result?.result?.value ?? '{}'))) {
       idbCalls.set(key, (idbCalls.get(key) ?? 0) + count);
+    }
+    const measures = await cdp.trySend(
+      'Runtime.evaluate',
+      { expression: 'JSON.stringify(globalThis.__measureProbe ?? {})', returnByValue: true },
+      { sessionId, timeoutMs: GC_TIMEOUT_MS },
+    );
+    for (const [key, entry] of Object.entries(JSON.parse(measures?.result?.value ?? '{}'))) {
+      measureCalls.set(`${realm} ${key}`, entry);
     }
     const wasm = await cdp.trySend(
       'Runtime.evaluate',
@@ -792,6 +833,13 @@ try {
     }
   }
 
+  if (measureCalls.size) {
+    console.log('\n=== performance.measure, by JS call site (detail as JSON) ===');
+    for (const [key, entry] of [...measureCalls].sort((a, b) => b[1].detailBytes - a[1].detailBytes).slice(0, 8)) {
+      console.log(`  ${String(MB(entry.detailBytes)).padStart(7)} MB  x${String(entry.count).padStart(5)}  ${key.slice(0, 220)}`);
+    }
+  }
+
   console.log('\n=== by mechanism ===');
   for (const [name, bytes] of [...buckets, ['uncategorised', uncategorised]].sort((a, b) => b[1] - a[1])) {
     if (bytes > 0) {
@@ -811,6 +859,7 @@ try {
           rate,
           rendererPid,
           idbCalls: Object.fromEntries(idbCalls),
+          measureCalls: Object.fromEntries(measureCalls),
           wasmByModule: Object.fromEntries(wasmByModule),
           sampled,
           samples,
