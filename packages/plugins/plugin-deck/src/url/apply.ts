@@ -84,9 +84,13 @@ export const applyActive = Effect.fnUntraced(function* (
     // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
     // mounts its plank.
     if (changed || scrollIntoView !== undefined) {
+      // Read at write time, not from the snapshot above: a transition defers this write by a frame or
+      // more, and everything else on this atom — the dialog, popovers, toasts — would be reverted to
+      // whatever it held when the navigation started.
+      const current = registry.get(ephemeralAtom);
       registry.set(ephemeralAtom, {
-        ...ephemeral,
-        open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
+        ...current,
+        open: { ...current.open, [workspace]: { ...current.open[workspace], active, inactive, segments } },
         ...(scrollIntoView !== undefined
           ? { scrollIntoView: { id: scrollIntoView, ...(intent?.focus !== undefined ? { focus: intent.focus } : {}) } }
           : {}),

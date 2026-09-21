@@ -34,6 +34,7 @@ import {
   openCompanionPlank,
   resolveDeckSpec,
   updateActiveDeck,
+  withViewTransition,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -51,10 +52,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         AppGraph.expandPath(graph, subjectId);
       }
 
+      // A cross-workspace open swaps the whole chrome, so it animates that the way `SwitchWorkspace`
+      // does. The plank write below then lands under the running transition instead of starting a
+      // second one, which would skip the first mid-flight.
+      let switchedWorkspace = false;
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         if (input.workspace && state.activeDeck !== input.workspace) {
-          yield* applyWorkspace(input.workspace);
+          switchedWorkspace = true;
+          yield* withViewTransition(applyWorkspace(input.workspace));
         }
       }
 
@@ -205,7 +211,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          intent: { scrollIntoView: scrolled, focus: input.focus, transition: true },
+          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !switchedWorkspace },
         });
       }
 
