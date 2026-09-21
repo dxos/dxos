@@ -80,6 +80,7 @@ shell, so it does not inherit your `PATH` and a bare `dx` will not resolve.
 
 ### Other clients
 
+<!-- TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support. -->
 Anything speaking MCP over stdio works — the command is `dx mcp serve` with no arguments.
 `src/commands/mcp/serve.test.ts` drives a raw session over a pipe if you want the wire shape.
 
@@ -119,11 +120,15 @@ claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve 
 ```
 
 The server runs as a child of a supervisor that holds the client's stdio. When the child reloads,
-the supervisor replays the MCP handshake into the new one and emits `tools/list_changed` and
-`prompts/list_changed`, so the client never reconnects and never re-initializes. In-flight requests
-are answered with an error rather than left hanging, so retry them. Each reload is a full server
-start — identity, storage and plugin activation — so expect the first request after an edit to wait
-on that.
+the supervisor re-sends the client's open `subscriptions/listen` requests into the new one and
+announces `list_changed` on each for the lists it asked about, so the client never reconnects.
+In-flight requests get an error rather than hanging, so retry them. Each reload is a full server
+start that brings identity, storage and plugins up again, so the first request after an edit waits
+on it.
+
+<!-- TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support. -->
+A client that connected with `initialize` never re-initializes, so the supervisor also replays that
+handshake into the new child and emits `tools/list_changed` and `prompts/list_changed`.
 
 What counts as a change depends on which `dx` you are running, because what can change differs:
 
