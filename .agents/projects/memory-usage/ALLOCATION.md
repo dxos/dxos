@@ -27,6 +27,25 @@ Read both with the harness
 [README](../../../packages/apps/composer-app/scripts/memory/README.md), which
 covers what each allocator node means and why a tab's footprint is not their sum.
 
+## Progression
+
+One row per fix, appended as each lands. Every row is the mean of three
+`native-heap.mjs --profile --journey --settle 90` runs on pristine copies of the
+same profile, seeded on the baseline build so every arm can open its databases,
+with the profile's service-worker precache cleared so each arm runs its own
+bundle. Footprint is the app renderer's private footprint in MiB; the other
+columns are the map's, defined under "The map after the fix".
+
+| arm           | footprint |    Δ |  live | slack |    v8 |  wasm | sampled | notes                                         |
+| ------------- | --------: | ---: | ----: | ----: | ----: | ----: | ------: | --------------------------------------------- |
+| baseline      |     876.3 |    – | 509.7 | 255.3 | 174.1 | 109.0 |   442.8 | #13250's tree                                 |
+| fix 1         |     684.6 | -192 | 228.2 | 183.9 | 176.3 | 111.3 |   179.6 | #13251, log store sweeps from keys            |
+| fix 1 + fix 2 |     617.1 |  -67 | 134.0 | 153.0 | 177.4 | 112.8 |    97.5 | #13281, track entries gated out of production |
+
+Per-run spread: baseline 830–939, fix 1 676–691, fix 1 + 2 575–647. The baseline
+and the last arm swing by ±50 MB run to run; fix 1 is tight. Read a delta under
+~30 MB as noise until it has more runs behind it.
+
 ## The measurement
 
 Eight runs of one tool revision: four of the app **as built**, four of a
@@ -148,7 +167,7 @@ put the sweep at roughly a third of the tab, came in about 2x high.
 that block scales with data and has nothing to do with the sweep. The
 empty-profile work could not see it. It is the largest unexplained thing left in
 the block. (Answered below: it was the retained `performance.measure` clones,
-and the gate takes `<unspecified>` from ~104 MB to ~43 MB on the same profile.)
+and the gate takes `<unspecified>` from ~97 MB to ~43 MB on the same profile.)
 
 One detail worth keeping: `getAllKeys` is 11-12 per run, not zero. A 30-second
 timer alone would fire three times in 90 seconds, so `#writeBatch` still
@@ -298,58 +317,42 @@ Performance panel open, and is paid for by every user.
 
 The fix gates every track entry behind a build-time flag (on under the dev
 server, `VITE_PERF_TRACK_ENTRIES=true` for a production build) and bounds
-`detail` for whoever turns it on. Three runs per arm, same three-space profile,
-`--journey --settle 90`, with the instrument fix described under "Reproducing"
-applied to both arms:
+`detail` for whoever turns it on. The row in "Progression" is the measurement:
+684.6 MB to 617.1 MB, **67 MB, 10%**, three runs per arm on top of fix 1.
 
-|           | footprint | `<unspecified>` | PartitionAlloc | malloc | sampled | `performance.measure` | Oilpan (workers) | entries | detail as JSON |
-| --------- | --------: | --------------: | -------------: | -----: | ------: | --------------------: | ---------------: | ------: | -------------: |
-| control 1 |     727.7 |           103.8 |          150.0 |  210.3 |   190.3 |                  94.2 |             30.2 | 104,143 |        42.8 MB |
-| control 2 |     709.6 |           101.8 |          145.7 |  208.7 |   186.8 |                  91.4 |             28.7 | 100,108 |        41.4 MB |
-| control 3 |     738.1 |           105.1 |          149.2 |  209.9 |   193.1 |                  96.1 |             29.3 | 106,343 |        43.8 MB |
-| gated 1   |     533.8 |            42.8 |           70.9 |  148.9 |    97.1 |                   1.2 |             14.8 |   5,620 |         0.3 MB |
-| gated 2   |     534.4 |            43.0 |           69.9 |  145.5 |    98.1 |                   1.8 |             14.7 |   5,749 |         0.3 MB |
-| gated 3   |     563.8 |            42.8 |           70.2 |  149.8 |    95.9 |                   1.1 |             15.2 |   5,385 |         0.3 MB |
+|              | footprint | `<unspecified>` | PartitionAlloc | malloc | sampled | `performance.measure` | Oilpan (workers) | entries |
+| ------------ | --------: | --------------: | -------------: | -----: | ------: | --------------------: | ---------------: | ------: |
+| fix 1, run 1 |     686.6 |            96.0 |          138.4 |  200.7 |   177.2 |                  81.2 |             27.8 |   ~100k |
+| fix 1, run 2 |     676.4 |            97.1 |          138.6 |  198.8 |   180.5 |                  83.9 |             27.2 |   ~100k |
+| fix 1, run 3 |     690.8 |            98.2 |          140.7 |  202.5 |   181.0 |                  84.3 |             28.9 |   ~100k |
+| + gate, 1    |     574.7 |            43.2 |           70.0 |  151.4 |    97.8 |                   1.4 |             15.0 |   5,641 |
+| + gate, 2    |     646.5 |            43.4 |           70.6 |  160.0 |    97.6 |                   1.3 |             15.2 |  ~5,600 |
+| + gate, 3    |     630.0 |            42.8 |           73.9 |  153.7 |    97.2 |                   1.2 |             14.6 |  ~5,600 |
 
-Mean footprint 725.1 MB to 544.0 MB: **181 MB, 25%**, against a prediction of
-30–50 MB. The prediction applied the log store's half-of-allocation discount to a
-mechanism that was not churn. The `entries` column is the new census: the
-control's worker carries 100,000 `PerformanceMeasure` objects after one journey,
-four SQL statements account for 90% of them (`SELECT blocks…` alone is 26,000
-calls and 15 MB of JSON), and each entry keeps its serialized `detail` in
-PartitionAlloc until the realm dies. That is why PartitionAlloc drops 78 MB and
-`<unspecified>` 60 MB: the "~54 MB that scales with data and has no mechanism"
-was this. The remaining entries on the gated build are the mark-based ones
-(`module:*`, `plugin-load:*`) that carry no detail.
+The category itself goes from ~83 MB to ~1.3 MB and `<unspecified>` from ~97 to
+~43 MB, so the "~54 MB that scales with data and has no mechanism" recorded
+after fix 1 was this. PartitionAlloc drops 68 MB and live native objects 94 MB,
+which is more than the footprint moved: the last arm's footprint swings 575–647
+across three runs, so the 67 MB mean carries about ±30 MB. The prediction of
+30–50 MB was low for the wrong reason — it discounted churn, and this was
+retention — and then landed near the truth because the allocator kept some of
+the freed pages.
 
-The same six runs in the columns of "The map after the fix", so the two maps
-line up:
+The `entries` column is the new census: after fix 1 the worker carries about
+100,000 `PerformanceMeasure` objects after one journey, four SQL statements
+account for 90% of them, and each keeps its serialized `detail` in
+PartitionAlloc until the realm dies. What remains on the gated build is the
+mark-based entries (`module:*`, `plugin-load:*`) that carry no detail.
 
-| run       | footprint |    v8 | malloc |    PA | Oilpan |  live | slack | tab old | wkr old |  wasm |
-| --------- | --------: | ----: | -----: | ----: | -----: | ----: | ----: | ------: | ------: | ----: |
-| control 1 |     727.7 | 181.2 |  210.3 | 150.0 |   75.6 | 239.3 | 196.6 |   106.7 |    23.8 | 111.2 |
-| control 2 |     709.6 | 180.3 |  208.7 | 145.7 |   74.2 | 235.0 | 193.7 |   105.8 |    22.6 | 113.7 |
-| control 3 |     738.1 | 181.2 |  209.9 | 149.2 |   76.6 | 243.3 | 192.4 |   106.8 |    23.2 | 112.1 |
-| gated 1   |     533.8 | 174.0 |  148.9 |  70.9 |   57.0 | 133.1 | 143.8 |    99.3 |    22.8 | 113.5 |
-| gated 2   |     534.4 | 177.3 |  145.5 |  69.9 |   58.2 | 132.9 | 140.7 |   103.8 |    22.4 | 112.8 |
-| gated 3   |     563.8 | 177.0 |  149.8 |  70.2 |   61.1 | 130.0 | 151.1 |   103.2 |    23.0 | 112.8 |
-| ctrl mean |     725.1 | 180.9 |  209.6 | 148.3 |   75.5 | 239.2 | 194.2 |   106.4 |    23.2 | 112.3 |
-| gate mean |     544.0 | 176.1 |  148.1 |  70.3 |   58.8 | 132.0 | 145.2 |   102.1 |    22.7 | 113.0 |
-
-Live objects fall by 107 MB and slack by 49 MB; V8, the tab's old space and the
-wasm heaps do not move, which is what a fix confined to Blink-side clones should
-look like. What is left is 145 MB of slack, 132 MB of live native objects, 176 MB
-of V8 and 113 MB of wasm, and the wasm and V8 items are now the two largest
-things the map names.
-
-Two cautions on reading it. The control here is 80 MB above the five-run map
-above on the same build, because both arms now start without the profile's
-service-worker precache and fetch the bundle over the network; the arms are
-comparable with each other, not with the earlier map. And the footprint moved by
-twice the sampled allocation, which is the reverse of the log store's ratio: the
-sampler only sees allocations still live at the dump, so a retained clone counts
-once there while its committed page, its `PerformanceMeasure` object in Oilpan
-and its `SerializedScriptValue` header count elsewhere.
+**An earlier draft of this section reported 725 → 544 MB, 25%. Both arms of
+that comparison ran with a dead log store.** Fix 1 bumps the log database's
+schema version, the profile in use had been seeded on fix 1, and the worktree's
+source did not include fix 1, so both builds opened the database at the old
+version, IndexedDB refused, and the store neither wrote nor swept. The A/B was
+internally valid and the direction right, but the control was not fix 1 and
+the absolute figures belong to no arm anyone ships. The rows above come from a
+profile seeded on the baseline build, which every arm can open; see
+"Reproducing".
 
 ## 1. The log store's eviction sweep
 
@@ -597,9 +600,9 @@ Ordered by measured size over cost, against the 645.7 MB mean above.
    [#13251](https://github.com/dxos/dxos/pull/13251): 287 MB less allocation and
    140 MB less footprint on a loaded profile. See "What the fix bought" above.
 2. ~~**Stop cloning SQL text and parameters into `performance.measure` details.**~~
-   Done, pending its PR: 181 MB less footprint on a loaded profile, 25%, by
-   gating every track entry out of production builds. See "What the gate
-   bought" above.
+   Done in [#13281](https://github.com/dxos/dxos/pull/13281): 67 MB less
+   footprint on a loaded profile, 10%, by gating every track entry out of
+   production builds. See "What the gate bought" above.
 3. **Collapse the duplicate automerge instances.** 92.2 MB of linear memory in
    three instances of two binaries: `automerge_wasm` and
    `automerge_subduction_wasm` side by side in the worker, and a third in the tab.
@@ -649,9 +652,12 @@ first is now answered and the second was the wrong conclusion:
   disagreed with the arm they were in. What settled it was instrumenting the JS
   side and putting the read counts in the same run as the profile.
 
-Also corrected in this revision: three "after" runs of the gate measured the
-previous bundle, because the seeded profile's service worker served its precache;
-the instrument now clears it, and every arm above was re-run.
+Also corrected in this revision, twice: three "after" runs of the gate measured
+the previous bundle, because the seeded profile's service worker served its
+precache; then six re-runs measured a log store that could not open a database
+seeded by a newer schema. The instrument now clears the precache, the README
+says to seed on the oldest arm, and the "Progression" table at the top is the
+first series taken with both rules in force.
 
 Also corrected: macOS memory-infra _does_ emit `process_mmaps`, contrary to the
 harness README, but only as a module map with no `byte_stats`, so it decomposes
@@ -678,6 +684,9 @@ node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
 # the only run that reports wasm linear memory, which no allocator node covers.
 node scripts/memory/seed-profile.mjs http://localhost:4173 --profile ./tmp/loaded-profile --spaces 3
 cp -R tmp/loaded-profile tmp/run1   # a run mutates the profile; start each from a copy
+# Seed on the OLDEST build you will compare: a newer build can upgrade the profile's IndexedDB
+# schemas, an older one cannot open them and its stores go silent. The log store did that
+# (DB_VERSION 2 -> 3 in #13251) and six runs measured a store that never wrote.
 # A seeded profile also carries the service worker and precache of the build that seeded it,
 # and serves that bundle on every later run. native-heap.mjs --profile clears both stores
 # before navigating; check the chunk names in the JSON's wasmByModule against out/composer/assets.
