@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -18,6 +18,15 @@ export const Dialog = () => {
   const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
   const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
 
+  // Closing clears the content in the same update that closes the dialog, but the overlay stays
+  // mounted for its exit animation. Rendering the outgoing content until then is what lets the
+  // dialog play its own exit instead of vanishing, leaving a dimmed screen with nothing on it.
+  const closing = useRef(dialogContent);
+  if (dialogContent) {
+    closing.current = dialogContent;
+  }
+  const content = dialogContent ?? closing.current;
+
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       updateEphemeral((s) => ({ ...s, dialogOpen: nextOpen }));
@@ -32,7 +41,7 @@ export const Dialog = () => {
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
         <Surface.Surface
           type={AppSurface.Dialog}
-          data={dialogContent ?? undefined}
+          data={content ?? undefined}
           limit={1}
           fallback={PlankErrorFallback}
           placeholder={<div />}
@@ -41,7 +50,7 @@ export const Dialog = () => {
         <Overlay blockAlign={dialogBlockAlign} classNames={dialogOverlayClasses} style={dialogOverlayStyle}>
           <Surface.Surface
             type={AppSurface.Dialog}
-            data={dialogContent ?? undefined}
+            data={content ?? undefined}
             limit={1}
             fallback={PlankErrorFallback}
           />

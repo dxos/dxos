@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -14,7 +15,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeckStoryPlugin, storyItemId } from '../../testing/index.ts';
+import { DeckStoryPlugin, STORY_DIALOG, storyItemId } from '../../testing/index.ts';
 import { DeckLayout } from './DeckLayout.tsx';
 
 const meta = {
@@ -63,5 +64,51 @@ export const ManyPlanks: Story = {
     });
 
     return <DeckLayout />;
+  },
+};
+
+/** Set by the story's render so its play function can drive the operation a hook cannot reach. */
+let closeStoryDialog: (() => Promise<unknown>) | undefined;
+
+/**
+ * A closing dialog keeps its content until the overlay finishes exiting.
+ *
+ * `UpdateDialog` clears the content in the same update that closes the dialog, and the overlay
+ * stays mounted for its exit — so dropping the content on that update left the overlay alone on
+ * screen, a dimmed app with nothing on it, and the dialog's own exit animation never ran.
+ */
+export const ClosingKeepsContent: Story = {
+  tags: ['test'],
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    closeStoryDialog = () => invokePromise(LayoutOperation.UpdateDialog, { state: false });
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.UpdateDialog, { subject: STORY_DIALOG, state: true });
+    }, []);
+    return <DeckLayout />;
+  },
+  play: async () => {
+    const dialog = () => document.querySelector('[data-testid="story-dialog"]');
+    const backdrop = () => document.querySelector('[data-part="backdrop"]');
+    await waitFor(() => expect(dialog()).not.toBeNull());
+
+    // Sampled per frame: the failure is any frame showing a backdrop with no dialog inside it.
+    const orphaned: number[] = [];
+    let sampling = true;
+    const sample = () => {
+      if (backdrop() && !dialog()) {
+        orphaned.push(Math.round(performance.now()));
+      }
+      if (sampling) {
+        requestAnimationFrame(sample);
+      }
+    };
+    requestAnimationFrame(sample);
+
+    await closeStoryDialog!();
+    await waitFor(() => expect(backdrop()).toBeNull(), { timeout: 5_000 });
+    sampling = false;
+
+    await expect(orphaned).toEqual([]);
   },
 };
