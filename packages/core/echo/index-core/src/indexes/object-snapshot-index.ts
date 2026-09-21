@@ -11,7 +11,10 @@ import type { Obj } from '@dxos/echo';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
-import { chunkArray } from '../utils.ts';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
+
+/** Each upserted row binds two variables, so the batch is half what a single-column `IN` allows. */
+const UPSERT_CHUNK_SIZE = SQL_CHUNK_SIZE / 2;
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -77,50 +80,64 @@ export class ObjectSnapshotIndex implements Index {
   update = Effect.fn('ObjectSnapshotIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
+        if (objects.length === 0) {
+          return;
+        }
         const sql = yield* SqlClient.SqlClient;
 
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen(function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                return yield* Effect.die(new Error('ObjectSnapshotIndex.update requires recordId to be set'));
-              }
+        const pending: { recordId: number; object: IndexerObject }[] = [];
+        for (const object of objects) {
+          if (object.recordId === null) {
+            return yield* Effect.die(new Error('ObjectSnapshotIndex.update requires recordId to be set'));
+          }
+          pending.push({ recordId: object.recordId, object });
+        }
 
-              const existing = yield* sql<{
-                snapshot: string;
-              }>`SELECT snapshot FROM objectSnapshot WHERE recordId = ${recordId}`;
+        // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }` tombstone
+        // appended by `Feed.remove`. Feed blocks are stored wholesale, so such a block is merged onto
+        // the prior snapshot below to retain the body and type while layering the new marker;
+        // otherwise the upsert would replace the full snapshot with the bare partial and the client
+        // could not hydrate the deleted object (`Obj.fromJSON` needs `@type` to decode). Only those
+        // blocks need the prior row, so the common case reads nothing at all.
+        // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
+        // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
+        const isPartialBlock = ({ object }: { object: IndexerObject }) =>
+          (object.data as Record<string, unknown>)[ATTR_TYPE] === undefined;
+        const partial = pending.filter(isPartialBlock).map(({ recordId }) => recordId);
+        const prior = new Map<number, string>();
+        for (const chunk of chunkArray(partial)) {
+          const rows = yield* sql<{
+            recordId: number;
+            snapshot: string;
+          }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
+          for (const row of rows) {
+            prior.set(row.recordId, row.snapshot);
+          }
+        }
 
-              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
-              // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
-              // partial onto the prior snapshot to retain the body and type while layering the new
-              // marker; otherwise the upsert below would replace the full snapshot with the bare
-              // partial and the client could not hydrate the deleted object (`Obj.fromJSON` needs
-              // `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
-              // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
-              // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
-              const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-              const merged =
-                isPartialBlock && existing.length > 0
-                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
-                  : data;
-              // Document objects carry `@meta` only so the entity-meta index can extract the
-              // convergence key, and this store is what the full-text index is built from — so
-              // keeping it would let a search match on foreign keys and identity strings the
-              // visible content never contains. Queue blocks always carried meta in their snapshot
-              // (clients hydrate from it), so theirs stays.
-              const stored = object.documentId
-                ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
-                : merged;
+        const rows = pending.map(({ recordId, object }) => {
+          const existing = prior.get(recordId);
+          const merged =
+            isPartialBlock({ object }) && existing !== undefined
+              ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
+              : object.data;
+          // Document objects carry `@meta` only so the entity-meta index can extract the
+          // convergence key, and this store is what the full-text index is built from — so
+          // keeping it would let a search match on foreign keys and identity strings the
+          // visible content never contains. Queue blocks always carried meta in their snapshot
+          // (clients hydrate from it), so theirs stays.
+          const stored = object.documentId
+            ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
+            : merged;
+          return { recordId, snapshot: JSON.stringify(stored) };
+        });
 
-              yield* sql`
-                INSERT INTO objectSnapshot (recordId, snapshot) VALUES (${recordId}, ${JSON.stringify(stored)})
-                ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
-              `;
-            }),
-          { discard: true },
-        );
+        for (const chunk of chunkArray(rows, UPSERT_CHUNK_SIZE)) {
+          yield* sql`
+            INSERT INTO objectSnapshot ${sql.insert(chunk)}
+            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
+          `;
+        }
       }),
   );
 }
