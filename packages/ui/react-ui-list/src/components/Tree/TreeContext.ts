@@ -115,6 +115,9 @@ export type SelectModifiers = {
   keyboard?: boolean;
 };
 
+/** A row activation: the keys it was made with, and the selection the row takes from it. */
+export type RowActivation = SelectModifiers & { current: boolean };
+
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
   /** Stamped into every row's drag payload so a monitor can reject another tree's drags. */
@@ -141,11 +144,9 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   onItemHover?: (params: { item: T }) => void;
   /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
   focusNode: (id: string, value: string) => void;
-  /** Applies the select-vs-toggle policy for a row activation. */
-  selectNode: (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current: boolean) => void;
-  /** Whether a row's activation selects it; a branch that cannot be selected discloses instead. */
+  /** Applies the select-vs-disclose policy for a row activation. */
+  activateNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
   canSelectNode: (node: TreeNodeEntry<T>) => boolean;
-  /** In `multiple` mode a plain click selects the row alone and a meta-click toggles it. */
   selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;

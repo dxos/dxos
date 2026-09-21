@@ -163,9 +163,6 @@ const DefaultStory = ({
     [getOrCreateStateAtom, registry],
   );
 
-  // One current row at a time, as a real single-selection model keeps it: per-path state with no
-  // such rule left the previous row current too, and a tree showing two current rows is not the
-  // tree the component is written against.
   const currentPathRef = useRef<string | null>(null);
   const handleSelect = useCallback(
     ({ path: pathProp, current }: { path: string[]; current: boolean }) => {
@@ -293,11 +290,7 @@ export const EmptyBranch: Story = {
   },
 };
 
-/**
- * Selection and disclosure never share a click: a branch the model refuses to select discloses when
- * clicked, and a selectable one only ever selects — the row the reader just chose must not push
- * everything below it down.
- */
+/** A branch the model refuses to select discloses when clicked; a selectable one only selects. */
 export const UnselectableBranches: Story = {
   args: { draggable: true, unselectableBranches: true },
   play: async ({ canvasElement }) => {
@@ -308,7 +301,6 @@ export const UnselectableBranches: Story = {
     await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
     await expect(branch).not.toHaveAttribute('data-selected');
 
-    // The second click closes it again: an unselectable row has nothing else a click can mean.
     await userEvent.click(branch);
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
@@ -316,9 +308,8 @@ export const UnselectableBranches: Story = {
 };
 
 /**
- * Collapse is one gesture: the chevron follows the click at once, the rows animate out under a row
- * that already reads closed, and a click arriving mid-animation reopens rather than being eaten.
- * Each of those was a separate symptom of holding the close back until the animation ended.
+ * Collapse commits on the click: the chevron follows at once, the rows animate out under a row that
+ * already reads closed, and a click arriving mid-animation reopens rather than being eaten.
  */
 export const Collapse: Story = {
   play: async ({ canvasElement }) => {
@@ -332,14 +323,11 @@ export const Collapse: Story = {
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(height()).toBeGreaterThan(0));
 
-    // The row reads closed from the first frame, not once the rows have finished leaving — and the
-    // rows are still on screen at that point, which is the collapse animating rather than snapping.
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(height()).toBeGreaterThan(0);
     await waitFor(() => expect(height()).toBe(0));
 
-    // Reopened while the conceal is still running: the branch ends open, with its rows back.
     await userEvent.click(toggle);
     await waitFor(() => expect(height()).toBeGreaterThan(0));
     toggle.click();

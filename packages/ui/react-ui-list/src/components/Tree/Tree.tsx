@@ -50,6 +50,7 @@ import {
   type ColumnRenderer,
   type HeadingRenderer,
   type IconRenderer,
+  type RowActivation,
   type SelectModifiers,
   type TreeItemDataProps,
   type TreeModel,
@@ -351,11 +352,6 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
-  /**
-   * Commits a branch's disclosure on the gesture, with nothing held back for the animation: the
-   * machine keeps a closed branch's content mounted until its conceal ends, so the exit is the
-   * machine's to run and the model, the machine and the chevron never disagree.
-   */
   const setOpen = useCallback(
     (node: TreeNodeEntry<T>, open: boolean) => onOpenChange?.({ item: node.item, path: node.path, open }),
     [onOpenChange],
@@ -368,16 +364,12 @@ export const Tree = <T extends { id: string } = any>({
     [canSelect],
   );
 
-  /** `current` is the selection the row takes, stated by every caller rather than derived here. */
-  const onSelectNode = useCallback(
-    (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current: boolean) => {
-      // A branch the reader cannot select discloses instead, since the row has no other meaning; a
-      // selectable one never does, because pushing children in under the row just chosen moves
-      // everything below it. An option-activation is the explicit ask for disclosure either way.
-      if (node.branch && (modifiers.option || !canSelectNode(node))) {
+  const onActivateNode = useCallback(
+    (node: TreeNodeEntry<T>, activation: RowActivation) => {
+      if (node.branch && (activation.option || !canSelectNode(node))) {
         toggleOpen(node);
       } else if (canSelectNode(node)) {
-        onSelect?.({ item: node.item, path: node.path, current, ...modifiers });
+        onSelect?.({ item: node.item, path: node.path, ...activation });
       }
     },
     [canSelectNode, onSelect, toggleOpen],
@@ -475,10 +467,10 @@ export const Tree = <T extends { id: string } = any>({
       }
       const entry = byValue.get(focusedValue);
       if (entry) {
-        onSelectNode(entry, NO_MODIFIERS, true);
+        onActivateNode(entry, { ...NO_MODIFIERS, current: true });
       }
     },
-    [selectionFollowsFocus, selected, byValue, onSelectNode],
+    [selectionFollowsFocus, selected, byValue, onActivateNode],
   );
 
   const handleSelectionChange = useCallback(
@@ -490,26 +482,13 @@ export const Tree = <T extends { id: string } = any>({
           : selectedValue.find((candidate) => !previous.has(candidate));
       const entry = value ? byValue.get(value) : undefined;
       if (entry) {
-        // A value the machine reports in its selection is selected — the machine has no gesture
-        // that deselects (a multiple-mode meta-click never reaches it, `handleClickCapture` takes
-        // that one and states the new state itself).
-        onSelectNode(entry, recentModifiers(), true);
+        onActivateNode(entry, { ...recentModifiers(), current: true });
       }
     },
-    [selected, byValue, onSelectNode, recentModifiers],
+    [selected, byValue, onActivateNode, recentModifiers],
   );
 
-  /**
-   * `Space` discloses the focused branch; `Enter` activates the focused row.
-   *
-   * Both are handled here rather than left to the machine. The machine emits a selection change
-   * only when the selected value actually changes, so `Enter` on the row that is already selected
-   * reached nothing — and a consumer cannot tell a keyboard activation from a click, though only
-   * the former should carry focus on into what it opened. `Enter` therefore reports through
-   * `onSelect` with `keyboard` set, whether or not the row was already current, and never toggles:
-   * disclosure is `Space`'s, on any branch, so the two keys do not share a meaning that depends on
-   * which row happens to be current.
-   */
+  /** The machine emits no selection event for a row that is already selected, so `Enter` is taken here. */
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
@@ -566,7 +545,7 @@ export const Tree = <T extends { id: string } = any>({
       dropBelowExpanded,
       onOpenChange,
       onItemHover,
-      selectNode: onSelectNode,
+      activateNode: onActivateNode,
       canSelectNode,
       selectionMode,
       mountedRef,
@@ -586,7 +565,7 @@ export const Tree = <T extends { id: string } = any>({
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
-      onSelectNode,
+      onActivateNode,
       canSelectNode,
       selectionMode,
       onOpenChange,
@@ -696,9 +675,7 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * Branch children container. Disclosure animates height (via `interpolate-size`, opacity-only
  * where unsupported) — but only for content inserted after the initial paint, so a tree restoring
  * persisted open state does not animate every branch on load. The gate is stamped at DOM insertion
- * time because lazy-mounted content attaches long after the row first renders. Both directions ride
- * the machine's own `data-state`, which holds a closed branch's content mounted until its exit
- * animation ends.
+ * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
   const { mountedRef } = useTreeRender();
@@ -791,7 +768,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     dropBelowExpanded,
     onOpenChange,
     onItemHover,
-    selectNode,
+    activateNode,
     canSelectNode,
     selectionMode,
     focusNode,
@@ -947,24 +924,24 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
 
   useEffect(() => () => onCancelExpand(), [onCancelExpand]);
 
-  // The machine skips selection events for an already-selected row, so re-activation (scrolling a
-  // current row's content back into view) is reported here — as staying current, like Enter's,
-  // since a re-click re-activates and the machine has no gesture that deselects.
+  // The machine emits no selection event for a row that is already selected, so a re-click is taken here.
   const handleClick = useCallback(
     (event: MouseEvent) => {
       if (current) {
         event.preventDefault();
-        selectNode(node, { option: event.altKey, shift: event.shiftKey, meta: event.metaKey || event.ctrlKey }, true);
+        activateNode(node, {
+          option: event.altKey,
+          shift: event.shiftKey,
+          meta: event.metaKey || event.ctrlKey,
+          current: true,
+        });
       }
     },
-    [current, node, selectNode],
+    [current, node, activateNode],
   );
 
-  // In multiple mode a plain click selects the row alone and a meta-click toggles it. The machine
-  // reports a selection change one row at a time and nothing at all for a re-click of the only
-  // selected row (and `handleClick` would report a current row a second time), so both clicks are
-  // taken here in the capture phase and never reach it. A shift-click keeps the machine's range
-  // gesture, and a click on a control inside the row is the control's.
+  // The machine reports a selection change one row at a time and none for a re-click of the only
+  // selected row, so `multiple` mode's plain and meta clicks are taken in capture and never reach it.
   const handleClickCapture = useCallback(
     (event: MouseEvent) => {
       if (selectionMode !== 'multiple' || event.shiftKey || event.altKey) {
@@ -976,9 +953,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       event.stopPropagation();
       event.preventDefault();
       const meta = event.metaKey || event.ctrlKey;
-      selectNode(node, { option: false, shift: false, meta }, meta ? !current : true);
+      activateNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
     },
-    [selectionMode, node, current, selectNode],
+    [selectionMode, node, current, activateNode],
   );
 
   const handleItemHover = useCallback(() => onItemHover?.({ item }), [onItemHover, item]);
@@ -1000,11 +977,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       data-testid={props.testId}
       className={mx(
         'col-[tree-row] outline-none select-none',
-        // The pointer is promised to rows a click selects; a row that can only be dragged takes the
-        // open hand, and one that is neither keeps the arrow — disclosure is not what a cursor
-        // advertises.
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
-        // Native drag paints its own cursor, so grabbing shows for the press that starts the drag.
         isItemDraggable && 'active:cursor-grabbing',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
         // copy left behind in place reads as a second row rather than as the one being moved. A
@@ -1106,8 +1079,6 @@ const TreeNodeHeading = <T extends { id: string }>({
       <div
         data-testid='treeItem.heading'
         className={mx(
-          // No cursor of its own: the row decides, and a cursor here would cover the part of the
-          // row the reader actually aims at.
           'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) select-none',
           props.headingClassName,
         )}
