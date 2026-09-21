@@ -171,9 +171,23 @@ export const readProcessFootprint = async (browserCdp: Cdp): Promise<FootprintRe
       // stage's footprint once that trace ends; see the `boot` backfill in the flow.
       return [];
     }
-    await browserCdp.trySend('Tracing.requestMemoryDump', { deterministic: false, levelOfDetail: 'light' });
-    await browserCdp.trySend('Tracing.end');
-    await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 10_000))]);
+    // Each step checked rather than assumed: `trySend` turns every CDP failure into `undefined`,
+    // so a dump that never happened would otherwise fall through to the parse below and return an
+    // empty reading — which sums to a footprint of zero and enters the trend as a measurement.
+    const dumped = await browserCdp.trySend('Tracing.requestMemoryDump', {
+      deterministic: false,
+      levelOfDetail: 'light',
+    });
+    const ended = await browserCdp.trySend('Tracing.end');
+    const completed = await Promise.race([
+      complete.then(() => true),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 10_000)),
+    ]);
+    if (dumped === undefined || ended === undefined || !completed) {
+      // Nothing usable. Empty rather than partial, so the caller's `footprintProcesses` reads zero
+      // and the row is legible as uncollected instead of as an app that holds no memory.
+      return [];
+    }
   } finally {
     browserCdp.off('Tracing.dataCollected', collect);
     browserCdp.off('Tracing.tracingComplete', settle);

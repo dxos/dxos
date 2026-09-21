@@ -180,6 +180,7 @@ export type Readout = Totals & {
   readonly clientSamples: ReadonlyArray<ClientSample>;
 };
 
+/** Everything this realm has recorded: the running totals, plus copies of both sample rings. */
 export const getReadout = (): Readout => ({
   ...totals,
   samples: [...timingSamples],

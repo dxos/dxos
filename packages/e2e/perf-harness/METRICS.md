@@ -160,6 +160,12 @@ runtime that opens SQLite. **A module compiled before the probe is installed is 
 which is what `wasmInstances` exists to make visible: a realm that reports fewer memories than it
 should has had its initialization reordered.
 
+`wasmBytesTotal` sums the EXCLUSIVE bytes only. A `SharedArrayBuffer`-backed memory is visible in
+every realm it was posted to and nothing in the readings identifies one allocation across realms,
+so a deduplicated cross-realm total cannot be computed from them — `wasmSharedBytesSum` is the
+shared subtotal summed over realms, an upper bound rather than a union. Read it beside the total
+rather than adding the two.
+
 `kind` is `page`, `worker` or `shared_worker`; `name` carries the script name, which is how you tell
 the coordinator worker from the observability worker.
 
@@ -169,6 +175,11 @@ Sum of `usedBytes` across realms. Convenient, and lossy: it hides which realm gr
 excludes wasm — `wasmBytesTotal` is the companion column. Use `heap[]` when a number moves.
 
 ### `appFootprintBytes` — the trended one
+
+`footprintProcesses` is its integrity column, the role `sqliteRealms` plays for disk: the dump can
+fail or be pre-empted by another trace, and a failed read yields no processes — which sums to zero
+bytes and is otherwise indistinguishable from an app holding no memory. Zero processes means the
+row's footprints are ABSENT, not measured.
 
 Private footprint of the **renderer** processes at the stage's end, from a `light` memory-infra
 dump. It counts wasm linear memory, where automerge documents live, outside every JS-heap reading

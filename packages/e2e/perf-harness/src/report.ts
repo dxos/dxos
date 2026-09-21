@@ -252,16 +252,28 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
         (total, reading) => total + (reading.process === 'Renderer' ? 0 : reading.bytes),
         0,
       ),
+      // The integrity column for the two footprints, the role `sqliteRealms` plays for disk: the
+      // memory-infra dump can fail or be pre-empted by another trace, and a failed read yields no
+      // processes — which sums to zero bytes and is otherwise indistinguishable from an app that
+      // holds no memory. Zero processes means the row's footprints are absent, not measured.
+      footprintProcesses: row.footprint.length,
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByRealm,
       ...backingByRealm,
       ...wasmByRealm,
-      // Shared memory subtracted from the per-realm sum and added back once: a growable
-      // `SharedArrayBuffer`-backed memory is visible in every realm it was posted to, so adding the
-      // realm columns counts one allocation once per realm.
-      wasmBytesTotal:
-        row.heap.reduce((total, reading) => total + (reading.wasmBytes ?? 0) - (reading.wasmSharedBytes ?? 0), 0) +
-        row.heap.reduce((largest, reading) => Math.max(largest, reading.wasmSharedBytes ?? 0), 0),
+      // EXCLUSIVE memory only, so the total is exact. A `SharedArrayBuffer`-backed memory is
+      // visible in every realm it was posted to, and nothing in the probe's readings identifies
+      // one allocation across realms — so a deduplicated total cannot be computed here at all.
+      // Taking the largest realm's shared subtotal as the union was wrong whenever two realms hold
+      // DIFFERENT shared memories: 2 MB in one and 3 MB in another is 5 MB, not 3 MB.
+      wasmBytesTotal: row.heap.reduce(
+        (total, reading) => total + (reading.wasmBytes ?? 0) - (reading.wasmSharedBytes ?? 0),
+        0,
+      ),
+      // The shared subtotal, summed over realms and therefore an UPPER bound rather than a union:
+      // read it beside `wasmBytesTotal` rather than adding the two. Zero in this app today, which
+      // is why the total above is currently exact for the whole of wasm.
+      wasmSharedBytesSum: row.heap.reduce((total, reading) => total + (reading.wasmSharedBytes ?? 0), 0),
       // Published so a zero byte count is readable as "nothing instrumented" rather than "no wasm",
       // the same role `sqliteRealms` plays below.
       wasmRealms: row.heap.filter((reading) => reading.wasmBytes !== undefined).length,
@@ -291,10 +303,15 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       ...rpcServiceMaxByRealm,
       ...rpcRoundTripP95ByRealm,
       ...rpcRoundTripMaxByRealm,
-      // The pair that says whether a percentile above covers the whole stage: the middleware keeps
-      // a bounded sample ring, so `rpcCallsTotal` above `rpcSamples` means the tail of the stage.
+      // The pairs that say whether a percentile above covers the whole stage: each middleware keeps
+      // a bounded sample ring, so a call count above its OWN sample count means the percentiles
+      // describe the stage's tail. Served and issued are counted separately because they are
+      // different rings — summing them let 100 client samples hide a truncated server ring of 100
+      // against 140 served calls.
       rpcCallsTotal: row.rpc.reduce((total, realm) => total + realm.calls, 0),
-      rpcSamples: row.rpc.reduce((total, realm) => total + realm.samples + realm.clientSamples, 0),
+      rpcSamples: row.rpc.reduce((total, realm) => total + realm.samples, 0),
+      rpcClientCallsTotal: row.rpc.reduce((total, realm) => total + realm.clientCalls, 0),
+      rpcClientSamples: row.rpc.reduce((total, realm) => total + realm.clientSamples, 0),
       rpcRealms: row.rpc.length,
 
       longTaskMaxMs: row.responsiveness.longTaskMaxMs,

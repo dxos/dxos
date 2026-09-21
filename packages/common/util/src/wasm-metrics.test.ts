@@ -12,9 +12,9 @@ import { getWasmMemoryStats, installWasmMemoryProbe } from './wasm-metrics.ts';
  * toolchain to produce would put that behind a build step.
  */
 const MODULE_HEX =
-  '0061736d01000000' + // magic, version
-  '0503010001' + // memory section: one memory, minimum one page
-  '070a01066d656d6f72790200'; // export section: "memory"
+  '0061736d01000000' + // Magic, version.
+  '0503010001' + // Memory section: one memory, minimum one page.
+  '070a01066d656d6f72790200'; // Export section: "memory".
 
 const MEMORY_MODULE = Uint8Array.from(MODULE_HEX.match(/../g) ?? [], (byte) => parseInt(byte, 16));
 

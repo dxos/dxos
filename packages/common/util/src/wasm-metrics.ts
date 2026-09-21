@@ -199,8 +199,10 @@ export const installWasmMemoryProbe = (): void => {
   // is the one route neither instantiation hook sees on its own — an Emscripten pthreads build
   // does exactly that, and its memory is never on `instance.exports`.
   const memory = new Proxy(WebAssembly.Memory, {
-    construct: (target, args: [WebAssembly.MemoryDescriptor]) => {
-      const constructed = Reflect.construct(target, args);
+    // `newTarget` forwarded, so a class extending `WebAssembly.Memory` is constructed against its
+    // own prototype rather than the base one.
+    construct: (target, args: [WebAssembly.MemoryDescriptor], newTarget) => {
+      const constructed = Reflect.construct(target, args, newTarget);
       track(constructed, origin());
       return constructed;
     },

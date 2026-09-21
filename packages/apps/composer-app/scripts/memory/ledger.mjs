@@ -548,6 +548,9 @@ try {
       const heapBytes = heap?.usedSize ?? 0;
       const name = (target.url.split('/').pop() || target.url).slice(0, 44);
       realms.push({
+        // Carried so the snapshot pass below can match by identity: `/json/list` is enumerated
+        // again there, and target churn between the two calls changes its order and length.
+        targetId: target.id,
         type: target.type,
         name,
         url: target.url,
@@ -872,9 +875,13 @@ try {
 
     if (snapshots && label === snapshotAt) {
       const attributed = await readRealms(label, { withSnapshots: true });
-      realms.forEach((realm, index) => {
-        realm.attribution = attributed[index]?.attribution ?? null;
-      });
+      // Keyed by target id rather than zipped by index: the second enumeration can return a
+      // different set, which assigned one realm's attribution to another. `${type} ${url}` is no
+      // better a key — two dedicated workers running the same bundle share it.
+      const byTargetId = new Map(attributed.map((realm) => [realm.targetId, realm]));
+      for (const realm of realms) {
+        realm.attribution = byTargetId.get(realm.targetId)?.attribution ?? null;
+      }
     }
 
     const reading = {

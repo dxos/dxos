@@ -559,7 +559,14 @@ try {
       { sessionId, timeoutMs: GC_TIMEOUT_MS },
     );
     for (const [key, entry] of Object.entries(JSON.parse(measures?.result?.value ?? '{}'))) {
-      measureCalls.set(`${realm} ${key}`, entry);
+      // Accumulated, not replaced: `realm` is the target KIND, so two dedicated workers running
+      // the same bundle produce the same tagged key and the second one overwrote the first.
+      const tagged = `${realm} ${key}`;
+      const previous = measureCalls.get(tagged) ?? { count: 0, detailBytes: 0 };
+      measureCalls.set(tagged, {
+        count: previous.count + entry.count,
+        detailBytes: previous.detailBytes + entry.detailBytes,
+      });
     }
     const wasm = await cdp.trySend(
       'Runtime.evaluate',

@@ -205,9 +205,6 @@ export class StageRunner {
 
     await this.#mark(id, 'end');
     const wallMs = Date.now() - before.at;
-    // At the boundary rather than sampled: the read costs ~100 ms, and a peak over the stage was
-    // what made the quantity it replaces noisy rather than informative.
-    const footprint = await readProcessFootprint(browserCdp);
     const cpu = diffProcessCpu(before.cpu, await readProcessCpu(browserCdp));
     const thread = pageTarget
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
@@ -236,6 +233,12 @@ export class StageRunner {
 
     const responsiveness = await readResponsiveness(page, this.#targets);
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
+
+    // LAST of the closing reads, and at the boundary rather than sampled. It starts and ends a
+    // trace around one dump, which costs ~100 ms — an order of magnitude more than every other
+    // read here — so taking it first put the harness's own overhead, and whatever the app did
+    // during it, inside the CPU, thread, network, disk and RPC deltas that close the same stage.
+    const footprint = await readProcessFootprint(browserCdp);
 
     const stills = this.#instruments.screencast?.endStage();
     const profiled = await this.#instruments.profiler?.endStage();

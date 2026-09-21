@@ -162,13 +162,16 @@ elsewhere on the same dashboard is worse than no chart.
 **Peak memory composition (mean, stacked)** is the memory counterpart, and it stacks by
 **composition, not by phase** — deliberately. Time is additive, so phases stack; memory is a level,
 so stacking eleven phases' peaks would draw ~40 GB that never existed at any instant. What
-genuinely sums is JS heap plus everything else = peak RSS, which puts the finding on the page: ~250 MB of heap
-inside ~4 GB of RSS, so ~15x of this app's memory is wasm linear memory and native allocation and
-optimizing the JS heap cannot move the memory number.
+genuinely sums is the realms' JS heaps plus everything else = `ciAppFootprintBytes`, the private
+footprint of the renderer processes. The gap is the finding: most of this app's memory is wasm
+linear memory and native allocation, so optimizing a JS heap cannot move the memory number.
 
-One honest caveat, recorded in the tile's SQL: the RSS peak and the heap peak need not occur at the
-same instant within a phase, so the total is exact and the boundary between the two segments is
-approximate.
+Two caveats, both recorded in the tile's SQL. The footprint is read at each phase boundary while a
+heap peak is that phase's maximum, so the total is exact and the boundary between the segments is
+approximate. And the size of the gap is NOT what this file claimed before `ciPeakRssBytes` was
+retired: that figure divided the heap into a sum of RSS over Chrome's whole process tree, which
+multi-counts shared pages and included the browser, GPU and service processes. Read the ratio off
+the tile rather than from any number written here.
 
 ### Edge traffic, and what it took to measure it
 
