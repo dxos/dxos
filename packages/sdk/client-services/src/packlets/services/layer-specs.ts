@@ -21,6 +21,7 @@ import { Hook } from '@dxos/effect';
 import {
   HypercoreFactoryLayer,
   HypercoreFactoryService,
+  HypercoreStorageDirectoryService,
   HypercoreStoreLayer,
   HypercoreStoreService,
 } from '@dxos/feed-store';
@@ -99,12 +100,7 @@ import {
   storageLifecycleLayer,
   storageMigrationLayer,
 } from './service-stack.ts';
-import {
-  HypercoreStorageDirectoryLayer,
-  HypercoreStorageDirectoryService,
-  SqliteStorageLayer,
-  SqliteStorageService,
-} from './sqlite-storage.ts';
+import { HypercoreStorageDirectoryLayer, SqliteStorageLayer, SqliteStorageService } from './sqlite-storage.ts';
 import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
 
 const application = 'application' as const;

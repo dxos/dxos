@@ -12,7 +12,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { makeClientServicesRpcFromRouter } from '@dxos/client-protocol';
-import * as LayerStack from '@dxos/compute-runtime/LayerStack';
+import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { EchoHostService } from '@dxos/echo-host';
 import { EffectEx, Hook } from '@dxos/effect';
