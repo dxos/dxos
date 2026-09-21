@@ -7,13 +7,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
-import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine.ts';
+import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
+import { IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
   EntityMetaIndex,
@@ -97,7 +99,7 @@ describe('IndexEngine', () => {
     yield* tracker.migrate();
     const metaIndex = new EntityMetaIndex();
     yield* metaIndex.migrate();
-    const ftsIndex = new FtsIndex(tracker);
+    const ftsIndex = new FtsIndex();
     yield* ftsIndex.migrate();
     const objectSnapshotIndex = new ObjectSnapshotIndex();
     yield* objectSnapshotIndex.migrate();
@@ -158,7 +160,7 @@ describe('IndexEngine', () => {
       expect(results1[0].version).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
-      const ftsResults1 = yield* ftsIndex.query({
+      const ftsResults1 = yield* engine.queryText({
         query: 'Hello',
         spaceId: null,
         includeAllQueues: false,
@@ -190,7 +192,7 @@ describe('IndexEngine', () => {
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
 
-      const ftsResults2 = yield* ftsIndex.query({
+      const ftsResults2 = yield* engine.queryText({
         query: 'World',
         spaceId: null,
         includeAllQueues: false,
@@ -270,7 +272,7 @@ describe('IndexEngine', () => {
       const resultsB = yield* metaIndex.query({ spaceId, typeDXN: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
-      const ftsResults = yield* ftsIndex.query({
+      const ftsResults = yield* engine.queryText({
         query: 'TypeA',
         spaceId: null,
         includeAllQueues: false,
@@ -455,4 +457,117 @@ describe('IndexEngine', () => {
       expect(result.objects.size).toBe(0);
     }, Effect.provide(TestLayer)),
   );
+
+  describe('secondary indexes', () => {
+    const makeObject = (spaceId: SpaceId, documentId: string, title: string): IndexerObject => ({
+      spaceId,
+      documentId,
+      queueId: null,
+      queueNamespace: null,
+      recordId: null,
+      createdAt: null,
+      updatedAt: Date.now(),
+      data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title },
+    });
+
+    it.effect(
+      'leaves the full-text index behind the snapshot store until a secondary pass runs',
+      Effect.fnUntraced(function* () {
+        const { indexEngine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'Deferred Tokenization')]);
+        yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+
+        const sql = yield* SqlClient.SqlClient;
+        expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(0);
+
+        // The snapshot store is written on the primary pass, so everything read from it is current.
+        const meta = yield* indexEngine.queryType({ spaceId, typeDXN: TYPE_DEFAULT });
+        expect(yield* indexEngine.querySnapshotsJSON(meta.map((row) => row.recordId))).toHaveLength(1);
+
+        const { updated } = yield* indexEngine.updateSecondaryIndexes(Context.default());
+        expect(updated).toBe(1);
+        expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'resumes from its cursor, so a later pass indexes only what is new',
+      Effect.fnUntraced(function* () {
+        const { indexEngine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'First')]);
+        yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).done).toBe(true);
+
+        dataSource.push([makeObject(spaceId, 'doc-2', 'Second')]);
+        yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'coalesces repeated writes into a single re-tokenization',
+      Effect.fnUntraced(function* () {
+        const { indexEngine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        const object = makeObject(spaceId, 'doc-1', 'Alpha');
+        for (const title of ['Alpha', 'Bravo', 'Charlie', 'Delta']) {
+          object.data.title = title;
+          dataSource.push([object]);
+          yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+        }
+
+        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+
+        const query = { spaceId: null, includeAllQueues: false, queues: null };
+        expect(yield* indexEngine.queryText({ ...query, query: 'Delta' })).toHaveLength(1);
+        expect(yield* indexEngine.queryText({ ...query, query: 'Alpha' })).toHaveLength(0);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'drains the backlog before matching, so a search never sees a stale index',
+      Effect.fnUntraced(function* () {
+        const { indexEngine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'Unflushed Content')]);
+        yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+
+        const match = yield* indexEngine.queryText({
+          query: 'Unflushed',
+          spaceId: null,
+          includeAllQueues: false,
+          queues: null,
+        });
+        expect(match).toHaveLength(1);
+        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).done).toBe(true);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'rebuilds from scratch when its cursor name is retired',
+      Effect.fnUntraced(function* () {
+        const { indexEngine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'Rebuilt')]);
+        yield* indexEngine.update(Context.default(), dataSource, { spaceId: null });
+        yield* indexEngine.updateSecondaryIndexes(Context.default());
+
+        // What a migration does to retire a secondary index (see `migrations/tracker`).
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE indexName = 'fts7'`;
+        yield* sql`DELETE FROM ftsIndex`;
+
+        expect((yield* indexEngine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+        expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });

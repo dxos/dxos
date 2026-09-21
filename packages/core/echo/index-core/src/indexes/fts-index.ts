@@ -10,18 +10,13 @@ import type * as Statement from 'effect/unstable/sql/Statement';
 
 import type { SpaceId } from '@dxos/keys';
 
-import { IndexTracker } from '../index-tracker.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
 import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
+import { type Index, type IndexerObject } from './interface.ts';
 
-/**
- * Cursor identity of the full-text step. `index` rather than `automerge`/`queue` because this step
- * reads the index itself; the generation suffix retires the name the index used while it was fed
- * from a data source (see `migrations/tracker/0004_retire_fts_cursor.sql`).
- */
-const FTS_INDEX_NAME = 'fts7';
-const FTS_SOURCE_NAME = 'index';
+/** Each indexed row binds two variables, so the batch is half what a single-column `IN` allows. */
+const INSERT_CHUNK_SIZE = SQL_CHUNK_SIZE / 2;
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -105,28 +100,16 @@ const escapeFts5Query = (text: string): string => {
 /**
  * Trigram full-text index over {@link ObjectSnapshotIndex}.
  *
- * The second step of indexing: its source is the index itself rather than automerge or a feed, so
- * it tracks `objectMeta.version` — the monotonic counter stamped on every object the first step
- * writes — as an ordinary cursor in `indexCursor`. That is what makes re-tokenization deferrable,
- * and it is why re-tokenizing is cheap under a burst: 300 edits move one object's counter 300
- * times and are caught up in one rebuild.
+ * A secondary index: `IndexEngine` feeds it from {@link IndexedObjectSource} rather than from
+ * automerge or a feed, which is what makes re-tokenization deferrable — and cheap under a burst,
+ * since 300 edits move one object's counter 300 times and are caught up in a single pass.
  *
- * Deferring it matters because re-tokenizing is what made editing expensive — FTS5 cannot update a
+ * Deferring it matters because re-tokenizing is what made editing expensive: FTS5 cannot update a
  * row in place and a trigram tokenizer emits one token per 3-character window, so one changed
- * property rewrote hundreds of kilobytes. Nothing but `MATCH` reads this table, and matching calls
- * {@link flushPending} first, so a search never sees a stale index.
+ * property rewrote hundreds of kilobytes. Nothing but `MATCH` reads this table, and
+ * `IndexEngine.queryText` drains the backlog before matching, so a search never sees a stale index.
  */
-export class FtsIndex {
-  readonly #tracker: IndexTracker;
-
-  /**
-   * @param tracker Owner of `indexCursor`; the default is equivalent, since it holds no state of
-   * its own.
-   */
-  constructor(tracker: IndexTracker = new IndexTracker()) {
-    this.#tracker = tracker;
-  }
-
+export class FtsIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -212,10 +195,6 @@ export class FtsIndex {
       }
 
       if (useBm25) {
-        // Matching is the one read that goes to the index rather than the snapshot store, so it is
-        // also the one that has to wait for the deferred re-tokenization.
-        yield* this.flushPending();
-
         // Use BM25 ranking for FTS5 MATCH queries.
         // BM25 returns negative values, negate to get higher = better match.
         // Order by rank descending so best matches come first.
@@ -253,76 +232,33 @@ export class FtsIndex {
       }),
   );
 
-  /** Counter of the last object this step re-tokenized; 0 before it has ever run. */
-  #readCursor(): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen({ self: this }, function* () {
-      const cursors = yield* this.#tracker.queryCursors({
-        indexName: FTS_INDEX_NAME,
-        sourceName: FTS_SOURCE_NAME,
-      });
-      const cursor = cursors[0]?.cursor;
-      return typeof cursor === 'number' ? cursor : 0;
-    });
-  }
-
   /**
-   * Re-tokenizes every object indexed since this step last ran.
-   *
-   * Draining in chunks keeps one transaction proportional to the batch rather than to the backlog,
-   * and advancing the cursor in the same transaction as the index write is what lets an interrupted
-   * flush resume instead of losing the record. A record with no snapshot row contributes nothing
-   * here, which is the intended no-op: writing one stamps a fresh counter, so it comes back.
-   *
-   * @returns Number of records re-indexed.
+   * Re-tokenizes the given objects, whose text this reads from {@link IndexerObject.data} rather
+   * than from the snapshot store so that one pass writes one index.
    */
-  flushPending = Effect.fn('FtsIndex.flushPending')((): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen({ self: this }, function* () {
-      const sql = yield* SqlClient.SqlClient;
-      let cursor = yield* this.#readCursor();
-      let flushed = 0;
+  update = Effect.fn('FtsIndex.update')(
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (objects.length === 0) {
+          return;
+        }
+        const sql = yield* SqlClient.SqlClient;
 
-      for (;;) {
-        const pending = yield* sql<{ recordId: number; version: number }>`
-          SELECT recordId, version FROM objectMeta WHERE version > ${cursor} ORDER BY version LIMIT ${SQL_CHUNK_SIZE}
-        `;
-        if (pending.length === 0) {
-          return flushed;
+        const rows: { rowid: number; snapshot: string }[] = [];
+        for (const object of objects) {
+          if (object.recordId === null) {
+            return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
+          }
+          rows.push({ rowid: object.recordId, snapshot: JSON.stringify(object.data) });
         }
 
-        const recordIds = pending.map((row) => row.recordId);
-        const advanced = pending[pending.length - 1].version;
-        yield* sql.withTransaction(
-          Effect.gen({ self: this }, function* () {
-            // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
-            yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
-            yield* sql`
-              INSERT INTO ftsIndex (rowid, snapshot)
-              SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(recordIds)}
-            `;
-            yield* this.#tracker.updateCursors([
-              {
-                indexName: FTS_INDEX_NAME,
-                spaceId: null,
-                sourceName: FTS_SOURCE_NAME,
-                resourceId: null,
-                cursor: advanced,
-              },
-            ]);
-          }),
-        );
-        cursor = advanced;
-        flushed += recordIds.length;
-      }
-    }),
-  );
-
-  /** Records indexed since this step last ran. */
-  pendingCount = Effect.fn('FtsIndex.pendingCount')((): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen({ self: this }, function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const cursor = yield* this.#readCursor();
-      const rows = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM objectMeta WHERE version > ${cursor}`;
-      return rows[0]?.count ?? 0;
-    }),
+        // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
+        for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
+          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+        }
+        for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
+          yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
+        }
+      }),
   );
 }

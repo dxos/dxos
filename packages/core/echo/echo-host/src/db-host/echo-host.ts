@@ -239,7 +239,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
-      updateIndexes: () => this.updateIndexes(),
+      updateIndexes: (request) => this.updateIndexes(request),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
@@ -429,7 +429,7 @@ export class EchoHost extends Resource {
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
    */
-  async updateIndexes(): Promise<void> {
+  async updateIndexes({ secondaryIndexes = false }: { secondaryIndexes?: boolean } = {}): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
@@ -440,6 +440,32 @@ export class EchoHost extends Resource {
         return;
       }
     } while (!this._indexesUpToDate);
+
+    if (secondaryIndexes) {
+      await this.updateSecondaryIndexes();
+    }
+  }
+
+  /**
+   * Indexes the secondary-index backlog to completion, which the debounced flush otherwise gets to
+   * on its own schedule (see {@link IndexEngine.updateSecondaryIndexes}).
+   *
+   * @returns Number of records indexed.
+   */
+  async updateSecondaryIndexes(): Promise<number> {
+    let records = 0;
+    for (;;) {
+      if (this._ctx.disposed || !this.isOpen) {
+        return records;
+      }
+      const result = await this._indexEngine
+        .updateSecondaryIndexes(this._ctx)
+        .pipe(RuntimeProvider.runPromise(this._runtime));
+      records += result.updated;
+      if (result.done) {
+        return records;
+      }
+    }
   }
 
   /**
@@ -1119,7 +1145,7 @@ export class EchoHost extends Resource {
           return;
         }
 
-        const records = await this._indexEngine.flushFtsIndex().pipe(RuntimeProvider.runPromise(this._runtime));
+        const records = await this.updateSecondaryIndexes();
         if (records > 0) {
           log.verbose('flushed deferred full-text index', { records });
         }

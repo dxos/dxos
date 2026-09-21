@@ -206,7 +206,7 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.updateIndexes'](): Effect.Effect<void, BaseError> {
+  ['DataService.updateIndexes'](_request: DataService.UpdateIndexesRequest): Effect.Effect<void, BaseError> {
     log.verbose('updateIndexes called, but it is a no-op in EDGE env.');
     return Effect.void;
   }

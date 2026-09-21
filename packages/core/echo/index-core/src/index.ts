@@ -2,13 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export {
-  type DataSourceCursor,
-  type IndexDataSource,
-  IndexEngine,
-  type IndexEngineParams,
-  type IndexingResult,
-} from './index-engine.ts';
+export { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
+export { IndexEngine, type IndexEngineParams, type IndexingResult } from './index-engine.ts';
+export { IndexedObjectSource } from './indexed-object-source.ts';
 export { type IndexCursor, IndexTracker } from './index-tracker.ts';
 export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 export { type Index, type IndexerObject } from './indexes/interface.ts';

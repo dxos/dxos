@@ -131,14 +131,16 @@ objects per pass off `AutomergeDataSource` and `FeedDataSource`, triggered by
 hint after each pass. The join key across tables is `objectMeta.recordId ==
 objectSnapshot.recordId == ftsIndex.rowid == reverseRef.recordId`.
 
-The snapshot store is written on the indexing pass; the trigram index is not.
-`EntityMetaIndex.update` stamps every indexed object with a monotonic
-`objectMeta.version`, and `FtsIndex.flushPending` re-tokenizes everything past its
-own cursor over that counter — an ordinary `indexCursor` row, `sourceName='index'`
-— before any `MATCH` and on an idle moment after a burst of writes. FTS5 cannot
-update a row in place, so re-tokenizing a large object on every keystroke was the
-dominant cost of editing; a burst now moves the counter many times and is caught
-up once.
+The snapshot store is written on the indexing pass; the trigram index is not. It is
+a _secondary_ index, fed by `IndexEngine.updateSecondaryIndexes` from
+`IndexedObjectSource` — the index read back as a data source, ordered by the
+monotonic `objectMeta.version` that `EntityMetaIndex.update` stamps on everything
+the primary pass writes. Its cursor over that counter is an ordinary `indexCursor`
+row (`sourceName='index'`), so it is retired and rebuilt like any other. The pass
+runs before any `MATCH`, on an idle moment after a burst of writes, and on
+`Database.flush({ secondaryIndexes: true })`. FTS5 cannot update a row in place, so
+re-tokenizing a large object on every keystroke was the dominant cost of editing; a
+burst now moves the counter many times and is caught up once.
 
 ### 2.2 Full-text: what works and what doesn't
 

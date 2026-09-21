@@ -6,13 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { type Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
+import { type IndexDataSource } from './data-source.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
+import { IndexedObjectSource } from './indexed-object-source.ts';
 import {
   type EntityMeta,
   EntityMetaIndex,
@@ -98,53 +100,24 @@ const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
 };
 
 /**
- * Cursor into indexable data-source.
+ * Stores the engine reads and writes. Each defaults to a fresh instance; pass one in to share it
+ * with a caller that queries it directly.
  */
-export interface DataSourceCursor {
-  spaceId: SpaceId | null;
-
-  /**
-   * documentId or queueNamespace.
-   */
-  resourceId: string | null;
-
-  /**
-   * heads or queue position.
-   */
-  cursor: number | string;
-}
-
-export interface IndexDataSource {
-  readonly sourceName: string; // e.g. queue, automerge, etc.
-
-  /**
-   * Marks the start/end of one `IndexEngine.update` pass, letting a source reuse the
-   * cursor-independent part of its read across every index updated in that pass. Cursors differ per
-   * index, so the diff itself cannot be shared — only the underlying snapshot. Optional: a source
-   * with no expensive shared read can omit both.
-   */
-  beginPass?(): void;
-  endPass?(): void;
-
-  getChangedObjects(
-    ctx: Context,
-    cursors: DataSourceCursor[],
-    opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
-}
-
 export interface IndexEngineParams {
-  tracker: IndexTracker;
-  objectMetaIndex: EntityMetaIndex;
-  ftsIndex: FtsIndex;
-  reverseRefIndex: ReverseRefIndex;
-
-  /** Defaults to a fresh store; injectable for tests. */
+  tracker?: IndexTracker;
+  objectMetaIndex?: EntityMetaIndex;
+  ftsIndex?: FtsIndex;
   objectSnapshotIndex?: ObjectSnapshotIndex;
-
-  /** Defaults to a fresh store; injectable for tests. */
+  reverseRefIndex?: ReverseRefIndex;
   convergenceKeyIntents?: ConvergenceKeyIntentStore;
 }
+
+/** Name every index tracks its cursor under; a new name retires the old cursor and rebuilds. */
+const INDEX_NAMES = {
+  objectSnapshot: 'objectSnapshot',
+  reverseRef: 'reverseRef2',
+  fts: 'fts7',
+} as const;
 
 export class IndexEngine {
   readonly #tracker: IndexTracker;
@@ -153,11 +126,14 @@ export class IndexEngine {
   readonly #objectSnapshotIndex: ObjectSnapshotIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
+  readonly #indexedObjectSource = new IndexedObjectSource();
+  /** Covers reads the engine drives itself; a source over the index holds no per-pass resources. */
+  readonly #ctx = Context.default();
 
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
-    this.#ftsIndex = params?.ftsIndex ?? new FtsIndex(this.#tracker);
+    this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#objectSnapshotIndex = params?.objectSnapshotIndex ?? new ObjectSnapshotIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
     this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
@@ -179,6 +155,9 @@ export class IndexEngine {
    */
   queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen({ self: this }, function* () {
+      // Matching reads the index rather than the snapshot store, so it is the one read that has to
+      // wait for the deferred re-tokenization.
+      yield* this.#drainSecondaryIndexes();
       return yield* this.#ftsIndex.query(query);
     });
   }
@@ -217,14 +196,42 @@ export class IndexEngine {
   }
 
   /**
-   * Runs the second indexing step: re-tokenizes everything {@link update} has indexed since it last
-   * ran (see {@link FtsIndex}). Text search does this for itself; callers drive it so the backlog
-   * does not accumulate unbounded between searches.
-   *
-   * @returns Number of records re-indexed.
+   * Indexes one batch into every secondary index — those sourced from the index itself rather than
+   * from automerge or a feed (see {@link IndexedObjectSource}). `done` reports an empty batch, so a
+   * caller wanting the whole backlog loops until it is set, exactly as with {@link update}.
    */
-  flushFtsIndex(): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#ftsIndex.flushPending();
+  updateSecondaryIndexes(
+    ctx: Context,
+    opts?: { limit?: number },
+  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      const result = makeEmptyIndexingResult();
+      const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
+
+      const { updated, done, objects } = yield* this.#update(ctx, this.#ftsIndex, this.#indexedObjectSource, {
+        indexName: INDEX_NAMES.fts,
+        spaceId: null,
+        limit: opts?.limit,
+        cursors: cursors.get(INDEX_NAMES.fts) ?? [],
+      });
+      result.updated += updated;
+      result.done = result.done && done;
+      accumulateIndexingResult(result, objects);
+
+      return result as IndexingResult;
+    }).pipe(Effect.withSpan('IndexEngine.updateSecondaryIndexes'));
+  }
+
+  /** Drains {@link updateSecondaryIndexes} so a reader of a secondary index never sees a stale one. */
+  #drainSecondaryIndexes(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      for (;;) {
+        const { done } = yield* this.updateSecondaryIndexes(this.#ctx);
+        if (done) {
+          return;
+        }
+      }
+    });
   }
 
   /**
@@ -377,17 +384,17 @@ export class IndexEngine {
         spaceId: opts.spaceId ?? undefined,
       });
 
-      // The full-text index is not a leg of this pass: it is a second step over what this one
-      // writes, tracking `objectMeta.version` rather than the data source (see `FtsIndex`).
+      // The full-text index is not a leg of this pass: it is a secondary index, sourced from what
+      // this one writes (see `updateSecondaryIndexes`).
       const {
         updated: updatedSnapshotIndex,
         done: doneSnapshotIndex,
         objects: snapshotObjects,
       } = yield* this.#update(ctx, this.#objectSnapshotIndex, dataSource, {
-        indexName: 'objectSnapshot',
+        indexName: INDEX_NAMES.objectSnapshot,
         spaceId: opts.spaceId,
         limit: opts.limit,
-        cursors: cursorsByIndex.get('objectSnapshot') ?? [],
+        cursors: cursorsByIndex.get(INDEX_NAMES.objectSnapshot) ?? [],
       });
       result.updated += updatedSnapshotIndex;
       result.done = result.done && doneSnapshotIndex;
@@ -398,10 +405,10 @@ export class IndexEngine {
         done: doneReverseRefIndex,
         objects: reverseRefObjects,
       } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
-        indexName: 'reverseRef2',
+        indexName: INDEX_NAMES.reverseRef,
         spaceId: opts.spaceId,
         limit: opts.limit,
-        cursors: cursorsByIndex.get('reverseRef2') ?? [],
+        cursors: cursorsByIndex.get(INDEX_NAMES.reverseRef) ?? [],
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;
@@ -418,13 +425,13 @@ export class IndexEngine {
   }
 
   /**
-   * Update a dependent index that requires recordId enrichment.
-   * This method:
-   * 1. Gets changed objects from the source.
-   * 2. Ensures those objects exist in EntityMetaIndex.
-   * 3. Looks up recordIds for those objects.
-   * 4. Enriches objects with recordIds.
-   * 5. Updates the dependent index.
+   * Indexes one batch from a source into one index, advancing that index's cursor in the same
+   * transaction as the write so an interrupted pass resumes rather than losing the batch.
+   *
+   * A source feeding a primary index carries objects that may be new, so the batch is first written
+   * to `objectMeta` — which stamps each object's `version` and yields the `recordId` the index
+   * keys on. A source reading the index back (`indexed`) skips that: the rows are already there,
+   * and re-stamping them would bump the very counter the source reads.
    */
   #update(
     ctx: Context,
@@ -453,10 +460,11 @@ export class IndexEngine {
 
       // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
       // transaction below, atomically with the cursor advance that would otherwise be the only
-      // record that these writes were ever seen.
+      // record that these writes were ever seen. A source reading the index has already contributed
+      // them, and would otherwise re-raise the same merge on every pass.
       const intents: { spaceId: SpaceId; convergenceKey: string }[] = [];
       const seenIntents = new Set<string>();
-      for (const obj of objects) {
+      for (const obj of source.indexed ? [] : objects) {
         const convergenceKey = convergenceKeyOf(obj);
         if (convergenceKey !== undefined) {
           const composite = JSON.stringify([obj.spaceId, convergenceKey]);
@@ -470,13 +478,15 @@ export class IndexEngine {
       // Writes run INSIDE the transaction for atomicity.
       return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
-          // Ensure objects exist in EntityMetaIndex.
-          yield* this.#objectMetaIndex.update(objects);
+          if (!source.indexed) {
+            // Ensure objects exist in EntityMetaIndex.
+            yield* this.#objectMetaIndex.update(objects);
 
-          // Look up recordIds for the objects.
-          yield* this.#objectMetaIndex.lookupRecordIds(objects);
+            // Look up recordIds for the objects.
+            yield* this.#objectMetaIndex.lookupRecordIds(objects);
 
-          yield* this.#convergenceKeyIntents.record(intents);
+            yield* this.#convergenceKeyIntents.record(intents);
+          }
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
