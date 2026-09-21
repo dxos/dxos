@@ -70,7 +70,13 @@ const createWorkerFactory =
       started = Promise.resolve(),
       onClose,
       createRuntime = () => Effect.succeed({ createSession: () => Effect.never }),
-    }: { started?: Promise<void>; onClose?: () => void; createRuntime?: Worker.Options['createRuntime'] } = {},
+      displaceGraceTimeout,
+    }: {
+      started?: Promise<void>;
+      onClose?: () => void;
+      createRuntime?: Worker.Options['createRuntime'];
+      displaceGraceTimeout?: number;
+    } = {},
   ) =>
   () => {
     const channel = new MessageChannel();
@@ -104,6 +110,7 @@ const createWorkerFactory =
           },
         },
         storageLockKey,
+        displaceGraceTimeout,
         createRuntime,
       });
     });
@@ -892,6 +899,59 @@ describe('Worker displacement', () => {
     await asyncTimeout(connected, 5_000);
     await asyncTimeout(stranded.closed, 5_000);
   }, 40_000);
+
+  test('a wedged worker that ignores displacement is terminated by the tab that owns it', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const { connection, connected } = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected, 5_000);
+
+    // From here the worker services nothing, so it never runs `shutdown` and holds both the storage
+    // and the liveness lock — the cooperative path from #13269 has nothing left to work with.
+    wedgeable.wedge();
+
+    // The worker another tab spawns for the same storage lock. Its grace period is injected rather
+    // than waited out, so the escalation is observed by the terminations it causes, not by a clock.
+    const successor = startBareWorker(keys.storageLockKey, { displaceGraceTimeout: 50 });
+    await asyncTimeout(wedgeable.terminated, 10_000);
+    await asyncTimeout(successor.listening, 10_000);
+  }, 30_000);
+
+  test('a leader session opens against a storage lock a wedged worker still holds', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const incumbent = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await incumbent.connection.close();
+    });
+    await asyncTimeout(incumbent.connection.open(), 10_000);
+    await asyncTimeout(incumbent.connected, 5_000);
+    wedgeable.wedge();
+
+    // Two tabs each leading their own election over one storage lock: the broken-coordinator-link
+    // state that puts a second worker on a lock the first one still owns.
+    const successorKeys = { leaderLockKey: `${keys.leaderLockKey}-successor`, storageLockKey: keys.storageLockKey };
+    const successor = makeConnection(createHub(), successorKeys, undefined, {
+      createWorker: createWorkerFactory(keys.storageLockKey, { displaceGraceTimeout: 50 }),
+    });
+    onTestFinished(async () => {
+      await successor.connection.close();
+    });
+
+    // Budgeted past `LOCK_OR_RPC_WAIT_TIMEOUT` so a worker that never takes the storage lock fails
+    // this with the reported "opening worker leader session" timeout rather than a bare test timeout.
+    await asyncTimeout(successor.connection.open(), 25_000);
+    await asyncTimeout(successor.connected, 5_000);
+    await asyncTimeout(wedgeable.terminated, 5_000);
+  }, 40_000);
 });
 
 /**
@@ -899,7 +959,7 @@ describe('Worker displacement', () => {
  * displacement handshake turns on: `listening` (this worker holds the storage lock and serves) and
  * the endpoint closing (it stood down).
  */
-const startBareWorker = (storageLockKey: string) => {
+const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { displaceGraceTimeout?: number } = {}) => {
   const channel = new MessageChannel();
   channel.port1.start();
   channel.port2.start();
@@ -922,7 +982,74 @@ const startBareWorker = (storageLockKey: string) => {
       },
     },
     storageLockKey,
+    displaceGraceTimeout,
     createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
   });
   return { listening: listening.wait(), closed: closed.wait() };
+};
+
+/**
+ * A worker with the two levers the wedged-worker case needs and that {@link createWorkerFactory}
+ * cannot express:
+ *
+ * - `wedge()` stops delivering displacement messages into the worker. That is what a busy CPU loop
+ *   does to a worker — its queued tasks are never drained — and it is the only way to express it
+ *   here, where one thread runs both the worker loop and the test that has to keep observing it.
+ * - closing the client port stands the worker down for real. `MessagePort.close()` on its own
+ *   leaves `Worker.run` holding the storage lock, whereas the `Worker.terminate()` it stands in for
+ *   kills the thread and releases every Web Lock it held.
+ */
+const createWedgeableWorkerFactory = (storageLockKey: string) => {
+  const displaceChannels: BroadcastChannel[] = [];
+  const terminated = new Trigger();
+  let forceShutdown: (() => void) | undefined;
+
+  const createWorker = () => {
+    const channel = new MessageChannel();
+    channel.port1.start();
+    const closeClientEnd = channel.port2.close.bind(channel.port2);
+    channel.port2.close = () => {
+      closeClientEnd();
+      forceShutdown?.();
+      terminated.wake();
+    };
+
+    // `Worker.run` builds its displacement channel synchronously, so this window captures that one
+    // channel and nothing else — there is no handle on it otherwise.
+    const OriginalBroadcastChannel = globalThis.BroadcastChannel;
+    globalThis.BroadcastChannel = class extends OriginalBroadcastChannel {
+      constructor(name: string) {
+        super(name);
+        displaceChannels.push(this);
+      }
+    };
+    try {
+      Worker.run({
+        endpoint: {
+          postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+          addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+          removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+          close: () => channel.port1.close(),
+        },
+        storageLockKey,
+        createRuntime: ({ requestShutdown }) => {
+          forceShutdown = requestShutdown;
+          return Effect.succeed({ createSession: () => Effect.never });
+        },
+      });
+    } finally {
+      globalThis.BroadcastChannel = OriginalBroadcastChannel;
+    }
+    return channel.port2 as WorkerProtocol.WorkerOrPort;
+  };
+
+  return {
+    createWorker,
+    wedge: () => {
+      for (const displaceChannel of displaceChannels) {
+        displaceChannel.onmessage = null;
+      }
+    },
+    terminated: terminated.wait(),
+  };
 };

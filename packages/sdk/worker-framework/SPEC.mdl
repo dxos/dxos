@@ -210,12 +210,19 @@ feat F-3: Worker lifecycle and displacement
   req F-3.3:
     when: the leader sends `init` with config and an `ownerClientId`
     then: the worker builds its runtime, marks the owning client, and replies `ready`
-          with its `livenessLockKey`
+          with its `livenessLockKey`, `workerId`, and `displaceChannel`
 
   req F-3.4:
     when: building the runtime fails
     then: the worker replies `init-failed` with the encoded error instead of `ready`,
           then shuts down, releasing its liveness and storage locks
+
+  req F-3.5:
+    when: a starting worker is still queued on the storage lock after its displacement
+          grace period, i.e. the incumbent never serviced the stop signal
+    then: it escalates once on the same channel with a `terminate` action naming itself,
+          and the tab owning the incumbent's handle terminates it — unless the escalation
+          names that tab's own worker
 ```
 
 ```mdl

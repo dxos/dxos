@@ -43,6 +43,18 @@ export interface DedicatedWorkerReadyMessage {
    * Released if worker is terminated.
    */
   livenessLockKey: string;
+
+  /**
+   * Identifies this worker on the displacement channel, so its tab can tell an escalation raised
+   * against another worker from one this worker raised itself.
+   */
+  workerId: string;
+
+  /**
+   * Displacement channel for this worker's storage lock. The tab listens on it for the escalation a
+   * newer worker raises when this one ignores the cooperative stop signal.
+   */
+  displaceChannel: string;
 }
 
 /**

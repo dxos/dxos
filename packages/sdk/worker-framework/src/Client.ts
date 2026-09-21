@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
+import { DisplaceChannel } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
   isAbortError,
@@ -657,6 +658,8 @@ class LeaderSession extends Resource {
 
   #worker!: WorkerProtocol.WorkerOrPort;
   #livenessLockKey!: string;
+  #workerId!: string;
+  #displaceChannel: DisplaceChannel | undefined;
   #startFailure: Error | undefined;
 
   constructor(
@@ -737,7 +740,29 @@ class LeaderSession extends Resource {
       throw error;
     });
     this.#livenessLockKey = readyMessage.livenessLockKey;
+    this.#workerId = readyMessage.workerId;
     log('leader-session: ready', { leaderId: this.#leaderId });
+
+    // Second-level displacement (DX-1293): a worker wedged enough to ignore the cooperative stop
+    // signal holds the storage lock until the tab owning its handle terminates it, and this tab is
+    // the only party that holds that handle.
+    this.#displaceChannel = new DisplaceChannel(readyMessage.displaceChannel);
+    this.#displaceChannel.onTerminate = (issuerId) => {
+      // Our own worker raised the escalation while queued behind someone else's; terminating here
+      // would have every new leader kill the worker it just started, which is the kill loop.
+      if (issuerId === this.#workerId) {
+        return;
+      }
+      log.warn('leader-session: terminating a worker that ignored displacement', {
+        leaderId: this.#leaderId,
+        workerId: this.#workerId,
+        issuerId,
+      });
+      this.#closeWorker();
+      if (this.isOpen) {
+        this.onClose.emit(new Error('Dedicated worker forcefully terminated after ignoring displacement.'));
+      }
+    };
 
     void navigator.locks.request(this.#livenessLockKey, () => {
       log('leader-session: worker terminated');
@@ -776,6 +801,8 @@ class LeaderSession extends Resource {
 
   protected override async _close(): Promise<void> {
     log('leader-session: closing', { leaderId: this.#leaderId });
+    this.#displaceChannel?.close();
+    this.#displaceChannel = undefined;
     this.#closeWorker();
   }
 
