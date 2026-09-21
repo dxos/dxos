@@ -10,7 +10,7 @@
 //
 
 import type * as Scene from './scene.ts';
-import { GRID, type Rect, type RoutedRelation, type Router } from './uml-grid.ts';
+import type { Rect, RoutedRelation, Router } from './uml-grid.ts';
 
 /** Clearance kept between a route and any node border, in steps. */
 const CLEARANCE = 1;
@@ -27,16 +27,22 @@ type Point = Scene.Point;
 const DX = [1, 0, -1, 0];
 const DY = [0, 1, 0, -1];
 
+export type AvoidingRouterOptions = {
+  /** Search-cell size (scene px): a fraction of the layout grid, so routes can hug node borders. */
+  step: number;
+};
+
 /**
  * Creates a router that avoids the given node rects. Stateful across edges: earlier routes
  * penalize (not block) the cells they occupy, spreading parallel runs apart. `fallback` handles
- * the (fenced-in) edges the search cannot reach; imported types keep this module cycle-free.
+ * the (fenced-in) edges the search cannot reach. The step is passed in rather than derived from
+ * `uml-grid`'s `GRID`, which keeps this module free of a value import cycle with the dialects.
  */
-export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router => {
-  // Derived from the shared grid so retuning GRID keeps the modules in sync. Evaluated here, not
-  // at module scope: this module and uml-grid import each other, so GRID is TDZ during load.
-  const STEP = GRID / 4;
-
+export const makeAvoidingRouter = (
+  obstacles: Rect[],
+  fallback: Router,
+  { step: STEP }: AvoidingRouterOptions,
+): Router => {
   const xs = obstacles.flatMap((rect) => [rect.x, rect.x + rect.w]);
   const ys = obstacles.flatMap((rect) => [rect.y, rect.y + rect.h]);
   const bounds = {

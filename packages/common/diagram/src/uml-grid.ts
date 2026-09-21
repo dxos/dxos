@@ -318,7 +318,7 @@ export const emit = (
 ): Scene.Command[] => {
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
   // Default routing avoids every node (fewest turns), falling back to the Z-router per edge.
-  const router = route ?? makeAvoidingRouter([...rects.values()], zRouter);
+  const router = route ?? makeAvoidingRouter([...rects.values()], zRouter, { step: GRID / 4 });
   const commands: Scene.Command[] = [];
 
   for (const entry of model.classes) {

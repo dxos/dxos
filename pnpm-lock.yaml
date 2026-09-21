@@ -2262,6 +2262,9 @@ importers:
       '@dxos/plugin-calls':
         specifier: workspace:*
         version: link:../../plugins/plugin-calls
+      '@dxos/plugin-canvas':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-canvas
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
@@ -3224,6 +3227,25 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+
+  packages/common/diagram:
+    dependencies:
+      '@dagrejs/dagre':
+        specifier: 'catalog:'
+        version: 3.1.1
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+      elkjs:
+        specifier: 'catalog:'
+        version: 0.12.0
+    devDependencies:
+      effect:
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
 
   packages/common/display-name:
     devDependencies:
@@ -4305,6 +4327,9 @@ importers:
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../halo/credentials
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../../common/diagram
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -8514,6 +8539,64 @@ importers:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/plugins/plugin-canvas:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/plugin-illustrator':
+        specifier: workspace:*
+        version: link:../plugin-illustrator
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 4.0.0-rc.115
+        version: 4.0.0-rc.115
+    devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/plugins/plugin-chess:
     dependencies:
       '@dxos/app-framework':
@@ -10323,6 +10406,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -11415,9 +11501,6 @@ importers:
 
   packages/plugins/plugin-illustrator:
     dependencies:
-      '@dagrejs/dagre':
-        specifier: 'catalog:'
-        version: 3.1.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -11427,6 +11510,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -11469,9 +11555,6 @@ importers:
       effect:
         specifier: 4.0.0-rc.115
         version: 4.0.0-rc.115
-      elkjs:
-        specifier: 'catalog:'
-        version: 0.12.0
     devDependencies:
       '@codemirror/language':
         specifier: 'catalog:'
@@ -17006,6 +17089,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -20921,9 +21007,30 @@ importers:
 
   packages/ui/react-ui-canvas:
     dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.115(effect@4.0.0-rc.115)(react@19.2.7)(scheduler@0.27.0)

@@ -15,12 +15,9 @@ import { fileURLToPath } from 'node:url';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
+import { Diagnostics, Mermaid, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
+
 import { SceneSvg } from '../src/components/SceneSvg.tsx';
-import * as Diagnostics from '../src/model/diagnostics.ts';
-import * as MermaidEngine from '../src/model/mermaid-engine.ts';
-import * as Mermaid from '../src/model/mermaid.ts';
-import type * as Scene from '../src/model/scene.ts';
-import { GRID } from '../src/model/uml-grid.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
 
@@ -55,7 +52,7 @@ const strategies: Strategy[] = [
 
 /** Standalone SVG: the component's markup plus width/height from its viewBox and the inline styles. */
 const toSvg = (objects: readonly Scene.WorldObject[]): string => {
-  const markup = renderToStaticMarkup(<SceneSvg objects={objects} grid={GRID} />);
+  const markup = renderToStaticMarkup(<SceneSvg objects={objects} grid={UmlGrid.GRID} />);
   const viewBox = /viewBox="([^"]+)"/.exec(markup)?.[1].split(' ').map(Number) ?? [0, 0, 0, 0];
   return markup
     .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBox[2]}" height="${viewBox[3]}" `)

@@ -127,6 +127,9 @@
       "path": "../../plugins/plugin-calls"
     },
     {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
