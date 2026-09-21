@@ -332,10 +332,12 @@ Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to to
 1. **Grid**: the existing multi-resolution SVG `GridComponent` fed `{scale: zoom, offset: camera × zoom}`,
    always shown. It draws a minor grid (`DEFAULT_GRID`, 16 px at zoom 1), a major grid every
    `MAJOR_GRID_RATIO` (4) minor lines and a coarse level 4 major cells wide, dropping a level once its cells
-   fall under 6 screen px as the view zooms out. `g` and the Snap button toggle snapping only. **Snapping
-   is to the major grid** (`MAJOR_GRID`, 64 scene px): moves and resizes snap edges to it, arrow nudges step by
-   it, the derived scene bounds grow outward to it, and the fixture and the solver / layout defaults (pitch,
-   size, origin) are multiples of it, so an untouched layout is already snapped and the frame sits on lines.
+   fall under 6 screen px as the view zooms out. `g` and the Snap button toggle snapping only. **Creation and
+   resizing snap to the major grid** (`MAJOR_GRID`, 64 scene px), the derived scene bounds grow outward to it,
+   and the fixture and the solver / layout defaults (pitch, size, origin) are multiples of it, so an untouched
+   layout is already snapped and the frame sits on lines. **Moving snaps to the minor grid** (a drag, or an
+   arrow nudge; shift nudges by a major cell): a placed node keeps its major-grid size while its position is
+   not coarse, and its ports still sit on the nearest major line.
 2. **Scene layer**: one `div` whose transform is `scale(zoom) translate(x, y)`, set **imperatively from the
    camera atom** (no React re-render on pan/zoom). Inside, one `div` per placed cell positioned at its bounds, and
    one `svg` (overflow visible) per scene holding link paths in scene coordinates. Portals in the live tier mount

@@ -131,7 +131,7 @@ export type SceneViewProps = ThemedClassName<{
   projection?: Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: SceneViewAtoms;
-  /** Minor grid spacing in scene px; snapping uses the major grid, `MAJOR_GRID_RATIO` times it. */
+  /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
   liveDepth?: number;
@@ -480,6 +480,12 @@ export const SceneView = ({
   const snap = useCallback(
     (value: number) => (snapEnabled ? Math.round(value / major) * major : value),
     [snapEnabled, major],
+  );
+  // Moving is finer than creating or resizing: a placed node keeps its major-grid size and edges land on
+  // minor lines, so ports (drawn at the nearest major line) stay aligned while placement is not coarse.
+  const snapMinor = useCallback(
+    (value: number) => (snapEnabled ? Math.round(value / grid) * grid : value),
+    [snapEnabled, grid],
   );
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
@@ -857,14 +863,14 @@ export const SceneView = ({
           break;
         }
         case 'move': {
-          // Snap the pressed node's top-left to the grid; the selection moves by the same offset.
+          // Snap the pressed node's top-left to the minor grid; the selection moves by the same offset.
           const point = toScene(event);
           const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
             ...current,
             delta: {
-              x: snap(current.anchor.x + raw.x) - current.anchor.x,
-              y: snap(current.anchor.y + raw.y) - current.anchor.y,
+              x: snapMinor(current.anchor.x + raw.x) - current.anchor.x,
+              y: snapMinor(current.anchor.y + raw.y) - current.anchor.y,
             },
           });
           break;
@@ -1147,7 +1153,7 @@ export const SceneView = ({
             break;
           }
           // Shift moves by a major cell rather than a minor one.
-          const step = major * (event.shiftKey ? MAJOR_GRID_RATIO : 1);
+          const step = event.shiftKey ? major : grid;
           const delta = {
             x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
             y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
