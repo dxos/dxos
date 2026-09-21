@@ -160,6 +160,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._currentConnection?.pendingSendBytes ?? 0;
   }
 
+  /** @see EdgeWsConnection.unacknowledgedBytes */
+  get unacknowledgedBytes(): number {
+    return this._currentConnection?.unacknowledgedBytes ?? 0;
+  }
+
   /** @see EdgeWsConnection.flowControlEnabled */
   get flowControlEnabled(): boolean {
     return this._currentConnection?.flowControlEnabled ?? false;

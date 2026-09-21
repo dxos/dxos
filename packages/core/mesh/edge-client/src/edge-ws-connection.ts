@@ -135,6 +135,11 @@ export class EdgeWsConnection extends Resource {
     return this._wsMuxer?.pendingBytes ?? 0;
   }
 
+  /** @see WebSocketMuxer.unacknowledgedBytes */
+  public get unacknowledgedBytes(): number {
+    return this._wsMuxer?.unacknowledgedBytes ?? 0;
+  }
+
   /** Whether this connection negotiated credit-based flow control (`edge-ws-v2`). */
   public get flowControlEnabled(): boolean {
     return this._wsMuxer?.flowControlEnabled ?? false;

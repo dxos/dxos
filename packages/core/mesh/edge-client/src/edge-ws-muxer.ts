@@ -336,6 +336,21 @@ export class WebSocketMuxer {
     return pending;
   }
 
+  /**
+   * Payload bytes handed to the socket that the peer has not reported consuming, across channels.
+   *
+   * Under flow control this is bounded by the sum of the channels' windows -- that bound IS the
+   * backpressure. Without it nothing is ever acknowledged, so the figure only grows: it is the
+   * measure of how far a client may run ahead of a router that cannot keep up.
+   */
+  public get unacknowledgedBytes(): number {
+    let outstanding = 0;
+    for (const channelId of this._bytesSent.keys()) {
+      outstanding += this.inFlightBytes(channelId);
+    }
+    return outstanding;
+  }
+
   /** Outbound bytes sent but not yet reported consumed, for tests and diagnostics. */
   public inFlightBytes(channelId: number): number {
     return ((this._bytesSent.get(channelId) ?? 0) - (this._peerConsumed.get(channelId) ?? 0)) >>> 0;
