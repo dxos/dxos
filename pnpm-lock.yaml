@@ -10181,6 +10181,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10694,6 +10697,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10749,9 +10755,6 @@ importers:
         specifier: 'catalog:'
         version: 14.2.3(react@19.2.7)
     devDependencies:
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -13823,6 +13826,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -16452,6 +16458,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -21171,6 +21180,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -43310,7 +43322,7 @@ snapshots:
     dependencies:
       '@jsdevtools/ono': 7.1.3
       '@types/json-schema': 7.0.15
-      js-yaml: 4.3.1
+      js-yaml: 4.1.1
 
   '@ark-ui/react@5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -60012,7 +60024,7 @@ snapshots:
       '@types/json-schema': 7.0.15
       '@types/lodash': 4.17.12
       is-glob: 4.0.3
-      js-yaml: 4.3.1
+      js-yaml: 4.1.1
       lodash: 4.17.23
       minimist: 1.2.8
       prettier: 3.6.2

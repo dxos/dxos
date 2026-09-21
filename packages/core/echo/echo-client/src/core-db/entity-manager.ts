@@ -2088,6 +2088,15 @@ export class EntityManager implements IDatabaseBinding {
     return this._areDepsSatisfied(core);
   }
 
+  /**
+   * Whether the entity's strong-dependency closure has settled, satisfied or not.
+   * Naming an exact id is not a discovery query: the caller already holds the id, so an
+   * unreachable dependency must resolve the lookup rather than stall it forever.
+   */
+  areStrongDepsResolved(core: ObjectCore): boolean {
+    return this._areDepsResolved(core);
+  }
+
   private _areDepsSatisfied(core: ObjectCore): boolean {
     return this._ensureSatisfactionRequest(core).state === 'ready';
   }

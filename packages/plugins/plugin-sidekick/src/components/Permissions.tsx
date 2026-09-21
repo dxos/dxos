@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -46,26 +46,23 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
             <tr key={entry.profileId} className='border-t border-separator'>
               <td className='py-1'>{entry.name}</td>
               <td className='py-1 text-center'>
-                <input
-                  type='checkbox'
+                <Field.Checkbox
                   checked={entry.autoRespond}
-                  onChange={() => onUpdate?.(entry.profileId, 'autoRespond', !entry.autoRespond)}
+                  onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'autoRespond', checked === true)}
                   aria-label={`Auto-respond for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <input
-                  type='checkbox'
+                <Field.Checkbox
                   checked={entry.createDraft}
-                  onChange={() => onUpdate?.(entry.profileId, 'createDraft', !entry.createDraft)}
+                  onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'createDraft', checked === true)}
                   aria-label={`Draft for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <input
-                  type='checkbox'
+                <Field.Checkbox
                   checked={entry.researchEnabled}
-                  onChange={() => onUpdate?.(entry.profileId, 'researchEnabled', !entry.researchEnabled)}
+                  onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'researchEnabled', checked === true)}
                   aria-label={`Research for ${entry.name}`}
                 />
               </td>
