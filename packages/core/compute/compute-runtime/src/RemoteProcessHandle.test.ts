@@ -19,7 +19,7 @@ import { SpaceId } from '@dxos/keys';
 
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * How a handle for a remotely hosted process delivers ephemeral trace.
@@ -107,7 +107,6 @@ describe('RemoteProcessHandle ephemeral trace', () => {
     const collected = await EffectEx.runPromise(
       Effect.gen(function* () {
         const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), {
-          hasLiveSource: true,
           subscribeToTraceMessages: () => Stream.fromIterable([traceMessage('live')]),
         });
         return yield* Stream.runCollect(handle.subscribeEphemeral());
@@ -115,35 +114,6 @@ describe('RemoteProcessHandle ephemeral trace', () => {
     );
 
     expect(textsOf([...collected])).toEqual(['buffered', 'live']);
-  });
-
-  test('streams a running turn through a monitor with no live source', async ({ expect }) => {
-    // `layerNoop` is a defined monitor whose stream is empty, so the pushed path would end this
-    // subscription at the replay and the turn would only surface once the host flushed its ring.
-    let reads = 0;
-    const ring: Trace.Message[] = [];
-    const handle = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const monitor = yield* RemoteTraceMonitor.Service;
-        return yield* makeHandle(
-          // Appended after the first read, so only a subscription that keeps reading can see it.
-          makeControl(ring, () => {
-            if (++reads === 2) {
-              ring.push(traceMessage('partial'));
-            }
-          }),
-          monitor,
-        );
-      }).pipe(Effect.provide(Layer.mergeAll(registryLayer(), RemoteTraceMonitor.layerNoop))),
-    );
-
-    const collected = await EffectEx.runPromise(
-      Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1))).pipe(Effect.timeout('5 seconds')),
-    );
-
-    expect(textsOf([...collected])).toEqual(['partial']);
-    // The host never settles, so the message was delivered mid-turn rather than replayed after it.
-    expect(handle.status.state).toBe(Process.State.RUNNING);
   });
 
   test('falls back to polling the ring with no live source', async ({ expect }) => {
@@ -213,7 +183,6 @@ const makeControl = (buffered: readonly Trace.Message[], onRead?: () => void): R
 const makeLiveSource = () => {
   const listeners = new Set<(message: Trace.Message) => void>();
   const monitor: RemoteTraceMonitor.Monitor = {
-    hasLiveSource: true,
     subscribeToTraceMessages: () =>
       Stream.unwrap(
         Effect.gen(function* () {
