@@ -8,7 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { WeatherTemplate } from './index.ts';
+import * as WeatherTemplate from './WeatherTemplate.ts';
 
 /** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
 type ArchivedTask = {
@@ -22,7 +22,7 @@ type ArchivedTask = {
 
 describe('Weather MCP template', () => {
   test('builds the project, its skill and four steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(WeatherTemplate()));
+    const { json, objectCount } = await EffectEx.runPromise(buildArchive(WeatherTemplate.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
@@ -39,8 +39,8 @@ describe('Weather MCP template', () => {
   });
 
   test('every schema the content persists is declared', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(WeatherTemplate()));
-    const declared = new Set(WeatherTemplate().schemas.map((schema) => Type.getTypename(schema)));
+    const { json } = await EffectEx.runPromise(buildArchive(WeatherTemplate.make()));
+    const declared = new Set(WeatherTemplate.make().schemas.map((schema) => Type.getTypename(schema)));
 
     for (const type of Object.keys(histogram(json))) {
       const typename = type.match(/(?:[\w-]+\.)+type\.[\w.]+/)?.[0];
@@ -87,7 +87,7 @@ describe('Weather MCP template', () => {
 
 /** The archive's objects of one typename fragment, in the order they were written. */
 const archived = async <T>(fragment: string): Promise<T[]> => {
-  const { json } = await EffectEx.runPromise(buildArchive(WeatherTemplate()));
+  const { json } = await EffectEx.runPromise(buildArchive(WeatherTemplate.make()));
   const objects: Array<{ '@type'?: string }> = JSON.parse(json).objects;
   return objects.filter((object) => object['@type']?.includes(fragment)) as T[];
 };

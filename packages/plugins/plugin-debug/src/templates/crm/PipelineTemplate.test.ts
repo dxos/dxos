@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { PipelineTemplate } from './index.ts';
+import * as PipelineTemplate from './PipelineTemplate.ts';
 
 /**
  * The CRM template is built on demand rather than committed, so this asserts its shape in place
@@ -15,7 +15,7 @@ import { PipelineTemplate } from './index.ts';
  */
 describe('Northwind Sales template', () => {
   test('builds an archive with the board, the accounts and the mail', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(PipelineTemplate()));
+    const { json, objectCount } = await EffectEx.runPromise(buildArchive(PipelineTemplate.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
@@ -36,7 +36,7 @@ describe('Northwind Sales template', () => {
   // Same budget as above: this also boots a client and builds the whole space, which a shared CI
   // runner with coverage instrumentation does not finish inside the 15s default.
   test('backs every pipeline column with a stage-filtered view', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(PipelineTemplate()));
+    const { json } = await EffectEx.runPromise(buildArchive(PipelineTemplate.make()));
     const objects: Array<{ '@type'?: string; 'columns'?: Array<{ name: string; order: string[] }> }> =
       JSON.parse(json).objects;
 

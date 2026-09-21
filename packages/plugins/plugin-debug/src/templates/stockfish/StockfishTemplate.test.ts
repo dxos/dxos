@@ -8,7 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { StockfishTemplate } from './index.ts';
+import * as StockfishTemplate from './StockfishTemplate.ts';
 
 /**
  * The chess-MCP template is built on demand rather than committed, so this asserts its shape in
@@ -19,7 +19,7 @@ describe('Chess MCP template', () => {
     'builds an archive with the project, its plan, its skill and the test position',
     { timeout: 120_000 },
     async ({ expect }) => {
-      const { json, objectCount } = await EffectEx.runPromise(buildArchive(StockfishTemplate()));
+      const { json, objectCount } = await EffectEx.runPromise(buildArchive(StockfishTemplate.make()));
       const counts = histogram(json);
       const countOf = (typename: string) =>
         Object.entries(counts)
@@ -38,7 +38,7 @@ describe('Chess MCP template', () => {
       // Falsifiable without hardcoding the archive's contents: every typename in the archive must be
       // one the definition DECLARED. A pair of zero-counts would not be — `countOf` substring-matches,
       // so asserting a typename is absent passes just as well when the typename is misspelled.
-      const declared = new Set(StockfishTemplate().schemas.map((schema) => Type.getTypename(schema)));
+      const declared = new Set(StockfishTemplate.make().schemas.map((schema) => Type.getTypename(schema)));
       for (const type of Object.keys(counts)) {
         // Not namespace-limited: `Project.make` persists `com.example.type.project`, so matching only
         // `org.dxos.*` would let the project's own types go unchecked.
@@ -56,7 +56,7 @@ describe('Chess MCP template', () => {
   );
 
   test('the plan is one root, five stages, and their steps', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(StockfishTemplate()));
+    const { json } = await EffectEx.runPromise(buildArchive(StockfishTemplate.make()));
     const objects: Array<{
       '@type'?: string;
       'id': string;
@@ -94,7 +94,7 @@ describe('Chess MCP template', () => {
     "only the reader's own steps are assigned to them, and the two GitHub ones are last",
     { timeout: 120_000 },
     async ({ expect }) => {
-      const { json } = await EffectEx.runPromise(buildArchive(StockfishTemplate()));
+      const { json } = await EffectEx.runPromise(buildArchive(StockfishTemplate.make()));
       const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'assignee'?: unknown }> =
         JSON.parse(json).objects;
       const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
@@ -115,7 +115,7 @@ describe('Chess MCP template', () => {
   );
 
   test('the project binds the skill through its instructions', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(StockfishTemplate()));
+    const { json } = await EffectEx.runPromise(buildArchive(StockfishTemplate.make()));
     const objects: Array<{ '@type'?: string; 'id': string; 'skills'?: unknown }> = JSON.parse(json).objects;
 
     const skill = objects.find((object) => object['@type']?.includes('type.skill'));

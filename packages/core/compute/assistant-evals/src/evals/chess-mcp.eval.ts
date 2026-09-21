@@ -19,7 +19,7 @@ import { EDGE_URLS } from '@dxos/config';
 import { Blob, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { StockfishTemplate } from '@dxos/plugin-debug/templates';
+import * as StockfishTemplate from '@dxos/plugin-debug/StockfishTemplate';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
@@ -378,7 +378,7 @@ const task = createEvalRunner({
   ],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make(), SandboxPlugin.make()],
   types: [
-    ...StockfishTemplate().schemas,
+    ...StockfishTemplate.make().schemas,
     Collection.Collection,
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.
@@ -402,7 +402,7 @@ const task = createEvalRunner({
       if (!space) {
         return yield* Effect.fail(new EvalRunError({ message: `Space not found: ${spaceId}` }));
       }
-      yield* SpaceTemplate.applyTo(StockfishTemplate(), space);
+      yield* SpaceTemplate.applyTo(StockfishTemplate.make(), space);
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       if (!project?.taskSet || !project.instructions) {

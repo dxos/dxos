@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -46,7 +48,7 @@ const phases = {
   roastLogs: RoastLogs,
 };
 
-export const BrambleTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     space: { name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' },
     reference: REFERENCE,

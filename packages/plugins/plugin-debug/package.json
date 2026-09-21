@@ -66,13 +66,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Debug": {
       "source": "./src/types/Debug.ts",
       "types": "./dist/types/src/types/Debug.d.ts",
@@ -103,15 +96,47 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
+    "./IncidentTemplate": {
+      "source": "./src/templates/incident/IncidentTemplate.ts",
+      "types": "./dist/types/src/templates/incident/IncidentTemplate.d.ts",
+      "import": "./dist/lib/IncidentTemplate.mjs"
+    },
+    "./PipelineTemplate": {
+      "source": "./src/templates/crm/PipelineTemplate.ts",
+      "types": "./dist/types/src/templates/crm/PipelineTemplate.d.ts",
+      "import": "./dist/lib/PipelineTemplate.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
+    "./StockfishTemplate": {
+      "source": "./src/templates/stockfish/StockfishTemplate.ts",
+      "types": "./dist/types/src/templates/stockfish/StockfishTemplate.d.ts",
+      "import": "./dist/lib/StockfishTemplate.mjs"
+    },
+    "./TidepoolTemplate": {
+      "source": "./src/templates/tidepool/TidepoolTemplate.ts",
+      "types": "./dist/types/src/templates/tidepool/TidepoolTemplate.d.ts",
+      "import": "./dist/lib/TidepoolTemplate.mjs"
+    },
+    "./WeatherTemplate": {
+      "source": "./src/templates/weather/WeatherTemplate.ts",
+      "types": "./dist/types/src/templates/weather/WeatherTemplate.d.ts",
+      "import": "./dist/lib/WeatherTemplate.mjs"
+    },
+    "./WorkerTemplate": {
+      "source": "./src/templates/worker/WorkerTemplate.ts",
+      "types": "./dist/types/src/templates/worker/WorkerTemplate.d.ts",
+      "import": "./dist/lib/WorkerTemplate.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

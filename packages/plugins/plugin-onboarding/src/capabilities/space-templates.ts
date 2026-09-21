@@ -6,7 +6,7 @@ import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
 
 import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
-import { BrambleTemplate } from '../templates/index.ts';
+import * as BrambleTemplate from '../templates/BrambleTemplate.ts';
 
 /**
  * The Bramble Coffee Roasters template. Loaded only once something asks for the list — the world and
@@ -20,6 +20,6 @@ export default [
     id: BRAMBLE_TEMPLATE_ID,
     label: 'Bramble Coffee Roasters',
     description: 'A coffee roastery mid-launch: its people, mail, calendar, tasks, notes and roast logs.',
-    definition: BrambleTemplate(),
+    definition: BrambleTemplate.make(),
   }),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -28,7 +30,7 @@ const phases = {
  * guessing who to call — and in holding them against the log, which contradicts two of them. That is
  * the evaluation: does the retro recommend what the evidence supports, or what the loudest note says.
  */
-export const IncidentTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     space: { name: 'Incident 0516 retrospective', icon: 'stethoscope', hue: 'rose' },
     reference: REFERENCE,

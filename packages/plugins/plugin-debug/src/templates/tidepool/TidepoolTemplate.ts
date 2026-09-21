@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -30,7 +32,7 @@ const phases = {
  * shared with the Bramble space except the builder itself — the seeds, the phases and the world are
  * this space's own.
  */
-export const TidepoolTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     space: { name: 'Tidepool — Offline sync v2', icon: 'flask', hue: 'cyan' },
     reference: REFERENCE,

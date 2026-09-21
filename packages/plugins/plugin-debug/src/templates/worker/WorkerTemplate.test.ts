@@ -8,7 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { WorkerTemplate } from './index.ts';
+import * as WorkerTemplate from './WorkerTemplate.ts';
 
 /** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
 type ArchivedTask = {
@@ -21,7 +21,7 @@ type ArchivedTask = {
 };
 
 /** The archive's tasks, in the order they were written. */
-const taskArchive = async (definition: ReturnType<typeof WorkerTemplate>): Promise<ArchivedTask[]> => {
+const taskArchive = async (definition: ReturnType<typeof WorkerTemplate.make>): Promise<ArchivedTask[]> => {
   const { json } = await EffectEx.runPromise(buildArchive(definition));
   const objects: ArchivedTask[] = JSON.parse(json).objects;
   return objects.filter((object) => object['@type']?.includes('type.task:'));
@@ -33,7 +33,7 @@ const taskArchive = async (definition: ReturnType<typeof WorkerTemplate>): Promi
  */
 describe('Worker template', () => {
   test('builds the project and its five steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(WorkerTemplate()));
+    const { json, objectCount } = await EffectEx.runPromise(buildArchive(WorkerTemplate.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
@@ -53,8 +53,8 @@ describe('Worker template', () => {
   // the definition DECLARED. The zero-count above would not be — `countOf` substring-matches, so
   // asserting a typename is absent passes just as well when the typename is misspelled.
   test('every schema the content persists is declared', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(WorkerTemplate()));
-    const declared = new Set(WorkerTemplate().schemas.map((schema) => Type.getTypename(schema)));
+    const { json } = await EffectEx.runPromise(buildArchive(WorkerTemplate.make()));
+    const declared = new Set(WorkerTemplate.make().schemas.map((schema) => Type.getTypename(schema)));
 
     for (const type of Object.keys(histogram(json))) {
       // Not namespace-limited: `Project.make` persists `com.example.type.project`, so matching only
@@ -69,7 +69,7 @@ describe('Worker template', () => {
   });
 
   test('every step is todo and each depends on the one before it', { timeout: 120_000 }, async ({ expect }) => {
-    const tasks = await taskArchive(WorkerTemplate());
+    const tasks = await taskArchive(WorkerTemplate.make());
 
     expect(tasks.map((task) => task.title)).toEqual([
       'Create a sandbox and install wrangler',
@@ -91,7 +91,7 @@ describe('Worker template', () => {
   // The one browser step is the reader's, and it is last: an agent with no login cannot update a
   // claimed account, so claiming before the deploy would strand the run.
   test('only the claim is assigned to the reader, and it is last', { timeout: 120_000 }, async ({ expect }) => {
-    const tasks = await taskArchive(WorkerTemplate());
+    const tasks = await taskArchive(WorkerTemplate.make());
     const assigned = tasks.filter((task) => task.assignee !== undefined);
 
     expect(assigned.map((task) => task.title)).toEqual(['Claim the temporary Cloudflare account']);

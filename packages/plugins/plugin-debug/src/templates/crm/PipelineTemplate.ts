@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -27,7 +29,7 @@ const phases = {
  * collection-item types, so they live directly in the space DB and surface through their own
  * containers and the database viewer.
  */
-export const PipelineTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     space: { name: 'Northwind Sales', icon: 'handshake', hue: 'purple' },
     reference: REFERENCE,

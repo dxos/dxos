@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { IncidentTemplate } from './index.ts';
+import * as IncidentTemplate from './IncidentTemplate.ts';
 
 /**
  * Built on demand rather than committed, so this asserts the shape in place of a fixture: if a
@@ -15,7 +15,7 @@ import { IncidentTemplate } from './index.ts';
  */
 describe('Incident template', () => {
   test('builds the project, its sources and its four steps', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(IncidentTemplate()));
+    const { json, objectCount } = await EffectEx.runPromise(buildArchive(IncidentTemplate.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
@@ -32,7 +32,7 @@ describe('Incident template', () => {
   });
 
   test('every step is todo and each depends on the one before it', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(IncidentTemplate()));
+    const { json } = await EffectEx.runPromise(buildArchive(IncidentTemplate.make()));
     const objects: Array<{ '@type'?: string; 'title'?: string; 'status'?: string; 'dependsOn'?: unknown }> =
       JSON.parse(json).objects;
     const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
@@ -51,7 +51,7 @@ describe('Incident template', () => {
     'the log contradicts the notes on the points the retro must get right',
     { timeout: 120_000 },
     async ({ expect }) => {
-      const { json } = await EffectEx.runPromise(buildArchive(IncidentTemplate()));
+      const { json } = await EffectEx.runPromise(buildArchive(IncidentTemplate.make()));
       const objects: Array<{ '@type'?: string; 'content'?: string }> = JSON.parse(json).objects;
       const texts = objects
         .filter((object) => object['@type']?.includes('type.text'))

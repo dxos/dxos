@@ -34,7 +34,7 @@ import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHand
 import { Text } from '@dxos/schema';
 import { Message, Task } from '@dxos/types';
 
-import { StockfishTemplate } from './index.ts';
+import * as StockfishTemplate from './StockfishTemplate.ts';
 
 /**
  * The first turn of the chess-MCP template, driven live.
@@ -76,7 +76,7 @@ const MODEL = DXN.make('com.deepseek.model.deepseek-v4-pro.default');
  */
 const EXPECTED_SKILLS = [SkillManagerSkill.make(), ChatContextSkill.make(), ProjectSkill.make(), SandboxSkill.make()];
 
-const template = StockfishTemplate();
+const template = StockfishTemplate.make();
 
 const TestLayer = AssistantTestLayer({
   // Direct to the vendor rather than through EDGE, which the app routes this model over for auth

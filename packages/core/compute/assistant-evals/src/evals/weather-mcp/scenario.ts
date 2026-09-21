@@ -16,7 +16,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EchoError from '@dxos/echo/Error';
 import type { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { WeatherTemplate } from '@dxos/plugin-debug/templates';
+import * as WeatherTemplate from '@dxos/plugin-debug/WeatherTemplate';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -141,7 +141,7 @@ export const seed = ({
     if (!space) {
       return yield* new SeedError({ message: `Space not found: ${spaceId}` });
     }
-    yield* SpaceTemplate.applyTo(WeatherTemplate(), space);
+    yield* SpaceTemplate.applyTo(WeatherTemplate.make(), space);
 
     const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
     if (!project?.taskSet || !project.instructions) {

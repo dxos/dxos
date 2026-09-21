@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -29,7 +31,7 @@ const phases = {
  * path, small enough to run unattended. The account stays temporary and unclaimed, and the server is
  * configured on a seeded skill because a skill is where a chat reads MCP servers from.
  */
-export const WeatherTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     // Reaches a space only where the definition is applied directly (the generator panel, the
     // archive test): the create-space dialog takes its icon from `space-templates.ts`.

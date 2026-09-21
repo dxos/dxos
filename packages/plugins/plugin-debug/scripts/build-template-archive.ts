@@ -58,7 +58,7 @@ await EffectEx.runPromise(
   Effect.gen(function* () {
     yield* Effect.log(`building ${space}…`);
     const { json, objectCount } =
-      space === 'crm' ? yield* buildArchive(PipelineTemplate()) : yield* buildArchive(TidepoolTemplate());
+      space === 'crm' ? yield* buildArchive(PipelineTemplate.make()) : yield* buildArchive(TidepoolTemplate.make());
 
     yield* Effect.promise(() => writeFile(out, json + '\n', 'utf8'));
     yield* Effect.log(`wrote ${out} (${json.length} bytes, ${objectCount} objects)`);

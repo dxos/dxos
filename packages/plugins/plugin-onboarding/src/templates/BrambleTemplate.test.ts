@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { BrambleTemplate } from './index.ts';
+import * as BrambleTemplate from './BrambleTemplate.ts';
 
 /**
  * Bramble is built on demand rather than committed, so this asserts its shape in place of the
@@ -16,7 +16,7 @@ import { BrambleTemplate } from './index.ts';
  */
 describe('Bramble template', () => {
   test('builds the whole roastery', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(BrambleTemplate()));
+    const { json, objectCount } = await EffectEx.runPromise(buildArchive(BrambleTemplate.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
@@ -55,7 +55,7 @@ describe('Bramble template', () => {
     'persists the roast log as a space-local schema with rows behind it',
     { timeout: 120_000 },
     async ({ expect }) => {
-      const { json } = await EffectEx.runPromise(buildArchive(BrambleTemplate()));
+      const { json } = await EffectEx.runPromise(buildArchive(BrambleTemplate.make()));
       const counts = histogram(json);
 
       expect(counts['dxn:org.dxos.type.schema:0.1.0']).toBe(1);

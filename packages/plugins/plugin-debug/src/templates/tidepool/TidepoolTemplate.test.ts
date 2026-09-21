@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { TidepoolTemplate } from './index.ts';
+import * as TidepoolTemplate from './TidepoolTemplate.ts';
 
 /**
  * The Tidepool template is built on demand rather than committed, so this asserts its shape in
@@ -15,7 +15,7 @@ import { TidepoolTemplate } from './index.ts';
  */
 describe('Tidepool template', () => {
   test('builds an archive with the whole project graph', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(TidepoolTemplate()));
+    const { json, objectCount } = await EffectEx.runPromise(buildArchive(TidepoolTemplate.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
@@ -38,7 +38,7 @@ describe('Tidepool template', () => {
   // Same budget as above: this also boots a client and builds the whole space, which a shared CI
   // runner with coverage instrumentation does not finish inside the 15s default.
   test('files every sub-task under a parent, at two levels', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(TidepoolTemplate()));
+    const { json } = await EffectEx.runPromise(buildArchive(TidepoolTemplate.make()));
     const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'parentTask'?: unknown }> =
       JSON.parse(json).objects;
     const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));

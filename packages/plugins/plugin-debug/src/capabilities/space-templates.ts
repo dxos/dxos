@@ -26,38 +26,38 @@ export default [
     id: 'org.dxos.plugin-debug.template.pipeline',
     label: 'Northwind Sales',
     description: 'Seven accounts across the pipeline stages, a contact each, and the mail behind them.',
-    definition: PipelineTemplate(),
+    definition: PipelineTemplate.make(),
   }),
   SpaceTemplate.preset({
     id: 'org.dxos.plugin-debug.template.tidepool',
     label: 'Tidepool — Offline sync v2',
     description: 'A work-stream with a two-level task tree, a .mdl spec, an architecture note and a decision log.',
-    definition: TidepoolTemplate(),
+    definition: TidepoolTemplate.make(),
   }),
   SpaceTemplate.preset({
     id: 'org.dxos.plugin-debug.template.stockfish',
     label: 'Chess MCP on Workers',
     description:
       'A brief, a five-stage plan as a task tree, a position to test against, and the skill for building it in a sandbox.',
-    definition: StockfishTemplate(),
+    definition: StockfishTemplate.make(),
   }),
   SpaceTemplate.preset({
     id: 'org.dxos.plugin-debug.template.worker',
     label: 'Hello Worker',
     description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
-    definition: WorkerTemplate(),
+    definition: WorkerTemplate.make(),
   }),
   SpaceTemplate.preset({
     id: 'org.dxos.plugin-debug.template.weather',
     label: 'Weather MCP',
     description:
       'Four tasks an agent runs alone: a one-tool MCP server over a weather API, deployed to a temporary Worker and called from the chat.',
-    definition: WeatherTemplate(),
+    definition: WeatherTemplate.make(),
   }),
   SpaceTemplate.preset({
     id: 'org.dxos.plugin-debug.template.incident',
     label: 'Incident 0516 retrospective',
     description: "A status log, four people's notes, and the four tasks that turn them into a filed retro.",
-    definition: IncidentTemplate(),
+    definition: IncidentTemplate.make(),
   }),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

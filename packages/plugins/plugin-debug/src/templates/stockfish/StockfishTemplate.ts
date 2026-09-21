@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -36,7 +38,7 @@ const phases = {
  * DeepSeek through the edge, the first deploy uses wrangler's unauthenticated mode, and the only two
  * consent screens are in the last stage.
  */
-export const StockfishTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     // Reaches a space only where the definition is applied directly (the generator panel, the
     // archive test): the create-space dialog takes its icon from `space-templates.ts`, which

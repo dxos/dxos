@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
@@ -27,7 +29,7 @@ const phases = {
  * Reachable with no credentials but the reader's own DXOS identity: the first deploy uses wrangler's
  * unauthenticated mode, and the single consent screen is the last task.
  */
-export const WorkerTemplate = (): SpaceTemplate.Definition<typeof phases, void> =>
+export const make = (): SpaceTemplate.Definition<typeof phases, void> =>
   SpaceTemplate.make({
     // Reaches a space only where the definition is applied directly (the generator panel, the
     // archive test): the create-space dialog takes its icon from `space-templates.ts`, which
