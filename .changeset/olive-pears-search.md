@@ -2,4 +2,4 @@
 '@dxos/plugin-markdown': patch
 ---
 
-Pull request import failures are logged with the error's name and the HTTP status GitHub answered with, so a failed import can be diagnosed from a debug bundle.
+A pull request import that fails now says why: a GitHub connection the API rejects asks you to reconnect, a repository the connection cannot see is named as such, and the HTTP status appears alongside the reference.
