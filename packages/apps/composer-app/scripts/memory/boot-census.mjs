@@ -35,6 +35,10 @@ const context = profileDir
   ? await chromium.launchPersistentContext(profileDir, { headless: true })
   : await (await chromium.launch({ headless: true })).newContext();
 const page = context.pages()[0] ?? (await context.newPage());
+// The resource-timing buffer defaults to 250 entries and Composer fetches thousands of scripts,
+// so raise it before any script runs; `resources` below is what the tab actually fetched, as
+// against `chunks`, which is only the HTML's preload list.
+await page.addInitScript(() => performance.setResourceTimingBufferSize(20_000));
 const cdp = await page.context().newCDPSession(page);
 await cdp.send('Profiler.enable');
 // Coverage must be armed before any script runs. Count mode (not detailed) keeps overhead low
@@ -61,8 +65,18 @@ const pageFacts = await page.evaluate(() => {
   const readyMark =
     performance.getEntriesByName('boot:react-ready')[0] ?? performance.getEntriesByName('boot:ready')[0];
   const snapshot = window.composer?.profiler?.snapshot?.() ?? null;
+  const resources = performance
+    .getEntriesByType('resource')
+    .filter((entry) => entry.name.includes('/assets/') && entry.name.endsWith('.js'))
+    .map((entry) => ({
+      name: entry.name.split('/').pop(),
+      t: Math.round(entry.startTime),
+      bytes: entry.decodedBodySize,
+      initiator: entry.initiatorType,
+    }));
   return {
     chunks,
+    resources,
     marks,
     readyT: readyMark ? Math.round(readyMark.startTime) : null,
     moduleCount: snapshot?.moduleCount ?? null,
