@@ -28,6 +28,7 @@ import {
   applyOpfsPragmas,
   checkpointWal,
 } from './internal/opfs-pragmas.ts';
+import { recordSqliteQueryMetrics } from './internal/query-log.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -167,25 +168,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
                 }
               }
               options.port.postMessage([id, undefined, [columns, results]]);
-              const end = performance.now();
-              log('sqlite query', { sql, params, results: results.length, time: end - begin });
-              performance.measure(sql.slice(0, 128), {
-                start: begin,
-                end: end,
-                detail: {
-                  devtools: {
-                    dataType: 'track-entry',
-                    track: 'Query',
-                    trackGroup: 'SQlite',
-                    color: 'tertiary-dark',
-                    properties: [
-                      ['sql', sql],
-                      ['params', params],
-                      ['resultCount', results.length],
-                    ],
-                  },
-                },
-              });
+              recordSqliteQueryMetrics(sql, params, results.length, begin);
               return;
             }
           }
