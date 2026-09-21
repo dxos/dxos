@@ -29,10 +29,10 @@ import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import {
-  ClientServicesLayer,
-  type ClientServicesStackContext,
+  type ClientServicesStack,
   HostEvents,
   enableNetworking,
+  makeClientServicesStack,
   wipeSqliteStorage,
 } from '../services/index.ts';
 import { SessionClosed } from './events.ts';
@@ -91,8 +91,8 @@ export type WorkerRuntimeOptions = {
  * provide a WebRTC gateway. The runtime lives as long as the scope it was made in.
  */
 export interface WorkerRuntimeService {
-  /** Effect context of the running stack: every component and RPC handler. */
-  readonly stack: () => Context.Context<ClientServicesStackContext>;
+  /** The running stack; resolve a tag to reach a component or RPC handler. */
+  readonly stack: () => ClientServicesStack;
   /** Open a tab session over the supplied effect-rpc protocols for the life of the scope, registered for WebRTC bridging. */
   readonly createSession: (props: CreateSessionProps) => Effect.Effect<WorkerSession, never, Scope.Scope>;
   /** Route WebRTC through the given session (or disconnect when `undefined`). */
@@ -107,7 +107,7 @@ export class WorkerRuntime extends Context.Service<WorkerRuntime, WorkerRuntimeS
 ) {}
 
 /**
- * Builds and opens the worker runtime: {@link ClientServicesLayer} over the worker's SQLite layer.
+ * Builds and opens the worker runtime: {@link makeClientServicesStack} over the worker's SQLite layer.
  * A startup error rejects the readiness gate, closes the stack and fails the effect, so the worker
  * reports it instead of advertising `ready`. Closing the scope tears everything down.
  */
@@ -134,7 +134,7 @@ export const makeWorkerRuntime = ({
     let sessionForNetworking: WorkerSession | undefined;
     /** Owns the built stack; a reset closes it early, otherwise it closes with the runtime scope. */
     const stackScope = yield* Scope.fork(scope);
-    let stack: Context.Context<ClientServicesStackContext> | undefined;
+    let stack: ClientServicesStack | undefined;
 
     if (sqliteLayer) {
       log.warn('Using testing SQLite layer');
@@ -191,39 +191,44 @@ export const makeWorkerRuntime = ({
       }
 
       log('worker-runtime: building client services stack');
-      const stackContext = yield* Layer.build(
-        ClientServicesLayer({
-          // The dial is driven below once boot has drained, not on stack open.
-          autoConnect: false,
-          // Auto-activate spaces that were previously active after leader changeover.
-          runtimeProps: { autoActivateSpaces: true },
-          // Edge signaling is created by the platform layer from the edge connection; otherwise fall
-          // back to an in-memory manager (KUBE `WebsocketSignalManager` removed).
-          signalManager: config.get('runtime.client.edgeFeatures')?.signaling
-            ? undefined
-            : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
-          transportFactory,
-        }).pipe(
-          Layer.provideMerge(sqlite),
-          Layer.provide(Layer.succeed(ConfigService, config)),
-          Layer.provide(Layer.succeed(Hook.Controller, controller)),
-        ),
-      ).pipe(Scope.provide(stackScope));
-      stack = stackContext;
+      // Built into the stack's scope rather than provided to the effect: a scoped layer provided to
+      // an effect is torn down when that effect returns, taking the database with it.
+      const sqlContext = yield* Layer.build(sqlite).pipe(Scope.provide(stackScope));
+      const built = yield* makeClientServicesStack({
+        // The dial is driven below once boot has drained, not on stack open.
+        autoConnect: false,
+        // Auto-activate spaces that were previously active after leader changeover.
+        runtimeProps: { autoActivateSpaces: true },
+        // Edge signaling is created by the platform layer from the edge connection; otherwise fall
+        // back to an in-memory manager (KUBE `WebsocketSignalManager` removed).
+        signalManager: config.get('runtime.client.edgeFeatures')?.signaling
+          ? undefined
+          : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
+        transportFactory,
+      }).pipe(
+        Effect.provide(sqlContext),
+        Effect.provideService(ConfigService, config),
+        Effect.provideService(Hook.Controller, controller),
+        Scope.provide(stackScope),
+      );
+      stack = built;
       log('worker-runtime: stack built, opening');
+      // Builds the eager specs (registrations, lifecycle subscriptions); the events below are what
+      // those subscriptions are waiting for, so this has to come first.
+      yield* built.open();
       // `StackOpened` resolves once every handler the cascade triggered has run.
       yield* Effect.gen(function* () {
         yield* Hook.emit(HostEvents.Opening, undefined);
         yield* Hook.emit(HostEvents.StackOpened, undefined);
-      }).pipe(Effect.provide(stackContext));
+      }).pipe(Effect.provideService(Hook.Controller, controller));
       log('worker-runtime: stack opened, signalling ready');
       ready.wake(undefined);
       log('started');
 
       // Bridge the identity/devices Handlers to the effect-rpc client surface in-process.
       const [identityService, devicesService] = yield* Effect.all([
-        makeInProcessClient(IdentityService.Rpcs, Context.get(stackContext, IdentityService.Tag)),
-        makeInProcessClient(DevicesService.Rpcs, Context.get(stackContext, DevicesService.Tag)),
+        makeInProcessClient(IdentityService.Rpcs, yield* built.resolve(IdentityService.Tag)),
+        makeInProcessClient(DevicesService.Rpcs, yield* built.resolve(DevicesService.Tag)),
       ]);
       setIdentityTags({
         identityService,
@@ -246,7 +251,7 @@ export const makeWorkerRuntime = ({
           yield* Effect.sleep(EDGE_NETWORKING_START_DELAY);
           log('worker-runtime: starting networking');
           yield* enableNetworking;
-        }).pipe(Effect.provide(stackContext)),
+        }).pipe(Effect.provideService(Hook.Controller, controller)),
       );
       yield* Effect.addFinalizer(() => Fiber.interrupt(networkingFiber));
     }).pipe(
@@ -280,10 +285,11 @@ export const makeWorkerRuntime = ({
         }
         // Every service registered itself with the stack's router; the session only attaches its
         // transport, so adding a service never touches this code.
+        const router = yield* stack.resolve(RpcRouter.RpcRouter).pipe(Effect.orDie);
         yield* Layer.build(
           RpcRouter.layerTransport.pipe(
             Layer.provide(Layer.succeed(RpcServer.Protocol, appProtocol)),
-            Layer.provide(Layer.succeedContext(stack)),
+            Layer.provide(Layer.succeed(RpcRouter.RpcRouter, router)),
           ),
         );
 

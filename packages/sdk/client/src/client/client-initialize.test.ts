@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { TimeoutError, Trigger, sleep } from '@dxos/async';
+import { EffectEx } from '@dxos/effect';
 import { RpcClosedError } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SystemService } from '@dxos/protocols/rpc';
@@ -85,7 +85,7 @@ describe('Client.fatalError', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = EffectContext.get(services.stack, SystemService.Tag);
+    const system = await EffectEx.runPromise(services.stack.resolve(SystemService.Tag).pipe(Effect.orDie));
     const lost = new Trigger();
     const failure = new Error('status stream failed');
     vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
@@ -111,7 +111,7 @@ describe('Client.fatalError', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = EffectContext.get(services.stack, SystemService.Tag);
+    const system = await EffectEx.runPromise(services.stack.resolve(SystemService.Tag).pipe(Effect.orDie));
     const lost = new Trigger();
     vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
       Stream.make({ status: SystemStatus.ACTIVE }).pipe(
@@ -140,7 +140,7 @@ describe('Client.reset', () => {
 
     const services = testBuilder.createLocalClientServices();
     await services.open();
-    const system = EffectContext.get(services.stack, SystemService.Tag);
+    const system = await EffectEx.runPromise(services.stack.resolve(SystemService.Tag).pipe(Effect.orDie));
     vi.spyOn(system, 'SystemService.reset').mockImplementation(() => Effect.fail(new RpcClosedError()));
 
     const client = new Client({ services });

@@ -106,6 +106,14 @@ import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts
 const application = 'application' as const;
 
 /**
+ * Subduction needs the edge clients as well as the feature flag: the flag is set in config profiles
+ * that configure no edge endpoint, and requiring a tag nothing provides would prune the specs that
+ * declare it — silently taking the data space manager, and every service built on it, with them.
+ */
+const subductionEnabled = (options: ServiceStackServices): boolean =>
+  !!options.edgeFeatures?.subductionReplicator && !!options.edgeAvailable;
+
+/**
  * The client stack as a list of {@link LayerSpec.LayerSpec}s for a `LayerStack` to aggregate: each
  * spec declares the tags it needs and the tags it provides, so build order — and which specs are
  * built at all — follows from the graph rather than from a hand-written `provideMerge` chain.
@@ -323,7 +331,7 @@ export const DataSpaceManagerSpec = (options: ServiceStackServices) =>
         InvitationsManagerService,
         // Read with `Effect.serviceOption`, so each is required only where it is also provided.
         ...(options.disableP2pReplication ? [] : [MeshEchoReplicatorService]),
-        ...(options.edgeFeatures?.subductionReplicator ? [EdgeAutomergeReplicatorService] : []),
+        ...(subductionEnabled(options) ? [EdgeAutomergeReplicatorService] : []),
       ],
       provides: [DataSpaceManagerService],
     },
@@ -357,11 +365,13 @@ export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
     () => EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures }),
   );
 
+// Eager: nothing asks for its tag — it exists to subscribe to space changes across devices.
 export const CrossDeviceSpaceSynchronizerSpec = LayerSpec.make(
   {
     affinity: application,
     requires: [Hook.Controller, DataSpaceManagerService],
     provides: [CrossDeviceSpaceSynchronizerService],
+    eager: true,
   },
   () => CrossDeviceSpaceSynchronizerLayer,
 );
@@ -669,9 +679,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   CrossDeviceSpaceSynchronizerSpec,
 
   ...(options.disableP2pReplication ? [] : [MeshReplicatorSpec, MeshReplicatorRegistrationSpec]),
-  ...(options.edgeFeatures?.subductionReplicator
-    ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec]
-    : []),
+  ...(subductionEnabled(options) ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec] : []),
   FeedSyncerSpec,
 
   RpcRouterSpec,

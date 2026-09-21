@@ -35,6 +35,36 @@ interface LayerStackOpts {
   readonly services?: Context.Context<never>;
 }
 
+/**
+ * Tag for a built {@link LayerStack}.
+ */
+export class Service extends Context.Service<Service, LayerStack>()('@dxos/compute-runtime/LayerStack') {}
+
+/**
+ * A {@link LayerStack} whose ambient services are declared as tags rather than handed over as an
+ * opaque {@link Context.Context}: the returned layer requires exactly those tags, so an embedder
+ * that fails to provide one is a compile error rather than a spec silently pruned at runtime.
+ *
+ * The stack is destroyed when the layer's scope closes.
+ */
+export const layer = <const Tags extends readonly Context.Key<any, any>[]>(opts: {
+  readonly layers: LayerSpec.LayerSpec[];
+  readonly services: Tags;
+}): Layer.Layer<Service, never, Context.Service.Identifier<Tags[number]>> =>
+  Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const context = yield* Effect.context<Context.Service.Identifier<Tags[number]>>();
+      const stack = new LayerStack({
+        layers: opts.layers,
+        // Narrowed to the declared tags so the stack sees what the type promised and nothing else.
+        services: context.pipe(Context.pick(...opts.services)),
+      });
+      yield* Effect.addFinalizer(() => Effect.promise(() => stack.destroy()));
+      return stack;
+    }),
+  );
+
 export class LayerStack {
   #slices: Slice[] = [];
   #semapphore = Effect.runSync(Semaphore.make(1));
@@ -45,6 +75,18 @@ export class LayerStack {
   constructor(opts: LayerStackOpts) {
     this.#layers = opts.layers;
     this.#services = (opts.services ?? Context.empty()) as Context.Context<unknown>;
+  }
+
+  /**
+   * Initialise the slice for `context` without asking for a tag, which builds its eager specs.
+   * A stack whose point is its side effects — rpc registrations, lifecycle subscriptions — has
+   * nothing to resolve, so this is how an embedder starts it.
+   */
+  init(context: LayerSpec.LayerContext = {}): Effect.Effect<void, ServiceNotAvailableError, Scope.Scope> {
+    return this.#getOrInitSlice('application', contextForAffinity('application', context)).pipe(
+      Effect.catchTag('LayerDependencyCycleError', (err) => Effect.die(err)),
+      Effect.asVoid,
+    );
   }
 
   getServiceResolver(): ServiceResolver.ServiceResolver {

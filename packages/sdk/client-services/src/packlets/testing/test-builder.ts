@@ -40,6 +40,7 @@ import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
+import { RpcRouter } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
@@ -65,10 +66,10 @@ import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from 
 import { valueEncoding } from '../pipeline/index.ts';
 import { Closing, Opening, StackOpened, WipingStorage } from '../services/events.ts';
 import {
-  ClientServicesLayer,
-  type ClientServicesStackContext,
+  type ClientServicesStack,
   type ServiceContextRuntimeProps,
   StackReadinessService,
+  makeClientServicesStack,
 } from '../services/index.ts';
 import { SqliteStorage, wipeSqliteStorage } from '../services/sqlite-storage.ts';
 import { SpaceManager, SpaceManagerService } from '../space/index.ts';
@@ -96,7 +97,30 @@ export type ServiceContextOptions = {
 };
 
 /**
- * A client services runtime for tests: the stack built from {@link ClientServicesLayer} over an
+ * The tags this test surface hands out synchronously. The stack resolves lazily, so they are
+ * materialised together when it opens rather than on first access.
+ */
+const EXPOSED_TAGS = [
+  RpcRouter.RpcRouter,
+  StackReadinessService,
+  IdentityManagerService,
+  IdentityLifecycleService,
+  SpaceManagerService,
+  IMetadataStoreService,
+  EdgeIdentityRecoveryManagerService,
+  KeyringApiService,
+  HypercoreStoreService,
+  EchoHostService,
+  InvitationsHandlerService,
+  InvitationsManagerService,
+  SwarmNetworkManagerService,
+  SignalManagerService,
+  DataSpaceManagerService,
+  EdgeAgentManagerService,
+] as const;
+
+/**
+ * A client services runtime for tests: the stack built from {@link makeClientServicesStack} over an
  * in-memory SQLite runtime, plus the system service, with the components exposed as properties
  * while open.
  */
@@ -107,8 +131,11 @@ export class ServiceContext {
   readonly #controller = Hook.makeController();
   /** Holds the reset handlers; closed by `destroy`. */
   readonly #busScope = Effect.runSync(Scope.make());
-  #runtime?: ManagedRuntime.ManagedRuntime<ClientServicesStackContext, never>;
-  #stack?: EffectContext.Context<ClientServicesStackContext>;
+  /** Scope of the built stack; closed by `#closeStack`. */
+  #stackScope?: Scope.Closeable;
+  #stack?: ClientServicesStack;
+  /** The tags this test surface exposes, resolved once the stack is open so the getters stay sync. */
+  #services?: EffectContext.Context<never>;
   #ctx?: Context;
 
   constructor(options: ServiceContextOptions = {}) {
@@ -135,11 +162,18 @@ export class ServiceContext {
    * caller, who closes it when done.
    */
   get rpc(): Effect.Effect<ClientServicesRpc, never, Scope.Scope> {
-    return makeClientServicesRpcFromRouter.pipe(Effect.provide(this.stack));
+    return makeClientServicesRpcFromRouter.pipe(
+      Effect.provideService(RpcRouter.RpcRouter, this.#get(RpcRouter.RpcRouter)),
+    );
   }
 
-  get stack(): EffectContext.Context<ClientServicesStackContext> {
+  get stack(): ClientServicesStack {
     return this.#stack ?? failUndefined();
+  }
+
+  /** The router every service registered itself with; served to a client without a wire hop. */
+  get router(): RpcRouter.Service {
+    return this.#get(RpcRouter.RpcRouter);
   }
 
   get initialized(): Trigger {
@@ -191,39 +225,49 @@ export class ServiceContext {
   }
 
   get dataSpaceManager(): DataSpaceManager | undefined {
-    return this.#stack && EffectContext.get(this.#stack, DataSpaceManagerService);
+    return this.#services && EffectContext.getUnsafe(this.#services, DataSpaceManagerService);
   }
 
   get edgeAgentManager(): EdgeAgentManager | undefined {
-    return this.#stack && EffectContext.get(this.#stack, EdgeAgentManagerService);
+    return this.#services && EffectContext.getUnsafe(this.#services, EdgeAgentManagerService);
   }
 
   async open(ctx: Context = new Context()): Promise<void> {
-    if (this.#runtime) {
+    if (this.#stackScope) {
       return;
     }
     this.#ctx = ctx;
-    this.#runtime = ManagedRuntime.make(
-      ClientServicesLayer({
-        runtimeProps: {
-          invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
-          ...this.#options.runtimeProps,
-        },
-        signalManager: this.#options.signalManager,
-        transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
-      }).pipe(
-        Layer.provideMerge(RuntimeProvider.toLayer(this.#sql.contextEffect)),
-        Layer.provide(Layer.succeed(ConfigService, this.#config)),
-        Layer.provide(Layer.succeed(Hook.Controller, this.#controller)),
-      ),
-    );
+    const scope = Effect.runSync(Scope.make());
+    this.#stackScope = scope;
     try {
-      this.#stack = await this.#runtime.context();
-      await this.#runtime.runPromise(EffectEx.withContext(ctx)(openChain));
+      // Built into the stack's scope rather than provided to the effect: a scoped layer provided to
+      // an effect is torn down when that effect returns, taking the database with it.
+      const sqlContext = await EffectEx.runPromise(
+        Layer.build(RuntimeProvider.toLayer(this.#sql.contextEffect)).pipe(Scope.provide(scope)),
+      );
+      const stack = await EffectEx.runPromise(
+        makeClientServicesStack({
+          runtimeProps: {
+            invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+            ...this.#options.runtimeProps,
+          },
+          signalManager: this.#options.signalManager,
+          transportFactory: this.#options.transportFactory ?? MemoryTransportFactory,
+        }).pipe(
+          Effect.provide(sqlContext),
+          Effect.provideService(ConfigService, this.#config),
+          Effect.provideService(Hook.Controller, this.#controller),
+          Scope.provide(scope),
+        ),
+      );
+      this.#stack = stack;
+      await EffectEx.runPromise(stack.open().pipe(Effect.orDie));
+      this.#services = await EffectEx.runPromise(stack.resolveAll(...EXPOSED_TAGS).pipe(Effect.orDie));
+      await EffectEx.runPromise(
+        EffectEx.withContext(ctx)(openChain).pipe(Effect.provideService(Hook.Controller, this.#controller)),
+      );
     } catch (err) {
-      await this.#runtime.dispose();
-      this.#runtime = undefined;
-      this.#stack = undefined;
+      await this.#closeStack();
       throw err;
     }
   }
@@ -261,20 +305,26 @@ export class ServiceContext {
 
   // Shared by close and destroy so a caller that wraps `close` cannot recurse through `destroy`.
   async #closeStack(): Promise<void> {
-    if (!this.#runtime) {
+    const scope = this.#stackScope;
+    if (!scope) {
       return;
     }
-    await this.#runtime.dispose();
-    this.#runtime = undefined;
+    this.#stackScope = undefined;
+    // Closed before the services are dropped: teardown stops the schedulers that still reach for
+    // them, and clearing first leaves those callbacks resolving against nothing.
+    await EffectEx.runPromise(Scope.close(scope, Exit.void));
     this.#stack = undefined;
+    this.#services = undefined;
   }
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     return this.#get(IdentityLifecycleService).createIdentity(params, ctx ?? this.#ctx);
   }
 
-  #get<Self extends ClientServicesStackContext, Service>(tag: EffectContext.Key<Self, Service>): Service {
-    return EffectContext.get(this.stack, tag);
+  // The stack proves nothing about which tags are built, so the lookup is unsafe by construction:
+  // asking before `open` throws here rather than returning undefined into a test.
+  #get<Self, Service>(tag: EffectContext.Key<Self, Service>): Service {
+    return EffectContext.getUnsafe(this.#services ?? failUndefined(), tag);
   }
 }
 

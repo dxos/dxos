@@ -136,6 +136,60 @@ describe('LayerStack', () => {
     );
   });
 
+  describe('layer', () => {
+    it.effect(
+      'takes its ambient services from the layer context, declared as tags',
+      Effect.fn(function* ({ expect }) {
+        const stackLayer = LayerStack.layer({
+          services: [ServiceA],
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolved = yield* Effect.gen(function* () {
+          const stack = yield* LayerStack.Service;
+          return yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+        }).pipe(Effect.provide(stackLayer), Effect.provideService(ServiceA, { value: 'declared' }), Effect.scoped);
+        expect(resolved).toEqual({ value: 'b:declared' });
+      }),
+    );
+
+    it.effect(
+      'destroys the stack when the layer scope closes',
+      Effect.fn(function* ({ expect }) {
+        const released: string[] = [];
+        const stackLayer = LayerStack.layer({
+          services: [],
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.effect(
+                ServiceA,
+                Effect.acquireRelease(Effect.succeed({ value: 'a' }), () =>
+                  Effect.sync(() => {
+                    released.push('a');
+                  }),
+                ),
+              ),
+            ),
+          ],
+        });
+
+        yield* Effect.gen(function* () {
+          const stack = yield* LayerStack.Service;
+          yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        }).pipe(Effect.provide(stackLayer), Effect.scoped);
+
+        expect(released).toEqual(['a']);
+      }),
+    );
+  });
+
   describe('eager specs', () => {
     it.effect(
       'builds a side-effect-only spec nothing asks for',

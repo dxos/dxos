@@ -2,37 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Scope from 'effect/Scope';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
+import { LayerStack } from '@dxos/compute-runtime';
+import type { ServiceNotAvailableError } from '@dxos/compute/errors';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type Config, ConfigService } from '@dxos/config';
 import { Hook } from '@dxos/effect';
-import { type SignalManager, SignalManagerService } from '@dxos/messaging';
+import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
-import { RpcRouter } from '@dxos/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { ClientPlatformLayer, type TransportFactoryService } from './client-platform.ts';
+import { ClientPlatformLayer } from './client-platform.ts';
 import { NetworkingEnabled } from './events.ts';
-import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
+import { clientServiceSpecs } from './layer-specs.ts';
+import { type ServiceContextRuntimeProps } from './service-stack.ts';
 
-/**
- * Everything the client services runtime provides: the hook controller, config, the platform inputs,
- * the component layers, and the RPC handler layers.
- */
-export type ClientServicesStackContext =
-  | Hook.Controller
-  | ConfigService
-  | RpcRouter.RpcRouter
-  | ServiceContextStackContext
-  | SignalManagerService
-  | TransportFactoryService;
-
-/** The SQL services the stack persists through; the embedder provides them beneath the layer. */
+/** The SQL services the stack persists through; the embedder provides them beneath it. */
 export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport;
 
-export type ClientServicesLayerOptions = {
+export type ClientServicesStackOptions = {
   /** Overrides for the config-derived runtime props. */
   runtimeProps?: ServiceContextRuntimeProps;
   /** Overrides the config-derived signal manager; tests pass an in-memory one. */
@@ -63,45 +56,111 @@ export const runtimePropsFromConfig = (
 });
 
 /**
- * The whole client services runtime as one layer: RPC handlers over the component stack over the
- * platform inputs, persisting through the SQL services, config and the embedder's controller provided
- * beneath it. Build it with `ManagedRuntime`, then emit `Opening` and `StackOpened` to boot; disposing the
- * runtime tears everything down in reverse.
+ * The running client services stack: the {@link clientServiceSpecs} graph aggregated by a
+ * {@link LayerStack}, over the ambient services the embedder supplies.
+ *
+ * Specs are built on demand — resolving a tag builds what that tag needs and nothing else — except
+ * the `eager` ones (rpc registrations, lifecycle subscriptions, replicators), which the slice builds
+ * as soon as it initialises, since nothing would ever ask for them.
  */
-export const ClientServicesLayer = ({
+export class ClientServicesStack {
+  readonly #stack: LayerStack.LayerStack;
+  readonly #scope: Scope.Scope;
+
+  constructor(stack: LayerStack.LayerStack, scope: Scope.Scope) {
+    this.#stack = stack;
+    this.#scope = scope;
+  }
+
+  /**
+   * The service behind `tag`, building whatever the graph needs to produce it. Services live for
+   * the lifetime of the stack rather than of the caller, so the stack's own scope is provided here.
+   */
+  resolve<Tag extends Context.Key<any, any>>(
+    tag: Tag,
+  ): Effect.Effect<Context.Service.Shape<Tag>, ServiceNotAvailableError> {
+    return this.#stack.getServiceResolver().resolve(tag, {}).pipe(Scope.provide(this.#scope));
+  }
+
+  /**
+   * The given tags as one {@link Context}, for handing to an effect that requires them.
+   */
+  resolveAll<const Tags extends readonly Context.Key<any, any>[]>(
+    ...tags: Tags
+  ): Effect.Effect<Context.Context<Tags[number]>, ServiceNotAvailableError> {
+    return ServiceResolver.resolveAll(tags, {}).pipe(
+      Effect.provideService(ServiceResolver.ServiceResolver, this.#stack.getServiceResolver()),
+      Scope.provide(this.#scope),
+    );
+  }
+
+  /**
+   * Build the eager specs: the rpc registrations, the lifecycle subscriptions and the replicators.
+   * Until this runs the graph is dormant, so an embedder calls it before emitting `Opening`.
+   */
+  open(): Effect.Effect<void, ServiceNotAvailableError> {
+    return this.#stack.init().pipe(Scope.provide(this.#scope));
+  }
+
+  /**
+   * Tear down every built spec. Slices dispose newest first, so a spec closes before the ones it
+   * was built on.
+   */
+  destroy(): Promise<void> {
+    return this.#stack.destroy();
+  }
+}
+
+/**
+ * Builds the stack: the embedder's config, controller, SQL services and platform inputs become the
+ * ambient services every spec resolves against. Nothing in the graph is built until a tag is
+ * resolved. Emit `Opening` and `StackOpened` to boot it; closing the scope tears it down.
+ */
+export const makeClientServicesStack = ({
   runtimeProps,
   signalManager,
   transportFactory,
   connectionLog = true,
   autoConnect = true,
-}: ClientServicesLayerOptions = {}): Layer.Layer<
-  ClientServicesStackContext,
+}: ClientServicesStackOptions = {}): Effect.Effect<
+  ClientServicesStack,
   never,
-  ClientServicesSqlContext | ConfigService | Hook.Controller
+  ClientServicesSqlContext | ConfigService | Hook.Controller | Scope.Scope
 > =>
-  // The runtime props are read from the config eagerly, so the stack is unwrapped from an effect
-  // that resolves the config the embedder provided beneath it.
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const config = yield* ConfigService;
-      const controller = yield* Hook.Controller;
-      return ServiceStack({
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const controller = yield* Hook.Controller;
+    const scope = yield* Effect.scope;
+    // The platform inputs are effects (the edge clients are constructed from the configured
+    // endpoint), so they are built once into the stack's scope and handed over as plain services.
+    const platform = yield* Layer.build(
+      ClientPlatformLayer({ signalManager, transportFactory }).pipe(
+        Layer.provide(Layer.succeed(ConfigService, config)),
+      ),
+    );
+    const sql = yield* Effect.context<ClientServicesSqlContext>();
+
+    const services = Context.empty().pipe(
+      Context.add(ConfigService, config),
+      Context.add(Hook.Controller, controller),
+      Context.merge(platform),
+      Context.merge(sql),
+    );
+
+    const stack = new LayerStack.LayerStack({
+      layers: clientServiceSpecs({
         ...runtimePropsFromConfig(config, runtimeProps),
         edgeFeatures: config.get('runtime.client.edgeFeatures'),
+        edgeAvailable: !!config.get('runtime.services.edge.url'),
         connectionLog,
         autoConnect,
-      }).pipe(
-        Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
-        // The router sits beneath every service: each registers itself into it, and a transport
-        // attached later (a worker session) serves whatever is registered.
-        Layer.provideMerge(RpcRouter.layer),
-        // Re-provided so the built stack context carries them, as every consumer of the context expects.
-        Layer.provideMerge(Layer.succeed(ConfigService, config)),
-        Layer.provideMerge(Layer.succeed(Hook.Controller, controller)),
-        Layer.orDie,
-      );
-    }),
-  );
+      }),
+      services,
+    });
+    const built = new ClientServicesStack(stack, scope);
+    yield* Effect.addFinalizer(() => Effect.promise(() => built.destroy()));
+    return built;
+  });
 
 /**
  * Allows outbound network activity to begin; for embedders that build the stack with
