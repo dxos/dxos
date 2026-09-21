@@ -108,7 +108,15 @@ alongside any number:
   way. `native-heap.mjs --profile` now clears the origin's service worker and
   cache storage before navigating (IndexedDB and OPFS stay), and its JSON records
   chunk names under `wasmByModule` and `measureCalls`, so check those against
-  `out/composer/assets` before comparing two arms.
+  `out/composer/assets` before comparing two arms. `--keep-service-worker`
+  turns the clearing off, for measuring the precached bundle on purpose.
+- **Which build seeded the profile.** A seeded profile also pins every
+  IndexedDB schema version the seeding build wrote. A build carrying an older
+  `DB_VERSION` cannot open that database (IndexedDB refuses to downgrade) and
+  the store goes silent rather than failing: six runs measured a log store
+  that never wrote or swept, with nothing in the output to say so. For an A/B
+  across builds, seed on the oldest arm and let the newer ones upgrade, and
+  read `idbCalls` in the JSON for the reads the arm is supposed to make.
 
 ## Scripts
 

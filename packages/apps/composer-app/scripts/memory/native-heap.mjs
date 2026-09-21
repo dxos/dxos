@@ -469,7 +469,7 @@ try {
   // Linear memory appears in no allocator node, so this is the only instrument that
   // names the modules behind the residual — and the journey is when automerge grows.
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: WASM_PROBE });
-  if (persistentProfile) {
+  if (persistentProfile && !process.argv.includes('--keep-service-worker')) {
     // A seeded profile holds the service worker and precache of the build it was seeded
     // with, and a later build never runs until the app itself updates: three runs measured
     // the previous bundle that way. Drop those two stores only; the data stays in IndexedDB
