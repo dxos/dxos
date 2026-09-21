@@ -21,6 +21,8 @@ import {
   makeConnection,
   uniqueKeys,
 } from './testing/harness.ts';
+import * as Worker from './Worker.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 describe('Connection multi-client', () => {
   test('leader and a late-joining follower both connect', async () => {
@@ -627,3 +629,71 @@ describe('Worker session lifetime', () => {
     expect(order).toEqual(['session', 'session', 'runtime']);
   });
 });
+
+describe('Worker displacement', () => {
+  test('a worker starting while a previous one holds the storage lock displaces it', async () => {
+    const { storageLockKey } = uniqueKeys();
+
+    const incumbent = startBareWorker(storageLockKey);
+    // `listening` is posted from inside the storage lock, so it is proof the incumbent holds it.
+    await asyncTimeout(incumbent.listening, 5_000);
+
+    const successor = startBareWorker(storageLockKey);
+    await asyncTimeout(successor.listening, 5_000);
+    await asyncTimeout(incumbent.closed, 5_000);
+  }, 20_000);
+
+  test('a leader session opens against a storage lock a previous worker still holds', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    // A worker outliving the tab that spawned it — tearing that worker down needs the old tab's main
+    // thread, which is exactly what is unavailable when a leader is evicted for being wedged.
+    const stranded = startBareWorker(keys.storageLockKey);
+    await asyncTimeout(stranded.listening, 5_000);
+
+    const { connection, connected } = makeConnection(hub, keys);
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    // Budgeted past `LOCK_OR_RPC_WAIT_TIMEOUT` so a worker that never takes the storage lock fails
+    // this with the reported "opening worker leader session" timeout rather than a bare test timeout.
+    await asyncTimeout(connection.open(), 25_000);
+    await asyncTimeout(connected, 5_000);
+    await asyncTimeout(stranded.closed, 5_000);
+  }, 40_000);
+});
+
+/**
+ * Runs the real worker loop over a MessageChannel, exposing the two protocol milestones the
+ * displacement handshake turns on: `listening` (this worker holds the storage lock and serves) and
+ * the endpoint closing (it stood down).
+ */
+const startBareWorker = (storageLockKey: string) => {
+  const channel = new MessageChannel();
+  channel.port1.start();
+  channel.port2.start();
+  const listening = new Trigger();
+  const closed = new Trigger();
+  // The worker's end is port1, so its protocol messages surface on port2.
+  channel.port2.addEventListener('message', (event) => {
+    if ((event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data.type === 'listening') {
+      listening.wake();
+    }
+  });
+  Worker.run({
+    endpoint: {
+      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+      close: () => {
+        channel.port1.close();
+        closed.wake();
+      },
+    },
+    storageLockKey,
+    createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
+  });
+  return { listening: listening.wait(), closed: closed.wait() };
+};

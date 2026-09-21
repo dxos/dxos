@@ -607,6 +607,10 @@ export class Connection extends Resource {
         });
       });
 
+      if (ctx.disposed) {
+        return;
+      }
+
       if (result === LEADER_TIMEOUT) {
         this.#connectPhase = 'port-timeout';
         this.#portTimeoutCount++;
