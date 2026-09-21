@@ -47,11 +47,10 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   );
 };
 
-/**
- * Whether activating a row does anything. A synthetic section (the Collections row) carries no data
- * and has nothing to open, so the tree discloses it instead and offers no pointer.
- */
-const isSelectable = (node: AppGraphNode.Node) => !!node.data && (node.properties.selectable ?? true);
+/** What a row opens. A section node groups rows without standing for anything itself. */
+const hasSubject = (node: AppGraphNode.Node) => !!node.data;
+
+const isSelectable = (node: AppGraphNode.Node) => hasSubject(node) && (node.properties.selectable ?? true);
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;

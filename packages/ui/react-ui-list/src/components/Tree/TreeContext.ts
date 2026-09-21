@@ -146,7 +146,6 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
-  /** The consumer's own predicate, as passed to the tree. */
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   /** In `multiple` mode a plain click selects the row alone and a meta-click toggles it. */
   selectionMode: 'single' | 'multiple';

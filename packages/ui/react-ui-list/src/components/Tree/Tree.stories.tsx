@@ -39,7 +39,6 @@ const DefaultStory = ({
   groups?: boolean;
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
-  /** Refuse selection of every branch, as a model does for a section that is only a container. */
   unselectableBranches?: boolean;
   selectionMode?: 'single' | 'multiple';
 }) => {
@@ -173,9 +172,6 @@ const DefaultStory = ({
     [getOrCreateStateAtom, registry],
   );
 
-  // The tree reports one row at a time, so which rows stay current is the model's to decide: a
-  // plain activation replaces the selection, and a meta-click in `multiple` mode adds a row to it
-  // or takes that row back out.
   const currentPathsRef = useRef(new Set<string>());
   const handleSelect = useCallback(
     ({ path: pathProp, current, meta }: { path: string[]; current: boolean; meta: boolean }) => {
@@ -304,7 +300,6 @@ export const EmptyBranch: Story = {
   },
 };
 
-/** A branch the model refuses to select discloses when clicked; a selectable one only selects. */
 export const UnselectableBranches: Story = {
   args: { draggable: true, unselectableBranches: true },
   play: async ({ canvasElement }) => {
@@ -321,10 +316,6 @@ export const UnselectableBranches: Story = {
   },
 };
 
-/**
- * Collapse commits on the click: the chevron follows at once, the rows animate out under a row that
- * already reads closed, and a click arriving mid-animation reopens rather than being eaten.
- */
 export const Collapse: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -337,12 +328,9 @@ export const Collapse: Story = {
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(height()).toBeGreaterThan(0));
-    // Opening, the chevron leads: the rows follow it in.
     await waitFor(() => expect(chevron().rotate).toBe('90deg'));
     await expect(chevron().transitionDelay).toBe('0s');
 
-    // Closing, the chevron is the one thing that waits: its turn is held for the length of the
-    // conceal, so it lands with the last row rather than ahead of them.
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(height()).toBeGreaterThan(0);
@@ -359,7 +347,6 @@ export const Collapse: Story = {
   },
 };
 
-/** One row current at a time, and selecting one never discloses it. */
 export const Selection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -372,7 +359,6 @@ export const Selection: Story = {
     await expect(first).toHaveAttribute('data-selected');
     await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
 
-    // A re-click re-activates the row it is already on; nothing deselects and nothing discloses.
     await userEvent.click(label(first));
     await expect(first).toHaveAttribute('data-selected');
     await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
@@ -381,16 +367,12 @@ export const Selection: Story = {
     await expect(second).toHaveAttribute('data-selected');
     await expect(first).not.toHaveAttribute('data-selected');
 
-    // The click left the tabstop on the row: `Space` discloses it, and `Enter` activates it without
-    // disclosing, so the two keys do not share a meaning that depends on which row is current.
     await userEvent.keyboard(' ');
     await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
     await userEvent.keyboard('{Enter}');
     await expect(second).toHaveAttribute('data-selected');
     await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
 
-    // `Enter` on a row the reader has only moved focus to takes that row current, rather than
-    // reporting the state it is leaving — which read as "not selected" and selected nothing.
     await userEvent.click(label(first));
     await userEvent.keyboard('{ArrowDown}');
     await userEvent.keyboard('{Enter}');
@@ -399,7 +381,6 @@ export const Selection: Story = {
   },
 };
 
-/** `multiple` mode: a plain click selects a row alone, and a meta-click adds to and removes from the set. */
 export const MultipleSelection: Story = {
   args: { selectionMode: 'multiple' },
   play: async ({ canvasElement }) => {
@@ -429,7 +410,6 @@ export const MultipleSelection: Story = {
     await metaClick(rows[1]);
     await expect(selected()).toBe('1000');
 
-    // A plain click drops the rest.
     await userEvent.click(rows[2].querySelector<HTMLElement>('span[data-tooltip]')!);
     await expect(selected()).toBe('0010');
   },

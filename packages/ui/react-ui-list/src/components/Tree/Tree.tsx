@@ -359,27 +359,24 @@ export const Tree = <T extends { id: string } = any>({
 
   const toggleOpen = useCallback((node: TreeNodeEntry<T>) => setOpen(node, !node.open), [setOpen]);
 
-  const canSelectNode = useCallback(
-    (node: TreeNodeEntry<T>) => !node.props.disabled && (canSelect?.({ item: node.item, path: node.path }) ?? true),
+  /** The consumer's verdict alone. A disabled row answers no activation at all, which is separate. */
+  const allowsSelect = useCallback(
+    (node: TreeNodeEntry<T>) => canSelect?.({ item: node.item, path: node.path }) ?? true,
     [canSelect],
   );
 
   const onSelectNode = useCallback(
     (node: TreeNodeEntry<T>, activation: RowActivation) => {
-      // A disabled row answers no activation at all. `canSelectNode` is false for a disabled row
-      // and for one the consumer merely refuses to select, and only the second of those discloses
-      // instead; `multiple` mode's capture handler reaches here without passing the machine, which
-      // would otherwise have stopped the disabled one.
       if (node.props.disabled) {
         return;
       }
-      if (node.branch && (activation.option || !canSelectNode(node))) {
+      if (node.branch && (activation.option || !allowsSelect(node))) {
         toggleOpen(node);
-      } else if (canSelectNode(node)) {
+      } else if (allowsSelect(node)) {
         onSelect?.({ item: node.item, path: node.path, ...activation });
       }
     },
-    [canSelectNode, onSelect, toggleOpen],
+    [allowsSelect, onSelect, toggleOpen],
   );
 
   const handleExpandedChange = useCallback(
@@ -520,13 +517,11 @@ export const Tree = <T extends { id: string } = any>({
         return;
       }
       event.preventDefault();
-      if (canSelectNode(entry)) {
-        // `current: true`, not the state being left behind: `Enter` on a row the reader has only
-        // moved focus to takes that row current.
+      if (!entry.props.disabled && allowsSelect(entry)) {
         onSelect?.({ item: entry.item, path: entry.path, current: true, ...NO_MODIFIERS, keyboard: true });
       }
     },
-    [onKeyDown, byValue, toggleOpen, canSelectNode, onSelect],
+    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted
@@ -933,7 +928,6 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
 
   useEffect(() => () => onCancelExpand(), [onCancelExpand]);
 
-  // The machine emits no selection event for a row that is already selected, so a re-click is taken here.
   const handleClick = useCallback(
     (event: MouseEvent) => {
       if (current) {
@@ -949,8 +943,6 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     [current, node, selectNode],
   );
 
-  // The machine reports a selection change one row at a time and none for a re-click of the only
-  // selected row, so `multiple` mode's plain and meta clicks are taken in capture and never reach it.
   const handleClickCapture = useCallback(
     (event: MouseEvent) => {
       if (selectionMode !== 'multiple' || event.shiftKey || event.altKey) {
