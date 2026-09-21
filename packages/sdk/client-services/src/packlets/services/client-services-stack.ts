@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { LayerStack } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type Config, ConfigService } from '@dxos/config';
 import { Hook } from '@dxos/effect';
 import { type SignalManager } from '@dxos/messaging';
@@ -59,14 +60,17 @@ export const runtimePropsFromConfig = (
  *
  * Specs are built on demand — resolving a tag builds what that tag needs and nothing else — except
  * the `eager` ones (rpc registrations, lifecycle subscriptions, replicators), which this layer builds
- * as it is created, since nothing would ever ask for them. Reach a service through
- * {@link LayerStack.Service}'s resolver; emit `Opening` and `StackOpened` to boot the components,
- * and closing the layer's scope tears everything down.
+ * as it is created, since nothing would ever ask for them. Reach a service with
+ * `ServiceResolver.resolve`, which this layer provides alongside the stack; emit `Opening` and
+ * `StackOpened` to boot the components, and closing the layer's scope tears everything down.
  */
 export const layerClientServices = (
   options: ClientServicesStackOptions = {},
-): Layer.Layer<LayerStack.Service, never, ClientServicesSqlContext | ConfigService | Hook.Controller> =>
-  layerBuildEagerSpecs.pipe(Layer.provideMerge(layerSpecsFromConfig(options)));
+): Layer.Layer<
+  LayerStack.Service | ServiceResolver.ServiceResolver,
+  never,
+  ClientServicesSqlContext | ConfigService | Hook.Controller
+> => layerBuildEagerSpecs.pipe(Layer.provideMerge(layerSpecsFromConfig(options)));
 
 /**
  * Allows outbound network activity to begin; for embedders that build the stack with
@@ -80,7 +84,11 @@ export const enableNetworking: Effect.Effect<void, never, Hook.Controller> = Hoo
  */
 const layerSpecsFromConfig = (
   options: ClientServicesStackOptions,
-): Layer.Layer<LayerStack.Service, never, ClientServicesSqlContext | ConfigService | Hook.Controller> =>
+): Layer.Layer<
+  LayerStack.Service | ServiceResolver.ServiceResolver,
+  never,
+  ClientServicesSqlContext | ConfigService | Hook.Controller
+> =>
   Layer.unwrap(
     Effect.gen(function* () {
       const config = yield* ConfigService;

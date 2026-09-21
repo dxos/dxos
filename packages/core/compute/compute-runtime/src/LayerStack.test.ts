@@ -14,6 +14,7 @@ import * as Tracer from 'effect/Tracer';
 
 import { ServiceNotAvailableError } from '@dxos/compute';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
@@ -161,6 +162,23 @@ describe('LayerStack', () => {
     );
 
     it.effect(
+      'provides the resolver alongside the stack',
+      Effect.fn(function* ({ expect }) {
+        const stackLayer = LayerStack.layer({
+          services: [],
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+          ],
+        });
+
+        const resolved = yield* ServiceResolver.resolve(ServiceA, {}).pipe(Effect.provide(stackLayer), Effect.scoped);
+        expect(resolved).toEqual({ value: 'a' });
+      }),
+    );
+
+    it.effect(
       'destroys the stack when the layer scope closes',
       Effect.fn(function* ({ expect }) {
         const released: string[] = [];
@@ -290,7 +308,7 @@ describe('LayerStack', () => {
       });
 
       yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
-      yield* Effect.promise(() => stack.destroy());
+      yield* stack.destroy();
       expect(closed).toEqual(['b', 'a']);
     }),
   );

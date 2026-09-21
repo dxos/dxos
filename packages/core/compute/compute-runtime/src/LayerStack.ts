@@ -45,14 +45,16 @@ export class Service extends Context.Service<Service, LayerStack>()('@dxos/compu
  * opaque {@link Context.Context}: the returned layer requires exactly those tags, so an embedder
  * that fails to provide one is a compile error rather than a spec silently pruned at runtime.
  *
+ * Provides the stack's {@link ServiceResolver.ServiceResolver} alongside it, so a consumer can
+ * `ServiceResolver.resolve` a tag without reaching through the stack for its resolver.
+ *
  * The stack is destroyed when the layer's scope closes.
  */
 export const layer = <const Tags extends readonly Context.Key<any, any>[]>(opts: {
   readonly layers: LayerSpec.LayerSpec[];
   readonly services: Tags;
-}): Layer.Layer<Service, never, Context.Service.Identifier<Tags[number]>> =>
-  Layer.effect(
-    Service,
+}): Layer.Layer<Service | ServiceResolver.ServiceResolver, never, Context.Service.Identifier<Tags[number]>> =>
+  Layer.effectContext(
     Effect.gen(function* () {
       const context = yield* Effect.context<Context.Service.Identifier<Tags[number]>>();
       const stack = new LayerStack({
@@ -60,8 +62,10 @@ export const layer = <const Tags extends readonly Context.Key<any, any>[]>(opts:
         // Narrowed to the declared tags so the stack sees what the type promised and nothing else.
         services: context.pipe(Context.pick(...opts.services)),
       });
-      yield* Effect.addFinalizer(() => Effect.promise(() => stack.destroy()));
-      return stack;
+      yield* Effect.addFinalizer(() => stack.destroy());
+      return Context.make(Service, stack).pipe(
+        Context.add(ServiceResolver.ServiceResolver, stack.getServiceResolver()),
+      );
     }),
   );
 
@@ -99,11 +103,13 @@ export class LayerStack {
    * insertion order so higher-affinity slices dispose before the lower-affinity
    * ones they depend on.
    */
-  async destroy(): Promise<void> {
-    const slices = this.#slices.splice(0).reverse();
-    for (const slice of slices) {
-      await slice.destroy();
-    }
+  destroy(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      const slices = this.#slices.splice(0).reverse();
+      for (const slice of slices) {
+        yield* slice.destroy();
+      }
+    });
   }
 
   #resolveService(
@@ -286,7 +292,7 @@ export class LayerStack {
         if (index !== -1) {
           this.#slices.splice(index, 1);
         }
-        yield* Effect.promise(() => slice.destroy());
+        yield* slice.destroy();
       }
     }).pipe(this.#semapphore.withPermits(1));
   }
@@ -799,11 +805,13 @@ class Slice {
    * Disposes the batch runtimes newest first: a batch materialized later may hold services from an
    * earlier one, and Effect only orders finalizers within a single runtime.
    */
-  async destroy() {
-    const runtimes = this.#managedRuntimes.splice(0).reverse();
-    for (const runtime of runtimes) {
-      await runtime.dispose();
-    }
+  destroy(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      const runtimes = this.#managedRuntimes.splice(0).reverse();
+      for (const runtime of runtimes) {
+        yield* Effect.promise(() => runtime.dispose());
+      }
+    });
   }
 
   #sortLayers() {

@@ -88,7 +88,7 @@ const makeHarness = async () => {
 
   const stack = new LayerStack.LayerStack({ layers: clientServiceSpecs({}), services });
   onTestFinished(async () => {
-    await stack.destroy();
+    await EffectEx.runPromise(stack.destroy());
     await sql.dispose();
   });
 

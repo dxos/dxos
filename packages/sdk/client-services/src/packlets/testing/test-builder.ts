@@ -255,11 +255,10 @@ export class ServiceContext {
           ),
         ).pipe(Scope.provide(scope)),
       );
-      const stack = EffectContext.get(stackContext, LayerStack.Service);
-      this.#stack = stack;
+      this.#stack = EffectContext.get(stackContext, LayerStack.Service);
       this.#services = await EffectEx.runPromise(
         ServiceResolver.resolveAll(EXPOSED_TAGS, {}).pipe(
-          Effect.provideService(ServiceResolver.ServiceResolver, stack.getServiceResolver()),
+          Effect.provide(stackContext),
           Effect.orDie,
           Scope.provide(scope),
         ),
