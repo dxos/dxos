@@ -127,6 +127,21 @@ most phases. Every other phase is stable both within and across runs, so this is
 the harness. Until it is understood, a movement in a run total is more likely to be `open-space`
 than anything else in the flow, and the phase-stacked tile is where to check.
 
+### The footprint tiles MUST filter on `ciFootprintProcesses > 0` — and do not yet
+
+Not a description of the dashboard, but a requirement on it. The memory-infra dump can fail or be
+pre-empted by another trace, and a failed read yields no processes — which sums to zero bytes and
+is indistinguishable from an app holding no memory once it is a point on a chart. `report.ts`
+publishes `footprintProcesses` so the two are separable, but **separable is not separated**: no
+tile currently carries the filter, so a failed collection would plot as a floor of zero and read
+as a dramatic improvement, exactly as a pre-VFS run did before the SQLite tiles were gated.
+
+Anything trending `ciAppFootprintBytes` or `ciChromeFootprintBytes` — tile 5 and the memory
+composition tile — needs `AND properties.ciFootprintProcesses > 0` in its `WHERE`, for the same
+reason and by the same precedent as the section below. Until someone makes that dashboard edit,
+this section describes a gap rather than a safeguard, in the spirit of the completeness-filter
+defect recorded further down.
+
 ### The SQLite tiles filter on `ciSqliteRealms > 0`
 
 Alone among the tiles, these two carry a `WHERE` that is not about comparability. Zero bytes means
