@@ -145,7 +145,24 @@ export class EdgeWsConnection extends Resource {
     return this._wsMuxer?.flowControlEnabled ?? false;
   }
 
+  /**
+   * Send, dropping the result.
+   *
+   * Callers that need the send to reflect flow control must use {@link sendAndWait}: this returns
+   * as soon as the message is handed to the muxer, which under credit may be long before it
+   * reaches the socket.
+   */
   public send(message: Message): void {
+    void this.sendAndWait(message).catch((err) => log.catch(err));
+  }
+
+  /**
+   * Send, resolving once the last chunk has been handed to the socket.
+   *
+   * Under flow control that cannot happen until the peer has extended credit for it, so awaiting
+   * this is what turns backpressure into something a caller can feel.
+   */
+  public async sendAndWait(message: Message): Promise<void> {
     invariant(this._ws);
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
@@ -166,7 +183,7 @@ export class EdgeWsConnection extends Resource {
       // For muxer, we need to track the size of the message being sent.
       const binary = buf.toBinary(MessageSchema, message);
       this._recordBytes(binary.byteLength, 0);
-      this._wsMuxer.send(message).catch((e) => log.catch(e));
+      await this._wsMuxer.send(message);
     }
   }
 
