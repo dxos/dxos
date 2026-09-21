@@ -69,7 +69,12 @@ const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
-const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+// `DX_LAZY_CHUNKS=false` keeps the boot partition and leaves the lazy half to rolldown, for
+// measuring the package chunks against a build without them.
+const boot = bootChunking({
+  entry: path.resolve(dirname, 'src/main.tsx'),
+  lazyTargetBytes: process.env.DX_LAZY_CHUNKS === 'false' ? null : undefined,
+});
 
 // These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
 // Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
@@ -309,6 +314,13 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
+        // Package chunks from `bootChunking` can import each other through the chunk rolldown
+        // emits for a lazily imported panel, which the partition cannot foresee: rolldown places
+        // by its tree-shaken graph and the partition only sees the parse graph. Rolldown's own
+        // rule for manual groups is to wrap module bodies so evaluation order no longer depends
+        // on chunk order. The cost is the wrappers and the tree-shaking they inhibit; measured
+        // against the chunk count it buys in `.agents/projects/memory-usage/ALLOCATION.md`.
+        strictExecutionOrder: true,
         // Chunk grouping: React pinned, and the boot path collapsed from ~520 default-split
         // chunks into a handful via `bootChunking`. Coarser inference was measured and
         // rejected (2026-08): per-package groups welded each package's eager and lazy halves
