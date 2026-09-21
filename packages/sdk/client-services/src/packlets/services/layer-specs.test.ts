@@ -32,37 +32,6 @@ import { TransportFactoryService } from './client-platform.ts';
 import { Opening, StackOpened } from './events.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 
-/**
- * The stack's ambient services: everything the embedder supplies rather than the graph building —
- * config, the hook controller, the SQL runtime and the platform inputs. No edge clients, so every
- * edge-dependent spec is pruned.
- */
-const makeHarness = async () => {
-  const controller = Hook.makeController();
-  const sql = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
-  const signalManager: SignalManager = new MemorySignalManager(new MemorySignalManagerContext());
-  const services = EffectContext.empty().pipe(
-    EffectContext.add(ConfigService, new Config()),
-    EffectContext.add(Hook.Controller, controller),
-    EffectContext.add(SignalManagerService, signalManager),
-    EffectContext.add(TransportFactoryService, createRtcTransportFactory()),
-    EffectContext.merge(await sql.context()),
-  );
-
-  const stack = new LayerStack.LayerStack({ layers: clientServiceSpecs({}), services });
-  onTestFinished(async () => {
-    await stack.destroy();
-    await sql.dispose();
-  });
-
-  const scope = Effect.runSync(Scope.make());
-  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const resolve = <Tag extends EffectContext.Key<any, any>>(tag: Tag) =>
-    EffectEx.runPromise(stack.getServiceResolver().resolve(tag, {}).pipe(Scope.provide(scope)));
-
-  return { stack, controller, resolve, scope };
-};
-
 describe('clientServiceSpecs', () => {
   test('resolves a component the graph builds from the ambient SQL runtime', async () => {
     const { resolve } = await makeHarness();
@@ -99,3 +68,34 @@ describe('clientServiceSpecs', () => {
     expect(system).toBeDefined();
   });
 });
+
+/**
+ * The stack's ambient services: everything the embedder supplies rather than the graph building —
+ * config, the hook controller, the SQL runtime and the platform inputs. No edge clients, so every
+ * edge-dependent spec is pruned.
+ */
+const makeHarness = async () => {
+  const controller = Hook.makeController();
+  const sql = ManagedRuntime.make(sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie));
+  const signalManager: SignalManager = new MemorySignalManager(new MemorySignalManagerContext());
+  const services = EffectContext.empty().pipe(
+    EffectContext.add(ConfigService, new Config()),
+    EffectContext.add(Hook.Controller, controller),
+    EffectContext.add(SignalManagerService, signalManager),
+    EffectContext.add(TransportFactoryService, createRtcTransportFactory()),
+    EffectContext.merge(await sql.context()),
+  );
+
+  const stack = new LayerStack.LayerStack({ layers: clientServiceSpecs({}), services });
+  onTestFinished(async () => {
+    await stack.destroy();
+    await sql.dispose();
+  });
+
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const resolve = <Tag extends EffectContext.Key<any, any>>(tag: Tag) =>
+    EffectEx.runPromise(stack.getServiceResolver().resolve(tag, {}).pipe(Scope.provide(scope)));
+
+  return { stack, controller, resolve, scope };
+};

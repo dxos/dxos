@@ -279,6 +279,9 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
         HypercoreStoreService,
         EchoHostService,
         InvitationsManagerService,
+        // Read with `Effect.serviceOption`, so each is required only where it is also provided.
+        ...(options.disableP2pReplication ? [] : [MeshEchoReplicatorService]),
+        ...(options.edgeFeatures?.subductionReplicator ? [EdgeAutomergeReplicatorService] : []),
       ],
       provides: [DataSpaceManagerService],
     },
@@ -322,25 +325,45 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   // the rest of the stack asks for; the ones that need the edge are pruned without it.
   //
 
-  LayerSpec.make(
-    { affinity: application, requires: [EchoHostService, Hook.Controller], provides: [], eager: true },
-    () =>
-      options.disableP2pReplication
-        ? Layer.empty
-        : registerReplicator(MeshEchoReplicatorService).pipe(Layer.provide(MeshEchoReplicatorLayer())),
-  ),
-  LayerSpec.make(
-    {
-      affinity: application,
-      requires: [EchoHostService, Hook.Controller, EdgeConnectionService, EdgeHttpClientService],
-      provides: [],
-      eager: true,
-    },
-    () =>
-      options.edgeFeatures?.subductionReplicator
-        ? registerReplicator(EdgeAutomergeReplicatorService).pipe(Layer.provide(EchoEdgeSubductionReplicatorLayer()))
-        : Layer.empty,
-  ),
+  // Each replicator provides its own tag as well as registering itself, because `DataSpaceManager`
+  // reads both tags with `Effect.serviceOption` to decide which replication paths a space gets.
+  ...(options.disableP2pReplication
+    ? []
+    : [
+        LayerSpec.make({ affinity: application, requires: [], provides: [MeshEchoReplicatorService] }, () =>
+          MeshEchoReplicatorLayer(),
+        ),
+        LayerSpec.make(
+          {
+            affinity: application,
+            requires: [MeshEchoReplicatorService, EchoHostService, Hook.Controller],
+            provides: [],
+            eager: true,
+          },
+          () => registerReplicator(MeshEchoReplicatorService),
+        ),
+      ]),
+  ...(options.edgeFeatures?.subductionReplicator
+    ? [
+        LayerSpec.make(
+          {
+            affinity: application,
+            requires: [EdgeConnectionService, EdgeHttpClientService],
+            provides: [EdgeAutomergeReplicatorService],
+          },
+          () => EchoEdgeSubductionReplicatorLayer(),
+        ),
+        LayerSpec.make(
+          {
+            affinity: application,
+            requires: [EdgeAutomergeReplicatorService, EchoHostService, Hook.Controller],
+            provides: [],
+            eager: true,
+          },
+          () => registerReplicator(EdgeAutomergeReplicatorService),
+        ),
+      ]
+    : []),
   LayerSpec.make(
     {
       affinity: application,

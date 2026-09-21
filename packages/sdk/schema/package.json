@@ -44,7 +44,6 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@storybook/react-vite": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
