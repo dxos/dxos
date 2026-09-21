@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-vite-build
   - ts-test
+  - ts-test-workerd
   - model-fixture
 tasks:
   test:

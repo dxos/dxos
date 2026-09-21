@@ -48,6 +48,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "catalog:",
     "@dxos/assistant": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

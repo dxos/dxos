@@ -11,5 +11,15 @@ export default defineConfig({
     // module cannot also be the module the worker loads.
     WorkerSandboxEntry: 'src/WorkerSandboxEntry.ts',
   },
-  test: { node: true },
+  test: {
+    node: true,
+    workerd: {
+      // Dynamic isolate loading is what `WorkerdSandbox` is built on, and the binding exists only
+      // where it is declared.
+      compatibilityFlags: ['nodejs_compat', 'experimental'],
+      miniflare: { workerLoaders: { LOADER: {} } },
+      // `SELF` dispatches here, and a sandboxed isolate's outbound fetch is pointed at `SELF`.
+      main: 'src/WorkerdHostWorker.ts',
+    },
+  },
 });

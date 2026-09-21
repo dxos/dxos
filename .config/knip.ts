@@ -555,6 +555,9 @@ const config: KnipConfig = {
     '@dxos-theme',
     // Supplied by the editor at runtime to extensions, never installed.
     'vscode',
+    // `cloudflare:test` and `cloudflare:workers` are virtual modules the Workers runtime provides;
+    // knip reads the scheme as a package name.
+    'cloudflare',
     // `dxos:` is a virtual scheme the function runtime resolves for user scripts; the script
     // templates that import it are shipped as text, not compiled.
     'dxos',
