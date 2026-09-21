@@ -18,7 +18,6 @@ import { IndexedObjectSource } from './indexed-object-source.ts';
 import {
   ActivityIndex,
   type ActivityRow,
-  type ChangeSummary,
   type EntityMeta,
   EntityMetaIndex,
   FtsIndex,
