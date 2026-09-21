@@ -3,7 +3,7 @@
 //
 
 import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext } from '@dxos/async';
-import { type Context, Resource } from '@dxos/context';
+import { type Context, ContextDisposedError, Resource } from '@dxos/context';
 import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -50,11 +50,16 @@ export type ConnectionDiagnostics = {
   /** Whether this tab held the leader lock. */
   workerIsLeader: boolean;
   workerLeaderFailures: number;
+  /** Consecutive connect attempts that received a port but failed to open the connection handle. */
+  workerConnectFailures: number;
+  /** Recovery attempts since the last port: lock steals, or port timeouts while this tab led. */
   workerStealCount: number;
   /** Port requests that expired without a `provide-port`. */
   workerPortTimeouts: number;
   /** Age of the last heartbeat from a leader OTHER than this tab; absent when none was seen. */
   workerMsSinceLeaderHeartbeat?: number;
+  /** The coordinator link's own failure, when it reported one. */
+  workerCoordinatorError?: string;
 };
 
 export interface LeaderTimeouts {
@@ -73,8 +78,8 @@ export interface LeaderTimeouts {
   portTimeout?: number;
   /**
    * Backoff before re-entering leader election after the leader session itself fails (as opposed
-   * to the lock being stolen), so a persistently failing worker doesn't spin the election in a
-   * tight loop.
+   * to the lock being stolen), and before retrying a connect attempt whose handle failed to open, so
+   * a persistently failing worker or handle doesn't spin either loop in a tight cycle.
    */
   retryBackoff?: number;
   /**
@@ -96,14 +101,15 @@ export type Options = {
   leaderTimeouts?: LeaderTimeouts;
   /**
    * Consecutive leader-session failures before {@link Options.onPersistentFailure} fires. Doubles as
-   * the steal budget: the number of unproductive leader-lock steals after which this tab stops
-   * stealing and escalates instead.
+   * the budget for consecutive connect-handle failures and for unproductive recoveries (leader-lock
+   * steals, or port timeouts while leading) after which this tab stops stealing and escalates instead.
    */
   maxLeaderFailures?: number;
   /**
    * Invoked once per failure streak when `maxLeaderFailures` consecutive leader-session failures
-   * have occurred, or when that many leader-lock steals have failed to produce a port (this tab's
-   * coordinator link is broken, so no amount of re-election can help).
+   * have occurred, when that many connect attempts received a port but failed to open the handle,
+   * or when that many leader-lock steals have failed to produce a port (this tab's coordinator link
+   * is broken, so no amount of re-election can help).
    * Election keeps retrying afterwards — the callback lets the app escalate (e.g.
    * prompt or force a reload) instead of backing off silently forever. A common cause is stale
    * mixed-generation workers: a SharedWorker coordinator or dedicated worker running code from a
@@ -175,9 +181,15 @@ export class Connection extends Resource {
   // Consecutive leader-session open failures; grows the retry backoff and resets once a session
   // opens successfully.
   #leaderFailureCount = 0;
+  // Consecutive connect attempts that got a port but whose handle failed to open; grows the retry
+  // backoff and resets once a handle opens.
+  #connectFailureCount = 0;
   // Steals since the last successful port exchange: one that yields no port means the incumbent was
   // not the problem, so repeating it only destroys a healthy leader's worker.
   #stealCount = 0;
+  // Set once the coordinator reports its link dead: no message will ever arrive, so a steal can only
+  // destroy a healthy leader's worker, and a connection still booting cannot complete.
+  #coordinatorError: Error | undefined;
   // Whether the wedged-tab escalation has already fired for the current steal streak.
   #stealEscalated = false;
   // True while a `#watchLeader` chain holds the leader lock or is queued for it; a tab whose chain
@@ -251,6 +263,14 @@ export class Connection extends Resource {
         }
       }
     });
+    this.#coordinator.onError?.on(this._ctx, (error) => {
+      log.error('worker-connection: coordinator link failed', { clientId: this.#clientId, error });
+      this.#coordinatorError = error;
+      if (this.#isInitialConnection) {
+        // Nothing can arrive over this link, so the boot fails now rather than at the end of its budget.
+        void this.#failInitialConnection(error);
+      }
+    });
     this.#watchLeader(this._ctx);
     this.#connectTask.open();
     // The connect task retries on its own, so its first run completing is not the readiness signal —
@@ -261,14 +281,41 @@ export class Connection extends Resource {
     // `portTimeout` so a caller that widens the port wait widens the boot budget with it.
     const openTimeout = this.#leaderPortTimeout + LOCK_OR_RPC_WAIT_TIMEOUT;
     const timeoutError = lockOrRpcTimeoutError('establishing initial worker connection', openTimeout);
-    await asyncTimeout(this.#initialConnection.wait(), openTimeout, timeoutError).catch((error) => {
+    await asyncTimeout(this.#initialConnection.wait(), openTimeout, timeoutError).catch(async (error) => {
+      // Snapshotted before the teardown below, which is what they describe.
+      const diagnostics = this.#diagnostics;
+      // `Resource.close()` is a no-op on a resource that never opened, so an expired boot releases
+      // its lock, worker and timers itself.
+      if (error === timeoutError) {
+        await this.#teardown();
+      }
       // Only an expired budget reports the failure it outlasted; a rejected connection carries its own cause.
       throw withContext(
         error === timeoutError ? (this.#lastConnectError ?? this.#lastLeaderError ?? error) : error,
-        this.#diagnostics,
+        diagnostics,
       );
     });
     log('worker-connection: initial connection established');
+  }
+
+  /**
+   * Ends a boot that can no longer succeed with `error`, releasing everything the connection holds.
+   * A connection whose open failed is never closed, so it stops its own connect task and listeners.
+   */
+  async #failInitialConnection(error: Error): Promise<void> {
+    await this.#teardown();
+    this.#initialConnection.throw(error);
+  }
+
+  async #teardown(): Promise<void> {
+    await this._ctx.dispose();
+    await this.#connectTask.close();
+    const handle = this.#connectionHandle;
+    this.#connectionHandle = undefined;
+    await handle?.close().catch((err) => log.catch(err));
+    const session = this.#leaderSession;
+    this.#leaderSession = undefined;
+    await session?.close();
   }
 
   get #diagnostics(): ConnectionDiagnostics {
@@ -277,10 +324,33 @@ export class Connection extends Resource {
       workerConnectPhase: this.#connectPhase,
       workerIsLeader: this.#holdsLeaderLock,
       workerLeaderFailures: this.#leaderFailureCount,
+      workerConnectFailures: this.#connectFailureCount,
       workerStealCount: this.#stealCount,
       workerPortTimeouts: this.#portTimeoutCount,
       workerMsSinceLeaderHeartbeat: this.#peerLeaderHeartbeat ? Date.now() - this.#peerLeaderHeartbeat : undefined,
+      workerCoordinatorError: this.#coordinatorError?.message,
     };
+  }
+
+  /** Backoff for the `count`-th consecutive failure: exponential from `retryBackoff`, capped, with jitter. */
+  #backoffFor(count: number): number {
+    const backoff = Math.min(this.#leaderRetryBackoff * 2 ** count, MAX_LEADER_RETRY_BACKOFF);
+    return backoff * (0.5 + Math.random() * 0.5);
+  }
+
+  #escalate(error: unknown): void {
+    try {
+      this.#onPersistentFailure?.(error);
+    } catch (callbackError) {
+      log.catch(callbackError);
+    }
+  }
+
+  /** Re-runs the connect task unless the connection is closing, when the task no longer accepts work. */
+  #scheduleConnect(): void {
+    if (!this._ctx.disposed) {
+      this.#connectTask.schedule();
+    }
   }
 
   override async _close(): Promise<void> {
@@ -306,30 +376,34 @@ export class Connection extends Resource {
           log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
           this.#leaderPhase = 'lock-held';
           this.#holdsLeaderLock = true;
+          invariant(this.#coordinator);
+          invariant(!this.#leaderSession);
+          // A stolen lock leaves this callback running while the next hold starts, so every write
+          // to per-hold state after an await first checks that this is still the current hold.
+          const session = new LeaderSession(
+            this.#createWorker,
+            this.#coordinator,
+            this.#config,
+            this.#clientId,
+            this.#workerProbeTimeout,
+          );
+          const isCurrent = () => this.#leaderSession === session;
           try {
-            invariant(this.#coordinator);
-            invariant(!this.#leaderSession);
-
             const sendHeartbeat = () =>
               this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
             sendHeartbeat();
             const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
 
-            this.#leaderSession = new LeaderSession(
-              this.#createWorker,
-              this.#coordinator,
-              this.#config,
-              this.#clientId,
-              this.#workerProbeTimeout,
-            );
+            this.#leaderSession = session;
             const done = new Trigger();
             this.#leaderDone = done;
             // Removed in the `finally` below: election re-enters on every steal/failure, so a
             // permanent registration would grow the connection's dispose list for the tab's lifetime.
             const removeDoneDisposer = ctx.onDispose(() => done.wake());
-            this.#leaderSession.onClose.on((error) => {
+            // Left in place for the failure path below to close: a session nobody closes keeps its
+            // coordinator listener for the tab's lifetime, one more per worker that dies.
+            session.onClose.on((error) => {
               log('worker-connection: leader session closed', { hasError: !!error });
-              this.#leaderSession = undefined;
               if (error) {
                 done.throw(error);
               } else {
@@ -338,22 +412,29 @@ export class Connection extends Resource {
             });
             try {
               this.#leaderPhase = 'opening-session';
-              await this.#leaderSession.open();
+              await session.open();
+              // `Resource.close()` is a no-op while opening, so a close or steal that ran meanwhile
+              // skipped this session, whose worker would keep the storage lock the next leader waits on.
+              if (ctx.disposed || !isCurrent()) {
+                log('worker-connection: leader session ended while opening, closing it');
+                await session.close();
+                return;
+              }
               this.#leaderPhase = 'session-open';
               this.#leaderFailureCount = 0;
               this.#lastLeaderError = undefined;
-              // A close that ran while this session was opening skipped it, so nothing else closes it.
-              if (ctx.disposed) {
-                await this.#leaderSession?.close();
-              }
               await done.wait();
             } finally {
               removeDoneDisposer();
               clearInterval(heartbeat);
-              this.#leaderDone = undefined;
+              if (this.#leaderDone === done) {
+                this.#leaderDone = undefined;
+              }
             }
           } finally {
-            this.#holdsLeaderLock = false;
+            if (isCurrent() || !this.#leaderSession) {
+              this.#holdsLeaderLock = false;
+            }
           }
         });
         this.#electionActive = false;
@@ -395,18 +476,14 @@ export class Connection extends Resource {
             clientId: this.#clientId,
             error: startFailure,
           });
-          // A connection whose open failed is never closed, so it stops its own connect task and listeners.
-          await ctx.dispose();
-          this.#initialConnection.throw(startFailure);
-          await this.#connectTask.close();
+          await this.#failInitialConnection(startFailure);
           return;
         }
         // The leader session itself failed (e.g. worker init/crash). The lock is released once this
         // callback rejects, so re-enter the election after a backoff — otherwise this tab can never
         // host or reconnect to a worker again, leaving followers retrying `provide-port` forever.
         // Exponential backoff (capped) with jitter avoids a tight retry loop and lockstep retries.
-        const backoff = Math.min(this.#leaderRetryBackoff * 2 ** this.#leaderFailureCount, MAX_LEADER_RETRY_BACKOFF);
-        const jitteredBackoff = backoff * (0.5 + Math.random() * 0.5);
+        const jitteredBackoff = this.#backoffFor(this.#leaderFailureCount);
         this.#leaderFailureCount++;
         this.#leaderPhase = 'session-failed';
         this.#lastLeaderError = error;
@@ -417,10 +494,10 @@ export class Connection extends Resource {
           backoff: jitteredBackoff,
         });
         if (this.#leaderFailureCount === this.#maxLeaderFailures) {
-          try {
-            this.#onPersistentFailure?.(error);
-          } catch (callbackError) {
-            log.catch(callbackError);
+          this.#escalate(error);
+          if (this.#isInitialConnection) {
+            await this.#failInitialConnection(withContext(error, this.#diagnostics));
+            return;
           }
         }
         try {
@@ -442,14 +519,22 @@ export class Connection extends Resource {
     // Held for this attempt's lifetime and handed to the worker, which ends the session when it
     // releases — the only way the worker learns that this tab closed or died.
     const sessionLockKey = `${this.#clientId}/session/${attempt}`;
+    // Set when the worker reports that the session behind this attempt's ports could not be built.
+    let sessionFailure: Error | undefined;
 
+    // Closes the stale handle BEFORE rescheduling, so the next `onConnect` cannot interleave with the
+    // old `close`; disposing first ends an attempt still opening, so the retry is not queued behind it.
     const handleLeaderStopped = async () => {
       log('worker-connection: lost connection');
-      this.#connectTask?.schedule();
       await ctx.dispose();
       const oldHandle = this.#connectionHandle;
       this.#connectionHandle = undefined;
-      await oldHandle?.close();
+      if (oldHandle) {
+        await waitWithLockOrRpcTimeout(oldHandle.close(), 'closing stale worker connection handle').catch((err) =>
+          log.catch(err),
+        );
+      }
+      this.#scheduleConnect();
     };
 
     try {
@@ -480,13 +565,32 @@ export class Connection extends Resource {
       this.#connectPhase = 'requesting-port';
       const result = await new Promise<
         (WorkerProtocol.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT
-      >((resolve) => {
+      >((resolve, reject) => {
         invariant(this.#coordinator);
 
         const unsubscribe = this.#coordinator.onMessage.on((message) => {
           if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+            // The worker closes an abandoned attempt's session when it serves this one, so its ports
+            // would hang until the handle timeout; a worker predating the field sends no attempt.
+            if (message.attempt !== undefined && message.attempt !== attempt) {
+              log('worker-connection: ignoring provide-port for a superseded attempt', {
+                attempt,
+                received: message.attempt,
+              });
+              return;
+            }
             unsubscribe();
             resolve(message);
+          } else if (
+            message.type === 'session-failed' &&
+            message.clientId === this.#clientId &&
+            (message.attempt === undefined || message.attempt === attempt)
+          ) {
+            // The worker already gave this attempt up; whether or not its ports still arrive, retry.
+            log('worker-connection: session failed before its port arrived', { attempt });
+            unsubscribe();
+            sessionFailure = WorkerProtocol.decodeError(message.error);
+            reject(sessionFailure);
           } else if (message.type === 'new-leader' || message.type === 'leader-heartbeat') {
             // Re-request on any sign of a live leader. A late-joining follower misses the one-shot
             // `new-leader` broadcast, so its single initial `request-port` is its only chance —
@@ -507,12 +611,12 @@ export class Connection extends Resource {
           unsubscribe();
           resolve(LEADER_TIMEOUT);
         }, this.#leaderPortTimeout);
-        // Settled on disposal as well, since `close()` joins the connect task: a run left awaiting a
-        // port that no longer has a timer would never finish, hanging the tab's shutdown for good.
+        // Settled on dispose: with the timer cleared and the listener gone, nothing else would end
+        // this attempt, and `connectTask.close()` waits for it.
         ctx.onDispose(() => {
           clearTimeout(timer);
           unsubscribe();
-          resolve(LEADER_TIMEOUT);
+          reject(new ContextDisposedError());
         });
 
         this.#coordinator.sendMessage({
@@ -532,7 +636,7 @@ export class Connection extends Resource {
         this.#portTimeoutCount++;
         log.warn('worker-connection: timed out waiting for provide-port', { clientId: this.#clientId });
         await this.#maybeStealStaleLeader();
-        this.#connectTask.schedule();
+        this.#scheduleConnect();
         return;
       }
 
@@ -560,16 +664,54 @@ export class Connection extends Resource {
       this.#coordinator.onMessage.on(ctx, async (msg) => {
         if (msg.type === 'new-leader' && msg.leaderId !== leaderId) {
           await handleLeaderStopped();
+        } else if (
+          msg.type === 'session-failed' &&
+          msg.clientId === this.#clientId &&
+          (msg.attempt === undefined || msg.attempt === attempt)
+        ) {
+          // The ports in hand lead nowhere; ending the attempt here saves the handle's full timeout.
+          log('worker-connection: session failed after its port arrived', { attempt, installed });
+          sessionFailure = WorkerProtocol.decodeError(msg.error);
+          await ctx.dispose();
+          if (installed) {
+            // Already connected as far as this tab knew: the catch below has run, so retry from here.
+            const handle = this.#connectionHandle;
+            this.#connectionHandle = undefined;
+            await handle?.close().catch((err) => log.catch(err));
+            await this.#retryAfterConnectFailure(sessionFailure);
+          }
         }
       });
 
       this.#connectPhase = 'opening-handle';
-      this.#connectionHandle = await waitWithLockOrRpcTimeout(
-        this.#onConnect({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner }),
-        'opening worker connection handle',
-      );
+      let installed = false;
+      // `onConnect` cannot be cancelled, so a handle that arrives after this attempt timed out or
+      // was abandoned is closed instead of installed over the live one.
+      const opening = this.#onConnect({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner });
+      const closeLate = () =>
+        void opening.then(
+          (handle) => {
+            log.warn('worker-connection: closing handle that opened after its attempt ended', { attempt });
+            void handle.close().catch((err) => log.catch(err));
+          },
+          () => {},
+        );
+      let handle: Handle;
+      try {
+        handle = await untilDisposed(ctx, waitWithLockOrRpcTimeout(opening, 'opening worker connection handle'));
+      } catch (err) {
+        closeLate();
+        throw err;
+      }
+      if (ctx.disposed) {
+        closeLate();
+        throw new ContextDisposedError();
+      }
+      this.#connectionHandle = handle;
+      installed = true;
       this.#connectPhase = 'connected';
       this.#lastConnectError = undefined;
+      this.#connectFailureCount = 0;
 
       if (this.#isInitialConnection) {
         performance.mark('worker-connection:session-ready');
@@ -577,20 +719,55 @@ export class Connection extends Resource {
         this.#initialConnection.wake();
       } else {
         log('worker-connection: reconnecting, calling callbacks', { count: this.#reconnectCallbacks.length });
-        await Promise.all(this.#reconnectCallbacks.map((cb) => cb()));
+        // Isolated: a caller's failing callback must not fail the reconnection it is reacting to.
+        await Promise.all(this.#reconnectCallbacks.map((cb) => cb().catch((err) => log.catch(err))));
         this.reconnected.emit();
       }
-    } catch (err: any) {
-      // Deliberately does not settle `#initialConnection`: a Trigger cannot be re-armed once it
-      // throws, so rejecting here would fail `open()` permanently for a failure the reschedule below
-      // recovers from — the tab then sits on a boot spinner while its worker connection is live.
-      this.#lastConnectError = err;
-      log.warn('worker-connection: connect task failed, will reschedule', { err });
-      log.catch(err);
+    } catch (caught: any) {
+      if (ctx.disposed && !sessionFailure) {
+        // Abandoned from outside (worker died, connection closing); whoever disposed it reschedules.
+        log('worker-connection: connect attempt abandoned', { attempt });
+        return;
+      }
       void ctx.dispose();
-      this.#connectTask?.schedule();
+      await this.#retryAfterConnectFailure(sessionFailure ?? caught);
     }
   });
+
+  /**
+   * Records a connect attempt that got a port but no working handle, then retries after a backoff:
+   * a handle that fails every time would otherwise churn a fresh worker session per millisecond, and
+   * the escalation lets the app surface it instead of retrying silently forever.
+   */
+  async #retryAfterConnectFailure(err: unknown): Promise<void> {
+    // Settling `#initialConnection` here would fail `open()` permanently for a failure the retry
+    // recovers from, so it only settles at the escalation threshold below.
+    this.#lastConnectError = err;
+    const backoff = this.#backoffFor(this.#connectFailureCount);
+    this.#connectFailureCount++;
+    log.warn('worker-connection: connect attempt failed, will retry', {
+      err,
+      failureCount: this.#connectFailureCount,
+      backoff,
+    });
+    log.catch(err);
+    if (this.#connectFailureCount === this.#maxLeaderFailures) {
+      this.#escalate(err);
+      if (this.#isInitialConnection) {
+        // Not awaited: the teardown joins the connect task this may be running in.
+        void this.#failInitialConnection(
+          withContext(err instanceof Error ? err : new Error(String(err)), this.#diagnostics),
+        );
+        return;
+      }
+    }
+    try {
+      await sleepWithContext(this._ctx, backoff);
+    } catch {
+      return;
+    }
+    this.#scheduleConnect();
+  }
 
   async #maybeStealStaleLeader(): Promise<void> {
     // Every steal kills the incumbent's worker, so it has to pay for itself: past this many with no
@@ -600,18 +777,29 @@ export class Connection extends Resource {
       // escalation it is meant to explain.
       if (!this.#stealEscalated) {
         this.#stealEscalated = true;
-        log.warn('worker-connection: steal budget exhausted, coordinator link is broken', {
+        log.warn('worker-connection: recovery budget exhausted, no port after repeated attempts', {
           clientId: this.#clientId,
-          stealCount: this.#stealCount,
+          attempts: this.#stealCount,
         });
-        try {
-          this.#onPersistentFailure?.(
-            new Error(`Worker connection wedged: ${this.#stealCount} leader-lock steals yielded no port.`),
-          );
-        } catch (callbackError) {
-          log.catch(callbackError);
-        }
+        this.#escalate(new Error(`Worker connection wedged: ${this.#stealCount} recovery attempts yielded no port.`));
       }
+      return;
+    }
+
+    if (this.#coordinatorError) {
+      // The link is known dead, so no heartbeat can arrive: the incumbent is not stale, just unreachable.
+      this.#stealCount++;
+      log.warn('worker-connection: coordinator link failed, not stealing', { clientId: this.#clientId });
+      return;
+    }
+
+    if (this.#holdsLeaderLock) {
+      // Our own worker did not answer us. Stealing our own lock would only restart a worker that
+      // other tabs may be using fine, so count it towards the escalation and wait.
+      this.#stealCount++;
+      log.warn('worker-connection: leader timed out waiting for its own worker, not stealing', {
+        clientId: this.#clientId,
+      });
       return;
     }
 
@@ -728,9 +916,18 @@ class LeaderSession extends Resource {
             clientToWorker: event.data.clientToWorker,
             workerToClient: event.data.workerToClient,
             clientId: event.data.clientId,
+            attempt: event.data.attempt,
             leaderId: this.#leaderId,
             livenessLockKey: this.#livenessLockKey,
             isOwner: event.data.isOwner,
+          });
+          break;
+        case 'session-failed':
+          this.#coordinator.sendMessage({
+            type: 'session-failed',
+            clientId: event.data.clientId,
+            attempt: event.data.attempt,
+            error: event.data.error,
           });
           break;
         default:
@@ -740,6 +937,8 @@ class LeaderSession extends Resource {
     if (isWorker(this.#worker)) {
       this.#worker.onerror = (event) => {
         const error = workerErrorFromEvent(event, 'dedicated');
+        // After the handshake the worker survives an uncaught error, so it is only reported.
+        log.error('leader-session: dedicated worker error', { leaderId: this.#leaderId, error });
         ready.throw(error);
         listening.throw(error);
       };
@@ -916,3 +1115,19 @@ class LeaderSession extends Resource {
 const isWorker = (worker: WorkerProtocol.WorkerOrPort): worker is Worker => {
   return typeof Worker !== 'undefined' && worker instanceof Worker;
 };
+
+/** Settles with `promise`, or rejects as soon as `ctx` is disposed — whichever comes first. */
+const untilDisposed = <T>(ctx: Context, promise: Promise<T>): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const removeDisposer = ctx.onDispose(() => reject(new ContextDisposedError()));
+    promise.then(
+      (value) => {
+        removeDisposer();
+        resolve(value);
+      },
+      (error) => {
+        removeDisposer();
+        reject(error);
+      },
+    );
+  });
