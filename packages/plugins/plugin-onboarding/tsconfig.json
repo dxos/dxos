@@ -13,7 +13,6 @@
     "vitest.config.ts"
   ],
   "include": [
-    "scripts",
     "src"
   ],
   "references": [

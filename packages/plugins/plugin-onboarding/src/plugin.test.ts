@@ -21,12 +21,15 @@ describe('OnboardingPlugin', () => {
     // All dependency-mode roots, so they activate immediately during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
-        moduleId('Settings'),
         moduleId('OAuthRecoveryRedirect'),
         moduleId('AppGraphBuilder'),
         moduleId('OperationHandler'),
         moduleId('translations'),
       ]),
     );
+
+    // Demand-gated: the template carries the whole Bramble world, so nothing loads it until the
+    // create dialog (or a caller naming it by id) asks for the list.
+    expect(harness.manager.getActive()).not.toContain(moduleId('SpaceTemplates'));
   });
 });

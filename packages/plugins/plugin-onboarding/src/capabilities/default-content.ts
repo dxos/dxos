@@ -17,10 +17,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
 import README_CONTENT from '../content/README.md?raw';
-import { OnboardingOperation } from '../operations/index.ts';
 import { type OnboardingOptions } from './capabilities.ts';
 
 const DEFAULT_SPACE_ICON = 'house-line';
@@ -49,7 +50,7 @@ export default Capability.makeModule(
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
     // depend on a fresh space (e.g. skills) wire themselves up. The sample space
-    // gets the same callbacks via the regular SpaceCreated event on import.
+    // gets the same callbacks from the create operation that builds it.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const rootCollection = Option.getOrUndefined(
       Annotation.get(defaultSpace.properties, RootCollectionAnnotation),
@@ -70,16 +71,25 @@ export default Capability.makeModule(
     }
 
     if (generateSampleSpace) {
-      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportSampleSpace, {}));
+      // Built here rather than imported from a committed archive: the template the create dialog
+      // offers and the space a new identity lands in are then the same content, built from one
+      // source. Idempotent on the tag, which also survives a reload mid-build.
+      const existing = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
+      const sampleSpaceId =
+        existing?.id ??
+        (yield* Operation.invoke(SpaceOperation.Create, {
+          template: BRAMBLE_TEMPLATE_ID,
+          tags: [AppSpace.SAMPLE_SPACE_TAG],
+        }).pipe(
+          Effect.provideService(Operation.Service, operationInvoker),
+          Effect.map(({ id }) => id),
+        ));
 
       // Eagerly expand the graph so the sample space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
-      const sampleSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
-      if (sampleSpace) {
-        AppGraph.expandSync(graph, sampleSpace.id, 'child');
-      }
+      AppGraph.expandSync(graph, sampleSpaceId, 'child');
     } else {
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');

@@ -3,6 +3,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
@@ -26,28 +27,50 @@ const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication, template }) {
+    Effect.fnUntraced(function* ({
+      name,
+      hue: hue_,
+      icon: icon_,
+      private: isPrivate,
+      edgeReplication,
+      tags,
+      template,
+    }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
-      const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
 
       // Resolved before the space exists: the form is uncontrolled, so it keeps the template's id,
       // name, icon and hue even if the contributing plugin deactivates while the dialog is open.
       // Matching afterwards would create a space styled as a template and silently leave it empty.
+      // The demand event is fired here rather than by each caller: the dialog has its own list to
+      // populate, but a caller naming a template by id has nothing that would have activated it.
+      if (template) {
+        yield* Plugin.activate(ActivationEvents.SpaceTemplatesRequested);
+      }
       const templates = template ? yield* Capability.getAll(SpaceCapabilities.SpaceTemplate) : [];
       const match = template ? templates.find(({ id }) => id === template) : undefined;
       if (template && !match) {
         return yield* Effect.fail(new TemplateNotFoundError({ context: { template } }));
       }
+
+      // The dialog seeds these from the template it selected; a caller naming one by id gets the
+      // same styling without having to repeat it. A template's icon must BE an `iconValues` name —
+      // anything else is dropped rather than stored, since the picker renders it as a blank.
+      const hue = hue_ ?? match?.hue ?? hues[Math.floor(Math.random() * hues.length)];
+      const templateIcon = match?.icon && iconValues.includes(match.icon) ? match.icon : undefined;
+      const icon = icon_ ?? templateIcon ?? iconValues[Math.floor(Math.random() * iconValues.length)];
+
       const space = yield* Effect.promise(() =>
         client.spaces.create(
           {
-            name,
+            name: name ?? match?.label,
             hue,
             icon,
           },
           // Membership policy is written into the genesis credential and cannot be changed later.
-          { membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE },
+          {
+            tags: tags ? [...tags] : undefined,
+            membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE,
+          },
         ),
       );
       if (edgeReplication) {

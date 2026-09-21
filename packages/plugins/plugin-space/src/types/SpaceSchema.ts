@@ -167,4 +167,11 @@ export const SpaceForm = Schema.Struct({
   template: Schema.optional(
     Schema.String.annotate({ title: 'Template' }).pipe(Annotation.FormInputAnnotation.set(false)),
   ),
+  /**
+   * Space tags, written into the genesis metadata. Set by callers that create a space on the user's
+   * behalf and need to recognize it later, so it renders no field.
+   */
+  tags: Schema.optional(
+    Schema.Array(Schema.String).annotate({ title: 'Tags' }).pipe(Annotation.FormInputAnnotation.set(false)),
+  ),
 });

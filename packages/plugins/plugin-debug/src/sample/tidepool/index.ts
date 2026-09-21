@@ -32,7 +32,7 @@ const phases = {
  */
 export const TidepoolSpace = (): SampleSpace.Definition<typeof phases, void> =>
   SampleSpace.make({
-    space: { name: 'Tidepool — Offline sync v2', icon: 'ph--stack--regular', hue: 'cyan' },
+    space: { name: 'Tidepool — Offline sync v2', icon: 'flask', hue: 'cyan' },
     reference: REFERENCE,
     phases,
     build: (phases) =>

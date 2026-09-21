@@ -29,7 +29,7 @@ const phases = {
  */
 export const PipelineSpace = (): SampleSpace.Definition<typeof phases, void> =>
   SampleSpace.make({
-    space: { name: 'Northwind Sales', icon: 'ph--path--regular', hue: 'purple' },
+    space: { name: 'Northwind Sales', icon: 'handshake', hue: 'purple' },
     reference: REFERENCE,
     phases,
     build: (phases) =>

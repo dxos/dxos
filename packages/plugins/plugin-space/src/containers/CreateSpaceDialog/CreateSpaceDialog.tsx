@@ -5,9 +5,10 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
@@ -32,8 +33,16 @@ export const CreateSpaceDialog = () => {
 
   const inputSurfaceLookup = useInputSurfaceLookup();
   const [error, setError] = useState<string | undefined>(undefined);
-  const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
+  const manager = usePluginManager();
+  const contributed = useCapabilities(SpaceCapabilities.SpaceTemplate);
+  const templates = useMemo(() => contributed.filter(({ hidden }) => !hidden), [contributed]);
   const [template, setTemplate] = useState<string | undefined>(undefined);
+
+  // Opening the dialog is the demand signal: template modules are gated on `SpaceTemplatesRequested`,
+  // so without this the picker is empty until something else has asked for the list.
+  useEffect(() => {
+    EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
+  }, [manager]);
 
   const handleCancel = useCallback(
     () => invoke(LayoutOperation.UpdateDialog, { state: false }).pipe(EffectEx.runAndForwardErrors),

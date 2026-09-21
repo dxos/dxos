@@ -338,6 +338,7 @@ export type PhaseRunners<Phases extends PhaseMap> = { readonly [K in keyof Phase
 
 export type SpaceOptions = {
   readonly name: string;
+  /** An `iconValues` name (`stack`), not its Phosphor spelling, so the icon picker can produce it too. */
   readonly icon?: string;
   readonly hue?: string;
 };
@@ -424,18 +425,27 @@ export const applyTo = <Phases extends PhaseMap, A>(
 /**
  * Wraps a definition as an offerable preset: registers its types on the client, then applies it.
  *
- * The result is a plain `{ id, label, apply }` record, which is what the `SampleSpace` capability
- * carries — a picker that lists one needs neither the definition nor Effect.
+ * The result is a plain record structurally matching plugin-space's `SpaceTemplate` capability,
+ * which is what a picker lists — it needs neither the definition nor Effect. Icon and hue come from
+ * the definition's own `space` options unless overridden, so the template a user picks is styled
+ * the way its author described it.
  */
 export const preset = <Phases extends PhaseMap, A>(options: {
   readonly id: string;
   readonly label: string;
   readonly description?: string;
+  readonly icon?: string;
+  readonly hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  readonly hidden?: boolean;
   readonly definition: Definition<Phases, A>;
 }): {
   readonly id: string;
   readonly label: string;
   readonly description?: string;
+  readonly icon?: string;
+  readonly hue?: string;
+  readonly hidden?: boolean;
   readonly apply: (options: {
     readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
     readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
@@ -444,6 +454,9 @@ export const preset = <Phases extends PhaseMap, A>(options: {
   id: options.id,
   label: options.label,
   description: options.description,
+  icon: options.icon ?? options.definition.space.icon,
+  hue: options.hue ?? options.definition.space.hue,
+  hidden: options.hidden,
   apply: async ({ client, space }) => {
     await client.addTypes([...options.definition.schemas]);
     await EffectEx.runPromise(applyTo(options.definition, space));

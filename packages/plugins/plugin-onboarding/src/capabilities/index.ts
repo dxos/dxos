@@ -9,6 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { translations } from '../translations.ts';
 import { OnboardingCapabilities } from './capabilities.ts';
@@ -33,7 +34,6 @@ export const DefaultContent = Capability.lazyModule(
   },
   () => import('./default-content.ts'),
 );
-export const Settings = AppCapability.settings(() => import('./settings.ts'));
 export const OAuthRecoveryRedirect = Capability.lazyModule(
   'OAuthRecoveryRedirect',
   { provides: [] },
@@ -59,6 +59,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
 });
+export const SpaceTemplates = SpaceCapability.spaceTemplates(() => import('./space-templates.ts'));
 
 export * from './capabilities.ts';
 export const Translations = AppCapability.translations(translations);

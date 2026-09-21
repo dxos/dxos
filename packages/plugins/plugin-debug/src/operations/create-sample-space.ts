@@ -7,24 +7,25 @@ import * as Effect from 'effect/Effect';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { DebugOperation } from '#types';
 
 import { SampleSpaceApplyError, SampleSpaceNotFoundError } from '../errors.ts';
 
-const summarize = ({ id, label, description }: AppCapabilities.SampleSpace) => ({ id, label, description });
+const summarize = ({ id, label, description }: SpaceCapabilities.SpaceTemplate) => ({ id, label, description });
 
 const handler: Operation.WithHandler<typeof DebugOperation.CreateSampleSpace> = DebugOperation.CreateSampleSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       // The same demand signal the generator panel fires on mount: nothing else activates these
-      // modules, so without it the list is empty on a cold app.
-      yield* Plugin.activate(ActivationEvents.SampleSpacesRequested);
-      const samples = yield* Capability.getAll(AppCapabilities.SampleSpace);
+      // modules, so without it the list is empty on a cold app. Hidden templates are listed: this
+      // operation is the by-id path the flag reserves them for.
+      yield* Plugin.activate(ActivationEvents.SpaceTemplatesRequested);
+      const samples = yield* Capability.getAll(SpaceCapabilities.SpaceTemplate);
       const available = samples.map(summarize);
       if (!id) {
         return { available };

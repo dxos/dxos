@@ -12,7 +12,7 @@ import {
   type OnboardingOptions,
   OperationHandler,
   ReactSurface,
-  Settings,
+  SpaceTemplates,
   Translations,
 } from '#capabilities';
 
@@ -25,7 +25,7 @@ export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
   Plugin.addModule(Onboarding),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(Settings),
+  Plugin.addModule(SpaceTemplates),
   Plugin.addModule(Translations),
   Plugin.make,
 );

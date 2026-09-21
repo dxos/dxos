@@ -7,9 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
+// Raw imports keep the two welcome documents as Markdown files that render in editors and diff cleanly.
+import ABOUT_MD from '../content/sample/ABOUT.md?raw';
+import TOUR_MD from '../content/sample/README.md?raw';
 import { Schedule } from './calendar.ts';
 import { ContactsViews } from './contacts-views.ts';
-import { Docs, type DocsContent } from './docs.ts';
+import { Docs } from './docs.ts';
 import { Drawings } from './drawings.ts';
 import { Inbox } from './mailbox.ts';
 import { Notes } from './notes.ts';
@@ -21,7 +24,8 @@ import { SpringBlend } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
 /**
- * The Bramble Coffee Roasters sample space — the content every new identity gets on first launch.
+ * The Bramble Coffee Roasters sample space — the content every new identity gets on first launch,
+ * and the template anyone can pick again from the create-space dialog.
  *
  * Content is grounded in `src/content/sample/ABOUT.md`, the canonical reference for all Bramble
  * world-facts (company history, team, suppliers, customers, active initiatives, email conventions,
@@ -42,14 +46,14 @@ const phases = {
   roastLogs: RoastLogs,
 };
 
-export const BrambleSpace = (content: DocsContent): SampleSpace.Definition<typeof phases, void> =>
+export const BrambleSpace = (): SampleSpace.Definition<typeof phases, void> =>
   SampleSpace.make({
     space: { name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' },
     reference: REFERENCE,
     phases,
     build: (phases) =>
       Effect.gen(function* () {
-        const docs = yield* phases.docs(content);
+        const docs = yield* phases.docs({ tourMd: TOUR_MD, aboutMd: ABOUT_MD });
 
         // Contacts — organizations, people and the views over them live directly in the space DB.
         // They are not collection-item types; the database viewer surfaces them.

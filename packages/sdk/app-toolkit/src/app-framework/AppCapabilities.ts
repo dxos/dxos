@@ -16,8 +16,6 @@ import * as Capability$ from '@dxos/app-framework/Capability';
 import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
-import type { Client } from '@dxos/client';
-import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -275,29 +273,6 @@ export type PluginAsset = Readonly<{
  * @category Capability
  */
 export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
-
-/**
- * A themed sample space a plugin offers, for filling a space with demonstrable content.
- *
- * `apply` is a bound closure rather than the definition itself: a consumer needs only "put this
- * content in that space", and handing it the definition would drag the builder, its phase map and
- * Effect into every picker that lists one. Build the entry with `SampleSpace.preset`.
- */
-export type SampleSpace = Readonly<{
-  /** Stable id, namespaced by the owning plugin. */
-  id: string;
-  /** Name for the picker. */
-  label: string;
-  /** One line on what the space contains. */
-  description?: string;
-  /** Registers the content's types on the client, then writes it into `space`. */
-  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
-}>;
-
-/**
- * @category Capability
- */
-export const SampleSpace = Capability$.make<SampleSpace>()('org.dxos.app-framework.capability.sampleSpace');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is

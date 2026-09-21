@@ -2,40 +2,62 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
+import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { hues, iconValues } from '@dxos/ui-types';
+import {
+  IncidentSpace,
+  PipelineSpace,
+  StockfishSpace,
+  TidepoolSpace,
+  WeatherSpace,
+  WorkerSpace,
+} from '../sample/index.ts';
 
 /**
- * Standard space icons, so a template's default is one the icon picker can also produce. Every entry
- * must BE an `iconValues` name: the filter drops anything else silently, and a list that shrinks
- * below the number of templates hands two of them the same icon.
+ * The space templates this plugin offers. Loaded only once something asks for the list — the content
+ * and the builder ride this module's chunk, not the plugin definition's.
+ *
+ * They live here rather than in the plugins whose types they use: the content is a debugging aid,
+ * and every consumer of it (the generator panel, the create-space dialog) is this plugin's.
  */
-const templateIcons = ['campfire', 'planet', 'users-three', 'rocket-launch', 'sun', 'graph'].filter((icon) =>
-  iconValues.includes(icon),
-);
-
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    // The sample content is demand-gated; the create dialog is the demand.
-    yield* Plugin.activate(ActivationEvents.SampleSpacesRequested);
-    const samples = yield* Capability.getAll(AppCapabilities.SampleSpace);
-
-    return Capability.contributeAll(
-      SpaceCapabilities.SpaceTemplate,
-      samples.map((sample, index) => ({
-        id: sample.id,
-        label: sample.label,
-        description: sample.description,
-        icon: templateIcons[index % templateIcons.length] ?? iconValues[index % iconValues.length],
-        hue: hues[index % hues.length],
-        apply: sample.apply,
-      })),
-    );
+export default [
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.pipeline',
+    label: 'Northwind Sales',
+    description: 'Seven accounts across the pipeline stages, a contact each, and the mail behind them.',
+    definition: PipelineSpace(),
   }),
-);
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.tidepool',
+    label: 'Tidepool — Offline sync v2',
+    description: 'A work-stream with a two-level task tree, a .mdl spec, an architecture note and a decision log.',
+    definition: TidepoolSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.stockfish',
+    label: 'Chess MCP on Workers',
+    description:
+      'A brief, a five-stage plan as a task tree, a position to test against, and the skill for building it in a sandbox.',
+    definition: StockfishSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.worker',
+    label: 'Hello Worker',
+    description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
+    definition: WorkerSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.weather',
+    label: 'Weather MCP',
+    description:
+      'Four tasks an agent runs alone: a one-tool MCP server over a weather API, deployed to a temporary Worker and called from the chat.',
+    definition: WeatherSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.incident',
+    label: 'Incident 0516 retrospective',
+    description: "A status log, four people's notes, and the four tasks that turn them into a filed retro.",
+    definition: IncidentSpace(),
+  }),
+] satisfies ReadonlyArray<SpaceCapabilities.SpaceTemplate>;

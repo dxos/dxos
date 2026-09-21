@@ -24,9 +24,10 @@ import * as DebugPlugin from '../DebugPlugin.ts';
 /**
  * Picking a sample space and watching it land.
  *
- * The generator lists whatever plugins contributed through `AppCapabilities.SampleSpace`; the panel
- * beside it is the same object tree the debug plugin shows in the app, so the collections, refs and
- * feeds a sample space builds are all inspectable here rather than only in an exported archive.
+ * The generator lists whatever plugins contributed through `SpaceCapabilities.SpaceTemplate`; the
+ * panel beside it is the same object tree the debug plugin shows in the app, so the collections,
+ * refs and feeds a sample space builds are all inspectable here rather than only in an exported
+ * archive.
  */
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -75,7 +76,7 @@ const meta = {
         }),
         // Contributes the operation handlers the generators invoke (e.g. `SpaceOperation.AddType`).
         SpacePlugin({}),
-        // This plugin contributes the sample spaces, and the panel below is rendered directly
+        // This plugin contributes the space templates, and the panel below is rendered directly
         // rather than through a surface — so without the plugin in the list nothing ever activates
         // the module that registers them and the picker stays empty.
         DebugPlugin.make(),
