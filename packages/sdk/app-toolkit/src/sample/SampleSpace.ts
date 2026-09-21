@@ -13,6 +13,7 @@ import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type }
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
+import { iconValues } from '@dxos/ui-types';
 
 import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
@@ -428,6 +429,9 @@ export const applyTo = <Phases extends PhaseMap, A>(
  *
  * Name, icon and hue default to the definition's own `space` options.
  */
+const asIconValue = (icon: string | undefined): string | undefined =>
+  icon && iconValues.includes(icon) ? icon : undefined;
+
 export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   readonly id: string;
   /** Defaults to the definition's space name, which is what the created space is called. */
@@ -453,7 +457,9 @@ export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   id: options.id,
   label: options.label ?? options.definition.space.name,
   description: options.description,
-  icon: options.icon ?? options.definition.space.icon,
+  // Dropped rather than passed on when it is not a name the icon picker can produce: a template
+  // carrying a Phosphor-spelled icon renders as a blank everywhere it is offered.
+  icon: asIconValue(options.icon ?? options.definition.space.icon),
   hue: options.hue ?? options.definition.space.hue,
   hidden: options.hidden,
   apply: async ({ client, space }) => {

@@ -22,7 +22,7 @@ content: 77 objects, 3 feeds, 127 typed entities), a software-project space, and
 and the Gmail mbox importer was ported to it as well, retiring the last copy of the
 boot/create/populate/export harness those scripts used to duplicate.
 
-Plugins offer content through `SpaceCapabilities.SpaceTemplate`, which the Create Space dialog
+Plugins offer content through `AppCapabilities.SpaceTemplate`, which the Create Space dialog
 lists, so a new space can be seeded from a template at creation time. Contributions are gated on
 `ActivationEvents.SpaceTemplatesRequested` and load only once something asks for the list, so the
 dialog depends on no content package.

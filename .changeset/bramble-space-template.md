@@ -36,12 +36,11 @@ so one read answers "which template made this" for every space whenever it was c
 itself stays — it rides the space's admission credential and cannot be removed — but nothing reads
 it any more except the migration that records what it meant.
 
-`AppSpace.isVisibleSpace` now names the tags it hides (`SETTINGS_SPACE_TAG`,
-`FILESYSTEM_MIRROR_SPACE_TAG`) instead of hiding every tagged space and excepting the ones that turn
-out to be the user's. A space carrying an unrecognized tag is now visible rather than hidden: a tag
-this list has not heard of is far more likely to be a marker someone hung on their own space than a
-new internal space type, and a space wrongly hidden is unreachable while one wrongly shown is
-merely untidy.
+`AppSpace.isVisibleSpace` now tests for the settings space, the only one the app keeps for itself,
+instead of hiding every tagged space and excepting the ones that turn out to be the user's. A space
+carrying an unrecognized tag is now visible rather than hidden: a tag we did not write is far more
+likely to be a marker someone hung on their own space than a new internal space type, and a space
+wrongly hidden is unreachable while one wrongly shown is merely untidy.
 
 First launch builds Bramble through its template instead of importing
 `plugin-onboarding/src/content/sample/space.dx.json`, which is deleted along with the script that
