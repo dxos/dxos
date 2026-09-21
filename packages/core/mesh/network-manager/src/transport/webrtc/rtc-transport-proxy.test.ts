@@ -42,17 +42,21 @@ describe('RtcTransportProxy', () => {
 
       // The client outlives the effect that builds it, so the scope is held and closed by hand.
       const scope = Effect.runSync(Scope.make());
-      const rtcService = await EffectEx.runPromise(
-        RpcTest.makeClient(RTCService.Rpcs).pipe(Effect.provide(handlers), Scope.provide(scope)),
-      );
+      try {
+        const rtcService = await EffectEx.runPromise(
+          RpcTest.makeClient(RTCService.Rpcs).pipe(Effect.provide(handlers), Scope.provide(scope)),
+        );
 
-      const transport = new RtcTransportProxy({ ...createTransportOptions(), rtcService });
-      await transport.open();
-      await transport.close();
+        const transport = new RtcTransportProxy({ ...createTransportOptions(), rtcService });
+        await transport.open();
+        await transport.close();
 
-      expect(hostCloseCompleted).to.be.true;
-
-      await EffectEx.runPromise(Scope.close(scope, Exit.void));
+        expect(hostCloseCompleted).to.be.true;
+      } finally {
+        // Released here rather than after the assertion, so a failing run still tears down the
+        // in-memory RPC resources the scope holds.
+        await EffectEx.runPromise(Scope.close(scope, Exit.void));
+      }
     },
     SLOW_HOST_CLOSE_MS * 4,
   );
