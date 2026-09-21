@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
+import { processStorageLayer } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -271,10 +273,29 @@ const RemoteProcessManagerSpec = LayerSpec.make(
       Effect.gen(function* () {
         const client = yield* ClientService;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-        return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
+        if (!edgeUrl) {
+          return RemoteProcessManager.layerNoop;
+        }
+        // Commands are queued into the process registry's own store, so a spawn issued offline — or
+        // while EDGE is mid-deploy — survives the reload rather than being lost at the call.
+        const kvStore = yield* KeyValueStore.KeyValueStore;
+        return EdgeProcessManager.fromClient(client, { kvStore, onConnected: onNetworkOnline });
       }),
-    ),
+    ).pipe(Layer.provide(processStorageLayer)),
 );
+
+/**
+ * Subscribes to the browser's own back-online transition, which is the cheapest true signal that
+ * EDGE may be reachable again; elsewhere (Node, a worker with no `window`) the queue recovers on its
+ * backoff alone.
+ */
+const onNetworkOnline = (listener: () => void): (() => void) => {
+  if (typeof globalThis.addEventListener !== 'function') {
+    return () => {};
+  }
+  globalThis.addEventListener('online', listener);
+  return () => globalThis.removeEventListener('online', listener);
+};
 
 /**
  * Application-scoped {@link RemoteTraceMonitor.Service}: the swarm-backed monitor contributed by

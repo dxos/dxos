@@ -89,14 +89,29 @@ describe('import — token fallback', () => {
       ...reference,
       status: 401,
       connected: true,
-      tokenRejected: true,
+      tokenStatus: 401,
     });
     expect(tokens).toEqual(['dead-token', '']);
   });
 
-  test('a repository the live token cannot see is not reported as a rejected credential', async ({ expect }) => {
+  // GitHub answers 404 rather than 403 wherever a credential lacks access, so a GitHub App token
+  // whose installation does not cover the repository reports a PUBLIC pull request as absent.
+  // Retrying anonymously is the only way to tell that apart from one that really does not exist.
+  for (const status of [403, 404]) {
+    test(`a public pull request survives a token scoped away from it (${status})`, async ({ expect }) => {
+      const tokens: string[] = [];
+      const result = await run(
+        fetchPullRequestWithFallback(reference, 'scoped-token', fetchRejectingToken(status, tokens)),
+      );
+
+      expect(result).toEqual(pull);
+      expect(tokens).toEqual(['scoped-token', '']);
+    });
+  }
+
+  test('a pull request unreachable with and without the token keeps the token status', async ({ expect }) => {
     const error = await run(
-      fetchPullRequestWithFallback(reference, 'live-token', () => Effect.fail(statusError(404))),
+      fetchPullRequestWithFallback(reference, 'scoped-token', () => Effect.fail(statusError(404))),
     ).then(
       () => undefined,
       (error) => error,
@@ -106,12 +121,20 @@ describe('import — token fallback', () => {
     expect((error as GitHubRepoInaccessibleError).context).toMatchObject({
       status: 404,
       connected: true,
-      tokenRejected: false,
+      tokenStatus: 404,
     });
   });
 
   test('a space with no connection reports itself as unconnected', async ({ expect }) => {
-    const error = await run(fetchPullRequestWithFallback(reference, '', () => Effect.fail(statusError(404)))).then(
+    const tokens: string[] = [];
+    const error = await run(
+      fetchPullRequestWithFallback(reference, '', (_owner, _repo, _number) =>
+        Effect.gen(function* () {
+          tokens.push((yield* GitHubApi.GitHubCredentials).token);
+          return yield* Effect.fail(statusError(404));
+        }),
+      ),
+    ).then(
       () => undefined,
       (error) => error,
     );
@@ -120,7 +143,9 @@ describe('import — token fallback', () => {
     expect((error as GitHubRepoInaccessibleError).context).toMatchObject({
       status: 404,
       connected: false,
-      tokenRejected: false,
+      tokenStatus: undefined,
     });
+    // No credential to fall back from, so the anonymous request is the only one made.
+    expect(tokens).toEqual(['']);
   });
 });

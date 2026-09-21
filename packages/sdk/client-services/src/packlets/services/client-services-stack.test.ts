@@ -10,7 +10,7 @@ import { rmSync } from 'node:fs';
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
-import { type ClientServices, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
+import { type ClientServices, makeServicesFromRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
@@ -35,7 +35,7 @@ import { createMockCredential, createServiceHost } from '../testing/index.ts';
 const makeProxyServices = async (host: ReturnType<typeof createServiceHost>): Promise<Partial<ClientServices>> => {
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const rpc = await EffectEx.runPromise(makeInProcessClientServicesRpc(() => host.services).pipe(Scope.provide(scope)));
+  const rpc = await EffectEx.runPromise(host.rpc.pipe(Scope.provide(scope)));
   return makeServicesFromRpc(rpc, EffectContext.empty());
 };
 
