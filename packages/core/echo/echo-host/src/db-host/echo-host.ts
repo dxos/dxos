@@ -455,15 +455,19 @@ export class EchoHost extends Resource {
       return;
     }
 
-    if (!(await this._acceptRegistrySnapshot(clientId, entries, opts))) {
-      return;
-    }
+    const changed = await this._acceptRegistrySnapshot(clientId, entries, opts);
 
     // Outside the lock above: an index pass runs until the whole index is quiet, which under a
     // concurrent writer is unbounded, and every client's close waits on a release through that
     // same lock. Holding it here would serialize one client's teardown behind another client's
     // indexing.
-    this.#scheduleIndexRun('registry-update');
+    if (changed) {
+      this.#scheduleIndexRun('registry-update');
+    }
+
+    // Awaited even when nothing changed: an identical snapshot can land between another client's
+    // buffer update and the pass that indexes it, and returning early here would let this caller
+    // query rows the indexer has not written yet.
     await this.updateIndexes();
   }
 
