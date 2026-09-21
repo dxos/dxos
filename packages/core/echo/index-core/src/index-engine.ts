@@ -99,19 +99,6 @@ const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
   return typeof convergenceKey === 'string' && convergenceKey.length > 0 ? convergenceKey : undefined;
 };
 
-/**
- * Stores the engine reads and writes. Each defaults to a fresh instance; pass one in to share it
- * with a caller that queries it directly.
- */
-export interface IndexEngineParams {
-  tracker?: IndexTracker;
-  objectMetaIndex?: EntityMetaIndex;
-  ftsIndex?: FtsIndex;
-  objectSnapshotIndex?: ObjectSnapshotIndex;
-  reverseRefIndex?: ReverseRefIndex;
-  convergenceKeyIntents?: ConvergenceKeyIntentStore;
-}
-
 /** Name every index tracks its cursor under; a new name retires the old cursor and rebuilds. */
 const INDEX_NAMES = {
   objectSnapshot: 'objectSnapshot',
@@ -120,22 +107,15 @@ const INDEX_NAMES = {
 } as const;
 
 export class IndexEngine {
-  readonly #tracker: IndexTracker;
-  readonly #objectMetaIndex: EntityMetaIndex;
-  readonly #ftsIndex: FtsIndex;
-  readonly #objectSnapshotIndex: ObjectSnapshotIndex;
-  readonly #reverseRefIndex: ReverseRefIndex;
-  readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
+  // Every store here is a stateless accessor over the ambient `SqlClient`, so the engine owns them
+  // outright and a caller that wants to read one constructs its own.
+  readonly #tracker = new IndexTracker();
+  readonly #objectMetaIndex = new EntityMetaIndex();
+  readonly #ftsIndex = new FtsIndex();
+  readonly #objectSnapshotIndex = new ObjectSnapshotIndex();
+  readonly #reverseRefIndex = new ReverseRefIndex();
+  readonly #convergenceKeyIntents = new ConvergenceKeyIntentStore();
   readonly #indexedObjectSource = new IndexedObjectSource();
-
-  constructor(params?: IndexEngineParams) {
-    this.#tracker = params?.tracker ?? new IndexTracker();
-    this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
-    this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
-    this.#objectSnapshotIndex = params?.objectSnapshotIndex ?? new ObjectSnapshotIndex();
-    this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
-    this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
-  }
 
   migrate() {
     return Effect.gen({ self: this }, function* () {
