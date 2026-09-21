@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
 import { CanvasArticle } from '#containers';
 import { CanvasBuilder, createCanvas } from '#model';
@@ -22,6 +23,9 @@ const variant: IllustratorCapabilities.DrawingVariant = {
   article: CanvasArticle,
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(IllustratorCapabilities.VariantProvider, variant)),
+// Browser-only: the variant supplies the React article that renders a drawing.
+export const DrawingVariant = Capability.makeModule(
+  'drawing-variant',
+  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
+  () => Effect.succeed(Capability.contribute(IllustratorCapabilities.VariantProvider, variant)),
 );
