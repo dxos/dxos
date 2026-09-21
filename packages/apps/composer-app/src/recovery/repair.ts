@@ -29,13 +29,14 @@ const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<vo
   });
 
 /**
- * Deletes the stored Subduction remote heads (see `deleteSubductionRemoteHeads`) straight from the profile's OPFS
- * database, through an OPFS worker of its own with no client running: the profiles that need this are the ones whose
- * boot cannot be trusted. OPFS access is exclusive, so nothing else may hold the database while it runs.
+ * Deletes the stored Subduction remote heads and vacuums the file (see `deleteSubductionRemoteHeads`) straight from
+ * the profile's OPFS database, through an OPFS worker of its own with no client running: the profiles that need this
+ * are the ones whose boot cannot be trusted. OPFS access is exclusive, so nothing else may hold the database while it
+ * runs.
  */
 export const repairRemoteHeads = (
   onProgress?: (progress: { deleted: number; total: number }) => void,
-): Promise<{ deleted: number }> =>
+): Promise<{ deleted: number; reclaimedBytes: number }> =>
   Effect.gen(function* () {
     const worker = yield* Effect.acquireRelease(
       Effect.sync(() => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' })),
@@ -51,7 +52,7 @@ export const repairRemoteHeads = (
       // A profile that never stored a document has no chunk table, and so nothing to delete.
       const tables = yield* sql`SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'automerge_chunks'`;
       if (tables.length === 0) {
-        return { deleted: 0 };
+        return { deleted: 0, reclaimedBytes: 0 };
       }
       return yield* deleteSubductionRemoteHeads({ onProgress });
     }).pipe(Effect.provide(SqliteClient.layer({ worker: Effect.succeed(worker) })));

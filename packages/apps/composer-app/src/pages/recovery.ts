@@ -139,7 +139,7 @@ const recoveryHelpers: RecoveryHelpers = {
     }
     print('Deleting sync heads stored for remote peers…');
     const started = performance.now();
-    const { deleted } = await repairRemoteHeads((progress) =>
+    const { deleted, reclaimedBytes } = await repairRemoteHeads((progress) =>
       print(
         `  ${progress.deleted.toLocaleString()} / ${progress.total.toLocaleString()} ` +
           `(${((performance.now() - started) / 1000).toFixed(0)} s)`,
@@ -148,11 +148,12 @@ const recoveryHelpers: RecoveryHelpers = {
     const elapsedMs = Math.round(performance.now() - started);
     print(
       deleted > 0
-        ? `Deleted ${deleted.toLocaleString()} record(s) in ${elapsedMs} ms — Boot to reopen Composer.`
+        ? `Deleted ${deleted.toLocaleString()} record(s) and reclaimed ${(reclaimedBytes / 1_000_000).toFixed(1)} MB ` +
+            `in ${elapsedMs} ms — Boot to reopen Composer.`
         : 'No stored sync heads — nothing to delete.',
     );
     attachRecoveryHelpers(recoveryHelpers);
-    return { deleted, elapsedMs };
+    return { deleted, reclaimedBytes, elapsedMs };
   },
   compactDocuments: async (options) => {
     print('Compacting linked Automerge documents (epoch migration)…');

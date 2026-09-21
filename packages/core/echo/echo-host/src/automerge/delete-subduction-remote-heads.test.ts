@@ -4,6 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -14,14 +17,18 @@ import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 
 describe('deleteSubductionRemoteHeads', () => {
-  const setup = async () => {
-    const { runtime, dispose } = createTestSqliteRuntime();
+  const setup = async ({ onDisk = false }: { onDisk?: boolean } = {}) => {
+    const directory = onDisk ? mkdtempSync(join(tmpdir(), 'dxos-remote-heads-')) : undefined;
+    const { runtime, dispose } = createTestSqliteRuntime(directory ? join(directory, 'chunks.db') : undefined);
     const adapter = new SqliteStorageAdapter({ runtime });
     await adapter.open?.();
     await RuntimeProvider.runPromise(runtime)(adapter.migrate);
     onTestFinished(async () => {
       await adapter.close?.();
       await dispose();
+      if (directory) {
+        rmSync(directory, { recursive: true, force: true });
+      }
     });
     return { adapter, runtime };
   };
@@ -125,13 +132,85 @@ describe('deleteSubductionRemoteHeads', () => {
     expect(await adapter.loadRange(['subduction', 'remote-heads'])).toEqual([]);
   });
 
+  const bulky = Array.from({ length: 300 }, (_, index) => ['subduction', 'remote-heads', `sid${index}`, 'peer']);
+
+  const fileBytes = (runtime: TestSqliteRuntime['runtime']) =>
+    RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const [row] = yield* sql<{ bytes: number; freelist: number }>`
+          SELECT page_count * page_size AS bytes, freelist_count AS freelist
+          FROM pragma_page_count(), pragma_page_size(), pragma_freelist_count()
+        `;
+        return row;
+      }),
+    );
+
+  // Both strategies leave the freed pages on SQLite's freelist, so without the vacuum a 700 MB profile stays 700 MB.
+  test.each([
+    { strategy: 'rebuild', others: [] as string[][] },
+    { strategy: 'in place', others: Array.from({ length: 400 }, (_, index) => ['doc3', 'incremental', `h${index}`]) },
+  ])('shrinks the file after deleting ($strategy)', async ({ others }) => {
+    const { adapter, runtime } = await setup({ onDisk: true });
+    for (const key of bulky) {
+      await adapter.save(key, new Uint8Array(4_096));
+    }
+    await seed(adapter, [...unrelated, ...others]);
+    const before = await fileBytes(runtime);
+
+    const { deleted, reclaimedBytes } = await RuntimeProvider.runPromise(runtime)(deleteSubductionRemoteHeads());
+
+    const after = await fileBytes(runtime);
+    expect(deleted).toBe(bulky.length);
+    expect(after.freelist).toBe(0);
+    expect(after.bytes).toBeLessThan(before.bytes / 2);
+    // Measured from after the delete, whose staging table moves the count by a page, to after the vacuum.
+    expect(reclaimedBytes).toBeGreaterThan(before.bytes / 2);
+    expect(reclaimedBytes).toBeLessThanOrEqual(before.bytes - after.bytes + 2 * 4_096);
+    await expectIntact(adapter, [...unrelated, ...others]);
+  });
+
+  // The delete commits before the vacuum, so a run stopped in between leaves nothing to delete but everything to
+  // reclaim; the rerun must not take its own empty delete as a reason to skip the vacuum.
+  test('a rerun after an interrupted vacuum still reclaims the space', async () => {
+    const { adapter, runtime } = await setup({ onDisk: true });
+    for (const key of bulky) {
+      await adapter.save(key, new Uint8Array(4_096));
+    }
+    await seed(adapter, unrelated);
+    const first = await RuntimeProvider.runPromise(runtime)(deleteSubductionRemoteHeads({ vacuum: false }));
+    expect(first).toEqual({ deleted: bulky.length, reclaimedBytes: 0 });
+    const before = await fileBytes(runtime);
+    expect(before.freelist).toBeGreaterThan(0);
+
+    const rerun = await RuntimeProvider.runPromise(runtime)(deleteSubductionRemoteHeads());
+
+    expect(rerun.deleted).toBe(0);
+    expect(rerun.reclaimedBytes).toBeGreaterThan(before.bytes / 2);
+    expect((await fileBytes(runtime)).freelist).toBe(0);
+    await expectIntact(adapter, unrelated);
+  });
+
+  test('a file without free pages is not vacuumed', async () => {
+    const { adapter, runtime } = await setup();
+    await seed(adapter, unrelated);
+    const before = await fileBytes(runtime);
+    expect(before.freelist).toBe(0);
+
+    const result = await RuntimeProvider.runPromise(runtime)(deleteSubductionRemoteHeads());
+
+    expect(result).toEqual({ deleted: 0, reclaimedBytes: 0 });
+    expect(await fileBytes(runtime)).toEqual(before);
+  });
+
   test('a store without remote-heads records is left as is', async () => {
     const { adapter, runtime } = await setup();
     await seed(adapter, unrelated);
 
-    const { deleted, progress } = await deleteWithProgress(runtime);
+    const { deleted, reclaimedBytes, progress } = await deleteWithProgress(runtime);
 
     expect(deleted).toBe(0);
+    expect(reclaimedBytes).toBe(0);
     expect(progress).toEqual([]);
     await expectIntact(adapter, unrelated);
   });
