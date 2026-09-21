@@ -128,6 +128,38 @@ describe('LayerStack', () => {
     );
   });
 
+  it.effect(
+    'disposes later-materialized batches before the ones they depend on',
+    Effect.fn(function* ({ expect }) {
+      const closed: string[] = [];
+      const stack = new LayerStack.LayerStack({
+        layers: [
+          // Eager, so it lands in the slice's first batch.
+          LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA], eager: true }, () =>
+            Layer.effect(
+              ServiceA,
+              Effect.acquireRelease(Effect.succeed({ value: 'a' }), () => Effect.sync(() => closed.push('a'))),
+            ),
+          ),
+          // Lazy and dependent, so it is materialized into a later batch.
+          LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+            Layer.effect(
+              ServiceB,
+              Effect.acquireRelease(
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+                () => Effect.sync(() => closed.push('b')),
+              ),
+            ),
+          ),
+        ],
+      });
+
+      yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+      yield* Effect.promise(() => stack.destroy());
+      expect(closed).toEqual(['b', 'a']);
+    }),
+  );
+
   describe('application-affinity resolution', () => {
     it.effect(
       'resolves a single service provided by an application-affinity layer',

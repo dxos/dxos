@@ -739,9 +739,15 @@ class Slice {
     );
   }
 
+  /**
+   * Disposes the batch runtimes newest first: a batch materialized later may hold services from an
+   * earlier one, and Effect only orders finalizers within a single runtime.
+   */
   async destroy() {
-    await Promise.all(this.#managedRuntimes.map((runtime) => runtime.dispose()));
-    this.#managedRuntimes = [];
+    const runtimes = this.#managedRuntimes.splice(0).reverse();
+    for (const runtime of runtimes) {
+      await runtime.dispose();
+    }
   }
 
   #sortLayers() {
