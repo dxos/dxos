@@ -17,9 +17,14 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./scene": {
+      "source": "./src/scene.ts",
+      "types": "./dist/types/src/scene.d.ts",
+      "import": "./dist/lib/scene.mjs"
+    },
     "./types": {
-      "source": "./src/types.ts",
-      "types": "./dist/types/src/types.d.ts",
+      "source": "./src/archive/types.ts",
+      "types": "./dist/types/src/archive/types.d.ts",
       "import": "./dist/lib/types.mjs"
     }
   },
@@ -29,7 +34,14 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/debug": "workspace:*",
+    "@dxos/diagram": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",

@@ -4,9 +4,9 @@
 
 //
 // Backend-neutral scene DSL: a diagram is a set of named world objects ("face", "hat"),
-// each composed of graphical elements (rect, ellipse, line, curve, text, arrow) authored
-// in object-local units. A backend compiler (tldraw today) maps the scene onto the
-// concrete canvas; see `render.ts` / `read.ts`.
+// each composed of graphical elements (rect, ellipse, line, curve, text, arrow, portal)
+// authored in object-local units. A backend's `ContentHandler` (tldraw, excalidraw, the SVG
+// handler here) maps the scene onto its concrete canvas records; see `content.ts`.
 //
 
 import * as Schema from 'effect/Schema';
@@ -140,14 +140,15 @@ export type ArrowTail = Schema.Schema.Type<typeof ArrowTail>;
 
 /**
  * Connector. Endpoints are element refs — `"<elementId>"` within the same object or
- * `"<objectId>/<elementId>"` across objects — or explicit local points. Bound endpoints
- * track their target when it moves.
+ * `"<objectId>/<elementId>"` across objects, either with an optional `#<port>` naming an
+ * attachment point on the element — or explicit local points. Bound endpoints track their
+ * target when it moves; without a port the renderer picks the attachment point.
  */
 export const Arrow = Schema.Struct({
   kind: Schema.Literal('arrow'),
   id,
-  from: Schema.optional(Schema.String).annotate({ description: 'Source element ref.' }),
-  to: Schema.optional(Schema.String).annotate({ description: 'Target element ref.' }),
+  from: Schema.optional(Schema.String).annotate({ description: 'Source element ref, optionally `#port`.' }),
+  to: Schema.optional(Schema.String).annotate({ description: 'Target element ref, optionally `#port`.' }),
   start: Schema.optional(Point).annotate({ description: 'Explicit start (used when `from` is omitted).' }),
   end: Schema.optional(Point).annotate({ description: 'Explicit end (used when `to` is omitted).' }),
   text: Schema.optional(Schema.String).annotate({ description: 'Label at the arrow midpoint.' }),
@@ -161,7 +162,57 @@ export const Arrow = Schema.Struct({
 });
 export type Arrow = Schema.Schema.Type<typeof Arrow>;
 
-export const Element = Schema.Union([Box, Circle, Polyline, Curve, Arc, Text, Arrow]);
+/** A parsed endpoint ref; `object` is absent for a ref within the same object. */
+export type ElementRef = {
+  object?: string;
+  element: string;
+  port?: string;
+};
+
+/** Parse `"[object/]element[#port]"`; element ids may not contain `/` or `#`. */
+export const parseRef = (ref: string): ElementRef => {
+  const hash = ref.indexOf('#');
+  const target = hash === -1 ? ref : ref.slice(0, hash);
+  const port = hash === -1 ? undefined : ref.slice(hash + 1);
+  const slash = target.indexOf('/');
+  return {
+    ...(slash === -1 ? {} : { object: target.slice(0, slash) }),
+    element: slash === -1 ? target : target.slice(slash + 1),
+    ...(port ? { port } : {}),
+  };
+};
+
+/** Inverse of {@link parseRef}. */
+export const formatRef = ({ object, element, port }: ElementRef): string =>
+  `${object === undefined ? '' : `${object}/`}${element}${port === undefined ? '' : `#${port}`}`;
+
+/**
+ * Canonical `object/element` handle of a ref, resolving a bare element id against the owning
+ * object and dropping the port, so renderers without ports bind to the element itself.
+ */
+export const resolveRef = (ref: string, objectId: string): string => {
+  const { object = objectId, element } = parseRef(ref);
+  return `${object}/${element}`;
+};
+
+/**
+ * Window onto another drawing: the referenced scene is rendered inside the box as a nested level
+ * of detail. Renderers without nesting ignore it.
+ */
+export const Portal = Schema.Struct({
+  kind: Schema.Literal('portal'),
+  id,
+  x: Schema.Number.annotate({ description: 'Left edge (object-local units).' }),
+  y: Schema.Number.annotate({ description: 'Top edge (object-local units).' }),
+  w: Schema.Number,
+  h: Schema.Number,
+  ref: Schema.String.annotate({ description: 'The drawing shown inside the box: an ECHO object reference (DXN).' }),
+  text: Schema.optional(Schema.String).annotate({ description: 'Title shown on the frame.' }),
+  ...styleFields,
+});
+export type Portal = Schema.Schema.Type<typeof Portal>;
+
+export const Element = Schema.Union([Box, Circle, Polyline, Curve, Arc, Text, Arrow, Portal]);
 export type Element = Schema.Schema.Type<typeof Element>;
 
 /**
@@ -178,6 +229,9 @@ export const WorldObject = Schema.Struct({
     description: 'Canvas position (px). Omit on upsert to keep the current position.',
   }),
   scale: Schema.optional(Schema.Number).annotate({ description: 'Canvas px per local unit (default 1).' }),
+  index: Schema.optional(Schema.String).annotate({
+    description: 'Fractional z-order index (e.g. "a1"); objects with one paint above those without, in index order.',
+  }),
   ref: Schema.optional(Schema.String).annotate({
     description:
       'What the object depicts: an ECHO object reference (activating the node opens it) or any other URI or path, carried for tooling.',

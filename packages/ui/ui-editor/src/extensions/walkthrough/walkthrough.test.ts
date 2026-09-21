@@ -60,8 +60,10 @@ describe('diffBlocks', () => {
       .map((source) => source(view))
       .some((set) => {
         let covered = false;
+        // The widget host widens a block's atomic range past its line breaks, so one caret step
+        // clears the block; the range must still cover the replaced text.
         set.between(from, to, (rangeFrom, rangeTo) => {
-          covered ||= rangeFrom === from && rangeTo === to;
+          covered ||= rangeFrom <= from && rangeTo >= to;
         });
         return covered;
       });
