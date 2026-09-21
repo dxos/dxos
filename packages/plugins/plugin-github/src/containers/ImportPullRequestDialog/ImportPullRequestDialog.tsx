@@ -57,7 +57,7 @@ const importFailureKey = (error: unknown): string => {
   if (!GitHubRepoInaccessibleError.is(error)) {
     return 'import-pull-request-failed.title';
   }
-  if (error.context.tokenRejected === true) {
+  if (error.context.tokenStatus === 401) {
     return 'import-pull-request-token-rejected.title';
   }
   return error.context.connected === true
