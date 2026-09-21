@@ -426,10 +426,7 @@ export const applyTo = <Phases extends PhaseMap, A>(
  * Offers a sample space as a {@link AppCapabilities.SpaceTemplate}: registers its types on the
  * client, then applies it.
  *
- * The two are different layers. A sample space is content and the recipe for it; a template is an
- * entry in the create dialog, which needs neither the definition nor Effect — hence the flat record
- * with a bound `apply`. Name, icon and hue come from the definition's own `space` options unless
- * overridden, so the template a user picks is the space its author described.
+ * Name, icon and hue default to the definition's own `space` options.
  */
 export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   readonly id: string;

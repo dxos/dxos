@@ -35,8 +35,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       // Resolved before the space exists: the form is uncontrolled, so it keeps the template's id,
       // name, icon and hue even if the contributing plugin deactivates while the dialog is open.
       // Matching afterwards would create a space styled as a template and silently leave it empty.
-      // The demand event is fired here rather than by each caller: the dialog has its own list to
-      // populate, but a caller naming a template by id has nothing that would have activated it.
       if (template) {
         yield* Plugin.activate(ActivationEvents.SpaceTemplatesRequested);
       }
@@ -46,8 +44,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         return yield* Effect.fail(new TemplateNotFoundError({ context: { template } }));
       }
 
-      // The dialog seeds these from the template it selected; a caller naming one by id gets the
-      // same styling without having to repeat it.
       const hue = hue_ ?? match?.hue ?? hues[Math.floor(Math.random() * hues.length)];
       const icon = icon_ ?? getTemplateIcon(match) ?? iconValues[Math.floor(Math.random() * iconValues.length)];
 
@@ -80,8 +76,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {
         Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
-        // Recorded before the content is written, so a space whose template failed part-way still
-        // says where it came from — and a caller looking for "did I already make this one" finds it.
         if (match) {
           Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, match.id);
         }

@@ -26,8 +26,7 @@ export const AppSettingsAnnotation = Annotation.make({
 
 /**
  * Id of the {@link AppCapabilities.SpaceTemplate} a space was created from, recorded on its
- * `properties` for reference: which template produced this content, and a way to find the space
- * again without tagging it (a tag would take the space out of the user-facing space lists).
+ * `properties`.
  */
 export const SpaceTemplateAnnotation = Annotation.make({
   id: 'org.dxos.space.spaceTemplate',

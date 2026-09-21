@@ -15,7 +15,6 @@ import { OnboardingPlugin } from '#plugin';
 
 import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 
-/** The tag the demo space carried before templates recorded their own provenance. */
 const LEGACY_TAG = 'org.dxos.space.exemplar';
 
 describe('demo space migration', () => {
@@ -27,13 +26,10 @@ describe('demo space migration', () => {
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
-    // Created after the event, which is the case a single pass at `SpacesReady` would miss: the
-    // module sees it through the space list rather than the one fire.
     const space = await client.spaces.create({ name: 'Bramble Coffee Roasters' }, { tags: [LEGACY_TAG] });
     await space.waitUntilReady();
 
     await expect.poll(() => AppSpace.getSpaceTemplateId(space), { timeout: 30_000 }).toBe(BRAMBLE_TEMPLATE_ID);
-    // Found by the lookup a space created from the template today answers.
     expect(AppSpace.findSpaceFromTemplate(client, BRAMBLE_TEMPLATE_ID)?.id).toBe(space.id);
   });
 });

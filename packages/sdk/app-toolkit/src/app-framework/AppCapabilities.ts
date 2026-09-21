@@ -280,8 +280,6 @@ export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framewo
  * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
  * the content to write once the space exists.
  *
- * `apply` is a bound closure rather than a definition, so a consumer needs only "put this content in
- * that space" without dragging the builder, its phase map and Effect into the dialog that lists it.
  * Build one with `SampleSpace.makeTemplate`.
  */
 export type SpaceTemplate = Readonly<{

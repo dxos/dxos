@@ -38,7 +38,6 @@ export const MigrateDemoSpace = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client],
     provides: [],
-    // Runtime event: the spaces this reads are only observable once the space list has settled.
     activatesOn: ClientEvents.SpacesReady,
   },
   () => import('./migrate-demo-space.ts'),

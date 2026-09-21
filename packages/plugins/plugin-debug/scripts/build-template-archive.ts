@@ -10,7 +10,6 @@
  *
  *   pnpm run build-template -- --space crm --out ./northwind.dx.json
  *
- * One script for all of them: the definitions differ only by which one is passed to `buildArchive`.
  *
  * Needs Node 22+ (`node:sqlite`) — run it through moon or with proto's Node on PATH.
  */

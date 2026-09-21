@@ -44,12 +44,10 @@ describe('space visibility', () => {
   test('spaces the app keeps for itself are hidden', ({ expect }) => {
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.FILESYSTEM_MIRROR_SPACE_TAG]))).toBe(false);
-    // Hidden by one internal tag among several, not by being tagged at all.
     expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned', AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
   });
 
   test('every other tagged space belongs to the user, including tags this list has not heard of', ({ expect }) => {
-    // Both retired tags are still persisted in profiles that onboarded before they were retired.
     expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
     expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned']))).toBe(true);
@@ -95,7 +93,6 @@ describe('space templates', () => {
     const space = makeReadySpace('a', [LEGACY_TAG]);
     expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual(['a']);
     expect(AppSpace.getSpaceTemplateId(space)).toBe(TEMPLATE_ID);
-    // Found by the same lookup as a space created from the template today.
     expect(AppSpace.findSpaceFromTemplate(client([space]), TEMPLATE_ID)).toBe(space);
   });
 

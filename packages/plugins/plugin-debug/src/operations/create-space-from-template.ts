@@ -23,9 +23,6 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSpaceFromTempla
   DebugOperation.CreateSpaceFromTemplate.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ id }) {
-        // The same demand signal the generator panel fires on mount: nothing else activates these
-        // modules, so without it the list is empty on a cold app. Hidden templates are listed: this
-        // operation is the by-id path the flag reserves them for.
         yield* Plugin.activate(ActivationEvents.SpaceTemplatesRequested);
         const templates = yield* Capability.getAll(AppCapabilities.SpaceTemplate);
         const available = templates.map(summarize);
@@ -40,30 +37,17 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSpaceFromTempla
           );
         }
 
-        // Delegated rather than `client.spaces.create`: the space operation is what waits for ready,
-        // installs the root collection annotation and runs the OnCreateSpace callbacks, and content
-        // written into a space missing that root collection is unreachable from the navtree.
-        //
-        // The template's styling is passed rather than its id: letting `Create` apply it would fail
-        // before this handler holds a space, leaving the half-written space the cleanup below deletes.
         const { space, subject } = yield* Operation.invoke(SpaceOperation.Create, {
           name: template.label,
           icon: template.icon,
           hue: template.hue,
         });
         const client = yield* Capability.get(ClientCapabilities.Client);
-        // What `Create` records when it applies a template itself, written here for the path that
-        // does not — a space's origin should not depend on which caller filled it.
         AppSpace.setSpaceTemplateId(space, template.id);
         yield* Effect.tryPromise({
           try: () => template.apply({ client, space }),
           catch: (cause) => new SpaceTemplateApplyError({ context: { id: template.id }, cause }),
-        }).pipe(
-          // The space is created before it can be filled, so a failed apply would otherwise leave a
-          // half-populated space in the profile. Cleanup is ignored rather than propagated: a failure
-          // to delete must not replace the error that explains what actually went wrong.
-          Effect.tapError(() => Effect.ignore(Operation.invoke(SpaceOperation.Delete, { space }))),
-        );
+        }).pipe(Effect.tapError(() => Effect.ignore(Operation.invoke(SpaceOperation.Delete, { space }))));
 
         return { applied: summarize(template), spaceId: space.id, subject, available };
       }),

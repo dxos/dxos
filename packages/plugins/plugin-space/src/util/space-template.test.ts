@@ -21,8 +21,6 @@ describe('getTemplateIcon', () => {
   });
 
   test('drops anything else, so a space is never styled with a blank', ({ expect }) => {
-    // The Phosphor spelling is the near-miss to expect: the picker renders `ph--${icon}--regular`,
-    // so passing one through would resolve to `ph--ph--sun--regular--regular`.
     expect(getTemplateIcon(template('ph--sun--regular'))).toBeUndefined();
     expect(getTemplateIcon(template('not-an-icon'))).toBeUndefined();
     expect(getTemplateIcon(template())).toBeUndefined();

@@ -48,7 +48,6 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
       }),
   });
 
-/** Offered in the create dialog; the label, icon and hue are the space's own. */
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.worker',

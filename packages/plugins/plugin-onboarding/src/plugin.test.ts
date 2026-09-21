@@ -28,10 +28,7 @@ describe('OnboardingPlugin', () => {
       ]),
     );
 
-    // Demand-gated: the template carries the whole Bramble world, so nothing loads it until the
-    // create dialog (or a caller naming it by id) asks for the list.
     expect(harness.manager.getActive()).not.toContain(moduleId('SpaceTemplates'));
-    // Runtime-gated: the spaces it stamps are only observable once the space list has settled.
     expect(harness.manager.getActive()).not.toContain(moduleId('MigrateDemoSpace'));
   });
 });

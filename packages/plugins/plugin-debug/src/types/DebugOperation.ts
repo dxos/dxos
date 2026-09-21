@@ -185,8 +185,6 @@ const SpaceTemplateSummary = Schema.Struct({
  */
 export const CreateSpaceFromTemplate = Operation.make({
   meta: {
-    // The key keeps its `sampleSpace` spelling: operation keys can be referenced from persisted
-    // user-side state, so renaming one is a data change rather than a rename.
     key: DXN.make('org.dxos.operation.debug.createSampleSpace'),
     name: 'Create Space From Template',
     description:

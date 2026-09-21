@@ -313,10 +313,8 @@ export const pluginAsset = (
 /**
  * Module contributing space templates.
  *
- * Gated on demand, and loader-only: a template carries the content it writes, which is bulky and of
- * interest to nobody who has not asked for the list — an inline array is a static import in the
- * plugin definition, so the whole world lands in the definition's closure and every session pays
- * for it. The loader keeps it in its own chunk, which is what makes the gating worth anything.
+ * Loader-only, so the content a template writes stays in its own chunk rather than the plugin
+ * definition's closure.
  */
 export const spaceTemplates = (
   loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SpaceTemplate> }>,

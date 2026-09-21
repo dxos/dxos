@@ -11,8 +11,6 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
 import { BRAMBLE_TEMPLATE_ID } from '../../constants.ts';
-// Raw imports keep the two welcome documents as Markdown files that render in editors and diff
-// cleanly, beside the phases that seed them.
 import ABOUT_MD from './ABOUT.md?raw';
 import { Schedule } from './calendar.ts';
 import { ContactsViews } from './contacts-views.ts';
@@ -32,10 +30,8 @@ import { REFERENCE } from './util.ts';
  * The Bramble Coffee Roasters space template — the content every new identity gets on first launch,
  * and the template anyone can pick again from the create-space dialog.
  *
- * Content is grounded in `ABOUT.md` beside it, the canonical reference for all Bramble
- * world-facts (company history, team, suppliers, customers, active initiatives, email conventions,
- * map coordinates). When extending a phase, read it first and update it if the world changes; all
- * generated content must agree with the facts and tone described there.
+ * All generated content must agree with `ABOUT.md` beside it, the canonical reference for every
+ * Bramble world-fact; update it when the world changes.
  */
 const phases = {
   docs: Docs,
@@ -92,7 +88,6 @@ export const make = (): SampleSpace.Definition<typeof phases, void> =>
       }),
   });
 
-/** Offered in the create dialog, and what a new identity's first launch applies. */
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: BRAMBLE_TEMPLATE_ID,

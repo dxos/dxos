@@ -58,10 +58,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
     const manager = usePluginManager();
-    const templates = useCapabilities(AppCapabilities.SpaceTemplate);
+    const allTemplates = useCapabilities(AppCapabilities.SpaceTemplate);
 
-    // Mounting is the demand signal: template modules are gated on `SpaceTemplatesRequested`,
-    // which nothing else fires, so their content stays out of the app until this panel opens.
     useEffect(() => {
       EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
     }, [manager]);
@@ -77,11 +75,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invokePromise, type)]),
       );
 
-      // A template is a generator that ignores the count: it writes one coherent world, not n of
-      // anything. Keyed by template id so it sits in the same table as the type generators. Hidden
-      // templates are listed here: this panel is the by-id path the flag reserves them for.
-      const templateGenerators = new Map<string, ObjectGenerator<any>>(
-        templates.map((template) => [
+      const allTemplateGenerators = new Map<string, ObjectGenerator<any>>(
+        allTemplates.map((template) => [
           template.id,
           async (space) => {
             await template.apply({ client, space });
@@ -90,8 +85,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         ]),
       );
 
-      return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...templateGenerators]);
-    }, [client, invokePromise, presets, templates]);
+      return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...allTemplateGenerators]);
+    }, [client, invokePromise, presets, allTemplates]);
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
@@ -228,10 +223,10 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 label='Presets'
                 onClick={handleCreateData}
               />
-              {templates.length > 0 && (
+              {allTemplates.length > 0 && (
                 <SchemaTable
                   classNames='py-1'
-                  types={templates.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
+                  types={allTemplates.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
                   objects={info.objects}
                   label='Space Templates'
                   onClick={handleCreateData}

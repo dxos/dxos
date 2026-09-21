@@ -23,11 +23,6 @@ import * as DebugPlugin from '../DebugPlugin.ts';
 
 /**
  * Picking a space template and watching it land.
- *
- * The generator lists whatever plugins contributed through `AppCapabilities.SpaceTemplate`; the
- * panel beside it is the same object tree the debug plugin shows in the app, so the collections,
- * refs and feeds a template builds are all inspectable here rather than only in an exported
- * archive.
  */
 const DefaultStory = () => {
   const [space] = useSpaces();

@@ -22,7 +22,7 @@ import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceOperation, SpaceSchema } from '#types';
 
-import { getTemplateIcon } from '../../util/index.ts';
+import { getTemplateIcon, getTemplateIconGlyph } from '../../util/index.ts';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
@@ -38,18 +38,16 @@ export const CreateSpaceDialog = () => {
   const [error, setError] = useState<string | undefined>(undefined);
   const manager = usePluginManager();
   const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
-  // Icons are normalized once, here, rather than at each of the three places that read one: the
-  // row, the form defaults and the space the operation goes on to create should not disagree about
-  // what a template looks like.
   const templates = useMemo(
     () =>
-      contributed.filter(({ hidden }) => !hidden).map((template) => ({ ...template, icon: getTemplateIcon(template) })),
+      contributed
+        .filter(({ hidden }) => !hidden)
+        // `icon` seeds the form, which stores a bare name on the space; `glyph` renders the row.
+        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) })),
     [contributed],
   );
   const [template, setTemplate] = useState<string | undefined>(undefined);
 
-  // Opening the dialog is the demand signal: template modules are gated on `SpaceTemplatesRequested`,
-  // so without this the picker is empty until something else has asked for the list.
   useEffect(() => {
     EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
   }, [manager]);
@@ -131,14 +129,9 @@ export const CreateSpaceDialog = () => {
                   >
                     <Listbox.Root value={template} onValueChange={setTemplate}>
                       <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
-                        {templates.map(({ id, label, description, icon }) => (
+                        {templates.map(({ id, label, description, glyph }) => (
                           <Listbox.Item key={id} id={id}>
-                            <Listbox.ItemContent
-                              // A bare `iconValues` name, as space properties carry.
-                              icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
-                              title={label}
-                              description={description}
-                            />
+                            <Listbox.ItemContent icon={glyph} title={label} description={description} />
                           </Listbox.Item>
                         ))}
                       </Listbox.Content>

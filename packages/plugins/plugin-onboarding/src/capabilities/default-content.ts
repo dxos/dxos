@@ -49,8 +49,7 @@ export default Capability.makeModule(
     });
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
-    // depend on a fresh space (e.g. skills) wire themselves up. The demo space
-    // gets the same callbacks from the create operation that builds it.
+    // depend on a fresh space (e.g. skills) wire themselves up.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const rootCollection = Option.getOrUndefined(
       Annotation.get(defaultSpace.properties, RootCollectionAnnotation),
@@ -71,10 +70,6 @@ export default Capability.makeModule(
     }
 
     if (generateDemoSpace) {
-      // Built here rather than imported from a committed archive: the template the create dialog
-      // offers and the space a new identity lands in are then the same content, built from one
-      // source. The annotation `Create` records is what keeps a reload mid-build from making a
-      // second copy.
       const existing = AppSpace.findSpaceFromTemplate(client, BRAMBLE_TEMPLATE_ID);
       const demoSpaceId =
         existing?.id ??
