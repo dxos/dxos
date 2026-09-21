@@ -41,7 +41,15 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSampleSpace> = 
       // Delegated rather than `client.spaces.create`: the space operation is what waits for ready,
       // installs the root collection annotation and runs the OnCreateSpace callbacks, and content
       // written into a space missing that root collection is unreachable from the navtree.
-      const { space, subject } = yield* Operation.invoke(SpaceOperation.Create, { name: sample.label });
+      //
+      // The template's own styling rather than `template: sample.id`: applying it inside `Create`
+      // would fail before this handler holds a space, leaving the half-written space the cleanup
+      // below exists to delete.
+      const { space, subject } = yield* Operation.invoke(SpaceOperation.Create, {
+        name: sample.label,
+        icon: sample.icon,
+        hue: sample.hue,
+      });
       const client = yield* Capability.get(ClientCapabilities.Client);
       yield* Effect.tryPromise({
         try: () => sample.apply({ client, space }),
