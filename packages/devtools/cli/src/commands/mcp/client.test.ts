@@ -5,7 +5,7 @@
 import { afterEach, describe, test, vi } from '@effect/vitest';
 import * as Schema from 'effect/Schema';
 
-import { type McpSession, McpProtocolError, ToolsListResult, request } from './client.ts';
+import { McpProtocolError, type McpSession, ToolsListResult, request } from './client.ts';
 
 const SESSION: McpSession = {
   serverUrl: 'https://mcp.example.test',
