@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
+import { failedInvariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
@@ -173,6 +174,9 @@ const createIdentityService = (serviceContext: ServiceContext) => {
     serviceContext.identityManager,
     serviceContext.recoveryManager,
     serviceContext.keyring,
+    serviceContext.dataSpaceManager ?? failedInvariant(),
+    // These tests never delete, so the wipe is never reached.
+    () => Promise.resolve(),
     (options) => serviceContext.createIdentity(options),
   );
 };
