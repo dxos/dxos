@@ -14,7 +14,6 @@ import { RpcRouter } from '@dxos/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { ClientPlatformLayer, type TransportFactoryService } from './client-platform.ts';
-import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
 import { NetworkingEnabled } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
 
@@ -26,7 +25,6 @@ export type ClientServicesStackContext =
   | Hook.Controller
   | ConfigService
   | RpcRouter.RpcRouter
-  | ClientServicesRpcContext
   | ServiceContextStackContext
   | SignalManagerService
   | TransportFactoryService;
@@ -87,15 +85,12 @@ export const ClientServicesLayer = ({
     Effect.gen(function* () {
       const config = yield* ConfigService;
       const controller = yield* Hook.Controller;
-      return ClientServicesRpcLayer.pipe(
-        Layer.provideMerge(
-          ServiceStack({
-            ...runtimePropsFromConfig(config, runtimeProps),
-            edgeFeatures: config.get('runtime.client.edgeFeatures'),
-            connectionLog,
-            autoConnect,
-          }),
-        ),
+      return ServiceStack({
+        ...runtimePropsFromConfig(config, runtimeProps),
+        edgeFeatures: config.get('runtime.client.edgeFeatures'),
+        connectionLog,
+        autoConnect,
+      }).pipe(
         Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
         // The router sits beneath every service: each registers itself into it, and a transport
         // attached later (a worker session) serves whatever is registered.
