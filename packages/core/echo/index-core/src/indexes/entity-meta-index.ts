@@ -267,10 +267,7 @@ export class EntityMetaIndex implements Index {
    * edits can be folded into the winner; the merge re-verifies every row against its document.
    */
   queryByConvergenceKeys = Effect.fn('EntityMetaIndex.queryByConvergenceKeys')(
-    (
-      spaceId: SpaceId,
-      convergenceKeys: readonly string[],
-    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+    (spaceId: SpaceId, convergenceKeys: readonly string[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         if (convergenceKeys.length === 0) {
           return [];
@@ -291,9 +288,7 @@ export class EntityMetaIndex implements Index {
   );
 
   query = Effect.fn('EntityMetaIndex.query')(
-    (
-      query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
-    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+    (query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         const sql = this.#sql;
         // SQLite stores booleans as integers, so we need to specify the raw row type.
@@ -409,107 +404,105 @@ export class EntityMetaIndex implements Index {
   );
 
   // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
-  update = Effect.fn('EntityMetaIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
-      Effect.gen({ self: this }, function* () {
-        const sql = this.#sql;
+  update = Effect.fn('EntityMetaIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
 
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen({ self: this }, function* () {
-              const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
+      yield* Effect.forEach(
+        objects,
+        (object) =>
+          Effect.gen({ self: this }, function* () {
+            const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
 
-              // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
-              const castData = data;
-              const objectId = castData.id;
+            // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
+            const castData = data;
+            const objectId = castData.id;
 
-              // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
-              type ExistingRow = {
-                recordId: number;
-                entityKind: string;
-                typeDXN: string;
-                source: string | null;
-                target: string | null;
-                parent: string | null;
-                convergenceKey: string | null;
-              };
-              let existing: readonly ExistingRow[];
-              if (documentId) {
-                existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
-              } else if (queueId) {
-                existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
-              } else {
-                // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
-                existing = [];
-              }
+            // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
+            type ExistingRow = {
+              recordId: number;
+              entityKind: string;
+              typeDXN: string;
+              source: string | null;
+              target: string | null;
+              parent: string | null;
+              convergenceKey: string | null;
+            };
+            let existing: readonly ExistingRow[];
+            if (documentId) {
+              existing =
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+            } else if (queueId) {
+              existing =
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+            } else {
+              // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
+              existing = [];
+            }
 
-              // Get max version + 1.
-              const result = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
-              const [{ v }] = result;
-              const version = (v ?? 0) + 1;
+            // Get max version + 1.
+            const result = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
+            const [{ v }] = result;
+            const version = (v ?? 0) + 1;
 
-              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
-              // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
-              // (type, kind, relation endpoints, parent) rather than recomputing them from the empty
-              // block; otherwise `typeDXN` collapses to the `'type'` fallback and type-scoped queries
-              // with `deleted: 'include'` stop matching the deleted object. Only `deleted`/`version`/
-              // `updatedAt` advance for such a block.
-              const priorRow = existing.length > 0 ? existing[0] : undefined;
-              const isPartialBlock = castData[ATTR_TYPE] === undefined;
-              const preserveBody = isPartialBlock && priorRow !== undefined;
+            // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
+            // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
+            // (type, kind, relation endpoints, parent) rather than recomputing them from the empty
+            // block; otherwise `typeDXN` collapses to the `'type'` fallback and type-scoped queries
+            // with `deleted: 'include'` stop matching the deleted object. Only `deleted`/`version`/
+            // `updatedAt` advance for such a block.
+            const priorRow = existing.length > 0 ? existing[0] : undefined;
+            const isPartialBlock = castData[ATTR_TYPE] === undefined;
+            const preserveBody = isPartialBlock && priorRow !== undefined;
 
-              // Extract metadata.
-              const entityKind = preserveBody
-                ? priorRow.entityKind
-                : castData[ATTR_RELATION_SOURCE]
-                  ? 'relation'
-                  : 'object';
-              // Type identifier as stored on `system.type`: a typename DXN for static schemas,
-              // an `echo:` EID for stored (dynamic) schemas. Normalize the EID form so the indexed
-              // value matches the normalized value the query path compares against (legacy
-              // single-slash `echo:/<id>` and canonical `echo:///<id>` address the same schema).
-              // A preserved prior row was normalized when it was written, so it needs no re-normalizing.
-              const typeDXN = preserveBody
-                ? priorRow.typeDXN
-                : URI.make(_normalizeTypeUri(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type'));
-              const deleted = castData[ATTR_DELETED] ? 1 : 0;
-              // Relations.
-              const source = preserveBody
-                ? priorRow.source
-                : entityKind === 'relation'
-                  ? (castData[ATTR_RELATION_SOURCE] ?? null)
-                  : null;
-              const target = preserveBody
-                ? priorRow.target
-                : entityKind === 'relation'
-                  ? (castData[ATTR_RELATION_TARGET] ?? null)
-                  : null;
-              // Parent (nullable).
-              const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
-              // Convergence key (nullable) — from the meta section of the serialized object. The meta
-              // arrives as raw replicated JSON, so anything but a string is treated as no key.
-              const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)
-                ?.convergenceKey;
-              const convergenceKey = preserveBody
-                ? priorRow.convergenceKey
-                : typeof rawConvergenceKey === 'string'
-                  ? rawConvergenceKey
-                  : null;
+            // Extract metadata.
+            const entityKind = preserveBody
+              ? priorRow.entityKind
+              : castData[ATTR_RELATION_SOURCE]
+                ? 'relation'
+                : 'object';
+            // Type identifier as stored on `system.type`: a typename DXN for static schemas,
+            // an `echo:` EID for stored (dynamic) schemas. Normalize the EID form so the indexed
+            // value matches the normalized value the query path compares against (legacy
+            // single-slash `echo:/<id>` and canonical `echo:///<id>` address the same schema).
+            // A preserved prior row was normalized when it was written, so it needs no re-normalizing.
+            const typeDXN = preserveBody
+              ? priorRow.typeDXN
+              : URI.make(_normalizeTypeUri(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type'));
+            const deleted = castData[ATTR_DELETED] ? 1 : 0;
+            // Relations.
+            const source = preserveBody
+              ? priorRow.source
+              : entityKind === 'relation'
+                ? (castData[ATTR_RELATION_SOURCE] ?? null)
+                : null;
+            const target = preserveBody
+              ? priorRow.target
+              : entityKind === 'relation'
+                ? (castData[ATTR_RELATION_TARGET] ?? null)
+                : null;
+            // Parent (nullable).
+            const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
+            // Convergence key (nullable) — from the meta section of the serialized object. The meta
+            // arrives as raw replicated JSON, so anything but a string is treated as no key.
+            const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)?.convergenceKey;
+            const convergenceKey = preserveBody
+              ? priorRow.convergenceKey
+              : typeof rawConvergenceKey === 'string'
+                ? rawConvergenceKey
+                : null;
 
-              const updatedAtTimestamp = object.updatedAt;
-              // Prefer the creation timestamp stored in the document (survives compaction/migrations).
-              // Fall back to the automerge-derived updatedAt for legacy objects that predate this field.
-              const createdAtTimestamp = object.createdAt ?? updatedAtTimestamp;
+            const updatedAtTimestamp = object.updatedAt;
+            // Prefer the creation timestamp stored in the document (survives compaction/migrations).
+            // Fall back to the automerge-derived updatedAt for legacy objects that predate this field.
+            const createdAtTimestamp = object.createdAt ?? updatedAtTimestamp;
 
-              if (existing.length > 0) {
-                // Feed entries collapse by id to the latest whole-object block — a re-append reusing
-                // an existing id (a live feed object's `Obj.update`) UPDATEs this row wholesale.
-                // TODO(wittjosiah): With partial-update blocks (see `EchoFeedCodec.encode`'s TODO),
-                // this becomes a field-level last-write-wins merge instead of a wholesale replace.
-                yield* sql`
+            if (existing.length > 0) {
+              // Feed entries collapse by id to the latest whole-object block — a re-append reusing
+              // an existing id (a live feed object's `Obj.update`) UPDATEs this row wholesale.
+              // TODO(wittjosiah): With partial-update blocks (see `EchoFeedCodec.encode`'s TODO),
+              // this becomes a field-level last-write-wins merge instead of a wholesale replace.
+              yield* sql`
                   UPDATE objectMeta SET
                     version = ${version},
                     queueNamespace = ${queueNamespace ?? ''},
@@ -524,8 +517,8 @@ export class EntityMetaIndex implements Index {
                     queuePosition = ${queuePosition ?? null}
                   WHERE recordId = ${existing[0].recordId}
                 `;
-              } else {
-                yield* sql`
+            } else {
+              yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, convergenceKey, version,
@@ -537,11 +530,11 @@ export class EntityMetaIndex implements Index {
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;
-              }
-            }),
-          { discard: true },
-        );
-      }),
+            }
+          }),
+        { discard: true },
+      );
+    }),
   );
 
   /**
@@ -756,10 +749,7 @@ export class EntityMetaIndex implements Index {
    *   DXN uses the feed's object id as its queue id — see `Feed.getFeedUri`).
    */
   queryChildren = Effect.fn('EntityMetaIndex.queryChildren')(
-    (query: {
-      spaceId: SpaceId[];
-      parentIds: EntityId[];
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+    (query: { spaceId: SpaceId[]; parentIds: EntityId[] }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         if (query.parentIds.length === 0) {
           return [];

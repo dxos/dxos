@@ -154,10 +154,7 @@ export class IndexTracker {
 
   /** Delete cursors for documents (resource ids) wiped by garbage collection. */
   deleteCursors = Effect.fn('IndexTracker.deleteCursors')(
-    (query: {
-      spaceId: SpaceId;
-      resourceIds: readonly string[];
-    }): Effect.Effect<void, SqlError.SqlError> =>
+    (query: { spaceId: SpaceId; resourceIds: readonly string[] }): Effect.Effect<void, SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         const sql = this.#sql;
         for (const chunk of chunkArray(query.resourceIds)) {

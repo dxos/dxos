@@ -161,10 +161,7 @@ export class IndexEngine {
    * Referrers of one target in one space, joined to the object metadata for the referrer's
    * document (see {@link ReverseRefIndex.queryReferrers}).
    */
-  queryReferrers(
-    spaceId: SpaceId,
-    targetDXN: URI.URI,
-  ): Effect.Effect<readonly Referrer[], SqlError.SqlError> {
+  queryReferrers(spaceId: SpaceId, targetDXN: URI.URI): Effect.Effect<readonly Referrer[], SqlError.SqlError> {
     return this.#reverseRefIndex.queryReferrers({ spaceId, targetDXN });
   }
 
@@ -190,10 +187,7 @@ export class IndexEngine {
    * from automerge or a feed (see {@link IndexedObjectSource}). `done` reports an empty batch, so a
    * caller wanting the whole backlog loops until it is set, exactly as with {@link update}.
    */
-  updateSecondaryIndexes(
-    ctx: Context,
-    opts?: { limit?: number },
-  ): Effect.Effect<IndexingResult, SqlError.SqlError> {
+  updateSecondaryIndexes(ctx: Context, opts?: { limit?: number }): Effect.Effect<IndexingResult, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
       const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
@@ -226,10 +220,7 @@ export class IndexEngine {
   /**
    * Pending convergence-key merge intents (see {@link ConvergenceKeyIntentStore.record}).
    */
-  takeConvergenceKeyIntents(): Effect.Effect<
-    { maxId: number; intents: Map<SpaceId, Set<string>> },
-    SqlError.SqlError
-  > {
+  takeConvergenceKeyIntents(): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError> {
     return this.#convergenceKeyIntents.take();
   }
 
@@ -244,9 +235,7 @@ export class IndexEngine {
     return this.#convergenceKeyIntents.clear(spaceId, convergenceKey, upToId);
   }
 
-  queryType(
-    query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
-  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
+  queryType(query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.query(query);
   }
 
@@ -415,10 +404,7 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
-  ): Effect.Effect<
-    { updated: number; done: boolean; objects: readonly IndexerObject[] },
-    SqlError.SqlError
-  > {
+  ): Effect.Effect<{ updated: number; done: boolean; objects: readonly IndexerObject[] }, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 

@@ -50,9 +50,7 @@ export class ConvergenceKeyIntentStore {
    * later pass re-presents it.
    */
   record = Effect.fn('ConvergenceKeyIntentStore.record')(
-    (
-      intents: readonly { spaceId: SpaceId; convergenceKey: string }[],
-    ): Effect.Effect<void, SqlError.SqlError> =>
+    (intents: readonly { spaceId: SpaceId; convergenceKey: string }[]): Effect.Effect<void, SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         if (intents.length === 0) {
           return;
@@ -91,11 +89,7 @@ export class ConvergenceKeyIntentStore {
    * Clear a serviced convergence-key intent, bounded by the id captured at read time.
    */
   clear = Effect.fn('ConvergenceKeyIntentStore.clear')(
-    (
-      spaceId: SpaceId,
-      convergenceKey: string,
-      upToId: number,
-    ): Effect.Effect<void, SqlError.SqlError> =>
+    (spaceId: SpaceId, convergenceKey: string, upToId: number): Effect.Effect<void, SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         const sql = this.#sql;
         yield* sql`DELETE FROM convergenceKeyIntents WHERE spaceId = ${spaceId} AND convergenceKey = ${convergenceKey} AND id <= ${upToId}`;

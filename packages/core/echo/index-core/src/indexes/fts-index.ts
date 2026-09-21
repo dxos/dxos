@@ -245,29 +245,28 @@ export class FtsIndex implements Index {
    * Re-tokenizes the given objects, whose text this reads from {@link IndexerObject.data} rather
    * than from the snapshot store so that one pass writes one index.
    */
-  update = Effect.fn('FtsIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
-      Effect.gen({ self: this }, function* () {
-        if (objects.length === 0) {
-          return;
-        }
-        const sql = this.#sql;
+  update = Effect.fn('FtsIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      if (objects.length === 0) {
+        return;
+      }
+      const sql = this.#sql;
 
-        const rows: { rowid: number; snapshot: string }[] = [];
-        for (const object of objects) {
-          if (object.recordId === null) {
-            return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
-          }
-          rows.push({ rowid: object.recordId, snapshot: JSON.stringify(object.data) });
+      const rows: { rowid: number; snapshot: string }[] = [];
+      for (const object of objects) {
+        if (object.recordId === null) {
+          return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
         }
+        rows.push({ rowid: object.recordId, snapshot: JSON.stringify(object.data) });
+      }
 
-        // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
-        for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
-          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
-        }
-        for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
-          yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
-        }
-      }),
+      // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
+      for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
+        yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+      }
+      for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
+        yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
+      }
+    }),
   );
 }

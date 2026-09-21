@@ -177,44 +177,43 @@ export class ReverseRefIndex implements Index {
       }),
   );
 
-  update = Effect.fn('ReverseRefIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
-      Effect.gen({ self: this }, function* () {
-        const sql = this.#sql;
+  update = Effect.fn('ReverseRefIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
 
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen({ self: this }, function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
-              }
+      yield* Effect.forEach(
+        objects,
+        (object) =>
+          Effect.gen({ self: this }, function* () {
+            const { recordId, data } = object;
+            if (recordId === null) {
+              return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
+            }
 
-              // Delete existing references for this record.
-              yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
+            // Delete existing references for this record.
+            yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
-              // Document objects carry `@meta` only so the entity-meta index can extract the
-              // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
-              // return everything merely tagged with it. Queue blocks always carried meta, so
-              // their extraction is unchanged.
-              const extractable = object.documentId
-                ? Object.fromEntries(
-                    Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
-                  )
-                : (data as unknown as Record<string, unknown>);
-              const refs = extractReferences(extractable);
+            // Document objects carry `@meta` only so the entity-meta index can extract the
+            // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+            // return everything merely tagged with it. Queue blocks always carried meta, so
+            // their extraction is unchanged.
+            const extractable = object.documentId
+              ? Object.fromEntries(
+                  Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
+                )
+              : (data as unknown as Record<string, unknown>);
+            const refs = extractReferences(extractable);
 
-              // Insert new references.
-              yield* Effect.forEach(
-                refs,
-                (ref) =>
-                  sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
-                { discard: true },
-              );
-            }),
-          { discard: true },
-        );
-      }),
+            // Insert new references.
+            yield* Effect.forEach(
+              refs,
+              (ref) =>
+                sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
+              { discard: true },
+            );
+          }),
+        { discard: true },
+      );
+    }),
   );
 }
