@@ -16,7 +16,7 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   type ClientServicesRpc,
-  makeInProcessClientServicesRpc,
+  makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
 import {
@@ -270,8 +270,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { ClientServicesLayer, HostEvents, handlersFromStack, wipeSqliteStorage } =
-      await import('@dxos/client-services');
+    const { ClientServicesLayer, HostEvents, wipeSqliteStorage } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     const config = this._params.config ?? new Config();
@@ -318,13 +317,12 @@ export class LocalClientServices implements ClientServicesProvider {
           );
         }).pipe(Effect.provideService(Hook.Controller, this._controller), Scope.provide(this._controllerScope)),
       );
-      const handlers = handlersFromStack(this._stack);
-
-      // Bridge the in-process Handlers to the effect-rpc client surface (no wire hop), then derive
-      // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
+      // Bridge the handlers the stack's services registered with its router to the effect-rpc client
+      // surface (no wire hop), then derive the deprecated Promise/Stream shaped services from it for
+      // consumers not yet on the effect surface.
       this._serviceScope = Effect.runSync(Scope.make());
       this._rpc = await EffectEx.runPromise(
-        makeInProcessClientServicesRpc(() => handlers).pipe(Scope.provide(this._serviceScope)),
+        makeClientServicesRpcFromRouter.pipe(Effect.provide(this._stack), Scope.provide(this._serviceScope)),
       );
       this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
     } catch (err) {

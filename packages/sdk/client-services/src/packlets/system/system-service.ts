@@ -17,12 +17,12 @@ import { toServiceError } from '@dxos/protocols';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SystemService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import { type Diagnostics, createDiagnosticsFromHandlers } from '../diagnostics/index.ts';
+import { type Diagnostics, createDiagnosticsFromRouter } from '../diagnostics/index.ts';
 import { IdentityManagerService } from '../identity/index.ts';
 import { Closing, Reset, StackOpened, WipingStorage } from '../services/events.ts';
-import { type RpcServicesContext, rpcHandlersFromStack } from '../services/handlers.ts';
 import { getPlatform } from '../services/platform.ts';
 import { DataSpaceManagerService } from '../spaces/index.ts';
 
@@ -162,7 +162,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
 export const SystemServiceLayer: Layer.Layer<
   SystemService.Tag,
   never,
-  | RpcServicesContext
+  | RpcRouter.RpcRouter
   | ConfigService
   | Hook.Controller
   | IdentityManagerService
@@ -173,12 +173,13 @@ export const SystemServiceLayer: Layer.Layer<
   Effect.gen(function* () {
     const config = yield* ConfigService;
     const controller = yield* Hook.Controller;
+    const router = yield* RpcRouter.RpcRouter;
     const stack = yield* Effect.context<
-      RpcServicesContext | IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
+      IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
     >();
     const service = new SystemServiceImpl({
       config: () => config,
-      getDiagnostics: () => createDiagnosticsFromHandlers(() => rpcHandlersFromStack(stack), stack, config),
+      getDiagnostics: () => createDiagnosticsFromRouter(router, stack, config),
       controller,
     });
     yield* Hook.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
