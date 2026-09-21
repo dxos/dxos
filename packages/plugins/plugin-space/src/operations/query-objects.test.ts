@@ -163,4 +163,54 @@ describe('SpaceOperation.QueryObjects', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a multi-word text search narrows rather than widens',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // `fullText` splits the phrase and combines the terms with `Query.all`, whose JSDoc here
+        // promises "Every term must match, so the words of a phrase narrow the result rather than
+        // widening it". `Query.all` builds a `{ type: 'union' }` node, so the terms are OR-ed: the
+        // more words a caller types, the more unrelated objects come back.
+        const both = yield* Database.add(Obj.make(TestObject, { name: 'alphaterm betaterm' }));
+        yield* Database.add(Obj.make(TestObject, { name: 'alphaterm only' }));
+        yield* Database.add(Obj.make(TestObject, { name: 'betaterm only' }));
+        yield* Database.flush();
+
+        const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          text: 'alphaterm betaterm',
+          limit: 200,
+        });
+
+        expect(results.map(labelOf)).toEqual([Obj.getLabel(both)]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'an unknown input property is rejected rather than silently dropped',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        yield* Database.add(Obj.make(TestObject, { name: 'searchable-token' }));
+        yield* Database.add(Obj.make(TestObject, { name: 'unrelated' }));
+        yield* Database.flush();
+
+        // The published input schema sets `additionalProperties: false`, and a caller that
+        // misspells `text` — say as `query`, which is what the tool's own description calls it —
+        // must be told. Today the field is dropped, `text` and `typename` are both undefined, and
+        // the handler's `Match.orElse` falls through to `Query.select(Filter.everything())`: the
+        // search silently becomes "list everything" and is returned as a success, which a caller
+        // cannot distinguish from a real result set.
+        const outcome = yield* Effect.exit(
+          Operation.invoke(SpaceOperation.QueryObjects, { query: 'searchable-token', limit: 200 } as any),
+        );
+
+        expect(outcome._tag, 'an unknown input property must not be accepted').toEqual('Failure');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

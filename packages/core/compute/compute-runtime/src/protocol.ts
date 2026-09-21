@@ -119,7 +119,14 @@ export const wrapFunctionHandler = (
         // instance, and callers send the encoded `{'/': dxn}` form.
         if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(dataWithDecodedRefs);
+            // `reportInput` puts the rejected value in the message, and `errors: 'all'` reports
+            // every bad field at once: a remote caller cannot see its own payload in our logs, so
+            // a message naming only the expected shape leaves it guessing which field it got wrong.
+            Schema.decodeUnknownSync(Schema.toType(func.input), {
+              onExcessProperty: 'error',
+              reportInput: true,
+              errors: 'all',
+            })(dataWithDecodedRefs);
           } catch (error: any) {
             throw new InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
@@ -491,10 +498,17 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Union': {
-      // Optional values are represented as union with undefined.
-      const nonUndefined = encoded.types.filter((t) => !SchemaAST.isUndefinedKeyword(t));
-      if (nonUndefined.length === 1) {
-        return decodeRefsFromSchema(nonUndefined[0], value, db);
+      // Optional and nullable values are represented as a union with `undefined` and/or `null`.
+      // A null or undefined `value` already returned above, so neither branch can be the one that
+      // matches here and both are safe to discard: without dropping `null`, a
+      // `Schema.optional(Schema.NullOr(Ref))` field keeps two branches, is left undecoded, and the
+      // handler rejects the caller's wire envelope — which is why updating a ref field failed
+      // while creating one with the same envelope succeeded.
+      const candidates = encoded.types.filter(
+        (type) => !SchemaAST.isUndefinedKeyword(type) && !SchemaAST.isNullKeyword(type),
+      );
+      if (candidates.length === 1) {
+        return decodeRefsFromSchema(candidates[0], value, db);
       }
 
       // For other unions we can't safely pick a branch without validating.

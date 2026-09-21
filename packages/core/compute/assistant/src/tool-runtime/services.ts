@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import type * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import * as Stream from 'effect/Stream';
 import * as Tool from 'effect/unstable/ai/Tool';
 import type * as Toolkit from 'effect/unstable/ai/Toolkit';
@@ -287,6 +288,19 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 };
 
 /**
+ * Keeps refs inline rather than hoisting them into `$defs`.
+ *
+ * The default policy extracts anything carrying an `identifier`, and `Ref` carries one so its
+ * rejection messages can name the target type. Without this a ref parameter reaches the model as a
+ * `$ref` into `$defs` instead of the described URI string it used to be. Only refs are declined, so
+ * a recursive parameter keeps the name it was recorded under.
+ */
+const REFERENCES_INLINE = {
+  referencePolicy: ({ identifier }: SchemaRepresentation.ReferencePolicyInput) =>
+    Ref.isRefIdentifier(identifier) ? undefined : identifier,
+} as const;
+
+/**
  * Emits the JSON Schema the model is shown for a tool's parameters.
  *
  * v4 renders `Schema.optional(T)` as `anyOf: [T, null]` while its decoder accepts an absent key but
@@ -298,7 +312,7 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 const toModelJsonSchema = (schema: Schema.Codec<unknown, unknown>): JsonSchema.JsonSchema => {
   // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
   // record; keeping only the root would advertise a dangling reference to the model.
-  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema, REFERENCES_INLINE);
   const document = Object.keys(definitions).length > 0 ? { ...root, $defs: definitions } : root;
   return statePropertyOpenness(dropNullBranches(document, new Set(asStringArray(schema))));
 };
@@ -332,7 +346,7 @@ const statePropertyOpenness = (node: JsonSchema.JsonSchema): JsonSchema.JsonSche
 
 /** Property names the schema marks required; only optional properties carry the spurious null branch. */
 const asStringArray = (schema: Schema.Codec<unknown, unknown>): readonly string[] => {
-  const { required } = Schema.toJsonSchemaDocument(schema).schema;
+  const { required } = Schema.toJsonSchemaDocument(schema, REFERENCES_INLINE).schema;
   return Array.isArray(required) ? required.map(String) : [];
 };
 
