@@ -277,27 +277,31 @@ export type PluginAsset = Readonly<{
 export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
 
 /**
- * A themed sample space a plugin offers, for filling a space with demonstrable content.
+ * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
+ * the content to write once the space exists.
  *
- * `apply` is a bound closure rather than the definition itself: a consumer needs only "put this
- * content in that space", and handing it the definition would drag the builder, its phase map and
- * Effect into every picker that lists one. Build the entry with `SampleSpace.preset`.
+ * Build one with `SampleSpace.makeTemplate`.
  */
-export type SampleSpace = Readonly<{
-  /** Stable id, namespaced by the owning plugin. */
+export type SpaceTemplate = Readonly<{
+  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
   id: string;
-  /** Name for the picker. */
+  /** Name for the picker, and the default space name when the template is chosen. */
   label: string;
-  /** One line on what the space contains. */
+  /** One line on what the template creates. */
   description?: string;
-  /** Registers the content's types on the client, then writes it into `space`. */
+  /** An `iconValues` name, as space properties carry. */
+  icon?: string;
+  hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  hidden?: boolean;
+  /** Registers the content's types on the client, then writes it into the new space. */
   apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
 }>;
 
 /**
  * @category Capability
  */
-export const SampleSpace = Capability$.make<SampleSpace>()('org.dxos.app-framework.capability.sampleSpace');
+export const SpaceTemplate = Capability$.make<SpaceTemplate>()('org.dxos.app-framework.capability.spaceTemplate');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is

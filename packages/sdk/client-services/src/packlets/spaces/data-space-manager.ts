@@ -92,7 +92,7 @@ import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 import { type Identity, IdentityProviderService, createAuthProvider } from '../identity/index.ts';
 import { type InvitationsManager, InvitationsManagerService } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
-import { DataSpacesReady, IdentityAvailable, ProfileUpdated } from '../services/events.ts';
+import { DataSpacesAvailable, IdentityAvailable, ProfileUpdated } from '../services/events.ts';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -1241,7 +1241,7 @@ export const DataSpaceManagerLayer = (
         IdentityAvailable,
         Effect.fn('DataSpaceManager.onIdentityAvailable')(function* ({ identity }) {
           yield* Effect.promise(() => dataSpaceManager.open(ctx));
-          yield* Hook.emit(DataSpacesReady, { identity });
+          yield* Hook.emit(DataSpacesAvailable, { identity });
         }),
       );
       yield* Hook.on(
