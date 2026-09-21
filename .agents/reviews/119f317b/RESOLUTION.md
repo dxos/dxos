@@ -2,7 +2,7 @@
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 119f317b-1 - resolved - private-new-packages - packages/common/diagram/package.json:1
+- 119f317b-1 - unresolved - private-new-packages - packages/common/diagram/package.json:1
 - 119f317b-2 - unresolved - no-casts - packages/common/diagram/src/content.ts:58
 - 119f317b-3 - unresolved - no-casts - packages/common/diagram/src/content.ts:64
 - 119f317b-4 - unresolved - no-casts - packages/common/diagram/src/content.ts:166
