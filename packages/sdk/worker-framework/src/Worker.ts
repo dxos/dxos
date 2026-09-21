@@ -16,6 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { type BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
+import { DisplaceChannel, displaceChannelFor } from './internal/displace-channel.ts';
 import * as WorkerProtocol from './WorkerProtocol.ts';
 
 // A single MessagePort multiplexes every request by id, so allow effectively-unbounded concurrent
@@ -23,11 +24,17 @@ import * as WorkerProtocol from './WorkerProtocol.ts';
 // every other call).
 const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 
-/** Message that tears down whichever worker currently owns a storage lock. */
-const DISPLACE_MESSAGE = { action: 'stop' } as const;
-
-/** Default displacement channel for a storage lock; see {@link Options.displaceChannel}. */
-export const displaceChannelFor = (storageLockKey: string): string => `${storageLockKey}/displace`;
+/**
+ * How long a starting worker waits for the incumbent to release the storage lock cooperatively
+ * before escalating to its tab.
+ *
+ * Killing a worker that was merely slow is the cost of being wrong, so the window is as long as it
+ * can be: it must stay strictly below `LOCK_OR_RPC_WAIT_TIMEOUT` (15s), because the escalating
+ * worker is itself terminated by its tab the moment that budget expires — a grace period at or
+ * above it never fires at all — leaving the remainder for the terminate, the lock grant and the
+ * handshake that follow.
+ */
+export const DEFAULT_DISPLACE_GRACE_TIMEOUT = 10_000;
 
 /**
  * Shuts down whichever worker currently holds `storageLockKey`, so its storage can be taken over.
@@ -42,37 +49,6 @@ export const displace = (storageLockKey: string, displaceChannel = displaceChann
     channel.close();
   }
 };
-
-/**
- * The worker-to-worker displacement channel, expressed as actions rather than raw messages: a starting
- * worker posts `stop` so whichever worker owns the same storage lock tears down and releases it.
- */
-class DisplaceChannel {
-  readonly #channel: BroadcastChannel;
-
-  /**
-   * Called when another worker posts `stop`. Assignable because what a stop means to this worker
-   * changes as it starts up — before the storage lock is granted there is nothing to stand down from.
-   */
-  onStop: () => void = () => {};
-
-  constructor(channelName: string) {
-    this.#channel = new BroadcastChannel(channelName);
-    this.#channel.onmessage = (event) => {
-      if (event.data?.action === DISPLACE_MESSAGE.action) {
-        this.onStop();
-      }
-    };
-  }
-
-  postStop(): void {
-    this.#channel.postMessage(DISPLACE_MESSAGE);
-  }
-
-  close(): void {
-    this.#channel.close();
-  }
-}
 
 const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePort) =>
   Layer.merge(
@@ -115,6 +91,11 @@ export type Options = {
    */
   displaceChannel?: string;
   /**
+   * How long to wait, after asking the incumbent worker for this storage lock to stand down, before
+   * escalating to the tab that owns it. Defaults to {@link DEFAULT_DISPLACE_GRACE_TIMEOUT}.
+   */
+  displaceGraceTimeout?: number;
+  /**
    * Ends the worker the way terminating its agent would: a pending storage-lock request is dropped
    * and a running worker shuts down. For hosts that run the loop in-process (tests, a native shell).
    */
@@ -154,9 +135,13 @@ export const run = ({
   endpoint = defaultEndpoint(),
   storageLockKey,
   displaceChannel = displaceChannelFor(storageLockKey),
+  displaceGraceTimeout = DEFAULT_DISPLACE_GRACE_TIMEOUT,
   signal,
   createRuntime,
 }: Options): void => {
+  // Identifies this worker to the tab that owns it, so an escalation this worker raised cannot come
+  // back as an order to terminate it.
+  const workerId = crypto.randomUUID();
   // Displacement is a worker-to-worker handshake, so the channel listens and the stop signal goes out
   // before this worker queues on the storage lock: the incumbent releases that lock only when it is
   // displaced, and a signal broadcast after the grant can never reach the worker being waited on.
@@ -168,6 +153,17 @@ export const run = ({
     displaced = true;
   };
   channel.postStop();
+  // Second level, for an incumbent wedged badly enough not to service the channel at all (a busy CPU
+  // loop being the clearest case): it never runs `shutdown`, so it releases neither the liveness nor
+  // the storage lock, and only the tab holding its `Worker` handle can free them. Fires at most once
+  // per worker start, and never once the lock has been granted.
+  const escalation = setTimeout(() => {
+    log.warn('displaced worker still holds the storage lock, escalating to its tab', {
+      storageLockKey,
+      graceTimeout: displaceGraceTimeout,
+    });
+    channel.postTerminate({ issuerId: workerId, storageLockKey, graceTimeout: displaceGraceTimeout });
+  }, displaceGraceTimeout);
 
   // Set once the storage lock is held; a lock stolen from under this worker ends it through here.
   let shutdownOnLockLost: (() => Promise<void>) | undefined;
@@ -181,15 +177,22 @@ export const run = ({
   };
   // Aborting a granted request leaves the lock held, so a running worker is shut down explicitly; a
   // worker that never got the lock only has its channel to release.
-  signal?.addEventListener('abort', () => {
-    if (shutdownOnLockLost) {
-      void shutdownOnLockLost();
-    } else {
-      channel.close();
-    }
-  });
+  signal?.addEventListener(
+    'abort',
+    () => {
+      // The channel is about to close, and posting an escalation on a closed BroadcastChannel throws.
+      clearTimeout(escalation);
+      if (shutdownOnLockLost) {
+        void shutdownOnLockLost();
+      } else {
+        channel.close();
+      }
+    },
+    { once: true },
+  );
   const storageLock = navigator.locks.request(storageLockKey, { signal }, async () => {
     log('lock acquired');
+    clearTimeout(escalation);
 
     let runtime: RuntimeHandle | undefined;
     // The runtime's lifetime (see `Options.createRuntime`); every session scope is forked from it.
@@ -206,7 +209,7 @@ export const run = ({
 
     // Hold a dedicated liveness lock for the worker's whole lifetime. Clients watch this key to detect
     // termination, so it must be held before `ready` is advertised — hence the awaited grant below.
-    const livenessLockKey = `${storageLockKey}/liveness/${crypto.randomUUID()}`;
+    const livenessLockKey = `${storageLockKey}/liveness/${workerId}`;
     let releaseLivenessLock: () => void;
     const livenessLockHeld = new Promise<void>((resolve) => {
       releaseLivenessLock = resolve;
@@ -283,7 +286,15 @@ export const run = ({
           endpoint.postMessage({
             type: 'ready',
             livenessLockKey,
+            workerId,
+            displaceChannel,
           } satisfies WorkerProtocol.DedicatedWorkerMessage);
+          break;
+        }
+        case 'ping': {
+          // Answered from the message loop itself, so the reply is proof that this worker is still
+          // draining its queue — the one thing that distinguishes it from a wedged incumbent.
+          endpoint.postMessage({ type: 'pong', nonce: message.nonce } satisfies WorkerProtocol.DedicatedWorkerMessage);
           break;
         }
         case 'start-session': {
@@ -411,5 +422,9 @@ export const run = ({
     await storageLockHeld;
     endpoint.removeEventListener('message', handleMessage);
   });
-  void storageLock.catch(onLockLost(storageLockKey));
+  void storageLock.catch((err) => {
+    // The request ended without ever entering its callback, so nothing else disarms the escalation.
+    clearTimeout(escalation);
+    onLockLost(storageLockKey)(err);
+  });
 };
