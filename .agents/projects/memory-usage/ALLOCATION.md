@@ -114,6 +114,161 @@ tab is open" in a way that implied the bytes grow with it; they do not.
 Script source stays flat at 31–33 MB whatever the profile holds, which is what
 makes it the floor rather than the problem.
 
+## What the fix bought
+
+[dxos/dxos#13251](https://github.com/dxos/dxos/pull/13251) put `byteLength` in the
+chunk key beside `lineCount`, so `#evict` computes its retention budget from
+`getAllKeys()` alone and the encoding happens once per chunk at write time
+instead of once per row per sweep. Three runs per arm, each on a pristine copy of
+the same three-space profile, `--journey --settle 90`:
+
+|          | footprint | `<unspecified>` |  sampled | IndexedDB | `getAll` / `getAllKeys` |
+| -------- | --------: | --------------: | -------: | --------: | ----------------------: |
+| before 1 |    737 MB |        232.1 MB | 379.5 MB |  208.1 MB |               531 / 531 |
+| before 2 |    730 MB |        339.7 MB | 446.6 MB |  277.8 MB |               507 / 507 |
+| before 3 |    865 MB |        335.1 MB | 520.8 MB |  351.4 MB |               576 / 577 |
+| after 1  |    614 MB |         77.8 MB | 142.8 MB |    1.9 MB |                  0 / 12 |
+| after 2  |    650 MB |         94.7 MB | 171.0 MB |    1.9 MB |                  0 / 12 |
+| after 3  |    647 MB |         95.4 MB | 173.2 MB |    0.7 MB |                  0 / 11 |
+
+Every after-run sits below every before-run on every column. The mechanism is
+gone rather than reduced: `getAll` to zero, and the IndexedDB category from a
+279 MB mean to 1.5 MB.
+
+**The footprint moved less than the allocation did, and the ratio is the point.**
+287 MB of mean sampled allocation removed yields 140 MB of mean footprint —
+777 MB down to 637 MB, 18%. About half of what the sweep allocated was pages the
+allocator had committed and would have kept either way. That gap between "stops
+allocating" and "gives memory back" is the thing to expect from any fix aimed at
+churn, and it is why the estimate this page carried before the fix landed, which
+put the sweep at roughly a third of the tab, came in about 2x high.
+
+**It also raised a new question.** The after arm's `<unspecified>` floor is
+78-95 MB on a loaded profile against 34.8 MB on an empty one, so roughly 54 MB of
+that block scales with data and has nothing to do with the sweep. The
+empty-profile work could not see it. It is the largest unexplained thing left in
+the block.
+
+One detail worth keeping: `getAllKeys` is 11-12 per run, not zero. A 30-second
+timer alone would fire three times in 90 seconds, so `#writeBatch` still
+re-enters the sweep after every flush — it is merely cheap now. The trigger was
+not what changed.
+
+## The map after the fix
+
+Five journey runs on [#13251](https://github.com/dxos/dxos/pull/13251)'s head,
+each on a pristine copy of the same three-space profile, `--journey --settle 90`.
+Every column is the app's own renderer, which under a dedicated-worker
+architecture holds the tab, the ECHO host and SQLite in one process.
+
+| run  | footprint |    v8 | malloc |    PA | Oilpan |  live | slack | tab old | wkr old |  wasm |
+| ---- | --------: | ----: | -----: | ----: | -----: | ----: | ----: | ------: | ------: | ----: |
+| 1    |     615.7 | 174.1 |  173.2 | 116.9 |   60.3 | 209.0 | 141.4 |   101.0 |    22.4 |     - |
+| 2    |     641.8 | 167.9 |  188.5 | 130.3 |   64.4 | 237.4 | 145.8 |    95.3 |    21.9 |     - |
+| 3    |     654.6 | 170.7 |  190.2 | 135.1 |   67.6 | 243.9 | 149.0 |    97.0 |    22.1 |     - |
+| 4    |     656.2 | 170.8 |  189.5 | 132.3 |   67.6 | 240.9 | 148.5 |    97.3 |    22.1 | 113.1 |
+| 5    |     660.1 | 175.4 |  191.7 | 135.1 |   66.1 | 242.7 | 150.1 |   102.8 |    22.2 | 110.7 |
+| mean |     645.7 | 171.8 |  186.6 | 129.9 |   65.2 | 234.8 | 146.9 |    98.6 |    22.1 |     - |
+
+`live` is `allocated_objects` across malloc, PartitionAlloc and Oilpan; `slack`
+is what those three have committed above it. Run 1 predates the wasm probe.
+
+Three things this settles.
+
+**A quarter of the tab is committed pages holding nothing.** 146.9 MB of the
+645.7 MB mean, steady to within 6% across five runs, is memory the allocators
+have taken from the OS and not given back. That is the same quantity the log-store
+fix ran into from the other side: removing 287 MB of allocation returned 140 MB
+of footprint because the rest was already-committed pages. Any churn fix pays out
+at roughly half its allocation, and no churn fix touches the slack that is already
+there.
+
+**Wasm was the residual, and it is mostly automerge.** Linear memory appears in no
+allocator node, so the ~90 MB that never reconciled had no name. The probe now
+reports it per realm (run 5):
+
+|    MB | realm  | module                      |
+| ----: | ------ | --------------------------- |
+| 34.63 | page   | `automerge_subduction_wasm` |
+| 30.94 | worker | `automerge_wasm`            |
+| 26.63 | worker | `automerge_subduction_wasm` |
+| 16.63 | worker | `wa-sqlite`                 |
+|  1.88 | both   | smaller modules             |
+
+**92.2 MB of automerge linear memory, in three instances of two different
+binaries.** The worker runs `automerge_wasm` and `automerge_subduction_wasm` side
+by side, each with its own heap; the tab runs a third. At boot with nothing open
+the same probe reads 4.4 MB, so this is the corpus, not the runtime — it is what
+opening three spaces costs.
+
+One caveat on the module column. The probe names a memory by the script on the
+stack that created it, and a bundle chunk can carry more than one wasm binary —
+`boot-9` contains both. So read the binary names as indicative and the realm
+split and the sizes as solid: three separate linear memories, one in the page and
+two in the worker, ~35, ~31 and ~27 MB. Which package owns each is worth
+confirming before anyone acts on it. `echo-host` depends on both
+`@automerge/automerge` and `@automerge/automerge-subduction`, so two binaries in
+the worker is expected by construction; two binaries each holding tens of
+megabytes of corpus is the part that is not obviously necessary.
+
+Committed is not resident: a `WebAssembly.Memory` reports the pages it has
+reserved, and the footprint only counts the ones touched. Read the 110-113 MB as
+naming where the residual lives, not as a term that closes the arithmetic.
+
+**`performance.measure` is now the largest allocating mechanism in the tab**, at
+52.7-80.7 MB per run, 36-47% of everything the profiler sampled. That is a
+reversal: before the log-store fix it was a rounding error next to the sweep.
+See [§5](#5-performancemeasure-details) below.
+
+## 5. `performance.measure` details
+
+[`recordSqliteQueryMetrics`](../../../packages/common/sql-sqlite/src/internal/opfs-client.ts)
+puts one `performance.measure` on the timeline per SQL statement, carrying the
+full statement text and the full bound-parameter array in `detail`:
+
+```js
+performance.measure(sql.slice(0, 128), {
+  start: begin,
+  end,
+  detail: {
+    devtools: {
+      dataType: 'track-entry',
+      track: 'Query',
+      trackGroup: 'SQlite',
+      properties: [
+        ['sql', sql],
+        ['params', params],
+        ['resultCount', resultCount],
+      ],
+    },
+  },
+});
+```
+
+`detail` is structured-cloned on every call. That clone is the whole of the
+mechanism: `ValueSerializer::WriteString` at 32-45 MB and
+`SerializedScriptValue::Create` at 17-27 MB per run are the top two call sites in
+the entire renderer.
+
+The line above it already knows better. `logSqliteQuery` passes
+`summarizeLoggedParams(params)`, which truncates strings at 64 characters, reduces
+a `Uint8Array` to a size marker and caps arrays at 64 items — added for DX-1250,
+where unbounded params were 80% of a 50 MB feedback upload. The
+`performance.measure` call beside it passes `params` raw, so a bound automerge blob
+is cloned in full, per query.
+
+The entries are also retained. `PerformanceMeasure` objects are 6.5, 9.4 and
+10.2 MB of the worker's Oilpan across runs 1-3 — 80% of everything live in that
+heap — and the buffer has no cap.
+
+Nine call sites carry a `dataType: 'track-entry'` detail; this is the only one on
+a per-statement path, and `query-executor.ts` already disables its own. None of
+them are gated: the DevTools custom track renders for a developer with the
+Performance panel open, and is paid for by every user.
+
+`DX_TRACE_QUERY_EXECUTION` in the same package is the shape to copy — an
+`import.meta.env` flag the bundler can eliminate.
+
 ## 1. The log store's eviction sweep
 
 [`IdbLogStore#evict`](../../../packages/common/log-store-idb/src/idb-log-store.ts):
@@ -170,6 +325,61 @@ The store's cap is 50 MB. These runs saw it at 2.4 MB, 90 seconds into a fresh
 profile. What a long-lived tab costs has not been measured; it is not smaller.
 
 todomvc, on the same SDK, does none of this — it has no log store.
+
+## The `v8` node, and why it has no single owner
+
+171.5 MB on a loaded journey run, and never opened until now. The allocator tree
+splits it per isolate and per space:
+
+|     MB | node                         |
+| -----: | ---------------------------- |
+| 128.89 | `v8/main`                    |
+| 100.13 | `v8/main/heap/old_space`     |
+|  15.30 | `v8/main/heap/code_space`    |
+|  10.83 | `v8/main/heap/trusted_space` |
+|  40.62 | `v8/workers`                 |
+|  22.66 | `v8/workers/heap/old_space`  |
+|   6.08 | `v8/workers/heap/code_space` |
+|   1.97 | `v8/shared/read_only_space`  |
+
+**The tab holds 4.4x the live JS of the worker.** 100 MB against 23 MB, in an
+architecture where ECHO and automerge are supposed to live in the worker. That
+fits the tab-side automerge replica already recorded against the login-sync work.
+
+A heap snapshot of the page realm on the same profile — three spaces opened,
+140.72 MB of self size over 2,560,784 nodes — says the 100 MB has no dominant
+holder. Grouping the constructors:
+
+|    MB | what                                                                                  |
+| ----: | ------------------------------------------------------------------------------------- |
+| 24.75 | object machinery: property backing arrays, shapes, `PropertyArray`, `DescriptorArray` |
+| 20.46 | `ExternalStringData` — strings whose bytes Blink owns, which is script source         |
+| 19.27 | compiled code: `InstructionStream`, `BytecodeArray`, `ScopeInfo`, feedback            |
+| 12.12 | closures                                                                              |
+|  9.49 | plain objects and arrays                                                              |
+|  7.41 | `Managed (WasmNativeModuleTag)` — the tab's own wasm module                           |
+|  6.43 | `JSArrayBufferData`                                                                   |
+
+The largest single line is 20 MB and the rest is a long tail. **There is no
+second log-store sweep in here.** Code, closures and the shapes that describe
+them come to roughly 56 MB, which is the 920-module cost again from the V8 side,
+and the `byHolder` view finds nothing worth naming because only 6.43 MB of the
+heap is array buffers at all.
+
+Two things this rules out. The tab is not caching document bytes in JS: 6.43 MB
+of `JSArrayBufferData` is the whole of it at this data scale, and whatever the
+tab-side replica costs is in its wasm module and that module's linear memory,
+which no JS-heap reading sees. And the heap is not leaking a structure: its shape
+is a large application's, not a growing cache's.
+
+So reducing it means shipping less code and instantiating fewer objects, not
+finding a bug. Per-package attribution would sharpen that, and is not available:
+it needs `trace_function_infos`, which only `startTrackingHeapObjects` produces,
+and that takes over ten minutes on this app and then returns no snapshot.
+
+Measured against the pre-fix build. The eviction sweep allocated in PartitionAlloc
+and Blink strings rather than V8's heap, so this is not expected to have moved,
+but it has not been re-measured since [#13251](https://github.com/dxos/dxos/pull/13251).
 
 ## 2. Script source — 31 MB, and it stays
 
@@ -299,18 +509,44 @@ workers were not measured this way and Chromium may host them elsewhere.
 
 ## What this says to do
 
-1. **Fix the log store's eviction sweep.** Store each chunk's byte length in the
-   key next to `lineCount` and sweep with `getAllKeys()` alone; that removes both
-   the `getAll()` payload and the `TextEncoder` copies. Stop re-entering the sweep
-   on every 250 ms flush. ~770 MB of allocation per 90 seconds, up to 124 MB live
-   at once, and the only item here with a control behind it.
-2. **Drop the `detail` payload from `performance.measure` outside development.**
-   Under 1 MB today, retained for the life of the tab, unread in production.
-3. **Ship fewer, larger modules.** 31 MB of decoded source and module-graph
+Ordered by measured size over cost, against the 645.7 MB mean above.
+
+1. ~~**Fix the log store's eviction sweep.**~~ Done in
+   [#13251](https://github.com/dxos/dxos/pull/13251): 287 MB less allocation and
+   140 MB less footprint on a loaded profile. See "What the fix bought" above.
+2. **Stop cloning SQL text and parameters into `performance.measure` details.**
+   52.7-80.7 MB per run, the largest allocating mechanism in the tab, plus a
+   `PerformanceMeasure` buffer that reaches 10 MB of the worker's Oilpan with no
+   cap. The summarizer it needs already exists one line above it. A one-file
+   change with no product behaviour behind it, so this is where to start.
+   Expect roughly half of the allocation back as footprint, on the ratio the log
+   store established.
+3. **Collapse the duplicate automerge instances.** 92.2 MB of linear memory in
+   three instances of two binaries: `automerge_wasm` and
+   `automerge_subduction_wasm` side by side in the worker, and a third in the tab.
+   [#13199](https://github.com/dxos/dxos/pull/13199) took the worker from 603
+   held documents to a 259-document warm floor
+   (`MIN_RESIDENT_DOCUMENTS = 256`); the corpus in each heap is the next lever,
+   and two engines holding it twice is the one to pull first, because unlike the
+   tab-side replica it buys nothing. The tab's own replica is not negotiable —
+   synchronous handle access needs it.
+4. **Ship fewer, larger modules.** 31 MB of decoded source and module-graph
    bookkeeping that does not go away, and the fixture puts the whole cost of
-   Composer's code shape at 96.9 MB of footprint.
-4. **Collapse the duplicate automerge instances.** Two Rust binaries plus a
-   tab-side replica, 146.6 MB committed once data is open.
+   Composer's code shape at 96.9 MB of footprint. Every user pays it; it is the
+   one cost that does not scale with their data.
+5. **Reclaim allocator slack.** 146.9 MB is committed and free, steady across
+   runs. Fixing churn shrinks what refills it but returns only about half; nothing
+   here returns the pages already taken. Whether PartitionAlloc can be made to
+   purge on a memory-pressure signal is unmeasured and would need its own pass.
+6. **Move work out of the tab.** Its 98.6 MB of live JS old_space is 4.5x the
+   worker's 22.1 MB, in an architecture where the worker is supposed to hold the
+   data. No single object owns it, so this is an architecture change rather than a
+   fix.
+
+Two things named earlier are now sized and are not worth chasing yet: the ~54 MB
+of `<unspecified>` that scales with data has no mechanism, and the ~40 MB of
+Oilpan that scales with data turns out to be mostly page slack — live Oilpan is
+12-20 MB, and 45-55 MB of the node is committed pages, which item 5 covers.
 
 ## What changed in this revision
 
@@ -353,6 +589,14 @@ node scripts/memory/api-census.mjs http://localhost:4173 --settle 90
 # disk once the symbol index is built.
 scripts/memory/fetch-electron.sh
 node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
+  --symbols "$(find ./tmp/electron -name 'Electron Framework.sym' -print -quit)"
+
+# The same, against a loaded profile with objects opened in every space. This is
+# the only run that reports wasm linear memory, which no allocator node covers.
+node scripts/memory/seed-profile.mjs http://localhost:4173 --profile ./tmp/loaded-profile --spaces 3
+cp -R tmp/loaded-profile tmp/run1   # a run mutates the profile; start each from a copy
+node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
+  --profile ./tmp/run1 --journey \
   --symbols "$(find ./tmp/electron -name 'Electron Framework.sym' -print -quit)"
 
 # The allocator ledger the shares above are a share of.
