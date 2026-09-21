@@ -147,6 +147,9 @@ export class LayerStack {
           ),
         );
       }
+      // Eager specs have no tag anyone asks for, so the slice builds them itself once its
+      // requirements are in place.
+      yield* target.materializeEager();
       return target;
     });
   }
@@ -575,6 +578,19 @@ class Slice {
     );
   }
 
+  /**
+   * Builds every {@link LayerSpec.LayerSpec.eager} spec that survived pruning, with whatever
+   * provides its requirements.
+   */
+  materializeEager(): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+    return Effect.suspend(() => {
+      const pending = this.#layers.filter((layer) => layer.eager && !this.#materializedLayers.includes(layer));
+      return pending.length === 0
+        ? Effect.void
+        : this.#buildLock.withPermits(1)(Effect.suspend(() => this.#materializeSpecs(pending)));
+    });
+  }
+
   #hasBuilt(tags: Context.Key<any, any>[]): boolean {
     return !this.#sortError && tags.every((tag) => Option.isSome(Context.getOption(this.#services, tag)));
   }
@@ -591,12 +607,18 @@ class Slice {
       return Effect.void;
     }
 
-    const layersToAdd = this.#layersNeededFor(pendingTags);
-    if (layersToAdd.length === 0) {
-      return Effect.void;
+    return this.#materializeSpecs(this.#layersNeededFor(pendingTags));
+  }
+
+  /** Builds `specs` and their dependency providers, skipping whatever is already materialized. */
+  #materializeSpecs(
+    specs: LayerSpec.LayerSpec[],
+  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+    if (this.#sortError) {
+      return Effect.fail(this.#sortError);
     }
 
-    const newLayers = layersToAdd.filter((layer) => !this.#materializedLayers.includes(layer));
+    const newLayers = this.#expand(specs).filter((layer) => !this.#materializedLayers.includes(layer));
     if (newLayers.length === 0) {
       return Effect.void;
     }
@@ -615,6 +637,13 @@ class Slice {
   }
 
   #layersNeededFor(tags: Context.Key<any, any>[]): LayerSpec.LayerSpec[] {
+    return this.#expand(
+      this.#layers.filter((layer) => tags.some((tag) => layer.provides.some((provided) => provided.key === tag.key))),
+    );
+  }
+
+  /** `seed` plus the specs providing their requirements, in slice (topological) order. */
+  #expand(seed: LayerSpec.LayerSpec[]): LayerSpec.LayerSpec[] {
     const needed = new Set<LayerSpec.LayerSpec>();
     const availableKeys = this.#availableServiceKeys();
 
@@ -636,12 +665,8 @@ class Slice {
       }
     };
 
-    for (const tag of tags) {
-      for (const layer of this.#layers) {
-        if (layer.provides.some((provided) => provided.key === tag.key)) {
-          addLayer(layer);
-        }
-      }
+    for (const layer of seed) {
+      addLayer(layer);
     }
 
     return this.#layers.filter((layer) => needed.has(layer));

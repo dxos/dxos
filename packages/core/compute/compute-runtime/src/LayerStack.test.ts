@@ -55,6 +55,79 @@ describe('LayerStack', () => {
     ),
   );
 
+  describe('eager specs', () => {
+    it.effect(
+      'builds a side-effect-only spec nothing asks for',
+      Effect.fn(function* ({ expect }) {
+        const built: string[] = [];
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+            // Provides nothing, so only `eager` can pull it in.
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [], eager: true }, () =>
+              Layer.effectDiscard(Effect.map(ServiceA, (service) => built.push(service.value))),
+            ),
+          ],
+        });
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        expect(built).toEqual(['a']);
+      }),
+    );
+
+    it.effect(
+      'leaves a lazy spec unbuilt until one of its tags is requested',
+      Effect.fn(function* ({ expect }) {
+        const built: string[] = [];
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.sync(() => {
+                  built.push('b');
+                  return { value: 'b' };
+                }),
+              ),
+            ),
+          ],
+        });
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        expect(built).toEqual([]);
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+        expect(built).toEqual(['b']);
+      }),
+    );
+
+    it.effect(
+      'builds an eager spec once across repeated resolutions',
+      Effect.fn(function* ({ expect }) {
+        let builds = 0;
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.succeed(ServiceA, { value: 'a' }),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [], eager: true }, () =>
+              Layer.effectDiscard(Effect.sync(() => void builds++)),
+            ),
+          ],
+        });
+
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        expect(builds).toEqual(1);
+      }),
+    );
+  });
+
   describe('application-affinity resolution', () => {
     it.effect(
       'resolves a single service provided by an application-affinity layer',
