@@ -85,7 +85,42 @@ describe('import — token fallback', () => {
     );
 
     expect(GitHubRepoInaccessibleError.is(error)).toBe(true);
-    expect((error as GitHubRepoInaccessibleError).context).toMatchObject({ ...reference, status: 401 });
+    expect((error as GitHubRepoInaccessibleError).context).toMatchObject({
+      ...reference,
+      status: 401,
+      connected: true,
+      tokenRejected: true,
+    });
     expect(tokens).toEqual(['dead-token', '']);
+  });
+
+  test('a repository the live token cannot see is not reported as a rejected credential', async ({ expect }) => {
+    const error = await run(
+      fetchPullRequestWithFallback(reference, 'live-token', () => Effect.fail(statusError(404))),
+    ).then(
+      () => undefined,
+      (error) => error,
+    );
+
+    expect(GitHubRepoInaccessibleError.is(error)).toBe(true);
+    expect((error as GitHubRepoInaccessibleError).context).toMatchObject({
+      status: 404,
+      connected: true,
+      tokenRejected: false,
+    });
+  });
+
+  test('a space with no connection reports itself as unconnected', async ({ expect }) => {
+    const error = await run(fetchPullRequestWithFallback(reference, '', () => Effect.fail(statusError(404)))).then(
+      () => undefined,
+      (error) => error,
+    );
+
+    expect(GitHubRepoInaccessibleError.is(error)).toBe(true);
+    expect((error as GitHubRepoInaccessibleError).context).toMatchObject({
+      status: 404,
+      connected: false,
+      tokenRejected: false,
+    });
   });
 });
