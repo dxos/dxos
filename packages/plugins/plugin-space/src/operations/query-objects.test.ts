@@ -78,7 +78,8 @@ describe('SpaceOperation.QueryObjects', () => {
         yield* Feed.append(feed, [
           Obj.make(TestObject, { name: 'Lot Booking Co', description: 'search-token-7f3a2c91' }),
         ]);
-        yield* Database.flush();
+        // A text query reads the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
 
         // Feed-backed content lives behind a feed ref, so a plain space query cannot see it.
         const { results: spaceOnly } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
@@ -108,7 +109,8 @@ describe('SpaceOperation.QueryObjects', () => {
         yield* Feed.append(inbox, [Obj.make(TestObject, { name: 'Alpha', description: 'in-param-token' })]);
         const archive = yield* Database.add(Feed.make({ name: 'inbox-2' }));
         yield* Feed.append(archive, [Obj.make(TestObject, { name: 'Beta', description: 'in-param-token' })]);
-        yield* Database.flush();
+        // A text query reads the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
 
         const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
           in: [Ref.make(inbox)],
