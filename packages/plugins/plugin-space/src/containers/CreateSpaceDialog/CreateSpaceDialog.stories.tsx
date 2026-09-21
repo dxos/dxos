@@ -30,7 +30,9 @@ const DefaultStory = () => (
 
 /**
  * Two templates through the real contribution path — a loader gated on `SpaceTemplatesRequested`,
- * which the dialog fires itself. One is hidden, so the picker shows one row and not two.
+ * which the dialog fires itself. One is hidden, so the picker shows one row and not two. The
+ * visible one's icon is deliberately the Phosphor spelling rather than an `iconValues` name: the
+ * dialog drops it instead of double-wrapping it, and `getTemplateIcon`'s own test covers that.
  */
 const TemplatesPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('com.example.plugin.templates'), name: 'Templates' }),
@@ -43,7 +45,7 @@ const TemplatesPlugin = Plugin.define(
             id: 'com.example.template.visible',
             label: 'Roastery',
             description: 'Listed in the picker.',
-            icon: 'potted-plant',
+            icon: 'ph--potted-plant--regular',
             hue: 'amber',
             apply: () => Promise.resolve(),
           },

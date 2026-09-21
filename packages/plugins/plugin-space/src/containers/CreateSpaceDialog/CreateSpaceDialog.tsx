@@ -38,7 +38,14 @@ export const CreateSpaceDialog = () => {
   const [error, setError] = useState<string | undefined>(undefined);
   const manager = usePluginManager();
   const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
-  const templates = useMemo(() => contributed.filter(({ hidden }) => !hidden), [contributed]);
+  // Icons are normalized once, here, rather than at each of the three places that read one: the
+  // row, the form defaults and the space the operation goes on to create should not disagree about
+  // what a template looks like.
+  const templates = useMemo(
+    () =>
+      contributed.filter(({ hidden }) => !hidden).map((template) => ({ ...template, icon: getTemplateIcon(template) })),
+    [contributed],
+  );
   const [template, setTemplate] = useState<string | undefined>(undefined);
 
   // Opening the dialog is the demand signal: template modules are gated on `SpaceTemplatesRequested`,
@@ -58,13 +65,7 @@ export const CreateSpaceDialog = () => {
   const values = useMemo<FormValues>(() => {
     const selected = templates.find(({ id }) => id === template);
     return selected
-      ? {
-          ...initialValues,
-          template: selected.id,
-          name: selected.label,
-          icon: getTemplateIcon(selected),
-          hue: selected.hue,
-        }
+      ? { ...initialValues, template: selected.id, name: selected.label, icon: selected.icon, hue: selected.hue }
       : initialValues;
   }, [templates, template]);
 
@@ -133,7 +134,7 @@ export const CreateSpaceDialog = () => {
                         {templates.map(({ id, label, description, icon }) => (
                           <Listbox.Item key={id} id={id}>
                             <Listbox.ItemContent
-                              // Templates carry a bare `iconValues` name, as space properties do.
+                              // A bare `iconValues` name, as space properties carry.
                               icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
                               title={label}
                               description={description}
