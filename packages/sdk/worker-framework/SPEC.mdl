@@ -258,10 +258,11 @@ feat F-3: Worker lifecycle and displacement
 
   req F-3.6:
     when: a tab receives an escalation over the displacement channel
-    then: it acts only on an escalation raised by another worker, whose own worker still
-          holds its liveness lock and does not answer a `ping` within the probe timeout,
-          so however many tabs share the storage lock only the wedged incumbent is
-          terminated; a malformed message is discarded before any of this
+    then: it discards a malformed message, ignores one its own worker raised, and otherwise
+          judges the worker it owns — never the issuer — terminating that worker only when
+          it still holds its liveness lock and does not answer a `ping` within the probe
+          timeout, so however many tabs share the storage lock every healthy bystander
+          stands down and only the wedged incumbent is terminated
 
   req F-3.7:
     when: a worker is asked `ping`
