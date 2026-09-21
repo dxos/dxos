@@ -88,4 +88,38 @@ describe('Ref', () => {
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
     expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
   });
+
+  // `Ref` is a `Schema.declare` carrying no identifier or title annotation (see the
+  // `TODO(dmaretskyi): Add name and description.` above `createEchoReferenceSchema`), so Effect
+  // renders it with its placeholder for an unnamed declaration. Every rejection of a ref field —
+  // and `InvalidOperationInput` interpolates this message verbatim — therefore says only what shape
+  // it is not, never which type was expected nor what arrived.
+  describe('rejection diagnostics', () => {
+    const rejectionMessage = (value: unknown): string => {
+      try {
+        Schema.decodeUnknownSync(Schema.toType(Schema.Struct({ tasks: Ref(Task) })))({ tasks: value } as any);
+      } catch (err: any) {
+        return err.message;
+      }
+      throw new Error('expected the decode to fail');
+    };
+
+    test('names the expected type', ({ expect }) => {
+      const message = rejectionMessage(42);
+
+      // The path is reported, and that part is fine.
+      expect(message).toContain('["tasks"]');
+
+      // The type is not. A caller correcting its input needs to know a reference was expected.
+      expect(message).not.toContain('<Declaration>');
+      expect(message.toLowerCase()).toContain('ref');
+    });
+
+    test('reports the offending value', ({ expect }) => {
+      // The value is what distinguishes "you passed a number" from "you passed an unresolvable
+      // envelope" — the two mistakes a remote caller actually makes, currently indistinguishable.
+      expect(rejectionMessage(42)).toContain('42');
+      expect(rejectionMessage({ '/': 'not-a-uri' })).toContain('not-a-uri');
+    });
+  });
 });
