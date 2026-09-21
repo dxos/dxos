@@ -186,17 +186,30 @@ tile. Earlier revisions of this file called it "the only machine-independent mea
 for regressions"; that claim is gone rather than the tile being restored, because a dashboard is
 not obliged to carry every field the harness records.
 
-### Every aggregate tile requires a COMPLETE iteration
+### No aggregate tile requires a COMPLETE iteration, and that is a defect
 
 `writePosthogBatch` drops a failed stage, so an iteration that lost one publishes ten rows rather
 than eleven. A run total summed over ten phases is smaller than one summed over eleven, and nothing
-about the number says so — a partial iteration would enter the distribution looking like a fast
-one and drag the whole box down.
+about the number says so — a partial iteration enters the distribution looking like a fast one and
+drags the whole box down.
 
-Each distribution and stacked query therefore reduces an iteration only if it has all eleven stages
-(`HAVING count() = 11` on the per-iteration group). The partial rows stay in the store and in the
-runs table, where the `stages` column is what makes them legible; they are excluded from the
-aggregates alone.
+Earlier revisions of this file said each distribution and stacked query reduces an iteration only
+if it has every stage (`HAVING count() = …` on the per-iteration group). **It does not, and no
+version of the dashboard ever did.** All fifteen insights were read on 2026-09-18: not one carries
+a `HAVING` clause or any other completeness filter, and the only literal count in their HogQL is
+the `count() > 1` guard that keeps `stddevSamp` from returning NaN on a single-iteration night.
+
+Two consequences follow, and both are live:
+
+- A partial iteration is silently in every box, undersized by whatever its missing stages cost. The
+  `stages` column of the runs table is the only place it is visible, which is why that column is
+  worth reading before any other number on the page.
+- A change to the STAGE SET moves every run total on the night it lands, because the totals sum
+  whatever rows an iteration published rather than a fixed set. Adding `await-replication` is
+  exactly that, so run totals do not compare across 2026-09-18.
+
+Adding the gate is a dashboard edit rather than a repo one; until someone makes it, this section
+describes what the tiles do rather than what they should do.
 
 ### Shared-worker panels are deliberately absent
 
@@ -217,9 +230,8 @@ it is also how a point that looks wrong gets traced back to a commit and a Depot
 
 Its `stages` column is the integrity check, and worth reading before any other number on the page.
 The flow has **eleven** stages and `writePosthogBatch` drops failed ones, so a row showing fewer
-than eleven is a partial iteration whose totals are not comparable to a complete one. The aggregate
-tiles exclude it (`HAVING count() = 11`), so this table and the stored rows are the only place it
-shows.
+than eleven is a partial iteration whose totals are not comparable to a complete one — and since
+nothing filters it out, that iteration is inside every box above. This table is where you catch it.
 
 `await-replication` is the eleventh, added after the per-stage I/O spread was traced to setup: the
 fixture's writes were still replicating through whichever stage happened to be running. Its own

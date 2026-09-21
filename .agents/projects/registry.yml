@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-canvas
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-20
+    summary: 'Infinite, multi-depth canvas: scenes (ECHO objects) contain cells (rect, link, nested scene) positioned in scene-local coordinates; zooming into a scene cell drills to the child scene. Hybrid SVG/canvas + HTML islands; react-ui-canvas-editor becomes a first consumer.'
+    tasks: .agents/projects/plugin-canvas/TASKS.md
+    design: packages/ui/react-ui-canvas/docs/DESIGN.md
+    prs: [13249]
+    resume: 'Phase 0 done (AUDIT.md, RESEARCH.md, DESIGN.md rev 4 incl. §6b mobile columns). PR #13249 (2026-09-20, branch claude/infinite-canvas-depth-7e0949-ojem5i, mirrored to claude/infinite-canvas-depth-7e0949): PR 0 extracts @dxos/diagram and adds ports/portal/index to the DSL; BLOCKED on the first npm publish of @dxos/diagram (check-packages-published). Phase 1 engine stacked on the same branch: react-ui-canvas/src/scene/ (types, order, camera, hit, ports, route, store, freehand projection, SceneView + layers + control frame + palette), Freehand, Nested, Constrained and Dynamic stories smoke-tested headlessly; spike deleted. NEXT: user review of the stories in local storybook; land #13249 once @dxos/diagram is published; then phase 2 (text/object cells via Surface, ortho routing, undo, mobile columns).'
   - name: plugin-markdown
     status: active
     user: burdon
@@ -14,8 +24,8 @@ projects:
     summary: 'Inline object embeds (`![label](echo:///…)`) in markdown documents: the embed container is a focusable attendable — click to focus (focus ring, events reach the surface), otherwise inert so wheel/scroll passes to the document.'
     tasks: .agents/projects/plugin-markdown/TASKS.md
     design: .agents/projects/plugin-markdown/DESIGN.md
-    prs: [13237, 13239]
-    resume: 'PR #13239 OPEN (deleted embed targets: inline editable error, setLinkWidgetState, stub no longer inherits a replaced element). #13237 MERGED 2026-09-19. NEXT: land #13239; then TASKS.md follow-ups.'
+    prs: [13237, 13239, 13253]
+    resume: 'PR #13253 OPEN (section embed takes its reservation back after a card; follow-up to #13239). #13239 MERGED 2026-09-20T19:56Z (deleted embed targets inline/editable/error, atomic arrow step over blocks, in-place height release, keepAlive). #13237 MERGED 2026-09-19. NEXT: land #13253; then TASKS.md follow-ups.'
   - name: plugin-debug
     status: active
     user: burdon

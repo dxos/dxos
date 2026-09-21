@@ -1,6 +1,6 @@
 # plugin-markdown — Tasks
 
-_Resume: land PR #13239. Uncommitted: none. Last: PR opened 2026-09-20._
+_Resume: land PR #13253 (follow-up). #13239 merged 2026-09-20. Uncommitted: none._
 
 ## Phase 1: focusable inline object embeds
 
@@ -50,7 +50,17 @@ that must be clicked to take events.
       reserved height); the stub no longer adopts a replaced widget's element or pin.
       `MarkdownArticle › DeletedEmbed` play test.
 
+- [x] **Phase 2 shipped in #13239** — plus: one arrow press steps over a block (atomic range widened past
+      line breaks); card embeds release their pin in place (`releaseBlockHeight`) and opt into `keepAlive`;
+      `StubWidget.eq` compares `block`. #13253: a section takes its reservation back after a card.
+
 ### Follow-ups
+
+- [ ] `EmbedFocus` play test settles 1s before clicking: a load-time rebuild redrawn under the click
+      replaces the element being clicked (focus lost). Root cause is CodeMirror redrawing culled blocks
+      with fresh roots on rebuild; two attempts (root adoption, instance reuse) were reverted — the
+      former collides with CodeMirror removing the old tile's node, the latter breaks the
+      fresh-instance-per-rebuild contract the xml-tags tests pin.
 
 - [ ] Clicking an embedded _document_ scrolls the outer document (~190px): the inner editor focuses
       its cursor and `scrollIntoView` chains up. Needs `preventScroll` on the inner editor's focus.

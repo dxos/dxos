@@ -15,12 +15,7 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
-import {
-  PROXY_CONNECTION_TIMEOUT,
-  layerClientServicesServer,
-  layerHandlersFromTag,
-  makeRtcServiceClientOverProtocol,
-} from '@dxos/client-protocol';
+import { PROXY_CONNECTION_TIMEOUT, makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
 import { type Config, ConfigService } from '@dxos/config';
 import { Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -28,22 +23,8 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { WorkerRuntimeStartError, makeInProcessClient } from '@dxos/protocols';
-import {
-  ContactsService,
-  DataService,
-  DevicesService,
-  DevtoolsHost,
-  EdgeAgentService,
-  FeedService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  QueryService,
-  type RTCService,
-  SpacesService,
-  SystemService,
-} from '@dxos/protocols/rpc';
+import { DevicesService, IdentityService, type RTCService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
@@ -297,24 +278,10 @@ export const makeWorkerRuntime = ({
         if (error || !stack) {
           return yield* Effect.die(error ?? new Error('worker runtime stack is not available'));
         }
+        // Every service registered itself with the stack's router; the session only attaches its
+        // transport, so adding a service never touches this code.
         yield* Layer.build(
-          layerClientServicesServer(
-            Layer.mergeAll(
-              layerHandlersFromTag(SystemService.Rpcs, SystemService.Tag),
-              layerHandlersFromTag(NetworkService.Rpcs, NetworkService.Tag),
-              layerHandlersFromTag(LoggingService.Rpcs, LoggingService.Tag),
-              layerHandlersFromTag(IdentityService.Rpcs, IdentityService.Tag),
-              layerHandlersFromTag(InvitationsService.Rpcs, InvitationsService.Tag),
-              layerHandlersFromTag(DevicesService.Rpcs, DevicesService.Tag),
-              layerHandlersFromTag(SpacesService.Rpcs, SpacesService.Tag),
-              layerHandlersFromTag(DataService.Rpcs, DataService.Tag),
-              layerHandlersFromTag(QueryService.Rpcs, QueryService.Tag),
-              layerHandlersFromTag(FeedService.Rpcs, FeedService.Tag),
-              layerHandlersFromTag(ContactsService.Rpcs, ContactsService.Tag),
-              layerHandlersFromTag(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
-              layerHandlersFromTag(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
-            ),
-          ).pipe(
+          RpcRouter.layerTransport.pipe(
             Layer.provide(Layer.succeed(RpcServer.Protocol, appProtocol)),
             Layer.provide(Layer.succeedContext(stack)),
           ),

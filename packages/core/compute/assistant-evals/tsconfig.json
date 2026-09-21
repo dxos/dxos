@@ -12,6 +12,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/diagram"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
@@ -106,6 +109,12 @@
     },
     {
       "path": "../../protocols"
+    },
+    {
+      "path": "../agent-code-mode"
+    },
+    {
+      "path": "../agent-runtime"
     },
     {
       "path": "../ai"

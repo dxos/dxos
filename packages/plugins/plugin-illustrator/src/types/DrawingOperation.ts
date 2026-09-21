@@ -8,10 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { Diagnostics, Scene } from '@dxos/diagram';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-
-import { Diagnostics, Scene } from '#model';
 
 import * as Drawing from './Drawing.ts';
 
