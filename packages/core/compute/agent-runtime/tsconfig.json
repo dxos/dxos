@@ -25,9 +25,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/client-protocol"
-    },
-    {
       "path": "../../../sdk/schema"
     },
     {

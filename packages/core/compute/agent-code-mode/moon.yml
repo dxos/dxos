@@ -4,3 +4,10 @@ tags:
   - ts-vite-build
   - ts-test
   - model-fixture
+tasks:
+  test:
+    # The worker sandbox starts its entry from a real FILE under `dist/lib`, not through vite, so
+    # the tests need this package's own build — which the `ts-test` tag only supplies for
+    # dependencies (`^:build`).
+    deps:
+      - ~:build

@@ -121,24 +121,32 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
         // is internal to one evaluation and has no dashboard reading it.
         { disableTracing: true, concurrency: 'unbounded', timing: false },
       );
-      yield* Effect.acquireRelease(
-        Effect.promise(() => server.open()),
-        () => Effect.promise(() => server.close()),
-      );
-
-      // The worker dying is the other way this ends: whichever happens first is the answer.
-      const evaluation = Effect.race(
-        Deferred.await(settled),
-        Effect.promise(() => handle.stopped).pipe(
-          Effect.flatMap((reason) =>
-            Effect.fail(
-              new Sandbox.EvaluationError({
-                message: `The worker stopped without reporting a result${reason === undefined ? '' : `: ${reason}`}.`,
-              }),
-            ),
+      // The worker dying is the other way every stage of this ends, including the one BEFORE the
+      // channel exists: `open()` waits for a handshake a dead worker will never send, so a failed
+      // spawn — a missing entry module, a crash while loading it — would otherwise hang there
+      // rather than be reported.
+      //
+      // `raceFirst`, not `race`: this branch always FAILS, and `race` waits for a SUCCESS, so it
+      // would discard the very signal being watched for and wait out the other side regardless.
+      const stopped = Effect.promise(() => handle.stopped).pipe(
+        Effect.flatMap((reason) =>
+          Effect.fail(
+            new Sandbox.EvaluationError({
+              message: `The worker stopped without reporting a result${reason === undefined ? '' : `: ${reason}`}.`,
+            }),
           ),
         ),
       );
+
+      // Registered before the open rather than paired with it, so the server is closed even when
+      // the open loses that race.
+      yield* Effect.addFinalizer(() => Effect.promise(() => server.close()));
+      yield* Effect.raceFirst(
+        Effect.promise(() => server.open()),
+        stopped,
+      );
+
+      const evaluation = Effect.raceFirst(Deferred.await(settled), stopped);
       return yield* timeout === undefined
         ? evaluation
         : evaluation.pipe(

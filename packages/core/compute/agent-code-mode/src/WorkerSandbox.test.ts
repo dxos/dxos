@@ -18,6 +18,7 @@ import { DXN } from '@dxos/keys';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
+import type * as Sandbox from './Sandbox.ts';
 import * as WorkerSandbox from './WorkerSandbox.ts';
 
 const TASK_TYPENAME = 'com.example.type.task';
@@ -119,6 +120,20 @@ describe('worker sandbox', () => {
     expect(output).not.toContain('killed');
   }, 60_000);
 
+  test('reports a worker that dies before the channel exists', async () => {
+    // The entry module is missing, so the thread dies while loading it and never connects. The
+    // host is waiting on a handshake that will never come, which is a hang unless the dead worker
+    // is watched from BEFORE the channel opens — and a hang here costs the caller its whole
+    // budget and then blames a timeout it never hit. CI found this the hard way, by running the
+    // suite without the package's own build.
+    const { runWithEntry } = await setup();
+    const output = await runWithEntry(
+      new URL('../dist/lib/no-such-entry.mjs', import.meta.url),
+      'print("unreachable");',
+    );
+    expect(output).toContain('The worker stopped without reporting a result');
+  }, 60_000);
+
   test('kills a worker whose code never finishes', async () => {
     const { run } = await setup();
     // A synchronous loop: the case the in-process sandbox cannot even observe, let alone stop,
@@ -135,21 +150,29 @@ const setup = async () => {
   const peer = await builder.createPeer({ types: [Task] });
   const db = await peer.createDatabase();
 
-  const sandbox = WorkerSandbox.make({
-    entry: BUILT_ENTRY,
-    echo: () => ({
-      DataService: peer.host.dataService,
-      QueryService: peer.host.queryService,
-      space: { spaceId: String(db.spaceId), spaceKey: db.spaceKey.toHex(), rootUrl: db.rootUrl! },
-    }),
-  });
+  const makeSandbox = (entry: URL) =>
+    WorkerSandbox.make({
+      entry,
+      echo: () => ({
+        DataService: peer.host.dataService,
+        QueryService: peer.host.queryService,
+        space: { spaceId: String(db.spaceId), spaceKey: db.spaceKey.toHex(), rootUrl: db.rootUrl! },
+      }),
+    });
+
+  const sandbox = makeSandbox(BUILT_ENTRY);
 
   const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, noAmbientOperations));
 
   /** Runs `code` in a worker exactly as a turn would, returning what it printed. */
   const run = (code: string, timeout?: Duration.Input) => runWith(PlainDialect, code, timeout);
 
-  const runWith = (dialect: Dialect, code: string, timeout?: Duration.Input) =>
+  const runWith = (dialect: Dialect, code: string, timeout?: Duration.Input) => runOn(sandbox, dialect, code, timeout);
+
+  /** Runs against a sandbox pointed at `entry`, for the cases where the entry itself is the subject. */
+  const runWithEntry = (entry: URL, code: string) => runOn(makeSandbox(entry), PlainDialect, code);
+
+  const runOn = (sandbox: Sandbox.Sandbox, dialect: Dialect, code: string, timeout?: Duration.Input) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const toolkit = makeEvalToolkit({
@@ -171,5 +194,5 @@ const setup = async () => {
       }),
     );
 
-  return { db, run, runWith };
+  return { db, run, runWith, runWithEntry };
 };
