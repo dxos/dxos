@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
+import { WorkerTerminationError } from './errors.ts';
 import { DisplaceChannel } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
@@ -747,20 +748,29 @@ class LeaderSession extends Resource {
     // signal holds the storage lock until the tab owning its handle terminates it, and this tab is
     // the only party that holds that handle.
     this.#displaceChannel = new DisplaceChannel(readyMessage.displaceChannel);
-    this.#displaceChannel.onTerminate = (issuerId) => {
+    this.#displaceChannel.onTerminate = ({ issuerId, storageLockKey, graceTimeout }) => {
       // Our own worker raised the escalation while queued behind someone else's; terminating here
       // would have every new leader kill the worker it just started, which is the kill loop.
       if (issuerId === this.#workerId) {
         return;
       }
-      log.warn('leader-session: terminating a worker that ignored displacement', {
-        leaderId: this.#leaderId,
-        workerId: this.#workerId,
-        issuerId,
+      // Reported from the side that actually kills the worker, and only there: the escalating
+      // worker runs in a thread with no observability processor attached, and a second event per
+      // incident would only split the incident in the error stream.
+      const error = new WorkerTerminationError({
+        context: {
+          storageLockKey,
+          terminatedWorkerId: this.#workerId,
+          issuerId,
+          graceTimeout,
+          raisedBy: 'tab',
+          leaderId: this.#leaderId,
+        },
       });
+      log.catch(error);
       this.#closeWorker();
       if (this.isOpen) {
-        this.onClose.emit(new Error('Dedicated worker forcefully terminated after ignoring displacement.'));
+        this.onClose.emit(error);
       }
     };
 

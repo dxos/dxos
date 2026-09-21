@@ -221,8 +221,14 @@ feat F-3: Worker lifecycle and displacement
     when: a starting worker is still queued on the storage lock after its displacement
           grace period, i.e. the incumbent never serviced the stop signal
     then: it escalates once on the same channel with a `terminate` action naming itself,
-          and the tab owning the incumbent's handle terminates it — unless the escalation
-          names that tab's own worker
+          the storage lock and the grace period it allowed, and the tab owning the
+          incumbent's handle terminates it — unless the escalation names that tab's own
+          worker
+
+  req F-3.6:
+    when: a tab terminates a worker that ignored displacement
+    then: it reports a `WorkerTerminationError` at error level, so the forced kill reaches
+          error telemetry, and closes the session with that same error
 ```
 
 ```mdl

@@ -7,7 +7,17 @@ const STOP_ACTION = 'stop';
 /** Asks the tab owning that worker to terminate it, once it has ignored {@link STOP_ACTION}. */
 const TERMINATE_ACTION = 'terminate';
 
-type DisplaceMessage = { action: typeof STOP_ACTION } | { action: typeof TERMINATE_ACTION; issuerId: string };
+/**
+ * What an escalation tells the tab acting on it: who raised it, over which storage lock, and how
+ * long the incumbent was given — the context the forced termination is reported with.
+ */
+export type TerminateRequest = {
+  issuerId: string;
+  storageLockKey: string;
+  graceTimeout: number;
+};
+
+type DisplaceMessage = { action: typeof STOP_ACTION } | ({ action: typeof TERMINATE_ACTION } & TerminateRequest);
 
 /** Default displacement channel for a storage lock. */
 export const displaceChannelFor = (storageLockKey: string): string => `${storageLockKey}/displace`;
@@ -34,7 +44,7 @@ export class DisplaceChannel {
    * Called when a newer worker escalates. `issuerId` is that worker's id, so a tab can tell an
    * escalation raised against someone else from one raised by the worker it owns.
    */
-  onTerminate: (issuerId: string) => void = () => {};
+  onTerminate: (request: TerminateRequest) => void = () => {};
 
   constructor(channelName: string) {
     this.#channel = new BroadcastChannel(channelName);
@@ -44,9 +54,11 @@ export class DisplaceChannel {
         case STOP_ACTION:
           this.onStop();
           break;
-        case TERMINATE_ACTION:
-          this.onTerminate(message.issuerId);
+        case TERMINATE_ACTION: {
+          const { issuerId, storageLockKey, graceTimeout } = message;
+          this.onTerminate({ issuerId, storageLockKey, graceTimeout });
           break;
+        }
       }
     };
   }
@@ -55,8 +67,8 @@ export class DisplaceChannel {
     this.#channel.postMessage({ action: STOP_ACTION } satisfies DisplaceMessage);
   }
 
-  postTerminate(issuerId: string): void {
-    this.#channel.postMessage({ action: TERMINATE_ACTION, issuerId } satisfies DisplaceMessage);
+  postTerminate(request: TerminateRequest): void {
+    this.#channel.postMessage({ action: TERMINATE_ACTION, ...request } satisfies DisplaceMessage);
   }
 
   close(): void {

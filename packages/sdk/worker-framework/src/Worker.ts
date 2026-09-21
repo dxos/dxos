@@ -26,11 +26,15 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 
 /**
  * How long a starting worker waits for the incumbent to release the storage lock cooperatively
- * before escalating to its tab. Long enough for a slow-but-live worker to finish shutting down
- * (its runtime scope may still be flushing), and well inside the leader session's own budget so the
- * handover still has time to complete after the escalation lands.
+ * before escalating to its tab.
+ *
+ * Killing a worker that was merely slow is the cost of being wrong, so the window is as long as it
+ * can be: it must stay strictly below `LOCK_OR_RPC_WAIT_TIMEOUT` (15s), because the escalating
+ * worker is itself terminated by its tab the moment that budget expires — a grace period at or
+ * above it never fires at all — leaving the remainder for the terminate, the lock grant and the
+ * handshake that follow.
  */
-const DEFAULT_DISPLACE_GRACE_TIMEOUT = 5_000;
+export const DEFAULT_DISPLACE_GRACE_TIMEOUT = 10_000;
 
 export { displaceChannelFor };
 
@@ -150,8 +154,11 @@ export const run = ({
   // the storage lock, and only the tab holding its `Worker` handle can free them. Fires at most once
   // per worker start, and never once the lock has been granted.
   const escalation = setTimeout(() => {
-    log.warn('displaced worker still holds the storage lock, escalating to its tab', { storageLockKey });
-    channel.postTerminate(workerId);
+    log.warn('displaced worker still holds the storage lock, escalating to its tab', {
+      storageLockKey,
+      graceTimeout: displaceGraceTimeout,
+    });
+    channel.postTerminate({ issuerId: workerId, storageLockKey, graceTimeout: displaceGraceTimeout });
   }, displaceGraceTimeout);
 
   void navigator.locks.request(storageLockKey, async () => {

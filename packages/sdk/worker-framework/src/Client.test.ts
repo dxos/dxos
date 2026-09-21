@@ -8,9 +8,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
+import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as Client from './Client.ts';
-import { WorkerConnectionError } from './errors.ts';
+import { WorkerConnectionError, WorkerTerminationError } from './errors.ts';
 import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
 import * as Worker from './Worker.ts';
 import * as WorkerProtocol from './WorkerProtocol.ts';
@@ -916,12 +917,40 @@ describe('Worker displacement', () => {
     // and the liveness lock — the cooperative path from #13269 has nothing left to work with.
     wedgeable.wedge();
 
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const removeProcessor = log.addProcessor(processor);
+    onTestFinished(removeProcessor);
+
     // The worker another tab spawns for the same storage lock. Its grace period is injected rather
     // than waited out, so the escalation is observed by the terminations it causes, not by a clock.
     const successor = startBareWorker(keys.storageLockKey, { displaceGraceTimeout: 50 });
     await asyncTimeout(wedgeable.terminated, 10_000);
     await asyncTimeout(successor.listening, 10_000);
+
+    // A forced kill is a fault, so it must reach error telemetry — the PostHog processor forwards
+    // an entry only when it carries an `Error`, which a bare `log.warn` never does.
+    const reported = entries.filter((entry): entry is LogEntry & { error: WorkerTerminationError } => {
+      return entry.error instanceof WorkerTerminationError;
+    });
+    expect(reported).toHaveLength(1);
+    expect(reported[0].level).to.eq(LogLevel.ERROR);
+    expect(reported[0].error.context).to.deep.contain({
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+      raisedBy: 'tab',
+    });
   }, 30_000);
+
+  // DX-1293 follow-up: 5s killed workers that were merely slow. The escalating worker is itself
+  // terminated once its tab's `LOCK_OR_RPC_WAIT_TIMEOUT` budget expires, so a grace period at or
+  // above that budget would never fire.
+  test('the displacement grace period is long, and still inside the leader session budget', () => {
+    expect(Worker.DEFAULT_DISPLACE_GRACE_TIMEOUT).toBeGreaterThanOrEqual(10_000);
+    expect(Worker.DEFAULT_DISPLACE_GRACE_TIMEOUT).toBeLessThan(LOCK_OR_RPC_WAIT_TIMEOUT);
+  });
 
   test('a leader session opens against a storage lock a wedged worker still holds', async () => {
     const hub = createHub();

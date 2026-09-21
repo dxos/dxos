@@ -14,3 +14,15 @@ export class WorkerError extends BaseError.extend('WorkerError', 'Worker failed'
  * connection handle failed. Carries the phase it reached in {@link BaseError.context}.
  */
 export class WorkerConnectionError extends BaseError.extend('WorkerConnectionError', 'Worker connection failed') {}
+
+/**
+ * A worker ignored the cooperative displacement signal for its whole grace period and had to be
+ * killed by the tab owning its handle. Raised at error level because a worker that stops servicing
+ * its event loop is a fault rather than routine displacement, so it reaches error telemetry; its
+ * {@link BaseError.context} carries what triage needs — the storage lock, both worker ids, the
+ * grace period that elapsed, and the side that raised it.
+ */
+export class WorkerTerminationError extends BaseError.extend(
+  'WorkerTerminationError',
+  'Worker forcefully terminated after ignoring displacement',
+) {}
