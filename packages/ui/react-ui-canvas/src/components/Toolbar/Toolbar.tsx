@@ -12,6 +12,7 @@ import React from 'react';
 import { Menu, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { shortcutFor } from '../../model/keys.ts';
 import { type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type NodeType, type SceneId } from '../../model/types.ts';
 import { Breadcrumbs } from '../Breadcrumbs/Breadcrumbs.tsx';
@@ -76,7 +77,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
-        label='Fit (Home)'
+        label={`Fit (${shortcutFor('fit')})`}
         data-testid='toolbar-fit'
         onClick={actions.fit}
       />
@@ -100,7 +101,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
-        label='Snap (G): snap moves, resizes and new nodes to the major grid'
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid`}
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
@@ -110,7 +111,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-left--regular'
-        label='Undo (⌘Z)'
+        label={`Undo (${shortcutFor('undo')})`}
         disabled={!actions.canUndo}
         data-testid='undo'
         onClick={actions.undo}
@@ -119,7 +120,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-right--regular'
-        label='Redo (⇧⌘Z)'
+        label={`Redo (${shortcutFor('redo')})`}
         disabled={!actions.canRedo}
         data-testid='redo'
         onClick={actions.redo}
@@ -129,7 +130,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--scissors--regular'
-        label='Cut (⌘X)'
+        label={`Cut (${shortcutFor('cut')})`}
         disabled={!actions.hasSelection || !capabilities.delete}
         data-testid='cut'
         onClick={actions.cut}
@@ -138,7 +139,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--copy--regular'
-        label='Copy (⌘C)'
+        label={`Copy (${shortcutFor('copy')})`}
         disabled={!actions.hasSelection}
         data-testid='copy'
         onClick={actions.copy}
@@ -147,7 +148,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--clipboard-text--regular'
-        label='Paste (⌘V)'
+        label={`Paste (${shortcutFor('paste')})`}
         disabled={!actions.hasClipboard || !capabilities.create}
         data-testid='paste'
         onClick={actions.paste}
@@ -156,7 +157,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--trash--regular'
-        label='Delete'
+        label={`Delete (${shortcutFor('delete')})`}
         disabled={!actions.hasSelection || !capabilities.delete}
         data-testid='toolbar-delete'
         onClick={actions.delete}
@@ -199,7 +200,7 @@ export const Toolbar = ({ classNames, actions, nodes, capabilities, children }: 
         variant='ghost'
         iconOnly
         icon='ph--bug--regular'
-        label='Debug (D): label every frame with its id, type and geometry'
+        label={`Debug (${shortcutFor('debug')}): label every frame with its id, type and geometry`}
         classNames={mx(actions.debug && 'bg-primary-500/20')}
         data-testid='toolbar-debug'
         onClick={actions.toggleDebug}

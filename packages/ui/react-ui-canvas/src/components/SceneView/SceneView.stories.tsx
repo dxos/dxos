@@ -20,7 +20,8 @@ import { SceneView } from './SceneView.tsx';
  * Test:
  * 1. Ctrl/cmd+wheel zooms about the cursor; wheel or hand-tool drag pans; drag on empty canvas draws a marquee.
  * 2. Click selects, shift-click toggles; drag moves the selection (snapped); handles resize a single node.
- *    Hovering a node shows its ports; drag from a port onto a node or port links (with the last link type picked).
+ *    Hovering a node with cmd / ctrl held shows its ports; drag from a port onto a node or port links (with the last
+ *    link type picked).
  * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows its control points: drag one, double-click the spline to add
  *    one, alt-click one to remove it.
@@ -29,7 +30,7 @@ import { SceneView } from './SceneView.tsx';
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
  */
-type StoryArgs = { depth: number; liveDepth: number };
+type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean };
 
 const RegistryWrapper = ({ children }: { children: ReactNode }) => {
   const [registry] = useState(() => Registry.make());
@@ -42,26 +43,31 @@ const withRegistry: Decorator = (Story) => (
   </RegistryWrapper>
 );
 
-type EditorProps = { store: ReturnType<typeof createMemoryStore>; root: string; liveDepth: number };
+type EditorProps = {
+  store: ReturnType<typeof createMemoryStore>;
+  root: string;
+  liveDepth: number;
+  readonly?: boolean;
+};
 
-const Editor = ({ store, root, liveDepth }: EditorProps) => {
+const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => {
   const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
   const projection = useSceneProjection({ store, atoms });
   return (
     <div className='dx-fill grid grid-cols-[1fr_20rem]'>
-      <SceneView store={store} root={root} atoms={atoms} liveDepth={liveDepth} />
-      <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
+      <SceneView store={store} root={root} atoms={atoms} liveDepth={liveDepth} readonly={readonly} />
+      <Properties projection={projection} atoms={atoms} readonly={readonly} classNames='border-l border-separator' />
     </div>
   );
 };
 
-const DefaultStory = ({ depth, liveDepth }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     const tree = createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth]);
   // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.
-  return <Editor key={root} store={store} root={root} liveDepth={liveDepth} />;
+  return <Editor key={root} store={store} root={root} liveDepth={liveDepth} readonly={readonly} />;
 };
 
 const meta: Meta<StoryArgs> = {
@@ -92,4 +98,9 @@ export const Freehand: Story = {
 /** Four levels of portals: drill in and out, tiers, auto drill; `liveDepth` sets how many levels render live. */
 export const Nested: Story = {
   args: { depth: 4, liveDepth: 1 },
+};
+
+/** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
+export const Readonly: Story = {
+  args: { depth: 1, liveDepth: 1, readonly: true },
 };

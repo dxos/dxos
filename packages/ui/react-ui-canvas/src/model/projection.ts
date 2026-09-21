@@ -154,6 +154,16 @@ export const freehandCapabilities: Capabilities = {
   update: true,
 };
 
+/** What a read-only view may do: look, select and navigate, nothing that reaches the model. */
+export const readonlyCapabilities: Capabilities = {
+  move: false,
+  resize: false,
+  link: false,
+  create: false,
+  delete: false,
+  update: false,
+};
+
 /** Identity projection over the store: what the surface asks for is what the model becomes. */
 export const createFreehandProjection = ({ registry, store, sceneId }: FreehandProjectionOptions): Projection => ({
   scene: Atom.keepAlive(Atom.make((get) => get(store.scene(sceneId)) ?? EMPTY)),

@@ -68,6 +68,8 @@ export type PropertiesProps = ThemedClassName<{
   atoms: SceneViewAtoms;
   nodes?: NodeRegistry;
   fields?: FormFieldMap;
+  /** Show the fields without letting them change; also implied by a projection that cannot `update`. */
+  readonly?: boolean;
 }>;
 
 export const Properties = ({
@@ -76,12 +78,13 @@ export const Properties = ({
   atoms,
   nodes = defaultNodeRegistry,
   fields = DEFAULT_FIELDS,
+  readonly: readonlyProp = false,
 }: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
   const ids = [...selection];
   const element = ids.length === 1 ? getElement(scene, ids[0]) : undefined;
-  const readonly = !projection.capabilities.update;
+  const readonly = readonlyProp || !projection.capabilities.update;
 
   const onSave = useCallback(
     (values: Element) => {
@@ -109,8 +112,9 @@ export const Properties = ({
 
 type FormProps = { readonly: boolean; onSave: (values: Element) => void };
 
+// Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it.
 const formFields = (
-  <Form.Viewport>
+  <Form.Viewport scroll>
     <Form.Content>
       <Form.Fields exclude={HIDDEN} />
     </Form.Content>

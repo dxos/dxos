@@ -68,10 +68,16 @@ test.describe('SceneView', () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
   });
 
-  test('hovering outlines the node and D labels every frame', async () => {
+  test('hovering outlines the node, the command key reveals its ports and D labels every frame', async () => {
     const box = await scene.box(scene.node('scene:root/a'));
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect(scene.node('scene:root/a')).toHaveClass(/border-primary-500\/50/);
+    const ports = page.locator('[data-testid="scene-view"] circle.cursor-crosshair');
+    await expect(ports).toHaveCount(0);
+    await page.keyboard.down('Meta');
+    await expect(ports).not.toHaveCount(0);
+    await page.keyboard.up('Meta');
+    await expect(ports).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press('d');
     await expect(page.getByTestId('node-debug')).toHaveCount(4);
@@ -153,5 +159,29 @@ test.describe('SceneView', () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
     expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
+  });
+
+  test('a read-only view selects but draws no handles and applies no edit', async ({ browser }) => {
+    await close?.();
+    ({ page, close } = await setupPage(browser, {
+      url: storybookUrl('ui-react-ui-canvas-scene-sceneview--readonly', PORT),
+      viewportSize: { width: 1400, height: 800 },
+    }));
+    page.on('pageerror', (error) => errors.push(error.message));
+    scene = new SceneManager(page);
+    await scene.ready();
+    const before = await scene.nodeCount();
+    await scene.clickNode('scene:root/a');
+    expect(await scene.selectedNodes()).toEqual(['scene:root/a']);
+    await expect(page.locator('[data-testid="scene-view"] svg rect[style*="cursor"]')).toHaveCount(0);
+    await page.keyboard.down('Meta');
+    await expect(page.locator('[data-testid="scene-view"] circle.cursor-crosshair')).toHaveCount(0);
+    await page.keyboard.up('Meta');
+    await page.keyboard.press('Delete');
+    expect(await scene.nodeCount()).toBe(before);
+    // Only the select and pan tools remain, and nothing on the toolbar can change the scene.
+    await expect(page.locator('[data-testid="palette"] button')).toHaveCount(2);
+    await expect(page.getByTestId('toolbar-create')).toBeDisabled();
+    await expect(page.getByTestId('toolbar-delete')).toBeDisabled();
   });
 });

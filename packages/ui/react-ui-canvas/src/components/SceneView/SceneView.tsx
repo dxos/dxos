@@ -24,7 +24,13 @@ import {
   type SceneViewAtoms,
   createSceneViewAtoms,
 } from '../../model/atoms.ts';
-import { type FreehandProjectionOptions, type Projection, reduceIntent } from '../../model/projection.ts';
+import { hasCommandKey, isCommandKey, isToolKey, keyAction } from '../../model/keys.ts';
+import {
+  type FreehandProjectionOptions,
+  type Projection,
+  readonlyCapabilities,
+  reduceIntent,
+} from '../../model/projection.ts';
 import {
   type CreateProps,
   type LinkRegistry,
@@ -130,6 +136,11 @@ export type SceneViewProps = ThemedClassName<{
   liveDepth?: number;
   showPalette?: boolean;
   showToolbar?: boolean;
+  /**
+   * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
+   * whatever the projection would allow.
+   */
+  readonly?: boolean;
   /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
   overlay?: ReactNode;
 }>;
@@ -147,6 +158,7 @@ export const SceneView = ({
   liveDepth = MAX_LIVE_DEPTH,
   showPalette = true,
   showToolbar = true,
+  readonly = false,
   overlay,
 }: SceneViewProps) => {
   const registry = useRegistry();
@@ -164,14 +176,34 @@ export const SceneView = ({
   const selectedPoint = useAtomValue(atoms.point);
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
+
+  // The command key held reveals the hovered node's ports; tracked on the window so a press without pointer
+  // movement shows them, and cleared on blur so a switch away never leaves them stuck on.
+  const [connect, setConnect] = useState(false);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (isCommandKey(event.key)) {
+        setConnect(event.type === 'keydown');
+      }
+    };
+    const onBlur = () => setConnect(false);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
   const clipboard = useAtomValue(atoms.clipboard);
   const editing = useAtomValue(atoms.editing);
   const debug = useAtomValue(atoms.debug);
   const sceneId = path[path.length - 1];
-  const canUndo = undoState.key === sceneId && undoState.past.length > 0;
-  const canRedo = undoState.key === sceneId && undoState.future.length > 0;
+  const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;
+  const canRedo = !readonly && undoState.key === sceneId && undoState.future.length > 0;
 
   const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
   /** The portal in `parent` that shows `childId`, if any. */
@@ -194,7 +226,8 @@ export const SceneView = ({
     [portalTo],
   );
   const bounds = useMemo(() => frameOf(path, scene), [frameOf, path, scene]);
-  const capabilities = projection.capabilities;
+  // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
+  const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
 
   //
   // Camera.
@@ -309,15 +342,15 @@ export const SceneView = ({
 
   // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
   const onUndo = useCallback(() => {
-    if (undo(projection, registry, atoms.undo, sceneId)) {
+    if (!readonly && undo(projection, registry, atoms.undo, sceneId)) {
       select([]);
     }
-  }, [projection, registry, atoms.undo, sceneId, select]);
+  }, [readonly, projection, registry, atoms.undo, sceneId, select]);
   const onRedo = useCallback(() => {
-    if (redo(projection, registry, atoms.undo, sceneId)) {
+    if (!readonly && redo(projection, registry, atoms.undo, sceneId)) {
       select([]);
     }
-  }, [projection, registry, atoms.undo, sceneId, select]);
+  }, [readonly, projection, registry, atoms.undo, sceneId, select]);
 
   const drillIn = useCallback(
     (portal: Node, animate = true) => {
@@ -793,6 +826,7 @@ export const SceneView = ({
         if (!navigatingRef.current) {
           updateHover(toScene(event));
         }
+        setConnect(hasCommandKey(event));
         return;
       }
       switch (current.kind) {
@@ -1042,79 +1076,112 @@ export const SceneView = ({
     commitCreated,
   ]);
 
+  // Every chord comes from `KEY_BINDINGS`; this only decides what the action means in the current state.
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       const selected = [...registry.get(atoms.selection)];
       const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
       const point = registry.get(atoms.point);
-      if (event.key === 'Escape') {
-        if (registry.get(atoms.drag)) {
-          cancelDrag();
-        } else if (point) {
-          registry.set(atoms.point, undefined);
-        } else if (selected.length > 0) {
-          select([]);
-        } else {
-          drillOut();
+      const action = keyAction(event);
+      switch (action) {
+        case 'cancel':
+          if (registry.get(atoms.drag)) {
+            cancelDrag();
+          } else if (point) {
+            registry.set(atoms.point, undefined);
+          } else if (selected.length > 0) {
+            select([]);
+          } else {
+            drillOut();
+          }
+          break;
+        case 'delete':
+          if (point) {
+            removePoint(point);
+          } else if (selected.length > 0 && capabilities.delete) {
+            projection.apply({ kind: 'delete', ids: selected });
+            select([]);
+          }
+          break;
+        case 'open': {
+          const node = selected.length === 1 ? scene.nodes[selected[0]] : undefined;
+          if (node && nodeDef(nodeRegistry, node)?.openable) {
+            drillIn(node);
+          }
+          break;
         }
-      } else if ((event.key === 'Delete' || event.key === 'Backspace') && point) {
-        removePoint(point);
-      } else if ((event.key === 'Delete' || event.key === 'Backspace') && selected.length > 0 && capabilities.delete) {
-        projection.apply({ kind: 'delete', ids: selected });
-        select([]);
-      } else if (event.key === 'Enter' && selected.length === 1) {
-        const node = scene.nodes[selected[0]];
-        if (node && nodeDef(nodeRegistry, node)?.openable) {
-          drillIn(node);
+        case 'fit':
+          animateTo(fitBounds(bounds, viewport, FIT_INSET));
+          event.preventDefault();
+          break;
+        case 'fitSelection': {
+          const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
+          if (union) {
+            animateTo(fitBounds(union, viewport, FIT_INSET));
+          }
+          break;
         }
-      } else if ((event.shiftKey && event.key === '!') || event.key === 'Home') {
-        animateTo(fitBounds(bounds, viewport, FIT_INSET));
-        event.preventDefault();
-      } else if (event.shiftKey && event.key === '@' && selectedNodes.length > 0) {
-        const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
-        if (union) {
-          animateTo(fitBounds(union, viewport, FIT_INSET));
+        case 'zoomReset':
+          animateTo(zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, 1));
+          break;
+        case 'back':
+          goHistory(-1);
+          break;
+        case 'forward':
+          goHistory(1);
+          break;
+        case 'nudge': {
+          if (selectedNodes.length === 0 || !capabilities.move) {
+            break;
+          }
+          // Shift moves by a major cell rather than a minor one.
+          const step = major * (event.shiftKey ? MAJOR_GRID_RATIO : 1);
+          const delta = {
+            x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
+            y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
+          };
+          projection.apply({ kind: 'move', ids: selectedNodes, delta });
+          event.preventDefault();
+          break;
         }
-      } else if (event.shiftKey && event.key === ')') {
-        animateTo(zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, 1));
-      } else if (event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
-        goHistory(event.key === 'ArrowLeft' ? -1 : 1);
-      } else if (event.key.startsWith('Arrow') && selectedNodes.length > 0 && capabilities.move) {
-        const step = major * (event.shiftKey ? MAJOR_GRID_RATIO : 1);
-        const delta = {
-          x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
-          y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
-        };
-        projection.apply({ kind: 'move', ids: selectedNodes, delta });
-        event.preventDefault();
-      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c') {
-        copy();
-        event.preventDefault();
-      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'x') {
-        cut();
-        event.preventDefault();
-      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'v') {
-        paste();
-        event.preventDefault();
-      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
-        if (event.shiftKey) {
-          onRedo();
-        } else {
+        case 'copy':
+          copy();
+          event.preventDefault();
+          break;
+        case 'cut':
+          cut();
+          event.preventDefault();
+          break;
+        case 'paste':
+          paste();
+          event.preventDefault();
+          break;
+        case 'undo':
           onUndo();
-        }
-        event.preventDefault();
-      } else if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
-        select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
-        event.preventDefault();
-      } else if (event.key === 'g' && !event.metaKey && !event.ctrlKey && !event.altKey) {
-        toggleSnap();
-      } else if (event.key === 'd' && !event.metaKey && !event.ctrlKey && !event.altKey) {
-        toggleDebug();
-      } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
-        const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
-        if (next) {
-          setTool(next);
-        }
+          event.preventDefault();
+          break;
+        case 'redo':
+          onRedo();
+          event.preventDefault();
+          break;
+        case 'selectAll':
+          select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+          event.preventDefault();
+          break;
+        case 'snap':
+          toggleSnap();
+          break;
+        case 'debug':
+          toggleDebug();
+          break;
+        case undefined:
+          if (isToolKey(event)) {
+            const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
+            if (next) {
+              setTool(next);
+            }
+          }
+          break;
       }
     },
     [
@@ -1422,7 +1489,9 @@ export const SceneView = ({
           selectedPoint={selectedPoint}
           zoom={camera.zoom}
           drag={drag}
+          capabilities={capabilities}
           showPorts={tool.kind === 'link'}
+          connect={connect}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
