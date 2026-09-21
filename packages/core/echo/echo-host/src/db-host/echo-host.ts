@@ -502,7 +502,10 @@ export class EchoHost extends Resource {
     // for the next session to re-adopt by digest, and the reconciliation below reclaims whatever
     // no client comes back for.
     const stale = new Set(opts?.releasing ? [] : removed);
-    const reconciling = !this._registryReconciled;
+    // Never off a release: it carries no entries, so if it is the first snapshot of a session the
+    // live set is empty and reconciliation would read the whole persisted registry as orphaned —
+    // deleting exactly the rows a release is meant to keep. The first real snapshot reconciles.
+    const reconciling = !opts?.releasing && !this._registryReconciled;
     if (reconciling) {
       const live = this._registryDataSource.keys;
       const indexed = await this._indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));

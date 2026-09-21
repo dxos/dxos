@@ -45,27 +45,6 @@ describe('registry indexing', () => {
     await builder.close();
   });
 
-  /** Publishes the registry and resolves once the host has indexed it. */
-  const publish = () => client.flushRegistry();
-
-  const rowsFor = (keys: readonly string[]) => peer.host.queryIndexedRegistry({ keys });
-
-  /** Pushes entries straight at the host, bypassing the client's own keying and serialization. */
-  const pushRaw = (entries: readonly { key: string; objectJson: string }[]) =>
-    peer.host.updateRegistry('test-client', entries);
-
-  const only = async (keys: readonly string[]): Promise<EntityMeta> => {
-    const rows = await rowsFor(keys);
-    expect(rows).toHaveLength(1);
-    return rows[0];
-  };
-
-  /** The indexed snapshot behind a row, for asserting which registration is the active one. */
-  const labelOf = async (row: EntityMeta): Promise<string | undefined> => {
-    const snapshots = await peer.runtime.runPromise(peer.host.indexEngine.querySnapshotsJSON([row.recordId]));
-    return (snapshots[0]?.snapshot as { label?: string } | undefined)?.label;
-  };
-
   describe('publication', () => {
     test('a registered entity is indexed under its versioned key', async () => {
       client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'a' })]);
@@ -302,6 +281,19 @@ describe('registry indexing', () => {
       expect(await labelOf(await only([`dxn:${KEY}:1.0.0`]))).toBe('from first');
     });
 
+    test("a release before the first push does not reclaim the previous session's rows", async () => {
+      client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'kept' })]);
+      await publish();
+
+      // A client that opens and closes before its first snapshot lands makes the release the
+      // session's first registry call. It carries no entries, so treating it as the snapshot to
+      // reconcile against would read every persisted row as orphaned.
+      await peer.reload();
+      client = peer.client;
+      await peer.host.updateRegistry('transient-client', [], { releasing: true });
+      expect(await rowsFor([`dxn:${KEY}:1.0.0`])).toHaveLength(1);
+    });
+
     test('a row a previous session left behind is reclaimed on the next push', async () => {
       client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'stale' })]);
       await publish();
@@ -372,7 +364,8 @@ describe('registry indexing', () => {
     test('a registry entity is not returned by a full-text search over a space', async () => {
       client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'zyzzyva' })]);
       await publish();
-      db.add(Obj.make(TestSchema.Expando, { label: 'zyzzyva' }));
+      const spaceObject = Obj.make(TestSchema.Expando, { label: 'zyzzyva' });
+      db.add(spaceObject);
       await db.flush();
       // Trigram tokenization is deferred and debounced, so the primary pass alone leaves nothing
       // for a text query to match — registry row or space row.
@@ -380,7 +373,9 @@ describe('registry indexing', () => {
 
       const results = await db.query(Query.select(Filter.text('zyzzyva'))).run();
       expect(results).toHaveLength(1);
-      expect((results[0] as { id: string }).id).not.toBe(KEY);
+      // The space object by identity, not merely "not the registry key": an object id could never
+      // equal a registry key, so a negative assertion would hold even if the row were the wrong one.
+      expect((results[0] as { id: string }).id).toBe(spaceObject.id);
     });
 
     test('a registry type entity is not returned by a space-scoped type query', async () => {
@@ -408,4 +403,25 @@ describe('registry indexing', () => {
       expect(inRegistry).toHaveLength(1);
     });
   });
+
+  /** Publishes the registry and resolves once the host has indexed it. */
+  const publish = () => client.flushRegistry();
+
+  const rowsFor = (keys: readonly string[]) => peer.host.queryIndexedRegistry({ keys });
+
+  /** Pushes entries straight at the host, bypassing the client's own keying and serialization. */
+  const pushRaw = (entries: readonly { key: string; objectJson: string }[]) =>
+    peer.host.updateRegistry('test-client', entries);
+
+  const only = async (keys: readonly string[]): Promise<EntityMeta> => {
+    const rows = await rowsFor(keys);
+    expect(rows).toHaveLength(1);
+    return rows[0];
+  };
+
+  /** The indexed snapshot behind a row, for asserting which registration is the active one. */
+  const labelOf = async (row: EntityMeta): Promise<string | undefined> => {
+    const snapshots = await peer.runtime.runPromise(peer.host.indexEngine.querySnapshotsJSON([row.recordId]));
+    return (snapshots[0]?.snapshot as { label?: string } | undefined)?.label;
+  };
 });
