@@ -42,12 +42,12 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
       useMemo(
         () =>
           Atom.make((get) =>
-            thread.messages.flatMap((message) => {
+            (get(Obj.atomProperty(thread, 'messages')) ?? []).flatMap((message) => {
               const value = get(message.atom);
               return value ? [value] : [];
             }),
           ),
-        [thread.messages],
+        [thread],
       ),
     );
 

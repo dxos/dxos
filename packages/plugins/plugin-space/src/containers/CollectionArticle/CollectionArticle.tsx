@@ -89,12 +89,12 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
     useMemo(
       () =>
         Atom.make((get) =>
-          (collection.objects ?? []).flatMap((ref) => {
+          (get(Obj.atomProperty(collection, 'objects')) ?? []).flatMap((ref) => {
             const value = get(ref.atom);
             return value ? [value] : [];
           }),
         ),
-      [collection.objects],
+      [collection],
     ),
   );
 
