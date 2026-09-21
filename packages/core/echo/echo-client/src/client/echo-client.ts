@@ -8,7 +8,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
@@ -79,6 +79,14 @@ export class EchoClient extends Resource {
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
   private _registryPublisher: RegistryPublisher | undefined = undefined;
 
+  /**
+   * Identifies this client to the host's registry bookkeeping, for the client's whole lifetime.
+   * Held here rather than on the publisher so a reopened client resumes under the same id: its
+   * first snapshot then replaces the contribution the previous session filed, which is what keeps
+   * a release that failed on the way out from stranding a claim.
+   */
+  private readonly _registryClientId = PublicKey.random().toHex();
+
   /** Aggregated local object-update signal across all databases, consumed by index query sources. */
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
@@ -135,6 +143,7 @@ export class EchoClient extends Resource {
       registry: this._graph.registry,
       service: this._queryService,
       runtime: this._runtime,
+      clientId: this._registryClientId,
     });
     this._registryPublisher.open(ctx);
   }
@@ -146,10 +155,11 @@ export class EchoClient extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     // Withdraw this client's registry before dropping the publisher: the host reclaims an entry
-    // only when no client still carries it, and it learns that this one is gone from a snapshot —
-    // a reopened client is a new client id, so nothing else would ever release these entries
-    // within the host's session. Best-effort: the service may already be torn down, and a failure
-    // here must not block the close.
+    // only when no client still carries it, and it learns that this one is gone from a snapshot.
+    // Best-effort — the service is usually already torn down by this point, and a failure must not
+    // block the close. What a failure leaves behind is bounded: the client id outlives the
+    // publisher, so reopening replaces the stale claim, and the next host session's
+    // reconciliation reclaims rows nothing comes back for.
     try {
       await this._registryPublisher?.release();
     } catch (err) {

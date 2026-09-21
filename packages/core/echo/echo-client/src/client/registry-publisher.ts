@@ -9,7 +9,7 @@ import { DeferredTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { Entity, type Registry, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { DXN, EID, EntityId, PublicKey } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/rpc';
 
@@ -49,6 +49,13 @@ export type RegistryPublisherParams = {
   registry: Registry.Registry;
   service: QueryService.Client;
   runtime: EffectContext.Context<never>;
+  /**
+   * Identifies this client's contribution to the host's union of registries. Owned by the client
+   * rather than minted here, so a client that closes and reopens against the same host resumes
+   * under the id its previous snapshot was filed under — and replaces that contribution rather
+   * than stranding it beside a second one.
+   */
+  clientId: string;
 };
 
 /**
@@ -65,8 +72,7 @@ export class RegistryPublisher {
   readonly #runtime: EffectContext.Context<never>;
   /** Replaced on reconnection; a captured client would address a host that is no longer serving. */
   #service: QueryService.Client;
-  /** Identifies this client's contribution to the host's union of registries. */
-  readonly #clientId = PublicKey.random().toHex();
+  readonly #clientId: string;
 
   #publish!: DeferredTask;
 
@@ -74,6 +80,7 @@ export class RegistryPublisher {
     this.#registry = params.registry;
     this.#service = params.service;
     this.#runtime = params.runtime;
+    this.#clientId = params.clientId;
   }
 
   /** Publishes the current registry and keeps publishing as it changes, until `ctx` is disposed. */

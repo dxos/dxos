@@ -162,13 +162,16 @@ export class RegistryDataSource implements IndexDataSource {
         log.warn('Ignoring registry entry with an empty key', { clientId });
         continue;
       }
-      seen.add(entry.key);
       const hash = contentHash(entry.objectJson);
       const existing = this.#entries.get(entry.key);
       if (existing?.contributions.get(clientId)?.hash === hash) {
+        seen.add(entry.key);
         continue;
       }
 
+      // A key counts as carried by this client only once its entry is one the indexer can file.
+      // Marking it before the checks below would let a malformed replacement preserve the
+      // client's previous contribution, which the reconciliation would then never drop.
       let parsed: unknown;
       try {
         parsed = JSON.parse(entry.objectJson);
@@ -180,6 +183,7 @@ export class RegistryDataSource implements IndexDataSource {
         log.warn('Ignoring registry entry that is not a well-formed object', { key: entry.key });
         continue;
       }
+      seen.add(entry.key);
 
       const contribution: Contribution = {
         json: entry.objectJson,

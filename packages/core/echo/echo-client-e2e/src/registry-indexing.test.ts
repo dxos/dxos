@@ -60,6 +60,12 @@ describe('registry indexing', () => {
     return rows[0];
   };
 
+  /** The indexed snapshot behind a row, for asserting which registration is the active one. */
+  const labelOf = async (row: EntityMeta): Promise<string | undefined> => {
+    const snapshots = await peer.runtime.runPromise(peer.host.indexEngine.querySnapshotsJSON([row.recordId]));
+    return (snapshots[0]?.snapshot as { label?: string } | undefined)?.label;
+  };
+
   describe('publication', () => {
     test('a registered entity is indexed under its versioned key', async () => {
       client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'a' })]);
@@ -96,9 +102,7 @@ describe('registry indexing', () => {
       await publish();
 
       const row = await only([`dxn:${KEY}:1.0.0`]);
-      const snapshots = await peer.runtime.runPromise(peer.host.indexEngine.querySnapshotsJSON([row.recordId]));
-      expect(snapshots).toHaveLength(1);
-      expect((snapshots[0].snapshot as { label?: string }).label).toBe('searchable');
+      expect(await labelOf(row)).toBe('searchable');
     });
   });
 
@@ -287,15 +291,15 @@ describe('registry indexing', () => {
       await publish();
       second.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'from second' })]);
       await second.flushRegistry();
-      expect(await only([`dxn:${KEY}:1.0.0`])).toMatchObject({ registryKey: `dxn:${KEY}:1.0.0` });
+      // Assert the precondition: without it the test would also pass if last-registration
+      // selection never took effect and the first client's value had stayed active throughout.
+      expect(await labelOf(await only([`dxn:${KEY}:1.0.0`]))).toBe('from second');
 
       // The second client registered last, so its value is the indexed one; when it leaves, the
       // first client's value has to come back rather than the second's staying behind.
       await second.close();
       await publish();
-      const row = await only([`dxn:${KEY}:1.0.0`]);
-      const snapshots = await peer.runtime.runPromise(peer.host.indexEngine.querySnapshotsJSON([row.recordId]));
-      expect((snapshots[0].snapshot as { label?: string }).label).toBe('from first');
+      expect(await labelOf(await only([`dxn:${KEY}:1.0.0`]))).toBe('from first');
     });
 
     test('a row a previous session left behind is reclaimed on the next push', async () => {
@@ -325,6 +329,19 @@ describe('registry indexing', () => {
       await pushRaw([]);
 
       expect(await db.query(Query.select(Filter.everything())).run()).toHaveLength(1);
+    });
+
+    test('a malformed replacement does not preserve the previous registration', async () => {
+      const key = 'dxn:com.example.op.replaced:1.0.0';
+      const good = (label: string) =>
+        JSON.stringify(Obj.toJSON(makeKeyed('com.example.op.replaced', '1.0.0', { label })));
+      await pushRaw([{ key, objectJson: good('original') }]);
+      expect(await rowsFor([key])).toHaveLength(1);
+
+      // The client no longer carries a usable entry for this key, so the reconciliation must treat
+      // it as gone rather than let the malformed push hold the previous contribution in place.
+      await pushRaw([{ key, objectJson: 'not json at all' }]);
+      expect(await rowsFor([key])).toHaveLength(0);
     });
 
     test('a malformed entity is dropped without failing the snapshot', async () => {
