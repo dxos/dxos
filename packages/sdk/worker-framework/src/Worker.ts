@@ -36,8 +36,6 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
  */
 export const DEFAULT_DISPLACE_GRACE_TIMEOUT = 10_000;
 
-export { displaceChannelFor };
-
 /**
  * Shuts down whichever worker currently holds `storageLockKey`, so its storage can be taken over.
  * A worker does this to its predecessor on startup; a caller rewriting the storage from outside
