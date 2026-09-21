@@ -45,6 +45,7 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
+import { RowHeights, useRowOcclusion } from './row-occlusion.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -262,6 +263,15 @@ export type TreeProps<T extends { id: string } = any> = {
    * and without this it is both invisible and wrong.
    */
   dropAtEnd?: boolean;
+  /**
+   * Render a row's contents only while the row is on screen.
+   *
+   * Every row stays in the DOM and on the machine's collection, so focus, drag targets and the
+   * keymap are unchanged; what an off-screen row drops is its heading and its columns, which is
+   * where a consumer's cost lives. It holds its measured height in their place. Off by default —
+   * a list short enough to render whole gains nothing and pays an observer per row.
+   */
+  virtualize?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   /**
@@ -309,6 +319,7 @@ export const Tree = <T extends { id: string } = any>({
   debug = false,
   dropBelowExpanded = false,
   dropAtEnd = false,
+  virtualize = false,
   canSelect,
   onOpenChange,
   onSelect,
@@ -316,6 +327,11 @@ export const Tree = <T extends { id: string } = any>({
   onKeyDown,
 }: TreeProps<T>) => {
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
+  // One per tree, not per row: a row nobody has scrolled to takes its size from the rows that
+  // have been seen, so the measurements have to be pooled. The estimate is held as state because
+  // rows that start empty render before anything is measured and have to be asked again.
+  const [, setRowEstimate] = useState<number>();
+  const rowHeights = useMemo(() => new RowHeights(setRowEstimate), []);
   // Every tree sharing a path root is one drag scope, which is what a monitor claims: the navtree
   // mounts a `Tree` per workspace tab, and a scope per tab would leave its own drops unclaimed.
   const treeId = treePath[0];
@@ -597,6 +613,8 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       closingValues,
       commitClose: onCommitClose,
+      virtualize,
+      rowHeights,
       mountedRef,
     }),
     [
@@ -620,6 +638,8 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       onCommitClose,
+      virtualize,
+      rowHeights,
     ],
   );
 
@@ -867,6 +887,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     selectNode,
     selectionMode,
     focusNode,
+    virtualize,
+    rowHeights,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const openRef = useRef(false);
@@ -876,6 +898,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { id, value, item, path, level, branch, open, last, current, props } = node;
+  // The top-level position stands in for the row's own: a nested row is rendered eagerly when the
+  // subtree it belongs to is, which is the granularity the first paint needs.
+  const { rendered, reservedHeight } = useRowOcclusion(rowRef, value, node.indexPath[0] ?? 0, virtualize, rowHeights);
   // `expanded` only applies to a branch that is actually showing children: the mode exists to drop
   // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
@@ -1068,6 +1093,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
       data-testid={props.testId}
+      // Named directly while the row is empty, since the machine takes a row's name from its text.
+      // Only a plain label, which is every row a consumer virtualizes; translating one here would
+      // put the lookup back on the row this is keeping work off.
+      aria-label={!rendered && typeof props.label === 'string' ? props.label : undefined}
       className={mx(
         'col-[tree-row] outline-none cursor-pointer select-none',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
@@ -1109,7 +1138,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           places it with `row-start-2`. */}
       <div
         className='indent relative grid grid-rows-[var(--dx-control)]'
-        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
+        // `blockSize` only while the row is empty: it holds the space the heading and columns took,
+        // so scrolling past a row does not shorten the list under the reader's thumb.
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level), blockSize: reservedHeight }}
       >
         {toggle &&
           (branch ? (
@@ -1129,12 +1160,16 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           ) : (
             <TreeItemToggle isBranch={false} density={density} />
           ))}
-        {RenderHeading ? (
-          <RenderHeading item={item} path={path} props={props} open={open} />
-        ) : (
-          <TreeNodeHeading item={item} path={path} props={props} />
+        {rendered && (
+          <>
+            {RenderHeading ? (
+              <RenderHeading item={item} path={path} props={props} open={open} />
+            ) : (
+              <TreeNodeHeading item={item} path={path} props={props} />
+            )}
+            {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+          </>
         )}
-        {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
         {debug && (
           <TreeDropDebug

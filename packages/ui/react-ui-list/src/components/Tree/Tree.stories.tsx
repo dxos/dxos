@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
@@ -27,18 +27,23 @@ const tree = createTree();
 const groupsTree = createTree(4, 4, { groups: true });
 // Three childless nodes the story still presents as branches (a folder with nothing in it).
 const emptyTree = createTree(3, 1);
+// Flat and long, which is the shape `virtualize` is for.
+const longTree = createTree(120, 1);
 
 const DefaultStory = ({
   draggable,
   groups,
   emptyBranches,
+  virtualize,
 }: {
   draggable?: boolean;
   groups?: boolean;
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
+  /** Render a long list in a short scroller, with row contents rendered only on screen. */
+  virtualize?: boolean;
 }) => {
-  const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
+  const rootTree = virtualize ? longTree : emptyBranches ? emptyTree : groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -207,12 +212,13 @@ const DefaultStory = ({
     });
   }, [rootTree, childIdsFamily, registry]);
 
-  return (
+  const subject = (
     <Tree
       model={model}
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      virtualize={virtualize}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -221,6 +227,15 @@ const DefaultStory = ({
       onOpenChange={handleOpenChange}
       onSelect={handleSelect}
     />
+  );
+
+  // A scroller short enough that most of the list is off screen, which is what the observer reads.
+  return virtualize ? (
+    <div data-testid='tree.scroller' className='h-[240px] overflow-y-auto'>
+      {subject}
+    </div>
+  ) : (
+    subject
   );
 };
 
@@ -271,5 +286,40 @@ export const EmptyBranch: Story = {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(branch).toHaveAttribute('data-state', 'closed');
     await expect(tree.getBoundingClientRect().height).toBe(height);
+  },
+};
+
+/**
+ * A long list renders every row but fills in only the ones on screen.
+ *
+ * The rows stay in the DOM — they are the machine's focus targets and the drag's drop targets — so
+ * what this asserts is the split: every row present, most of them empty, and an empty one filling
+ * once it is scrolled to.
+ */
+export const TestVirtualizedRowsFillOnScroll: Story = {
+  args: { virtualize: true },
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    // Keyed off the heading rather than the row's text: an empty row still holds the disclosure
+    // toggle, whose accessible name is text of its own.
+    const isFilled = (row: HTMLElement) => row.querySelector('[data-testid="treeItem.heading"]') !== null;
+    const filled = () => rows().filter(isFilled);
+
+    await waitFor(async () => expect(rows().length).toEqual(120), { timeout: 5_000 });
+    // The eager window covers the first paint; everything past it waits for the observer.
+    await waitFor(async () => expect(filled().length).toBeLessThan(rows().length), { timeout: 5_000 });
+
+    const last = rows()[rows().length - 1];
+    await expect(isFilled(last)).toBe(false);
+    // Its height is held, so the row is somewhere to scroll to rather than collapsed against the end.
+    await expect(last.getBoundingClientRect().height).toBeGreaterThan(0);
+
+    last.scrollIntoView();
+    await waitFor(async () => expect(isFilled(rows()[rows().length - 1])).toBe(true), { timeout: 5_000 });
+
+    // And the rows left behind empty again, so the window travels rather than accumulating.
+    scroller.scrollTo({ top: 0 });
+    await waitFor(async () => expect(isFilled(rows()[rows().length - 1])).toBe(false), { timeout: 5_000 });
   },
 };

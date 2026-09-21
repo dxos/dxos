@@ -828,9 +828,14 @@ export const TestOrdinalsAreLinear: Story = {
       );
 
     await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
-    // Built from the count rather than hardcoded, so the seed can grow without editing the test.
-    const expected = ordinals().map((_, index) => String(index + 1));
-    await expect(ordinals()).toEqual(expected);
+    // Asserted per row rather than over the column: the list virtualizes, so a row below the fold
+    // renders no ordinal at all, and which rows those are depends on the viewport. Every row that
+    // does carry one must still number its own position, which is what linear means here.
+    const numbered = ordinals()
+      .map((ordinal, index) => ({ ordinal, index }))
+      .filter(({ ordinal }) => ordinal !== '');
+    await expect(numbered.length).toBeGreaterThan(1);
+    await expect(numbered.map(({ ordinal }) => ordinal)).toEqual(numbered.map(({ index }) => String(index + 1)));
   },
 };
 
