@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
+import { RegisterService } from '@dxos/client-protocol';
 import { type ConfigService } from '@dxos/config';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -31,19 +32,40 @@ import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  DevtoolsHost,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  LoggingService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+  SystemService,
+} from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents/index.ts';
+import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
+import { DevicesServiceLayer } from '../devices/index.ts';
+import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
 import {
   EdgeIdentityRecoveryManagerLayer,
   EdgeIdentityRecoveryManagerService,
 } from '../identity/identity-recovery-manager.ts';
 import {
+  ContactsServiceLayer,
   IdentityLifecycleLayer,
   IdentityLifecycleService,
   IdentityManagerLayer,
   type IdentityManagerProps,
   IdentityManagerService,
   IdentityProviderService,
+  IdentityServiceLayer,
   identityProviderFromManager,
 } from '../identity/index.ts';
 import {
@@ -53,8 +75,11 @@ import {
   InvitationsHandlerService,
   InvitationsManagerLayer,
   InvitationsManagerService,
+  InvitationsServiceLayer,
 } from '../invitations/index.ts';
+import { LoggingServiceLayer } from '../logging/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata/index.ts';
+import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import {
@@ -63,7 +88,9 @@ import {
   DataSpaceManagerService,
   SigningContextProviderLayer,
   SigningContextProviderService,
+  SpacesServiceLayer,
 } from '../spaces/index.ts';
+import { SystemServiceLayer } from '../system/index.ts';
 import { type TransportFactoryService } from './client-platform.ts';
 import {
   CrossDeviceSpaceSynchronizerLayer,
@@ -101,8 +128,8 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
 };
 
 /**
- * Component tags the composed stack exposes so embedders and the client RPC service layers can
- * depend on each component directly.
+ * Everything the composed stack exposes: the components, so embedders and the RPC handlers can
+ * depend on each directly, and the RPC service handlers themselves.
  */
 export type ServiceContextStackContext =
   | EchoHostService
@@ -122,19 +149,41 @@ export type ServiceContextStackContext =
   | StorageMigrationService
   | IdentityLifecycleService
   | StackReadinessService
-  | SwarmNetworkManagerService;
+  | SwarmNetworkManagerService
+  // The RPC service handlers, each under its own tag and registered with the router below.
+  | SystemService.Tag
+  | IdentityService.Tag
+  | ContactsService.Tag
+  | InvitationsService.Tag
+  | DevicesService.Tag
+  | SpacesService.Tag
+  | NetworkService.Tag
+  | EdgeAgentService.Tag
+  | DataService.Tag
+  | QueryService.Tag
+  | FeedService.Tag
+  | LoggingService.Tag
+  | DevtoolsHost.Tag
+  | DevtoolsHostService;
 
 /**
- * Effect Layer composing the dormant client-stack components, constructed before identity is ready.
- * Each layer opens its component on the lifecycle event it depends on (see `events.ts`) and closes
- * it in its finalizer; the embedder only emits `Opening` and `StackOpened`.
+ * The whole client stack as one layer: the dormant components, constructed before identity is ready,
+ * with the RPC services over them. Each layer opens its component on the lifecycle event it depends
+ * on (see `events.ts`) and closes it in its finalizer; the embedder only emits `Opening` and
+ * `StackOpened`.
  */
 export const ServiceStack = (
   options: ServiceStackServices,
 ): Layer.Layer<
   ServiceContextStackContext,
   never,
-  Hook.Controller | ConfigService | SignalManagerService | TransportFactoryService | SqlClient.SqlClient
+  | Hook.Controller
+  | ConfigService
+  | SignalManagerService
+  | TransportFactoryService
+  | RpcRouter.RpcRouter
+  | SqlClient.SqlClient
+  | SqlExport.SqlExport
 > => {
   // Core stack, flattened into a single pipe. Optional replicators expose their service via
   // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
@@ -173,7 +222,7 @@ export const ServiceStack = (
   // With edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
   // replicator sits below, needing only the edge inputs, which the core reads via `serviceOption`,
   // and registers with the echo host from above the core.
-  return Layer.unwrap(
+  const components = Layer.unwrap(
     Effect.gen(function* () {
       const edge = Option.isSome(yield* Effect.serviceOption(EdgeConnectionService));
       if (!edge) {
@@ -199,7 +248,67 @@ export const ServiceStack = (
       );
     }),
   );
+
+  // The RPC services sit at the top: their handlers consume the components below, and each
+  // registers itself with the router beneath the stack, so nothing enumerates them per connection.
+  return rpcServices.pipe(Layer.provideMerge(components));
 };
+
+// The Data/Query/Feed services are thin projections of {@link EchoHostService} properties rather
+// than package-local ServiceImpl classes, so their layers stay here as trivial maps.
+const dataServiceLayer = Layer.effect(
+  DataService.Tag,
+  Effect.map(EchoHostService, (echoHost) => echoHost.dataService),
+);
+
+const queryServiceLayer = Layer.effect(
+  QueryService.Tag,
+  Effect.map(EchoHostService, (echoHost) => echoHost.queryService),
+);
+
+const feedServiceLayer = Layer.effect(
+  FeedService.Tag,
+  Effect.map(EchoHostService, (echoHost) => echoHost.feedService),
+);
+
+/**
+ * Every client RPC service: the registrations, over the handler layers that satisfy their tags.
+ * Handler creation and registration stay separate layers, and each handler keeps its own tag so
+ * callers resolve them individually from the built stack.
+ */
+const rpcServices = Layer.mergeAll(
+  RegisterService(SystemService.Rpcs, SystemService.Tag),
+  RegisterService(IdentityService.Rpcs, IdentityService.Tag),
+  RegisterService(ContactsService.Rpcs, ContactsService.Tag),
+  RegisterService(InvitationsService.Rpcs, InvitationsService.Tag),
+  RegisterService(DevicesService.Rpcs, DevicesService.Tag),
+  RegisterService(SpacesService.Rpcs, SpacesService.Tag),
+  RegisterService(NetworkService.Rpcs, NetworkService.Tag),
+  RegisterService(EdgeAgentService.Rpcs, EdgeAgentService.Tag),
+  RegisterService(DataService.Rpcs, DataService.Tag),
+  RegisterService(QueryService.Rpcs, QueryService.Tag),
+  RegisterService(FeedService.Rpcs, FeedService.Tag),
+  RegisterService(LoggingService.Rpcs, LoggingService.Tag),
+  RegisterService(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
+).pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      SystemServiceLayer,
+      IdentityServiceLayer,
+      ContactsServiceLayer,
+      InvitationsServiceLayer,
+      DevicesServiceLayer,
+      SpacesServiceLayer,
+      NetworkServiceLayer,
+      EdgeAgentServiceLayer,
+      dataServiceLayer,
+      queryServiceLayer,
+      feedServiceLayer,
+      LoggingServiceLayer,
+      DevtoolsHostLayer,
+    ),
+  ),
+);
 
 /** Reads an optional service that the caller has established is present. */
 const presentService = <Self, Service>(tag: EffectContext.Key<Self, Service>): Effect.Effect<Service> =>

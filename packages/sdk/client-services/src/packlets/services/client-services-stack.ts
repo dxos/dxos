@@ -10,10 +10,10 @@ import { type Config, ConfigService } from '@dxos/config';
 import { Hook } from '@dxos/effect';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
+import { RpcRouter } from '@dxos/rpc';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { ClientPlatformLayer, type TransportFactoryService } from './client-platform.ts';
-import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
 import { NetworkingEnabled } from './events.ts';
 import { type ServiceContextRuntimeProps, type ServiceContextStackContext, ServiceStack } from './service-stack.ts';
 
@@ -24,7 +24,7 @@ import { type ServiceContextRuntimeProps, type ServiceContextStackContext, Servi
 export type ClientServicesStackContext =
   | Hook.Controller
   | ConfigService
-  | ClientServicesRpcContext
+  | RpcRouter.RpcRouter
   | ServiceContextStackContext
   | SignalManagerService
   | TransportFactoryService;
@@ -85,16 +85,16 @@ export const ClientServicesLayer = ({
     Effect.gen(function* () {
       const config = yield* ConfigService;
       const controller = yield* Hook.Controller;
-      return ClientServicesRpcLayer.pipe(
-        Layer.provideMerge(
-          ServiceStack({
-            ...runtimePropsFromConfig(config, runtimeProps),
-            edgeFeatures: config.get('runtime.client.edgeFeatures'),
-            connectionLog,
-            autoConnect,
-          }),
-        ),
+      return ServiceStack({
+        ...runtimePropsFromConfig(config, runtimeProps),
+        edgeFeatures: config.get('runtime.client.edgeFeatures'),
+        connectionLog,
+        autoConnect,
+      }).pipe(
         Layer.provideMerge(ClientPlatformLayer({ signalManager, transportFactory })),
+        // The router sits beneath every service: each registers itself into it, and a transport
+        // attached later (a worker session) serves whatever is registered.
+        Layer.provideMerge(RpcRouter.layer),
         // Re-provided so the built stack context carries them, as every consumer of the context expects.
         Layer.provideMerge(Layer.succeed(ConfigService, config)),
         Layer.provideMerge(Layer.succeed(Hook.Controller, controller)),
