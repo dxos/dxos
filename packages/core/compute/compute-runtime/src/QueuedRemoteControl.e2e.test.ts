@@ -60,6 +60,40 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
+    'a process whose spawn was never delivered is still queryable, as STARTING',
+    Effect.fn(function* ({ expect }) {
+      yield* withHarness(({ client, host, link }) =>
+        Effect.gen(function* () {
+          yield* link.cut;
+          const { pid } = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'undelivered' });
+
+          // Every read a caller can make must answer for a process the host has never heard of —
+          // the host would 404 the pid, and a client that surfaced that would lose the process the
+          // user just spawned.
+          const status = yield* client.status({ spaceId: SPACE, pid });
+          expect(status.state).toEqual(Process.State.STARTING);
+          expect(status.key).toEqual(EchoProcess.key);
+          expect(status.params.name).toEqual('undelivered');
+
+          const listed = yield* client.list({ spaceId: SPACE });
+          expect(listed.map((info) => [info.pid, info.state])).toEqual([[pid, Process.State.STARTING]]);
+          // Filters apply to the local view as they do to the host's.
+          expect(yield* client.list({ spaceId: SPACE, state: Process.State.IDLE })).toEqual([]);
+          expect((yield* client.list({ spaceId: SPACE, key: EchoProcess.key })).length).toEqual(1);
+
+          // No host process means no events, but the page still carries the state at read time.
+          const page = yield* client.readEvents({ spaceId: SPACE, pid, cursor: 0 });
+          expect(page.events).toEqual([]);
+          expect(page.snapshot.state).toEqual(Process.State.STARTING);
+
+          // And none of that reached the host, which is what "never delivered" means.
+          expect(yield* host.list({ spaceId: SPACE })).toEqual([]);
+        }),
+      );
+    }),
+  );
+
+  it.live(
     'inputs submitted while cut are buffered and applied in order once the host is reachable',
     Effect.fn(function* ({ expect }) {
       yield* withHarness(({ client, host, link }) =>
