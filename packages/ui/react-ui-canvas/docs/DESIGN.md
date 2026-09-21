@@ -240,26 +240,29 @@ Data flow for one gesture: pointer-down hit-tests the positioned scene in scene 
   `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
 - **While the camera moves on its own** (wheel zoom or pan, an animation) the canvas ignores the pointer: a shield
   takes presses and hover is cleared, since nothing under the pointer is where it will be.
-- **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), then swap the root scene
+- **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), stopping where the child
+  would pass 1:1 so its text lands at natural size rather than magnified to fill the view, then swap the root scene
   and re-express the camera in child space (`enterPortal`); **drill-out** is the inverse (`exitPortal`) followed
   by a fit of the parent. Both verified seamless in the spike.
 - **Auto drill**: after a zoom gesture settles (150 ms), a portal covering ≥ 85% of the viewport becomes the root;
-  a root covering < 30% yields to its parent. The swap preserves coverage, so the two rules cannot oscillate.
+  a root covering < 30% of what it covered on arrival (the history entry for the path) yields to its parent, so a
+  child capped at 1:1, or a frame that shrinks as its first node is drawn, is never thrown out on arrival. The
+  swap preserves coverage, so the two rules cannot oscillate.
 - **Tiers** for a portal by on-screen size (`min(size) × composed zoom`): `< 40px` tile, `< 260px` title +
   cell count (later: rasterised thumbnail), else live child scene, only while `depth < 2`. Hysteresis of ±10% at
   the boundaries.
 
 ## 6. Navigation
 
-| Gesture                                                                | Effect                                                                         |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Double-click a portal, or Enter with a portal selected                 | Animated drill-in                                                              |
-| Pinch/ctrl+wheel until a portal fills the view                         | Auto drill-in (no animation, camera preserved)                                 |
-| Escape, breadcrumb click, "Up", or zooming the root below 30% coverage | Drill-out (breadcrumb jumps several levels)                                    |
-| Alt+← / Alt+→                                                          | Back / forward through a history of `{path, camera}` entries                   |
-| Shift+1 / Shift+2 / Shift+0                                            | Fit scene / fit selection / reset zoom                                         |
-| Double-click a text part of a node                                     | Edits it in place (§4 text parts); other openable nodes open (the ECHO object) |
-| URL / deep link (phase 3)                                              | `{path, camera}` serialised so a location inside a nested scene is shareable   |
+| Gesture                                                                               | Effect                                                                         |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Double-click a portal, or Enter with a portal selected                                | Animated drill-in                                                              |
+| Pinch/ctrl+wheel until a portal fills the view                                        | Auto drill-in (no animation, camera preserved)                                 |
+| Escape, breadcrumb click, "Up", or zooming the root below 30% of its arrival coverage | Drill-out (breadcrumb jumps several levels)                                    |
+| Alt+← / Alt+→                                                                         | Back / forward through a history of `{path, camera}` entries                   |
+| Shift+1 / Shift+2 / Shift+0                                                           | Fit scene / fit selection / reset zoom                                         |
+| Double-click a text part of a node                                                    | Edits it in place (§4 text parts); other openable nodes open (the ECHO object) |
+| URL / deep link (phase 3)                                                             | `{path, camera}` serialised so a location inside a nested scene is shareable   |
 
 ## 6b. Mobile navigation mode
 

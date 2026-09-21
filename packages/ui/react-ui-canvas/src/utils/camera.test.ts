@@ -68,6 +68,15 @@ describe('camera', () => {
     expect(coverage(camera, bounds, viewport)).toBeCloseTo((800 * 200) / (800 * 600));
   });
 
+  test('fitBounds stops at maxZoom and still centres the bounds', ({ expect }) => {
+    const bounds = { x: 100, y: 100, width: 400, height: 100 };
+    const camera = fitBounds(bounds, viewport, 0, 1);
+    expect(camera.zoom).toBe(1);
+    const centre = sceneToScreen(camera, { x: 300, y: 150 });
+    expect(centre.x).toBeCloseTo(400);
+    expect(centre.y).toBeCloseTo(300);
+  });
+
   test('exitPortal ∘ enterPortal is the identity', ({ expect }) => {
     const camera = { x: -300, y: -450, zoom: 1.3 };
     expectCamera(expect, exitPortal(enterPortal(camera, portal, child), portal, child), camera);

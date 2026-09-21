@@ -70,6 +70,7 @@ import {
   fitBounds,
   panBy,
   portalFrame,
+  portalScale,
   screenToScene,
   zoomAt,
 } from '../../utils/camera.ts';
@@ -372,7 +373,9 @@ export const SceneView = ({
         pushHistory({ path: registry.get(atoms.path), camera: next });
       };
       if (animate) {
-        const target = fitBounds(nodeBounds(portal), viewport);
+        // Zoom onto the portal, but only as far as leaves the child at 1:1 after the swap, so its text lands at
+        // its natural size rather than magnified to fill the view.
+        const target = fitBounds(nodeBounds(portal), viewport, 0, 1 / portalScale(portal, childBounds));
         animateTo(target, () => swap(target));
         setOpening(portal.id);
       } else {
@@ -442,7 +445,9 @@ export const SceneView = ({
     [registry, atoms.history, atoms.path, select, animateTo],
   );
 
-  // Auto drill: a portal filling the viewport becomes the root; a root shrunk to a corner yields to its parent.
+  // Auto drill: a portal filling the viewport becomes the root; a root shrunk well below its size on arrival
+  // yields to its parent. Arrival is the history entry for this path, so a child capped at 1:1 (or a frame
+  // that shrinks under a stationary camera) is measured against itself rather than an absolute coverage.
   useEffect(() => {
     if (cancelRef.current || drag || viewport.width === 0) {
       return;
@@ -453,12 +458,19 @@ export const SceneView = ({
       );
       if (portal) {
         drillIn(portal, false);
-      } else if (path.length > 1 && coverage(camera, bounds, viewport) < AUTO_EXIT) {
-        drillOut(1, false);
+      } else if (path.length > 1) {
+        const history = registry.get(atoms.history);
+        const arrival = history.entries[history.index];
+        const arrived =
+          arrival && arrival.path.length === path.length && arrival.path.every((id, index) => id === path[index]);
+        const reference = arrived ? coverage(arrival.camera, bounds, viewport) : 1;
+        if (coverage(camera, bounds, viewport) < AUTO_EXIT * reference) {
+          drillOut(1, false);
+        }
       }
     }, AUTO_DRILL_MS);
     return () => clearTimeout(timer);
-  }, [camera, scene, bounds, path.length, viewport, drag, drillIn, drillOut]);
+  }, [camera, scene, bounds, path, viewport, drag, drillIn, drillOut, registry, atoms.history]);
 
   //
   // Pointer state machine.

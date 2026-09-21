@@ -52,10 +52,13 @@ export const screenBounds = (camera: Camera, bounds: Bounds): Bounds => {
   return { ...origin, width: bounds.width * camera.zoom, height: bounds.height * camera.zoom };
 };
 
-/** Camera that centres `bounds` in the viewport at the largest zoom that fits it with `inset` px around. */
-export const fitBounds = (bounds: Bounds, viewport: Size, inset = 0): Camera => {
+/**
+ * Camera that centres `bounds` in the viewport at the largest zoom that fits it with `inset` px around,
+ * never above `maxZoom` (a small region is centred rather than blown up past it).
+ */
+export const fitBounds = (bounds: Bounds, viewport: Size, inset = 0, maxZoom = MAX_ZOOM): Camera => {
   const zoom = clampZoom(
-    Math.min(viewport.width / (bounds.width + 2 * inset), viewport.height / (bounds.height + 2 * inset)),
+    Math.min(maxZoom, viewport.width / (bounds.width + 2 * inset), viewport.height / (bounds.height + 2 * inset)),
   );
   return {
     zoom,
