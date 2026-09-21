@@ -9890,9 +9890,6 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
-      '@dxos/ui-types':
-        specifier: workspace:*
-        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13502,52 +13499,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/migrations':
-        specifier: workspace:*
-        version: link:../../sdk/migrations
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/plugin-support':
-        specifier: workspace:*
-        version: link:../plugin-support
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@fontsource/poiret-one':
-        specifier: 'catalog:'
-        version: 5.2.8
-      date-fns:
-        specifier: 'catalog:'
-        version: 3.6.0
-    devDependencies:
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
-      '@dxos/plugin-assistant':
-        specifier: workspace:*
-        version: link:../plugin-assistant
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
@@ -13560,15 +13514,30 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../plugin-sheet
-      '@dxos/plugin-testing':
+      '@dxos/plugin-space':
         specifier: workspace:*
-        version: link:../plugin-testing
+        version: link:../plugin-space
+      '@dxos/plugin-support':
+        specifier: workspace:*
+        version: link:../plugin-support
       '@dxos/plugin-tldraw':
         specifier: workspace:*
         version: link:../plugin-tldraw
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -13578,9 +13547,15 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@storybook/react-vite':
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@fontsource/poiret-one':
         specifier: 'catalog:'
-        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+        version: 5.2.8
       '@tldraw/store':
         specifier: 'catalog:'
         version: 3.0.0(react@19.2.7)
@@ -13590,6 +13565,22 @@ importers:
       '@tldraw/utils':
         specifier: 'catalog:'
         version: 3.0.0
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
+    devDependencies:
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -18587,6 +18578,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

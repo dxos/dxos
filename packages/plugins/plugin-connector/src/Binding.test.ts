@@ -1003,7 +1003,7 @@ const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestAp
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return defaultSpace.db;
 };
 

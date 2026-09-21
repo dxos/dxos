@@ -31,14 +31,11 @@ import * as AppAnnotation from './AppAnnotation.ts';
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
 /**
- * Space tag for the bundled sample space.
+ * Tag the onboarding space carried before it was created from a space template.
  *
- * The value still reads `exemplar` because it is already persisted in the space metadata of every
- * profile that has onboarded: changing it would make the import's idempotency check miss the
- * existing space (importing a second copy) and flip `isVisibleSpace` for those spaces. Renaming it
- * needs a tag migration, not an edit here.
+ * It rides the space's admission credential, so it cannot be removed from profiles that carry it.
  */
-export const SAMPLE_SPACE_TAG = 'org.dxos.space.exemplar';
+const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -48,9 +45,6 @@ type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefi
 
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
-
-/** Check if a space is the bundled sample space. */
-export const isSampleSpace = (space: Space): boolean => hasTag(space, SAMPLE_SPACE_TAG);
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
@@ -87,12 +81,55 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
- * Tags mark spaces the app manages on the user's behalf — the settings space, filesystem mirrors —
- * so anything tagged is internal, except the sample space and the legacy personal-space tag that
- * pre-migration profiles still carry.
+ * The settings space is the only one the app keeps for itself; every other tag is the user's.
  */
-export const isVisibleSpace = (space: Space): boolean =>
-  space.tags.length === 0 || isSampleSpace(space) || isLegacyDefaultSpace(space);
+export const isVisibleSpace = (space: Space): boolean => !isSettingsSpace(space);
+
+//
+// Space templates.
+//
+
+/** Id of the space template a space was created from, if any. The space must be ready. */
+export const getSpaceTemplateId = (space: Space): string | undefined =>
+  Annotation.get(space.properties, AppAnnotation.SpaceTemplateAnnotation).pipe(Option.getOrUndefined);
+
+/** Record which template produced `space`. Pairs with {@link getSpaceTemplateId}. */
+export const setSpaceTemplateId = (space: Space, templateId: string): void => {
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, templateId);
+  });
+};
+
+/**
+ * The first space created from `templateId`, skipping any whose properties are not yet readable.
+ *
+ * A space still opening reads as absent, so treat a miss as "not found yet" rather than proof.
+ */
+export const findSpaceFromTemplate = (client: { spaces: { get(): Space[] } }, templateId: string): Space | undefined =>
+  client.spaces
+    .get()
+    .find((space) => space.state.get() === SpaceState.SPACE_READY && getSpaceTemplateId(space) === templateId);
+
+/**
+ * Stamps {@link AppAnnotation.SpaceTemplateAnnotation} on the space a profile onboarded with before
+ * templates recorded their own provenance. Returns the ids it stamped.
+ *
+ * Idempotent, and skips a space whose properties are not yet readable; such a space is stamped on a
+ * later launch.
+ */
+export const migrateLegacyOnboardingSpaces = (client: { spaces: { get(): Space[] } }, templateId: string): string[] =>
+  client.spaces
+    .get()
+    .filter(
+      (space) =>
+        space.state.get() === SpaceState.SPACE_READY &&
+        hasTag(space, LEGACY_ONBOARDING_SPACE_TAG) &&
+        getSpaceTemplateId(space) === undefined,
+    )
+    .map((space) => {
+      setSpaceTemplateId(space, templateId);
+      return space.id;
+    });
 
 //
 // Default space designation.
@@ -101,7 +138,7 @@ export const isVisibleSpace = (space: Space): boolean =>
 /**
  * Get the designated default space id from the settings space.
  * The settings space must be open; callers resolve it via {@link getSettingsSpace} after
- * `SpacesReady`, at which point its properties are readable.
+ * `SpacesAvailable`, at which point its properties are readable.
  */
 export const getDefaultSpaceId = (settingsSpace: Space): string | undefined =>
   Annotation.get(settingsSpace.properties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined);
