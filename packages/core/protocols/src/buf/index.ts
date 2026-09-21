@@ -65,12 +65,8 @@ export const fromTimeframe = (timeframe: Timeframe): TimeframeVector =>
     frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
   });
 
-/**
- * Packs a JSON payload as `google.protobuf.Any` carrying a `Struct`.
- *
- * A gossip channel's payload is opaque to the router, so a caller with a plain JSON message
- * encodes it as the well-known `Struct` rather than declaring a proto for it.
- */
+/* eslint-disable @dxos/rules/no-raw-any-pack -- the sanctioned wrappers below are what the rule points callers to. */
+
 /**
  * The bare type name a `type_url` carries. `anyPack` writes `type.googleapis.com/<name>`, the legacy
  * codec wrote the bare name, and every registry here is keyed by the bare name either way.
@@ -90,6 +86,21 @@ export const anyPackBare = <Desc extends DescMessage>(desc: Desc, message: Messa
   return packed;
 };
 
+/**
+ * Packs a message into an `Any` whose `type_url` carries the `type.googleapis.com/` prefix.
+ *
+ * EDGE's router and messenger read the type out with `split('/')[1]`, so a bare url leaves them
+ * with `undefined`; those wire formats need the spec form the prefix provides.
+ */
+export const anyPackPrefixed = <Desc extends DescMessage>(desc: Desc, message: MessageShape<Desc>): Any =>
+  anyPack(desc, message);
+
+/**
+ * Packs a JSON payload as `google.protobuf.Any` carrying a `Struct`.
+ *
+ * A gossip channel's payload is opaque to the router, so a caller with a plain JSON message
+ * encodes it as the well-known `Struct` rather than declaring a proto for it.
+ */
 export const packJson = (value: JsonObject): Any => anyPack(StructSchema, fromJson(StructSchema, value));
 
 /** Reads a `google.protobuf.Any` packed by {@link packJson}. */

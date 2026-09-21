@@ -16,6 +16,7 @@ import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noDeadTailwindLogical from './rules/no-dead-tailwind-logical.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import noRawAnyPack from './rules/no-raw-any-pack.js';
 import operationKeyShape from './rules/operation-key-shape.js';
 import preferSizingUtilities from './rules/prefer-sizing-utilities.js';
 import translationKeyFormat from './rules/translation-key-format.js';
@@ -40,6 +41,7 @@ const plugin = {
     'no-bare-dot-imports': noBareDotImports,
     'no-dead-tailwind-logical': noDeadTailwindLogical,
     'no-effect-run-promise': noEffectRunPromise,
+    'no-raw-any-pack': noRawAnyPack,
     'operation-key-shape': operationKeyShape,
     'prefer-sizing-utilities': preferSizingUtilities,
     'no-empty-promise-catch': noEmptyPromiseCatch,
@@ -56,6 +58,7 @@ const plugin = {
         'dxos-plugin/import-as-namespace': 'error',
         'dxos-plugin/no-bare-dot-imports': 'error',
         'dxos-plugin/no-effect-run-promise': 'error',
+        'dxos-plugin/no-raw-any-pack': 'error',
         'dxos-plugin/no-empty-promise-catch': 'error',
         // TODO(dmaretskyi): Turned off due to large number of errors and no auto-fix.
         // 'dxos-plugin/comment': 'error',

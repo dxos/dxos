@@ -9,7 +9,7 @@ import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { bufWkt, createBuf, fromDate, fromPublicKey } from '@dxos/protocols/buf';
+import { anyPackBare, createBuf, fromDate, fromPublicKey } from '@dxos/protocols/buf';
 import {
   ClaimSchema,
   type Credential,
@@ -83,7 +83,7 @@ export const getAccessCredential = (identityKey: PublicKey): Credential => {
     issuanceDate: fromDate(new Date()),
     subject: createBuf(ClaimSchema, {
       id: key,
-      assertion: bufWkt.anyPack(
+      assertion: anyPackBare(
         ServiceAccessSchema,
         createBuf(ServiceAccessSchema, {
           serverName: 'hub.dxos.network',

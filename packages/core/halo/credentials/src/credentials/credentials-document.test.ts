@@ -3,12 +3,11 @@
 //
 
 import { create, toBinary } from '@bufbuild/protobuf';
-import { anyPack } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { anyPackPrefixed, fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { ClaimSchema, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -106,7 +105,7 @@ const credential = (
     parentCredentialIds: parentCredentialIds.map(fromPublicKey),
     subject: create(ClaimSchema, {
       id: fromPublicKey(PublicKey.random()),
-      assertion: anyPack(desc, create(desc, {})),
+      assertion: anyPackPrefixed(desc, create(desc, {})),
     }),
   });
 };
