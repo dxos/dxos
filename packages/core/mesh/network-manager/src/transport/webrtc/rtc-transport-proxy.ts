@@ -32,7 +32,9 @@ import { type Transport, type TransportFactory, type TransportOptions, type Tran
 import { bindDataChannel } from './rtc-data-channel.ts';
 
 const RPC_TIMEOUT = '10 seconds' as const;
-const CLOSE_RPC_TIMEOUT = '3 seconds' as const;
+/** Above {@link RPC_TIMEOUT}, since a close queues behind the host's own peer-connection teardown
+ * in a tab the browser may be throttling as a background page. */
+const CLOSE_RPC_TIMEOUT = '15 seconds' as const;
 
 export type RtcTransportProxyOptions = TransportOptions & {
   rtcService: RTCService.Client;
