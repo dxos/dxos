@@ -137,6 +137,44 @@ describe('LayerStack', () => {
     );
   });
 
+  describe('teardown', () => {
+    it.effect(
+      'disposes every batch even when a later one fails',
+      Effect.fn(function* ({ expect }) {
+        const released: string[] = [];
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+              Layer.effect(
+                ServiceA,
+                Effect.acquireRelease(Effect.succeed({ value: 'a' }), () =>
+                  Effect.sync(() => {
+                    released.push('a');
+                  }),
+                ),
+              ),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.acquireRelease(Effect.succeed({ value: 'b' }), () => Effect.die(new Error('teardown failed'))),
+              ),
+            ),
+          ],
+        });
+
+        // Resolved one at a time so each lands in its own batch runtime; the failing one is disposed
+        // first, and the batch beneath it must still be released.
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+
+        const exit = yield* Effect.exit(stack.destroy());
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(released).toEqual(['a']);
+      }),
+    );
+  });
+
   describe('layer', () => {
     it.effect(
       'takes its ambient services from the layer context, declared as tags',
