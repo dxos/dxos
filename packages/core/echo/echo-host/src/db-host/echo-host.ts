@@ -430,12 +430,7 @@ export class EchoHost extends Resource {
    * Entities no connected client carries any more are reclaimed from the index, including — on the
    * first push of a session — rows a previous session left behind. Resolves once the pushed
    * entities are queryable, so a caller that pushes and then queries does not race the indexer.
-   *
-   * Serialized across clients: the buffer update and the deletions it implies have to reach the
-   * index as one step, or a second snapshot could reclaim a key while the first snapshot's pass
-   * still holds it and is about to write it back.
    */
-  @synchronized
   async updateRegistry(
     clientId: string,
     entries: readonly RegistryEntry[],
@@ -445,6 +440,34 @@ export class EchoHost extends Resource {
       return;
     }
 
+    if (!(await this._acceptRegistrySnapshot(clientId, entries, opts))) {
+      return;
+    }
+
+    // Outside the lock above: an index pass runs until the whole index is quiet, which under a
+    // concurrent writer is unbounded, and every client's close waits on a release through that
+    // same lock. Holding it here would serialize one client's teardown behind another client's
+    // indexing.
+    this.#scheduleIndexRun('registry-update');
+    await this.updateIndexes();
+  }
+
+  /**
+   * Fold one client's snapshot into the buffer and reclaim what it orphaned.
+   *
+   * Serialized across clients: the buffer update and the deletions it implies have to land as one
+   * step, or a second snapshot could reclaim a key between the two and leave the index disagreeing
+   * with the buffer. The pass that follows is protected separately — `RegistryDataSource` re-reads
+   * each entry at emit time, since passes also run outside this path.
+   *
+   * @returns whether anything changed, and so whether an index pass is owed.
+   */
+  @synchronized
+  private async _acceptRegistrySnapshot(
+    clientId: string,
+    entries: readonly RegistryEntry[],
+    opts?: { releasing?: boolean },
+  ): Promise<boolean> {
     const { removed, changed } = this._registryDataSource.submit(clientId, entries);
     // A releasing client is withdrawing its claim, not unregistering its entities: the rows stay
     // for the next session to re-adopt by digest, and the reconciliation below reclaims whatever
@@ -476,12 +499,7 @@ export class EchoHost extends Resource {
       this._registryReconciled = true;
     }
 
-    if (changed === 0 && stale.size === 0) {
-      return;
-    }
-
-    this.#scheduleIndexRun('registry-update');
-    await this.updateIndexes();
+    return changed > 0 || stale.size > 0;
   }
 
   /**

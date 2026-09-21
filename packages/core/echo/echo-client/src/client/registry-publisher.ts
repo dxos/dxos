@@ -87,8 +87,14 @@ export class RegistryPublisher {
   open(ctx: Context): void {
     // A background push only logs a failure: it is driven by a registry change no caller is
     // waiting on, and letting it reject would surface as an unhandled rejection in the task.
+    // A push still in flight when the client tears down is interrupted rather than failed, and
+    // reporting that as a warning would put a stack in every closing client's output.
     this.#publish = new DeferredTask(ctx, () =>
-      this.#push().catch((err) => log.warn('Failed to publish registry', { err })),
+      this.#push().catch((err) => {
+        if (!ctx.disposed) {
+          log.warn('Failed to publish registry', { err });
+        }
+      }),
     );
     this.#registry.changed.on(ctx, () => this.#publish.schedule());
     this.#publish.schedule();
