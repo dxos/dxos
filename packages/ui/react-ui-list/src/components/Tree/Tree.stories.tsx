@@ -380,6 +380,14 @@ export const Selection: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(second).toHaveAttribute('data-selected');
     await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+
+    // `Enter` on a row the reader has only moved focus to takes that row current, rather than
+    // reporting the state it is leaving — which read as "not selected" and selected nothing.
+    await userEvent.click(label(first));
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.keyboard('{Enter}');
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(first).not.toHaveAttribute('data-selected');
   },
 };
 

@@ -366,6 +366,13 @@ export const Tree = <T extends { id: string } = any>({
 
   const onActivateNode = useCallback(
     (node: TreeNodeEntry<T>, activation: RowActivation) => {
+      // A disabled row answers no activation at all. `canSelectNode` is false for a disabled row
+      // and for one the consumer merely refuses to select, and only the second of those discloses
+      // instead; `multiple` mode's capture handler reaches here without passing the machine, which
+      // would otherwise have stopped the disabled one.
+      if (node.props.disabled) {
+        return;
+      }
       if (node.branch && (activation.option || !canSelectNode(node))) {
         toggleOpen(node);
       } else if (canSelectNode(node)) {
@@ -514,7 +521,9 @@ export const Tree = <T extends { id: string } = any>({
       }
       event.preventDefault();
       if (canSelectNode(entry)) {
-        onSelect?.({ item: entry.item, path: entry.path, current: entry.current, ...NO_MODIFIERS, keyboard: true });
+        // `current: true`, not the state being left behind: `Enter` on a row the reader has only
+        // moved focus to takes that row current.
+        onSelect?.({ item: entry.item, path: entry.path, current: true, ...NO_MODIFIERS, keyboard: true });
       }
     },
     [onKeyDown, byValue, toggleOpen, canSelectNode, onSelect],
