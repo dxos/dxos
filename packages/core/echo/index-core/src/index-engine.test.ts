@@ -15,7 +15,13 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
-import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes/index.ts';
+import {
+  EntityMetaIndex,
+  FtsIndex,
+  type IndexerObject,
+  ObjectSnapshotIndex,
+  ReverseRefIndex,
+} from './indexes/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -93,19 +99,33 @@ describe('IndexEngine', () => {
     yield* metaIndex.migrate();
     const ftsIndex = new FtsIndex();
     yield* ftsIndex.migrate();
+    const objectSnapshotIndex = new ObjectSnapshotIndex([ftsIndex]);
+    yield* objectSnapshotIndex.migrate();
     const reverseRefIndex = new ReverseRefIndex();
     yield* reverseRefIndex.migrate();
-    const indexEngine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
-    return { indexEngine, tracker, metaIndex, ftsIndex, reverseRefIndex };
+    const indexEngine = new IndexEngine({
+      tracker,
+      ftsIndex,
+      objectSnapshotIndex,
+      objectMetaIndex: metaIndex,
+      reverseRefIndex,
+    });
+    return { indexEngine, tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex };
   });
 
   it.effect(
     'should index and update objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex } = yield* setup;
 
       // Inject dependencies.
-      const engine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
+      const engine = new IndexEngine({
+        tracker,
+        ftsIndex,
+        objectSnapshotIndex,
+        objectMetaIndex: metaIndex,
+        reverseRefIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -128,7 +148,7 @@ describe('IndexEngine', () => {
 
       // First update.
       const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      // Updates objectMeta, FTS, and reverseRef indexes.
+      // Updates objectMeta, the snapshot store, and the reverseRef index.
       expect(updated).toBe(2);
 
       // Verify using the SAME index instance.
@@ -183,9 +203,15 @@ describe('IndexEngine', () => {
   it.effect(
     'should handle multiple objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex } = yield* setup;
 
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        objectSnapshotIndex,
+        reverseRefIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -257,9 +283,15 @@ describe('IndexEngine', () => {
   it.effect(
     'done is true only when all sub-indexes have no remaining work',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex } = yield* setup;
 
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        objectSnapshotIndex,
+        reverseRefIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -299,8 +331,14 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult contains correct sets for a batch with multiple objects across spaces',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex } = yield* setup;
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        objectSnapshotIndex,
+        reverseRefIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId1 = SpaceId.random();
       const spaceId2 = SpaceId.random();
@@ -356,8 +394,14 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult includes typename for deleted objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex } = yield* setup;
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        objectSnapshotIndex,
+        reverseRefIndex,
+      });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -390,8 +434,14 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult is empty when no objects are indexed',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { tracker, metaIndex, ftsIndex, objectSnapshotIndex, reverseRefIndex } = yield* setup;
+      const engine = new IndexEngine({
+        tracker,
+        objectMetaIndex: metaIndex,
+        ftsIndex,
+        objectSnapshotIndex,
+        reverseRefIndex,
+      });
       const dataSource = new MockIndexDataSource();
 
       const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });

@@ -68,10 +68,10 @@ const CLOSURE_YIELD_INTERVAL = 32;
 const AUTOMATIC_GARBAGE_COLLECTION = false;
 
 /**
- * Idle window before the full-text re-tokenization `FtsIndex.update` defers is applied, and the
- * ceiling an unbroken write stream cannot push it past. A typing burst then costs one pass rather
- * than one per save; nothing a query reads depends on either number, since text search flushes for
- * itself and every other read comes from the snapshot store.
+ * Idle window before the records `ObjectSnapshotIndex` marked dirty are re-tokenized, and the
+ * ceiling an unbroken write stream cannot push it past. A typing burst then costs one rebuild
+ * rather than one per save; nothing a query reads depends on either number, since text search
+ * flushes for itself and every other read comes from the snapshot store.
  */
 const FTS_FLUSH_IDLE_MS = 1_000;
 const FTS_FLUSH_MAX_DELAY_MS = 10_000;

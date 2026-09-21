@@ -113,15 +113,17 @@ client-side** (in the client worker) — there is no server/edge indexer.
 ### 2.1 The index engine
 
 `IndexEngine` ([`index-engine.ts`](../../../core/echo/index-core/src/index-engine.ts))
-owns four indexes, each implementing the `Index` interface (`migrate()` +
-`update(objects)`):
+owns five stores. Three are fed from a data source and implement the `Index`
+interface (`migrate()` + `update(objects)`); `FtsIndex` is derived from the
+snapshot store instead and implements `DerivedIndex` (`markDirty(recordIds)`):
 
-| Index             | Backing                                                          | Purpose                                                              |
-| ----------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `EntityMetaIndex` | `objectMeta` table                                               | type / id / timestamp / relation / hierarchy queries — the workhorse |
-| **`FtsIndex`**    | `objectSnapshot` + **FTS5 virtual table** (`tokenize='trigram'`) | JSON snapshot store, and the full-text index over it                 |
-| `ReverseRefIndex` | `reverseRef` table                                               | incoming-reference traversal                                         |
-| `IndexTracker`    | `indexCursor` table                                              | per-source incremental cursors (Automerge heads / queue positions)   |
+| Index                 | Backing                                       | Purpose                                                              |
+| --------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| `EntityMetaIndex`     | `objectMeta` table                            | type / id / timestamp / relation / hierarchy queries — the workhorse |
+| `ObjectSnapshotIndex` | `objectSnapshot` table                        | the JSON row store every reader hydrates from                        |
+| **`FtsIndex`**        | **FTS5 virtual table** (`tokenize='trigram'`) | full-text index over the snapshot store, plus `ftsIndexDirty`        |
+| `ReverseRefIndex`     | `reverseRef` table                            | incoming-reference traversal                                         |
+| `IndexTracker`        | `indexCursor` table                           | per-source incremental cursors (Automerge heads / queue positions)   |
 
 Indexing is incremental and event-driven: `EchoHost._runUpdateIndexes` batches 50
 objects per pass off `AutomergeDataSource` and `FeedDataSource`, triggered by
@@ -129,11 +131,12 @@ objects per pass off `AutomergeDataSource` and `FeedDataSource`, triggered by
 hint after each pass. The join key across tables is `objectMeta.recordId ==
 objectSnapshot.recordId == ftsIndex.rowid == reverseRef.recordId`.
 
-The snapshot store is written on the write path; the trigram index is not.
-`FtsIndex.update` queues the record in `ftsIndexQueue` and `flushPending` applies
-it later — before any `MATCH`, and on an idle moment after a burst of writes —
-because FTS5 cannot update a row in place and re-tokenizing a large object on
-every keystroke was the dominant cost of editing.
+The snapshot store is written on the indexing pass; the trigram index is not.
+`ObjectSnapshotIndex.update` marks the record in `ftsIndexDirty` — in the same
+transaction as the write — and `FtsIndex.flushPending` rebuilds it later, before
+any `MATCH` and on an idle moment after a burst of writes, because FTS5 cannot
+update a row in place and re-tokenizing a large object on every keystroke was the
+dominant cost of editing.
 
 ### 2.2 Full-text: what works and what doesn't
 
@@ -146,7 +149,7 @@ every keystroke was the dominant cost of editing.
 - The whole object JSON is indexed as one `snapshot` column — **no per-field
   text indexing**, so matches can hit structural/key text, not just user content.
 - The `LIKE` fallback scans `objectSnapshot`, so it sees writes the trigram index
-  has not caught up with; `MATCH` flushes the queue first and so does too.
+  has not caught up with; `MATCH` flushes the dirty set first and so does too.
 
 Query path: `Filter.text(...)` → `text-search` AST node → a `TextSelector`
 **SelectStep** that calls `IndexEngine.queryText` → `FtsIndex.query` (BM25). Queue

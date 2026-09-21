@@ -7,11 +7,13 @@ import { SqlMigrations } from '@dxos/sql-sqlite';
 import init from './0001_init.sql?raw';
 import reindexReverseRef from './0002_reindex_reverse_ref.sql?raw';
 import retirePreConvergenceKeyCursors from './0003_retire_pre_convergence_key_cursors.sql?raw';
+import renameFtsCursorToObjectSnapshot from './0004_rename_fts_cursor_to_object_snapshot.sql?raw';
 
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
   '0002_reindex_reverse_ref': SqlMigrations.apply(reindexReverseRef),
   '0003_retire_pre_convergence_key_cursors': SqlMigrations.apply(retirePreConvergenceKeyCursors),
+  '0004_rename_fts_cursor_to_object_snapshot': SqlMigrations.apply(renameFtsCursorToObjectSnapshot),
 };
 
 /** Own history table per store, since many stores share the client database. */

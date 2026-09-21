@@ -21,6 +21,7 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  ObjectSnapshotIndex,
   type QueueRef,
   type QueueWindow,
   type Referrer,
@@ -138,6 +139,9 @@ export interface IndexEngineParams {
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
 
+  /** Defaults to one wired to `ftsIndex`; inject only together with the index derived from it. */
+  objectSnapshotIndex?: ObjectSnapshotIndex;
+
   /** Defaults to a fresh store; injectable for tests. */
   convergenceKeyIntents?: ConvergenceKeyIntentStore;
 }
@@ -146,6 +150,7 @@ export class IndexEngine {
   readonly #tracker: IndexTracker;
   readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
+  readonly #objectSnapshotIndex: ObjectSnapshotIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
 
@@ -153,6 +158,7 @@ export class IndexEngine {
     this.#tracker = params?.tracker ?? new IndexTracker();
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
+    this.#objectSnapshotIndex = params?.objectSnapshotIndex ?? new ObjectSnapshotIndex([this.#ftsIndex]);
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
     this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
   }
@@ -161,7 +167,9 @@ export class IndexEngine {
     return Effect.gen({ self: this }, function* () {
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
+      // Before the snapshot store, whose first migration seeds itself from `ftsIndex`.
       yield* this.#ftsIndex.migrate();
+      yield* this.#objectSnapshotIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
       yield* this.#convergenceKeyIntents.migrate();
     });
@@ -206,13 +214,13 @@ export class IndexEngine {
    * Used to load queue objects from indexed snapshots.
    */
   querySnapshotsJSON(recordIds: number[]) {
-    return this.#ftsIndex.querySnapshotsJSON(recordIds);
+    return this.#objectSnapshotIndex.querySnapshotsJSON(recordIds);
   }
 
   /**
-   * Applies the full-text re-tokenization that {@link update} deferred (see {@link FtsIndex}).
-   * Text search does this for itself; callers drive it so the backlog does not accumulate
-   * unbounded between searches.
+   * Rebuilds the full-text index for the records {@link update} marked dirty (see
+   * {@link FtsIndex}). Text search does this for itself; callers drive it so the backlog does not
+   * accumulate unbounded between searches.
    *
    * @returns Number of records re-indexed.
    */
@@ -319,8 +327,8 @@ export class IndexEngine {
   /**
    * Delete index rows for garbage-collected documents and objects: whole documents (all their
    * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
-   * (by record id) into the FTS and reverse-ref indexes, and drops the tracker cursors for wiped
-   * documents. See `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
+   * (by record id) into the snapshot store and the FTS and reverse-ref indexes, and drops the
+   * tracker cursors for wiped documents. See `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
    *
    * @returns Number of `objectMeta` rows deleted.
    */
@@ -340,6 +348,7 @@ export class IndexEngine {
           });
           if (recordIds.length > 0) {
             yield* this.#ftsIndex.deleteByRecordIds(recordIds);
+            yield* this.#objectSnapshotIndex.deleteByRecordIds(recordIds);
             yield* this.#reverseRefIndex.deleteByRecordIds(recordIds);
             yield* this.#objectMetaIndex.deleteByRecordIds(recordIds);
           }
@@ -369,19 +378,21 @@ export class IndexEngine {
         spaceId: opts.spaceId ?? undefined,
       });
 
+      // The full-text index has no leg of its own: it is rebuilt from the snapshot store, which
+      // marks the records this pass wrote (see `ObjectSnapshotIndex`).
       const {
-        updated: updatedFtsIndex,
-        done: doneFtsIndex,
-        objects: ftsObjects,
-      } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
-        indexName: 'fts6',
+        updated: updatedSnapshotIndex,
+        done: doneSnapshotIndex,
+        objects: snapshotObjects,
+      } = yield* this.#update(ctx, this.#objectSnapshotIndex, dataSource, {
+        indexName: 'objectSnapshot',
         spaceId: opts.spaceId,
         limit: opts.limit,
-        cursors: cursorsByIndex.get('fts6') ?? [],
+        cursors: cursorsByIndex.get('objectSnapshot') ?? [],
       });
-      result.updated += updatedFtsIndex;
-      result.done = result.done && doneFtsIndex;
-      accumulateIndexingResult(result, ftsObjects);
+      result.updated += updatedSnapshotIndex;
+      result.done = result.done && doneSnapshotIndex;
+      accumulateIndexingResult(result, snapshotObjects);
 
       const {
         updated: updatedReverseRefIndex,

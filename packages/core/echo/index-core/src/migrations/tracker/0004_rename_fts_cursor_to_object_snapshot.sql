@@ -1,0 +1,12 @@
+--
+-- The `fts6` leg became the object snapshot store: the full-text index is now derived from that
+-- store and keeps a dirty set instead of a data-source cursor. Renaming rather than invalidating
+-- is what makes the split free — the rows those cursors describe are already in `objectSnapshot`,
+-- backfilled from the index, so re-presenting every document would rewrite them unchanged.
+--
+-- `OR REPLACE` covers a cursor already written under the new name; renaming onto it would
+-- otherwise collide on the primary key.
+--
+-- Immutable: recorded in `index_cursor_migrations` and never re-run.
+--
+UPDATE OR REPLACE indexCursor SET indexName = 'objectSnapshot' WHERE indexName = 'fts6';

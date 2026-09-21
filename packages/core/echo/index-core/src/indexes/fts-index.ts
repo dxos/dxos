@@ -8,18 +8,12 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
-import type { Obj } from '@dxos/echo';
-import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import type { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
-import { chunkArray } from '../utils.ts';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
-import type { Index, IndexerObject } from './interface.ts';
-
-// SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
-// Use 500 as a safe chunk size for IN (...) clauses.
-const SQL_CHUNK_SIZE = 500;
+import type { DerivedIndex } from './interface.ts';
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -101,16 +95,16 @@ const escapeFts5Query = (text: string): string => {
 };
 
 /**
- * The object snapshot store and the full-text index over it.
+ * Trigram full-text index over {@link ObjectSnapshotIndex}.
  *
- * These were one table until the trigram index became the dominant cost of editing: FTS5 cannot
- * update a row in place, so a single changed property re-tokenized the whole object. Splitting
- * them is what makes the expensive half deferrable — `objectSnapshot` is written on the spot, so
- * every query that reads object data stays current, while `ftsIndex` catches up from
- * `ftsIndexQueue` under {@link flushPending}. Full-text matching flushes first, so a search never
- * sees a stale index.
+ * Derived rather than source-driven, because re-tokenizing is what made editing expensive: FTS5
+ * cannot update a row in place and a trigram tokenizer emits one token per 3-character window, so
+ * one changed property rewrote hundreds of kilobytes. Rebuilding from the snapshot store instead
+ * of from the indexing pass lets a burst of edits collapse into a single re-tokenization, which
+ * {@link flushPending} applies at an idle moment. Nothing but `MATCH` reads this table, and
+ * matching flushes first, so a search never sees a stale index.
  */
-export class FtsIndex implements Index {
+export class FtsIndex implements DerivedIndex {
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -213,7 +207,7 @@ export class FtsIndex implements Index {
         `;
         return rows;
       } else {
-        // LIKE fallback - no ranking available, default to 1. Reads the snapshot store directly,
+        // LIKE fallback - no ranking available, default to 1. Scans the snapshot store directly,
         // so a term below the trigram minimum matches writes the index has not caught up with.
         const rows = yield* sql<EntityMeta>`
           SELECT m.* 
@@ -226,104 +220,28 @@ export class FtsIndex implements Index {
     });
   }
 
-  /**
-   * Query snapshots by recordIds.
-   * Returns the parsed JSON snapshots for queue objects.
-   * RecordIds not present in the snapshot store are silently omitted from the result.
-   */
-  querySnapshotsJSON(
-    recordIds: number[],
-  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
-      if (recordIds.length === 0) {
-        return [];
-      }
-      const sql = yield* SqlClient.SqlClient;
-
-      // Chunk to avoid SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER,
-      // typically 999 in wasm builds). 500 gives a safe margin.
-      const chunks: number[][] = [];
-      for (let i = 0; i < recordIds.length; i += SQL_CHUNK_SIZE) {
-        chunks.push(recordIds.slice(i, i + SQL_CHUNK_SIZE));
-      }
-
-      const allResults: { recordId: number; snapshot: Obj.JSON }[] = [];
-      for (const chunk of chunks) {
-        const rows = yield* sql<{
-          recordId: number;
-          snapshot: string;
-        }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
-        for (const r of rows) {
-          allResults.push({ recordId: r.recordId, snapshot: JSON.parse(r.snapshot) });
-        }
-      }
-
-      return allResults;
-    });
-  }
-
-  /** Delete snapshot and index rows by record id. Used by garbage collection. */
+  /** Delete index rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
-          yield* sql`DELETE FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
-          // Dropped with the rest, or the pending re-index would resurrect a collected row.
-          yield* sql`DELETE FROM ftsIndexQueue WHERE recordId IN ${sql.in(chunk)}`;
+          // Dropped with the rest, or the pending rebuild would resurrect a collected row.
+          yield* sql`DELETE FROM ftsIndexDirty WHERE recordId IN ${sql.in(chunk)}`;
         }
       }),
   );
 
-  update = Effect.fn('FtsIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+  markDirty = Effect.fn('FtsIndex.markDirty')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-
+        // `OR IGNORE` is what collapses a burst: the second edit to a record already queued adds
+        // no row, so the record is re-tokenized once however many times it was written.
         yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen(function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
-              }
-
-              const existing = yield* sql<{
-                snapshot: string;
-              }>`SELECT snapshot FROM objectSnapshot WHERE recordId = ${recordId}`;
-
-              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
-              // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
-              // partial onto the prior snapshot to retain the body and type while layering the new
-              // marker; otherwise the upsert below would replace the full snapshot with the bare
-              // partial and the client could not hydrate the deleted object (`Obj.fromJSON` needs
-              // `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
-              // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
-              // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
-              const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-              const merged =
-                isPartialBlock && existing.length > 0
-                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
-                  : data;
-              // Document objects carry `@meta` only so the entity-meta index can extract the
-              // convergence key — full-text search must not match on foreign keys or identity
-              // strings the visible content never contains. Queue blocks always carried meta in
-              // their snapshot (clients hydrate from it), so theirs stays.
-              const searchable = object.documentId
-                ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
-                : merged;
-              const snapshot = JSON.stringify(searchable);
-
-              yield* sql`
-                INSERT INTO objectSnapshot (recordId, snapshot) VALUES (${recordId}, ${snapshot})
-                ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
-              `;
-              // Re-tokenizing here is what made a keystroke cost hundreds of kilobytes; the queue
-              // hands that to `flushPending`, which a search or an idle moment drains.
-              yield* sql`INSERT OR IGNORE INTO ftsIndexQueue (recordId) VALUES (${recordId})`;
-            }),
+          recordIds,
+          (recordId) => sql`INSERT OR IGNORE INTO ftsIndexDirty (recordId) VALUES (${recordId})`,
           { discard: true },
         );
       }),
@@ -333,7 +251,7 @@ export class FtsIndex implements Index {
    * Re-tokenizes every record whose snapshot has moved on since it was last indexed.
    *
    * Draining in chunks keeps one transaction proportional to the batch rather than to the backlog,
-   * and deleting the queue rows in the same transaction as the index write is what lets an
+   * and clearing the dirty rows in the same transaction as the index write is what lets an
    * interrupted flush resume instead of losing the record.
    *
    * @returns Number of records re-indexed.
@@ -346,7 +264,7 @@ export class FtsIndex implements Index {
       for (;;) {
         const pending = yield* sql<{
           recordId: number;
-        }>`SELECT recordId FROM ftsIndexQueue LIMIT ${SQL_CHUNK_SIZE}`;
+        }>`SELECT recordId FROM ftsIndexDirty LIMIT ${SQL_CHUNK_SIZE}`;
         if (pending.length === 0) {
           return flushed;
         }
@@ -354,14 +272,14 @@ export class FtsIndex implements Index {
         const recordIds = pending.map((row) => row.recordId);
         yield* sql.withTransaction(
           Effect.gen(function* () {
-            // FTS5 has no UPDATE; an upsert is a delete followed by an insert. A record queued
+            // FTS5 has no UPDATE; an upsert is a delete followed by an insert. A record marked
             // before it was ever indexed matches nothing here, which is the intended no-op.
             yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
             yield* sql`
                 INSERT INTO ftsIndex (rowid, snapshot)
                 SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(recordIds)}
               `;
-            yield* sql`DELETE FROM ftsIndexQueue WHERE recordId IN ${sql.in(recordIds)}`;
+            yield* sql`DELETE FROM ftsIndexDirty WHERE recordId IN ${sql.in(recordIds)}`;
           }),
         );
         flushed += recordIds.length;
@@ -373,7 +291,7 @@ export class FtsIndex implements Index {
   pendingCount = Effect.fn('FtsIndex.pendingCount')((): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM ftsIndexQueue`;
+      const rows = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM ftsIndexDirty`;
       return rows[0]?.count ?? 0;
     }),
   );

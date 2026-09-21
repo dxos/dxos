@@ -97,7 +97,7 @@ GC has to reason about the concrete stores, so they are enumerated here.
 - `EntityMetaIndex` (`objectMeta` table) has one row per indexed object with a
   `deleted` flag and a `recordId`. Dependent stores key off `recordId`: the object
   snapshots (`objectSnapshot`), the full-text index over them (`ftsIndex`, with
-  `ftsIndexQueue` holding what it has yet to re-tokenize) and reverse-refs
+  `ftsIndexDirty` holding what it has yet to re-tokenize) and reverse-refs
   (`reverseRef`). `IndexTracker` stores per-document indexing cursors keyed by
   `documentId`.
 - Today nothing ever deletes an `objectMeta` row; a deleted object simply flips
@@ -228,7 +228,7 @@ id (the tombstone and all superseded content blocks).
 
 For every document wiped in step 2 and every object removed in step 1, delete the
 corresponding index rows: `objectMeta` (by `spaceId` + `documentId`, or by
-`objectId`), cascading to `objectSnapshot`, `ftsIndex`, `ftsIndexQueue` and
+`objectId`), cascading to `objectSnapshot`, `ftsIndex`, `ftsIndexDirty` and
 `reverseRef` (by `recordId`) and the `IndexTracker` cursor (by `documentId`).
 This keeps the index from carrying tombstone rows for storage that no longer
 exists.
