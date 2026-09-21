@@ -44,6 +44,7 @@ import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
 import { registerSkills, startMcpHost } from './mcp-host.ts';
 import * as McpAuth from './McpAuth.ts';
+import * as McpCall from './McpCall.ts';
 import * as McpLatency from './McpLatency.ts';
 import * as McpTarget from './McpTarget.ts';
 import * as Observe from './Observe.ts';
@@ -116,6 +117,16 @@ export type ClaudeHarness = {
     probes: readonly McpLatency.Probe[],
     options?: { iterations?: number; warmup?: number },
   ) => Promise<McpLatency.Report>;
+  /**
+   * Opens a client connection of the scenario's own and calls the surface with no model in front
+   * of it.
+   *
+   * What the server owes a caller — that a filter narrows, that a capped page says so, that a
+   * malformed input is refused — cannot be established through a scored turn: the agent chooses its
+   * own arguments, so a call that never happened and a call that came back wrong both leave a green
+   * run. The caller closes the session it opens.
+   */
+  readonly call: () => Promise<McpCall.Session>;
   /** Sends one user message to the agent and resolves when that turn ends. */
   readonly send: (prompt: string) => Promise<Turn>;
   /**
@@ -552,6 +563,7 @@ export const runClaudeEval = async <T>(
         query,
         score,
         latency: (probes, probeOptions) => McpLatency.probe({ target, url, headers, probes, ...probeOptions }),
+        call: () => McpCall.open({ url, headers }),
         send: async (prompt) => {
           const turn = await claudeAgent.send(prompt);
           durationMillis += turn.end - turn.start;
