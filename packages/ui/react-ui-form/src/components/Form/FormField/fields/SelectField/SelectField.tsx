@@ -23,10 +23,15 @@ export const SelectField = ({
   presentation,
   getValue,
   onValueChange,
+  onBlur,
 }: SelectFieldOptions) => {
+  // A choice is a commit: the select never blurs, so it commits itself.
   const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
-    (value) => onValueChange(type, value),
-    [type, onValueChange],
+    (value) => {
+      onValueChange(type, value);
+      onBlur();
+    },
+    [type, onValueChange, onBlur],
   );
 
   const value = getValue();

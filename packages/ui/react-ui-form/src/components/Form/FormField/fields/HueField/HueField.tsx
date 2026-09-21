@@ -23,9 +23,20 @@ export const HueField = ({
   presentation,
   getValue,
   onValueChange,
+  onBlur,
 }: FormFieldRendererProps<string | undefined>) => {
-  const handleChange = useCallback((hue: string) => onValueChange(type, hue), [onValueChange, type]);
-  const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+  // A pick is a commit: the picker never blurs, so it commits itself.
+  const handleChange = useCallback(
+    (hue: string) => {
+      onValueChange(type, hue);
+      onBlur();
+    },
+    [onValueChange, onBlur, type],
+  );
+  const handleReset = useCallback(() => {
+    onValueChange(type, undefined);
+    onBlur();
+  }, [onValueChange, onBlur, type]);
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
     return <FormStaticValue value={value} format={format} />;
