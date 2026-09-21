@@ -80,7 +80,7 @@ export const Toolbar = ({
               icon: 'ph--microphone--regular',
               label: t('mic-off.button'),
               onClick: () => call.turnAudioOff(),
-              classNames: 'bg-call-active',
+              classNames: 'bg-accent-bg',
             },
             off: {
               icon: 'ph--microphone-slash--duotone',
@@ -201,7 +201,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
     {...defaultButtonProps}
-    classNames={[active ? (state.on.classNames ?? 'bg-call-active') : state.off.classNames]}
+    classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}
     onClick={active ? state.on.onClick : state.off.onClick}
