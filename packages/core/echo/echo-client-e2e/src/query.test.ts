@@ -2779,7 +2779,9 @@ describe('Query', () => {
         expect(objects).toHaveLength(0);
       }
     });
+  });
 
+  describe('indexer2 text search', () => {
     test('flush waits for the full-text index', async () => {
       const { db, host, graph } = await builder.createDatabase();
       graph.registry.add([TestSchema.Task]);
@@ -2791,9 +2793,30 @@ describe('Query', () => {
       // records for this to index.
       expect(await host.updateSecondaryIndexes()).toEqual(0);
     });
-  });
 
-  describe('indexer2 text search', () => {
+    test('the deferred pass invalidates a live text query', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      const query = db.query(Query.select(Filter.text('deferred invalidation', { type: 'full-text' })));
+      const matched = new Trigger();
+      const unsubscribe = query.subscribe(() => {
+        if (query.results.length > 0) {
+          matched.wake();
+        }
+      });
+      onTestFinished(unsubscribe);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred invalidation' }));
+      // Primary pass only: the trigram index still has nothing to match, so the subscription above
+      // is left holding an empty result that only the catch-up below can fill.
+      await db.flush();
+      await host.updateSecondaryIndexes();
+
+      await matched.wait();
+      expect(query.results).toHaveLength(1);
+    });
+
     test('full-text search via indexer2', async () => {
       const { db } = await builder.createDatabase();
 

@@ -54,7 +54,7 @@ import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
-import { hintFromIndexingResult } from './invalidation-hint.ts';
+import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { QueryServiceImpl } from './query-service.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
@@ -454,18 +454,30 @@ export class EchoHost extends Resource {
    */
   async updateSecondaryIndexes(): Promise<number> {
     let records = 0;
+    let hint: InvalidationHint | undefined;
     for (;;) {
       if (this._ctx.disposed || !this.isOpen) {
-        return records;
+        break;
       }
       const result = await this._indexEngine
         .updateSecondaryIndexes(this._ctx)
         .pipe(RuntimeProvider.runPromise(this._runtime));
       records += result.updated;
+      const batch = hintFromIndexingResult(result);
+      if (batch) {
+        hint = hint ? mergeHints(hint, batch) : batch;
+      }
       if (result.done) {
-        return records;
+        break;
       }
     }
+
+    // A text query issued before this catch-up matched nothing and would never re-run on its own:
+    // the indexer is the sole invalidation source, and this pass is the only writer of the rows.
+    if (hint) {
+      this._queryService.invalidateQueries(hint);
+    }
+    return records;
   }
 
   /**
