@@ -654,6 +654,8 @@ describe('ConvergenceKeyMerger.mergeDuplicates', () => {
       target: null,
       parent: null,
       convergenceKey,
+      registryKey: '',
+      contentHash: null,
       version: 0,
       createdAt: null,
       updatedAt: null,

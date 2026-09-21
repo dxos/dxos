@@ -20,6 +20,7 @@ import {
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
+import { splitRegistryKey } from '../registry-keys.ts';
 import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import type { IndexerObject } from './interface.ts';
 import type { Index } from './interface.ts';
@@ -103,6 +104,13 @@ export const EntityMeta = Schema.Struct({
   parent: Schema.NullOr(EID.Schema),
   /** Caller-supplied domain identity from `meta.convergenceKey` (nullable); duplicates sharing one merge. */
   convergenceKey: Schema.NullOr(Schema.String),
+  /**
+   * Registry entry key this row was registered under; the empty string for a row sourced from a
+   * space. Non-empty marks a registry row, which every space-scoped scan excludes.
+   */
+  registryKey: Schema.String,
+  /** Digest of the registered snapshot, for skipping an unchanged re-push. Null for non-registry rows. */
+  contentHash: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -127,6 +135,20 @@ export interface QueueRef {
   readonly queueId: string;
   readonly spaceId?: string;
 }
+
+/**
+ * Predicate admitting only rows sourced from a space. Registry rows share these tables but belong
+ * to no space, so every space- or queue-scoped read has to exclude them; `queryRegistry` is the
+ * only read that does not. `FtsIndex` spells the same predicate against its `objectMeta` alias.
+ */
+export const buildExcludeRegistryCondition = (sql: SqlClient.SqlClient): Statement.Fragment => sql`registryKey = ''`;
+
+/**
+ * LIKE pattern matching every versioned entry key under an unversioned one. Metacharacters in the
+ * literal prefix are escaped with a backslash, declared as the ESCAPE character at the call site.
+ */
+const escapeVersionPrefix = (key: string): string =>
+  `${key.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_')}:%`;
 
 /**
  * Builds a SQL condition for filtering by space and queue source.
@@ -166,7 +188,7 @@ const buildSourceCondition = (
     return sql`1 = 0`;
   }
 
-  return sql.or(conditions);
+  return sql`(${sql.or(conditions)} AND ${buildExcludeRegistryCondition(sql)})`;
 };
 
 // SQLite caps bound variables (conventionally 999); chunk well below it, matching the FTS index.
@@ -276,7 +298,7 @@ export class EntityMetaIndex implements Index {
         for (let offset = 0; offset < convergenceKeys.length; offset += QUERY_CHUNK_SIZE) {
           const chunk = convergenceKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
           const rows =
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('convergenceKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('convergenceKey', chunk)} AND entityKind = 'object' AND queueId = '' AND ${buildExcludeRegistryCondition(sql)}`;
           results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
         }
         return results;
@@ -291,7 +313,7 @@ export class EntityMetaIndex implements Index {
         const sql = yield* SqlClient.SqlClient;
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${buildTypeDxnCondition(sql, [query.typeDXN])})`;
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${buildTypeDxnCondition(sql, [query.typeDXN])}) AND ${buildExcludeRegistryCondition(sql)}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -390,14 +412,115 @@ export class EntityMetaIndex implements Index {
         }
         const sql = yield* SqlClient.SqlClient;
         const column = endpoint === 'source' ? 'source' : 'target';
-        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
-          column,
-          anchorDxns,
-        )}`;
+        const rows =
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${buildExcludeRegistryCondition(sql)} AND ${sql.in(
+            column,
+            anchorDxns,
+          )}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
         }));
+      }),
+  );
+
+  /**
+   * Registry rows, optionally restricted to a set of entry keys.
+   *
+   * An unversioned key (`dxn:<nsid>`) matches every version registered under that nsid, mirroring
+   * how the in-process registry indexes a keyed entity under both forms; a versioned key matches
+   * only itself. Rows come back newest-registration-first (`version` is the monotonic sequence the
+   * indexer stamps on every write), so the caller reading the first row per key gets the entity
+   * that was registered last.
+   */
+  queryRegistry = Effect.fn('EntityMetaIndex.queryRegistry')(
+    (
+      query: {
+        keys?: readonly string[];
+        typeDxns?: readonly string[];
+      } = {},
+    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const typeCondition =
+          query.typeDxns === undefined ? undefined : sql`(${buildTypeDxnCondition(sql, query.typeDxns)})`;
+        if (query.typeDxns !== undefined && query.typeDxns.length === 0) {
+          return [];
+        }
+
+        const rowsFor = (condition: Statement.Fragment) =>
+          typeCondition === undefined
+            ? sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${condition} ORDER BY version DESC`
+            : sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${condition} AND ${typeCondition} ORDER BY version DESC`;
+
+        if (query.keys === undefined) {
+          const rows = yield* rowsFor(sql`registryKey != ''`);
+          return rows.map((row) => ({ ...row, deleted: !!row.deleted }));
+        }
+        if (query.keys.length === 0) {
+          return [];
+        }
+
+        // Two bound variables per key (exact plus LIKE prefix), so halve the chunk budget.
+        const results: EntityMeta[] = [];
+        for (const chunk of chunkArray(query.keys, Math.floor(SQL_CHUNK_SIZE / 2))) {
+          const condition = sql.or(
+            chunk.map((key) =>
+              splitRegistryKey(key) === undefined
+                ? sql`(registryKey = ${key} OR registryKey LIKE ${escapeVersionPrefix(key)} ESCAPE '\\')`
+                : sql`registryKey = ${key}`,
+            ),
+          );
+          const rows = yield* rowsFor(sql`(${condition})`);
+          results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
+        }
+        // Chunking splits one ordering into several; restore the global newest-first order so the
+        // caller's "first row per key is the primary" reading holds across chunk boundaries.
+        return results.sort((left, right) => right.version - left.version);
+      }),
+  );
+
+  /**
+   * Stored digests for the given registry entry keys — the dedup probe a data source runs before
+   * re-emitting an entry whose row may already carry the identical snapshot.
+   */
+  lookupRegistryHashes = Effect.fn('EntityMetaIndex.lookupRegistryHashes')(
+    (keys: readonly string[]): Effect.Effect<Map<string, string | null>, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const hashes = new Map<string, string | null>();
+        if (keys.length === 0) {
+          return hashes;
+        }
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(keys)) {
+          const rows = yield* sql<{
+            registryKey: string;
+            contentHash: string | null;
+          }>`SELECT registryKey, contentHash FROM objectMeta WHERE ${sql.in('registryKey', chunk)}`;
+          for (const row of rows) {
+            hashes.set(row.registryKey, row.contentHash);
+          }
+        }
+        return hashes;
+      }),
+  );
+
+  /** Record ids of the rows registered under the given entry keys — the set an unregister reclaims. */
+  selectRegistryRecordIds = Effect.fn('EntityMetaIndex.selectRegistryRecordIds')(
+    (keys: readonly string[]): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (keys.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const recordIds: number[] = [];
+        for (const chunk of chunkArray(keys)) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE ${sql.in('registryKey', chunk)}`;
+          rows.forEach((row) => recordIds.push(row.recordId));
+        }
+        return recordIds;
       }),
   );
 
@@ -412,6 +535,7 @@ export class EntityMetaIndex implements Index {
           (object) =>
             Effect.gen(function* () {
               const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
+              const registryKey = object.registryKey ?? '';
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
               const castData = data;
@@ -428,7 +552,13 @@ export class EntityMetaIndex implements Index {
                 convergenceKey: string | null;
               };
               let existing: readonly ExistingRow[];
-              if (documentId) {
+              if (registryKey !== '') {
+                // A registry row is identified by its entry key alone: the same entity re-registered
+                // under a new version is a different key and so a different row, while a re-push
+                // under the same key replaces this one — last registered wins.
+                existing =
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE registryKey = ${registryKey} LIMIT 1`;
+              } else if (documentId) {
                 existing =
                   yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
@@ -513,6 +643,8 @@ export class EntityMetaIndex implements Index {
                     target = ${target},
                     parent = ${parent},
                     convergenceKey = ${convergenceKey},
+                    contentHash = ${object.contentHash ?? null},
+                    objectId = ${objectId},
                     updatedAt = ${updatedAtTimestamp},
                     queuePosition = ${queuePosition ?? null}
                   WHERE recordId = ${existing[0].recordId}
@@ -521,12 +653,14 @@ export class EntityMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, convergenceKey, version,
+                    entityKind, typeDXN, deleted, source, target, parent, convergenceKey,
+                    registryKey, contentHash, version,
                     createdAt, updatedAt, queuePosition
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${convergenceKey}, ${version},
+                    ${source}, ${target}, ${parent}, ${convergenceKey},
+                    ${registryKey}, ${object.contentHash ?? null}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;
@@ -549,9 +683,14 @@ export class EntityMetaIndex implements Index {
         for (const object of objects) {
           const { spaceId, queueId, documentId, data } = object;
           const objectId = data.id;
+          const registryKey = object.registryKey ?? '';
 
           let result: readonly { recordId: number }[];
-          if (documentId) {
+          if (registryKey !== '') {
+            result = yield* sql<{
+              recordId: number;
+            }>`SELECT recordId FROM objectMeta WHERE registryKey = ${registryKey} LIMIT 1`;
+          } else if (documentId) {
             result = yield* sql<{
               recordId: number;
             }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
@@ -566,7 +705,9 @@ export class EntityMetaIndex implements Index {
           if (result.length === 0) {
             // TODO(mykola): Handle this case gracefully.
             return yield* Effect.die(
-              new Error(`Object not found in EntityMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
+              new Error(
+                `Object not found in EntityMetaIndex: ${spaceId}/${registryKey || (documentId ?? queueId)}/${objectId}`,
+              ),
             );
           }
           object.recordId = result[0].recordId;
@@ -656,7 +797,7 @@ export class EntityMetaIndex implements Index {
 
         const sql = yield* SqlClient.SqlClient;
         const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)} AND ${sql.in('objectId', query.objectIds)}`;
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)} AND ${sql.in('objectId', query.objectIds)} AND ${buildExcludeRegistryCondition(sql)}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -676,7 +817,7 @@ export class EntityMetaIndex implements Index {
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND objectId = ${query.objectId} LIMIT 1`;
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND objectId = ${query.objectId} AND ${buildExcludeRegistryCondition(sql)} LIMIT 1`;
 
         if (rows.length === 0) {
           return null;
@@ -762,7 +903,7 @@ export class EntityMetaIndex implements Index {
         const parentDzns = query.parentIds.map((id) => EID.make({ entityId: id }));
         const parentDxns = parentDzns;
         const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND ${buildExcludeRegistryCondition(sql)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
 
         return rows.map((row) => ({
           ...row,

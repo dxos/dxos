@@ -14,6 +14,7 @@ export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 export { type Index, type IndexerObject } from './indexes/interface.ts';
 export { FtsIndex, type FtsQuery } from './indexes/fts-index.ts';
 export { type EntityMeta, EntityMetaIndex, type QueueRef, type QueueWindow } from './indexes/entity-meta-index.ts';
+export { REGISTRY_SPACE_ID, contentHash, splitRegistryKey } from './registry-keys.ts';
 export {
   type Referrer,
   type ReverseRef,

@@ -35,6 +35,12 @@ export type QueryServiceProps = {
    * fallback, so the index is their only source of truth.
    */
   updateIndexes: () => Promise<void>;
+
+  /**
+   * Hands the client's registry snapshot to the host's registry data source and brings the index
+   * up to date over it. Resolves once the pushed entities are queryable.
+   */
+  updateRegistry: (clientId: string, entries: readonly QueryService.RegistryEntry[]) => Promise<void>;
 };
 
 /**
@@ -144,6 +150,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   ['QueryService.reindex'](): Effect.Effect<void, Error> {
     // No-op: SQL indexer handles re-indexing automatically.
     return Effect.sync(() => log.warn('reindex() is deprecated and no longer has any effect'));
+  }
+
+  ['QueryService.updateRegistry'](request: QueryService.RegistryUpdateRequest): Effect.Effect<void, Error> {
+    return Effect.promise(() => this._params.updateRegistry(request.clientId, request.entries));
   }
 
   ['QueryService.execQuery'](

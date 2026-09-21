@@ -106,6 +106,39 @@ export const QueryResponse = Schema.Struct({
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
 /**
+ * One entity as the client holds it in its in-process registry.
+ */
+export const RegistryEntry = Schema.Struct({
+  /**
+   * Canonical entry key the entity is registered under — a versioned DXN (`dxn:<nsid>:<version>`)
+   * where the entity carries a version, its bare DXN or identifier EID otherwise. Two versions of
+   * one entity are two keys, and so two index entries; a re-registration of one key replaces it.
+   */
+  key: Schema.String,
+  /**
+   * The entity in the ECHO JSON object format.
+   */
+  objectJson: Schema.String,
+});
+export interface RegistryEntry extends Schema.Schema.Type<typeof RegistryEntry> {}
+
+/**
+ * The client's registry, whole. A snapshot rather than a delta: the registry is small and is
+ * rebuilt from code on every start, so sending all of it lets the host diff by content digest and
+ * removes the need to track removals on the client.
+ */
+export const RegistryUpdateRequest = Schema.Struct({
+  /**
+   * Identifies the client this snapshot describes. Several clients (browser tabs, workers) share
+   * one host, so the host holds the union of their registries and only drops an entry once no
+   * client still carries it — without this, each client's snapshot would delete the others'.
+   */
+  clientId: Schema.String,
+  entries: mutableArray(RegistryEntry),
+});
+export interface RegistryUpdateRequest extends Schema.Schema.Type<typeof RegistryUpdateRequest> {}
+
+/**
  * Effect RPC definitions for `dxos.echo.query.QueryService`.
  * Payloads use hand-authored Effect schemas (not protobuf) so large string fields survive the wire intact.
  */
@@ -121,6 +154,10 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('reindex', {
+    error: serviceError,
+  }),
+  Rpc.make('updateRegistry', {
+    payload: RegistryUpdateRequest,
     error: serviceError,
   }),
 ).prefix('QueryService.') {}

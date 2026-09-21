@@ -28,7 +28,7 @@ import {
 } from '@dxos/echo-protocol';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { type EntityMeta, IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -57,6 +57,7 @@ import { FeedDataSource } from './feed-data-source.ts';
 import { hintFromIndexingResult } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { QueryServiceImpl } from './query-service.ts';
+import { RegistryDataSource, type RegistryEntry } from './registry-data-source.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
@@ -72,7 +73,13 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
  */
-export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+export type IndexRunReason =
+  | 'open'
+  | 'feed-blocks'
+  | 'documents-saved'
+  | 'batch-continuation'
+  | 'registry-update'
+  | 'rpc-update-indexes';
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -140,6 +147,15 @@ export class EchoHost extends Resource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
+  private readonly _registryDataSource: RegistryDataSource;
+
+  /**
+   * Whether the index has been reconciled against a registry snapshot in this session. The buffered
+   * snapshot starts empty, so the first push cannot tell an entity that left the registry from one
+   * this process has simply not been told about yet; rows orphaned by a previous session are
+   * reclaimed once, against the first snapshot that arrives.
+   */
+  private _registryReconciled = false;
 
   private _updateIndexes!: DeferredTask;
 
@@ -199,6 +215,11 @@ export class EchoHost extends Resource {
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
 
+    this._registryDataSource = new RegistryDataSource({
+      runtime: this._runtime,
+      lookupHashes: (keys) => this._indexEngine.lookupRegistryHashes(keys),
+    });
+
     this._convergenceKeyMerger = new ConvergenceKeyMerger({
       queryByConvergenceKeys: (spaceId, keys) =>
         this._indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
@@ -217,6 +238,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
       updateIndexes: () => this.updateIndexes(),
+      updateRegistry: (clientId, entries) => this.updateRegistry(clientId, entries),
     });
 
     this._dataService = new DataServiceImpl({
@@ -400,6 +422,59 @@ export class EchoHost extends Resource {
    */
   async flush(ctx: Context): Promise<void> {
     await this._automergeHost.flush(ctx);
+  }
+
+  /**
+   * Take one client's registry snapshot and index it.
+   *
+   * Entities no connected client carries any more are reclaimed from the index, including — on the
+   * first push of a session — rows a previous session left behind. Resolves once the pushed
+   * entities are queryable, so a caller that pushes and then queries does not race the indexer.
+   */
+  async updateRegistry(clientId: string, entries: readonly RegistryEntry[]): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
+
+    const { removed, changed } = this._registryDataSource.submit(clientId, entries);
+    const stale = new Set(removed);
+    if (!this._registryReconciled) {
+      this._registryReconciled = true;
+      const live = this._registryDataSource.keys;
+      const indexed = await this._indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
+      for (const row of indexed) {
+        if (!live.has(row.registryKey)) {
+          stale.add(row.registryKey);
+        }
+      }
+    }
+
+    if (stale.size > 0) {
+      const deleted = await this._indexEngine
+        .deleteRegistryEntries([...stale])
+        .pipe(RuntimeProvider.runPromise(this._runtime));
+      log('reclaimed registry entries', { keys: stale.size, rows: deleted });
+      this._queryService.invalidateQueries();
+    }
+
+    if (changed === 0 && stale.size === 0) {
+      return;
+    }
+
+    this.#scheduleIndexRun('registry-update');
+    await this.updateIndexes();
+  }
+
+  /**
+   * Rows the indexer holds for the client's registry — the read side of {@link updateRegistry}.
+   *
+   * Newest registration first, so the first row matching a key is the entity registered last. An
+   * unversioned key matches every version registered under it; a versioned key matches only itself.
+   */
+  async queryIndexedRegistry(
+    query: { keys?: readonly string[]; typeDxns?: readonly string[] } = {},
+  ): Promise<readonly EntityMeta[]> {
+    return this._indexEngine.queryRegistry(query).pipe(RuntimeProvider.runPromise(this._runtime));
   }
 
   /**
@@ -1217,6 +1292,18 @@ export class EchoHost extends Resource {
             },
           },
         });
+      }
+
+      if (this._ctx.disposed || !this.isOpen) {
+        this._indexesUpToDate = true;
+        return;
+      }
+
+      {
+        const result = await this._indexEngine
+          .update(ctx, this._registryDataSource, { spaceId: null, limit: 50 })
+          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
+        _mergeInto(combinedResult, result);
       }
 
       const hint = hintFromIndexingResult(combinedResult);

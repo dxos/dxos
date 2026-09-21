@@ -180,6 +180,10 @@ export class FtsIndex implements Index {
         conditions.push(sql`(${sql.or(sourceConditions)})`);
       }
 
+      // Registry snapshots live in the same virtual table but belong to no space, so a text search
+      // — which is always space- or queue-scoped — must never surface one.
+      conditions.push(sql`m.registryKey = ''`);
+
       // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `snapshot`.
       if (typeDxns && typeDxns.length > 0) {
         conditions.push(sql`(${buildTypeDxnCondition(sql, typeDxns)})`);

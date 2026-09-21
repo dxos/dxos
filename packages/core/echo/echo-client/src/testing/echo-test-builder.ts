@@ -171,6 +171,11 @@ export class EchoTestPeer extends Resource {
     return this._echoClient;
   }
 
+  /** SQLite-backed runtime the host's index engine runs on, for tests that read the index directly. */
+  get runtime(): ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never> {
+    return this._managedRuntime;
+  }
+
   get host() {
     return this._echoHost;
   }

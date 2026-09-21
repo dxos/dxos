@@ -242,6 +242,49 @@ export class IndexEngine {
     return this.#convergenceKeyIntents.clear(spaceId, convergenceKey, upToId);
   }
 
+  /**
+   * Rows indexed from the registry (see {@link EntityMetaIndex.queryRegistry}) — the only read that
+   * sees them, since they belong to no space and every space-scoped scan excludes them.
+   */
+  queryRegistry(
+    query: { keys?: readonly string[]; typeDxns?: readonly string[] } = {},
+  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryRegistry(query);
+  }
+
+  /** Stored snapshot digests for registry entry keys — the dedup probe for a re-push. */
+  lookupRegistryHashes(
+    keys: readonly string[],
+  ): Effect.Effect<Map<string, string | null>, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.lookupRegistryHashes(keys);
+  }
+
+  /**
+   * Drop the rows registered under the given entry keys, cascading into the FTS and reverse-ref
+   * indexes — what an entity leaving the registry reclaims.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
+  deleteRegistryEntries(keys: readonly string[]): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      if (keys.length === 0) {
+        return 0;
+      }
+      const sql = yield* SqlClient.SqlClient;
+      return yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const recordIds = yield* this.#objectMetaIndex.selectRegistryRecordIds(keys);
+          if (recordIds.length > 0) {
+            yield* this.#ftsIndex.deleteByRecordIds(recordIds);
+            yield* this.#reverseRefIndex.deleteByRecordIds(recordIds);
+            yield* this.#objectMetaIndex.deleteByRecordIds(recordIds);
+          }
+          return recordIds.length;
+        }),
+      );
+    }).pipe(Effect.withSpan('IndexEngine.deleteRegistryEntries'));
+  }
+
   queryType(
     query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
   ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {

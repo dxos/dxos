@@ -38,6 +38,20 @@ export interface IndexerObject {
   queuePosition?: number | null;
 
   /**
+   * Canonical registry entry key this object was registered under (see `registry-keys.ts`), or
+   * null for an object sourced from a space. Non-null identifies a registry row: it is the row's
+   * identity in place of `documentId`/`queueId`, so a re-registration under the same key replaces
+   * the row and a different version — a different key — is a separate row.
+   */
+  registryKey?: string | null;
+
+  /**
+   * Digest of the registered snapshot, carried so an unchanged re-push can be recognised without
+   * rewriting the row. Set together with `registryKey`; null otherwise.
+   */
+  contentHash?: string | null;
+
+  /**
    * Record id from the objectMeta index.
    * `Null` before the object is stored in the EntityMetaIndex.
    * Enriched by the IndexEngine after the object is stored in the EntityMetaIndex.

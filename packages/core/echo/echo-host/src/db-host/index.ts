@@ -10,4 +10,5 @@ export * from './sqlite-health-check.ts';
 export * from './database-root.ts';
 export * from './invalidation-hint.ts';
 export * from './query-service.ts';
+export * from './registry-data-source.ts';
 export * from './space-state-manager.ts';
