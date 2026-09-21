@@ -865,8 +865,13 @@ export class EntityManager implements IDatabaseBinding {
     core.setDecoded([], newStruct);
   }
 
-  async flush({ disk = true, indexes = true, updates = false }: Database.FlushOptions = {}): Promise<void> {
-    log('flush', { disk, indexes, updates });
+  async flush({
+    disk = true,
+    indexes = true,
+    secondaryIndexes = false,
+    updates = false,
+  }: Database.FlushOptions = {}): Promise<void> {
+    log('flush', { disk, indexes, secondaryIndexes, updates });
     await this._waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush();
@@ -881,8 +886,8 @@ export class EntityManager implements IDatabaseBinding {
       );
     }
 
-    if (indexes) {
-      await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
+    if (indexes || secondaryIndexes) {
+      await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']({ secondaryIndexes }));
     }
 
     if (updates) {
@@ -976,7 +981,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
-    await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
+    await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']({}));
   }
 
   /** Host-side stats only; the client's own residency is added by {@link DatabaseImpl.stats}. */

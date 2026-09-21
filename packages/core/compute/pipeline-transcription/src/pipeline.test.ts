@@ -31,7 +31,8 @@ describe('pipeline integration (correction + extraction)', () => {
     const { db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] });
     db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
     db.add(Obj.make(Person.Person, { fullName: 'Sarah Johnson' }));
-    await db.flush({ indexes: true });
+    // The lookup searches the full-text index, which lags the indexing pass until a flush drains it.
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const blocks: ContentBlock.Transcript[] = [
       { _tag: 'transcript', started: 's0', text: 'So I caught up with Sarah Johnson this morning' },

@@ -15,8 +15,8 @@ import { DXN } from '@dxos/keys';
 /**
  * End-to-end coverage of registry indexing: the client mirrors its in-process registry to the host
  * (`RegistryPublisher` → `QueryService.updateRegistry` → `RegistryDataSource`), the indexer writes
- * those entities into the same `objectMeta`/FTS tables as everything else, and the `registryKey`
- * mark keeps them out of every space-scoped read.
+ * those entities into the same `objectMeta` and snapshot tables as everything else, and the
+ * `registryKey` mark keeps them out of every space-scoped read.
  */
 
 class Widget extends Type.makeObject<Widget>(DXN.make('com.example.type.widget', '0.1.0'))(
@@ -97,7 +97,7 @@ describe('registry indexing', () => {
       expect(row.objectId).toBe(Widget.id);
     });
 
-    test('the snapshot lands in the FTS table alongside the metadata row', async () => {
+    test('the snapshot lands in the object snapshot store alongside the metadata row', async () => {
       client.graph.registry.add([makeKeyed(KEY, '1.0.0', { label: 'searchable' })]);
       await publish();
 
@@ -374,6 +374,9 @@ describe('registry indexing', () => {
       await publish();
       db.add(Obj.make(TestSchema.Expando, { label: 'zyzzyva' }));
       await db.flush();
+      // Trigram tokenization is deferred and debounced, so the primary pass alone leaves nothing
+      // for a text query to match — registry row or space row.
+      await peer.host.updateSecondaryIndexes();
 
       const results = await db.query(Query.select(Filter.text('zyzzyva'))).run();
       expect(results).toHaveLength(1);

@@ -37,6 +37,12 @@ export type DebugCliOptions = {
 
 const normalizeKey = (key: unknown): string => String(key).replace(/^dxn:/, '');
 
+/**
+ * The Linear label the PostHog feedback submissions sync under; console-filed issues carry it too
+ * so both sources land in one triage view.
+ */
+const REPORT_LABEL = 'Composer Feedback Form';
+
 const findDefinition = Effect.fn(function* (key: string) {
   const capabilities = (yield* Plugin.Service).capabilities;
   const wanted = normalizeKey(key);
@@ -219,9 +225,13 @@ const makeCommand = (options: DebugCliOptions = {}) => {
         Flag.optional,
         Flag.withDescription('"High priority" | "Medium priority" | "Low priority".'),
       ),
+      label: Flag.String('label').pipe(
+        Flag.optional,
+        Flag.withDescription(`Linear label; defaults to "${REPORT_LABEL}".`),
+      ),
       noLogs: Flag.Boolean('no-logs').pipe(Flag.withDefault(false), Flag.withDescription('Skip the debug log dump.')),
     },
-    ({ title, body, type, severity, noLogs }) =>
+    ({ title, body, type, severity, label, noLogs }) =>
       Effect.gen(function* () {
         const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', {
           report: {
@@ -229,6 +239,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
             body: body._tag === 'Some' ? body.value : '',
             ...(type._tag === 'Some' ? { type: type.value } : {}),
             ...(severity._tag === 'Some' ? { severity: severity.value } : {}),
+            labels: [label._tag === 'Some' ? label.value : REPORT_LABEL],
             includeLogs: !noLogs,
           },
         });

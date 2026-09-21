@@ -68,6 +68,8 @@ const meta = {
                   { type: Person.Person, count: 50 },
                 ]),
               );
+              // The story searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
       ],

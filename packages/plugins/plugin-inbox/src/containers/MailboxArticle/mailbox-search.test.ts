@@ -200,7 +200,8 @@ describe('buildThreadSemiJoin (results)', () => {
 
   const append = async ({ db, feed }: Fixture, messages: Message.Message[]) => {
     await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
-    await db.flush();
+    // Search reads the full-text index, which lags the indexing pass until something drains it.
+    await db.flush({ secondaryIndexes: true });
   };
 
   const runSemiJoin = async ({ db, feedUri }: Fixture, viewFilter: Filter.Any): Promise<string[]> => {
