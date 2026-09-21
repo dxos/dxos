@@ -126,6 +126,20 @@ export class EdgeWsConnection extends Resource {
     return this._messagesReceived;
   }
 
+  /**
+   * Payload bytes queued locally because the peer has not extended enough credit.
+   *
+   * Zero on a connection without flow control, where the muxer never holds anything back.
+   */
+  public get pendingSendBytes(): number {
+    return this._wsMuxer?.pendingBytes ?? 0;
+  }
+
+  /** Whether this connection negotiated credit-based flow control (`edge-ws-v2`). */
+  public get flowControlEnabled(): boolean {
+    return this._wsMuxer?.flowControlEnabled ?? false;
+  }
+
   public send(message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);

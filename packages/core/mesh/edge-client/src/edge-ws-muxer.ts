@@ -314,6 +314,23 @@ export class WebSocketMuxer {
     this._inWindow.clear();
   }
 
+  /**
+   * Payload bytes queued for sending but not yet handed to the socket.
+   *
+   * Non-zero means this end is holding back -- under flow control, because a channel is out of
+   * credit. It is the only externally visible sign that backpressure is being applied, so it is
+   * what diagnostics and tests read.
+   */
+  public get pendingBytes(): number {
+    let pending = 0;
+    for (const chunks of this._outMessageChunks.values()) {
+      for (const chunk of chunks) {
+        pending += chunk.payloadBytes;
+      }
+    }
+    return pending;
+  }
+
   /** Outbound bytes sent but not yet reported consumed, for tests and diagnostics. */
   public inFlightBytes(channelId: number): number {
     return ((this._bytesSent.get(channelId) ?? 0) - (this._peerConsumed.get(channelId) ?? 0)) >>> 0;

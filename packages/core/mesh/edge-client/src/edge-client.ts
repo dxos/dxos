@@ -155,6 +155,16 @@ export class EdgeClient extends Resource implements EdgeConnection {
     });
   }
 
+  /** @see EdgeWsConnection.pendingSendBytes */
+  get pendingSendBytes(): number {
+    return this._currentConnection?.pendingSendBytes ?? 0;
+  }
+
+  /** @see EdgeWsConnection.flowControlEnabled */
+  get flowControlEnabled(): boolean {
+    return this._currentConnection?.flowControlEnabled ?? false;
+  }
+
   get identityDid() {
     return this._identity.identityDid;
   }
