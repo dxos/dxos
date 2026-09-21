@@ -182,6 +182,12 @@ const SpaceTemplateSummary = Schema.Struct({
 /**
  * Creates a space from one of the templates plugins contribute, so an agent driving the debug port
  * can seed a realistic space without clicking through the generator panel.
+ *
+ * TODO(wittjosiah): Reconcile with `SpaceOperation.Create`, which also takes a `template`. This adds
+ * only the listing (call without `id`) and deleting the space when the apply fails; the rest it
+ * hand-rolls because `Create` applies the template before the caller holds the space. Rollback
+ * belongs in `Create` for every caller or nowhere, and the listing belongs in a read-only
+ * operation rather than in a create that means something else when an argument is absent.
  */
 export const CreateSpaceFromTemplate = Operation.make({
   meta: {
