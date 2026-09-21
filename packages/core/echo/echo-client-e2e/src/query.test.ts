@@ -1734,7 +1734,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const withFeeds: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -1778,7 +1778,7 @@ describe('Query', () => {
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
       await db.appendToFeed(feed, [traceTask]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const results: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -2755,7 +2755,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
 
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
@@ -2782,13 +2782,48 @@ describe('Query', () => {
   });
 
   describe('indexer2 text search', () => {
+    test('flush waits for the full-text index', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred tokenization' }));
+      await db.flush({ secondaryIndexes: true });
+
+      // The full-text index lags the primary pass, so a flush that did not wait for it would leave
+      // records for this to index.
+      expect(await host.updateSecondaryIndexes()).toEqual(0);
+    });
+
+    test('the deferred pass invalidates a live text query', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      const query = db.query(Query.select(Filter.text('deferred invalidation', { type: 'full-text' })));
+      const matched = new Trigger();
+      const unsubscribe = query.subscribe(() => {
+        if (query.results.length > 0) {
+          matched.wake();
+        }
+      });
+      onTestFinished(unsubscribe);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred invalidation' }));
+      // Primary pass only: the trigram index still has nothing to match, so the subscription above
+      // is left holding an empty result that only the catch-up below can fill.
+      await db.flush();
+      await host.updateSecondaryIndexes();
+
+      await matched.wait();
+      expect(query.results).toHaveLength(1);
+    });
+
     test('full-text search via indexer2', async () => {
       const { db } = await builder.createDatabase();
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // TODO(mykola): Defalut to full-text
       const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
@@ -2827,7 +2862,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Python for Data Science' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
       expect(objects).toHaveLength(2);
@@ -2842,7 +2877,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Partial word "Script" should match "TypeScript".
       {
@@ -2877,7 +2912,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Words in different order should still match.
       {
@@ -2901,7 +2936,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'Quarterly planning' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Quarterly Reviewer' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Unrelated Name' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Unscoped matches both entities containing the term.
       {
@@ -2950,7 +2985,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Poll until indexer2 has processed the document.
       {
@@ -2962,7 +2997,7 @@ describe('Query', () => {
       Obj.update(obj, (obj) => {
         obj.title = 'Updated Title';
       });
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Verify search results.
       {
@@ -3022,7 +3057,7 @@ describe('Query', () => {
       console.timeEnd('create');
 
       console.time('flush');
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
       console.timeEnd('flush');
 
       console.time('query');
@@ -3052,7 +3087,7 @@ describe('Query', () => {
       ]);
 
       // Wait for indexing.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Search in specific queue.
       {
@@ -3097,7 +3132,7 @@ describe('Query', () => {
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Search with allFeedsFromSpaces: true should return both space and queue objects.
       {
@@ -3124,7 +3159,7 @@ describe('Query', () => {
       const feed = db.add(Feed.make({}));
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
       await db.appendToFeed(feed, [task]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const obj: TestSchema.Task = await db
         .query(
@@ -3148,7 +3183,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming' })); // No match.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
       const entries = await query.runEntries();
@@ -3171,7 +3206,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank descending (best matches first) - default direction.
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
@@ -3201,7 +3236,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank ascending (worst matches first).
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
@@ -3253,7 +3288,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank descending and limit to top 2 results.
       const query = db.query(
@@ -3286,7 +3321,7 @@ describe('Query', () => {
         db.add(object);
       }
 
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
     });
 
     test('fires only once when new objects are added', async () => {

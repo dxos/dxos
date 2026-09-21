@@ -104,6 +104,14 @@ export type Resolver = refInternal.RefResolver;
 
 export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`; generators that must keep refs inline decline exactly these.
+ */
+export const isRefIdentifier: (identifier: string | undefined) => boolean = refInternal.isRefIdentifier;
+
 export const make = refInternal.Ref.make;
 
 // TODO(dmaretskyi): Consider just allowing `make` to accept URI.
