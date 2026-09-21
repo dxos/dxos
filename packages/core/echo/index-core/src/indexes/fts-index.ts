@@ -100,6 +100,16 @@ const escapeFts5Query = (text: string): string => {
     .join(' ');
 };
 
+/**
+ * The object snapshot store and the full-text index over it.
+ *
+ * These were one table until the trigram index became the dominant cost of editing: FTS5 cannot
+ * update a row in place, so a single changed property re-tokenized the whole object. Splitting
+ * them is what makes the expensive half deferrable — `objectSnapshot` is written on the spot, so
+ * every query that reads object data stays current, while `ftsIndex` catches up from
+ * `ftsIndexQueue` under {@link flushPending}. Full-text matching flushes first, so a search never
+ * sees a stale index.
+ */
 export class FtsIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
@@ -119,7 +129,7 @@ export class FtsIndex implements Index {
     queues,
     typeDxns,
   }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
+    return Effect.gen({ self: this }, function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
         return [];
@@ -144,7 +154,7 @@ export class FtsIndex implements Index {
 
       const conditions =
         minTermLength < 3
-          ? // LIKE fallback - scan the entire table, AND all terms.
+          ? // LIKE fallback - scan the entire snapshot store, AND all terms.
             terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
           : // MATCH - fast index lookup.
             [sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`];
@@ -186,6 +196,10 @@ export class FtsIndex implements Index {
       }
 
       if (useBm25) {
+        // Matching is the one read that goes to the index rather than the snapshot store, so it is
+        // also the one that has to wait for the deferred re-tokenization.
+        yield* this.flushPending();
+
         // Use BM25 ranking for FTS5 MATCH queries.
         // BM25 returns negative values, negate to get higher = better match.
         // Order by rank descending so best matches come first.
@@ -199,11 +213,12 @@ export class FtsIndex implements Index {
         `;
         return rows;
       } else {
-        // LIKE fallback - no ranking available, default to 1.
+        // LIKE fallback - no ranking available, default to 1. Reads the snapshot store directly,
+        // so a term below the trigram minimum matches writes the index has not caught up with.
         const rows = yield* sql<EntityMeta>`
           SELECT m.* 
-          FROM ftsIndex AS f 
-          JOIN objectMeta AS m ON f.rowid = m.recordId 
+          FROM objectSnapshot AS f 
+          JOIN objectMeta AS m ON f.recordId = m.recordId 
           WHERE ${sql.and(conditions)}
         `;
         return rows.map((row) => ({ ...row, rank: 1 }));
@@ -214,7 +229,7 @@ export class FtsIndex implements Index {
   /**
    * Query snapshots by recordIds.
    * Returns the parsed JSON snapshots for queue objects.
-   * RecordIds not present in the FTS index are silently omitted from the result.
+   * RecordIds not present in the snapshot store are silently omitted from the result.
    */
   querySnapshotsJSON(
     recordIds: number[],
@@ -235,11 +250,11 @@ export class FtsIndex implements Index {
       const allResults: { recordId: number; snapshot: Obj.JSON }[] = [];
       for (const chunk of chunks) {
         const rows = yield* sql<{
-          rowid: number;
+          recordId: number;
           snapshot: string;
-        }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+        }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
         for (const r of rows) {
-          allResults.push({ recordId: r.rowid, snapshot: JSON.parse(r.snapshot) });
+          allResults.push({ recordId: r.recordId, snapshot: JSON.parse(r.snapshot) });
         }
       }
 
@@ -247,13 +262,16 @@ export class FtsIndex implements Index {
     });
   }
 
-  /** Delete FTS rows by record id (rowid). Used by garbage collection. */
+  /** Delete snapshot and index rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+          yield* sql`DELETE FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
+          // Dropped with the rest, or the pending re-index would resurrect a collected row.
+          yield* sql`DELETE FROM ftsIndexQueue WHERE recordId IN ${sql.in(chunk)}`;
         }
       }),
   );
@@ -272,18 +290,16 @@ export class FtsIndex implements Index {
                 return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
               }
 
-              // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
               const existing = yield* sql<{
-                rowid: number;
                 snapshot: string;
-              }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
+              }>`SELECT snapshot FROM objectSnapshot WHERE recordId = ${recordId}`;
 
               // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
               // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
               // partial onto the prior snapshot to retain the body and type while layering the new
-              // marker; otherwise the DELETE+INSERT below would replace the full snapshot with the
-              // bare partial and the client could not hydrate the deleted object (`Obj.fromJSON`
-              // needs `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
+              // marker; otherwise the upsert below would replace the full snapshot with the bare
+              // partial and the client could not hydrate the deleted object (`Obj.fromJSON` needs
+              // `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
               // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
               // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
               const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
@@ -300,14 +316,65 @@ export class FtsIndex implements Index {
                 : merged;
               const snapshot = JSON.stringify(searchable);
 
-              if (existing.length > 0) {
-                yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
-              }
-
-              yield* sql`INSERT INTO ftsIndex (rowid, snapshot) VALUES (${recordId}, ${snapshot})`;
+              yield* sql`
+                INSERT INTO objectSnapshot (recordId, snapshot) VALUES (${recordId}, ${snapshot})
+                ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
+              `;
+              // Re-tokenizing here is what made a keystroke cost hundreds of kilobytes; the queue
+              // hands that to `flushPending`, which a search or an idle moment drains.
+              yield* sql`INSERT OR IGNORE INTO ftsIndexQueue (recordId) VALUES (${recordId})`;
             }),
           { discard: true },
         );
       }),
+  );
+
+  /**
+   * Re-tokenizes every record whose snapshot has moved on since it was last indexed.
+   *
+   * Draining in chunks keeps one transaction proportional to the batch rather than to the backlog,
+   * and deleting the queue rows in the same transaction as the index write is what lets an
+   * interrupted flush resume instead of losing the record.
+   *
+   * @returns Number of records re-indexed.
+   */
+  flushPending = Effect.fn('FtsIndex.flushPending')((): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      let flushed = 0;
+
+      for (;;) {
+        const pending = yield* sql<{
+          recordId: number;
+        }>`SELECT recordId FROM ftsIndexQueue LIMIT ${SQL_CHUNK_SIZE}`;
+        if (pending.length === 0) {
+          return flushed;
+        }
+
+        const recordIds = pending.map((row) => row.recordId);
+        yield* sql.withTransaction(
+          Effect.gen(function* () {
+            // FTS5 has no UPDATE; an upsert is a delete followed by an insert. A record queued
+            // before it was ever indexed matches nothing here, which is the intended no-op.
+            yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
+            yield* sql`
+                INSERT INTO ftsIndex (rowid, snapshot)
+                SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(recordIds)}
+              `;
+            yield* sql`DELETE FROM ftsIndexQueue WHERE recordId IN ${sql.in(recordIds)}`;
+          }),
+        );
+        flushed += recordIds.length;
+      }
+    }),
+  );
+
+  /** Records waiting to be re-tokenized. */
+  pendingCount = Effect.fn('FtsIndex.pendingCount')((): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM ftsIndexQueue`;
+      return rows[0]?.count ?? 0;
+    }),
   );
 }

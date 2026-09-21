@@ -802,4 +802,117 @@ describe('FtsIndex', () => {
       }, Effect.provide(TestLayer)),
     );
   });
+
+  describe('deferred re-tokenization', () => {
+    /** One indexed object, with the metadata row its record id comes from. */
+    const indexed = Effect.fnUntraced(function* (index: FtsIndex, title: string) {
+      const metaIndex = new EntityMetaIndex();
+      yield* index.migrate();
+      yield* metaIndex.migrate();
+
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, title },
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      yield* index.update([object]);
+      return object;
+    });
+
+    it.effect(
+      'leaves the index behind the snapshot store until flushed',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const object = yield* indexed(index, 'Deferred Tokenization');
+
+        expect(yield* index.pendingCount()).toBe(1);
+
+        // The snapshot store is written on the spot, so everything read from it is already current.
+        const snapshots = yield* index.querySnapshotsJSON([object.recordId!]);
+        expect(snapshots).toHaveLength(1);
+
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql`SELECT rowid FROM ftsIndex WHERE rowid = ${object.recordId!}`;
+        expect(rows).toHaveLength(0);
+
+        expect(yield* index.flushPending()).toBe(1);
+        expect(yield* index.pendingCount()).toBe(0);
+        expect(yield* sql`SELECT rowid FROM ftsIndex WHERE rowid = ${object.recordId!}`).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'coalesces repeated writes into a single re-tokenization',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const object = yield* indexed(index, 'Alpha');
+
+        for (const title of ['Bravo', 'Charlie', 'Delta']) {
+          object.data.title = title;
+          yield* index.update([object]);
+        }
+
+        expect(yield* index.pendingCount()).toBe(1);
+        expect(yield* index.flushPending()).toBe(1);
+
+        const match = yield* index.query({ query: 'Delta', spaceId: null, includeAllQueues: false, queues: null });
+        expect(match).toHaveLength(1);
+        const stale = yield* index.query({ query: 'Alpha', spaceId: null, includeAllQueues: false, queues: null });
+        expect(stale).toHaveLength(0);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'matches a term below the trigram minimum against an unflushed write',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        yield* indexed(index, 'ab cd');
+
+        // The LIKE fallback reads the snapshot store, so it owes nothing to the pending flush.
+        const match = yield* index.query({ query: 'ab', spaceId: null, includeAllQueues: false, queues: null });
+        expect(match).toHaveLength(1);
+        expect(yield* index.pendingCount()).toBe(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'flushes before matching, so a search never sees a stale index',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        yield* indexed(index, 'Unflushed Content');
+
+        const match = yield* index.query({
+          query: 'Unflushed',
+          spaceId: null,
+          includeAllQueues: false,
+          queues: null,
+        });
+        expect(match).toHaveLength(1);
+        expect(yield* index.pendingCount()).toBe(0);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'does not resurrect a record deleted while its re-tokenization was pending',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const object = yield* indexed(index, 'Collected Soon');
+
+        yield* index.deleteByRecordIds([object.recordId!]);
+        expect(yield* index.pendingCount()).toBe(0);
+        expect(yield* index.flushPending()).toBe(0);
+
+        const match = yield* index.query({ query: 'Collected', spaceId: null, includeAllQueues: false, queues: null });
+        expect(match).toHaveLength(0);
+        expect(yield* index.querySnapshotsJSON([object.recordId!])).toHaveLength(0);
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });

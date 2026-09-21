@@ -520,4 +520,6 @@ export const wipeSqliteStorage: Effect.Effect<void, SqlError.SqlError, SqlClient
   yield* sql`DELETE FROM objectMeta`;
   yield* sql`DELETE FROM reverseRef`;
   yield* sql`DELETE FROM ftsIndex`;
+  yield* sql`DELETE FROM objectSnapshot`;
+  yield* sql`DELETE FROM ftsIndexQueue`;
 });

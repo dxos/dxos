@@ -210,6 +210,17 @@ export class IndexEngine {
   }
 
   /**
+   * Applies the full-text re-tokenization that {@link update} deferred (see {@link FtsIndex}).
+   * Text search does this for itself; callers drive it so the backlog does not accumulate
+   * unbounded between searches.
+   *
+   * @returns Number of records re-indexed.
+   */
+  flushFtsIndex(): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#ftsIndex.flushPending();
+  }
+
+  /**
    * Live rows carrying any of the given convergence keys in one space — the detection point-lookup
    * for convergence-key merging.
    */
