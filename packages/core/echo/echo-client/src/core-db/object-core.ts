@@ -299,8 +299,20 @@ export class ObjectCore {
     return this.doc != null || this.docHandle != null;
   }
 
-  getObjectStructure(): EntityStructure {
-    return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
+  /**
+   * Whether the bound document carries this object's body. A linked document settles ready while
+   * still empty when the peer holding it has replicated the space directory ahead of the payload,
+   * and the core exists from that moment on so the object's identity survives the body arriving.
+   *
+   * Derived from the document instead of stored, so it cannot disagree with what a read would find.
+   */
+  get isBodyAvailable(): boolean {
+    return this.hasDoc && getDeep(this.getDoc(), this.mountPath) != null;
+  }
+
+  /** Undefined until the body arrives — see {@link isBodyAvailable}. */
+  getObjectStructure(): EntityStructure | undefined {
+    return getDeep<EntityStructure>(this.getDoc(), this.mountPath);
   }
 
   /**

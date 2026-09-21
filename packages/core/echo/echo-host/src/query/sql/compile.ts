@@ -351,7 +351,7 @@ export class SqlPlanCompiler {
     const predicate = this.#compileRootPredicate(step.filter);
     return this.#define(
       'ws',
-      sql`SELECT w.* FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId WHERE ${predicate}`,
+      sql`SELECT w.* FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId WHERE ${predicate}`,
       ws.grouped,
     );
   }
@@ -381,12 +381,12 @@ export class SqlPlanCompiler {
         }
         if (filter.foreignKeys && filter.foreignKeys.length > 0) {
           conditions.push(sql`EXISTS (
-            SELECT 1 FROM json_each(d.body, ${jsonPathLiteral(sql, [ATTR_META, 'keys'])}) k, json_each(${JSON.stringify(filter.foreignKeys)}) f
+            SELECT 1 FROM json_each(d.snapshot, ${jsonPathLiteral(sql, [ATTR_META, 'keys'])}) k, json_each(${JSON.stringify(filter.foreignKeys)}) f
             WHERE json_extract(k.value, '$.source') = json_extract(f.value, '$.source') AND json_extract(k.value, '$.id') = json_extract(f.value, '$.id'))`);
         }
         if (filter.metaKey !== undefined) {
           const keyPath = jsonPathLiteral(sql, [ATTR_META, 'key']);
-          conditions.push(sql`json_extract(d.body, ${keyPath}) = ${filter.metaKey}`);
+          conditions.push(sql`json_extract(d.snapshot, ${keyPath}) = ${filter.metaKey}`);
           if (filter.metaVersion !== undefined) {
             const versions = this.#metaVersions.get(metaVersionKey(filter.metaKey, filter.metaVersion));
             if (versions === undefined) {
@@ -397,7 +397,7 @@ export class SqlPlanCompiler {
             }
             const versionPath = jsonPathLiteral(sql, [ATTR_META, 'version']);
             conditions.push(
-              sql`json_extract(d.body, ${versionPath}) IN (SELECT value FROM json_each(${JSON.stringify(versions)}))`,
+              sql`json_extract(d.snapshot, ${versionPath}) IN (SELECT value FROM json_each(${JSON.stringify(versions)}))`,
             );
           }
         }
@@ -407,7 +407,7 @@ export class SqlPlanCompiler {
         const tagsPath = jsonPathLiteral(sql, [ATTR_META, 'tags']);
         const target = canonicalTag(filter.tag);
         // A tag is an encoded reference or (legacy) a bare URI; both sides compare by entity id.
-        return sql`EXISTS (SELECT 1 FROM json_each(d.body, ${tagsPath}) t
+        return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
           WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
       }
       case 'text-search':
@@ -471,10 +471,10 @@ export class SqlPlanCompiler {
   #compileValuePredicate(filter: QueryAST.Filter, path: readonly string[]): Fragment {
     const sql = this.#sql;
     const at = jsonPathLiteral(sql, path);
-    const value = sql`json_extract(d.body, ${at})`;
+    const value = sql`json_extract(d.snapshot, ${at})`;
     // Coalesced so a missing property yields a definite `false`, never SQL's NULL: `NOT` over a
     // NULL is NULL, which would drop rows the matcher's `!==` keeps.
-    const type = sql`COALESCE(json_type(d.body, ${at}), 'missing')`;
+    const type = sql`COALESCE(json_type(d.snapshot, ${at}), 'missing')`;
     switch (filter.type) {
       case 'compare': {
         const operand = filter.value;
@@ -513,7 +513,7 @@ export class SqlPlanCompiler {
         const numbers = values.filter((candidate): candidate is number => typeof candidate === 'number');
         const booleans = values.filter((candidate): candidate is boolean => typeof candidate === 'boolean');
         const branches: Fragment[] = [];
-        const refOrValue = sql`COALESCE(json_extract(d.body, ${jsonPathLiteral(sql, [...path, '/'])}), ${value})`;
+        const refOrValue = sql`COALESCE(json_extract(d.snapshot, ${jsonPathLiteral(sql, [...path, '/'])}), ${value})`;
         if (strings.length > 0) {
           branches.push(
             sql`(${type} IN ('text', 'object') AND ${refOrValue} IN (SELECT value FROM json_each(${JSON.stringify(strings)})))`,
@@ -537,15 +537,15 @@ export class SqlPlanCompiler {
       }
       case 'in-query': {
         const subquery = this.#compileInQuery(filter);
-        const refOrValue = sql`COALESCE(json_extract(d.body, ${jsonPathLiteral(sql, [...path, '/'])}), ${value})`;
+        const refOrValue = sql`COALESCE(json_extract(d.snapshot, ${jsonPathLiteral(sql, [...path, '/'])}), ${value})`;
         return sql`COALESCE(${refOrValue} IN (SELECT v FROM ${sql.literal(subquery)}), 0)`;
       }
       case 'contains': {
         const element = filter.value;
         if (typeof element === 'object' && element !== null && !Array.isArray(element)) {
-          return sql`(${type} = 'array' AND EXISTS (SELECT 1 FROM json_each(d.body, ${at}) e WHERE ${structuralMatch(sql, sql`e.value`, element)}))`;
+          return sql`(${type} = 'array' AND EXISTS (SELECT 1 FROM json_each(d.snapshot, ${at}) e WHERE ${structuralMatch(sql, sql`e.value`, element)}))`;
         }
-        return sql`(${type} = 'array' AND EXISTS (SELECT 1 FROM json_each(d.body, ${at}) e WHERE ${scalarEquals(sql, sql`e.value`, sql`e.type`, element)}))`;
+        return sql`(${type} = 'array' AND EXISTS (SELECT 1 FROM json_each(d.snapshot, ${at}) e WHERE ${scalarEquals(sql, sql`e.value`, sql`e.type`, element)}))`;
       }
       case 'range': {
         if (typeof filter.from === 'number' && typeof filter.to === 'number') {
@@ -575,13 +575,13 @@ export class SqlPlanCompiler {
   #equalsOperand(path: readonly string[], operand: unknown): Fragment {
     const sql = this.#sql;
     const at = jsonPathLiteral(sql, path);
-    const value = sql`json_extract(d.body, ${at})`;
-    const type = sql`COALESCE(json_type(d.body, ${at}), 'missing')`;
+    const value = sql`json_extract(d.snapshot, ${at})`;
+    const type = sql`COALESCE(json_type(d.snapshot, ${at}), 'missing')`;
     if (operand === undefined) {
       return sql`(${type} = 'missing')`;
     }
     if (isEncodedReference(operand)) {
-      return sql`(COALESCE(json_extract(d.body, ${jsonPathLiteral(sql, [...path, '/'])}) = ${EncodedReference.toURI(operand)}, 0))`;
+      return sql`(COALESCE(json_extract(d.snapshot, ${jsonPathLiteral(sql, [...path, '/'])}) = ${EncodedReference.toURI(operand)}, 0))`;
     }
     return scalarEquals(sql, value, type, operand);
   }
@@ -601,7 +601,7 @@ export class SqlPlanCompiler {
     // Missing and null projected values never broaden the membership set.
     const projection = this.#define(
       'sub',
-      sql`SELECT COALESCE(json_extract(d.body, ${refAt}), json_extract(d.body, ${at})) AS v FROM ${this.#ref(result)} w JOIN objectData d ON d.recordId = w.recordId WHERE json_type(d.body, ${at}) IS NOT NULL AND json_type(d.body, ${at}) != 'null'`,
+      sql`SELECT COALESCE(json_extract(d.snapshot, ${refAt}), json_extract(d.snapshot, ${at})) AS v FROM ${this.#ref(result)} w JOIN objectSnapshot d ON d.recordId = w.recordId WHERE json_type(d.snapshot, ${at}) IS NOT NULL AND json_type(d.snapshot, ${at}) != 'null'`,
     );
     this.#subqueries.set(key, projection.name);
     return projection.name;
@@ -739,7 +739,7 @@ export class SqlPlanCompiler {
           const path = EscapedPropPath.unescape(step.traversal.property);
           const at = jsonPathLiteral(sql, path);
           // The property holds one reference or an array of them; either way each is `{"/": uri}`.
-          const refs = sql`json_each(CASE json_type(d.body, ${at}) WHEN 'array' THEN json_extract(d.body, ${at}) ELSE json_array(json_extract(d.body, ${at})) END)`;
+          const refs = sql`json_each(CASE json_type(d.snapshot, ${at}) WHEN 'array' THEN json_extract(d.snapshot, ${at}) ELSE json_array(json_extract(d.snapshot, ${at})) END)`;
           const uri = sql`json_extract(ref.value, '$."/"')`;
           // A target in a feed is reachable only when the plan scopes the space with its feeds.
           const target = this.#includeAllFeeds
@@ -750,7 +750,7 @@ export class SqlPlanCompiler {
             'ws',
             sql`${project(sql`t`)} FROM ${wsRef} w
               JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
-              JOIN objectData d ON d.recordId = w.recordId
+              JOIN objectSnapshot d ON d.recordId = w.recordId
               JOIN ${refs} ref
               JOIN ${target} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND ${targetKind}
               WHERE ${uri} LIKE 'echo:%'
@@ -874,7 +874,7 @@ export class SqlPlanCompiler {
       const regrouped = this.#define(
         'grp',
         sql`SELECT w.*, DENSE_RANK() OVER (ORDER BY ${orderBy}, w.groupOrd) AS newGroupOrd
-          FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId
+          FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId
           WHERE w.ord = (SELECT MIN(ord) FROM ${wsRef} f WHERE f.groupKey = w.groupKey)`,
       );
       const reordered = this.#define(
@@ -893,7 +893,7 @@ export class SqlPlanCompiler {
     const ordered = this.#define(
       'ws',
       sql`SELECT w.recordId, w.objectId, w.spaceId, w.rank, ROW_NUMBER() OVER (ORDER BY ${orderBy}) AS ord
-        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId`,
     );
     return step.limit === undefined ? ordered : this.#compileLimitSkip(ordered, { limit: step.limit });
   }
@@ -917,7 +917,7 @@ export class SqlPlanCompiler {
         }
         const at = jsonPathLiteral(sql, [order.property]);
         // Only scalars order; anything else sorts with the nulls, last.
-        return sql`CASE WHEN json_type(d.body, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.body, ${at}) END ${direction} NULLS LAST`;
+        return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.snapshot, ${at}) END ${direction} NULLS LAST`;
       }
       default:
         return sql`w.ord`;
@@ -982,7 +982,7 @@ export class SqlPlanCompiler {
     const keyed = this.#define(
       'keyed',
       sql`SELECT w.*, ${keyJson} AS groupKey${keyColumns.length > 0 ? sql`, ${sql.csv(keyColumns)}` : sql``}
-        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId`,
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId`,
     );
 
     const aggregateColumns = scalarAggregates.map((aggregate) => {
@@ -1007,7 +1007,7 @@ export class SqlPlanCompiler {
       sql`SELECT k.recordId, k.objectId, k.spaceId, k.rank, k.ord, k.groupKey,
         MIN(k.ord) OVER (PARTITION BY k.groupKey) AS firstOrd,
         COUNT(*) OVER (PARTITION BY k.groupKey) AS groupCount${aggregateColumns.length > 0 ? sql`, ${sql.csv(aggregateColumns)}` : sql``}
-        FROM ${this.#ref(keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectData d ON d.recordId = k.recordId`,
+        FROM ${this.#ref(keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectSnapshot d ON d.recordId = k.recordId`,
     );
     const shape: GroupedShape = { aggregateNames: scalarAggregates.map((aggregate) => aggregate.name), collapsed };
     // Groups take the order of their first member; members keep their order, or the `items`
@@ -1018,7 +1018,7 @@ export class SqlPlanCompiler {
     return this.#define(
       'ws',
       sql`SELECT ${this.#groupedColumns(shape, sql`w`, sql`DENSE_RANK() OVER (ORDER BY w.firstOrd)`, sql`ROW_NUMBER() OVER (ORDER BY w.firstOrd, ${memberOrder})`)}
-        FROM ${this.#ref(stamped)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectData d ON d.recordId = w.recordId ${members}`,
+        FROM ${this.#ref(stamped)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId ${members}`,
       shape,
     );
   }
@@ -1089,7 +1089,7 @@ export class SqlPlanCompiler {
       return sql`${row}.objectId`;
     }
     const at = jsonPathLiteral(sql, [property]);
-    return sql`CASE WHEN json_type(d.body, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.body, ${at}) END`;
+    return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.snapshot, ${at}) END`;
   }
 
   /** The group key component as JSON, so booleans serialize as `true`/`false` like `JSON.stringify`. */
@@ -1103,7 +1103,7 @@ export class SqlPlanCompiler {
         return sql`WHEN m.objectId IS NOT NULL THEN m.objectId`;
       }
       const at = jsonPathLiteral(sql, [property]);
-      return sql`WHEN json_type(d.body, ${at}) IN ('true', 'false') THEN json(json_type(d.body, ${at})) WHEN json_type(d.body, ${at}) IN ('text', 'integer', 'real') THEN json_extract(d.body, ${at})`;
+      return sql`WHEN json_type(d.snapshot, ${at}) IN ('true', 'false') THEN json(json_type(d.snapshot, ${at})) WHEN json_type(d.snapshot, ${at}) IN ('text', 'integer', 'real') THEN json_extract(d.snapshot, ${at})`;
     });
     return sql`CASE ${sql.join(' ', false)(branches)} ELSE NULL END`;
   }
@@ -1125,9 +1125,9 @@ export class SqlPlanCompiler {
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt,
-      CASE WHEN m.queueId != '' THEN json(d.body) END AS documentJson,
+      CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
       ${groupColumns}
-      FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectData d ON d.recordId = w.recordId
+      FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ORDER BY w.ord`;
   }
 }
@@ -1156,7 +1156,7 @@ export const compilePlan = (
       const keyPath = jsonPathLiteral(sql, [ATTR_META, 'key']);
       const versionPath = jsonPathLiteral(sql, [ATTR_META, 'version']);
       const rows = yield* sql<{ version: string | null }>`
-        SELECT DISTINCT json_extract(body, ${versionPath}) AS version FROM objectData WHERE json_extract(body, ${keyPath}) = ${key}`;
+        SELECT DISTINCT json_extract(snapshot, ${versionPath}) AS version FROM objectSnapshot WHERE json_extract(snapshot, ${keyPath}) = ${key}`;
       const matching = rows
         .map((row) => row.version)
         .filter((version): version is string => typeof version === 'string')
@@ -1247,6 +1247,59 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
         return false;
     }
   });
+
+/**
+ * Whether any filter in the plan reads `@meta` — foreign keys, a registry key/version, or tags.
+ *
+ * `objectSnapshot` strips `@meta` from document rows (it exists there only so the entity-meta index
+ * can lift the convergence key out), so those predicates cannot be evaluated in SQL and the plan
+ * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
+ * sees both, so this declines the plan wholesale rather than by scope.
+ */
+export const planReadsObjectMeta = (plan: QueryPlan.Plan): boolean => {
+  const readsMeta = (filter: QueryAST.Filter): boolean => {
+    if (filter.type === 'object') {
+      if (filter.foreignKeys !== undefined || filter.metaKey !== undefined) {
+        return true;
+      }
+      if (Object.values(filter.props ?? {}).some(readsMeta)) {
+        return true;
+      }
+    }
+    if (filter.type === 'tag') {
+      return true;
+    }
+    if (filter.type === 'and' || filter.type === 'or') {
+      return filter.filters.some(readsMeta);
+    }
+    if (filter.type === 'not') {
+      return readsMeta(filter.filter);
+    }
+    if (filter.type === 'in-query') {
+      // The subquery carries no scope of its own, so it cannot be planned here; walk its AST.
+      let found = false;
+      QueryAST.visit(filter.subquery, (node) => {
+        if ((node.type === 'select' || node.type === 'filter') && readsMeta(node.filter)) {
+          found = true;
+        }
+      });
+      return found;
+    }
+    return false;
+  };
+  return plan.steps.some((step) => {
+    switch (step._tag) {
+      case 'FilterStep':
+        return readsMeta(step.filter);
+      case 'UnionStep':
+        return step.plans.some(planReadsObjectMeta);
+      case 'SetDifferenceStep':
+        return planReadsObjectMeta(step.source) || planReadsObjectMeta(step.exclude);
+      default:
+        return false;
+    }
+  });
+};
 
 /** Every `(metaKey, metaVersion)` pair in the plan, sub-plans and subqueries included. */
 const collectMetaVersionFilters = (plan: QueryPlan.Plan): [key: string, range: string][] => {

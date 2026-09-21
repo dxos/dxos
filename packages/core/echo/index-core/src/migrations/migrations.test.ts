@@ -16,8 +16,8 @@ import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
 import { MIGRATIONS as FTS } from './fts/index.ts';
-import objectDataInit from './object-data/0001_init.sql?raw';
-import { MIGRATIONS as OBJECT_DATA, MIGRATIONS_TABLE as OBJECT_DATA_TABLE } from './object-data/index.ts';
+import objectSnapshotInit from './object-snapshot/0001_init.sql?raw';
+import { MIGRATIONS as OBJECT_SNAPSHOT } from './object-snapshot/index.ts';
 import reverseRefInit from './reverse-ref/0001_init.sql?raw';
 import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
@@ -28,7 +28,7 @@ const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 const STORES = [
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
   { name: 'fts', init: ftsInit, manifest: FTS },
-  { name: 'object-data', init: objectDataInit, manifest: OBJECT_DATA },
+  { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
   { name: 'reverse-ref', init: reverseRefInit, manifest: REVERSE_REF },
   { name: 'tracker', init: trackerInit, manifest: TRACKER },
 ];
@@ -38,17 +38,11 @@ const migrateEntityMeta = Migrator.make({})({
   table: ENTITY_META_TABLE,
 }).pipe(Effect.orDie);
 
-const migrateObjectData = Migrator.make({})({
-  loader: Migrator.fromRecord(OBJECT_DATA),
-  table: OBJECT_DATA_TABLE,
-}).pipe(Effect.orDie);
-
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
-const manifestIds = (manifest: Record<string, unknown>) =>
-  Object.keys(manifest).map((key) => [Number(key.slice(0, key.indexOf('_'))), key.slice(key.indexOf('_') + 1)]);
-
-const ENTITY_META_IDS = manifestIds(ENTITY_META);
-const OBJECT_DATA_IDS = manifestIds(OBJECT_DATA);
+const ENTITY_META_IDS = Object.keys(ENTITY_META).map((key) => [
+  Number(key.slice(0, key.indexOf('_'))),
+  key.slice(key.indexOf('_') + 1),
+]);
 
 const objectMetaColumns = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
@@ -109,7 +103,7 @@ describe('index-core migrations', () => {
 
 describe('objectMeta vintages', () => {
   // The three database vintages in the field. All must converge on the shape the code consumes and
-  // produces — the INSERT writes all 19 non-key columns and `SELECT *` reads them back.
+  // produces — the INSERT writes all 15 non-key columns and `SELECT *` reads them back.
   it.effect('fresh database gets the desired shape, and the column back-fill no-ops', () =>
     Effect.gen(function* () {
       expect(yield* migrateEntityMeta).toEqual(ENTITY_META_IDS);
@@ -177,36 +171,6 @@ describe('objectMeta vintages', () => {
     Effect.gen(function* () {
       yield* migrateEntityMeta;
       expect(yield* migrateEntityMeta).toEqual([]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-});
-
-describe('objectData store', () => {
-  it.effect('applies on a fresh database, and a second run is a no-op', () =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      expect(yield* migrateObjectData).toEqual(OBJECT_DATA_IDS);
-
-      const tables = yield* sql<{ name: string }>`
-        SELECT name FROM sqlite_master WHERE type = 'table' AND name != ${OBJECT_DATA_TABLE}
-      `;
-      expect(tables.map((table) => table.name)).toContain('objectData');
-      expect(yield* migrateObjectData).toEqual([]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  // A database left with the table but no history (a crash between DDL and the history insert)
-  // must take migration 1 as a no-op and keep its rows.
-  it.effect('is a no-op on a database that already has the table', () =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* SqlMigrations.apply(objectDataInit);
-      yield* sql`INSERT INTO objectData (recordId, body) VALUES (1, jsonb('{"id":"o1"}'))`;
-
-      expect(yield* migrateObjectData).toEqual(OBJECT_DATA_IDS);
-
-      const rows = yield* sql<{ recordId: number; body: string }>`SELECT recordId, json(body) AS body FROM objectData`;
-      expect(rows).toEqual([{ recordId: 1, body: '{"id":"o1"}' }]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -13,15 +13,21 @@ import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
+import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type ExecutionTrace, QueryExecutor } from '../query/index.ts';
+import { type AutomergeHost } from '../automerge/index.ts';
+import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
+import type { SpaceStateManager } from './space-state-manager.ts';
 
 export type QueryServiceProps = {
+  indexEngine: IndexEngine;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
   /**
    * Brings the index up to date and resolves once done. Awaited before a feed-scoped query's first
    * execution so that a query issued right after a feed append reads the just-written items instead
@@ -29,12 +35,16 @@ export type QueryServiceProps = {
    * fallback, so the index is their only source of truth.
    */
   updateIndexes: () => Promise<void>;
+
   /**
-   * False while the index still lacks bodies for some objects (the backfill after the body store's
-   * introduction). The compiled executor reads bodies only, so until it is true every query's
-   * first execution awaits indexing, as feed-scoped queries always do.
+   * True once every indexed object has a snapshot. The compiled executor reads that store rather
+   * than loading documents, so while it is still filling after upgrade a query awaits indexing
+   * before its first execution. Ignored on the in-memory path, which loads documents itself.
    */
-  hasCompleteBodies?: () => Promise<boolean>;
+  hasCompleteSnapshots?: () => Promise<boolean>;
+
+  /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
+  executor?: QueryExecutorMode;
 };
 
 /**
@@ -81,9 +91,19 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return this._queries.size;
   }
 
-  /** Execution traces of the active queries' last runs, for diagnostics and benchmarks. */
   'getQueryTraces'(): ExecutionTrace[] {
     return Array.from(this._queries, (query) => query.executor.trace);
+  }
+
+  /** Cached once true: the store only ever finishes filling, so the check need not repeat. */
+  #snapshotsKnownComplete = false;
+
+  async #snapshotsComplete(): Promise<boolean> {
+    if (this.#snapshotsKnownComplete || !this._params.hasCompleteSnapshots) {
+      return true;
+    }
+    this.#snapshotsKnownComplete = await this._params.hasCompleteSnapshots();
+    return this.#snapshotsKnownComplete;
   }
 
   // 'all' = catch-all; null = no pending hint.
@@ -165,7 +185,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
-        if (queryEntry.feedScoped || !(await this.#bodiesComplete())) {
+        if (queryEntry.feedScoped || !(await this.#snapshotsComplete())) {
           await this._params.updateIndexes();
         }
         queryEntry.open = true;
@@ -177,20 +197,6 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       });
     });
   }
-
-  /** Cached once true: bodies never become incomplete again after the backfill drains. */
-  #bodiesComplete = async (): Promise<boolean> => {
-    if (this.#bodiesKnownComplete || !this._params.hasCompleteBodies) {
-      return true;
-    }
-    const complete = await this._params.hasCompleteBodies();
-    if (complete) {
-      this.#bodiesKnownComplete = true;
-    }
-    return complete;
-  };
-
-  #bodiesKnownComplete = false;
 
   /**
    * Schedule re-execution of queries, optionally guided by a targeted hint.
@@ -220,10 +226,14 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
+        indexEngine: this._params.indexEngine,
         runtime: this._params.runtime,
+        automergeHost: this._params.automergeHost,
         queryId: request.queryId ?? raise(new Error('query id required')),
         query: parsedQuery,
         reactivity: request.reactivity,
+        executor: this._params.executor,
+        spaceStateManager: this._params.spaceStateManager,
       }),
       dirty: true,
       open: false,

@@ -205,7 +205,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          intent: { scrollIntoView: scrolled, transition: true },
+          intent: { scrollIntoView: scrolled, focus: input.focus, transition: true },
         });
       }
 
@@ -215,7 +215,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
         // Nothing newly open means no URL changed, so no write carried the intent above.
         if (scrolled === undefined && input.scrollIntoView !== false && input.subject[0]) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0] });
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0], focus: input.focus });
         }
 
         if (newlyOpen[0] ?? input.subject[0]) {

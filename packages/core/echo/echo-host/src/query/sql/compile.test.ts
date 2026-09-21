@@ -18,12 +18,12 @@ import {
   ATTR_TYPE,
 } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { EntityMetaIndex, type IndexerObject, ObjectDataIndex, ReverseRefIndex } from '@dxos/index-core';
+import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex, ReverseRefIndex } from '@dxos/index-core';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
 import { GroupBy } from '../group-by.ts';
 import { QueryPlanner } from '../query-planner.ts';
-import { compilePlan } from './compile.ts';
+import { compilePlan, planReadsObjectMeta } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
@@ -40,7 +40,7 @@ type Fixture = {
 /** Seeds the three index tables the compiler reads, the way `IndexEngine.#update` would. */
 const seed = Effect.gen(function* () {
   const meta = new EntityMetaIndex();
-  const bodies = new ObjectDataIndex();
+  const bodies = new ObjectSnapshotIndex();
   const refs = new ReverseRefIndex();
   yield* meta.migrate();
   yield* bodies.migrate();
@@ -142,7 +142,7 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('typed comparisons, contains, in, has-parent and foreign keys', () =>
+  it.effect('typed comparisons, contains, in and has-parent', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
@@ -191,17 +191,35 @@ describe('SqlPlanCompiler', () => {
           roots.rows.map((row) => row.objectId),
         ).sort(),
       ).toEqual(['t3', 't4']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-      const keyed = yield* run(
-        fixture,
-        Query.select(Filter.foreignKeys(TASK, [{ source: 'github.com', id: '42' }])).from(scope),
-      );
+  // `objectSnapshot` strips `@meta` from document rows, so these predicates have nothing to read
+  // there and the executor sends the plan to the in-memory path instead.
+  it.effect('declines plans whose filters read object meta', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const plan = (query: Query.Any) => new QueryPlanner().createPlan(query.ast);
+
+      expect(planReadsObjectMeta(plan(Query.select(Filter.type(TASK)).from(scope)))).toBe(false);
       expect(
-        names(
-          fixture,
-          keyed.rows.map((row) => row.objectId),
+        planReadsObjectMeta(
+          plan(Query.select(Filter.foreignKeys(TASK, [{ source: 'github.com', id: '42' }])).from(scope)),
         ),
-      ).toEqual(['t4']);
+      ).toBe(true);
+      expect(planReadsObjectMeta(plan(Query.select(Filter.key('example.com/type/Contact')).from(scope)))).toBe(true);
+      // A meta predicate nested under a union is still a meta predicate.
+      expect(
+        planReadsObjectMeta(
+          plan(
+            Query.all(
+              Query.select(Filter.type(TASK)),
+              Query.select(Filter.foreignKeys(TASK, [{ source: 'github.com', id: '42' }])),
+            ).from(scope),
+          ),
+        ),
+      ).toBe(true);
     }).pipe(Effect.provide(TestLayer)),
   );
 

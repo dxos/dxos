@@ -18,6 +18,7 @@ import { DeckSchema } from '#types';
 
 import { focusPane } from '../../util/index.ts';
 import { CompanionPlank } from './CompanionPlank.tsx';
+import { focusContent } from './focus-content.ts';
 import { PlankControls } from './PlankControls.tsx';
 import { PlankErrorFallback } from './PlankFallback.tsx';
 import { useDeckPlank } from './useDeckPlank.ts';
@@ -88,14 +89,23 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   // A layout effect, since attention is derived from focus and focus has to move in the task that
   // inserted this plank or its first painted frame reads as unattended. Scrolling is owned by the deck
   // viewport, which positions the plank past the pile of spines, so this focus must not scroll.
+  // The wait for a lazy article's content, held outside the effect: clearing the intent below re-runs
+  // the effect at once, which must not cancel a wait it just started.
+  const contentFocusRef = useRef<(() => void) | undefined>(undefined);
   useLayoutEffect(() => {
     if (scrollIntoView?.id === id) {
-      if (scrollIntoView.focus !== false) {
+      contentFocusRef.current?.();
+      if (scrollIntoView.focus === 'content') {
+        // Straight into the content: a keyboard navigation that landed on the plank itself would need
+        // a second Enter before the reader could type.
+        contentFocusRef.current = focusContent(rootRef.current);
+      } else if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);
       }
       onScrollIntoView(undefined);
     }
   }, [scrollIntoView, id, onScrollIntoView]);
+  useLayoutEffect(() => () => contentFocusRef.current?.(), []);
 
   // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {

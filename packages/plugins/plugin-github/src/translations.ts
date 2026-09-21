@@ -21,6 +21,9 @@ export const translations = [
         'import-pull-request-dialog.title': 'Import pull request',
         'import-pull-request-submit.label': 'Import',
         'import-pull-request-failed.title': 'Could not import the pull request',
+        'import-pull-request-token-rejected.title': 'GitHub rejected your connection — reconnect GitHub and try again',
+        'import-pull-request-not-connected.title':
+          'Pull request not found — connect GitHub to import one from a private repository',
         'import-pull-request-inaccessible.title':
           'Pull request not found, or not accessible with your GitHub connection',
         'import-pull-request-no-space.title': 'Open a space to import a pull request into',

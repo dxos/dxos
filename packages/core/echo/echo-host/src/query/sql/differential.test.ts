@@ -11,7 +11,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_DELETED, ATTR_TYPE, type ObjectJSON } from '@dxos/echo/internal';
-import { EntityMetaIndex, type IndexerObject, ObjectDataIndex } from '@dxos/index-core';
+import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex } from '@dxos/index-core';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { filterMatchObjectJSON } from '../../filter/index.ts';
@@ -136,7 +136,7 @@ describe('SqlPlanCompiler differential', () => {
     Effect.gen(function* () {
       const random = makeRandom(20260917);
       const meta = new EntityMetaIndex();
-      const bodies = new ObjectDataIndex();
+      const bodies = new ObjectSnapshotIndex();
       yield* meta.migrate();
       yield* bodies.migrate();
 

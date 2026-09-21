@@ -3,7 +3,7 @@
 //
 
 export * from './fts-index.ts';
+export * from './object-snapshot-index.ts';
 export * from './entity-meta-index.ts';
 export * from './reverse-ref-index.ts';
-export * from './object-data-index.ts';
 export * from './interface.ts';

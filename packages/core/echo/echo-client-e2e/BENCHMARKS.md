@@ -673,12 +673,12 @@ enough to suggest the shared handler cost anything. Stage E's case is the deleti
 # Query executor: memory vs sql — `src/query-executor.bench.ts`
 
 The same query workload under the host's two query executors, side by side in one process. The `memory`
-column was produced by the legacy executor, which loaded every candidate document from the Automerge repo and
-evaluated the plan in JS; the `sql` executor compiles the plan into one SQLite statement over the index tables
-and loads no documents. The legacy executor was deleted in the commit following `c5294281`, so the two runs
-recorded below are the before/after record and the bench now exercises the sql executor only. To reproduce
-the `memory` column, check out `c5294281`, where one peer per mode was built with
-`createPeer({ queryExecutor })` and both columns came from one run. Run with:
+column is the in-memory executor, which loads every candidate document from the Automerge repo and
+evaluates the plan in JS; the `sql` executor compiles the plan into one SQLite statement over the index tables
+and loads no documents. Both ship: `memory` is the default and `sql` is selected with
+`DX_ECHO_QUERY_EXECUTOR=sql`, so either column can be reproduced by setting that variable. The earliest runs
+below built one peer per mode in a single process, which the harness no longer does; a run now measures the
+one mode it was given. Run with:
 
 ```bash
 DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run query-executor --outputJson /tmp/query-executor.json

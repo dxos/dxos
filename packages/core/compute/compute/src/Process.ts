@@ -472,6 +472,11 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
  * Runtime state of a process.
  */
 export enum State {
+  // Command to spawn the process has been accepted locally but the runtime hosting it has not yet
+  // acknowledged it. Only ever reported by a client queueing commands for a remote runtime
+  // (`RemoteCommandQueue`); a process the local runtime owns is never in this state.
+  STARTING = 'STARTING',
+
   // Process is actively running.
   RUNNING = 'RUNNING',
 

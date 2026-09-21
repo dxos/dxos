@@ -751,6 +751,22 @@ export class DataSpaceManager extends Resource {
   }
 
   /**
+   * Closes and tombstones every loaded space without writing SpaceDeleted credentials: used when the
+   * identity itself is being deleted, so there is no HALO left to replicate the deletion to.
+   */
+  @synchronized
+  async deleteAllSpaces(ctx: Context): Promise<void> {
+    const spaces = [...this._spaces.values()].map((space) => ({ key: space.key, id: space.id }));
+    log('deleting all spaces', { count: spaces.length });
+    for (const { key, id } of spaces) {
+      await this._tombstoneSpace(ctx, key);
+      // Drops the host's in-memory state for the space as well as the tombstone, since the stack
+      // stays open afterwards and would otherwise keep serving a space that no longer exists.
+      await this._echoHost.removeSpace(id);
+    }
+  }
+
+  /**
    * Tombstones a space in response to a SpaceDeleted credential replicated from another device.
    * Does not write a credential (one already exists in the HALO).
    */

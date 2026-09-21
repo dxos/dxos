@@ -7,7 +7,7 @@
 // Kept bidirectional so `read.ts` can report only non-default styles back to the agent.
 //
 
-import { type Scene } from '@dxos/plugin-illustrator/model';
+import { type Scene } from '@dxos/diagram';
 
 /** Scene palette → excalidraw stroke colors (tldraw-compatible hues). */
 const COLOR_TO_HEX: Record<Scene.Color, string> = {

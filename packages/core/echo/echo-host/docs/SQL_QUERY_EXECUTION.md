@@ -1,9 +1,11 @@
 # ECHO query execution in SQLite
 
-Status: **implemented through phase 3**, 2026-09-17, on this branch. Phase 4 (EDGE) is a
-cross-repo change and phase 5 (property indexes, contentless FTS) is not started. Where the
-implementation departs from the proposal below, the "Implementation notes" section at the end
-records the departure and why.
+Status: **implemented and off by default**, 2026-09-21, on this branch. The compiled executor covers
+phases 1 to 3 of the plan below and is selected with `EchoHost({ queryExecutor: 'sql' })` or
+`DX_ECHO_QUERY_EXECUTOR=sql`; the in-memory executor stays the default until the compiled path has
+soaked. Phase 4 (EDGE) is a cross-repo change and phase 5 (property indexes, contentless FTS) is not
+started. Where the implementation departs from the proposal below, the "Implementation notes"
+section at the end records the departure and why.
 
 ## Problem
 

@@ -8,12 +8,15 @@ import { describe, test } from 'vitest';
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
+import { AutomergeHost } from '../automerge/index.ts';
 import { QueryExecutor } from '../query/query-executor.ts';
 import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { SpaceStateManager } from './space-state-manager.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -42,9 +45,15 @@ const QUEUE_DXN = EID.make({ spaceId: QUEUE_SPACE_ID, entityId: QUEUE_ID });
 
 const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
-/** Never run, so a `never`-typed placeholder satisfies the executor's `RuntimeProvider<SqlClient>`. */
+/** Never run, so a `never`-typed placeholder satisfies every dependency's `RuntimeProvider<R>`. */
+const testRuntime = Effect.never;
+
+/** Real but never-opened QueryExecutor dependencies, shared across the fixtures below. */
 const testDeps = {
-  runtime: Effect.never,
+  indexEngine: new IndexEngine(),
+  runtime: testRuntime,
+  automergeHost: new AutomergeHost({ runtime: testRuntime }),
+  spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
 };
 
 /** Creates a QueryExecutor whose plan and cached scopes come only from `query`, via extractScopes(). */

@@ -8,17 +8,15 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
-import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import type { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
-import { chunkArray } from '../utils.ts';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
-import type { Index, IndexerObject } from './interface.ts';
+import { type Index, type IndexerObject } from './interface.ts';
 
-// SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
-// Use 500 as a safe chunk size for IN (...) clauses.
-const SQL_CHUNK_SIZE = 500;
+/** Each indexed row binds two variables, so the batch is half what a single-column `IN` allows. */
+const INSERT_CHUNK_SIZE = SQL_CHUNK_SIZE / 2;
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -100,26 +98,19 @@ const escapeFts5Query = (text: string): string => {
 };
 
 /**
- * The `WHERE` fragment matching `ftsIndex f` against free text, and whether BM25 ranking applies.
- * Terms shorter than the trigram tokenizer's three characters fall back to `LIKE` over the
- * snapshot, which cannot rank. `undefined` when the text has no terms.
+ * Trigram full-text index over {@link ObjectSnapshotIndex}.
+ *
+ * A secondary index: `IndexEngine` feeds it from {@link IndexedObjectSource} rather than from
+ * automerge or a feed, which is what makes re-tokenization deferrable — and cheap under a burst,
+ * since 300 edits move one object's counter 300 times and are caught up in a single pass.
+ *
+ * Deferring it matters because re-tokenizing is what made editing expensive: FTS5 cannot update a
+ * row in place and a trigram tokenizer emits one token per 3-character window, so one changed
+ * property rewrote hundreds of kilobytes. Nothing but `MATCH` reads this table — every other read,
+ * the sub-trigram `LIKE` fallback included, goes to the snapshot store, which is never behind. A
+ * caller that needs its own write matched drains first, via `Database.flush({ secondaryIndexes:
+ * true })`.
  */
-export const buildFtsCondition = (
-  sql: SqlClient.SqlClient,
-  text: string,
-): { condition: Statement.Fragment; ranked: boolean } | undefined => {
-  const trimmed = text.trim();
-  if (trimmed.length === 0) {
-    return undefined;
-  }
-  const terms = trimmed.split(/\s+/).filter(Boolean);
-  const minTermLength = Math.min(...terms.map((term) => term.length));
-  if (minTermLength < 3) {
-    return { condition: sql.and(terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)), ranked: false };
-  }
-  return { condition: sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`, ranked: true };
-};
-
 export class FtsIndex implements Index {
   /**
    * Applies any migrations this database has not recorded yet.
@@ -139,7 +130,7 @@ export class FtsIndex implements Index {
     queues,
     typeDxns,
   }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
+    return Effect.gen({ self: this }, function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
         return [];
@@ -164,7 +155,7 @@ export class FtsIndex implements Index {
 
       const conditions =
         minTermLength < 3
-          ? // LIKE fallback - scan the entire table, AND all terms.
+          ? // LIKE fallback - scan the entire snapshot store, AND all terms.
             terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
           : // MATCH - fast index lookup.
             [sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`];
@@ -219,11 +210,12 @@ export class FtsIndex implements Index {
         `;
         return rows;
       } else {
-        // LIKE fallback - no ranking available, default to 1.
+        // LIKE fallback - no ranking available, default to 1. Scans the snapshot store directly,
+        // so a term below the trigram minimum matches writes the index has not caught up with.
         const rows = yield* sql<EntityMeta>`
           SELECT m.* 
-          FROM ftsIndex AS f 
-          JOIN objectMeta AS m ON f.rowid = m.recordId 
+          FROM objectSnapshot AS f 
+          JOIN objectMeta AS m ON f.recordId = m.recordId 
           WHERE ${sql.and(conditions)}
         `;
         return rows.map((row) => ({ ...row, rank: 1 }));
@@ -231,7 +223,7 @@ export class FtsIndex implements Index {
     });
   }
 
-  /** Delete FTS rows by record id (rowid). Used by garbage collection. */
+  /** Delete index rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
@@ -242,56 +234,55 @@ export class FtsIndex implements Index {
       }),
   );
 
+  /**
+   * Re-tokenizes the given objects, whose text this reads from {@link IndexerObject.data} rather
+   * than from the snapshot store so that one pass writes one index.
+   */
   update = Effect.fn('FtsIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
+        if (objects.length === 0) {
+          return;
+        }
         const sql = yield* SqlClient.SqlClient;
 
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen(function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
-              }
+        const rows: { rowid: number; snapshot: string }[] = [];
+        for (const object of objects) {
+          if (object.recordId === null) {
+            return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
+          }
+          rows.push({ rowid: object.recordId, snapshot: JSON.stringify(object.data) });
+        }
 
-              // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
-              const existing = yield* sql<{
-                rowid: number;
-                snapshot: string;
-              }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
-
-              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
-              // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
-              // partial onto the prior snapshot to retain the body and type while layering the new
-              // marker; otherwise the DELETE+INSERT below would replace the full snapshot with the
-              // bare partial and the client could not hydrate the deleted object (`Obj.fromJSON`
-              // needs `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
-              // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
-              // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
-              const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-              const merged =
-                isPartialBlock && existing.length > 0
-                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
-                  : data;
-              // Document objects carry `@meta` only so the entity-meta index can extract the
-              // convergence key — full-text search must not match on foreign keys or identity
-              // strings the visible content never contains. Queue blocks always carried meta in
-              // their snapshot (clients hydrate from it), so theirs stays.
-              const searchable = object.documentId
-                ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
-                : merged;
-              const snapshot = JSON.stringify(searchable);
-
-              if (existing.length > 0) {
-                yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
-              }
-
-              yield* sql`INSERT INTO ftsIndex (rowid, snapshot) VALUES (${recordId}, ${snapshot})`;
-            }),
-          { discard: true },
-        );
+        // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
+        for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
+          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+        }
+        for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
+          yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
+        }
       }),
   );
 }
+
+/**
+ * The `WHERE` fragment matching `ftsIndex f` against free text, and whether BM25 ranking applies.
+ * Terms shorter than the trigram tokenizer's three characters fall back to `LIKE`, which cannot
+ * rank. `undefined` when the text has no terms. Mirrors the conditions {@link FtsIndex.query}
+ * builds, so the compiled and in-memory executors match the same rows.
+ */
+export const buildFtsCondition = (
+  sql: SqlClient.SqlClient,
+  text: string,
+): { condition: Statement.Fragment; ranked: boolean } | undefined => {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const terms = trimmed.split(/\s+/).filter(Boolean);
+  const minTermLength = Math.min(...terms.map((term) => term.length));
+  if (minTermLength < 3) {
+    return { condition: sql.and(terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)), ranked: false };
+  }
+  return { condition: sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`, ranked: true };
+};

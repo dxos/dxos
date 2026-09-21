@@ -2,8 +2,10 @@
 '@dxos/echo': minor
 ---
 
-ECHO queries are now evaluated inside SQLite. The host compiles a query plan into one SQL statement over the index tables (`objectMeta`, the new `objectData` body store, `reverseRef`, `ftsIndex`) and no longer loads an Automerge document to answer a query; document rows are shipped as identity only (the client hydrates them itself, as before), feed rows keep their body. The in-memory executor and the `DX_ECHO_QUERY_EXECUTOR` switch are removed.
+Adds a second query executor that evaluates a query inside SQLite: the host compiles the query plan into one statement over the index tables (`objectMeta`, `objectSnapshot`, `reverseRef`, `ftsIndex`) and loads no Automerge document to answer it. Off by default. Select it per host with `EchoHost({ queryExecutor: 'sql' })` or `DX_ECHO_QUERY_EXECUTOR=sql`; the in-memory executor remains the default and is unchanged.
 
-Storage: `objectData(recordId, body JSONB)` is written by the indexer alongside `objectMeta`; `objectMeta` gains `parentId`/`sourceId`/`targetId`, `reverseRef` gains `propPathNormalized`. Existing databases backfill on the first open after upgrade (queries await the backfill once); SQLite 3.45 or newer is required and asserted at open.
+A plan whose filters read `@meta` (foreign keys, a registry key or version, tags) always takes the in-memory path, because `objectSnapshot` stores no `@meta` for document rows.
 
-Behaviour changes, deliberate: ordering by a string property uses code-unit (BINARY) order instead of `localeCompare`; `gt`/`gte`/`lt`/`lte`/`Filter.between` no longer coerce across types (a number property never matches a string operand); the client working-set executor's natural order and `child-of` depth (now 10) match the host.
+Storage, written on the existing indexing pass whichever executor is selected: `objectMeta` gains `parentId`/`sourceId`/`targetId`, and `reverseRef` gains `propPathNormalized`. The reverse-reference index re-presents its rows once after upgrade to fill the new column. SQLite 3.45 or newer is required and asserted when the index opens.
+
+Behaviour differences under `sql`, deliberate: ordering by a string property uses code-unit (BINARY) order instead of `localeCompare`; `gt`/`gte`/`lt`/`lte`/`Filter.between` do not coerce across types, so a number property never matches a string operand. The client working-set executor's natural order and `child-of` depth (now 10) were aligned with the host for both paths.

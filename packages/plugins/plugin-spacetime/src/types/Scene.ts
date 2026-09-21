@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { CardAnnotation } from '@dxos/schema';
 
 import * as Model from './Model.ts';
 
@@ -19,7 +20,11 @@ export class Scene extends Type.makeObject<Scene>(DXN.make('org.dxos.type.spacet
       Annotation.SetParent.set(true),
       Annotation.FormInputAnnotation.set(false),
     ),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
+    // Opts the type into card-content previews (the masonry tile renders the CardContent surface).
+    CardAnnotation.set(true),
+  ),
 ) {}
 
 export const make = (props?: Partial<Omit<Scene, 'objects'>>) => {

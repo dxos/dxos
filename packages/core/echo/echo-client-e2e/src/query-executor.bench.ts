@@ -18,9 +18,10 @@ import { DXN } from '@dxos/keys';
 import { blackhole, parseBenchCount } from './testing/bench-util.ts';
 
 //
-// A query workload under the host's query executor, which compiles the plan into one SQLite statement
-// over the index tables and loads no documents. It is the only executor; the memory-vs-sql comparison
-// against the deleted in-memory executor is recorded in `BENCHMARKS.md`.
+// A query workload under one of the host's two query executors, selected by `DX_ECHO_QUERY_EXECUTOR`
+// (`memory`, the default, loads the objects a plan touches and evaluates it in JS; `sql` compiles the
+// plan into one SQLite statement and loads nothing). One run measures one mode; `BENCHMARKS.md`
+// records the pairs.
 //
 // One warm peer holds a mixed population: TASK_COUNT tasks (priority cycling 1..5, each assigned to
 // one of PERSON_COUNT persons), half as many notes with ~1 KB bodies, half as many events, a few

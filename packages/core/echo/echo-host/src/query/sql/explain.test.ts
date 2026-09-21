@@ -11,7 +11,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EntityMetaIndex, ObjectDataIndex, ReverseRefIndex } from '@dxos/index-core';
+import { EntityMetaIndex, ObjectSnapshotIndex, ReverseRefIndex } from '@dxos/index-core';
 import { SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from '../query-planner.ts';
@@ -23,7 +23,7 @@ const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provid
 const explain = (query: Query.Any) =>
   Effect.gen(function* () {
     yield* new EntityMetaIndex().migrate();
-    yield* new ObjectDataIndex().migrate();
+    yield* new ObjectSnapshotIndex().migrate();
     yield* new ReverseRefIndex().migrate();
     const sql = yield* SqlClient.SqlClient;
     const plan = new QueryPlanner().createPlan(query.ast);

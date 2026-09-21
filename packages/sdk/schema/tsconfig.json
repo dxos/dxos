@@ -30,9 +30,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -43,15 +40,6 @@
     },
     {
       "path": "../../core/echo/echo-panproto"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../react-client"
     }
   ]
 }
