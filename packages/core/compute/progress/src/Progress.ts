@@ -43,12 +43,12 @@ type MutableTask = {
   -readonly [Key in keyof TaskProgress]: TaskProgress[Key];
 };
 
-export type ProgressSnapshot = {
+export type Snapshot = {
   readonly updatedAt: string;
   readonly tasks: readonly TaskProgress[];
 };
 
-/** Handle for updating one task; returned by {@link ProgressApi.task}. */
+/** Handle for updating one task; returned by {@link Api.task}. */
 export interface TaskHandle {
   /** Advance the item index by `by` (default 1). */
   readonly advance: (by?: number) => void;
@@ -85,11 +85,11 @@ export interface TaskHandle {
  * A live progress registry. It is subscribable — every mutation notifies listeners, so a reactive
  * consumer (e.g. a browser panel) updates instantly while file/log sinks throttle.
  */
-export interface ProgressApi {
+export interface Api {
   /**
    * Registers (or resumes) a task and marks it running; returns a handle to update it.
    * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
-   * {@link ProgressApi.cancel}.
+   * {@link Api.cancel}.
    */
   readonly task: (
     name: string,
@@ -99,19 +99,19 @@ export interface ProgressApi {
   readonly seed: (tasks: readonly { name: string; total?: number; label?: string }[]) => void;
   /** Invokes the task's registered `onCancel` handler (no-op if absent). */
   readonly cancel: (name: string) => void;
-  readonly snapshot: () => ProgressSnapshot;
+  readonly snapshot: () => Snapshot;
   /** Subscribe to snapshots; returns an unsubscribe. The listener fires on every change. */
-  readonly subscribe: (listener: (snapshot: ProgressSnapshot) => void) => () => void;
+  readonly subscribe: (listener: (snapshot: Snapshot) => void) => () => void;
 }
 
 /** Construct a standalone progress registry. */
-export const make = (): ProgressApi => {
+export const make = (): Api => {
   const tasks = new Map<string, MutableTask>();
   const cancelHandlers = new Map<string, () => void>();
-  const listeners = new Set<(snapshot: ProgressSnapshot) => void>();
+  const listeners = new Set<(snapshot: Snapshot) => void>();
   const now = (): string => new Date().toISOString();
 
-  const snapshot = (): ProgressSnapshot => ({
+  const snapshot = (): Snapshot => ({
     updatedAt: now(),
     tasks: [...tasks.values()].map((task) => ({ ...task })),
   });
@@ -138,7 +138,7 @@ export const make = (): ProgressApi => {
     emit();
   };
 
-  const task: ProgressApi['task'] = (name, options = {}) => {
+  const task: Api['task'] = (name, options = {}) => {
     const started = now();
     const entry: MutableTask = tasks.get(name) ?? { name, current: 0, status: 'pending', updatedAt: started };
     entry.label = options.label ?? entry.label;
@@ -195,11 +195,11 @@ export const make = (): ProgressApi => {
     };
   };
 
-  const cancel: ProgressApi['cancel'] = (name) => {
+  const cancel: Api['cancel'] = (name) => {
     cancelHandlers.get(name)?.();
   };
 
-  const seed: ProgressApi['seed'] = (defs) => {
+  const seed: Api['seed'] = (defs) => {
     for (const def of defs) {
       if (!tasks.has(def.name)) {
         tasks.set(def.name, {
@@ -215,7 +215,7 @@ export const make = (): ProgressApi => {
     emit();
   };
 
-  const subscribe: ProgressApi['subscribe'] = (listener) => {
+  const subscribe: Api['subscribe'] = (listener) => {
     listeners.add(listener);
     return () => void listeners.delete(listener);
   };

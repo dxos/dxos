@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Icon, Panel } from '@dxos/react-ui';
+import { Field, Icon, Panel } from '@dxos/react-ui';
 
 import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
@@ -95,7 +95,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         </header>
 
         {error && (
-          <p className='text-redText text-sm' role='alert' data-testid='qa.plan.error'>
+          <p className='text-red-text text-sm' role='alert' data-testid='qa.plan.error'>
             {error}
           </p>
         )}
@@ -103,15 +103,15 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         <section>
           <h2 className='text-sm text-subdued'>Cases</h2>
           <div className='flex gap-2 py-2'>
-            <input
-              className='dx-input w-24'
+            <Field.Input
+              classNames='w-24'
               placeholder='Key'
               value={caseKey}
               onChange={(event) => setCaseKey(event.target.value)}
               data-testid='qa.plan.case-key'
             />
-            <input
-              className='dx-input grow'
+            <Field.Input
+              classNames='grow'
               placeholder='Title'
               value={caseTitle}
               onChange={(event) => setCaseTitle(event.target.value)}

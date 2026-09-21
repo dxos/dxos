@@ -13,6 +13,7 @@ import { getSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
+import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -55,7 +56,7 @@ export type InvocationsSurfaceProps = {
 /** Resolves the space's invocation-trace feed for the companion's subject. */
 export const InvocationsSurface = ({ role, companionTo }: InvocationsSurfaceProps) => {
   const space = getSpace(companionTo);
-  const feed = space?.properties.invocationTraceFeed?.target;
+  const feed = useResolveRef(space?.properties.invocationTraceFeed);
   const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
   // TODO(wittjosiah): Support invocation filtering for prompts.
   const target = Obj.instanceOf(Instructions.Instructions, companionTo) ? undefined : companionTo;

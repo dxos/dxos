@@ -454,7 +454,7 @@ export type ProgressMonitor = Progress.TaskHandle;
  */
 export type ProgressRegistry = Readonly<{
   /** Aggregate snapshot of all active providers. */
-  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  snapshotAtom: Atom.Atom<Progress.Snapshot>;
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
   /**
@@ -465,7 +465,7 @@ export type ProgressRegistry = Readonly<{
   /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
   cancel: (name: string) => void;
   /** Non-reactive read of the current snapshot. */
-  snapshot: () => Progress.ProgressSnapshot;
+  snapshot: () => Progress.Snapshot;
 }>;
 
 /**

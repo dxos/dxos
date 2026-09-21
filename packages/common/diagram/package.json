@@ -1,6 +1,7 @@
 {
   "name": "@dxos/diagram",
   "version": "0.11.1",
+  "private": true,
   "description": "Renderer-neutral scene DSL, diagram dialects, and layout engines.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
