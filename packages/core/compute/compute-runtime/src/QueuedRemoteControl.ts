@@ -43,6 +43,14 @@ const DEFAULT_BACKOFF: Backoff = { initial: Duration.seconds(1), max: Duration.m
 /** How long the flusher sits on an empty queue before re-reading it, absent a wake-up. */
 const IDLE_POLL = Duration.seconds(5);
 
+/**
+ * Deliveries of one command before it is given up on.
+ *
+ * At the default backoff this is hours of trying, so an outage never reaches it; what does is a
+ * command the host keeps rejecting, which would otherwise hold the strictly-ordered queue forever.
+ */
+const DEFAULT_MAX_ATTEMPTS = 12;
+
 export interface Options {
   /** Transport to the host. Its failures are defects, which is what marks a command for retry. */
   readonly control: RemoteProcessManager.Control;
@@ -50,6 +58,8 @@ export interface Options {
   readonly kvStore: KeyValueStore.KeyValueStore;
   readonly prefix?: string;
   readonly backoff?: Backoff;
+  /** Deliveries of one command before it is abandoned; see {@link DEFAULT_MAX_ATTEMPTS}. */
+  readonly maxAttempts?: number;
   /** Injectable so a test can make command ids deterministic. */
   readonly newId?: () => string;
 }
@@ -101,7 +111,7 @@ export interface Queued extends RemoteProcessManager.Control {
  */
 export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope> =>
   Effect.gen(function* () {
-    const { control, kvStore, prefix, backoff = DEFAULT_BACKOFF } = options;
+    const { control, kvStore, prefix, backoff = DEFAULT_BACKOFF, maxAttempts = DEFAULT_MAX_ATTEMPTS } = options;
     const newId = options.newId ?? (() => globalThis.crypto.randomUUID());
     const queue = new RemoteCommandQueue(kvStore, prefix);
 
@@ -281,6 +291,30 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         return yield* queue.complete(command.id);
       }
       const attempts = yield* queue.recordAttempt(command.id);
+      if (attempts >= maxAttempts) {
+        // The queue is strictly ordered, so a command the host will never accept — a process it has
+        // dropped, a key it does not host, a payload it rejects — would hold every later command
+        // for every OTHER process behind it forever. `Control` reports a rejection and an outage
+        // identically (both are defects), so the only thing that can tell them apart is how many
+        // times it has happened: past this, the command and its process are given up on.
+        log.error('remote command abandoned after repeated failures', {
+          command: command.payload._tag,
+          id: command.id,
+          pid: command.localPid,
+          attempts,
+        });
+        const snapshot = overlay.get(command.localPid);
+        // Reported as FAILED rather than dropped silently: a caller waiting on this process has to
+        // learn that it is never going to run.
+        if (snapshot !== undefined) {
+          overlay.set(command.localPid, {
+            ...snapshot,
+            state: Process.State.FAILED,
+            completedAt: Option.some(Date.now()),
+          });
+        }
+        return yield* queue.purgeProcess(command.localPid);
+      }
       const delay = backoffFor(attempts);
       log.warn('remote command delivery failed; will retry', {
         command: command.payload._tag,
@@ -342,12 +376,12 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
             // The host has never heard of this process, so there is nothing to terminate there —
             // dropping the group is both the correct end state and the only one that does not leak
             // a process the caller has already abandoned.
-            overlay.set(localPid, {
-              ...(overlay.get(localPid) ?? startingSnapshot(localPid, { spaceId, key: 'unknown' })),
-              state: Process.State.TERMINATED,
-              completedAt: Option.some(Date.now()),
-            });
-            return yield* queue.purgeProcess(localPid);
+            //
+            // The local view is dropped with it rather than left reading TERMINATED: the queue is
+            // the only durable record, so a snapshot kept in memory here would be a state this
+            // client reports until it reloads and then never again. A process that never reached
+            // the host is simply not one, and both halves of that answer now agree.
+            return yield* forget(localPid);
           }
           const existing = overlay.get(localPid);
           overlay.set(localPid, {

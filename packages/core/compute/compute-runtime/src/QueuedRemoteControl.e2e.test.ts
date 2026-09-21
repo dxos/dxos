@@ -159,9 +159,10 @@ describe('queued remote control (e2e against a local host)', () => {
           yield* client.submitInput({ spaceId: SPACE, pid: snapshot.pid, input: 'abandoned' });
           yield* client.terminate({ spaceId: SPACE, pid: snapshot.pid });
 
-          // Nothing to terminate on the host, so nothing should ever be sent there.
+          // Nothing to terminate on the host, so nothing should ever be sent there — and the client
+          // forgets it rather than keeping a TERMINATED snapshot only this session could see.
           expect(yield* client.pending).toEqual([]);
-          expect((yield* client.status({ spaceId: SPACE, pid: snapshot.pid })).state).toEqual(Process.State.TERMINATED);
+          expect(yield* client.list({ spaceId: SPACE })).toEqual([]);
 
           yield* link.resume;
           yield* client.connected;
@@ -169,6 +170,37 @@ describe('queued remote control (e2e against a local host)', () => {
           expect(yield* host.list({ spaceId: SPACE })).toEqual([]);
           expect(yield* host.applied).toEqual([]);
         }),
+      );
+    }),
+  );
+
+  it.live(
+    'a command the host keeps rejecting is abandoned rather than wedging the queue',
+    Effect.fn(function* ({ expect }) {
+      yield* withHarness(
+        ({ client, host, link }) =>
+          Effect.gen(function* () {
+            yield* link.cut;
+            const doomed = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'doomed' });
+            // Queued behind it, for a different process: the point is that this still gets through.
+            const other = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'other' });
+
+            // The queue is strictly ordered, so without a cap the second spawn never leaves while
+            // the first keeps failing.
+            yield* waitUntil(client.pending.pipe(Effect.map((pending) => pending.length === 1)));
+            expect((yield* client.list({ spaceId: SPACE })).map((info) => info.pid)).toContain(other.pid);
+            // The abandoned process is reported as failed, not dropped in silence.
+            const failed = yield* client.status({ spaceId: SPACE, pid: doomed.pid });
+            expect(failed.state).toEqual(Process.State.FAILED);
+
+            yield* link.resume;
+            yield* client.connected;
+            yield* client.drained;
+            // Only the surviving spawn ever reached the host.
+            expect((yield* host.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
+          }),
+        // Three quick attempts, so the cap is reached inside the test rather than in hours.
+        { backoff: { initial: Duration.millis(1), max: Duration.millis(2) }, maxAttempts: 3 },
       );
     }),
   );
@@ -338,7 +370,7 @@ interface Harness {
  */
 const withHarness = (
   body: (harness: Harness) => Effect.Effect<void, never, Registry.AtomRegistry | Scope.Scope>,
-  options: { backoff?: QueuedRemoteControl.Backoff } = {},
+  options: { backoff?: QueuedRemoteControl.Backoff; maxAttempts?: number } = {},
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -362,9 +394,12 @@ const withHarness = (
     // Clients live in a scope of their own so every flusher is stopped before the host is.
     const clients = yield* Scope.make();
     const makeClient = (kvStore: KeyValueStore.KeyValueStore) =>
-      QueuedRemoteControl.make({ control, kvStore, backoff: options.backoff ?? BACKOFF }).pipe(
-        Effect.provideService(Scope.Scope, clients),
-      );
+      QueuedRemoteControl.make({
+        control,
+        kvStore,
+        backoff: options.backoff ?? BACKOFF,
+        ...(options.maxAttempts !== undefined ? { maxAttempts: options.maxAttempts } : {}),
+      }).pipe(Effect.provideService(Scope.Scope, clients));
 
     const clientStore = KeyValueStore.prefix(kv, 'client/');
     const client = yield* makeClient(clientStore);

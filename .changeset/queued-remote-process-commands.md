@@ -1,10 +1,5 @@
 ---
 '@dxos/compute-runtime': patch
-'@dxos/compute': patch
-'@dxos/edge-compute': patch
-'@dxos/edge-client': patch
-'@dxos/protocols': patch
-'@dxos/app-framework': patch
 '@dxos/plugin-routine': patch
 ---
 

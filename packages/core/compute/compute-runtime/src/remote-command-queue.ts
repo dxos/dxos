@@ -99,10 +99,12 @@ export class RemoteCommandQueue {
       if (raw === undefined) {
         return [];
       }
-      const decoded = yield* Schema.decodeEffect(QueueSchema)(raw).pipe(Effect.result);
-      // A record this process cannot read is not one it can retry; dropping it is the only way
-      // forward that does not wedge the queue behind an entry it will never deliver.
-      return decoded._tag === 'Failure' ? [] : [...decoded.success].sort((a, b) => a.seq - b.seq);
+      // A record that will not decode is NOT reported as an empty queue: every mutation below reads
+      // the queue and writes it back whole, so answering `[]` here would let the next enqueue or
+      // completion overwrite durable commands that are merely unreadable. Failing loudly keeps them
+      // on disk for a version of this code that can read them.
+      const decoded = yield* Schema.decodeEffect(QueueSchema)(raw).pipe(Effect.orDie);
+      return [...decoded].sort((a, b) => a.seq - b.seq);
     });
   }
 
