@@ -36,6 +36,25 @@ interface LayerStackOpts {
 }
 
 /**
+ * Runs every teardown before re-emitting the first failure. The caller has already taken the
+ * resources off its list, so stopping at the first failure would strand the rest with nothing left
+ * holding a reference to retry them.
+ */
+const destroyAll = (teardowns: readonly Effect.Effect<void>[]): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    let failure: Exit.Exit<void> | undefined;
+    for (const teardown of teardowns) {
+      const exit = yield* Effect.exit(teardown);
+      if (Exit.isFailure(exit)) {
+        failure ??= exit;
+      }
+    }
+    if (failure) {
+      return yield* failure;
+    }
+  });
+
+/**
  * Tag for a built {@link LayerStack}.
  */
 export class Service extends Context.Service<Service, LayerStack>()('@dxos/compute-runtime/LayerStack') {}
@@ -104,12 +123,14 @@ export class LayerStack {
    * ones they depend on.
    */
   destroy(): Effect.Effect<void> {
-    return Effect.gen({ self: this }, function* () {
-      const slices = this.#slices.splice(0).reverse();
-      for (const slice of slices) {
-        yield* slice.destroy();
-      }
-    });
+    return Effect.suspend(() =>
+      destroyAll(
+        this.#slices
+          .splice(0)
+          .reverse()
+          .map((slice) => slice.destroy()),
+      ),
+    );
   }
 
   #resolveService(
@@ -806,12 +827,14 @@ class Slice {
    * earlier one, and Effect only orders finalizers within a single runtime.
    */
   destroy(): Effect.Effect<void> {
-    return Effect.gen({ self: this }, function* () {
-      const runtimes = this.#managedRuntimes.splice(0).reverse();
-      for (const runtime of runtimes) {
-        yield* Effect.promise(() => runtime.dispose());
-      }
-    });
+    return Effect.suspend(() =>
+      destroyAll(
+        this.#managedRuntimes
+          .splice(0)
+          .reverse()
+          .map((runtime) => Effect.promise(() => runtime.dispose())),
+      ),
+    );
   }
 
   #sortLayers() {
