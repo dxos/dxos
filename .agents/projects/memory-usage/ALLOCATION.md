@@ -103,13 +103,13 @@ first journey run:
 That is **242 MB, 54% of everything the profiler sampled**, from one line that
 wants a number it could have stored in the key.
 
-**`performance.measure` is churn, not a leak.** It rises to 24–72 MB once there is
-data to query and index, but the retained detail payloads across 1,871 entries
-total ~0.1 MB: the bytes are serialization buffers in flight during a burst of
-ECHO queries, not entries piling up. The entry count does grow without bound —
-1,332 after boot, still climbing three passes later — but that costs kilobytes,
-not megabytes. An earlier revision of this page said it "grows for as long as the
-tab is open" in a way that implied the bytes grow with it; they do not.
+**`performance.measure` was called churn here, and that was wrong.** This
+revision said the 24–72 MB was serialization buffers in flight and that the
+retained detail totalled ~0.1 MB, from `JSON.stringify` of 1,871 entries' `detail`
+in an empty tab. On a loaded profile the worker holds over 100,000 entries with
+42 MB of `detail` as JSON, and every one keeps its structured clone for the life
+of the realm. It is retention, and removing it returned more footprint than the
+profiler had charged to it. See "What the gate bought" below.
 
 Script source stays flat at 31–33 MB whatever the profile holds, which is what
 makes it the floor rather than the problem.
@@ -147,7 +147,8 @@ put the sweep at roughly a third of the tab, came in about 2x high.
 78-95 MB on a loaded profile against 34.8 MB on an empty one, so roughly 54 MB of
 that block scales with data and has nothing to do with the sweep. The
 empty-profile work could not see it. It is the largest unexplained thing left in
-the block.
+the block. (Answered below: it was the retained `performance.measure` clones,
+and the gate takes `<unspecified>` from ~104 MB to ~43 MB on the same profile.)
 
 One detail worth keeping: `getAllKeys` is 11-12 per run, not zero. A 30-second
 timer alone would fire three times in 90 seconds, so `#writeBatch` still
@@ -292,6 +293,43 @@ Performance panel open, and is paid for by every user.
 
 `DX_TRACE_QUERY_EXECUTION` in the same package is the shape to copy — an
 `import.meta.env` flag the bundler can eliminate.
+
+## What the gate bought
+
+The fix gates every track entry behind a build-time flag (on under the dev
+server, `VITE_PERF_TRACK_ENTRIES=true` for a production build) and bounds
+`detail` for whoever turns it on. Three runs per arm, same three-space profile,
+`--journey --settle 90`, with the instrument fix described under "Reproducing"
+applied to both arms:
+
+|           | footprint | `<unspecified>` | PartitionAlloc | malloc | sampled | `performance.measure` | Oilpan (workers) | entries | detail as JSON |
+| --------- | --------: | --------------: | -------------: | -----: | ------: | --------------------: | ---------------: | ------: | -------------: |
+| control 1 |     727.7 |           103.8 |          150.0 |  210.3 |   190.3 |                  94.2 |             30.2 | 104,143 |        42.8 MB |
+| control 2 |     709.6 |           101.8 |          145.7 |  208.7 |   186.8 |                  91.4 |             28.7 | 100,108 |        41.4 MB |
+| control 3 |     738.1 |           105.1 |          149.2 |  209.9 |   193.1 |                  96.1 |             29.3 | 106,343 |        43.8 MB |
+| gated 1   |     533.8 |            42.8 |           70.9 |  148.9 |    97.1 |                   1.2 |             14.8 |   5,620 |         0.3 MB |
+| gated 2   |     534.4 |            43.0 |           69.9 |  145.5 |    98.1 |                   1.8 |             14.7 |   5,749 |         0.3 MB |
+| gated 3   |     563.8 |            42.8 |           70.2 |  149.8 |    95.9 |                   1.1 |             15.2 |   5,385 |         0.3 MB |
+
+Mean footprint 725.1 MB to 544.0 MB: **181 MB, 25%**, against a prediction of
+30–50 MB. The prediction applied the log store's half-of-allocation discount to a
+mechanism that was not churn. The `entries` column is the new census: the
+control's worker carries 100,000 `PerformanceMeasure` objects after one journey,
+four SQL statements account for 90% of them (`SELECT blocks…` alone is 26,000
+calls and 15 MB of JSON), and each entry keeps its serialized `detail` in
+PartitionAlloc until the realm dies. That is why PartitionAlloc drops 78 MB and
+`<unspecified>` 60 MB: the "~54 MB that scales with data and has no mechanism"
+was this. The remaining entries on the gated build are the mark-based ones
+(`module:*`, `plugin-load:*`) that carry no detail.
+
+Two cautions on reading it. The control here is 80 MB above the five-run map
+above on the same build, because both arms now start without the profile's
+service-worker precache and fetch the bundle over the network; the arms are
+comparable with each other, not with the earlier map. And the footprint moved by
+twice the sampled allocation, which is the reverse of the log store's ratio: the
+sampler only sees allocations still live at the dump, so a retained clone counts
+once there while its committed page, its `PerformanceMeasure` object in Oilpan
+and its `SerializedScriptValue` header count elsewhere.
 
 ## 1. The log store's eviction sweep
 
@@ -538,13 +576,10 @@ Ordered by measured size over cost, against the 645.7 MB mean above.
 1. ~~**Fix the log store's eviction sweep.**~~ Done in
    [#13251](https://github.com/dxos/dxos/pull/13251): 287 MB less allocation and
    140 MB less footprint on a loaded profile. See "What the fix bought" above.
-2. **Stop cloning SQL text and parameters into `performance.measure` details.**
-   52.7-80.7 MB per run, the largest allocating mechanism in the tab, plus a
-   `PerformanceMeasure` buffer that reaches 10 MB of the worker's Oilpan with no
-   cap. The summarizer it needs already exists one line above it. A one-file
-   change with no product behaviour behind it, so this is where to start.
-   Expect roughly half of the allocation back as footprint, on the ratio the log
-   store established.
+2. ~~**Stop cloning SQL text and parameters into `performance.measure` details.**~~
+   Done, pending its PR: 181 MB less footprint on a loaded profile, 25%, by
+   gating every track entry out of production builds. See "What the gate
+   bought" above.
 3. **Collapse the duplicate automerge instances.** 92.2 MB of linear memory in
    three instances of two binaries: `automerge_wasm` and
    `automerge_subduction_wasm` side by side in the worker, and a third in the tab.
@@ -594,6 +629,10 @@ first is now answered and the second was the wrong conclusion:
   disagreed with the arm they were in. What settled it was instrumenting the JS
   side and putting the read counts in the same run as the profile.
 
+Also corrected in this revision: three "after" runs of the gate measured the
+previous bundle, because the seeded profile's service worker served its precache;
+the instrument now clears it, and every arm above was re-run.
+
 Also corrected: macOS memory-infra _does_ emit `process_mmaps`, contrary to the
 harness README, but only as a module map with no `byte_stats`, so it decomposes
 nothing and no script here reads it.
@@ -619,6 +658,9 @@ node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
 # the only run that reports wasm linear memory, which no allocator node covers.
 node scripts/memory/seed-profile.mjs http://localhost:4173 --profile ./tmp/loaded-profile --spaces 3
 cp -R tmp/loaded-profile tmp/run1   # a run mutates the profile; start each from a copy
+# A seeded profile also carries the service worker and precache of the build that seeded it,
+# and serves that bundle on every later run. native-heap.mjs --profile clears both stores
+# before navigating; check the chunk names in the JSON's wasmByModule against out/composer/assets.
 node scripts/memory/native-heap.mjs http://localhost:4173 --settle 90 \
   --profile ./tmp/run1 --journey \
   --symbols "$(find ./tmp/electron -name 'Electron Framework.sym' -print -quit)"
