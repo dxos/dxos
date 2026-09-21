@@ -9,21 +9,26 @@
 The Bramble Coffee Roasters space is a template any plugin can contribute, and it is built on
 demand rather than shipped as an archive.
 
-One capability now carries themed content: `SpaceCapabilities.SpaceTemplate`. `AppCapabilities.SampleSpace`
-and the debug plugin's adapter between the two are gone, along with the icon-by-list-index it used
-to assign — a template's icon and hue come from its own definition, which is what made a second
-contributing plugin possible at all. `SpaceCapability.spaceTemplates(loader)` is the module maker;
-contributions activate on `ActivationEvents.SpaceTemplatesRequested`, fired by the create dialog and
-by `SpaceOperation.Create` when a caller names a template by id.
+One name and one home for themed content: a **space template**, in `@dxos/app-toolkit`. The
+`SampleSpace` builder is `@dxos/app-toolkit/SpaceTemplate`, and the capability that was
+`SpaceCapabilities.SpaceTemplate` is `AppCapabilities.SpaceTemplate` beside it, contributed through
+`AppCapability.spaceTemplates(loader)`. plugin-space lists templates without owning them, and the
+debug plugin's adapter between two near-identical capabilities is gone — along with the
+icon-by-list-index it used to assign, since a template's icon and hue now come from its own
+definition. Contributions activate on `ActivationEvents.SpaceTemplatesRequested`, fired by the
+create dialog and by `SpaceOperation.Create` when a caller names a template by id.
 
 A template can set `hidden`, keeping it out of the create picker while leaving it reachable by id —
 the same escape hatch `RoutineCapabilities.Template` has.
 
-First launch builds Bramble through that template instead of importing
+A space created from a template records which one in `AppAnnotation.SpaceTemplateAnnotation`, and
+`AppSpace.findSpaceFromTemplate` reads it back. That replaces the tag the onboarding space carried:
+a tag takes a space out of the user-facing lists, so every reader needed an exception for it.
+`AppSpace.SAMPLE_SPACE_TAG` and `isSampleSpace` are gone; profiles that onboarded earlier keep the
+persisted tag and stay visible.
+
+First launch builds Bramble through its template instead of importing
 `plugin-onboarding/src/content/sample/space.dx.json`, which is deleted along with the script that
 generated it and the settings button that re-imported it. The content has one source now: the
-phases under `plugin-onboarding/src/sample/`, asserted by a test that builds the archive. Building
-the whole world takes about a second.
-
-`SpaceOperation.Create` takes `tags`, which is how the onboarding space keeps the tag that marks it
-as the sample.
+phases under `plugin-onboarding/src/templates/`, asserted by a test that builds the archive.
+Building the whole world takes about a second.

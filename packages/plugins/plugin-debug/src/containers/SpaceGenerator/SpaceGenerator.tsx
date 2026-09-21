@@ -15,7 +15,6 @@ import { EffectEx } from '@dxos/effect';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -59,7 +58,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
     const manager = usePluginManager();
-    const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
+    const templates = useCapabilities(AppCapabilities.SpaceTemplate);
 
     // Mounting is the demand signal: template modules are gated on `SpaceTemplatesRequested`,
     // which nothing else fires, so their content stays out of the app until this panel opens.

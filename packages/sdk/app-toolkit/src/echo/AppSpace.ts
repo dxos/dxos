@@ -31,14 +31,15 @@ import * as AppAnnotation from './AppAnnotation.ts';
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
 /**
- * Space tag for the bundled sample space.
+ * Tag the onboarding space carried before it was created from a space template.
  *
- * The value still reads `exemplar` because it is already persisted in the space metadata of every
- * profile that has onboarded: changing it would make the import's idempotency check miss the
- * existing space (importing a second copy) and flip `isVisibleSpace` for those spaces. Renaming it
+ * Nothing writes it any more — a templated space records its origin in
+ * {@link AppAnnotation.SpaceTemplateAnnotation} instead — but every profile that onboarded before
+ * that has it persisted, and a tagged space is internal unless something says otherwise. Read only
+ * by {@link isVisibleSpace}, which is what keeps those spaces in the user's lists. Dropping it
  * needs a tag migration, not an edit here.
  */
-export const SAMPLE_SPACE_TAG = 'org.dxos.space.exemplar';
+const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -49,8 +50,8 @@ type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefi
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
 
-/** Check if a space is the bundled sample space. */
-export const isSampleSpace = (space: Space): boolean => hasTag(space, SAMPLE_SPACE_TAG);
+/** Check if a space carries the retired onboarding tag. See {@link LEGACY_ONBOARDING_SPACE_TAG}. */
+const isLegacyOnboardingSpace = (space: Space): boolean => hasTag(space, LEGACY_ONBOARDING_SPACE_TAG);
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
@@ -88,11 +89,30 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
  * Tags mark spaces the app manages on the user's behalf — the settings space, filesystem mirrors —
- * so anything tagged is internal, except the sample space and the legacy personal-space tag that
- * pre-migration profiles still carry.
+ * so anything tagged is internal, except the two tags pre-migration profiles still carry: the
+ * onboarding space's and the personal space's.
  */
 export const isVisibleSpace = (space: Space): boolean =>
-  space.tags.length === 0 || isSampleSpace(space) || isLegacyDefaultSpace(space);
+  space.tags.length === 0 || isLegacyOnboardingSpace(space) || isLegacyDefaultSpace(space);
+
+//
+// Space templates.
+//
+
+/** Id of the space template a space was created from, if any. The space must be ready. */
+export const getSpaceTemplateId = (space: Space): string | undefined =>
+  Annotation.get(space.properties, AppAnnotation.SpaceTemplateAnnotation).pipe(Option.getOrUndefined);
+
+/**
+ * The first space created from `templateId`, skipping any whose properties are not yet readable.
+ *
+ * A caller creating a space from a template on the user's behalf uses this to avoid making a second
+ * one. A space still opening reads as absent, so treat a miss as "not found yet" rather than proof.
+ */
+export const findSpaceFromTemplate = (client: { spaces: { get(): Space[] } }, templateId: string): Space | undefined =>
+  client.spaces
+    .get()
+    .find((space) => space.state.get() === SpaceState.SPACE_READY && getSpaceTemplateId(space) === templateId);
 
 //
 // Default space designation.

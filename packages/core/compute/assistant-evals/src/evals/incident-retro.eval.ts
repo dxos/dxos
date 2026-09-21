@@ -7,14 +7,14 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
+import * as SpaceTemplate from '@dxos/app-toolkit/SpaceTemplate';
 import { PlanningSkill } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { IncidentSpace } from '@dxos/plugin-debug/sample';
+import { IncidentTemplate } from '@dxos/plugin-debug/templates';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
@@ -269,7 +269,7 @@ const task = createEvalRunner({
       if (!space) {
         return yield* Effect.fail(new EvalRunError({ message: `Space not found: ${spaceId}` }));
       }
-      yield* SampleSpace.applyTo(IncidentSpace(), space);
+      yield* SpaceTemplate.applyTo(IncidentTemplate(), space);
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       if (!project?.taskSet) {

@@ -30,7 +30,7 @@ const DEFAULT_SPACE_ICON_HUE = 'violet';
 export const README_DOCUMENT_NAME = 'README';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ generateSampleSpace }: OnboardingOptions) {
+  Effect.fnUntraced(function* ({ generateDemoSpace }: OnboardingOptions) {
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
@@ -49,7 +49,7 @@ export default Capability.makeModule(
     });
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
-    // depend on a fresh space (e.g. skills) wire themselves up. The sample space
+    // depend on a fresh space (e.g. skills) wire themselves up. The demo space
     // gets the same callbacks from the create operation that builds it.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const rootCollection = Option.getOrUndefined(
@@ -70,26 +70,24 @@ export default Capability.makeModule(
       });
     }
 
-    if (generateSampleSpace) {
+    if (generateDemoSpace) {
       // Built here rather than imported from a committed archive: the template the create dialog
       // offers and the space a new identity lands in are then the same content, built from one
-      // source. Idempotent on the tag, which also survives a reload mid-build.
-      const existing = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
-      const sampleSpaceId =
+      // source. The annotation `Create` records is what keeps a reload mid-build from making a
+      // second copy.
+      const existing = AppSpace.findSpaceFromTemplate(client, BRAMBLE_TEMPLATE_ID);
+      const demoSpaceId =
         existing?.id ??
-        (yield* Operation.invoke(SpaceOperation.Create, {
-          template: BRAMBLE_TEMPLATE_ID,
-          tags: [AppSpace.SAMPLE_SPACE_TAG],
-        }).pipe(
+        (yield* Operation.invoke(SpaceOperation.Create, { template: BRAMBLE_TEMPLATE_ID }).pipe(
           Effect.provideService(Operation.Service, operationInvoker),
           Effect.map(({ id }) => id),
         ));
 
-      // Eagerly expand the graph so the sample space's content is visible in the navtree
+      // Eagerly expand the graph so the demo space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
-      AppGraph.expandSync(graph, sampleSpaceId, 'child');
+      AppGraph.expandSync(graph, demoSpaceId, 'child');
     } else {
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 import { type IncomingMessage, type ServerResponse } from 'node:http';
 
-import { FORECAST_URL } from '@dxos/plugin-debug/sample';
+import { FORECAST_URL } from '@dxos/plugin-debug/templates';
 
 import { listenLoopback, loopbackUrl } from '../../loopback-server.ts';
 

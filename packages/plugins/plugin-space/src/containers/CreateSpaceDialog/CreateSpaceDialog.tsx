@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
@@ -19,7 +20,7 @@ import { Listbox } from '@dxos/react-ui-list';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+import { SpaceOperation, SpaceSchema } from '#types';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
@@ -34,7 +35,7 @@ export const CreateSpaceDialog = () => {
   const inputSurfaceLookup = useInputSurfaceLookup();
   const [error, setError] = useState<string | undefined>(undefined);
   const manager = usePluginManager();
-  const contributed = useCapabilities(SpaceCapabilities.SpaceTemplate);
+  const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
   const templates = useMemo(() => contributed.filter(({ hidden }) => !hidden), [contributed]);
   const [template, setTemplate] = useState<string | undefined>(undefined);
 

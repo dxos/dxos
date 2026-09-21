@@ -41,8 +41,9 @@ describe('space visibility', () => {
     expect(AppSpace.isVisibleSpace(makeSpace([]))).toBe(true);
   });
 
-  test('the sample space and pre-migration personal spaces stay visible', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SAMPLE_SPACE_TAG]))).toBe(true);
+  test('pre-migration onboarding and personal spaces stay visible', ({ expect }) => {
+    // Both tags are retired, and both are still persisted in profiles that onboarded before that.
+    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
   });
 

@@ -16,6 +16,8 @@ import * as Capability$ from '@dxos/app-framework/Capability';
 import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
+import type { Client } from '@dxos/client';
+import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -273,6 +275,35 @@ export type PluginAsset = Readonly<{
  * @category Capability
  */
 export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
+
+/**
+ * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
+ * the content to write once the space exists.
+ *
+ * `apply` is a bound closure rather than a definition, so a consumer needs only "put this content in
+ * that space" without dragging the builder, its phase map and Effect into the dialog that lists it.
+ * Build the entry with `SpaceTemplate.preset`.
+ */
+export type SpaceTemplate = Readonly<{
+  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
+  id: string;
+  /** Name for the picker, and the default space name when the template is chosen. */
+  label: string;
+  /** One line on what the template creates. */
+  description?: string;
+  /** An `iconValues` name, as space properties carry. */
+  icon?: string;
+  hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  hidden?: boolean;
+  /** Registers the content's types on the client, then writes it into the new space. */
+  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const SpaceTemplate = Capability$.make<SpaceTemplate>()('org.dxos.app-framework.capability.spaceTemplate');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is

@@ -7,6 +7,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
@@ -27,15 +28,7 @@ const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({
-      name,
-      hue: hue_,
-      icon: icon_,
-      private: isPrivate,
-      edgeReplication,
-      tags,
-      template,
-    }) {
+    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication, template }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
       // Resolved before the space exists: the form is uncontrolled, so it keeps the template's id,
@@ -46,7 +39,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       if (template) {
         yield* Plugin.activate(ActivationEvents.SpaceTemplatesRequested);
       }
-      const templates = template ? yield* Capability.getAll(SpaceCapabilities.SpaceTemplate) : [];
+      const templates = template ? yield* Capability.getAll(AppCapabilities.SpaceTemplate) : [];
       const match = template ? templates.find(({ id }) => id === template) : undefined;
       if (template && !match) {
         return yield* Effect.fail(new TemplateNotFoundError({ context: { template } }));
@@ -67,10 +60,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
             icon,
           },
           // Membership policy is written into the genesis credential and cannot be changed later.
-          {
-            tags: tags ? [...tags] : undefined,
-            membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE,
-          },
+          { membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE },
         ),
       );
       if (edgeReplication) {
@@ -91,6 +81,11 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {
         Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
+        // Recorded before the content is written, so a space whose template failed part-way still
+        // says where it came from — and a caller looking for "did I already make this one" finds it.
+        if (match) {
+          Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, match.id);
+        }
         if (Migrations.targetVersion) {
           Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
         }

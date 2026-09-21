@@ -108,10 +108,10 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./sample": {
-      "source": "./src/sample/index.ts",
-      "types": "./dist/types/src/sample/index.d.ts",
-      "import": "./dist/lib/sample.mjs"
+    "./templates": {
+      "source": "./src/templates/index.ts",
+      "types": "./dist/types/src/templates/index.d.ts",
+      "import": "./dist/lib/templates.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -142,7 +142,7 @@
     "scripts"
   ],
   "scripts": {
-    "build-sample": "vite-node ./scripts/build-sample-space.ts"
+    "build-template": "vite-node ./scripts/build-template-archive.ts"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

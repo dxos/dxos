@@ -9,6 +9,7 @@ import { expect, screen, waitFor } from 'storybook/test';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { Dialog } from '@dxos/react-ui';
@@ -16,7 +17,6 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { SpaceCapability } from '#types';
 
 import { CreateSpaceDialog } from './CreateSpaceDialog.tsx';
 
@@ -36,7 +36,7 @@ const TemplatesPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('com.example.plugin.templates'), name: 'Templates' }),
 ).pipe(
   Plugin.addModule(
-    SpaceCapability.spaceTemplates(() =>
+    AppCapability.spaceTemplates(() =>
       Promise.resolve({
         default: [
           {
