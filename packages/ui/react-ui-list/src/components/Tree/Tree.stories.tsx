@@ -33,6 +33,7 @@ const DefaultStory = ({
   groups,
   emptyBranches,
   unselectableBranches,
+  selectionMode = 'single',
 }: {
   draggable?: boolean;
   groups?: boolean;
@@ -40,6 +41,7 @@ const DefaultStory = ({
   emptyBranches?: boolean;
   /** Refuse selection of every branch, as a model does for a section that is only a container. */
   unselectableBranches?: boolean;
+  selectionMode?: 'single' | 'multiple';
 }) => {
   const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
@@ -163,21 +165,32 @@ const DefaultStory = ({
     [getOrCreateStateAtom, registry],
   );
 
-  const currentPathRef = useRef<string | null>(null);
-  const handleSelect = useCallback(
-    ({ path: pathProp, current }: { path: string[]; current: boolean }) => {
-      const path = Path.create(...pathProp);
-      const previous = currentPathRef.current;
-      if (current && previous && previous !== path) {
-        const previousAtom = getOrCreateStateAtom(previous);
-        registry.set(previousAtom, { ...registry.get(previousAtom), current: false });
-      }
-      const atom = getOrCreateStateAtom(path);
-      const prev = registry.get(atom);
-      registry.set(atom, { ...prev, current });
-      currentPathRef.current = current ? path : null;
+  const setCurrent = useCallback(
+    (pathKey: string, current: boolean) => {
+      const atom = getOrCreateStateAtom(pathKey);
+      registry.set(atom, { ...registry.get(atom), current });
     },
     [getOrCreateStateAtom, registry],
+  );
+
+  // The tree reports one row at a time, so which rows stay current is the model's to decide: a
+  // plain activation replaces the selection, and a meta-click in `multiple` mode adds a row to it
+  // or takes that row back out.
+  const currentPathsRef = useRef(new Set<string>());
+  const handleSelect = useCallback(
+    ({ path: pathProp, current, meta }: { path: string[]; current: boolean; meta: boolean }) => {
+      const path = Path.create(...pathProp);
+      if (current && (selectionMode === 'single' || !meta)) {
+        currentPathsRef.current.forEach((previous) => previous !== path && setCurrent(previous, false));
+        currentPathsRef.current = new Set([path]);
+      } else if (current) {
+        currentPathsRef.current.add(path);
+      } else {
+        currentPathsRef.current.delete(path);
+      }
+      setCurrent(path, current);
+    },
+    [selectionMode, setCurrent],
   );
 
   const handleCanSelect = useCallback(
@@ -228,6 +241,7 @@ const DefaultStory = ({
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      selectionMode={selectionMode}
       canSelect={handleCanSelect}
       renderColumns={() => (
         <div className='flex items-center'>
@@ -334,5 +348,73 @@ export const Collapse: Story = {
     toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(height()).toBeGreaterThan(0));
+  },
+};
+
+/** One row current at a time, and selecting one never discloses it. */
+export const Selection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const [first, second] = [rows[0], rows[1]];
+    const label = (row: HTMLElement) => row.querySelector<HTMLElement>('span[data-tooltip]')!;
+
+    await userEvent.click(label(first));
+    await expect(first).toHaveAttribute('data-selected');
+    await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+
+    // A re-click re-activates the row it is already on; nothing deselects and nothing discloses.
+    await userEvent.click(label(first));
+    await expect(first).toHaveAttribute('data-selected');
+    await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.click(label(second));
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(first).not.toHaveAttribute('data-selected');
+
+    // The click left the tabstop on the row: `Space` discloses it, and `Enter` activates it without
+    // disclosing, so the two keys do not share a meaning that depends on which row is current.
+    await userEvent.keyboard(' ');
+    await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+    await userEvent.keyboard('{Enter}');
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+  },
+};
+
+/** `multiple` mode: a plain click selects a row alone, and a meta-click adds to and removes from the set. */
+export const MultipleSelection: Story = {
+  args: { selectionMode: 'multiple' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const selected = () =>
+      [...rows]
+        .slice(0, 4)
+        .map((row) => (row.hasAttribute('data-selected') ? 1 : 0))
+        .join('');
+    // One session, so the held modifier survives from the keyboard call into the click: the
+    // top-level `userEvent` helpers each start their own and would drop it.
+    const user = userEvent.setup();
+    const metaClick = async (row: HTMLElement) => {
+      await user.keyboard('{Meta>}');
+      await user.click(row.querySelector<HTMLElement>('span[data-tooltip]')!);
+      await user.keyboard('{/Meta}');
+    };
+
+    await userEvent.click(rows[0].querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(selected()).toBe('1000');
+
+    await metaClick(rows[1]);
+    await expect(selected()).toBe('1100');
+
+    await metaClick(rows[1]);
+    await expect(selected()).toBe('1000');
+
+    // A plain click drops the rest.
+    await userEvent.click(rows[2].querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(selected()).toBe('0010');
   },
 };
