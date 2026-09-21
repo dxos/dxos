@@ -50,14 +50,23 @@ let installed = false;
  * the creating module is read off the first frame carrying a URL.
  */
 const origin = (): string => {
-  const frames = (new Error().stack ?? '').split('\n').slice(2);
-  for (const frame of frames) {
-    const match = frame.match(/https?:\/\/[^\s)]+/);
-    if (match) {
-      return match[0].split('/').pop()!.split('?')[0];
-    }
+  const located = (new Error().stack ?? '')
+    .split('\n')
+    .map((frame) => frame.match(/https?:\/\/[^\s)]+/)?.[0])
+    .filter((url): url is string => url !== undefined)
+    .map((url) => url.split('?')[0]);
+  // The first located frame is this module's own, whatever bundle it was inlined into, so the
+  // caller is the first frame from a DIFFERENT file — a fixed frame count gets this wrong as soon
+  // as the probe is bundled with the code it measures.
+  const strip = (url: string) => url.replace(/:\d+:\d+$/, '');
+  const own = located[0] === undefined ? undefined : strip(located[0]);
+  const caller = located.find((url) => strip(url) !== own) ?? located[0];
+  if (caller === undefined) {
+    return 'unknown';
   }
-  return 'unknown';
+  // The last non-empty path segment, so an inline module script in the document itself lands under
+  // the document rather than under the empty string a trailing slash leaves behind.
+  return strip(caller).split('/').filter(Boolean).pop() ?? 'document';
 };
 
 /**

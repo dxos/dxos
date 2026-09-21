@@ -836,7 +836,9 @@ try {
   if (measureCalls.size) {
     console.log('\n=== performance.measure, by JS call site (detail as JSON) ===');
     for (const [key, entry] of [...measureCalls].sort((a, b) => b[1].detailBytes - a[1].detailBytes).slice(0, 8)) {
-      console.log(`  ${String(MB(entry.detailBytes)).padStart(7)} MB  x${String(entry.count).padStart(5)}  ${key.slice(0, 220)}`);
+      console.log(
+        `  ${String(MB(entry.detailBytes)).padStart(7)} MB  x${String(entry.count).padStart(5)}  ${key.slice(0, 220)}`,
+      );
     }
   }
 

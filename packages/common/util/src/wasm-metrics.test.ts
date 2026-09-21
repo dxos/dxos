@@ -64,4 +64,59 @@ describe('wasm memory probe', () => {
 
     expect(getWasmMemoryStats().instances).toBe(before.instances + 1);
   });
+
+  test('a memory built in JS is counted even if no module ever exports it', async ({ expect }) => {
+    installWasmMemoryProbe();
+    const before = getWasmMemoryStats();
+
+    // The route neither instantiation hook sees: constructed here, handed to a module's imports
+    // later or never. Before the constructor was wrapped this realm reported zero for it.
+    const standalone = new WebAssembly.Memory({ initial: 3 });
+    expect(standalone.buffer.byteLength).toBe(3 * PAGE_BYTES);
+
+    const stats = getWasmMemoryStats();
+    expect(stats.instances).toBe(before.instances + 1);
+    expect(stats.bytes).toBe(before.bytes + 3 * PAGE_BYTES);
+  });
+
+  test('a memory reached by two routes is counted once', async ({ expect }) => {
+    installWasmMemoryProbe();
+    const before = getWasmMemoryStats();
+
+    // Constructed here (the constructor hook sees it) and then passed into a module's imports
+    // (the import hook sees it again). Counting both inflates the realm by the memory's size.
+    const shared = new WebAssembly.Memory({ initial: 8 });
+    await WebAssembly.instantiate(MEMORY_MODULE.buffer, { env: { shared } });
+
+    const stats = getWasmMemoryStats();
+    // The module's own exported page is the second instance; the imported memory is not a third.
+    expect(stats.instances).toBe(before.instances + 2);
+    expect(stats.bytes).toBe(before.bytes + 9 * PAGE_BYTES);
+  });
+
+  test('shared memory is reported separately, so a cross-realm total can subtract it', async ({ expect }) => {
+    installWasmMemoryProbe();
+    const before = getWasmMemoryStats();
+
+    // One `SharedArrayBuffer`-backed memory is visible in every realm it is posted to, so a sum of
+    // the realm columns counts this allocation once per realm unless the total subtracts it.
+    const shared = new WebAssembly.Memory({ initial: 2, maximum: 2, shared: true });
+    expect(shared.buffer).toBeInstanceOf(SharedArrayBuffer);
+
+    const stats = getWasmMemoryStats();
+    expect(stats.sharedBytes).toBe(before.sharedBytes + 2 * PAGE_BYTES);
+    expect(stats.bytes).toBe(before.bytes + 2 * PAGE_BYTES);
+  });
+
+  test('bytes are attributed to the creating script', async ({ expect }) => {
+    installWasmMemoryProbe();
+
+    await WebAssembly.instantiate(MEMORY_MODULE.buffer);
+
+    // Keyed by file rather than by module URL: the stack is the only source available in a worker,
+    // where `document.currentScript` does not exist.
+    const attributed = Object.entries(getWasmMemoryStats().byModule);
+    expect(attributed.length).toBeGreaterThan(0);
+    expect(attributed.reduce((total, [, bytes]) => total + bytes, 0)).toBe(getWasmMemoryStats().bytes);
+  });
 });
