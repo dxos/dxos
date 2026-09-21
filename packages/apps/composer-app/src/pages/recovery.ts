@@ -46,7 +46,7 @@ print('');
 print('Footer actions (left → right):');
 print('  Boot    — try opening full Composer at /');
 print('  Reset   — wipe all data for this origin (export first!)');
-print('  Repair  — delete stored sync heads (fixes a profile that freezes on load)');
+print('  Repair  — clean up stale sync heads (a common cause of a profile that freezes on load)');
 print('  Export  — download .dxprofile backup (SQLite + origin metadata)');
 print('  Import  — restore .dxprofile or raw .sqlite into this origin');
 print('  Logs    — download NDJSON logs for debugging');

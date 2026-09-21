@@ -347,6 +347,12 @@ export const Open = Operation.make({
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
     scrollIntoView: Schema.optional(Schema.Boolean.annotate({ description: 'Scroll the items into view.' })),
+    focus: Schema.optional(
+      Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
+        description:
+          'Where focus goes once the item is in view: the plank (default), its first focusable content, or nowhere (false).',
+      }),
+    ),
     navigation: Schema.optional(
       NavigationMode.annotate({
         description:
@@ -425,7 +431,10 @@ export const ScrollIntoView = Operation.make({
     cursor: Schema.optional(Schema.String.annotate({ description: 'A cursor to scroll to within the item.' })),
     ref: Schema.optional(Schema.String.annotate({ description: 'A reference id for the scroll target.' })),
     focus: Schema.optional(
-      Schema.Boolean.annotate({ description: 'Whether the item takes focus once in view; defaults to true.' }),
+      Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
+        description:
+          'Where focus goes once the item is in view: the plank (default), its first focusable content, or nowhere (false).',
+      }),
     ),
   }),
   output: Schema.Void,

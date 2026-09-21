@@ -147,11 +147,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         path,
         option,
         shift,
+        keyboard = false,
       }: {
         item: AppGraphNode.Node;
         path: string[];
         option: boolean;
         shift: boolean;
+        keyboard?: boolean;
       }) => {
         if (!node.data) {
           return;
@@ -165,6 +167,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           return;
         }
 
+        // A click leaves focus on the row, so the arrows keep walking the tree; Enter is the reader
+        // committing to the item, so focus goes on into its content and they can type at once.
+        const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
         if (!current) {
           // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
@@ -173,11 +178,12 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             subject: [node.id],
             disposition: 'solo',
             modifiers: { shift },
+            focus,
           });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
+          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
         }
 
         const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>

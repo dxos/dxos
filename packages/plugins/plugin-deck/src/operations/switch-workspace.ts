@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '#types';
 
 import { Navigation, RESOLVE_TIMEOUT_MS, applyWorkspace, navigate, navigateDeck } from '../url/index.ts';
-import { firstOpenableChild, openableChildren } from '../util/index.ts';
+import { firstOpenableChild, openableChildren, withViewTransition } from '../util/index.ts';
 
 /**
  * The workspace's last URL, if it had planks. It is remembered for the session but never persisted, so a
@@ -43,15 +43,22 @@ const seedWhenLoaded = Effect.fnUntraced(function* (
   const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
   const deck = yield* DeckCapabilities.getDeck();
   if (first && state.activeDeck === subject && deck.active.length === 0) {
-    // Replaces the empty entry, so Back does not land on a workspace showing nothing.
-    yield* navigateDeck({ workspace, active: [first], companionPlanks: deck.companionPlanks, method: 'replace' });
-    yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
+    // Replaces the empty entry, so Back does not land on a workspace showing nothing. The plank takes its
+    // focus intent in the same write, which an empty deck gaining one always makes.
+    yield* navigateDeck({
+      workspace,
+      active: [first],
+      companionPlanks: deck.companionPlanks,
+      method: 'replace',
+      intent: { scrollIntoView: first },
+    });
   }
 });
 
 /**
- * Opens the workspace's first openable child, returning it. Connector output lands on a flush, so waiting
- * for one seeds a workspace whose children are ready in a single navigation; the rest seed once they load.
+ * Opens the workspace's first openable child, returning it and whether the navigation wrote. Connector
+ * output lands on a flush, so waiting for one seeds a workspace whose children are ready in a single
+ * navigation; the rest seed once they load.
  */
 const seedWorkspace = Effect.fnUntraced(function* (
   builder: AppCapabilities.AppGraph,
@@ -62,7 +69,12 @@ const seedWorkspace = Effect.fnUntraced(function* (
   AppGraph.expandSync(builder.graph, subject, 'child');
   yield* Effect.promise(() => AppGraphBuilder.flush(builder));
   const [first] = openableChildren(builder.graph, subject);
-  yield* navigateDeck({ workspace, active: first ? [first] : [], companionPlanks });
+  const wrote = yield* navigateDeck({
+    workspace,
+    active: first ? [first] : [],
+    companionPlanks,
+    intent: { scrollIntoView: first },
+  });
   if (!first) {
     // Detached: a later switch leaves this one to find the deck already moved on.
     yield* Effect.forkDetach(
@@ -71,7 +83,7 @@ const seedWorkspace = Effect.fnUntraced(function* (
       ),
     );
   }
-  return first;
+  return { first, wrote };
 });
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
@@ -82,7 +94,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      yield* applyWorkspace(input.subject);
+      yield* withViewTransition(applyWorkspace(input.subject));
       const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (!workspace) {
         return;
@@ -95,18 +107,21 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const restored = lastUrl(builder, open[input.subject]?.url);
 
       let first: string | undefined;
+      let wrote = false;
       if (Option.isSome(restored)) {
         // Through the projection a reload uses, which shows the planks while they rebuild and turns any
         // that no longer exist into not-found.
-        yield* navigate(restored.value);
         first = open[input.subject]?.active[0];
+        wrote = yield* navigate(restored.value, { intent: { scrollIntoView: first } });
       } else if (platform === 'mobile') {
         yield* navigateDeck({ workspace, active: [], companionPlanks: deck.companionPlanks });
       } else {
-        first = yield* seedWorkspace(builder, input.subject, workspace, deck.companionPlanks);
+        ({ first, wrote } = yield* seedWorkspace(builder, input.subject, workspace, deck.companionPlanks));
       }
 
-      if (first) {
+      // The first plank takes its focus intent in the write above, so it never paints unattended. A
+      // workspace the URL already names writes nothing, leaving the intent undelivered.
+      if (first && !wrote) {
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
       }
     }),

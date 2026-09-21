@@ -53,6 +53,8 @@ export type DocumentType = Markdown.Document | Text.Text | { id: string; text: s
 
 export type ExtensionsOptions = {
   id: string;
+  /** The editor's attendable id; embeds nest under it so the document stays an attention ancestor. */
+  attendableId?: string;
   object?: DocumentType;
   settings?: Markdown.Settings;
   compact?: boolean;
@@ -75,9 +77,14 @@ export type ExtensionsOptions = {
   onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
 };
 
+/**
+ * The CodeMirror extensions for a document: data binding to its content, the markdown decorations,
+ * object-link widgets (embeds nest under `attendableId`), and the settings-driven extras.
+ */
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
   id,
+  attendableId,
   object,
   settings,
   compact,
@@ -105,6 +112,7 @@ export const useExtensions = ({
     () =>
       createBaseExtensions({
         id,
+        attendableId,
         object,
         space,
         settings,
@@ -117,6 +125,7 @@ export const useExtensions = ({
       }),
     [
       id,
+      attendableId,
       object,
       space,
       compact,
@@ -175,6 +184,7 @@ export const useExtensions = ({
  */
 const createBaseExtensions = ({
   id,
+  attendableId,
   object,
   space,
   onSelectLink,
@@ -223,7 +233,10 @@ const createBaseExtensions = ({
             // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
             // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
             estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
-            Component: (props) => <PreviewComponent {...props} db={space?.db} />,
+            // An embed that released its reserved height (a card) must still keep its element across
+            // rebuilds, or a click that reconfigures the editor remounts it out from under the user.
+            keepAlive: true,
+            Component: (props) => <PreviewComponent {...props} db={space?.db} attendableId={attendableId} />,
           },
         }),
         substitutions(),

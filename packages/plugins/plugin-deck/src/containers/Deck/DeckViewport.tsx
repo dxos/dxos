@@ -966,12 +966,15 @@ const useScrollIntoView = ({
   viewportRef,
   stackRef,
   getPlankTiles,
+  planks,
   scrollIntoViewId,
   scrollIntentRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
+  /** Rendered plank ids, so the intent can be recorded without waiting on the DOM. */
+  planks: readonly string[];
   scrollIntoViewId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
 }) => {
@@ -981,6 +984,14 @@ const useScrollIntoView = ({
   const watchdogRef = useRef<number | undefined>(undefined);
 
   useEffect(() => () => cancelAnimationFrame(watchdogRef.current ?? 0), []);
+
+  // Ahead of the fold pass, which would otherwise hand attention to whichever plank is already on screen
+  // while this one is still off it. `planks` rather than the DOM, since the tile has not mounted yet.
+  useLayoutEffect(() => {
+    if (scrollIntoViewId && planks.includes(scrollIntoViewId)) {
+      scrollIntentRef.current = scrollIntoViewId;
+    }
+  }, [scrollIntoViewId, planks, scrollIntentRef]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -1401,6 +1412,14 @@ export const DeckPlanks = () => {
   // declaration order, and measuring at the exposé's zeroed scroll reads every trailing plank as
   // off-screen — enough for the attention hysteresis to hand attention to whatever sits near the start.
   useExposeScroll({ viewportRef, stackRef, getPlankTiles, selectRef: exposeSelectRef, expose });
+  useScrollIntoView({
+    viewportRef,
+    stackRef,
+    getPlankTiles,
+    planks,
+    scrollIntoViewId: state.scrollIntoView?.id,
+    scrollIntentRef,
+  });
   useFoldedPlanks({
     viewportRef,
     getPlankTiles,
@@ -1408,13 +1427,6 @@ export const DeckPlanks = () => {
     expose,
     plankCount: planks.length,
     maxPlankWidthPx,
-    scrollIntentRef,
-  });
-  useScrollIntoView({
-    viewportRef,
-    stackRef,
-    getPlankTiles,
-    scrollIntoViewId: state.scrollIntoView?.id,
     scrollIntentRef,
   });
   useExposeInert({ getPlankTiles, expose });
@@ -1784,6 +1796,7 @@ export const DeckPlanks = () => {
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
+                data-testid='deck.viewport'
                 // Scroll anchoring off: the deck owns its scroll position, and the browser's anchor
                 // compensation turns any tile growing (a companion opening) into a silent scroll no
                 // code commanded — measured as the deck shifting by exactly the width delta.

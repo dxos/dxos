@@ -16,6 +16,9 @@ export const translations = [
         'picker-none.label': 'None',
         'picker-type.placeholder': 'Type',
         'picker-tag.placeholder': 'Tag',
+
+        'progress-meter.cancel.label': 'Cancel',
+        'progress-meter.dismiss.label': 'Dismiss',
       },
     },
   },

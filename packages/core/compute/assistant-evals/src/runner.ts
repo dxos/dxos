@@ -11,10 +11,13 @@ import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 import { afterAll } from 'vitest';
 
+import type { MakeTurnProducer } from '@dxos/agent-runtime';
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
@@ -28,6 +31,7 @@ import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
@@ -100,11 +104,35 @@ const servedByEdge = (model: DXN.DXN): boolean => Model.developer(model) === 'co
 const directAiService = (): Promise<AiService.Service> =>
   AiService.tag.pipe(Effect.provide(AiServiceTestingPreset('direct')), EffectEx.runAndForwardErrors);
 
+/**
+ * Contributes an alternative turn engine to the run. `AgentServiceSpec` reads this registry once,
+ * when its layer materializes, so the module has to be there at Startup rather than contributed
+ * later.
+ */
+const turnProducerPlugin = (makeTurnProducer: MakeTurnProducer): Plugin.Plugin =>
+  Plugin.make(
+    Plugin.define(
+      Plugin.makeMeta({
+        key: DXN.make('org.dxos.eval.plugin.turnProducer'),
+        name: 'Eval turn producer',
+      }),
+    ).pipe(
+      Plugin.addModule({
+        id: 'org.dxos.eval.plugin.turnProducer.module.producer',
+        activatesOn: ActivationEvents.Startup,
+        provides: [AssistantCapabilities.AgentTurnProducer],
+        activate: () =>
+          Effect.succeed([Capability.contribute(AssistantCapabilities.AgentTurnProducer, makeTurnProducer)]),
+      }),
+    ),
+  )();
+
 const createDefaultPlugins = async (options: {
   plugins?: Plugin.Plugin[];
   types?: Type.AnyEntity[];
   config?: Config;
   model: DXN.DXN;
+  makeTurnProducer?: MakeTurnProducer;
   record: (call: Usage.Call) => void;
 }): Promise<Plugin.Plugin[]> => [
   ClientPlugin.make({
@@ -128,6 +156,7 @@ const createDefaultPlugins = async (options: {
   RoutinePlugin.make(),
   InboxPlugin.make(),
   SpacePlugin.make({}),
+  ...(options.makeTurnProducer ? [turnProducerPlugin(options.makeTurnProducer)] : []),
   ...(options.plugins ?? []),
 ];
 
@@ -187,6 +216,12 @@ export interface CreateEvalRunnerOptions<I, O> {
    */
   skills?: Ref.Ref<Skill.Skill>[] | (() => Ref.Ref<Skill.Skill>[]);
   model?: DXN.DXN;
+  /**
+   * Runs the agent's turns on an alternative engine (e.g. code mode) instead of DXOS's own
+   * `AiSession`. The same knob as `model`, one level down: a variant can switch it per run, which
+   * is how a matrix eval compares engines over one set of tasks.
+   */
+  makeTurnProducer?: MakeTurnProducer;
   plugins?: Plugin.Plugin[];
   /**
    * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
@@ -254,6 +289,7 @@ export type VariantConfig =
   | undefined
   | {
       model?: DXN.DXN;
+      makeTurnProducer?: MakeTurnProducer;
     };
 
 /**
@@ -319,6 +355,7 @@ export function createEvalRunner<I, O>(
 
   const execute = async (input: I, variant: VariantConfig, record: (call: Usage.Call) => void) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
+    const makeTurnProducer = variant?.makeTurnProducer ?? options.makeTurnProducer;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
     const gradeIncomplete = options.gradeIncomplete === true && options.scored === true;
 
@@ -334,7 +371,7 @@ export function createEvalRunner<I, O>(
       Effect.gen(function* () {
         const harness = yield* Effect.promise(async () =>
           createComposerTestApp({
-            plugins: await createDefaultPlugins({ ...options, model, record }),
+            plugins: await createDefaultPlugins({ ...options, model, makeTurnProducer, record }),
           }),
         );
         // The scope owns the harness until a session that outlives this effect takes it over, so a

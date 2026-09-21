@@ -39,10 +39,15 @@ export const ProgressStatusIndicator = () => {
       </Popover.Trigger>
       {active.length > 0 && (
         <Popover.Portal>
-          <Popover.Content side='left'>
-            <div className='flex flex-col gap-1 w-[260px] p-2 overflow-hidden'>
+          <Popover.Content side='left' border>
+            <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
               {active.map((monitor) => (
-                <ProgressMeter key={monitor.name} state={monitor} onCancel={() => registry.cancel(monitor.name)} />
+                <ProgressMeter
+                  key={monitor.name}
+                  delay={0}
+                  state={monitor}
+                  onCancel={() => registry.cancel(monitor.name)}
+                />
               ))}
             </div>
             <Popover.Arrow />

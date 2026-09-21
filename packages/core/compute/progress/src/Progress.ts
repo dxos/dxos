@@ -27,6 +27,8 @@ export type TaskProgress = {
   readonly status: TaskStatus;
   readonly startedAt?: string;
   readonly updatedAt: string;
+  /** When `current` last moved forward, which is what {@link deriveEta} rates a run by. */
+  readonly progressedAt?: string;
   readonly elapsedMs?: number;
   /** Producer-supplied estimate of remaining time (ms); see {@link deriveEta}. */
   readonly estimatedMs?: number;
@@ -124,8 +126,12 @@ export const make = (): ProgressApi => {
   };
 
   const touch = (task: MutableTask, mutate: (task: MutableTask) => void): void => {
+    const before = task.current;
     mutate(task);
     task.updatedAt = now();
+    if (task.current > before) {
+      task.progressedAt = task.updatedAt;
+    }
     if (task.startedAt) {
       task.elapsedMs = Date.parse(task.updatedAt) - Date.parse(task.startedAt);
     }
@@ -141,6 +147,7 @@ export const make = (): ProgressApi => {
     entry.status = 'running';
     entry.startedAt = entry.startedAt ?? started;
     entry.updatedAt = started;
+    entry.progressedAt = entry.progressedAt ?? started;
     if (options.onCancel) {
       cancelHandlers.set(name, options.onCancel);
       entry.cancellable = true;
@@ -164,6 +171,8 @@ export const make = (): ProgressApi => {
         touch(entry, (item) => {
           item.phase = phase;
           item.current = 0;
+          // A phase starts its own clock: the count resets, so the stall window does too.
+          item.progressedAt = now();
           item.total = options.total;
           if (options.note !== undefined) {
             item.note = options.note;
@@ -215,15 +224,32 @@ export const make = (): ProgressApi => {
 };
 
 /**
+ * A run that has gone this long without moving, or twice its average per-item time if that is
+ * longer, is stalled. The floor keeps a bursty producer from flickering between an estimate and
+ * none; the multiple lets a slow one keep its estimate between items.
+ */
+const STALL_FLOOR_MS = 5_000;
+
+/**
  * Estimated remaining time (ms): the producer's `estimatedMs` if present, else a naive linear
  * estimate `elapsedMs / current × (total − current)` when the total and some progress are known;
- * `undefined` when it cannot be estimated.
+ * `undefined` when it cannot be estimated, or when the run has stalled — a rate is only worth
+ * projecting while the count is moving, and projecting a stalled run reports an estimate that
+ * grows with every touch and never arrives.
  */
 export const deriveEta = (task: TaskProgress): number | undefined => {
   if (task.estimatedMs !== undefined) {
     return task.estimatedMs;
   }
-  if (task.total !== undefined && task.current > 0 && task.current < task.total && task.elapsedMs !== undefined) {
-    return (task.elapsedMs / task.current) * (task.total - task.current);
+  if (task.total === undefined || task.current <= 0 || task.current >= task.total || task.elapsedMs === undefined) {
+    return undefined;
   }
+  const perItemMs = task.elapsedMs / task.current;
+  if (task.progressedAt !== undefined) {
+    const sinceProgressMs = Date.parse(task.updatedAt) - Date.parse(task.progressedAt);
+    if (sinceProgressMs > Math.max(STALL_FLOOR_MS, 2 * perItemMs)) {
+      return undefined;
+    }
+  }
+  return perItemMs * (task.total - task.current);
 };

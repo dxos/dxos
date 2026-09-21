@@ -12,6 +12,8 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
+import { isAnyCompanionOpen } from '../util/companion-anchor.ts';
+
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
@@ -158,14 +160,14 @@ export const getCompanionSelection = (
   platform: Platform,
   state: StoredDeckState,
   viewStateVariant: string | undefined,
+  flatten: boolean | undefined,
 ): CompanionSelection => {
   if (platform === 'mobile') {
     const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
     return { open, variant: open ? state.complementarySidebarPanel : undefined };
   }
 
-  const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
-  const open = companionPlanks === undefined || companionPlanks.length > 0;
+  const open = isAnyCompanionOpen(state.decks[state.activeDeck]?.companionPlanks, flatten);
   return { open, variant: open ? viewStateVariant : undefined };
 };
 
@@ -173,8 +175,8 @@ export const getCompanionSelection = (
 export const ScrollIntoView = Schema.Struct({
   /** The identifier of the component. */
   id: Schema.String,
-  /** Whether the component takes focus once in view; unset means it does. */
-  focus: Schema.optional(Schema.Boolean),
+  /** Where focus goes once in view: the component (unset or true), its first focusable content, or nowhere. */
+  focus: Schema.optional(Schema.Union([Schema.Boolean, Schema.Literal('content')])),
 });
 export type ScrollIntoView = Schema.Schema.Type<typeof ScrollIntoView>;
 

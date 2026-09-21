@@ -72,5 +72,5 @@ const titles = (results: readonly unknown[]) =>
 const seed = Effect.fnUntraced(function* () {
   yield* Database.add(Obj.make(Memory, { title: 'Favourite colour', content: 'The colour blue.' }));
   yield* Database.add(Obj.make(Memory, { title: 'Favourite language', content: 'TypeScript.' }));
-  yield* Database.flush();
+  yield* Database.flush({ secondaryIndexes: true });
 });

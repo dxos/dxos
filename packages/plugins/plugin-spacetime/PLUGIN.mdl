@@ -82,8 +82,8 @@ type Mesh
 ## Components
 
 ```mdl
-component SpacetimeArticle
-  desc: Full-canvas article surface rendered for a Scene object.
+component SceneArticle
+  desc: Full-canvas article surface rendered for a Scene object. Remembers the camera pose per scene (react-ui-attention view state, local backend).
   props:
     role: string
     subject: Scene.Scene
