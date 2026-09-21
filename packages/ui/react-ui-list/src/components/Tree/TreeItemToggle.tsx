@@ -37,7 +37,10 @@ export const TreeItemToggle = memo(
             // every other cell in a row, so a grid laid out beside it tiles with no gap.
             'h-(--dx-control) w-(--dx-control) px-0',
             '[&_svg]:transition-transform [&_svg]:duration-200',
-            open ? '[&_svg]:rotate-90' : '[&_svg]:rotate-0',
+            // Closing waits out the conceal (same 200ms), so the chevron turns as the last row
+            // leaves rather than ahead of them; opening leads, since the rows follow it in.
+            // Presentation only — `aria-expanded` and every click still read the committed state.
+            open ? '[&_svg]:rotate-90 [&_svg]:delay-0' : '[&_svg]:rotate-0 [&_svg]:delay-200',
             hidden ? 'hidden' : !isBranch && 'invisible',
             classNames,
           ]}

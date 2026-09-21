@@ -144,9 +144,11 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   onItemHover?: (params: { item: T }) => void;
   /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
   focusNode: (id: string, value: string) => void;
-  /** Applies the select-vs-disclose policy for a row activation. */
-  activateNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
-  canSelectNode: (node: TreeNodeEntry<T>) => boolean;
+  /** Applies the select-vs-toggle policy for a row activation. */
+  selectNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
+  /** The consumer's own predicate, as passed to the tree. */
+  canSelect?: (params: { item: T; path: string[] }) => boolean;
+  /** In `multiple` mode a plain click selects the row alone and a meta-click toggles it. */
   selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;

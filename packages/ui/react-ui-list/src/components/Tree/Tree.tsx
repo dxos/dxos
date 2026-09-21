@@ -364,7 +364,7 @@ export const Tree = <T extends { id: string } = any>({
     [canSelect],
   );
 
-  const onActivateNode = useCallback(
+  const onSelectNode = useCallback(
     (node: TreeNodeEntry<T>, activation: RowActivation) => {
       // A disabled row answers no activation at all. `canSelectNode` is false for a disabled row
       // and for one the consumer merely refuses to select, and only the second of those discloses
@@ -474,10 +474,10 @@ export const Tree = <T extends { id: string } = any>({
       }
       const entry = byValue.get(focusedValue);
       if (entry) {
-        onActivateNode(entry, { ...NO_MODIFIERS, current: true });
+        onSelectNode(entry, { ...NO_MODIFIERS, current: true });
       }
     },
-    [selectionFollowsFocus, selected, byValue, onActivateNode],
+    [selectionFollowsFocus, selected, byValue, onSelectNode],
   );
 
   const handleSelectionChange = useCallback(
@@ -489,10 +489,10 @@ export const Tree = <T extends { id: string } = any>({
           : selectedValue.find((candidate) => !previous.has(candidate));
       const entry = value ? byValue.get(value) : undefined;
       if (entry) {
-        onActivateNode(entry, { ...recentModifiers(), current: true });
+        onSelectNode(entry, { ...recentModifiers(), current: true });
       }
     },
-    [selected, byValue, onActivateNode, recentModifiers],
+    [selected, byValue, onSelectNode, recentModifiers],
   );
 
   /** The machine emits no selection event for a row that is already selected, so `Enter` is taken here. */
@@ -554,8 +554,8 @@ export const Tree = <T extends { id: string } = any>({
       dropBelowExpanded,
       onOpenChange,
       onItemHover,
-      activateNode: onActivateNode,
-      canSelectNode,
+      selectNode: onSelectNode,
+      canSelect,
       selectionMode,
       mountedRef,
     }),
@@ -574,8 +574,8 @@ export const Tree = <T extends { id: string } = any>({
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
-      onActivateNode,
-      canSelectNode,
+      onSelectNode,
+      canSelect,
       selectionMode,
       onOpenChange,
       onItemHover,
@@ -777,8 +777,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     dropBelowExpanded,
     onOpenChange,
     onItemHover,
-    activateNode,
-    canSelectNode,
+    selectNode,
+    canSelect,
     selectionMode,
     focusNode,
   } = useTreeRender();
@@ -803,7 +803,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
   const data = { treeId, id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
-  const selectable = canSelectNode(node);
+  const selectable = !props.disabled && (canSelect?.({ item, path }) ?? true);
   const isItemDroppable = props.droppable !== false;
   const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
@@ -938,7 +938,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     (event: MouseEvent) => {
       if (current) {
         event.preventDefault();
-        activateNode(node, {
+        selectNode(node, {
           option: event.altKey,
           shift: event.shiftKey,
           meta: event.metaKey || event.ctrlKey,
@@ -946,7 +946,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         });
       }
     },
-    [current, node, activateNode],
+    [current, node, selectNode],
   );
 
   // The machine reports a selection change one row at a time and none for a re-click of the only
@@ -962,9 +962,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       event.stopPropagation();
       event.preventDefault();
       const meta = event.metaKey || event.ctrlKey;
-      activateNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
+      selectNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
     },
-    [selectionMode, node, current, activateNode],
+    [selectionMode, node, current, selectNode],
   );
 
   const handleItemHover = useCallback(() => onItemHover?.({ item }), [onItemHover, item]);

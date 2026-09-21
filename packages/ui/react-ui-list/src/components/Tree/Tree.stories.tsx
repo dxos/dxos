@@ -333,14 +333,22 @@ export const Collapse: Story = {
     const branch = toggle.closest('[data-part="branch"]')!;
     const height = () => branch.querySelector('[data-part="branch-content"]')?.getBoundingClientRect().height ?? 0;
 
+    const chevron = () => getComputedStyle(toggle.querySelector('svg')!);
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(height()).toBeGreaterThan(0));
+    // Opening, the chevron leads: the rows follow it in.
+    await waitFor(() => expect(chevron().rotate).toBe('90deg'));
+    await expect(chevron().transitionDelay).toBe('0s');
 
+    // Closing, the chevron is the one thing that waits: its turn is held for the length of the
+    // conceal, so it lands with the last row rather than ahead of them.
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(height()).toBeGreaterThan(0);
+    await expect(chevron().transitionDelay).toBe('0.2s');
     await waitFor(() => expect(height()).toBe(0));
+    await waitFor(() => expect(chevron().rotate).not.toBe('90deg'));
 
     await userEvent.click(toggle);
     await waitFor(() => expect(height()).toBeGreaterThan(0));
