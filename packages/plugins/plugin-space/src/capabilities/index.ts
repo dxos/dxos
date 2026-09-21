@@ -88,6 +88,8 @@ export const Repair = Capability.lazyModule(
   () => import('./repair.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
+// headless host registers.
 export const SpacesAvailable = Capability.lazyModule(
   'SpacesAvailable',
   {
@@ -107,13 +109,11 @@ export const SpacesAvailable = Capability.lazyModule(
     // Runtime event: spaces become ready when the client observes them, not at startup.
     activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./spaces-ready.ts'),
+  () => import('./spaces-available.ts'),
 );
 export const SpaceSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });
-// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
-// headless host registers.
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 // Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
 // the app-graph builder, `SpacesAvailable` — is itself browser-only.

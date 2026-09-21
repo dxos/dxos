@@ -83,6 +83,21 @@ describe('settings space resolution', () => {
  * A stand-in carrying only the fields the tag predicates read. Cast here rather than widening the
  * predicates, so production code sees a real `Space` and the fake stays contained to the test.
  */
+const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unknown as Space;
+
+/** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */
+const makeClosedSpace = (id: string, tags: string[]): Space =>
+  ({ id, tags, properties: {}, state: { get: () => SpaceState.SPACE_CLOSED } }) as unknown as Space;
+
+/** As {@link makeClosedSpace}, ready and with real (annotation-readable) properties. */
+const makeReadySpace = (id: string, tags: string[]): Space =>
+  ({
+    id,
+    tags,
+    properties: Obj.make(Expando.Expando, {}),
+    state: { get: () => SpaceState.SPACE_READY },
+  }) as unknown as Space;
+
 describe('space templates', () => {
   const LEGACY_TAG = 'org.dxos.space.exemplar';
   const TEMPLATE_ID = 'org.dxos.plugin.onboarding.template.bramble';
@@ -109,18 +124,3 @@ describe('space templates', () => {
     expect(AppSpace.getSpaceTemplateId(untagged)).toBeUndefined();
   });
 });
-
-const makeSpace = (tags: string[]): Space => ({ tags, properties: {} }) as unknown as Space;
-
-/** As {@link makeSpace}, adding the id and closed state the settings-space resolution reads. */
-const makeClosedSpace = (id: string, tags: string[]): Space =>
-  ({ id, tags, properties: {}, state: { get: () => SpaceState.SPACE_CLOSED } }) as unknown as Space;
-
-/** As {@link makeClosedSpace}, ready and with real (annotation-readable) properties. */
-const makeReadySpace = (id: string, tags: string[]): Space =>
-  ({
-    id,
-    tags,
-    properties: Obj.make(Expando.Expando, {}),
-    state: { get: () => SpaceState.SPACE_READY },
-  }) as unknown as Space;
