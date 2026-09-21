@@ -60,7 +60,6 @@ describe('applyActive', () => {
     await navigating;
 
     expect(readEphemeral().dialogOpen).toBe(false);
-    expect(readEphemeral().dialogContent).toBeNull();
     expect(readEphemeral().open.default?.active).toEqual(['item-1']);
   });
 });

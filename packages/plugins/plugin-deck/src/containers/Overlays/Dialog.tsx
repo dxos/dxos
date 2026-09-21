@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -18,12 +18,6 @@ export const Dialog = () => {
   const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
   const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
 
-  const closing = useRef(dialogContent);
-  if (dialogContent) {
-    closing.current = dialogContent;
-  }
-  const content = dialogContent ?? closing.current;
-
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       updateEphemeral((s) => ({ ...s, dialogOpen: nextOpen }));
@@ -38,7 +32,7 @@ export const Dialog = () => {
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
         <Surface.Surface
           type={AppSurface.Dialog}
-          data={content ?? undefined}
+          data={dialogContent ?? undefined}
           limit={1}
           fallback={PlankErrorFallback}
           placeholder={<div />}
@@ -47,7 +41,7 @@ export const Dialog = () => {
         <Overlay blockAlign={dialogBlockAlign} classNames={dialogOverlayClasses} style={dialogOverlayStyle}>
           <Surface.Surface
             type={AppSurface.Dialog}
-            data={content ?? undefined}
+            data={dialogContent ?? undefined}
             limit={1}
             fallback={PlankErrorFallback}
           />
