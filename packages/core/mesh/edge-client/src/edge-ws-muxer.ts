@@ -155,18 +155,23 @@ export class WebSocketMuxer {
       this._ensureOutWindow(channelId, message.serviceId);
     }
 
-    // Without flow control the legacy short path stands: unsegmented, straight to the socket.
-    if (!this.flowControlEnabled && (channelId == null || binary.length < this._maxChunkLength)) {
+    // Only reachable without flow control, which assigns every message a channel; the legacy
+    // unsegmented path has no id to account against.
+    if (channelId == null) {
       this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
       return;
     }
 
     if (binary.length < this._maxChunkLength) {
+      if (!this.flowControlEnabled) {
+        this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
+        return;
+      }
       // One terminated chunk rather than the unsegmented shape: a short message that skipped the
       // queue would evade the credit gate, and every message under 16KiB takes this path.
       const terminatorSentTrigger = new Trigger();
-      const flags = new Uint8Array([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId!]);
-      this._enqueueChunks(channelId!, [
+      const flags = new Uint8Array([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
+      this._enqueueChunks(channelId, [
         { payload: concatUint8Arrays(flags, binary), payloadBytes: binary.length, trigger: terminatorSentTrigger },
       ]);
       await terminatorSentTrigger.wait();

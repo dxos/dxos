@@ -45,7 +45,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
         ws.send('__pong__');
         return;
       }
-      const message = muxer.receiveData(await toUint8Array(data));
+      const { message } = muxer.receiveData(await toUint8Array(data));
       if (!message) {
         return;
       }
