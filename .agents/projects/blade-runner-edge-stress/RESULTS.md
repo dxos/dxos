@@ -544,6 +544,17 @@ Five framework defects surfaced only in CI and are fixed:
    nor the cause beneath it. `describeError` records message, cause chain and the top frames.
 5. **SIGTERM skipped cleanup.** A job timeout kills the process without unwinding, which leaked two
    spaces and five identities on dev before `onCleanupSignal` was added.
+6. **A command could hang the run past every budget it had.** Only assertion-side calls carried a
+   deadline; the `run` body of each command, the joins `execute` performs and the whole of
+   `_setupFleet` called the replicant bare, and RPC is created with `timeout: 0`. The 2026-09-21
+   nightly wedged inside one of them: the log stops at `fleet ready` (02:02) and the next line is
+   Depot cancelling the job at 90 minutes. `maxRuntimeMs` could not stop it — `execute` checks the
+   deadline _between_ commands — so the run never reached its own failure path, and the summary,
+   the `edge-soak` artifact and the cleanup all died with the process, leaving a preview run
+   undiagnosable and its identities behind. Every replicant call is now bounded by
+   `quiescenceTimeoutMs` and names its peer, so the same stall reads like 2026-09-20's did:
+   `command 12 Checkpoint() failed: replicant call did not return within 90000ms: flush(client 1,
+space 3)`.
 
 ### Join latency — 100 objects, 5 joiners, preview
 

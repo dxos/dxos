@@ -33,6 +33,7 @@ import {
   assertFullyReplicated,
   cleanupRun,
   isDevLikeTarget,
+  withDeadline,
 } from './system.ts';
 
 /**
@@ -145,7 +146,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       fleet = await this._setupFleet(env, spec, { edgeUrl, hubUrl }, limits, spawned);
     } catch (err) {
       if (spec.cleanup) {
-        await this._cleanupPartialFleet(edgeUrl, spawned);
+        await this._cleanupPartialFleet(edgeUrl, spec.quiescenceTimeoutMs, spawned);
       }
       traceStream.end();
       throw err;
@@ -339,11 +340,19 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
    * exists yet when setup throws part-way. No spaces have been created at this point, so each
    * client only has its own identity to drop.
    */
-  private async _cleanupPartialFleet(edgeUrl: string, spawned: ReplicantBrain<ClientReplicant>[]): Promise<void> {
+  private async _cleanupPartialFleet(
+    edgeUrl: string,
+    budgetMs: number,
+    spawned: ReplicantBrain<ClientReplicant>[],
+  ): Promise<void> {
     const refused: string[] = [];
     for (const [index, replicant] of spawned.entries()) {
       try {
-        const result = await replicant.brain.deleteOwnData({ spaceIds: [] });
+        const result = await withDeadline(
+          `deleteOwnData(client ${index})`,
+          budgetMs,
+          replicant.brain.deleteOwnData({ spaceIds: [] }),
+        );
         refused.push(...result.refused);
       } catch (err) {
         log.warn('partial-fleet cleanup threw', { index, err });
@@ -372,9 +381,16 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const model = makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits });
 
     const replicants = spawned;
+    // Bounded like every other replicant call, because RPC is created with `timeout: 0` and a peer
+    // stuck in one would hang setup until the CI job timeout killed the process uncleaned.
+    const budgetMs = spec.quiescenceTimeoutMs;
     for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
-      await replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions });
+      await withDeadline(
+        `init(client ${index})`,
+        budgetMs,
+        replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions }),
+      );
       replicants.push(replicant);
     }
 
@@ -384,19 +400,25 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const deviceDids: { client: ClientIndex; identityDid: string }[] = [];
     for (const [identity, { devices }] of model.identities.entries()) {
       const [owner, ...rest] = devices;
-      const { identityDid } = await replicants[owner].brain.createIdentity({
-        displayName: `edge-stress-identity-${identity}`,
-      });
+      const { identityDid } = await withDeadline(
+        `createIdentity(client ${owner})`,
+        budgetMs,
+        replicants[owner].brain.createIdentity({ displayName: `edge-stress-identity-${identity}` }),
+      );
       identityDids.push(identityDid);
       deviceDids.push({ client: owner, identityDid });
       // Wherever the hatch is open, because the self-serve cleanup routes 403 an identity with no
       // Hub account. One fixed alias per identity slot — the hatch rebinds, so every run reuses the
       // same rows. On preview the hatch is closed and cleanup falls back to the admin key.
       if (isDevLikeTarget(spec.edge)) {
-        await replicants[owner].brain.bindTestAccount({
-          hubUrl: urls.hubUrl,
-          email: `test+bladerunner-${identity}@dxos.org`,
-        });
+        await withDeadline(
+          `bindTestAccount(client ${owner})`,
+          budgetMs,
+          replicants[owner].brain.bindTestAccount({
+            hubUrl: urls.hubUrl,
+            email: `test+bladerunner-${identity}@dxos.org`,
+          }),
+        );
       }
       // One agent per identity — the agent belongs to the identity, so a second device of the same
       // identity adds nothing. Fatal, not best-effort: without agents a DELEGATED invitation is
@@ -404,11 +426,19 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       // the one the spec asked for, and a run that quietly measures the fallback is worse than a
       // red one.
       if (spec.agents) {
-        await replicants[owner].brain.createAgent();
+        await withDeadline(`createAgent(client ${owner})`, budgetMs, replicants[owner].brain.createAgent());
       }
       for (const device of rest) {
-        const { invitationCode } = await replicants[owner].brain.inviteDevice();
-        const joined = await replicants[device].brain.joinAsDevice({ invitationCode });
+        const { invitationCode } = await withDeadline(
+          `inviteDevice(client ${owner})`,
+          budgetMs,
+          replicants[owner].brain.inviteDevice(),
+        );
+        const joined = await withDeadline(
+          `joinAsDevice(client ${device})`,
+          budgetMs,
+          replicants[device].brain.joinAsDevice({ invitationCode }),
+        );
         // The model treats these clients as one identity — `knownBy`, `onlineMemberDevices` and
         // every membership precondition depend on it. A device that silently landed on an identity
         // of its own would make the fleet a different shape than the plan was simulated against,

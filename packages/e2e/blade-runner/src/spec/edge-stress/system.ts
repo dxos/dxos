@@ -149,10 +149,10 @@ export type Real = {
  *
  * RPC to a replicant is created with `timeout: 0`, and the scheduler only rescues the run when a
  * replicant *dies* — a peer that is alive but stuck inside `flush` or a query hangs the orchestrator
- * for as long as the run lasts, with no diagnosis. Every assertion-side call gets a deadline, so
- * that becomes a named failure against a named peer.
+ * for as long as the run lasts, with no diagnosis. Every call gets a deadline, so that becomes a
+ * named failure against a named peer.
  */
-const withDeadline = <T>(label: string, budgetMs: number, call: Promise<T>): Promise<T> =>
+export const withDeadline = <T>(label: string, budgetMs: number, call: Promise<T>): Promise<T> =>
   asyncTimeout(call, budgetMs, new Error(`replicant call did not return within ${budgetMs}ms: ${label}`));
 
 /** Sentinel: the time budget ran out, which ends the sequence normally rather than failing it. */
@@ -199,7 +199,11 @@ export const awaitSpaceOnAllDevices = async (real: Real, spaceSlot: number, clie
 export const joinSpace = async (model: Model, real: Real, client: ClientIndex, spaceSlot: number): Promise<void> => {
   const identity = identityOf(model, client);
   const space = model.spaces[spaceSlot];
-  await real.replicants[client].brain.joinSpace({ invitationCode: real.invitationCodes[spaceSlot] });
+  await withDeadline(
+    `joinSpace(client ${client}, space ${spaceSlot})`,
+    real.spec.quiescenceTimeoutMs,
+    real.replicants[client].brain.joinSpace({ invitationCode: real.invitationCodes[spaceSlot] }),
+  );
   space.pending.delete(identity);
   space.members.add(identity);
 };
@@ -293,7 +297,11 @@ export const cleanupRun = async (model: Model, real: Real): Promise<void> => {
   for (const [identity, { devices }] of model.identities.entries()) {
     const spaceIds = spacesByIdentity.get(identity) ?? [];
     try {
-      const result = await real.replicants[devices[0]].brain.deleteOwnData({ spaceIds });
+      const result = await withDeadline(
+        `deleteOwnData(identity ${identity})`,
+        real.spec.quiescenceTimeoutMs,
+        real.replicants[devices[0]].brain.deleteOwnData({ spaceIds }),
+      );
       accepted += result.accepted.length;
       refused.push(...result.refused);
     } catch (err) {
@@ -441,10 +449,18 @@ export const runCheckpoint = async (model: Model, real: Real): Promise<void> => 
 export const assertFullyReplicated = async (model: Model, real: Real): Promise<void> => {
   for (let client = 0; client < model.clients.length; client++) {
     if (model.clients[client].state === 'offline') {
-      await real.replicants[client].brain.goOnline();
+      await withDeadline(
+        `goOnline(client ${client})`,
+        real.spec.quiescenceTimeoutMs,
+        real.replicants[client].brain.goOnline(),
+      );
       model.clients[client].state = 'online';
     } else if (model.clients[client].state === 'down') {
-      await real.replicants[client].brain.restart();
+      await withDeadline(
+        `restart(client ${client})`,
+        real.spec.quiescenceTimeoutMs,
+        real.replicants[client].brain.restart(),
+      );
       model.clients[client].state = 'online';
     }
   }

@@ -22,7 +22,7 @@ import {
   resolvablePendingSpaces,
   token,
 } from './model.ts';
-import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system.ts';
+import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint, withDeadline } from './system.ts';
 
 //
 // What the system can do. Each command below is one declaration: its arguments (the schema, which
@@ -101,6 +101,16 @@ const Position = Schema.Literals(POSITIONS);
 
 const brainOf = (real: Real, client: ClientIndex) => real.replicants[client].brain;
 
+/**
+ * Bound one replicant call made while executing a command, against the run's own stall budget.
+ *
+ * `execute` can only check `maxRuntimeMs` between commands, so an unbounded call here outlives every
+ * budget the run has and is killed by the CI job timeout instead — taking the summary, the trace
+ * artifact and the cleanup that a thrown failure would still have run.
+ */
+const bounded = <T>(real: Real, label: string, call: Promise<T>): Promise<T> =>
+  withDeadline(label, real.spec.quiescenceTimeoutMs, call);
+
 const decided = <T>(value: T | undefined, what: string): T => {
   invariant(value !== undefined, `the model decided no ${what}`);
   return value;
@@ -132,7 +142,7 @@ export const GoOffline = command(
       return {};
     },
     run: async (real, { client }) => {
-      await brainOf(real, client).goOffline();
+      await bounded(real, `goOffline(client ${client})`, brainOf(real, client).goOffline());
     },
   },
 );
@@ -149,7 +159,7 @@ export const GoOnline = command(
       return catchUp(model, client, ops);
     },
     run: async (real, { client }) => {
-      await brainOf(real, client).goOnline();
+      await bounded(real, `goOnline(client ${client})`, brainOf(real, client).goOnline());
     },
   },
 );
@@ -166,7 +176,7 @@ export const Restart = command(
       return catchUp(model, client, ops);
     },
     run: async (real, { client }) => {
-      await brainOf(real, client).restart();
+      await bounded(real, `restart(client ${client})`, brainOf(real, client).restart());
     },
   },
 );
@@ -204,8 +214,16 @@ export const CreateSpace = command(
     run: async (real, { client }, transition) => {
       const slot = decided(transition.spaceSlot, 'space slot');
       const brain = brainOf(real, client);
-      const { spaceId } = await brain.createSpace({ label: `edge-stress-space-${slot}` });
-      const { invitationCode } = await brain.shareSpace({ spaceId });
+      const { spaceId } = await bounded(
+        real,
+        `createSpace(client ${client}, space ${slot})`,
+        brain.createSpace({ label: `edge-stress-space-${slot}` }),
+      );
+      const { invitationCode } = await bounded(
+        real,
+        `shareSpace(client ${client}, space ${slot})`,
+        brain.shareSpace({ spaceId }),
+      );
       real.spaceIds[slot] = spaceId;
       real.invitationCodes[slot] = invitationCode;
       real.spaceOwners[slot] = client;
@@ -255,11 +273,15 @@ export const CreateDocument = command(
     },
     run: async (real, { client, space }, transition) => {
       real.counters.documents++;
-      await brainOf(real, client).createDocument({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, decided(transition.documentSlot, 'document slot')),
-        counterSlots: real.replicants.length,
-      });
+      await bounded(
+        real,
+        `createDocument(client ${client}, space ${space})`,
+        brainOf(real, client).createDocument({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, decided(transition.documentSlot, 'document slot')),
+          counterSlots: real.replicants.length,
+        }),
+      );
     },
   },
 );
@@ -280,12 +302,16 @@ export const EditText = command(
     run: async (real, { client, space, document, position }, transition) => {
       const value = decided(transition.token, 'token');
       real.trace({ seq: real.counters.commands, detail: 'token', token: value });
-      await brainOf(real, client).editDocumentText({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, document),
-        token: value,
-        positionRatio: position,
-      });
+      await bounded(
+        real,
+        `editDocumentText(client ${client}, space ${space}, document ${document})`,
+        brainOf(real, client).editDocumentText({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, document),
+          token: value,
+          positionRatio: position,
+        }),
+      );
     },
   },
 );
@@ -304,11 +330,15 @@ export const EditCounter = command(
       return {};
     },
     run: async (real, { client, space, document }) => {
-      await brainOf(real, client).editDocumentCounter({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, document),
-        slot: client,
-      });
+      await bounded(
+        real,
+        `editDocumentCounter(client ${client}, space ${space}, document ${document})`,
+        brainOf(real, client).editDocumentCounter({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, document),
+          slot: client,
+        }),
+      );
     },
   },
 );
@@ -328,10 +358,14 @@ export const DeleteDocument = command(
       return {};
     },
     run: async (real, { client, space, document }) => {
-      await brainOf(real, client).deleteDocument({
-        spaceId: real.spaceIds[space],
-        docId: documentId(space, document),
-      });
+      await bounded(
+        real,
+        `deleteDocument(client ${client}, space ${space}, document ${document})`,
+        brainOf(real, client).deleteDocument({
+          spaceId: real.spaceIds[space],
+          docId: documentId(space, document),
+        }),
+      );
     },
   },
 );
@@ -490,7 +524,11 @@ export const execute = async <T extends Tag>(command: CommandOf<T>, model: Model
   await specOf(command._tag).run(real, command, transition, model);
   // Joins and HALO propagation are consequences of the transition, not of any one command.
   for (const { client, space } of transition.joins) {
-    await brainOf(real, client).joinSpace({ invitationCode: real.invitationCodes[space] });
+    await bounded(
+      real,
+      `joinSpace(client ${client}, space ${space})`,
+      brainOf(real, client).joinSpace({ invitationCode: real.invitationCodes[space] }),
+    );
   }
   await settleLearned(real, transition.learned);
 };
