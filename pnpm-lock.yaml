@@ -9890,9 +9890,6 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
-      '@dxos/ui-types':
-        specifier: workspace:*
-        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13499,9 +13496,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/migrations':
-        specifier: workspace:*
-        version: link:../../sdk/migrations
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -13541,9 +13535,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table

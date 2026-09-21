@@ -77,9 +77,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/migrations"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -93,9 +90,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-table"
