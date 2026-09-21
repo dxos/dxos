@@ -10,6 +10,7 @@ export * from './useDeckPresentation.ts';
 export * from './useDeckSettings.ts';
 export * from './useDeckState.ts';
 export * from './useDismissToast.ts';
+export * from './useLastPresent.ts';
 export * from './useMainSize.ts';
 export * from './useNodeActionExpander.ts';
 export * from './useSelectedCompanion.ts';

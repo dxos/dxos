@@ -69,7 +69,7 @@ export const ManyPlanks: Story = {
 
 let closeStoryDialog: (() => Promise<unknown>) | undefined;
 
-export const ClosingKeepsContent: Story = {
+export const ClosingKeepsContentUntilExit: Story = {
   tags: ['test'],
   render: () => {
     const { invokePromise } = useOperationInvoker();

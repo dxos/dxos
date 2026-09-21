@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
-import { useDeckState } from '#hooks';
+import { useDeckState, useLastPresent } from '#hooks';
 
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
@@ -17,6 +17,7 @@ export const Dialog = () => {
   const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
   const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
   const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
+  const content = useLastPresent(dialogOpen, dialogContent);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -32,19 +33,14 @@ export const Dialog = () => {
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
         <Surface.Surface
           type={AppSurface.Dialog}
-          data={dialogContent ?? undefined}
+          data={content}
           limit={1}
           fallback={PlankErrorFallback}
           placeholder={<div />}
         />
       ) : (
         <Overlay blockAlign={dialogBlockAlign} classNames={dialogOverlayClasses} style={dialogOverlayStyle}>
-          <Surface.Surface
-            type={AppSurface.Dialog}
-            data={dialogContent ?? undefined}
-            limit={1}
-            fallback={PlankErrorFallback}
-          />
+          <Surface.Surface type={AppSurface.Dialog} data={content} limit={1} fallback={PlankErrorFallback} />
         </Overlay>
       )}
     </Root>
