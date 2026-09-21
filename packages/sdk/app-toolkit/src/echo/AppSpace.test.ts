@@ -41,13 +41,12 @@ describe('space visibility', () => {
     expect(AppSpace.isVisibleSpace(makeSpace([]))).toBe(true);
   });
 
-  test('spaces the app keeps for itself are hidden', ({ expect }) => {
+  test("the settings space is hidden, tagged alone or alongside the user's own tags", ({ expect }) => {
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.FILESYSTEM_MIRROR_SPACE_TAG]))).toBe(false);
     expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned', AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
   });
 
-  test('every other tagged space belongs to the user, including tags this list has not heard of', ({ expect }) => {
+  test('every other tagged space belongs to the user, including tags this one has not heard of', ({ expect }) => {
     expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
     expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned']))).toBe(true);

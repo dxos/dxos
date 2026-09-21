@@ -103,7 +103,7 @@ const StoryGraphPlugin = () =>
         'AppGraphBuilder',
         // After the client is ready: a connector that throws before it subscribes to anything
         // reactive never re-runs, so an extension registered at startup would stay empty for good.
-        { activatesOn: ClientEvents.SpacesReady, provides: [AppCapabilities.AppGraphBuilder] },
+        { activatesOn: ClientEvents.SpacesAvailable, provides: [AppCapabilities.AppGraphBuilder] },
         Effect.fnUntraced(function* () {
           const capabilities = yield* Capability.Service;
           const extensions = yield* AppGraphBuilder.createExtension({

@@ -24,7 +24,7 @@ describe('demo space migration', () => {
     });
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const space = await client.spaces.create({ name: 'Bramble Coffee Roasters' }, { tags: [LEGACY_TAG] });
     await space.waitUntilReady();

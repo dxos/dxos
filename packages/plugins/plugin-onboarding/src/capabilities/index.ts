@@ -38,7 +38,7 @@ export const MigrateDemoSpace = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client],
     provides: [],
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./migrate-demo-space.ts'),
 );

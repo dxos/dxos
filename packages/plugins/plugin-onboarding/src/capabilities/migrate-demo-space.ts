@@ -21,6 +21,8 @@ export default Capability.makeModule(
       }
     };
 
+    // Re-run per space: the list is available before its spaces open, and properties need an open
+    // space. The list re-emits on each state change.
     const subscription = client.spaces.subscribe(() => migrate());
     yield* Effect.addFinalizer(() => Effect.sync(() => subscription.unsubscribe()));
     migrate();

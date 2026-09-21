@@ -185,7 +185,7 @@ const SpaceTemplateSummary = Schema.Struct({
  */
 export const CreateSpaceFromTemplate = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.debug.createSampleSpace'),
+    key: DXN.make('org.dxos.operation.debug.createSpaceFromTemplate'),
     name: 'Create Space From Template',
     description:
       'Creates a new space and fills it from a themed space template. Call without `id` to list ' +

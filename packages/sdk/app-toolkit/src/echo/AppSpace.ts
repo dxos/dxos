@@ -30,18 +30,12 @@ import * as AppAnnotation from './AppAnnotation.ts';
  */
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
-/** Space tag for a mirror of a local filesystem directory. */
-export const FILESYSTEM_MIRROR_SPACE_TAG = 'org.dxos.space.filesystem-mirror';
-
 /**
  * Tag the onboarding space carried before it was created from a space template.
  *
  * It rides the space's admission credential, so it cannot be removed from profiles that carry it.
  */
 const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
-
-/** Tags marking a space the app keeps for itself. Every other tag, known or not, is the user's. */
-const INTERNAL_SPACE_TAGS: readonly string[] = [SETTINGS_SPACE_TAG, FILESYSTEM_MIRROR_SPACE_TAG];
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -87,9 +81,9 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
- * Hidden spaces are named, in {@link INTERNAL_SPACE_TAGS}.
+ * The settings space is the only one the app keeps for itself; every other tag is the user's.
  */
-export const isVisibleSpace = (space: Space): boolean => !space.tags.some((tag) => INTERNAL_SPACE_TAGS.includes(tag));
+export const isVisibleSpace = (space: Space): boolean => !isSettingsSpace(space);
 
 //
 // Space templates.
@@ -144,7 +138,7 @@ export const migrateLegacyOnboardingSpaces = (client: { spaces: { get(): Space[]
 /**
  * Get the designated default space id from the settings space.
  * The settings space must be open; callers resolve it via {@link getSettingsSpace} after
- * `SpacesReady`, at which point its properties are readable.
+ * `SpacesAvailable`, at which point its properties are readable.
  */
 export const getDefaultSpaceId = (settingsSpace: Space): string | undefined =>
   Annotation.get(settingsSpace.properties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined);
