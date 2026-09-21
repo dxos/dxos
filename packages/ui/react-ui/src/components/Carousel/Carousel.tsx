@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { useTranslation } from '../../providers/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { type ThemedClassName, animationsDisabled, composable, composableProps } from '../../util/index.ts';
 import { IconButton } from '../Button/index.ts';
 import { type MediaKind, MediaPlayer } from '../MediaPlayer/index.ts';
 
@@ -30,7 +30,8 @@ export type CarouselRootProps = PropsWithChildren<{
   count: number;
   /**
    * Auto-advance interval in milliseconds. A positive value advances slides on its own until the user
-   * interacts with a control; omit (or `0`) to disable.
+   * interacts with a control; omit (or `0`) to disable. `VITE_DX_DISABLE_ANIMATIONS=true` disables
+   * it globally.
    */
   autoAdvance?: number;
   defaultIndex?: number;
@@ -61,12 +62,15 @@ const CarouselRoot = ({
     return null;
   }
 
+  // Auto-advance is unattended motion, which defeats the still-frame culling of agent recordings.
+  const autoplay = autoAdvance > 0 && !animationsDisabled();
+
   return (
     <CarouselPrimitive.Root
       slideCount={count}
       defaultPage={defaultIndex}
       loop={continuous}
-      autoplay={autoAdvance > 0 ? { delay: autoAdvance } : false}
+      autoplay={autoplay ? { delay: autoAdvance } : false}
       translations={translations}
       className='contents'
     >
