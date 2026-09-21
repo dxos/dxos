@@ -19,7 +19,15 @@ import type { SerializedError } from './edge/index.ts';
  */
 
 /** Runtime state of a process; the wire spelling of `Process.State`. */
-export type ProcessState = 'RUNNING' | 'HYBERNATING' | 'IDLE' | 'TERMINATING' | 'TERMINATED' | 'SUCCEEDED' | 'FAILED';
+export type ProcessState =
+  | 'STARTING'
+  | 'RUNNING'
+  | 'HYBERNATING'
+  | 'IDLE'
+  | 'TERMINATING'
+  | 'TERMINATED'
+  | 'SUCCEEDED'
+  | 'FAILED';
 
 /** Wire form of `Process.Environment`. */
 export interface ProcessEnvironment {
