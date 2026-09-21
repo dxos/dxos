@@ -22,6 +22,7 @@ import { iconValues } from '@dxos/ui-types';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
 import { SpaceNotReadyError, TemplateApplyError, TemplateNotFoundError } from '../errors.ts';
+import { getTemplateIcon } from '../util/index.ts';
 
 /** Bounds how long space creation waits for the new space's properties object to become available. */
 const SPACE_READY_TIMEOUT = Duration.seconds(10);
@@ -46,11 +47,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       }
 
       // The dialog seeds these from the template it selected; a caller naming one by id gets the
-      // same styling without having to repeat it. A template's icon must BE an `iconValues` name —
-      // anything else is dropped rather than stored, since the picker renders it as a blank.
+      // same styling without having to repeat it.
       const hue = hue_ ?? match?.hue ?? hues[Math.floor(Math.random() * hues.length)];
-      const templateIcon = match?.icon && iconValues.includes(match.icon) ? match.icon : undefined;
-      const icon = icon_ ?? templateIcon ?? iconValues[Math.floor(Math.random() * iconValues.length)];
+      const icon = icon_ ?? getTemplateIcon(match) ?? iconValues[Math.floor(Math.random() * iconValues.length)];
 
       const space = yield* Effect.promise(() =>
         client.spaces.create(

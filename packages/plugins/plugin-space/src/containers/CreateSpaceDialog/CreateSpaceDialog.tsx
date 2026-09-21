@@ -22,6 +22,8 @@ import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceOperation, SpaceSchema } from '#types';
 
+import { getTemplateIcon } from '../../util/index.ts';
+
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceSchema.SpaceForm>;
@@ -56,7 +58,13 @@ export const CreateSpaceDialog = () => {
   const values = useMemo<FormValues>(() => {
     const selected = templates.find(({ id }) => id === template);
     return selected
-      ? { ...initialValues, template: selected.id, name: selected.label, icon: selected.icon, hue: selected.hue }
+      ? {
+          ...initialValues,
+          template: selected.id,
+          name: selected.label,
+          icon: getTemplateIcon(selected),
+          hue: selected.hue,
+        }
       : initialValues;
   }, [templates, template]);
 
