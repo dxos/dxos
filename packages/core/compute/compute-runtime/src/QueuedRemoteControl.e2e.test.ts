@@ -175,33 +175,39 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
-    'a command the host keeps rejecting is abandoned rather than wedging the queue',
+    'a process the host keeps rejecting does not hold up another process, and keeps its own commands',
     Effect.fn(function* ({ expect }) {
       yield* withHarness(
-        ({ client, host, link }) =>
+        ({ client, host }) =>
           Effect.gen(function* () {
-            yield* link.cut;
-            const doomed = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'doomed' });
-            // Queued behind it, for a different process: the point is that this still gets through.
-            const other = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'other' });
+            // The host hosts no such process, so every delivery for it is rejected — the failure an
+            // outage cannot be told apart from, and the one that must not become head-of-line.
+            const doomed = yield* client.spawn({ spaceId: SPACE, key: 'test.not-hosted', name: 'doomed' });
+            // Queued BEHIND it, for a different process.
+            yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'other' });
 
-            // The queue is strictly ordered, so without a cap the second spawn never leaves while
-            // the first keeps failing.
-            yield* waitUntil(client.pending.pipe(Effect.map((pending) => pending.length === 1)));
-            expect((yield* client.list({ spaceId: SPACE })).map((info) => info.pid)).toContain(other.pid);
-            // The abandoned process is reported as failed, not dropped in silence.
-            const failed = yield* client.status({ spaceId: SPACE, pid: doomed.pid });
-            expect(failed.state).toEqual(Process.State.FAILED);
+            // Ordering is per process, so the second spawn overtakes the first rather than waiting
+            // on it — which under a single global order it never could.
+            yield* waitUntil(
+              Effect.map(host.list({ spaceId: SPACE }), (hosted) =>
+                hosted.some((info) => info.params.name === 'other'),
+              ),
+            );
 
-            yield* link.resume;
-            yield* client.connected;
-            yield* client.drained;
-            // Only the surviving spawn ever reached the host.
-            expect((yield* host.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
+            // The doomed process keeps its command rather than having it discarded, and keeps
+            // reporting the only state the client can honestly claim for it.
+            expect((yield* client.pending).map((command) => command.localPid)).toEqual([doomed.pid]);
+            expect((yield* client.status({ spaceId: SPACE, pid: doomed.pid })).state).toEqual(Process.State.STARTING);
+
+            // And terminating it is what actually releases the queue, since only the caller knows
+            // the process is not wanted any more.
+            yield* client.terminate({ spaceId: SPACE, pid: doomed.pid });
+            expect(yield* client.pending).toEqual([]);
+            // The other process is untouched by any of this — it is on the host and stays there.
+            expect((yield* client.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
           }),
-        // A horizon of milliseconds, so the give-up point is reached inside the test rather than a
-        // day from now.
-        { backoff: { initial: Duration.millis(1), max: Duration.millis(2) }, giveUpAfter: Duration.millis(20) },
+        // Fast backoff so the losing process cycles quickly; nothing here depends on its timing.
+        { backoff: { initial: Duration.millis(1), max: Duration.millis(5) } },
       );
     }),
   );
@@ -371,7 +377,7 @@ interface Harness {
  */
 const withHarness = (
   body: (harness: Harness) => Effect.Effect<void, never, Registry.AtomRegistry | Scope.Scope>,
-  options: { backoff?: QueuedRemoteControl.Backoff; giveUpAfter?: Duration.Duration } = {},
+  options: { backoff?: QueuedRemoteControl.Backoff } = {},
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -399,7 +405,6 @@ const withHarness = (
         control,
         kvStore,
         backoff: options.backoff ?? BACKOFF,
-        ...(options.giveUpAfter !== undefined ? { giveUpAfter: options.giveUpAfter } : {}),
       }).pipe(Effect.provideService(Scope.Scope, clients));
 
     const clientStore = KeyValueStore.prefix(kv, 'client/');
