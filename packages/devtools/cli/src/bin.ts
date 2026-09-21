@@ -59,10 +59,27 @@ if (!process.env.DX_KEEP_WARNINGS) {
   installStderrFilter();
 }
 
+/** Root flags whose value is a separate token, so the value is not mistaken for a command. */
+const ROOT_FLAGS_TAKING_A_VALUE = new Set(['--config', '-c', '--logLevel', '-l', '--profile', '-p', '--timeout']);
+
+/** The command tokens, with root flags and their values removed. */
+const commandTokens = (argv: readonly string[]): string[] => {
+  const path: string[] = [];
+  for (let i = 0; i < argv.length && path.length < 2; i++) {
+    const token = argv[i];
+    if (!token.startsWith('-')) {
+      path.push(token);
+    } else if (ROOT_FLAGS_TAKING_A_VALUE.has(token)) {
+      i++;
+    }
+  }
+  return path;
+};
+
 /** True for `dx mcp serve`, with or without `--watch`: stdout carries the MCP protocol. */
 const isMcpServe = (argv: readonly string[]): boolean => {
-  const serve = argv.indexOf('serve');
-  return serve > 0 && argv[serve - 1] === 'mcp';
+  const [command, subcommand] = commandTokens(argv);
+  return command === 'mcp' && subcommand === 'serve';
 };
 
 let filter = LogLevel.ERROR;
