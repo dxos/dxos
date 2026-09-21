@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AnthropicResolver, ChatCompletionsAdapter, DeepSeekResolver } from '@dxos/ai/resolvers';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Header from '@dxos/compute/Header';
@@ -20,7 +21,13 @@ import { ANTHROPIC_SOURCE, DEEPSEEK_SOURCE } from '../constants.ts';
 /** Host stripped by {@link EdgeAiHttpClient}; only the request path reaches EDGE. */
 const EDGE_SENTINEL_URL = 'http://edge.internal';
 
-const edgeModelResolver = Capability.makeModule(
+// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+// require once during startup, so a resolver contributed in a later round is invisible to it.
+// TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
+//   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
+export const EdgeModelResolver = Capability.makeModule(
+  'EdgeModelResolver',
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
 
@@ -80,5 +87,3 @@ const edgeModelResolver = Capability.makeModule(
     return Capability.contributeAll(AppCapabilities.AiModelResolver, [anthropicResolverLayer, deepSeekResolverLayer]);
   }),
 );
-
-export default edgeModelResolver;

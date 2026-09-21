@@ -10,6 +10,7 @@ import type * as PluginNS from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
@@ -29,7 +30,7 @@ import {
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths.ts';
 import { makePluginSpecSubject } from '../plugin-spec.ts';
 
-export default Capability.makeModule(
+export const CodeAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // `addPluginAssetModule` is dependency-mode (declared in `requires`), so every plugin's
     // asset module is already contributed by the time this module runs.
@@ -159,4 +160,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    requires: [AppCapabilities.PluginAsset],
+  },
 );

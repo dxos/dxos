@@ -42,69 +42,67 @@ const parseSettings = (value: string | null): Settings.Settings => {
   }
 };
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, platform }: ThemePluginOptions = {}) {
-    const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
-    const settingsAtom = yield* ThemeCapabilities.Settings;
-    const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
+export default Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, platform }: ThemePluginOptions = {}) {
+  const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
+  const settingsAtom = yield* ThemeCapabilities.Settings;
+  const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
-    const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // 'system' follows the OS; 'light'/'dark' override it. The accent rewrites the accent role tokens on
-    // the root, or clears them back to the stylesheet's default.
-    const applyTheme = ({ appearance = 'system', accent }: Settings.Settings) => {
-      const dark = appearance === 'system' ? modeQuery.matches : appearance === 'dark';
-      document.documentElement.classList[dark ? 'add' : 'remove']('dark');
-      applyAccent(document.documentElement, accent);
-      registry.set(themeAtom, { themeMode: dark ? 'dark' : 'light' });
-    };
+  // 'system' follows the OS; 'light'/'dark' override it. The accent rewrites the accent role tokens on
+  // the root, or clears them back to the stylesheet's default.
+  const applyTheme = ({ appearance = 'system', accent }: Settings.Settings) => {
+    const dark = appearance === 'system' ? modeQuery.matches : appearance === 'dark';
+    document.documentElement.classList[dark ? 'add' : 'remove']('dark');
+    applyAccent(document.documentElement, accent);
+    registry.set(themeAtom, { themeMode: dark ? 'dark' : 'light' });
+  };
 
-    // Apply the persisted setting synchronously to avoid a flash on load.
-    applyTheme(registry.get(settingsAtom));
+  // Apply the persisted setting synchronously to avoid a flash on load.
+  applyTheme(registry.get(settingsAtom));
 
-    // System preference changes (observed while appearance is 'system').
-    const handleModeChange = () => applyTheme(registry.get(settingsAtom));
-    modeQuery.addEventListener('change', handleModeChange);
+  // System preference changes (observed while appearance is 'system').
+  const handleModeChange = () => applyTheme(registry.get(settingsAtom));
+  modeQuery.addEventListener('change', handleModeChange);
 
-    // In-tab setting changes.
-    const unsubscribe = registry.subscribe(settingsAtom, (settings) => applyTheme(settings));
+  // In-tab setting changes.
+  const unsubscribe = registry.subscribe(settingsAtom, (settings) => applyTheme(settings));
 
-    // Cross-tab setting changes: `Atom.kvs` does not observe the `storage` event,
-    // so re-apply from the written value to keep every tab in the same browser in sync.
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key !== meta.profile.key) {
-        return;
-      }
-      applyTheme(parseSettings(event.newValue));
-    };
-    window.addEventListener('storage', handleStorage);
+  // Cross-tab setting changes: `Atom.kvs` does not observe the `storage` event,
+  // so re-apply from the written value to keep every tab in the same browser in sync.
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key !== meta.profile.key) {
+      return;
+    }
+    applyTheme(parseSettings(event.newValue));
+  };
+  window.addEventListener('storage', handleStorage);
 
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        modeQuery.removeEventListener('change', handleModeChange);
-        window.removeEventListener('storage', handleStorage);
-        unsubscribe();
-      }),
-    );
-    return Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
-      context: ({ children }: { children?: ReactNode }) => {
-        const { themeMode } = useAtomValue(themeAtom);
-        // Translations are registered in the shared i18next instance by the Translator module; the
-        // theme provider only exposes that instance to React.
-        return (
-          <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
-            <Toast.Provider>
-              <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
-                {children}
-                {/* Toasts render in the viewport, not where their roots sit, and their close button is a
+  yield* Effect.addFinalizer(() =>
+    Effect.sync(() => {
+      modeQuery.removeEventListener('change', handleModeChange);
+      window.removeEventListener('storage', handleStorage);
+      unsubscribe();
+    }),
+  );
+  return Capability.contribute(Capabilities.ReactContext, {
+    id: meta.profile.key,
+    context: ({ children }: { children?: ReactNode }) => {
+      const { themeMode } = useAtomValue(themeAtom);
+      // Translations are registered in the shared i18next instance by the Translator module; the
+      // theme provider only exposes that instance to React.
+      return (
+        <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
+          <Toast.Provider>
+            <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
+              {children}
+              {/* Toasts render in the viewport, not where their roots sit, and their close button is a
                     tooltip trigger, which throws without a provider above it. */}
-                <Toast.Viewport />
-              </Tooltip.Provider>
-            </Toast.Provider>
-          </ThemeProvider>
-        );
-      },
-    });
-  }),
-);
+              <Toast.Viewport />
+            </Tooltip.Provider>
+          </Toast.Provider>
+        </ThemeProvider>
+      );
+    },
+  });
+});

@@ -189,11 +189,11 @@ describe('Plugin module authoring', () => {
     });
   });
 
-  describe('lazyModule', () => {
+  describe('makeLazyModule', () => {
     it.effect('carries its spec eagerly and loads the body on demand', () =>
       Effect.gen(function* () {
         const manager = makeManager();
-        const Lazy = Capability.lazyModule('Total', { requires: [Number], provides: [Total] }, () =>
+        const Lazy = Capability.makeLazyModule('Total', { requires: [Number], provides: [Total] }, () =>
           Promise.resolve({
             default: Effect.fnUntraced(function* () {
               const { number } = yield* Number;
@@ -226,9 +226,9 @@ describe('Plugin module authoring', () => {
     });
   });
 
-  describe('inlineModule', () => {
+  describe('makeModule', () => {
     it('carries its spec with an eager body', () => {
-      const Inline = Capability.inlineModule('total', { provides: [Total] }, () =>
+      const Inline = Capability.makeModule('total', { provides: [Total] }, () =>
         Effect.succeed([Capability.contribute(Total, { total: 1 })]),
       );
 
@@ -241,27 +241,28 @@ describe('Plugin module authoring', () => {
 
   describe('moduleMaker', () => {
     const totalModule = Capability.moduleMaker('Total', Total);
-    const loader = () =>
-      Promise.resolve({
-        default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]),
-      });
+    const lazyTotalModule = Capability.lazyModuleMaker('Total', Total);
+    const activate = () => Effect.succeed([Capability.contribute(Total, { total: 1 })]);
 
     it('bakes in the default name and provides', () => {
-      const module = totalModule(loader);
+      const module = totalModule(activate);
       expect(Capability.getModuleTag(module)).toEqual('Total');
       expect(module.requires).toBeUndefined();
       expect(module.provides).toEqual([Total]);
     });
 
+    it('the lazy pairing carries the same spec around a loader', () => {
+      const module = lazyTotalModule(() => Promise.resolve({ default: activate }));
+      expect(Capability.getModuleTag(module)).toEqual('Total');
+      expect(module.provides).toEqual([Total]);
+    });
+
     it('merges custom requires and extra provides', () => {
       const module = totalModule(
-        () =>
-          Promise.resolve({
-            default: Effect.fnUntraced(function* () {
-              const { number } = yield* Number;
-              return [Capability.contribute(Total, { total: number }), Capability.contribute(Multi, { entry: 'a' })];
-            }),
-          }),
+        Effect.fnUntraced(function* () {
+          const { number } = yield* Number;
+          return [Capability.contribute(Total, { total: number }), Capability.contribute(Multi, { entry: 'a' })];
+        }),
         { name: 'CustomTotal', requires: [Number], provides: [Multi] },
       );
       expect(Capability.getModuleTag(module)).toEqual('CustomTotal');
@@ -272,7 +273,7 @@ describe('Plugin module authoring', () => {
 
   describe('addModule (spec-carrying module)', () => {
     it('derives the module id and spec from the module', () => {
-      const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
+      const Lazy = Capability.makeLazyModule('Total', { provides: [Total] }, () =>
         Promise.resolve({ default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]) }),
       );
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
@@ -285,7 +286,7 @@ describe('Plugin module authoring', () => {
     it.effect('maps plugin options to module props', () =>
       Effect.gen(function* () {
         const manager = makeManager();
-        const Lazy = Capability.lazyModule(
+        const Lazy = Capability.makeLazyModule(
           'Total',
           {
             provides: [Total],
@@ -336,7 +337,7 @@ describe('Plugin module authoring', () => {
     });
 
     it('normalizes a module authored with activatesOn to event mode', () => {
-      const Lazy = Capability.lazyModule(
+      const Lazy = Capability.makeLazyModule(
         'Listener',
         { requires: [String], provides: [], activatesOn: CountEvent },
         () => Promise.resolve({ default: () => Effect.succeed([]) }),
@@ -348,7 +349,7 @@ describe('Plugin module authoring', () => {
     });
 
     it('skips undefined modules so headless barrels can stub excluded exports', () => {
-      const Lazy = Capability.lazyModule('Total', { provides: [Total] }, () =>
+      const Lazy = Capability.makeLazyModule('Total', { provides: [Total] }, () =>
         Promise.resolve({ default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]) }),
       );
       // Simulates resolving a headless `#capabilities` barrel where a browser-only module
@@ -361,12 +362,12 @@ describe('Plugin module authoring', () => {
     });
 
     it('carries environments metadata on the module spec', () => {
-      const Lazy = Capability.lazyModule('Total', { provides: [Total], environments: ['browser', 'workerd'] }, () =>
+      const Lazy = Capability.makeLazyModule('Total', { provides: [Total], environments: ['browser', 'workerd'] }, () =>
         Promise.resolve({ default: () => Effect.succeed([Capability.contribute(Total, { total: 1 })]) }),
       );
       expect(Lazy.environments).toEqual(['browser', 'workerd']);
 
-      const Inline = Capability.inlineModule('InlineTotal', { provides: [Total], environments: ['node'] }, () =>
+      const Inline = Capability.makeModule('InlineTotal', { provides: [Total], environments: ['node'] }, () =>
         Effect.succeed([Capability.contribute(Total, { total: 2 })]),
       );
       expect(Inline.environments).toEqual(['node']);

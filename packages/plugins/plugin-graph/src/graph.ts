@@ -19,7 +19,9 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 
 // const KEY = `${meta.id}.app-graph`;
 
-export default Capability.makeModule(
+export const Graph = Capability.makeModule(
+  'Graph',
+  { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.AppGraph] },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 

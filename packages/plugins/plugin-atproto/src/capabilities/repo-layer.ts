@@ -9,15 +9,17 @@ import { Ref } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { AtprotoCapabilities } from '#types';
+import { AtprotoEvents } from '#types';
 
 import * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
-/**
- * Default (live) repo-layer factory: resolves credentials + PDS for the connection and talks to the
- * user's repo via the Edge proxy. Stories/tests override {@link AtprotoCapabilities.RepoLayer} with a
- * factory returning the in-memory mock.
- */
-export default Capability.makeModule(
+export const RepoLayer = Capability.makeModule(
+  'RepoLayer',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [AtprotoCapabilities.RepoLayer, AtprotoCapabilities.ReadRepoLayer],
+    activatesOn: AtprotoEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     return [

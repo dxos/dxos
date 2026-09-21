@@ -8,16 +8,24 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { type Space } from '@dxos/react-client/echo';
 
 import { SpaceCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
-      await removeQueryCollections(space);
-    }),
-  ),
+export const Repair = Capability.makeModule(
+  'Repair',
+  {
+    provides: [SpaceCapabilities.Repair],
+    // Runtime event: repairs run once spaces are observed, not at startup.
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
+  () =>
+    Effect.succeed(
+      Capability.contribute(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
+        await removeQueryCollections(space);
+      }),
+    ),
 );
 
 /**

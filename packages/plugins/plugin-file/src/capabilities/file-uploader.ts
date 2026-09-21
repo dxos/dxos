@@ -13,8 +13,15 @@ import { EffectEx } from '@dxos/effect';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { FileOperation } from '#types';
+import { FileEvents } from '#types';
 
-export default Capability.makeModule(
+export const FileUploader = Capability.makeModule(
+  'FileUploader',
+  {
+    requires: [Capabilities.OperationInvoker],
+    provides: [AppCapabilities.FileUploader],
+    activatesOn: FileEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const { invoke } = yield* Capabilities.OperationInvoker;
 

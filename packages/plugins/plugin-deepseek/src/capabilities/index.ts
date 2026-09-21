@@ -2,20 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+export { Connector } from './connector.ts';
 
-export const Connector = Capability.lazyModule(
-  'Connector',
-  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector.ts'),
-);
+export { SkillDefinition } from './skill-definition.ts';
 
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
-
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
-  activatesOn: ActivationEvents.Idle,
-});
+export { OperationHandler } from './operation-handler.ts';

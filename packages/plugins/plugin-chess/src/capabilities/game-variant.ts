@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
+import * as GameEvents from '@dxos/plugin-game/GameEvents';
 
 import { ChessArticle, ChessCard } from '#containers';
 import { Chess } from '#types';
@@ -40,6 +41,10 @@ const variant: GameCapabilities.GameVariant = {
   article: ChessArticle,
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(GameCapabilities.VariantProvider, variant)),
+// Browser-only: the variant descriptor carries the `card`/`article` React components the game
+// host renders, so the module cannot load without a DOM.
+export const GameVariant = Capability.makeModule(
+  'GameVariant',
+  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start, environments: [] },
+  () => Effect.succeed(Capability.contribute(GameCapabilities.VariantProvider, variant)),
 );

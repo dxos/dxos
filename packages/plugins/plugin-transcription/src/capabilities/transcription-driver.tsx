@@ -8,6 +8,7 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
@@ -29,7 +30,7 @@ const RECORDER_INTERVAL_MS = 200;
  * editor as pending-text effects. The user confirms or discards the pending text via the editor's
  * inline affordances. Mounted once, app-wide, via `Capabilities.ReactContext`.
  */
-const TranscriptionDriver = () => {
+const TranscriptionDriverComponent = () => {
   const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   // `useCapabilities` (not `useCapability`) so the driver does not throw when plugin-markdown is absent.
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
@@ -256,14 +257,14 @@ const TranscriptionDriver = () => {
   return null;
 };
 
-export default Capability.makeModule(
+export const TranscriptionDriver = AppCapability.reactContext(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
         <Fragment>
           {children}
-          <TranscriptionDriver />
+          <TranscriptionDriverComponent />
         </Fragment>
       ),
     });

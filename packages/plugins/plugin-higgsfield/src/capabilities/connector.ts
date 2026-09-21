@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { AccessToken, Connection } from '@dxos/link';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { HIGGSFIELD_CONNECTOR_ID, HIGGSFIELD_SOURCE } from '../constants.ts';
@@ -67,7 +68,9 @@ export const createHiggsfieldConnectorEntry = () => ({
   },
 });
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'Connector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [createHiggsfieldConnectorEntry()]);
   }),

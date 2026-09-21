@@ -16,6 +16,7 @@ import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { resolveSettingsSpace } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
@@ -44,12 +45,14 @@ const makeStore = (
   },
 });
 
-/**
- * Binds every settings surface the app already has — each plugin's settings atom, the enabled
- * plugin set, and the remote plugin install list — to the {@link AppSettings.AppSettings} object in
- * the settings space, so they follow the identity across devices with per-key device pins.
- */
-export default Capability.makeModule(
+export const SettingsSync = Capability.makeModule(
+  'SettingsSync',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.PluginManager, Capabilities.AtomRegistry],
+    provides: [AppCapabilities.SettingsSync],
+    // Runtime event: the settings space this projects into arrives with the space list, not at startup.
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const manager = yield* Capabilities.PluginManager;

@@ -12,7 +12,7 @@ import { translations } from '#translations';
 
 // Definitions only — bodies load lazily so the plugin definition stays out of the boot
 // evaluation floor (this def chunk was 177 kB when the bodies were inline).
-export const ProgressRegistry = Capability.lazyModule(
+export const ProgressRegistry = Capability.makeLazyModule(
   'ProgressRegistry',
   // Startup: every consumer reads the registry optionally, so no dependency edge ever pulls this module.
   {
@@ -22,12 +22,12 @@ export const ProgressRegistry = Capability.lazyModule(
   },
   () => import('./progress-registry.ts'),
 );
-export const TraceProgressSink = Capability.lazyModule(
+export const TraceProgressSink = Capability.makeLazyModule(
   'TraceProgressSink',
   { provides: [Capabilities.TraceSink] },
   () => import('./trace-progress-sink.ts'),
 );
-export const ReactSurface = Capability.lazyModule(
+export const ReactSurface = Capability.makeLazyModule(
   'ReactSurface',
   { provides: [Capabilities.ReactSurface] },
   () => import('./react-surface.ts'),

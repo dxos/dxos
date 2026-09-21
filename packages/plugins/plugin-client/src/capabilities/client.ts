@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -27,7 +28,21 @@ type ClientCapabilityOptions = Omit<
 /** The client did not finish initializing inside the configured timeout. */
 export class ClientInitError extends BaseError.extend('ClientInitError', 'Client failed to initialize.') {}
 
-export default Capability.makeModule(
+export const ClientModule = Capability.makeModule(
+  'Client',
+  {
+    // The boot root: everything downstream requires the client, and nothing pulls it in a host that
+    // has not asked for it yet — so it names the startup wave rather than inheriting the idle default.
+    activatesOn: ActivationEvents.Startup,
+    provides: [
+      ClientCapabilities.Client,
+      ClientCapabilities.InitializeTimeout,
+      Capabilities.Layer,
+      ClientCapabilities.IdentityService,
+      ClientCapabilities.SpaceService,
+    ],
+    environments: ['node'],
+  },
   Effect.fnUntraced(function* ({
     client: hostClient,
     onClientInitialized,

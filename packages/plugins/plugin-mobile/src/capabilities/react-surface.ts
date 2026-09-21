@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { Position } from '@dxos/util';
@@ -18,7 +19,7 @@ import { Home, NavBranch } from '#components';
 // blank panel for every category row except the role:'branch' ones (e.g. Settings).
 const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end', 'group'];
 
-export default Capability.makeModule(
+export const ReactSurface = AppCapability.surface(
   Effect.fnUntraced(function* () {
     // Mobile projects the graph root and branch/workspace nodes onto their own full-screen
     // surfaces instead of the desktop deck's plank rendering.
@@ -40,4 +41,7 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: ['org.dxos.role.article'],
+  },
 );

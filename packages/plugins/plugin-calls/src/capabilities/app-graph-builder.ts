@@ -4,17 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
+import { CallsEvents } from '#types';
 
-export default Capability.makeModule(
+export const CallsAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read reactively so the extension establishes a dependency and heals once this
     // capability lands (dependency modules contribute individually, not batched per wave).
@@ -50,4 +54,10 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    requires: [CallsCapabilities.Manager],
+    // The manager provider rides the client-initialized event, so the feature demand alone is
+    // not enough for the pull to find it.
+    activatesOn: ActivationEvent.allOf(CallsEvents.Start, ClientEvents.Initialized),
+  },
 );

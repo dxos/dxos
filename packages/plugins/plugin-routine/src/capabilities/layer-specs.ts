@@ -15,6 +15,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientService } from '@dxos/client';
 import {
   FeedTraceSink,
@@ -342,22 +343,27 @@ const TriggerMonitorSpec = LayerSpec.make(
   () => TriggerMonitor.layer,
 );
 
-export default Capability.makeModule(() =>
-  Effect.succeed([
-    Capability.contributeAll(Capabilities.LayerSpec, [
-      OperationHandlerProviderSpec,
-      RegistrySpec,
-      OpaqueToolkitSpec,
-      OperationsToRegistrySpec,
-      TriggerStateStoreSpec,
-      FeedTraceSinkSpec,
-      TriggerDispatcherSpec,
-      RemoteTriggerManagerSpec,
-      TriggerMonitorSpec,
-      RemoteOperationInvokerSpec,
-      RemoteTraceMonitorSpec,
-      RemoteProcessManagerSpec,
+export const LayerSpecs = AppCapability.layerSpec(
+  () =>
+    Effect.succeed([
+      Capability.contributeAll(Capabilities.LayerSpec, [
+        OperationHandlerProviderSpec,
+        RegistrySpec,
+        OpaqueToolkitSpec,
+        OperationsToRegistrySpec,
+        TriggerStateStoreSpec,
+        FeedTraceSinkSpec,
+        TriggerDispatcherSpec,
+        RemoteTriggerManagerSpec,
+        TriggerMonitorSpec,
+        RemoteOperationInvokerSpec,
+        RemoteTraceMonitorSpec,
+        RemoteProcessManagerSpec,
+      ]),
+      Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
     ]),
-    Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
-  ]),
+  {
+    name: 'LayerSpecs',
+    provides: [Capabilities.TraceSink],
+  },
 );

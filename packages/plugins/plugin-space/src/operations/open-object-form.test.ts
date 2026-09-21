@@ -79,7 +79,7 @@ describe('SpaceOperation.OpenObjectForm', () => {
 const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugin.Plugin =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.space.test.stubLayout'), name: 'Stub Layout' })).pipe(
     Plugin.addModule<void>(
-      Capability.inlineModule(
+      Capability.makeModule(
         'stub-layout',
         { provides: [Capabilities.OperationHandler, SpaceCapabilities.EphemeralState] },
         () =>

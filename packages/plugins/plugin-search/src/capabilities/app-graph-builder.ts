@@ -8,6 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,7 +19,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
 
-export default Capability.makeModule(
+export const SearchAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Reactive read: the connector may evaluate before the client module finishes
     // activating; the atom dependency re-evaluates it when the client lands.

@@ -13,6 +13,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
+import * as FileEvents from '@dxos/plugin-file/FileEvents';
 
 import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '#helpers';
 import { WnfsCapabilities } from '#types';
@@ -79,7 +80,15 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
   };
 };
 
-export default Capability.makeModule(
+export const WnfsBlobBackend = Capability.makeModule(
+  'BlobBackend',
+  {
+    // Blockstore/Instances are awaited in the module body, not declared here: they are absent by
+    // design when EDGE is unconfigured.
+    requires: [ClientCapabilities.Client],
+    provides: [FileCapabilities.Backend],
+    activatesOn: FileEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     // Declared requires resolve before the body runs, so the blockstore is awaited below instead —

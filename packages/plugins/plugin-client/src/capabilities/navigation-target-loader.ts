@@ -19,8 +19,9 @@ import { ClientCapabilities } from '#types';
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
 
-/** See {@link AppCapabilities.NavigationTargetLoader}. */
-export default Capability.makeModule(
+export const NavigationTargetLoader = Capability.makeModule(
+  'NavigationTargetLoader',
+  { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 

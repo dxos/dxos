@@ -9,15 +9,18 @@ import { createKvsStore } from '@dxos/effect';
 
 import { AccountCache, ClientCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(
-      ClientCapabilities.AccountCache,
-      createKvsStore<AccountCache.AccountCache>({
-        key: 'composer.account',
-        schema: AccountCache.AccountCache,
-        defaultValue: () => ({}),
-      }),
+export const ClientAccountCache = Capability.makeModule(
+  'AccountCache',
+  { provides: [ClientCapabilities.AccountCache] },
+  () =>
+    Effect.succeed(
+      Capability.contribute(
+        ClientCapabilities.AccountCache,
+        createKvsStore<AccountCache.AccountCache>({
+          key: 'composer.account',
+          schema: AccountCache.AccountCache,
+          defaultValue: () => ({}),
+        }),
+      ),
     ),
-  ),
 );

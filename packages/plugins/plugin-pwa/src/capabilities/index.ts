@@ -39,7 +39,7 @@ type PrecacheProgress = {
 const isPrecacheProgress = (data: unknown): data is PrecacheProgress =>
   Predicate.isObject(data) && data.type === PRECACHE_PROGRESS;
 
-export const RegisterPwa = Capability.inlineModule(
+export const RegisterPwa = Capability.makeModule(
   'RegisterPwa',
   { requires: [Capabilities.OperationInvoker], provides: [] },
   Effect.fnUntraced(function* () {
@@ -96,7 +96,7 @@ export const RegisterPwa = Capability.inlineModule(
 
 // Separate from `RegisterPwa` so that an app without the progress registry still registers the
 // service worker — only the meter is lost, not the update flow itself.
-export const UpdateProgress = Capability.inlineModule(
+export const UpdateProgress = Capability.makeModule(
   'UpdateProgress',
   { provides: [] },
   Effect.fnUntraced(function* () {

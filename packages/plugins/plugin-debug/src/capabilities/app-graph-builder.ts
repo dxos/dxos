@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -93,7 +94,7 @@ export const createDebugExtension = () =>
       ]),
   });
 
-export default Capability.makeModule(
+export const DebugAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // The hidden root/debug category.
@@ -139,4 +140,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: ['node'],
+  },
 );

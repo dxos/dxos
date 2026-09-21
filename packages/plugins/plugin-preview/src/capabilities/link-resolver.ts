@@ -10,31 +10,33 @@ import { EID } from '@dxos/keys';
 
 import { PreviewCapabilities } from '#types';
 
-/**
- * The ECHO resolver: an anchor whose eid parses as an entity URI is loaded from the space. Other
- * refs — `dxn:` type URIs, web URLs — are another resolver's.
- */
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(PreviewCapabilities.LinkResolver, [
-      {
-        match: (url) => EID.tryParse(url) !== undefined,
-        resolve: ({ eid, label }, { space }) =>
-          Effect.gen(function* () {
-            const parsed = EID.tryParse(eid);
-            if (!parsed || !space) {
-              return undefined;
-            }
-            const entity = yield* Effect.tryPromise(() => space.db.makeRef(parsed).load()).pipe(
-              Effect.catch(() => Effect.succeed(undefined)),
-            );
-            // A relation has no card; only an object is previewed.
-            if (!Obj.isObject(entity)) {
-              return undefined;
-            }
-            return { label: Obj.getLabel(entity, { fallback: 'typename' }) ?? label, object: entity };
-          }),
-      },
-    ]),
-  ),
+import { PreviewEvents } from '../events.ts';
+
+// Browser-only with the popover it serves: the resolver loads objects for a card no headless host renders.
+export const LinkResolver = Capability.makeModule(
+  'LinkResolver',
+  { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },
+  () =>
+    Effect.succeed(
+      Capability.contribute(PreviewCapabilities.LinkResolver, [
+        {
+          match: (url) => EID.tryParse(url) !== undefined,
+          resolve: ({ eid, label }, { space }) =>
+            Effect.gen(function* () {
+              const parsed = EID.tryParse(eid);
+              if (!parsed || !space) {
+                return undefined;
+              }
+              const entity = yield* Effect.tryPromise(() => space.db.makeRef(parsed).load()).pipe(
+                Effect.catch(() => Effect.succeed(undefined)),
+              );
+              // A relation has no card; only an object is previewed.
+              if (!Obj.isObject(entity)) {
+                return undefined;
+              }
+              return { label: Obj.getLabel(entity, { fallback: 'typename' }) ?? label, object: entity };
+            }),
+        },
+      ]),
+    ),
 );

@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -81,7 +82,7 @@ export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
-export default Capability.makeModule(
+export const InboxAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Hoisted so the sync actions below take a reactive dependency on the provider list: a connector
     // module activates lazily, and reading the capability manager synchronously inside a graph

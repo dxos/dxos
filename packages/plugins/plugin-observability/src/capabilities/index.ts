@@ -4,62 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
-export const ClientReady = Capability.lazyModule(
-  'ClientReady',
-  {
-    environments: [],
-    requires: [
-      Capabilities.PluginManager,
-      Capabilities.OperationInvoker,
-      ObservabilityCapabilities.ClientCapability,
-      ObservabilityCapabilities.Observability,
-      ObservabilityCapabilities.State,
-    ],
-    provides: [],
-    // Reads `client.services` (initialized-only) to wire metrics providers, so it needs the
-    // forked client initialization to have completed.
-    activatesOn: ObservabilityCapabilities.ClientInitialized,
-  },
-  () => import('./client-ready.ts'),
-);
-export const InvocationListener = Capability.lazyModule(
-  'InvocationListener',
-  {
-    requires: [Capabilities.OperationInvoker, AppCapabilities.ObservabilityMapping],
-    provides: [],
-    // Idle rather than Startup: contributed mappings are read live, so the listener only has to be
-    // running before the first user action, not before the plugins that register events.
-    activatesOn: ActivationEvents.Idle,
-  },
-  () => import('./invocation-listener.ts'),
-);
-export const PrivacyNotice = Capability.lazyModule(
-  'PrivacyNotice',
-  {
-    environments: [],
-    requires: [
-      Capabilities.OperationInvoker,
-      Capabilities.AtomRegistry,
-      ObservabilityCapabilities.State,
-      ObservabilityCapabilities.ClientCapability,
-    ],
-    provides: [],
-    // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
-    // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
-    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
-  },
-  () => import('./privacy-notice.ts'),
-);
-export const PrivacyBanner = Capability.lazyModule(
+export { ClientReady } from './client-ready.ts';
+export { InvocationListener } from './invocation-listener.ts';
+export { PrivacyNotice } from './privacy-notice.ts';
+export const PrivacyBanner = Capability.makeLazyModule(
   'PrivacyBanner',
   {
     environments: ['node'],
@@ -70,8 +24,8 @@ export const PrivacyBanner = Capability.lazyModule(
   () => import('#privacy-banner'),
 );
 // `#commands` resolves per condition: only a host with a CLI has anywhere to put them.
-export const Commands = AppCapability.commands(() => import('#commands'));
-export const Namespace = Capability.inlineModule(
+export const Commands = AppCapability.lazyCommands(() => import('#commands'));
+export const Namespace = Capability.makeModule(
   'namespace',
   {
     environments: ['node'],
@@ -80,7 +34,7 @@ export const Namespace = Capability.inlineModule(
   },
   (namespace) => Effect.succeed([Capability.contribute(ObservabilityCapabilities.Namespace, namespace)]),
 );
-export const Observability = Capability.inlineModule(
+export const Observability = Capability.makeModule(
   'observability',
   {
     environments: ['node'],
@@ -94,22 +48,8 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article'],
-});
-export const ObservabilitySettings = AppCapability.settings(() => import('./settings.ts'), {
-  provides: [ObservabilityCapabilities.Settings],
-  environments: [],
-});
-export const ObservabilityState = Capability.lazyModule(
-  'ObservabilityState',
-  {
-    environments: [],
-    requires: [Capabilities.AtomRegistry],
-    provides: [ObservabilityCapabilities.State],
-    props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
-  },
-  () => import('./state.ts'),
-);
+export const OperationHandler = AppCapability.lazyOperationHandler(() => import('#operation-handler'));
+export { ReactSurface } from './react-surface.ts';
+export { ObservabilitySettings } from './settings.ts';
+export { ObservabilityState } from './state.ts';
 export const Translations = AppCapability.translations(translations);

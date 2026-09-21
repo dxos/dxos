@@ -18,7 +18,7 @@ import { DXN } from '@dxos/echo';
  * belongs to AttentionPlugin (in `corePlugins`), and a no-op would swallow the selection the stack
  * publishes, leaving `useSelection` empty and the companion dead.
  */
-const StubDeckOperations = Capability.inlineModule(
+const StubDeckOperations = Capability.makeModule(
   'operation-handler',
   { provides: [Capabilities.OperationHandler] },
   () =>

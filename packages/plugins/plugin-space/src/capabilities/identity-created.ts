@@ -11,10 +11,21 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SpaceCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const IdentityCreated = Capability.makeModule(
+  'IdentityCreated',
+  {
+    // `SchemaRegistered` pulls the idle-gated schema registration into this wave; the root
+    // collection is a typed object.
+    requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
+    provides: [SpaceCapabilities.DefaultSpace],
+    // Runtime event: the default space is created when a local identity is created, not at startup.
+    activatesOn: ClientEvents.IdentityCreated,
+    environments: ['node'],
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 

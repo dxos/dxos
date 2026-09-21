@@ -9,7 +9,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { TranscriptionCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const RecordingSession = Capability.makeModule(
+  'RecordingSession',
+  { provides: [TranscriptionCapabilities.RecordingSession] },
   Effect.fnUntraced(function* () {
     const sessionAtom = Atom.make<TranscriptionCapabilities.RecordingSession | null>(null).pipe(Atom.keepAlive);
     return Capability.contribute(TranscriptionCapabilities.RecordingSession, sessionAtom);

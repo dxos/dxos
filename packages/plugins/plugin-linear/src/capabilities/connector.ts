@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -55,26 +56,9 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
-/**
- * Contributes a single `ConnectorSpec.Connector` entry that wires Linear's discovery,
- * materialization, and sync operations plus the token-created hook to the
- * `'linear.app'` source.
- *
- * Sync targets are Linear teams; each is bound by one external-sync `Cursor` whose
- * `spec.target` is the team's local root Project. Per-binding `SyncOptions.maxDaysBack`
- * caps how far back issues are pulled by `Issue.updatedAt`.
- *
- * Scopes:
- *   - `read`  — required for pull (projects, issues, workflow states).
- *   - `write` — required to push local edits back via `issueUpdate` and
- *               `projectUpdate`. Linear treats issue and project mutations
- *               under a single umbrella `write` scope; there's no narrower
- *               permission for "edit only, never create".
- *
- * Note: existing tokens issued with `read` only will return permission errors
- * on push. Re-consent via the connection setup flow upgrades the scope.
- */
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'LinearConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

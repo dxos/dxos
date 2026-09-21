@@ -6,7 +6,9 @@ import { ActivationEvents, Capabilities } from '../common/index.ts';
 import { Capability, Plugin } from '../core/index.ts';
 import { meta } from './meta.ts';
 
-const ProcessManagerCapability = Capability.lazyModule(
+// Lazy on purpose: this plugin is in the app's static boot closure, so an eager body would put
+// the process manager's runtime (and the AI client behind it) in the boot graph.
+const ProcessManagerCapability = Capability.makeLazyModule(
   'ProcessManager',
   {
     // Event-mode on Startup: the body snapshots multi capabilities (LayerSpec, TraceSink,
@@ -32,7 +34,7 @@ const ProcessManagerCapability = Capability.lazyModule(
   () => import('./process-manager-capability.ts'),
 );
 
-const HistoryCapabilities = Capability.lazyModule(
+const HistoryCapabilities = Capability.makeLazyModule(
   'HistoryCapabilities',
   {
     requires: [Capabilities.UndoMapping, Capabilities.OperationInvoker],

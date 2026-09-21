@@ -10,7 +10,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { DebugNodes } from '#types';
 
-export default Capability.makeModule(
+export const GraphRetention = Capability.makeModule(
+  'GraphRetention',
+  { provides: [AppCapabilities.AppGraphRetention] },
   Effect.fnUntraced(function* () {
     // Neither host of the panel — the deck's drawer nor the floating window — owns this subtree.
     // TODO(wittjosiah): Release it when no host is showing it.

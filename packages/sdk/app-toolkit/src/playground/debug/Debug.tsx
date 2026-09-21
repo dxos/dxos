@@ -32,7 +32,7 @@ export const Debug = () => {
   return <JsonHighlighter data={object} classNames='text-xs opacity-75 rounded-sm' />;
 };
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
@@ -42,5 +42,4 @@ export default Capability.makeModule(() =>
         component: Debug,
       }),
     ),
-  ),
-);
+  );

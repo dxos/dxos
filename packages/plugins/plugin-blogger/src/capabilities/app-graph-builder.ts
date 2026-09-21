@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -42,12 +43,7 @@ const PUBLICATION_NODE_TYPE = `${meta.profile.key}.publication`;
  */
 const CONTENT_DOC_NODE_TYPE = `${meta.profile.key}.post-content`;
 
-/**
- * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
- * section under each space's `content` group, with a branch node per Publication whose children are
- * that Publication's Posts.
- */
-export default Capability.makeModule(
+export const BloggerAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // "Publications" section under each space's content group.

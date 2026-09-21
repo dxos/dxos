@@ -11,11 +11,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-/**
- * Capability that sets up spotlight panel dismiss behavior.
- * Listens for focus loss and Escape key to dismiss the spotlight panel.
- */
-export default Capability.makeModule(
+export const SpotlightDismiss = Capability.makeModule(
+  'SpotlightDismiss',
+  { provides: [] },
   Effect.fnUntraced(function* () {
     const cleanup = yield* Effect.promise(async () => {
       if (!isTauri()) {

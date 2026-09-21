@@ -10,8 +10,19 @@ import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 
 import { ClientCapabilities } from '#types';
+import { ClientEvents } from '#types';
 
-export default Capability.makeModule(
+export const Migrations = Capability.makeModule(
+  'Migrations',
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration],
+    provides: [],
+    // The immediate subscription reads `client.spaces` synchronously, so this needs the forked
+    // client initialization to have completed — the same point it ran at when the startup pass
+    // awaited initialize.
+    activatesOn: ClientEvents.Initialized,
+    environments: ['node'],
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const client = yield* ClientCapabilities.Client;

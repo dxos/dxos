@@ -6,9 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { pendingText } from '@dxos/ui-editor';
 
-export default Capability.makeModule(
+export const MarkdownExtension = Capability.makeModule(
+  'MarkdownExtension',
+  { activatesOn: MarkdownEvents.Start, provides: [MarkdownCapabilities.ExtensionProvider] },
   Effect.fnUntraced(function* () {
     // Every Markdown editor receives the pending-text extension so the transcription driver can
     // inject live text into it (the driver resolves the editor via `MarkdownCapabilities.EditorViews`).

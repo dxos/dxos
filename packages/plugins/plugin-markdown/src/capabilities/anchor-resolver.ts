@@ -12,11 +12,16 @@ import { Markdown } from '#types';
 
 import { getMarkdownAnchorText } from '../model/selection.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(AppCapabilities.AnchorResolver, {
-      key: Type.getTypename(Markdown.Document),
-      getText: getMarkdownAnchorText,
-    }),
-  ),
+// Ordering-only: registers the anchor text resolver once the app graph exists (mirrors the
+// AppGraphReady ordering the event-mode module used previously); the body reads nothing.
+export const AnchorResolver = Capability.makeModule(
+  'AnchorResolver',
+  { requires: [AppCapabilities.AppGraph], provides: [AppCapabilities.AnchorResolver], environments: [] },
+  () =>
+    Effect.succeed(
+      Capability.contribute(AppCapabilities.AnchorResolver, {
+        key: Type.getTypename(Markdown.Document),
+        getText: getMarkdownAnchorText,
+      }),
+    ),
 );

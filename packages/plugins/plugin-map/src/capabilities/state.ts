@@ -9,17 +9,21 @@ import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { MapCapabilities } from '#types';
+import { MapEvents } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    const stateAtom = createKvsStore({
-      key: meta.profile.key,
-      schema: MapCapabilities.StateSchema,
-      defaultValue: () => ({
-        type: 'map' as const,
-      }),
-    });
+export const MapState = Capability.makeModule(
+  'MapState',
+  { provides: [MapCapabilities.State], activatesOn: MapEvents.Start },
+  () =>
+    Effect.sync(() => {
+      const stateAtom = createKvsStore({
+        key: meta.profile.key,
+        schema: MapCapabilities.StateSchema,
+        defaultValue: () => ({
+          type: 'map' as const,
+        }),
+      });
 
-    return Capability.contribute(MapCapabilities.State, stateAtom);
-  }),
+      return Capability.contribute(MapCapabilities.State, stateAtom);
+    }),
 );

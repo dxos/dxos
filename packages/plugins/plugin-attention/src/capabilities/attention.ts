@@ -4,13 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Attention, ViewState, createDefaultBackends } from '@dxos/react-ui-attention/types';
 
 import { AttentionCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const AttentionModule = Capability.makeModule(
+  'attention',
+  {
+    // App-shell state, so it must be on the startup pass rather than the idle default: the deck
+    // and its planks read it through the STRICT `useCapability` hooks during their first render,
+    // where a missing capability is an invariant violation and not a late-arriving value.
+    activatesOn: ActivationEvents.Startup,
+    requires: [Capabilities.AtomRegistry],
+    provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const attention = new Attention.AttentionManager(registry);

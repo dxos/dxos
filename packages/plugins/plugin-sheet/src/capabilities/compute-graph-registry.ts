@@ -9,16 +9,20 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type SpaceId } from '@dxos/keys';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SheetCapabilities } from '#types';
 
-/**
- * Builds the per-space compute graph registry by adapting the shared
- * {@link Capabilities.ProcessManagerRuntime} into a
- * {@link FunctionsRuntimeProvider} that resolves {@link Operation.Service}
- * from the space's service layer.
- */
-export default Capability.makeModule(
+export const ComputeGraphRegistry = Capability.makeModule(
+  'ComputeGraphRegistry',
+  {
+    // Headless: formulas evaluate in a markdown document with no sheet surface ever rendered, so
+    // gating this on the sheet's own start conflates "the sheet UI is on screen" with "compute
+    // graphs exist". Ungated (hence idle) it also becomes pullable by the consumers that need it
+    // earlier, which a start-gated provider is not.
+    requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
+    provides: [SheetCapabilities.ComputeGraphRegistry],
+  },
   Effect.fnUntraced(function* () {
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
 

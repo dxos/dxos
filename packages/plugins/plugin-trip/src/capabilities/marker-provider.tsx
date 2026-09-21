@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
+import * as MapEvents from '@dxos/plugin-map/MapEvents';
 import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
@@ -172,6 +173,10 @@ export const tripMarkerProvider: MapCapabilities.MarkerProvider = {
   useMarkers: useTripMarkers,
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, tripMarkerProvider)),
+// Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
+// `useMemo`/`useObject`/`useObjects` in its own body.
+export const MarkerProvider = Capability.makeModule(
+  'MarkerProvider',
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
+  () => Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, tripMarkerProvider)),
 );

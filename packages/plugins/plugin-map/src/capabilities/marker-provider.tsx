@@ -16,6 +16,7 @@ import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { Map, MapCapabilities } from '#types';
+import { MapEvents } from '#types';
 
 /**
  * Reactive markers for a {@link Map.Map}: queries the map's backing view and plots each row at its
@@ -70,6 +71,10 @@ export const viewMarkerProvider: MapCapabilities.MarkerProvider = {
   useMarkers: useViewMarkers,
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, viewMarkerProvider)),
+// Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
+// `useMemo`/`useQuery`/`useObject` in its own body.
+export const MarkerProvider = Capability.makeModule(
+  'MarkerProvider',
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
+  () => Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, viewMarkerProvider)),
 );

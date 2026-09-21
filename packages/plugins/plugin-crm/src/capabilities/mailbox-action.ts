@@ -8,15 +8,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 
 import { CrmOperation } from '#types';
 
-/**
- * Mailbox-scoped menu entries that are NOT feed passes. The cursored CRM pipeline moved to a
- * contributed processor (`mailbox-processor.ts`); what remains here is space-wide and belongs in a
- * menu, not a cascade.
- */
-export default Capability.makeModule(
+export const MailboxAction = Capability.makeModule(
+  'MailboxAction',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [InboxCapabilities.MailboxAction],
+    activatesOn: InboxEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     // The operation takes the endpoint as input and has no other source that reaches the app, so
     // resolve it here where the client config is available.

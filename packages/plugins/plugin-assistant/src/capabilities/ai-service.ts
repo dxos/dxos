@@ -9,12 +9,13 @@ import { AiModelResolver, AiService, Provider } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 
 import { AssistantOptions } from '#types';
 
-export default Capability.makeModule(
+export const AssistantAiService = AppCapability.layerSpec(
   Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
@@ -48,4 +49,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(Capabilities.LayerSpec, aiServiceSpec);
   }),
+  {
+    name: 'AiService',
+    requires: [AppCapabilities.AiModelResolver],
+  },
 );

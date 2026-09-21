@@ -53,7 +53,7 @@ const AgentRuntimePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.magazineStoryAgent'), name: 'Magazine Story Agent Runtime' }),
 ).pipe(
   Plugin.addModule<void>(
-    Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
+    Capability.makeModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentHandlers)]),
     ),
   ),

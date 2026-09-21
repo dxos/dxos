@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -44,7 +45,7 @@ const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.Meeti
   Atom.make((get) => get(store.stateAtom).transcriptionManager),
 );
 
-export default Capability.makeModule(
+export const MeetingAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read reactively so extensions establish a dependency and heal once these capabilities
     // land (dependency modules contribute individually, not batched per wave).
@@ -297,4 +298,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
+    requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
+  },
 );

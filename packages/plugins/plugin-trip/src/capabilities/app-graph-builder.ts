@@ -10,6 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -42,7 +43,7 @@ const resolvePlanningWindow = (viewState: ViewState.Manager, nodeId: string): { 
   return { from, to };
 };
 
-export default Capability.makeModule(
+export const TripAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const viewState = yield* AttentionCapabilities.ViewState;
     const selectedId = Atom.family((nodeId: string) =>
@@ -161,4 +162,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension, mergeExtension, planTripExtension]);
   }),
+  {
+    requires: [AttentionCapabilities.ViewState],
+  },
 );

@@ -8,6 +8,7 @@ import { type ComponentProps } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
@@ -43,148 +44,161 @@ import {
   TriggerStatusSurface,
 } from './AssistantSurfaces.tsx';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: AssistantSettingsSurface,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: 'spaceHomePrompt',
-        filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
-        component: SpaceHomePrompt,
-        props: ({ data: { space } }) => ({ space }),
-      }),
-      Surface.create({
-        id: 'spaceHomeSuggestions',
-        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
-        position: Position.last,
-        component: SpaceHomeSuggestionsSurface,
-        props: ({ data: { space } }) => ({ space }),
-      }),
-      Surface.create({
-        id: 'chat',
-        filter: AppSurface.object(
-          AppSurface.Article,
-          Chat.Chat,
-          (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
-        ),
-        component: ChatArticle,
-        props: ({ role, ref, data: { subject, attendableId, nodeId } }) => ({
-          role,
-          subject,
-          attendableId,
-          nodeId,
-          ref,
+export const ReactSurface = AppCapability.surface(
+  () =>
+    Effect.succeed(
+      Capability.contribute(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'pluginSettings',
+          filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+          component: AssistantSettingsSurface,
+          props: ({ data: { subject } }) => ({ subject }),
         }),
-      }),
-      Surface.create({
-        id: 'agent',
-        filter: AppSurface.object(AppSurface.Article, Agent.Agent),
-        component: AgentArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-      Surface.create({
-        id: 'objectProperties',
-        filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: AgentProperties,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: 'companionChat',
-        filter: Surface.makeFilter(
-          AppSurface.Article,
-          (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
-        ),
-        component: ChatCompanion,
-        props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
-          role,
-          subject,
-          attendableId,
-          nodeId,
-          companionTo,
-          ref,
+        Surface.create({
+          id: 'spaceHomePrompt',
+          filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
+          component: SpaceHomePrompt,
+          props: ({ data: { space } }) => ({ space }),
         }),
-      }),
-      Surface.create({
-        id: 'companionInvocations',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'invocations'),
-          AppSurface.oneOf(
-            AppSurface.companion(AppSurface.Article, Sequence.Sequence),
-            AppSurface.companion(AppSurface.Article, Instructions.Instructions),
+        Surface.create({
+          id: 'spaceHomeSuggestions',
+          filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
+          position: Position.last,
+          component: SpaceHomeSuggestionsSurface,
+          props: ({ data: { space } }) => ({ space }),
+        }),
+        Surface.create({
+          id: 'chat',
+          filter: AppSurface.object(
+            AppSurface.Article,
+            Chat.Chat,
+            (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
           ),
-        ),
-        component: InvocationsSurface,
-        props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
-      }),
-      Surface.create({
-        id: ASSISTANT_DIALOG,
-        filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
-        component: ChatDialog,
-        props: ({ data: { props } }) => ({ ...props }),
-      }),
-      Surface.create({
-        id: 'trace',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
-        component: TracePanelSurface,
-      }),
-      Surface.create({
-        id: 'integrationPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
-        component: IntegrationPrompt,
-        // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
-        props: ({ data }) => ({
-          service: nonBlank(data.data?.service),
-          scopes: Array.isArray(data.data?.scopes)
-            ? data.data.scopes.map(nonBlank).filter((scope): scope is string => scope !== undefined)
-            : undefined,
-          reason: nonBlank(data.data?.reason),
+          component: ChatArticle,
+          props: ({ role, ref, data: { subject, attendableId, nodeId } }) => ({
+            role,
+            subject,
+            attendableId,
+            nodeId,
+            ref,
+          }),
         }),
-      }),
-      Surface.create({
-        id: 'pluginPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
-        component: PluginPrompt,
-        // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
-        props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
-      }),
-      Surface.create({
-        // Wherever a card is drawn for the object — the blocked task's artifacts, search — not only
-        // in the conversation that asked.
-        id: 'card.question',
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.CardContent, Question.Question),
-        component: QuestionCard,
-        props: ({ role, data: { subject } }) => ({ role, subject }),
-      }),
-      // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
-      Surface.create({
-        id: 'objectCard',
-        filter: Surface.makeFilter(
-          ChatSurface.ChatSurface,
-          (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
-        ),
-        component: ObjectCardSurface,
-        props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
-      }),
-      Surface.create({
-        id: 'question',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
-        component: QuestionSurface,
-        // `data.data` is model-supplied JSON (untyped); narrow the id before use.
-        props: ({ data }) => ({ question: nonBlank(data.data?.question) }),
-      }),
-      Surface.create({
-        id: 'triggerStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: TriggerStatusSurface,
-      }),
-    ]),
-  ),
+        Surface.create({
+          id: 'agent',
+          filter: AppSurface.object(AppSurface.Article, Agent.Agent),
+          component: AgentArticle,
+          props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        }),
+        Surface.create({
+          id: 'objectProperties',
+          filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
+          component: AgentProperties,
+          props: ({ data: { subject } }) => ({ subject }),
+        }),
+        Surface.create({
+          id: 'companionChat',
+          filter: Surface.makeFilter(
+            AppSurface.Article,
+            (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
+          ),
+          component: ChatCompanion,
+          props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
+            role,
+            subject,
+            attendableId,
+            nodeId,
+            companionTo,
+            ref,
+          }),
+        }),
+        Surface.create({
+          id: 'companionInvocations',
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, 'invocations'),
+            AppSurface.oneOf(
+              AppSurface.companion(AppSurface.Article, Sequence.Sequence),
+              AppSurface.companion(AppSurface.Article, Instructions.Instructions),
+            ),
+          ),
+          component: InvocationsSurface,
+          props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
+        }),
+        Surface.create({
+          id: ASSISTANT_DIALOG,
+          filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
+          component: ChatDialog,
+          props: ({ data: { props } }) => ({ ...props }),
+        }),
+        Surface.create({
+          id: 'trace',
+          filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
+          component: TracePanelSurface,
+        }),
+        Surface.create({
+          id: 'integrationPrompt',
+          filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
+          component: IntegrationPrompt,
+          // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
+          props: ({ data }) => ({
+            service: nonBlank(data.data?.service),
+            scopes: Array.isArray(data.data?.scopes)
+              ? data.data.scopes.map(nonBlank).filter((scope): scope is string => scope !== undefined)
+              : undefined,
+            reason: nonBlank(data.data?.reason),
+          }),
+        }),
+        Surface.create({
+          id: 'pluginPrompt',
+          filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
+          component: PluginPrompt,
+          // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
+          props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
+        }),
+        Surface.create({
+          // Wherever a card is drawn for the object — the blocked task's artifacts, search — not only
+          // in the conversation that asked.
+          id: 'card.question',
+          position: Position.first,
+          filter: AppSurface.object(AppSurface.CardContent, Question.Question),
+          component: QuestionCard,
+          props: ({ role, data: { subject } }) => ({ role, subject }),
+        }),
+        // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
+        Surface.create({
+          id: 'objectCard',
+          filter: Surface.makeFilter(
+            ChatSurface.ChatSurface,
+            (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
+          ),
+          component: ObjectCardSurface,
+          props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
+        }),
+        Surface.create({
+          id: 'question',
+          filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
+          component: QuestionSurface,
+          // `data.data` is model-supplied JSON (untyped); narrow the id before use.
+          props: ({ data }) => ({ question: nonBlank(data.data?.question) }),
+        }),
+        Surface.create({
+          id: 'triggerStatus',
+          filter: Surface.makeFilter(AppSurface.StatusIndicator),
+          component: TriggerStatusSurface,
+        }),
+      ]),
+    ),
+  {
+    roles: [
+      'org.dxos.plugin.assistant.role.chatSurface',
+      'org.dxos.plugin.space.role.homeContent',
+      'org.dxos.plugin.space.role.homePinBottom',
+      'org.dxos.role.article',
+      'org.dxos.role.deckCompanion.trace',
+      'org.dxos.role.dialog',
+      'org.dxos.role.objectProperties',
+      'org.dxos.role.statusIndicator',
+    ],
+  },
 );
 
 /** A model-supplied string, or undefined when it is absent or blank. */

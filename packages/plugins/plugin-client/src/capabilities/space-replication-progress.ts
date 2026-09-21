@@ -20,6 +20,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
+import { ClientEvents } from '#types';
 
 import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress/index.ts';
 
@@ -30,12 +31,16 @@ import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } 
  */
 const RECONCILE_INTERVAL = Duration.seconds(10);
 
-/**
- * Publishes per-space replication backlog — automerge documents and ECHO feed blocks combined into a
- * single monitor per space — into the {@link AppCapabilities.ProgressRegistry}. Subscribes to the
- * combined sync-state stream and drops a space's monitor once it catches up.
- */
-export default Capability.makeModule(
+export const SpaceReplicationProgress = Capability.makeModule(
+  'SpaceReplicationProgress',
+  {
+    // ProgressRegistry is read optionally in the body, not required: a host that omits
+    // plugin-progress should lose the meter, not fail to activate ClientPlugin.
+    requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
+    provides: [],
+    // Runtime event: spaces become ready when the client observes them, not at startup.
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;

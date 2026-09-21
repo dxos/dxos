@@ -7,9 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCaps from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { Position } from '@dxos/util';
 
@@ -17,7 +19,7 @@ import { meta } from '#meta';
 
 import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util/index.ts';
 
-export default Capability.makeModule(
+export const NavigationTargetResolver = AppCapability.navigationResolver(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     const resolver: AppCaps.NavigationTargetResolver = (query) =>
@@ -77,4 +79,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
   }),
+  {
+    environments: [],
+    requires: [ClientCapabilities.Client],
+  },
 );

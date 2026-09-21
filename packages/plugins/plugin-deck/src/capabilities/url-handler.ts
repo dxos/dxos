@@ -4,15 +4,38 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { isTauri } from '@dxos/util';
 
 import { DeckOperation } from '#types';
+import { DeckCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const UrlHandler = Capability.makeModule(
+  'UrlHandler',
+  {
+    // Boot-time URL restore: this installs the popstate listener and the URL<->state sync, so an
+    // idle registration leaves a deep link unhandled for the window it takes to get there.
+    activatesOn: ActivationEvents.Startup,
+    requires: [
+      Capabilities.OperationInvoker,
+      AppCapabilities.NavigationHandler,
+      AppCapabilities.NavigationTargetLoader,
+      Capabilities.AtomRegistry,
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Settings,
+      AppCapabilities.AppGraph,
+      AttentionCapabilities.ViewState,
+      AttentionCapabilities.Attention,
+    ],
+    provides: [],
+  },
   Effect.fnUntraced(function* () {
     // Invoked rather than called: the operation declares the services its handler needs and the
     // invoker supplies them, so what comes back needs nothing from this module's context.

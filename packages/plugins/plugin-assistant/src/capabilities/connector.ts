@@ -10,6 +10,7 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
@@ -100,7 +101,9 @@ const makeCredentialForm = ({
     }),
 });
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'AnthropicConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

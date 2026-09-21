@@ -2,15 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Milestone, Outline, RemoteSession, Task, TaskSet } from '@dxos/types';
 
 import { Journal } from '#types';
 
-/**
- * Schemas this plugin registers, loaded on demand: the capability activates at idle,
- * so naming them here keeps them out of the plugin body's module graph.
- */
-export default [
+export const Schema = AppCapability.schema([
   Journal.JournalEntry,
   Journal.Journal,
   Milestone.Milestone,
@@ -18,4 +15,4 @@ export default [
   RemoteSession.RemoteSession,
   Task.Task,
   TaskSet.TaskSet,
-];
+]);

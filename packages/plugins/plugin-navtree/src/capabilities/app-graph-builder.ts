@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { COMMANDS_DIALOG, meta } from '#meta';
 
-export default Capability.makeModule(
+export const NavtreeAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',

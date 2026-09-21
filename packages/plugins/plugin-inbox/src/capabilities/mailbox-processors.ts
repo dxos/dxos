@@ -75,7 +75,9 @@ export const inboxMailboxProcessors: readonly InboxCapabilities.MailboxProcessor
   },
 ];
 
-export default Capability.makeModule(
+export const MailboxProcessors = Capability.makeModule(
+  'MailboxProcessors',
+  { provides: [InboxCapabilities.MailboxProcessor] },
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(InboxCapabilities.MailboxProcessor, inboxMailboxProcessors);
   }),

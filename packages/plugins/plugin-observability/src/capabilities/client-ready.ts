@@ -11,10 +11,22 @@ import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityC
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
-// The `observability` instance is read from `ObservabilityCapabilities.Observability` (contributed
-// once, at Startup, by the `observability` module) rather than re-created here — a capability is a
-// singleton and two independent contributions would trigger `DuplicateProviderError`.
-export default Capability.makeModule(
+export const ClientReady = Capability.makeModule(
+  'ClientReady',
+  {
+    environments: [],
+    requires: [
+      Capabilities.PluginManager,
+      Capabilities.OperationInvoker,
+      ObservabilityCapabilities.ClientCapability,
+      ObservabilityCapabilities.Observability,
+      ObservabilityCapabilities.State,
+    ],
+    provides: [],
+    // Reads `client.services` (initialized-only) to wire metrics providers, so it needs the
+    // forked client initialization to have completed.
+    activatesOn: ObservabilityCapabilities.ClientInitialized,
+  },
   Effect.fnUntraced(function* () {
     const manager = yield* Capabilities.PluginManager;
     const { invokePromise } = yield* Capabilities.OperationInvoker;

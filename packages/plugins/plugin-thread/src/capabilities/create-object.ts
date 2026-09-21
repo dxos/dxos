@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Channel } from '@dxos/types';
 
@@ -18,7 +19,9 @@ import { ChannelBackend, ThreadCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
-export default Capability.makeModule(
+// `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
+// cannot load without React — browser only.
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Channel.Channel),
@@ -41,4 +44,7 @@ export default Capability.makeModule(
         }),
     });
   }),
+  {
+    environments: [],
+  },
 );

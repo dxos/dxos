@@ -8,13 +8,14 @@ import React from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { MarkdownProperties } from '#components';
 import { ObjectHistory } from '#containers';
 
-export default Capability.makeModule(
+export const HistorySurface = AppCapability.surface(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -34,4 +35,8 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
+    name: 'HistorySurface',
+  },
 );

@@ -11,6 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SPACE_STATS_QUERY, type SpaceDashboard, findFavoriteTag, toShortcuts, toSpaceStats } from '#dashboard';
 import { SpaceCapabilities } from '#types';
@@ -18,8 +19,14 @@ import { SpaceCapabilities } from '#types';
 /** Enough favorites for any peripheral we drive; each device takes the prefix it can show. */
 const MAX_SHORTCUTS = 16;
 
-/** Projects the active space for peripheral displays, and owns the queries behind that projection. */
-export default Capability.makeModule(
+export const Dashboard = Capability.makeModule(
+  'Dashboard',
+  {
+    environments: [],
+    requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
+    provides: [SpaceCapabilities.Dashboard],
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const client = yield* Capability.get(ClientCapabilities.Client);

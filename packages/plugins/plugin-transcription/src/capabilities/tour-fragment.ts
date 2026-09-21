@@ -12,11 +12,14 @@ import { Dictatable } from '#types';
 
 import { steps } from '../tours/index.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(AppCapabilities.TourFragment, {
-      matches: Tour.whenTypes(Dictatable.types),
-      steps,
-    }),
-  ),
+export const TourFragment = Capability.makeModule(
+  'TourFragment',
+  { provides: [AppCapabilities.TourFragment], environments: [] },
+  () =>
+    Effect.succeed(
+      Capability.contribute(AppCapabilities.TourFragment, {
+        matches: Tour.whenTypes(Dictatable.types),
+        steps,
+      }),
+    ),
 );

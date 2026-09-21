@@ -2,18 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { meta } from '#meta';
 
-const Graph = Capability.lazyModule(
-  'Graph',
-  { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.AppGraph] },
-  () => import('./graph.ts'),
-);
+import { Graph } from './graph.ts';
 
 /**
  * Manages the state of the graph for the application.

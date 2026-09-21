@@ -11,8 +11,16 @@ import * as Observability from '@dxos/observability/Observability';
 
 import { meta } from '#meta';
 import { ObservabilityCapabilities } from '#types';
+import { ObservabilityOptions } from '#types';
 
-export default Capability.makeModule(
+export const ObservabilityState = Capability.makeModule(
+  'ObservabilityState',
+  {
+    environments: [],
+    requires: [Capabilities.AtomRegistry],
+    provides: [ObservabilityCapabilities.State],
+    props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
+  },
   Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
     const stateAtom = createKvsStore({
       key: meta.profile.key,

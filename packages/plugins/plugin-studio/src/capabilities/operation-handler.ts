@@ -4,11 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { StudioOperationHandlerSet } from '#operations';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(Capabilities.OperationHandler, StudioOperationHandlerSet)),
+export const OperationHandler = AppCapability.operationHandler(
+  () => Effect.succeed(Capability.contribute(Capabilities.OperationHandler, StudioOperationHandlerSet)),
+  {
+    activatesOn: ActivationEvents.Idle,
+  },
 );

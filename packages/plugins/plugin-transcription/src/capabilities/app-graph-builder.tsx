@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
@@ -21,7 +22,12 @@ const whenDictatable = GraphNodeMatcher.whenAll(
   GraphNodeMatcher.whenAny(...Dictatable.types.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
 );
 
-export default Capability.makeModule(
+// RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
+// (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
+// any of them while the driver mounts trips the missing-capability invariant.
+// Exception to the headless `appGraphBuilder` default: this builder's node renders a `<Mic/>`
+// companion inline, so its module is genuinely browser-bound.
+export const TranscriptionAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'transcriptionToolbar',
@@ -51,4 +57,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: [],
+  },
 );

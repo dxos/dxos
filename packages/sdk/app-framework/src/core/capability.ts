@@ -30,7 +30,7 @@ export class Service extends Context.Service<Service, CapabilityManager.Capabili
 
 /**
  * Module id of the activation currently executing — set by the loader around each module's
- * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
+ * `activate` so instrumentation inside module bodies (e.g. {@link makeLazyModule}'s chunk-import
  * timing) can attribute itself to the module without threading the id through every body.
  */
 export const CurrentModuleId: Context.Reference<string | undefined> = Context.Reference<string | undefined>(
@@ -474,16 +474,23 @@ export type Requirements<Requires extends readonly AnyTag[]> =
   | Scope.Scope;
 
 /**
- * Loader for a spec-carrying lazy module body. The default export's environment is
+ * A module body: `activate`, typed against the spec it is authored with. Its environment is
  * constrained to the declared requires and its return must cover the declared provides.
  */
+export type Activate<Props, Requires extends readonly AnyTag[], Provides extends readonly AnyTag[]> = (
+  props: Props,
+) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>;
+
+/**
+ * Loader for a lazy module body: the file's default export is its {@link Activate}.
+ */
 export type LoadModule<Props, Requires extends readonly AnyTag[], Provides extends readonly AnyTag[]> = () => Promise<{
-  default: (props: Props) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>;
+  default: Activate<Props, Requires, Provides>;
 }>;
 
 /**
  * A module body carrying its activation spec as erased runtime values. The spec types are
- * enforced where the body is authored ({@link lazyModule} / {@link inlineModule}) and
+ * enforced where the body is authored ({@link makeModule} / {@link makeLazyModule}) and
  * deliberately absent from this type, so exporting a module never leaks foreign capability
  * types into declaration emit (TS2883). Runtime manager validation is authoritative.
  */
@@ -517,7 +524,7 @@ export interface Module<Options = void> {
 export type Environment = string;
 
 /**
- * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides
+ * Spec shared by {@link makeModule} and {@link makeLazyModule}: the requires/provides
  * declaration checked at the authoring site, plus the optional event-mode and
  * props-mapping fields carried alongside it.
  */
@@ -533,17 +540,19 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
 };
 
 /**
- * Helper to define a lazily loaded module body with an eager requires/provides spec.
- * The spec is available without importing the chunk (dependency ordering happens before
- * code-splitting resolves) and the loaded default export is type-checked against it. The
- * returned {@link Module} is opaque with respect to requires/provides/props, parameterized
- * only by `Options` — this is what eliminates TS2883 at every call site.
- * The lazy pairing of {@link makeModule}.
+ * A module whose body lives in its own chunk, loaded on activation. The spec is available
+ * without importing the chunk (dependency ordering happens before code-splitting resolves) and
+ * the loaded default export is type-checked against it. The returned {@link Module} is opaque
+ * with respect to requires/provides/props, parameterized only by `Options` — this is what
+ * eliminates TS2883 at every call site.
+ *
+ * The marked form; {@link makeModule} is the default. Reach for it when a body statically
+ * imports something the plugin's own chunk should not carry.
  * @param name The export name (e.g., 'AppGraphBuilder') - used to auto-compute module IDs.
  * @param spec The requires/provides declaration, matching the module authoring site.
  * @param loader The lazy loader function.
  */
-export const lazyModule = <
+export const makeLazyModule = <
   const Provides extends readonly AnyTag[],
   const Requires extends readonly AnyTag[] = readonly [],
   Props = void,
@@ -582,14 +591,14 @@ export const lazyModule = <
 };
 
 /**
- * Helper to define an eager module body with the same spec-carrying shape as
- * {@link lazyModule} — for bodies that are plain values (translations, schema) or too small
- * to justify a chunk, so plugin definitions stay a uniform chain of spec-carrying modules.
+ * A module whose body is part of the chunk that defines it. The default: a plugin's bodies then
+ * share the chunk `Plugin.lazy` fetches on enable, and only a body that must stay out of it is
+ * written with {@link makeLazyModule}.
  * @param name The module name — used to auto-compute module IDs.
  * @param spec The requires/provides declaration.
  * @param activate The module body.
  */
-export const inlineModule = <
+export const makeModule = <
   const Provides extends readonly AnyTag[],
   const Requires extends readonly AnyTag[] = readonly [],
   Props = void,
@@ -597,7 +606,7 @@ export const inlineModule = <
 >(
   name: string,
   spec: ModuleSpec<Provides, Requires, Props, Options>,
-  activate: (props: Props) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>,
+  activate: Activate<Props, Requires, Provides>,
 ): Module<Options> => {
   const body = (options: Options): Effect.Effect<any, Error, any> => {
     // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
@@ -638,27 +647,70 @@ export type MakerOptions<
 };
 
 /**
- * Builds a lazy-module maker for a capability, with the tag and default module name baked
- * in so the maker takes only a loader in the common case. Capability owners export makers
- * so consumers author modules without restating the spec.
+ * Defaults a maker family declares once for every module made through it.
  *
- * `defaults.activatesOn` sets the family's default demand gate: modules made by the maker are
- * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
- * owner makes the well-behaved activation the default for every provider (e.g. operation
- * handlers park until an operation is invoked) — startup is not assumed.
+ * `activatesOn` sets the family's default demand gate: modules made by the maker are event-mode
+ * on it unless the call site declares its own `activatesOn`. This is how a capability owner
+ * makes the well-behaved activation the default for every provider (e.g. operation handlers park
+ * until an operation is invoked) — startup is not assumed.
  *
- * `defaults.environments` does the same for the runtime axis: a capability family that is headless
- * by construction (schema, operation handlers) declares every environment once here rather than
+ * `environments` does the same for the runtime axis: a capability family that is headless by
+ * construction (schema, operation handlers) declares every environment once here rather than
  * making each of ~36 plugins repeat the annotation — an omission that silently drops the module
  * from the generated headless barrels. A UI-bound family leaves it unset, keeping browser-only the
  * default. The call site's own `environments` still wins.
  */
+export type MakerDefaults = { activatesOn?: ActivationEvent.Events; environments?: readonly Environment[] };
+
+const makerSpec = <
+  C extends AnyTag,
+  Requires extends readonly AnyTag[],
+  Extra extends readonly AnyTag[],
+  Props,
+  Options,
+>(
+  capability: C,
+  options: MakerOptions<Requires, Extra, Props, Options> | undefined,
+  defaults: MakerDefaults | undefined,
+): ModuleSpec<readonly [C, ...Extra], Requires, Props, Options> => {
+  // Correlation cast: `provides` is required, so the spread needs a concrete tuple; when
+  // options are absent `Extra` resolves to its `readonly []` default, making it the correct
+  // value. `requires` needs no such fallback — it stays optional all the way to the boundary.
+  const extra = (options?.provides ?? []) as Extra;
+  return {
+    requires: options?.requires,
+    provides: [capability, ...extra],
+    activatesOn: options?.activatesOn ?? defaults?.activatesOn,
+    props: options?.props,
+    environments: options?.environments ?? defaults?.environments,
+  };
+};
+
+/**
+ * Builds a module maker for a capability, with the tag and default module name baked in so the
+ * maker takes only a body in the common case. Capability owners export makers so consumers
+ * author modules without restating the spec. The lazy pairing is {@link lazyModuleMaker}; a
+ * capability owner exports both under `x` / `lazyX`.
+ */
 export const moduleMaker =
-  <C extends AnyTag>(
-    defaultName: string,
-    capability: C,
-    defaults?: { activatesOn?: ActivationEvent.Events; environments?: readonly Environment[] },
-  ) =>
+  <C extends AnyTag>(defaultName: string, capability: C, defaults?: MakerDefaults) =>
+  <
+    Props = void,
+    Options = Props,
+    const Requires extends readonly AnyTag[] = readonly [],
+    const Extra extends readonly AnyTag[] = readonly [],
+  >(
+    activate: Activate<Props, Requires, readonly [C, ...Extra]>,
+    options?: MakerOptions<Requires, Extra, Props, Options>,
+  ): Module<Options> =>
+    makeModule(options?.name ?? defaultName, makerSpec(capability, options, defaults), activate);
+
+/**
+ * The lazy pairing of {@link moduleMaker}: the maker takes a loader and the body stays in its
+ * own chunk.
+ */
+export const lazyModuleMaker =
+  <C extends AnyTag>(defaultName: string, capability: C, defaults?: MakerDefaults) =>
   <
     Props = void,
     Options = Props,
@@ -667,23 +719,8 @@ export const moduleMaker =
   >(
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,
-  ): Module<Options> => {
-    // Correlation cast: `provides` is required, so the spread needs a concrete tuple; when
-    // options are absent `Extra` resolves to its `readonly []` default, making it the correct
-    // value. `requires` needs no such fallback — it stays optional all the way to the boundary.
-    const extra = (options?.provides ?? []) as Extra;
-    return lazyModule(
-      options?.name ?? defaultName,
-      {
-        requires: options?.requires,
-        provides: [capability, ...extra],
-        activatesOn: options?.activatesOn ?? defaults?.activatesOn,
-        props: options?.props,
-        environments: options?.environments ?? defaults?.environments,
-      },
-      loader,
-    );
-  };
+  ): Module<Options> =>
+    makeLazyModule(options?.name ?? defaultName, makerSpec(capability, options, defaults), loader);
 
 /**
  * Gets the module tag (export name) from a lazy capability function.
@@ -696,59 +733,3 @@ export const getModuleTag = (capability: unknown): string | undefined => {
     ? String(capability[ModuleTag])
     : undefined;
 };
-
-/**
- * Helper to define a capability module with explicit typing.
- * Wraps the default export function to provide better type inference and make the pattern explicit.
- *
- * This helper provides explicit typing for the module activation function,
- * making it clear that the function should:
- * - Access declared `requires` via `yield*` (or the ambient `Capability.Service`/`Plugin.Service`)
- * - Return an array of typed {@link Contribution}s (see {@link contribute}/{@link contributeAll})
- *
- * @example
- * ```ts
- * // Module without options - single capability
- * export default Capability.makeModule(
- *   Effect.fnUntraced(function* () {
- *     const client = yield* ClientCapabilities.Client;
- *     return Capability.contribute(Capabilities.SettingsStore, store);
- *   })
- * );
- *
- * // Module with multiple capabilities
- * export default Capability.makeModule(
- *   Effect.fnUntraced(function* () {
- *     return [
- *       Capability.contribute(Capabilities.SettingsStore, store),
- *       Capability.contribute(Capabilities.Translations, translations),
- *     ];
- *   })
- * );
- *
- * // Module with required options (context accessed via layer)
- * export default Capability.makeModule(
- *   Effect.fnUntraced(function* (props: { observability: boolean }) {
- *     const invoker = yield* Capabilities.OperationInvoker;
- *     return Capability.contribute(Capabilities.OperationHandler, ...);
- *   })
- * );
- *
- * // Module with scoped resources (closed automatically on deactivation)
- * export default Capability.makeModule(
- *   Effect.fnUntraced(function* () {
- *     const scope = yield* Scope.Scope;
- *     yield* Scope.addFinalizer(scope, Effect.sync(() => cleanup()));
- *     return Capability.contribute(Capabilities.MyCapability, implementation);
- *   })
- * );
- * ```
- */
-export const makeModule = <
-  TProps = void,
-  TReturn extends AnyContribution | readonly AnyContribution[] = readonly AnyContribution[],
-  E extends Error = Error,
-  R extends Requirements<readonly AnyTag[]> = Service,
->(
-  fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
-): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;

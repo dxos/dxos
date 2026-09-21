@@ -9,11 +9,12 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Notebook, ScriptOperation } from '#types';
 
-export default Capability.makeModule(
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
@@ -52,4 +53,7 @@ export default Capability.makeModule(
       ]),
     ];
   }),
+  {
+    environments: ['node'],
+  },
 );

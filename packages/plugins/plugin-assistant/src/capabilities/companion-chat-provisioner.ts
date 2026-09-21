@@ -25,12 +25,26 @@ import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
+import { AssistantEvents } from '#types';
 
-/**
- * Non-React capability that watches deck companion state and provisions transient chats
- * for active planks when the assistant companion is selected.
- */
-export default Capability.makeModule(
+export const CompanionChatProvisioner = Capability.makeModule(
+  'CompanionChatProvisioner',
+  {
+    environments: [],
+    requires: [
+      Capabilities.OperationInvoker,
+      AppCapabilities.AppGraph,
+      Capabilities.AtomRegistry,
+      // DeckCapabilities.State is read optionally in the body: provisioning is driven by deck
+      // planks, so a host without a deck (e.g. a story) has nothing to provision for and should
+      // lose this module, not fail to activate AssistantPlugin.
+      AssistantCapabilities.CompanionChatCache,
+      AssistantCapabilities.State,
+      AttentionCapabilities.ViewState,
+    ],
+    provides: [],
+    activatesOn: AssistantEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;

@@ -6,13 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { getSpace } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { Message, Transcript } from '@dxos/types';
 
+import { TranscriptionEvents } from '#types';
+
 import { renderByline } from '../util/index.ts';
 
-export default Capability.makeModule(
+export const TextContent = AppCapability.textContent(
   Effect.fnUntraced(function* () {
     return Capability.contribute(AppCapabilities.TextContent, {
       id: Type.getTypename(Transcript.Transcript),
@@ -38,4 +41,8 @@ export default Capability.makeModule(
       },
     });
   }),
+  {
+    activatesOn: TranscriptionEvents.Start,
+    environments: ['node'],
+  },
 );

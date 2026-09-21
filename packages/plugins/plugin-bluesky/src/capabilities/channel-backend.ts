@@ -9,6 +9,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 import { Message } from '@dxos/types';
 
 import { BlueskyChannel, makeBlueskyChannel } from '#types';
@@ -117,11 +118,10 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
   readOnly: () => true,
 };
 
-/** Contributes the read-only ATProto channel backend. */
 export const ChannelBackend = Capability.makeModule(
+  'BlueskyChannelBackend',
+  { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ThreadCapabilities.ChannelBackend, blueskyChannelBackend);
   }),
 );
-
-export default ChannelBackend;

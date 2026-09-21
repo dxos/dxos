@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -19,7 +20,7 @@ import { Frame, MediaArtifact, Storyboard, StoryboardView } from '#types';
 
 import { FRAME_COMPANION } from '../constants.ts';
 
-export default Capability.makeModule(
+export const StudioAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // A storyboard's frames' artifacts as hidden child nodes: a frame is a row of the storyboard, not
     // a destination, so nothing is listed in the navtree — but each nested artifact article still

@@ -50,7 +50,7 @@ const whenId = (id: string) => (node: AppGraphNode.Node) => (node.id === id ? Op
  * A branch holding a leaf, a group nothing contributes to, and a group with a child — the shape the
  * fixed mobile plugin set produces, where Communications has no contributor at all.
  */
-const storyGraph = Capability.inlineModule(
+const storyGraph = Capability.makeModule(
   'nav-branch-story-graph',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {

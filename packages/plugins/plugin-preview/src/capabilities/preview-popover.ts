@@ -20,6 +20,8 @@ import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { PreviewCapabilities } from '#types';
 
+import { PreviewEvents } from '../events.ts';
+
 const customEventOptions = { capture: true, passive: false };
 
 /** The first resolver's answer, asked in contribution order; a resolver declines by answering undefined. */
@@ -41,7 +43,10 @@ const resolveLink = (
     return undefined;
   });
 
-export default Capability.makeModule(
+// Browser-only: the module mounts the popover itself, so its body is React all the way down.
+export const PreviewPopover = Capability.makeModule(
+  'PreviewPopover',
+  { provides: [], activatesOn: PreviewEvents.Start, environments: [] },
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;

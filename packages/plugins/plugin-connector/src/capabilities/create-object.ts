@@ -8,11 +8,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { CreateConnectionPanel } from '#create-panel';
 import { ConnectorCoordination } from '#types';
 
-export default Capability.makeModule(
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Connection.Connection),
@@ -57,4 +58,7 @@ export default Capability.makeModule(
         }),
     });
   }),
+  {
+    environments: ['node'],
+  },
 );

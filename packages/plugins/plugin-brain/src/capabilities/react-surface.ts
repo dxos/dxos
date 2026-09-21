@@ -7,19 +7,23 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { FactsCompanion } from '#containers';
 import { BrainSurface } from '#types';
 
-/** React surfaces contributed by plugin-brain — the per-space facts panel. */
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'brain.facts',
-        filter: Surface.makeFilter(BrainSurface.Facts),
-        component: FactsCompanion,
-      }),
-    ]),
-  ),
+export const ReactSurface = AppCapability.surface(
+  () =>
+    Effect.succeed(
+      Capability.contribute(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'brain.facts',
+          filter: Surface.makeFilter(BrainSurface.Facts),
+          component: FactsCompanion,
+        }),
+      ]),
+    ),
+  {
+    roles: ['org.dxos.plugin.brain.surface.facts'],
+  },
 );

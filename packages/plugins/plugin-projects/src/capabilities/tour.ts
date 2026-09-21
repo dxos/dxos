@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 import { steps } from '../tours/index.ts';
 
-export default Capability.makeModule(() =>
+export const ProjectsTour = Capability.makeModule('Tour', { provides: [AppCapabilities.Tour], environments: [] }, () =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.Tour, {
       id: `${meta.profile.key}.tour.project`,

@@ -9,8 +9,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { ObservabilityOperationHandlerSet } from '#operations';
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, ObservabilityOperationHandlerSet);
-  }),
-);
+export default Effect.fnUntraced(function* () {
+  return Capability.contribute(Capabilities.OperationHandler, ObservabilityOperationHandlerSet);
+});

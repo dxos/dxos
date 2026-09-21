@@ -23,6 +23,7 @@ import * as AppCapabilities from './AppCapabilities.ts';
  * `C` reaches this alias only through `typeof`.
  */
 type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleMaker<C>>;
+type LazyMaker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.lazyModuleMaker<C>>;
 
 //
 // Lazy module makers (loader-based bodies).
@@ -34,10 +35,20 @@ type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleM
  * the navtree, so gating it on the plugin's own start (fired when its surface renders) is a
  * deadlock — the item never appears, so it can never be opened. Declare `activatesOn` to override.
  */
+const appGraphBuilderDefaults = {
+  activatesOn: ActivationEvents.Idle,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
-  { activatesOn: ActivationEvents.Idle, environments: ['node', 'workerd'] },
+  appGraphBuilderDefaults,
+);
+/** Lazy pairing of {@link appGraphBuilder}. */
+export const lazyAppGraphBuilder: LazyMaker<typeof AppCapabilities.AppGraphBuilder> = Capability$.lazyModuleMaker(
+  'AppGraphBuilder',
+  AppCapabilities.AppGraphBuilder,
+  appGraphBuilderDefaults,
 );
 
 /**
@@ -51,10 +62,20 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
  * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
  * is precisely the post-ready gate this paragraph rules out.
  */
+const settingsDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  settingsDefaults,
+);
+/** Lazy pairing of {@link settings}. */
+export const lazySettings: LazyMaker<typeof AppCapabilities.Settings> = Capability$.lazyModuleMaker(
+  'Settings',
+  AppCapabilities.Settings,
+  settingsDefaults,
 );
 
 /**
@@ -63,10 +84,20 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
  * (skills register into a shared registry whose consumers are reactive); declare `activatesOn`
  * to override.
  */
+const skillDefinitionDefaults = {
+  activatesOn: AppActivationEvents.AssistantStart,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: AppActivationEvents.AssistantStart, environments: ['node', 'workerd'] },
+  skillDefinitionDefaults,
+);
+/** Lazy pairing of {@link skillDefinition}. */
+export const lazySkillDefinition: LazyMaker<typeof AppCapabilities.SkillDefinition> = Capability$.lazyModuleMaker(
+  'SkillDefinition',
+  AppCapabilities.SkillDefinition,
+  skillDefinitionDefaults,
 );
 
 /**
@@ -81,10 +112,20 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
  * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
  * would leave the registry incomplete for exactly those boot-path invocations.
  */
+const operationHandlerDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  operationHandlerDefaults,
+);
+/** Lazy pairing of {@link operationHandler}. */
+export const lazyOperationHandler: LazyMaker<typeof Capabilities.OperationHandler> = Capability$.lazyModuleMaker(
+  'OperationHandler',
+  Capabilities.OperationHandler,
+  operationHandlerDefaults,
 );
 
 /**
@@ -100,17 +141,34 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
  * startup pass, and they must all be there together. Multi requires never gate, so getting this
  * wrong does not fail loudly at the contribution site — it surfaces hops away as a missing service.
  */
+const layerSpecDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  layerSpecDefaults,
+);
+/** Lazy pairing of {@link layerSpec}. */
+export const lazyLayerSpec: LazyMaker<typeof Capabilities.LayerSpec> = Capability$.lazyModuleMaker(
+  'LayerSpec',
+  Capabilities.LayerSpec,
+  layerSpecDefaults,
 );
 
 /** Module maker contributing undo operation mappings. */
+const undoMappingsDefaults = { environments: ['node', 'workerd'] } satisfies Capability$.MakerDefaults;
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
-  { environments: ['node', 'workerd'] },
+  undoMappingsDefaults,
+);
+/** Lazy pairing of {@link undoMappings}. */
+export const lazyUndoMappings: LazyMaker<typeof Capabilities.UndoMapping> = Capability$.lazyModuleMaker(
+  'UndoMappings',
+  Capabilities.UndoMapping,
+  undoMappingsDefaults,
 );
 
 /** Module maker contributing observability event mappings. */
@@ -118,23 +176,46 @@ export const observabilityMappings: Maker<typeof AppCapabilities.ObservabilityMa
   'ObservabilityMappings',
   AppCapabilities.ObservabilityMapping,
 );
+/** Lazy pairing of {@link observabilityMappings}. */
+export const lazyObservabilityMappings: LazyMaker<typeof AppCapabilities.ObservabilityMapping> =
+  Capability$.lazyModuleMaker('ObservabilityMappings', AppCapabilities.ObservabilityMapping);
 
 /** Module maker contributing a React context. */
+// A context provider has to wrap the tree on the FIRST render, and shell components read what it
+// provides through the strict `useCapability` hooks — arriving in the idle wave trips the
+// missing-capability invariant rather than merely rendering late.
+const reactContextDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: [],
+} satisfies Capability$.MakerDefaults;
 export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$.moduleMaker(
   'ReactContext',
   Capabilities.ReactContext,
-  // A context provider has to wrap the tree on the FIRST render, and shell components read what it
-  // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
-  // missing-capability invariant rather than merely rendering late.
-  { activatesOn: ActivationEvents.Startup, environments: [] },
+  reactContextDefaults,
+);
+/** Lazy pairing of {@link reactContext}. */
+export const lazyReactContext: LazyMaker<typeof Capabilities.ReactContext> = Capability$.lazyModuleMaker(
+  'ReactContext',
+  Capabilities.ReactContext,
+  reactContextDefaults,
 );
 
 /** Module maker contributing a React root. */
+// Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
+const reactRootDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: [],
+} satisfies Capability$.MakerDefaults;
 export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.moduleMaker(
   'ReactRoot',
   Capabilities.ReactRoot,
-  // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
-  { activatesOn: ActivationEvents.Startup, environments: [] },
+  reactRootDefaults,
+);
+/** Lazy pairing of {@link reactRoot}. */
+export const lazyReactRoot: LazyMaker<typeof Capabilities.ReactRoot> = Capability$.lazyModuleMaker(
+  'ReactRoot',
+  Capabilities.ReactRoot,
+  reactRootDefaults,
 );
 
 /**
@@ -142,24 +223,75 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
  * part of boot, so a resolver that registers at idle is absent exactly when the deep link it
  * resolves is being handled — the shape behind the earlier not-found-redirect-on-load race.
  */
+const navigationResolverDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: ['node', 'workerd'],
+} satisfies Capability$.MakerDefaults;
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  navigationResolverDefaults,
 );
+/** Lazy pairing of {@link navigationResolver}. */
+export const lazyNavigationResolver: LazyMaker<typeof AppCapabilities.NavigationTargetResolver> =
+  Capability$.lazyModuleMaker(
+    'NavigationResolver',
+    AppCapabilities.NavigationTargetResolver,
+    navigationResolverDefaults,
+  );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
  * {@link navigationResolver} — the boot-time URL restore is what invokes it. */
+const navigationHandlerDefaults = {
+  activatesOn: ActivationEvents.Startup,
+  environments: [],
+} satisfies Capability$.MakerDefaults;
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: [] },
+  navigationHandlerDefaults,
+);
+/** Lazy pairing of {@link navigationHandler}. */
+export const lazyNavigationHandler: LazyMaker<typeof AppCapabilities.NavigationHandler> = Capability$.lazyModuleMaker(
+  'NavigationHandler',
+  AppCapabilities.NavigationHandler,
+  navigationHandlerDefaults,
 );
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
   Capabilities.ReactSurface,
 );
+const lazySurfaceMaker: LazyMaker<typeof Capabilities.ReactSurface> = Capability$.lazyModuleMaker(
+  'ReactSurface',
+  Capabilities.ReactSurface,
+);
+
+type SurfaceOptions<
+  Requires extends readonly Capability$.AnyTag[],
+  Extra extends readonly Capability$.AnyTag[],
+  Props,
+  Options,
+> = Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] };
+
+const surfaceOptions = <
+  Requires extends readonly Capability$.AnyTag[],
+  Extra extends readonly Capability$.AnyTag[],
+  Props,
+  Options,
+>(
+  options: SurfaceOptions<Requires, Extra, Props, Options> | undefined,
+): Capability$.MakerOptions<Requires, Extra, Props, Options> => {
+  const { roles, ...rest } = options ?? {};
+  return {
+    ...rest,
+    activatesOn:
+      rest.activatesOn ??
+      (roles?.length
+        ? ActivationEvent.oneOf(...roles.map((role) => ActivationEvents.SurfacesRequested(role)))
+        : undefined),
+  };
+};
 
 /**
  * Module maker contributing React surfaces. Declaring `roles` (the role NSIDs the module's
@@ -174,41 +306,64 @@ export const surface = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
+  activate: Capability$.Activate<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
+  options?: SurfaceOptions<Requires, Extra, Props, Options>,
+): Capability$.Module<Options> =>
+  surfaceMaker(activate, { ...surfaceOptions(options), environments: options?.environments ?? [] });
+
+/** Lazy pairing of {@link surface}. */
+export const lazySurface = <
+  Props = void,
+  Options = Props,
+  const Requires extends readonly Capability$.AnyTag[] = readonly [],
+  const Extra extends readonly Capability$.AnyTag[] = readonly [],
+>(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
-  options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
-): Capability$.Module<Options> => {
-  const { roles, ...rest } = options ?? {};
-  return surfaceMaker(loader, {
-    ...rest,
-    environments: rest.environments ?? [],
-    activatesOn:
-      rest.activatesOn ??
-      (roles?.length
-        ? ActivationEvent.oneOf(...roles.map((role) => ActivationEvents.SurfacesRequested(role)))
-        : undefined),
-  });
-};
+  options?: SurfaceOptions<Requires, Extra, Props, Options>,
+): Capability$.Module<Options> =>
+  lazySurfaceMaker(loader, { ...surfaceOptions(options), environments: options?.environments ?? [] });
 
 /** Module maker contributing a comment configuration. */
+const commentConfigDefaults = { environments: ['node', 'workerd'] } satisfies Capability$.MakerDefaults;
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
-  { environments: ['node', 'workerd'] },
+  commentConfigDefaults,
+);
+/** Lazy pairing of {@link commentConfig}. */
+export const lazyCommentConfig: LazyMaker<typeof AppCapabilities.CommentConfig> = Capability$.lazyModuleMaker(
+  'CommentConfig',
+  AppCapabilities.CommentConfig,
+  commentConfigDefaults,
 );
 
 /** Module maker contributing a text content extractor. */
+const textContentDefaults = { environments: ['node', 'workerd'] } satisfies Capability$.MakerDefaults;
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
-  { environments: ['node', 'workerd'] },
+  textContentDefaults,
+);
+/** Lazy pairing of {@link textContent}. */
+export const lazyTextContent: LazyMaker<typeof AppCapabilities.TextContent> = Capability$.lazyModuleMaker(
+  'TextContent',
+  AppCapabilities.TextContent,
+  textContentDefaults,
 );
 
 /** Module maker contributing an anchor sort comparator. */
+// Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
+const anchorSortDefaults = { environments: [] } satisfies Capability$.MakerDefaults;
 export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.moduleMaker(
   'AnchorSort',
   AppCapabilities.AnchorSort,
-  // Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
-  { environments: [] },
+  anchorSortDefaults,
+);
+/** Lazy pairing of {@link anchorSort}. */
+export const lazyAnchorSort: LazyMaker<typeof AppCapabilities.AnchorSort> = Capability$.lazyModuleMaker(
+  'AnchorSort',
+  AppCapabilities.AnchorSort,
+  anchorSortDefaults,
 );
 
 //
@@ -221,7 +376,7 @@ export const translations = (
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const value: Translations.Resource[] = Array.isArray(resources) ? resources : [resources];
-  return Capability$.inlineModule(
+  return Capability$.makeModule(
     options?.name ?? 'translations',
     {
       provides: [AppCapabilities.Translations],
@@ -231,31 +386,36 @@ export const translations = (
   );
 };
 
-/**
- * Module contributing schemas. Prefer the loader form — schema objects ride whatever barrels
- * declare them, so an inline list drags those barrels into the plugin definition's static
- * closure (the boot evaluation floor); a loader keeps them in the module body chunk.
- */
+/** Module contributing schemas. */
 export const schema = (
-  types: ReadonlyArray<Type.AnyEntity> | (() => Promise<{ default: ReadonlyArray<Type.AnyEntity> }>),
+  types: ReadonlyArray<Type.AnyEntity>,
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
-) => {
-  const spec = {
-    provides: [AppCapabilities.Schema],
-    environments: options?.environments ?? ['node', 'workerd'],
-  } as const;
-  if (typeof types === 'function') {
-    const loader = types;
-    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
+) =>
+  Capability$.makeModule(options?.name ?? 'schema', schemaSpec(options?.environments ?? ['node', 'workerd']), () =>
+    Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
+  );
+
+/**
+ * Lazy pairing of {@link schema}: schema objects ride whatever barrels declare them, so this is
+ * the form for a list whose barrels the plugin's chunk should not carry.
+ */
+export const lazySchema = (
+  loader: () => Promise<{ default: ReadonlyArray<Type.AnyEntity> }>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) =>
+  Capability$.makeLazyModule<readonly [typeof AppCapabilities.Schema]>(
+    options?.name ?? 'schema',
+    schemaSpec(options?.environments ?? ['node', 'workerd']),
+    () =>
       loader().then(({ default: values }) => ({
         default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
       })),
-    );
-  }
-  return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>
-    Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
   );
-};
+
+// The default is spelled at each export rather than here: the barrel generator reads a maker's
+// `environments` literal from the export's own initializer.
+const schemaSpec = (environments: readonly Capability$.Environment[]) =>
+  ({ provides: [AppCapabilities.Schema], environments }) as const;
 
 /** Module contributing guided tours. */
 export const tour = (
@@ -263,7 +423,7 @@ export const tour = (
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
-  return Capability$.inlineModule(
+  return Capability$.makeModule(
     options?.name ?? 'tour',
     { provides: [AppCapabilities.Tour], environments: options?.environments ?? [] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
@@ -276,7 +436,7 @@ export const tourFragment = (
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
-  return Capability$.inlineModule(
+  return Capability$.makeModule(
     options?.name ?? 'tour-fragment',
     { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? [] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
@@ -289,7 +449,7 @@ export const pluginAsset = (
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
-  return Capability$.inlineModule(
+  return Capability$.makeModule(
     options?.name ?? 'plugin-asset',
     { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? [] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
@@ -304,11 +464,6 @@ export const pluginAsset = (
  * pays for a plugin's command graph only once someone opens a terminal. Contributing at startup
  * instead would drag every command-bearing plugin onto the app's critical path to serve a panel
  * most sessions never open.
- *
- * Prefer the loader form. Demand-gating the module defers only its activation, not its code: an
- * inline list is a static import in the plugin definition, so `@effect/cli` and every handler's
- * service graph land in the definition's closure and are paid at boot by every session. A loader
- * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
 /**
  * Module contributing space templates.
@@ -316,11 +471,11 @@ export const pluginAsset = (
  * Loader-only, so the content a template writes stays in its own chunk rather than the plugin
  * definition's closure.
  */
-export const spaceTemplates = (
+export const lazySpaceTemplates = (
   loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SpaceTemplate> }>,
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) =>
-  Capability$.lazyModule<readonly [typeof AppCapabilities.SpaceTemplate]>(
+  Capability$.makeLazyModule<readonly [typeof AppCapabilities.SpaceTemplate]>(
     options?.name ?? 'SpaceTemplates',
     {
       activatesOn: ActivationEvents.SpaceTemplatesRequested,
@@ -334,24 +489,32 @@ export const spaceTemplates = (
   );
 
 export const commands = (
-  values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
+  values: ReadonlyArray<Capabilities.AnyCommand>,
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
-) => {
-  const spec = {
-    activatesOn: ActivationEvents.CommandsRequested,
-    provides: [Capabilities.Command],
-    environments: options?.environments ?? ['node', 'workerd'],
-  } as const;
-  if (typeof values === 'function') {
-    const loader = values;
-    return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>
+) =>
+  Capability$.makeModule(
+    options?.name ?? 'cli-commands',
+    commandsSpec(options?.environments ?? ['node', 'workerd']),
+    () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
+  );
+
+/**
+ * Lazy pairing of {@link commands}. Demand-gating the module defers only its activation, not its
+ * code: `@effect/cli` and every handler's service graph would otherwise land in the plugin's chunk
+ * and be paid by every session that enables it, to serve a panel most never open.
+ */
+export const lazyCommands = (
+  loader: () => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) =>
+  Capability$.makeLazyModule<readonly [typeof Capabilities.Command]>(
+    options?.name ?? 'cli-commands',
+    commandsSpec(options?.environments ?? ['node', 'workerd']),
+    () =>
       loader().then(({ default: commands }) => ({
         default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, commands)]),
       })),
-    );
-  }
-
-  return Capability$.inlineModule(options?.name ?? 'cli-commands', spec, () =>
-    Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
   );
-};
+
+const commandsSpec = (environments: readonly Capability$.Environment[]) =>
+  ({ activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command], environments }) as const;

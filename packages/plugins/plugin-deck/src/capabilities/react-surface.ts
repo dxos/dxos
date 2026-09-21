@@ -7,13 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { DeckSettings } from '#containers';
 import { meta } from '#meta';
 
-export default Capability.makeModule(
+export const ReactSurface = AppCapability.surface(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -29,4 +30,7 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: ['org.dxos.role.article'],
+  },
 );

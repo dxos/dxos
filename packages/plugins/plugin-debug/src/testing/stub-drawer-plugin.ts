@@ -42,7 +42,7 @@ export const StubDrawerPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.debug.story.stubDrawer'), name: 'Drawer (stub)' }),
 ).pipe(
   Plugin.addModule(
-    Capability.inlineModule('stub-drawer-operations', { provides: [Capabilities.OperationHandler] }, () =>
+    Capability.makeModule('stub-drawer-operations', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.contribute(
           Capabilities.OperationHandler,

@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
 import { Stack } from '#types';
 
-/**
- * Schemas this plugin registers, loaded on demand: the capability activates at idle,
- * so naming them here keeps them out of the plugin body's module graph.
- */
-export default [Stack.Stack];
+export const Schema = AppCapability.schema([Stack.Stack]);

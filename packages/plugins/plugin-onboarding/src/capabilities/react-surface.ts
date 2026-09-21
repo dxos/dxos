@@ -7,36 +7,41 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components/index.ts';
 import { ABOUT_DIALOG, AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
 import { WelcomeContainer } from '../containers/index.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'welcome',
-        filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
-        component: WelcomeContainer,
-      }),
-      Surface.create({
-        id: 'authorizingDevice',
-        filter: AppSurface.component(AppSurface.Dialog, AUTHORIZING_DEVICE_DIALOG),
-        component: AuthorizingDeviceDialog,
-      }),
-      Surface.create({
-        id: 'nativeRedirect',
-        filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
-        component: NativeRedirectDialog,
-        props: ({ data: { props } }) => ({ ...props }),
-      }),
-      Surface.create({
-        id: 'aboutDialog',
-        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
-        component: AboutDialog,
-      }),
-    ]),
-  ),
+export const ReactSurface = AppCapability.surface(
+  () =>
+    Effect.succeed(
+      Capability.contribute(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'welcome',
+          filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
+          component: WelcomeContainer,
+        }),
+        Surface.create({
+          id: 'authorizingDevice',
+          filter: AppSurface.component(AppSurface.Dialog, AUTHORIZING_DEVICE_DIALOG),
+          component: AuthorizingDeviceDialog,
+        }),
+        Surface.create({
+          id: 'nativeRedirect',
+          filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
+          component: NativeRedirectDialog,
+          props: ({ data: { props } }) => ({ ...props }),
+        }),
+        Surface.create({
+          id: 'aboutDialog',
+          filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
+          component: AboutDialog,
+        }),
+      ]),
+    ),
+  {
+    roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+  },
 );

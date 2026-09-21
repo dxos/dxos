@@ -68,30 +68,54 @@ const readMakerDefaults = (filePath: string): Map<string, readonly string[]> | n
     return null;
   }
 
-  const out = new Map<string, readonly string[]>();
+  // An eager/lazy maker pair shares one `<name>Defaults` const, so a maker's literal may sit one
+  // identifier away from its own initializer.
+  const initializers = new Map<string, import('@typescript/typescript6').Expression>();
   for (const stmt of source.statements) {
     if (!ts.isVariableStatement(stmt)) {
       continue;
     }
     for (const decl of stmt.declarationList.declarations) {
-      if (!ts.isIdentifier(decl.name) || !decl.initializer) {
-        continue;
+      if (ts.isIdentifier(decl.name) && decl.initializer) {
+        initializers.set(decl.name.text, decl.initializer);
       }
-      const found = findEnvironments(decl.initializer);
-      if (found) {
-        out.set(decl.name.text, found);
-      }
+    }
+  }
+
+  const out = new Map<string, readonly string[]>();
+  for (const [name, initializer] of initializers) {
+    const found = findEnvironments(initializer, (identifier) => initializers.get(identifier));
+    if (found) {
+      out.set(name, found);
     }
   }
   return out.size > 0 ? out : null;
 };
 
 /** First `environments:` literal reachable in an expression, unwrapping a `??` fallback. */
-const findEnvironments = (node: import('@typescript/typescript6').Node): readonly string[] | null => {
+const findEnvironments = (
+  node: import('@typescript/typescript6').Node,
+  resolve: (identifier: string) => import('@typescript/typescript6').Expression | undefined = () => undefined,
+): readonly string[] | null => {
   let found: readonly string[] | null = null;
   const visit = (child: import('@typescript/typescript6').Node): void => {
     if (found) {
       return;
+    }
+    // Only a call's arguments are followed: a maker's defaults are passed to `moduleMaker`, and
+    // following every identifier would read unrelated consts.
+    if (ts.isCallExpression(child)) {
+      for (const arg of child.arguments) {
+        if (ts.isIdentifier(arg)) {
+          const target = resolve(arg.text);
+          if (target) {
+            found = findEnvironments(target);
+            if (found) {
+              return;
+            }
+          }
+        }
+      }
     }
     if (ts.isPropertyAssignment(child) && ts.isIdentifier(child.name) && child.name.text === 'environments') {
       let value: import('@typescript/typescript6').Node = child.initializer;

@@ -21,7 +21,15 @@ const defaultSpaceState: SpaceCapabilities.SpaceState = {
   enabledEdgeReplication: false,
 };
 
-export default Capability.makeModule(
+// Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
+// the app-graph builder, `SpacesAvailable` — is itself browser-only.
+export const SpaceState = Capability.makeModule(
+  'SpaceState',
+  {
+    requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
+    provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
+    environments: [],
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 

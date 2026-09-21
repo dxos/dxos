@@ -27,68 +27,66 @@ import { log } from '@dxos/log';
  * upfront, since the factory itself has no dependencies. Process-manager runtime is likewise
  * resolved lazily on cancel.
  */
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const capabilityManager = yield* Capability.Service;
-    const runtime = yield* Effect.context<Capability.Service>();
+export default Effect.fnUntraced(function* () {
+  const capabilityManager = yield* Capability.Service;
+  const runtime = yield* Effect.context<Capability.Service>();
 
-    // Local branch: terminate the emitting process on this runtime's ProcessManager (interrupting the
-    // operation's fiber). Unchanged from the former pid-only path.
-    const terminateLocal = (pid: string) =>
-      Effect.gen(function* () {
-        const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+  // Local branch: terminate the emitting process on this runtime's ProcessManager (interrupting the
+  // operation's fiber). Unchanged from the former pid-only path.
+  const terminateLocal = (pid: string) =>
+    Effect.gen(function* () {
+      const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
 
-        processManagerRuntime.runFork(
-          Effect.gen(function* () {
-            const manager = yield* ProcessManager.ProcessManagerService;
-            const handle = yield* manager
-              .attach(Process.ID.make(pid))
-              .pipe(Effect.catch(() => Effect.succeed(undefined)));
-            if (handle) {
-              yield* handle.terminate();
-            }
-          }),
-        );
-      }).pipe(Effect.provide(runtime), Effect.runFork);
-
-    // Edge branch: cancel the trigger's current run (in-flight execution + continuation chain) via the
-    // remote process manager. A missing remote manager (local-only deployment) resolves to a no-op.
-    const cancelRemote = (resolver: ServiceResolver.ServiceResolver, space: string, trigger: string, pid?: string) =>
-      Effect.runFork(
-        resolver.resolve(RemoteProcessManager.Service, {}).pipe(
-          Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
-          Effect.scoped,
-          // Soft-fail (the meter has already cleared locally) but never silently: an unresolvable
-          // manager or a rejected request means the run may still be going on the edge.
-          Effect.catchCause((cause) =>
-            Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
-          ),
-        ),
-      );
-
-    return [
-      Capability.contribute(Capabilities.TraceSink, ({ resolver }) =>
-        createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
-          cancelProcess: (target: CancelTarget) => {
-            // An edge target never falls through to local terminate: its pid names a process on the
-            // edge runtime, so terminating that id here could only hit an unrelated local process.
-            if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName)) {
-              const triggerId = resolveTriggerId(target);
-              if (target.space && triggerId) {
-                cancelRemote(resolver, target.space, triggerId, target.pid);
-              } else {
-                log.warn('edge progress cancel dropped: unresolvable target', {
-                  space: target.space,
-                  trigger: target.trigger?.uri.toString(),
-                  pid: target.pid,
-                });
-              }
-            } else if (target.pid) {
-              terminateLocal(target.pid);
-            }
-          },
+      processManagerRuntime.runFork(
+        Effect.gen(function* () {
+          const manager = yield* ProcessManager.ProcessManagerService;
+          const handle = yield* manager
+            .attach(Process.ID.make(pid))
+            .pipe(Effect.catch(() => Effect.succeed(undefined)));
+          if (handle) {
+            yield* handle.terminate();
+          }
         }),
+      );
+    }).pipe(Effect.provide(runtime), Effect.runFork);
+
+  // Edge branch: cancel the trigger's current run (in-flight execution + continuation chain) via the
+  // remote process manager. A missing remote manager (local-only deployment) resolves to a no-op.
+  const cancelRemote = (resolver: ServiceResolver.ServiceResolver, space: string, trigger: string, pid?: string) =>
+    Effect.runFork(
+      resolver.resolve(RemoteProcessManager.Service, {}).pipe(
+        Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
+        Effect.scoped,
+        // Soft-fail (the meter has already cleared locally) but never silently: an unresolvable
+        // manager or a rejected request means the run may still be going on the edge.
+        Effect.catchCause((cause) =>
+          Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
+        ),
       ),
-    ];
-  }),
-);
+    );
+
+  return [
+    Capability.contribute(Capabilities.TraceSink, ({ resolver }) =>
+      createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
+        cancelProcess: (target: CancelTarget) => {
+          // An edge target never falls through to local terminate: its pid names a process on the
+          // edge runtime, so terminating that id here could only hit an unrelated local process.
+          if (target.runtimeName && Trace.isEdgeRuntime(target.runtimeName)) {
+            const triggerId = resolveTriggerId(target);
+            if (target.space && triggerId) {
+              cancelRemote(resolver, target.space, triggerId, target.pid);
+            } else {
+              log.warn('edge progress cancel dropped: unresolvable target', {
+                space: target.space,
+                trigger: target.trigger?.uri.toString(),
+                pid: target.pid,
+              });
+            }
+          } else if (target.pid) {
+            terminateLocal(target.pid);
+          }
+        },
+      }),
+    ),
+  ];
+});

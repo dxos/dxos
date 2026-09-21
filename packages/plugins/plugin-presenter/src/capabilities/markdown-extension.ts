@@ -9,17 +9,16 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { keymap } from '@dxos/ui-editor';
 
 import { PresenterOperation } from '#types';
 
 import { isPresenting } from '../paths.ts';
 
-/**
- * Contributes the present shortcut (Shift+Cmd+P) to the markdown editor so presentation
- * can be toggled while editing without relying on the global navtree keyboard context.
- */
-export default Capability.makeModule(
+export const MarkdownExtension = Capability.makeModule(
+  'MarkdownExtension',
+  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 

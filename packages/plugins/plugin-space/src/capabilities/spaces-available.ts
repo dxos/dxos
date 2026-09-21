@@ -24,6 +24,7 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // alias instead of a relative `node_modules` path (TS2883).
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
@@ -87,7 +88,27 @@ const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.E
     });
   });
 
-export default Capability.makeModule(
+// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
+// headless host registers.
+export const SpacesAvailable = Capability.makeModule(
+  'SpacesAvailable',
+  {
+    environments: [],
+    requires: [
+      Capabilities.OperationInvoker,
+      AppCapabilities.AppGraph,
+      Capabilities.AtomRegistry,
+      AppCapabilities.Layout,
+      AttentionCapabilities.Attention,
+      SpaceCapabilities.State,
+      SpaceCapabilities.EphemeralState,
+      ClientCapabilities.Client,
+      ClientCapabilities.IdentityService,
+    ],
+    provides: [],
+    // Runtime event: spaces become ready when the client observes them, not at startup.
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();

@@ -6,13 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
 
 import { Provider } from '#types';
 
 import { getProviderPath } from '../paths.ts';
 
-export default Capability.makeModule(
+export const NavigationTargetResolver = AppCapability.navigationResolver(
   Effect.fnUntraced(function* () {
     return Capability.contribute(
       AppCapabilities.NavigationTargetResolver,

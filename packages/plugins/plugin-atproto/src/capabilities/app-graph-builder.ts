@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -46,7 +47,7 @@ const whenPublishable: GraphNodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) =
   return hasAtprotoConnection ? Option.some(object) : Option.none();
 };
 
-export default Capability.makeModule(
+export const AtprotoAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({

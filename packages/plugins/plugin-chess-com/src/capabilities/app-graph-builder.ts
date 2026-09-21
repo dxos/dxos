@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
 
-export default Capability.makeModule(
+export const ChessComAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const accountActions = yield* AppGraphBuilder.createTypeExtension({
       id: 'chessComAccountActions',

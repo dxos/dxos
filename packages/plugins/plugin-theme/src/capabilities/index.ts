@@ -9,13 +9,13 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { ThemeCapabilities } from '#types';
 
-export const ReactContext = AppCapability.reactContext(() => import('../react-context.tsx'), {
+export const ReactContext = AppCapability.lazyReactContext(() => import('../react-context.tsx'), {
   requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
 });
-export const Settings = AppCapability.settings(() => import('../settings.ts'), {
+export const Settings = AppCapability.lazySettings(() => import('../settings.ts'), {
   provides: [ThemeCapabilities.Settings],
 });
-export const Translator = Capability.lazyModule(
+export const Translator = Capability.makeLazyModule(
   'Translator',
   { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
   () => import('../translator.ts'),

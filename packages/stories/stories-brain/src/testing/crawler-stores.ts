@@ -46,12 +46,10 @@ export type CrawlerStoresRuntime = ManagedRuntime.ManagedRuntime<CrawlerStoreSer
 /** Capability exposing the shared crawler-stores runtime to Facts-story modules. */
 export const CrawlerStores = Capability.makeSingleton<CrawlerStoresRuntime>()('org.dxos.stories.brain.crawlerStores');
 
-const CrawlerStoresModule = Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const runtime = ManagedRuntime.make(crawlerStoresLayer());
-    return Capability.contribute(CrawlerStores, runtime);
-  }),
-);
+const CrawlerStoresModule = Effect.fnUntraced(function* () {
+  const runtime = ManagedRuntime.make(crawlerStoresLayer());
+  return Capability.contribute(CrawlerStores, runtime);
+});
 
 /** Contributes the {@link CrawlerStores} runtime capability for the Facts story. */
 export const CrawlerStoresPlugin = Plugin.define(

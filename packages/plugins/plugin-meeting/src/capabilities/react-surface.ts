@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
@@ -16,26 +17,30 @@ import { Meeting } from '#types';
 
 import { MeetingCompanion } from './MeetingCompanion.tsx';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'meeting',
-        filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
-        component: MeetingArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-      Surface.create({
-        id: 'meetingCompanion',
-        filter: Surface.makeFilter(
-          AppSurface.Article,
-          (data) =>
-            (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
-            Obj.instanceOf(Channel.Channel, data.companionTo),
-        ),
-        component: MeetingCompanion,
-        props: ({ role, data: { subject, companionTo } }) => ({ role, subject, companionTo }),
-      }),
-    ]),
-  ),
+export const ReactSurface = AppCapability.surface(
+  () =>
+    Effect.succeed(
+      Capability.contribute(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'meeting',
+          filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
+          component: MeetingArticle,
+          props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        }),
+        Surface.create({
+          id: 'meetingCompanion',
+          filter: Surface.makeFilter(
+            AppSurface.Article,
+            (data) =>
+              (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
+              Obj.instanceOf(Channel.Channel, data.companionTo),
+          ),
+          component: MeetingCompanion,
+          props: ({ role, data: { subject, companionTo } }) => ({ role, subject, companionTo }),
+        }),
+      ]),
+    ),
+  {
+    roles: ['org.dxos.role.article'],
+  },
 );

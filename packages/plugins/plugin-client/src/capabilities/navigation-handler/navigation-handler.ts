@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
@@ -14,6 +15,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { ClientCapabilities } from '#types';
+import { ClientOptions } from '#types';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -23,11 +25,7 @@ export type NavigationHandlerOptions = {
   invitationUrlHandler?: boolean;
 };
 
-/**
- * NavigationHandler for auth-related URL params.
- * Handles login tokens and device invitation codes.
- */
-export default Capability.makeModule(
+export const NavigationHandler = AppCapability.navigationHandler(
   Effect.fnUntraced(function* ({
     invitationProp = 'deviceInvitationCode',
     tokenProp = 'token',
@@ -82,6 +80,13 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.NavigationHandler, handler);
   }),
+  {
+    requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
+    props: ({ invitationProp, invitationUrlHandler }: ClientOptions.ClientPluginOptions) => ({
+      invitationProp,
+      invitationUrlHandler,
+    }),
+  },
 );
 
 /** Remove a query param from the current browser URL. */

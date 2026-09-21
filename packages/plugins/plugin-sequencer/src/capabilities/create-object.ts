@@ -8,11 +8,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Score } from '#types';
 
-export default Capability.makeModule(
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Score.Score),

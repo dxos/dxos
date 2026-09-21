@@ -30,7 +30,13 @@ const defaultStateEntries: [string, NavTreeCapabilities.NavTreeItemState][] = [
   ['root', { open: true, current: false }],
 ];
 
-export default Capability.makeModule(
+export const State = Capability.makeModule(
+  'State',
+  {
+    // ViewState is the persistence backend for per-path expansion.
+    requires: [Capabilities.AtomRegistry, AppCapabilities.Layout, AttentionCapabilities.ViewState],
+    provides: [NavTreeCapabilities.State],
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;

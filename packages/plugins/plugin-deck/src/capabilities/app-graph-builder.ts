@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,7 +19,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { DeckCapabilities, DeckSchema } from '#types';
 
-export default Capability.makeModule(
+export const DeckAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read reactively so the extension establishes a dependency and heals once these
     // capabilities land (dependency modules contribute individually, not batched per wave).

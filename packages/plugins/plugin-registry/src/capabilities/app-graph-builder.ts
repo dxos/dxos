@@ -10,6 +10,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -46,7 +47,7 @@ const toDisplayPlugin = (entry: Plugin.Meta): Plugin.Plugin =>
     modules: [],
   }) as Plugin.Plugin;
 
-export default Capability.makeModule(
+export const RegistryAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* ({ externalPlugins = true }: RegistryPluginOptions = {}) {
     // Hoisted so connector bodies read reactively via `get(...)` instead of a sync
     // `Capability.get`, establishing a dependency that heals once the capability lands.

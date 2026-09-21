@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
+import { CrxEvents } from '#types';
 
 import { installPageActionListeners } from '../page-actions.ts';
 
@@ -24,7 +25,13 @@ const openObject = async (invoker: Capabilities.OperationInvoker, uri: EID.EID) 
   }
 };
 
-export default Capability.makeModule(
+export const InstallPageActions = Capability.makeModule(
+  'InstallPageActions',
+  {
+    requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry, CrxCapabilities.Settings],
+    provides: [],
+    activatesOn: CrxEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const invoker = yield* Capabilities.OperationInvoker;

@@ -7,8 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
-const Main = Capability.lazyModule('Main', { provides: [Capabilities.ReactSurface] }, () => import('./Main.tsx'));
-const Toolbar = Capability.lazyModule(
+const Main = Capability.makeLazyModule('Main', { provides: [Capabilities.ReactSurface] }, () => import('./Main.tsx'));
+const Toolbar = Capability.makeLazyModule(
   'Toolbar',
   { provides: [Capabilities.ReactSurface] },
   () => import('./Toolbar.tsx'),

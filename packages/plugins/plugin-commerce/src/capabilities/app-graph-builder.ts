@@ -9,10 +9,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position } from '@dxos/util';
 
@@ -21,7 +23,7 @@ import { Provider, Search, SearchOperation } from '#types';
 
 import { getProvidersSectionId } from '../paths.ts';
 
-export default Capability.makeModule(
+export const CommerceAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // Show Provider.Provider objects as nodes under each space.
@@ -137,4 +139,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    requires: [AttentionCapabilities.Attention],
+  },
 );

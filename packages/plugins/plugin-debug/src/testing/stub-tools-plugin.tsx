@@ -29,7 +29,7 @@ export const STUB_TOOL_PAGES = [
   { id: 'beta', data: 'stub-tool.beta', label: 'Beta tool' },
 ] as const;
 
-const stubGraphBuilder = Capability.inlineModule(
+const stubGraphBuilder = Capability.makeModule(
   'stub-tools-graph',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
@@ -70,7 +70,7 @@ const stubGraphBuilder = Capability.inlineModule(
   }),
 );
 
-const stubSurfaces = Capability.inlineModule('stub-tools-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
+const stubSurfaces = Capability.makeModule('stub-tools-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
     Capability.contribute(
       Capabilities.ReactSurface,

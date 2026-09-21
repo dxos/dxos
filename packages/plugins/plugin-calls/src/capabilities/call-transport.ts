@@ -8,13 +8,20 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { CallsCapabilities } from '#types';
 
 const CLOUDFLARE_TRANSPORT_KIND = 'org.dxos.call.transport.cloudflare';
 
-/** Built-in Cloudflare {@link CallsCapabilities.CallTransportProvider} over `CallManager`. */
-export default Capability.makeModule(
+export const CallTransport = Capability.makeModule(
+  'CallTransport',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [CallsCapabilities.CallTransportProvider],
+    activatesOn: ClientEvents.Initialized,
+    environments: [],
+  },
   Effect.fnUntraced(function* () {
     // Presence of a transport provider is what the UI offers a call on, so an unconfigured calls
     // service must contribute nothing rather than let `join()` fail behind an enabled control.

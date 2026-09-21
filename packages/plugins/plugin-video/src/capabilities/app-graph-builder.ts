@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 
@@ -19,12 +20,7 @@ import { meta } from '#meta';
 // item is invoked.
 import { Video } from '#types';
 
-/**
- * Contributes the video operations to a Video object's app-graph node, so they appear in the
- * article's menu: fetch the transcript from captions, transcribe via the EDGE worker, and create the
- * AI summary. These are explicit alternatives to the on-demand generation the surfaces run.
- */
-export default Capability.makeModule(
+export const VideoAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Lazy-load the operation definitions (and their `@dxos/ai` dependency) only at click time, so the
     // AI stack stays out of early boot. Each action references its concrete operation (the three ops

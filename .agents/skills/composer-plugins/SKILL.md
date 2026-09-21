@@ -238,8 +238,8 @@ plugin-foo/
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
     skills/             # AI skill definitions.
       index.ts
-    capabilities/           # Lazy capability modules (one file each).
-      index.ts              # Barrel of maker / Capability.lazyModule() exports.
+    capabilities/           # Capability modules (one file each), re-exported by the barrel.
+      index.ts              # `export { X } from './x.ts'`, plus value makers (translations, assets).
       react-surface.tsx
       operation-handler.ts
       skill-definition.ts
@@ -327,7 +327,7 @@ from its cause. Replacement table and the grep are in **composer-ui** § "Sizing
 
 ### Capability (`src/capabilities/`)
 
-Plugin modules that contribute functionality to the framework. Each is a single file with a default export using `Capability.makeModule()`. The barrel `index.ts` uses only makers (`AppCapability.*`) or `Capability.lazyModule()` exports. Do NOT add non-lazy exports.
+Plugin modules that contribute functionality to the framework. Each is a single file that defines its module with a maker (`export const ReactSurface = AppCapability.surface(body, { roles })`) or `Capability.makeModule(name, spec, body)`, and the barrel `index.ts` re-exports it. The barrel is what `Plugin.lazy` fetches on enable, so every module a barrel re-exports lands in the plugin's one chunk; a body that must stay out of it uses the maker's lazy pairing (`AppCapability.lazySurface(() => import('./x.ts'), ...)` / `Capability.makeLazyModule`), which is the exception, not the default. The other exception is a plugin the app reaches statically rather than through `Plugin.lazy` (`plugin-progress`, which draws the boot loader; the framework's own `ProcessManagerPlugin`): its barrel is in the boot closure, so every body it defines eagerly lands in the boot graph. Those keep lazy bodies throughout, and `check-boot-budget` is what catches a new one.
 
 See: `plugin-chess/src/capabilities/`
 
@@ -406,11 +406,11 @@ Plugins that contribute Effect services to the process-manager runtime do so via
 
 Conventions:
 
-- **Declare each spec at module level**, not inside the `Capability.makeModule(Effect.fnUntraced(...))` activation body. Keep the activation block to just the `Capability.contribute(...)` list (+ any conditional contributions that depend on runtime config).
+- **Declare each spec at module level**, not inside the module's `Effect.fnUntraced(...)` activation body. Keep the activation block to just the `Capability.contribute(...)` list (+ any conditional contributions that depend on runtime config).
 - **Use PascalCase names ending in `LayerSpec`** (`ClientLayerSpec`, `DatabaseLayerSpec`, `RemoteFunctionExecutionSpec`, …). This makes the module-level intent obvious at the callsite.
 - **Declare runtime dependencies via `requires`, not via outer-scope closures.** If a spec needs the `Client`, require `ClientService` (or `Capability.Service` + `Capability.get(ClientCapabilities.Client)` inside a `Layer.unwrapEffect(Effect.gen(...))`). If a spec needs contributed capabilities (e.g. operation handlers, skill definitions), require `Capability.Service` and resolve them with `Capability.get` / `Capability.getAll` — this keeps the spec portable and the dependency graph explicit.
 - **Hard-fail with `invariant` on missing space context or missing space records.** Space-affinity specs that receive a `context` argument should `invariant(context.space, …)` and `invariant(space, …)` on the client lookup — returning a `notAvailable` fallback hides configuration bugs in the layer graph.
-- **Activation-conditional specs stay inside the `makeModule` body.** Specs that only apply when a runtime config flag is set (e.g. `runtime.client.edgeFeatures.agents`) can still read that config from the `Client` and conditionally append themselves to the contributions list.
+- **Activation-conditional specs stay inside the activation body.** Specs that only apply when a runtime config flag is set (e.g. `runtime.client.edgeFeatures.agents`) can still read that config from the `Client` and conditionally append themselves to the contributions list.
 
 #### Affinity and `LayerSpec.LayerContext`
 
@@ -505,8 +505,10 @@ See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/pat
 ## Plugin Definition
 
 The main plugin file wires everything together with `Plugin.define(meta).pipe(Plugin.addModule(...))`.
-Modules come from **makers** in `AppCapability` (loader-based) or `Capability.lazyModule` /
-`Capability.inlineModule` (for anything without a maker). See `plugin-chess/src/ChessPlugin.tsx`.
+Modules come from **makers** in `AppCapability` or `Capability.makeModule` (for anything without a
+maker). Each maker takes the body directly; its `lazy` pairing (`AppCapability.lazySurface`,
+`Capability.makeLazyModule`) takes a loader and keeps the body in its own chunk. See
+`plugin-chess/src/ChessPlugin.tsx`.
 
 | Maker                                                                         | Contributes                 | Default wave                                         |
 | ----------------------------------------------------------------------------- | --------------------------- | ---------------------------------------------------- |
@@ -533,8 +535,8 @@ almost everything; the exceptions are listed above and are baked into the makers
 
 Five rules, each learned from a shipped regression:
 
-1. **Use the maker.** A module that builds its spec by hand (`Capability.lazyModule({ provides:
-[Capabilities.ReactContext] })`) bypasses the maker's gate and silently inherits the idle
+1. **Use the maker.** A module that builds its spec by hand (`Capability.makeModule('X', { provides:
+[Capabilities.ReactContext] }, body)`) bypasses the maker's gate and silently inherits the idle
    default. A React context arriving at idle leaves roots already mounted _outside_ it — Radix
    reports `Tooltip.Trigger must be used within Tooltip`.
 2. **The gate belongs on the PROVIDER, not the reader.** If a Startup module reads state on its
@@ -590,7 +592,7 @@ selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `sr
 `src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
 plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
 
-**`lazy` defers evaluation, not bundling.** `Capability.lazyModule`, `OperationHandlerSet.lazy` and
+**`lazy` defers evaluation, not bundling.** `Capability.makeLazyModule`, `OperationHandlerSet.lazy` and
 `React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
 merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
 consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
@@ -714,6 +716,6 @@ moon run plugin-foo:test-storybook
 - `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
-- Never rely on `Capability.lazyModule` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
+- Never rely on `Capability.makeLazyModule` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
   out of a bundle — they defer evaluation, not bundling. See **Non-Browser Variants**.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

@@ -56,7 +56,7 @@ const MockDeckOperationsPlugin = Plugin.define(
   }),
 ).pipe(
   Plugin.addModule(
-    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+    Capability.makeModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([
         Capability.contribute(
           Capabilities.OperationHandler,

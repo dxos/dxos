@@ -10,7 +10,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { steps } from '../tours/index.ts';
 import { getCommentConfig } from '../util/commentable.ts';
 
-export default Capability.makeModule(
+export const TourFragment = Capability.makeModule(
+  'TourFragment',
+  { provides: [AppCapabilities.TourFragment], environments: [] },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 

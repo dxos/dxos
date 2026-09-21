@@ -7,10 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
+import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
 import { ProjectOperation } from '#types';
 
-export default Capability.makeModule(
+export const TaskAction = Capability.makeModule(
+  'TaskAction',
+  { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(TasksCapabilities.TaskAction, [
       {

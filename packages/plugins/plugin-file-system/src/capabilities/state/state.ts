@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { FileSystemCapabilities } from '#types';
+import { FileSystemEvents } from '#types';
 
 import { loadWorkspace, refreshWorkspace } from '../../util.ts';
 import { createDirectoryWatcher } from './directory-watcher.ts';
@@ -19,7 +20,13 @@ import * as FileSystemManager from './FileSystemManager.ts';
 import { createMarkdownDocuments } from './markdown-documents.ts';
 import { MirrorSpaceManager } from './mirror-space-manager.ts';
 
-export default Capability.makeModule(
+export const State = Capability.makeModule(
+  'State',
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [FileSystemCapabilities.State, FileSystemCapabilities.FileSystemManager],
+    activatesOn: FileSystemEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const client = yield* ClientCapabilities.Client;

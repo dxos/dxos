@@ -10,6 +10,7 @@ import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { DecisionError, DecisionModel, TypeSafeClient } from '@dxos/ai-typesafe';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 
@@ -55,7 +56,7 @@ const decisionModelLayer = (
     }),
   );
 
-export default Capability.makeModule(
+export const LayerSpecs = AppCapability.layerSpec(
   Effect.fnUntraced(function* () {
     const settingsAtom = yield* Capability.get(TypeSafeCapabilities.Settings);
     const registry: AtomRegistry.AtomRegistry = yield* Capabilities.AtomRegistry;
@@ -73,4 +74,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(Capabilities.LayerSpec, DecisionModelSpec);
   }),
+  {
+    name: 'DecisionModel',
+    requires: [TypeSafeCapabilities.Settings, Capabilities.AtomRegistry],
+  },
 );

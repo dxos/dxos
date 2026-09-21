@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { Tag } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
@@ -20,11 +21,7 @@ import {
   TaskSet,
 } from '@dxos/types';
 
-/**
- * Schemas this plugin registers, loaded on demand: the capability activates at idle,
- * so naming them here keeps them out of the plugin body's module graph.
- */
-export default [
+export const Schema = AppCapability.schema([
   ...DataTypes,
   AnchoredTo.AnchoredTo,
   AppSettings.AppSettings,
@@ -40,4 +37,4 @@ export default [
   Tag.Tag,
   Task.Task,
   TaskSet.TaskSet,
-];
+]);

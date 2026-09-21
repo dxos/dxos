@@ -6,28 +6,34 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { ObservabilityCapabilities, Settings } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    const settingsAtom = createKvsStore({
-      key: meta.profile.key,
-      schema: Settings.Settings,
-      defaultValue: () => ({
-        enabled: true,
-      }),
-    });
-
-    return [
-      Capability.contribute(ObservabilityCapabilities.Settings, settingsAtom),
-      Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+export const ObservabilitySettings = AppCapability.settings(
+  () =>
+    Effect.sync(() => {
+      const settingsAtom = createKvsStore({
+        key: meta.profile.key,
         schema: Settings.Settings,
-        atom: settingsAtom,
-      }),
-    ];
-  }),
+        defaultValue: () => ({
+          enabled: true,
+        }),
+      });
+
+      return [
+        Capability.contribute(ObservabilityCapabilities.Settings, settingsAtom),
+        Capability.contribute(AppCapabilities.Settings, {
+          prefix: meta.profile.key,
+          schema: Settings.Settings,
+          atom: settingsAtom,
+        }),
+      ];
+    }),
+  {
+    provides: [ObservabilityCapabilities.Settings],
+    environments: [],
+  },
 );

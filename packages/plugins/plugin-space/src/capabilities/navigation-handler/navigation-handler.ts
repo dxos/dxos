@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,6 +19,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
+import { SpaceSchema } from '#types';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -25,11 +27,7 @@ export type NavigationHandlerOptions = {
   invitationUrlHandler?: boolean;
 };
 
-/**
- * NavigationHandler for space invitation URL params.
- * Handles ?spaceInvitationCode=X → join space via invitation.
- */
-export default Capability.makeModule(
+export const NavigationHandler = AppCapability.navigationHandler(
   Effect.fnUntraced(function* ({
     invitationProp = 'spaceInvitationCode',
     invitationUrlHandler = true,
@@ -79,6 +77,10 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.NavigationHandler, handler);
   }),
+  {
+    requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({ invitationProp: options.invitationProp }),
+  },
 );
 
 /** Remove a query param from the current browser URL. */

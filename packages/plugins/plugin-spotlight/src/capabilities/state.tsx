@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -17,27 +18,35 @@ const defaultState: SpotlightCapabilities.SpotlightState = {
   dialogContent: { component: COMMANDS_DIALOG },
 };
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    const stateAtom = Atom.make<SpotlightCapabilities.SpotlightState>({ ...defaultState });
+export const State = Capability.makeModule(
+  'State',
+  {
+    // App-shell state — same reason as the deck's `DeckState`: `SpotlightLayout` reads it on its
+    // first render, so the shell cannot paint until this module has run.
+    activatesOn: ActivationEvents.Startup,
+    provides: [SpotlightCapabilities.State, AppCapabilities.Layout],
+  },
+  () =>
+    Effect.sync(() => {
+      const stateAtom = Atom.make<SpotlightCapabilities.SpotlightState>({ ...defaultState });
 
-    const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
-      const state = get(stateAtom);
-      return {
-        mode: 'spotlight',
-        dialogOpen: state.dialogOpen,
-        sidebarOpen: false,
-        complementarySidebarOpen: false,
-        workspace: GraphNode.RootId,
-        active: [],
-        inactive: [],
-        scrollIntoView: undefined,
-      };
-    });
+      const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
+        const state = get(stateAtom);
+        return {
+          mode: 'spotlight',
+          dialogOpen: state.dialogOpen,
+          sidebarOpen: false,
+          complementarySidebarOpen: false,
+          workspace: GraphNode.RootId,
+          active: [],
+          inactive: [],
+          scrollIntoView: undefined,
+        };
+      });
 
-    return [
-      Capability.contribute(SpotlightCapabilities.State, stateAtom),
-      Capability.contribute(AppCapabilities.Layout, layoutAtom),
-    ];
-  }),
+      return [
+        Capability.contribute(SpotlightCapabilities.State, stateAtom),
+        Capability.contribute(AppCapabilities.Layout, layoutAtom),
+      ];
+    }),
 );

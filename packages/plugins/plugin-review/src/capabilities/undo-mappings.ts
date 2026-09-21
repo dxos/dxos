@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
+import { ReviewEvents } from '#types';
 
-export default Capability.makeModule(
+export const UndoMappings = AppCapability.undoMappings(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.UndoMapping, [
       UndoMapping.make({
@@ -45,4 +47,8 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    activatesOn: ReviewEvents.Start,
+    environments: ['node'],
+  },
 );

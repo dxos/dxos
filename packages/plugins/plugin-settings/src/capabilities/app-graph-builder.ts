@@ -10,6 +10,7 @@ import type * as Plugin$ from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,7 +20,7 @@ import { Position, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SettingsPath } from '#types';
 
-export default Capability.makeModule(
+export const SettingsAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
@@ -114,4 +115,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    name: 'SettingsAppGraphBuilder',
+  },
 );

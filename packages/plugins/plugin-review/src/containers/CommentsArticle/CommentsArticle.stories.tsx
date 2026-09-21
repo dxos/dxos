@@ -122,7 +122,7 @@ const StubAgentRunner: CommentCapabilities.AgentRunner = {
  * 2. Stubs out plugin-deck's layout operations (`UpdateCompanion`,
  *    `ScrollIntoView`) that ReviewPlugin and the CommentsArticle invoke.
  */
-const StoryAppGraphBuilder = Capability.inlineModule(
+const StoryAppGraphBuilder = Capability.makeModule(
   'StoryAppGraphBuilder',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {
@@ -153,7 +153,7 @@ const StoryAppGraphBuilder = Capability.inlineModule(
   }),
 );
 
-const StoryOperationHandler = Capability.inlineModule(
+const StoryOperationHandler = Capability.makeModule(
   'StoryOperationHandler',
   { provides: [Capabilities.OperationHandler] },
   () =>

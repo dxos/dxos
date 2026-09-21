@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
@@ -170,16 +171,20 @@ const SpaceLayerSpec = LayerSpec.make(
     ),
 );
 
-export default Capability.makeModule(() =>
-  Effect.succeed([
-    Capability.contributeAll(Capabilities.LayerSpec, [
-      ClientLayerSpec,
-      DatabaseLayerSpec,
-      HypergraphLayerSpec,
-      AccessTokenResolverLayerSpec,
-      CredentialsLayerSpec,
-      IdentityLayerSpec,
-      SpaceLayerSpec,
+export const LayerSpecs = AppCapability.layerSpec(
+  () =>
+    Effect.succeed([
+      Capability.contributeAll(Capabilities.LayerSpec, [
+        ClientLayerSpec,
+        DatabaseLayerSpec,
+        HypergraphLayerSpec,
+        AccessTokenResolverLayerSpec,
+        CredentialsLayerSpec,
+        IdentityLayerSpec,
+        SpaceLayerSpec,
+      ]),
     ]),
-  ]),
+  {
+    name: 'LayerSpecs',
+  },
 );

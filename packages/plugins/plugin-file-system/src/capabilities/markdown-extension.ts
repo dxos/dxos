@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { listener } from '@dxos/ui-editor';
 
 import { FileSystemCapabilities } from '#types';
@@ -17,7 +18,15 @@ import { findFileById, updateFileInWorkspace, writeFileContent } from '../util.t
 
 const AUTO_SAVE_DELAY_MS = 1000;
 
-export default Capability.makeModule(
+export const Markdown = Capability.makeModule(
+  'MarkdownExtension',
+  {
+    // `State` is declared alongside the manager because the provider callbacks read it and it is
+    // contributed by this plugin's own idle-gated module, which markdown start can otherwise precede.
+    requires: [FileSystemCapabilities.FileSystemManager, FileSystemCapabilities.State],
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activatesOn: MarkdownEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     const fileSystemManager = yield* FileSystemCapabilities.FileSystemManager;

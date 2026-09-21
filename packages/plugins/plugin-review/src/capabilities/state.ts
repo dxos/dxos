@@ -9,7 +9,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { CommentCapabilities, ReviewCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const CommentState = Capability.makeModule(
+  'CommentState',
+  { provides: [CommentCapabilities.State] },
   Effect.fnUntraced(function* () {
     const stateAtom = Atom.make<ReviewCapabilities.CommentState>({ toolbar: {}, drafts: {} }).pipe(Atom.keepAlive);
 

@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 
 import { FileCapabilities } from '#types';
+import { FileEvents } from '#types';
 
 /**
  * Inline backend descriptor: file bytes are stored on the ECHO object itself.
@@ -19,6 +20,8 @@ export const inlineBackend: FileCapabilities.Backend = {
   storage: Blob.Storage.inline,
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(FileCapabilities.Backend, inlineBackend)),
+export const InlineBackend = Capability.makeModule(
+  'InlineBackend',
+  { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['node', 'workerd'] },
+  () => Effect.succeed(Capability.contribute(FileCapabilities.Backend, inlineBackend)),
 );

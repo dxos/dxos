@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Database, Entity, Obj } from '@dxos/echo';
@@ -14,15 +15,7 @@ import { Position } from '@dxos/util';
 
 import { getProjectChatPath } from '../paths.ts';
 
-/**
- * Places a project's chats on that project's Chats branch. Without this a project chat resolves
- * only to the assistant's Chats section, whose connector queries unparented chats — so the path
- * names a node that does not exist and opening it leaves a blank pane.
- *
- * `Position.first`: the branch is where the tree actually shows the chat, so it outranks both the
- * type section's answer and the generic database subtree.
- */
-export default Capability.makeModule(
+export const NavigationTargetResolver = AppCapability.navigationResolver(
   Effect.fnUntraced(function* () {
     return Capability.contribute(AppCapabilities.NavigationTargetResolver, (query) =>
       Effect.gen(function* () {

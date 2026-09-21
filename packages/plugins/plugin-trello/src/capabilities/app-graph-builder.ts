@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
@@ -19,7 +20,7 @@ import { TrelloOperation } from '#types';
 
 import { TRELLO_SOURCE } from '../constants.ts';
 
-export default Capability.makeModule(
+export const TrelloAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({

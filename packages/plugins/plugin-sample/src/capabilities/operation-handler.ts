@@ -9,13 +9,16 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { SampleOperationHandlerSet } from '#operations';
 
-// When the module doesn't need to access other capabilities or perform setup,
-// use `Effect.succeed` directly instead of `Effect.fnUntraced(function* () { ... })`.
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(Capabilities.OperationHandler, SampleOperationHandlerSet)),
+export const OperationHandler = AppCapability.operationHandler(
+  () => Effect.succeed(Capability.contribute(Capabilities.OperationHandler, SampleOperationHandlerSet)),
+  {
+    activatesOn: ActivationEvents.Idle,
+  },
 );

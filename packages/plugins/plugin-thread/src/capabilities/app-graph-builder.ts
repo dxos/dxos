@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -24,7 +25,10 @@ import { getChannelsPath } from '../paths.ts';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 
-export default Capability.makeModule(
+// The graph builder reads the call manager OPTIONALLY (reactive atom with an absence guard),
+// so no spec-level require: a hard cross-plugin require would fail this plugin whenever
+// plugin-calls is disabled. Cross-feature requires are only valid with a plugin-level dependsOn.
+export const ThreadAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read reactively so the extension establishes a dependency and heals once this
     // capability lands (dependency modules contribute individually, not batched per wave).

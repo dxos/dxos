@@ -7,7 +7,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
-const Debug = Capability.lazyModule('Debug', { provides: [Capabilities.ReactSurface] }, () => import('./Debug.tsx'));
+const Debug = Capability.makeLazyModule(
+  'Debug',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./Debug.tsx'),
+);
 
 export const DebugPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.test.pluginDebug'), name: 'Debug' }),

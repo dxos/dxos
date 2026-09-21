@@ -9,6 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -24,7 +25,7 @@ import { FeedOperation, Magazine, Subscription } from '#types';
 
 import { getMagazinesPath } from '../paths.ts';
 
-export default Capability.makeModule(
+export const MagazineAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const viewState = yield* AttentionCapabilities.ViewState;
     const selectedId = Atom.family((nodeId: string) =>
@@ -128,4 +129,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: [],
+    requires: [AttentionCapabilities.ViewState],
+  },
 );

@@ -8,11 +8,12 @@ import React from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { DevtoolsContextProvider } from '@dxos/devtools';
 
 import { meta } from '#meta';
 
-export default Capability.makeModule(() =>
+export const ReactContext = AppCapability.reactContext(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,

@@ -11,6 +11,7 @@ import { Format } from '@dxos/echo/Format';
 import { AccessToken, Connection } from '@dxos/link';
 
 import { ConnectorSpec } from '#types';
+import { ConnectorEvents } from '#types';
 
 import { CUSTOM_PROVIDER_ID } from '../constants.ts';
 
@@ -31,12 +32,9 @@ const CustomTokenForm = Schema.Struct({
   }),
 });
 
-/**
- * Built-in {@link ConnectorSpec.Connector} entries: just the manual-token connector.
- * Service-specific connectors (atproto/Atmosphere in `@dxos/plugin-atproto`, Bluesky, Trello,
- * GitHub, …) live in their own plugins and contribute from their own dependency-mode modules.
- */
-export default Capability.makeModule(
+export const BuiltinConnectors = Capability.makeModule(
+  'BuiltinConnectors',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

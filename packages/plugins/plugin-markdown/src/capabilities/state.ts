@@ -32,7 +32,15 @@ const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => 
   };
 };
 
-export default Capability.makeModule(
+// Browser-only, like the two anchor modules: it requires attention's view state, which only the
+// app shell provides — activating it headlessly just fails the dependency graph at boot.
+export const MarkdownState = Capability.makeModule(
+  'MarkdownState',
+  {
+    requires: [AttentionCapabilities.ViewState],
+    provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
+    environments: [],
+  },
   Effect.fnUntraced(function* () {
     // Resolve the view-state Manager contributed by plugin-attention (declared in `requires` so
     // this module activates only once it lands — see MarkdownPlugin.tsx).

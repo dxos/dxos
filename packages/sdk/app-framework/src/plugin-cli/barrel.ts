@@ -18,7 +18,10 @@ import {
 } from './ts-util.ts';
 
 export type BarrelMember = {
+  /** Name the declaration has in its own file. */
   name: string;
+  /** Name the barrel exports it under; differs from `name` across an aliased re-export. */
+  exportedName: string;
   /** `maker-call` members are module declarations; anything else is a helper/value export. */
   kind: 'maker-call' | 'non-call-initializer';
   /**
@@ -60,7 +63,7 @@ export const parseBarrel = (
         continue;
       }
       for (const [name, member] of parseBarrel(target)) {
-        members.set(name, member);
+        members.set(name, { ...member, exportedName: name });
       }
     } else if (!exp.isTypeOnly && exp.moduleSpecifier) {
       const target = resolveRelativeModule(path.dirname(filePath), exp.moduleSpecifier);
@@ -69,7 +72,7 @@ export const parseBarrel = (
       }
       const found = parseBarrel(target).get(exp.localName);
       if (found) {
-        members.set(exp.exportedName, found);
+        members.set(exp.exportedName, { ...found, exportedName: exp.exportedName });
       }
     }
   }
@@ -85,10 +88,18 @@ const describeMember = (
 ): BarrelMember => {
   const statementText = statementTextWithLeadingComments(sourceFile, entry.statement);
   if (!ts.isCallExpression(entry.initializer)) {
-    return { name: entry.name, kind: 'non-call-initializer', environments: null, sourceFile: filePath, statementText };
+    return {
+      name: entry.name,
+      exportedName: entry.name,
+      kind: 'non-call-initializer',
+      environments: null,
+      sourceFile: filePath,
+      statementText,
+    };
   }
   return {
     name: entry.name,
+    exportedName: entry.name,
     kind: 'maker-call',
     environments: resolveEnvironments(sourceFile, entry.initializer, defaults),
     sourceFile: filePath,

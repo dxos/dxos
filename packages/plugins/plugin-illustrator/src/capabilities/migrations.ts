@@ -21,7 +21,10 @@ export const sketchToDrawing = Migration.define({
 
 const migrations = [sketchToDrawing];
 
-export default Capability.makeModule(
+// Migration providers stay eager: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.makeModule(
+  'IllustratorMigrations',
+  { provides: [ClientCapabilities.Migration] },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ClientCapabilities.Migration, migrations);
   }),

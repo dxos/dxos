@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -15,7 +16,13 @@ import { CommentCapabilities } from '#types';
 
 import { commentSync } from '../extensions/index.ts';
 
-export default Capability.makeModule(
+export const Markdown = Capability.makeModule(
+  'MarkdownExtension',
+  {
+    requires: [CommentCapabilities.State],
+    provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
+    activatesOn: MarkdownEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;

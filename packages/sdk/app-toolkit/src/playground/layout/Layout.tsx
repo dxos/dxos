@@ -29,11 +29,10 @@ export const Layout = () => {
   );
 };
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactRoot, {
       id: 'org.dxos.test.layout.root',
       root: Layout,
     }),
-  ),
-);
+  );

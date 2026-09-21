@@ -8,6 +8,7 @@ import { type ComponentProps } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import {
@@ -29,7 +30,7 @@ type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset' | '
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default Capability.makeModule(
+export const ReactSurface = AppCapability.surface(
   Effect.fnUntraced(function* ({ createInvitationUrl, onReset, identityTestActions }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
@@ -88,4 +89,21 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+    props: ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      invitationPath = '/',
+      invitationProp = 'deviceInvitationCode',
+      onReset,
+      identityTestActions,
+    }: ClientOptions.ClientPluginOptions) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
+      return { createInvitationUrl, onReset, identityTestActions };
+    },
+  },
 );

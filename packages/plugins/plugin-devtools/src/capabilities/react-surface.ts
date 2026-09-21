@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AutomergeArticle,
@@ -86,7 +87,7 @@ const isGraphDebug = (data: unknown): data is GraphDebug => {
   );
 };
 
-export default Capability.makeModule(
+export const ReactSurface = AppCapability.surface(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -364,4 +365,7 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: ['org.dxos.plugin.debug.surface.page', 'org.dxos.role.deckCompanion.devtoolsOverview'],
+  },
 );

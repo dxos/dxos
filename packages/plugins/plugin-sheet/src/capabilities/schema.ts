@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
 import { Sheet } from '#types';
 
-/**
- * Schemas this plugin registers, loaded on demand: the capability activates at idle,
- * so naming them here keeps them out of the plugin body's module graph.
- */
-export default [Sheet.Sheet];
+export const Schema = AppCapability.schema([Sheet.Sheet]);

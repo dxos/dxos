@@ -10,17 +10,15 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { NavTreeCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
-export const Expose = Capability.inlineModule(
+export { NavtreeAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
+export const Expose = Capability.makeModule(
   'expose',
   { requires: [AppCapabilities.AppGraph, AppCapabilities.Layout, Capabilities.OperationInvoker], provides: [] },
   Effect.fnUntraced(function* () {
@@ -38,34 +36,14 @@ export const Expose = Capability.inlineModule(
     return [];
   }),
 );
-export const Keyboard = Capability.lazyModule(
-  'Keyboard',
-  // Listens on `document`, which node and workerd lack.
-  { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [], environments: [] },
-  () => import('./keyboard.ts'),
-);
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export { Keyboard } from './keyboard.ts';
+export { OperationHandler } from './operation-handler.ts';
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: [
-    'org.dxos.role.dialog',
-    'org.dxos.role.documentTitle',
-    'org.dxos.role.navigation',
-    'org.dxos.role.searchInput',
-  ],
-});
-export const State = Capability.lazyModule(
-  'State',
-  {
-    // ViewState is the persistence backend for per-path expansion.
-    requires: [Capabilities.AtomRegistry, AppCapabilities.Layout, AttentionCapabilities.ViewState],
-    provides: [NavTreeCapabilities.State],
-  },
-  () => import('./state.ts'),
-);
+export { ReactSurface } from './react-surface.ts';
+export { State } from './state.ts';
 export const Translations = AppCapability.translations(translations);

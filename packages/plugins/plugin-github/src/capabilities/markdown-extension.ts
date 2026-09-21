@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { Repo, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
@@ -17,16 +18,10 @@ import { githubLinks, githubReferences, referenceUrl } from '../extensions/index
 /** `owner/repo` — what `sync` writes as the name of the TaskSet mirroring a repository. */
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 
-/**
- * `#123` in a document resolves against the repository the document's project names: this plugin
- * owns that knowledge, so the decoration is contributed rather than built into the editor. A full
- * pull-request or issue URL needs no repository and becomes a chip whose popover this plugin's
- * link resolver answers.
- *
- * Ambiguity is answered by declining. A space with several repositories and no project naming one
- * has no single meaning for a bare number, so the reference is left as text rather than guessed at.
- */
-export default Capability.makeModule(
+// Browser-only: the editor it decorates and the popover it answers render nowhere else.
+export const MarkdownExtension = Capability.makeModule(
+  'MarkdownExtension',
+  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start, environments: [] },
   Effect.fnUntraced(function* () {
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, subject, viewMode }) => {

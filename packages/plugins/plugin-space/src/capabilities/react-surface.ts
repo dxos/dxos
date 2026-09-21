@@ -8,6 +8,7 @@ import { type ComponentProps } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -32,6 +33,7 @@ import {
   SyncStatus,
 } from '#containers';
 import { meta } from '#meta';
+import { SpaceSchema } from '#types';
 
 import {
   CREATE_SPACE_DIALOG,
@@ -43,6 +45,7 @@ import {
 import { TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
 import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
 import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { makeCreateInvitationUrl } from './helpers.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
@@ -63,7 +66,7 @@ type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default Capability.makeModule(
+export const ReactSurface = AppCapability.surface(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -267,4 +270,19 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: [
+      'org.dxos.plugin.space.role.homeContent',
+      'org.dxos.role.article',
+      'org.dxos.role.dialog',
+      'org.dxos.role.formInput',
+      'org.dxos.role.navbarEnd',
+      'org.dxos.role.navtreeItemEnd',
+      'org.dxos.role.objectProperties',
+      'org.dxos.role.popover',
+      'org.dxos.role.section',
+      'org.dxos.role.statusIndicator',
+    ],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
+  },
 );

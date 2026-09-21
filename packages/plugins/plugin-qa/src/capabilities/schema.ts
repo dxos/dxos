@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
 import { TestCase, TestPlan, TestRun } from '#types';
 
-/** Schemas this plugin registers, loaded on demand. */
-export default [TestPlan.TestPlan, TestCase.TestCase, TestRun.TestRun];
+export const Schema = AppCapability.schema([TestPlan.TestPlan, TestCase.TestCase, TestRun.TestRun]);

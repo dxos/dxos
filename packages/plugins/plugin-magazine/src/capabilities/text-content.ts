@@ -4,19 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Type } from '@dxos/echo';
 
 import { Subscription } from '#types';
 
-/**
- * Makes a Post's prose reachable to any plugin that reads text without knowing this type exists —
- * the reading companion, extraction pipelines. The fetched body wins over the feed's own `content`,
- * which is a summary for most publishers and absent for some, and the title leads so a reader that
- * renders the result as markdown gets a heading rather than an unlabelled wall of text.
- */
-export default Capability.makeModule(
+// Startup rather than the default dependency-mode gate: the consumers read the capability set
+// (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
+// and a Post would stay unreadable — no reading companion, no extraction.
+export const TextContent = AppCapability.textContent(
   Effect.fnUntraced(function* () {
     return Capability.contribute(AppCapabilities.TextContent, {
       id: Type.getTypename(Subscription.Post),
@@ -28,4 +27,7 @@ export default Capability.makeModule(
       },
     });
   }),
+  {
+    activatesOn: ActivationEvents.Startup,
+  },
 );

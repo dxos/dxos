@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
@@ -24,7 +25,7 @@ import { CommentOperation } from '#types';
 import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
 import { getAnchor } from '../util/message.ts';
 
-export default Capability.makeModule(
+export const ReviewAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     // Read through the atom: a config contributed after the relation expands has to reach the matcher.
@@ -109,4 +110,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: ['node'],
+  },
 );

@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as FiberHandle from 'effect/FiberHandle';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
@@ -47,7 +49,23 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
   open: {},
 };
 
-export default Capability.makeModule(
+export const DeckState = Capability.makeModule(
+  'DeckState',
+  {
+    // App-shell state, so it belongs on the startup pass rather than the idle default: the deck
+    // root and `DeckLayout` read it on their FIRST render, and the shell cannot paint without it.
+    // The gate belongs here, on the provider — declaring it as the reader's `requires` instead
+    // demotes the reader into this module's wave rather than promoting this module.
+    activatesOn: ActivationEvents.Startup,
+    requires: [Capabilities.AtomRegistry],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      AppCapabilities.Layout,
+      DeckCapabilities.Platform,
+      DeckCapabilities.Projection,
+    ],
+  },
   Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({

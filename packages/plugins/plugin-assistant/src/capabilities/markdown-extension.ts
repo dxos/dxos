@@ -8,11 +8,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
 import { promptRunExtension } from '../extensions/index.ts';
 
-export default Capability.makeModule(
+export const MarkdownExtension = Capability.makeModule(
+  'MarkdownExtension',
+  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 

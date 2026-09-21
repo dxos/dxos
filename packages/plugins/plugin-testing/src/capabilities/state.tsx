@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
@@ -18,7 +19,9 @@ const defaultState: StorybookCapabilities.LayoutStateProps = {
   workspace: 'default',
 };
 
-export default Capability.makeModule(
+export const State = Capability.makeModule(
+  'State',
+  { activatesOn: ActivationEvents.Startup, provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
   Effect.fnUntraced(function* (props?: { initialState?: Partial<StorybookCapabilities.LayoutStateProps> }) {
     const { initialState } = props ?? {};
     const stateAtom = Atom.make<StorybookCapabilities.LayoutStateProps>({ ...defaultState, ...initialState });

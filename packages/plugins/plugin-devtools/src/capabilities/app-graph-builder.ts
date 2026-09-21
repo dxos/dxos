@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -18,7 +19,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { Devtools } from '#types';
 
-export default Capability.makeModule(
+export const DevtoolsAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read the app graph through its atom so the extension establishes a reactive dependency
     // and re-evaluates once the capability lands (dependency modules contribute individually,
@@ -67,6 +68,10 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    requires: [AppCapabilities.AppGraph],
+    environments: ['node'],
+  },
 );
 
 /** The devtools tree: a container under the debug category with one page per tool, grouped by subsystem. */

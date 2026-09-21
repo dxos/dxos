@@ -10,16 +10,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
+import { NativeEvents } from '#types';
+
 // The payload is the operation's input, decoded against its schema on arrival.
 type SpotlightInvokePayload = {
   operation: string;
   payload?: unknown;
 };
 
-/**
- * Listens for spotlight:invoke events from the popover window and dispatches the corresponding operation.
- */
-export default Capability.makeModule(
+export const SpotlightListener = Capability.makeModule(
+  'SpotlightListener',
+  { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
 

@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
 import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -79,14 +80,9 @@ const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
     ),
   );
 
-/**
- * Contributes the Bluesky connector entry. plugin-connector looks up by
- * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (account-level,
- * all bindings), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
- * and `materializeTarget` creates the empty local Subscription.Feed bound to
- * each selected target.
- */
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'BlueskyConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

@@ -13,7 +13,7 @@ import { Markdown } from '#types';
 
 import { steps } from '../tours/index.ts';
 
-export default Capability.makeModule(() =>
+export const MarkdownTour = Capability.makeModule('Tour', { provides: [AppCapabilities.Tour], environments: [] }, () =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.Tour, {
       id: `${meta.profile.key}.tour.document`,

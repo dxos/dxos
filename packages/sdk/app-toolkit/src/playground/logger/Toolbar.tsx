@@ -19,7 +19,7 @@ export const Logger = () => {
   return <Button onClick={handleClick}>Log</Button>;
 };
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
@@ -29,5 +29,4 @@ export default Capability.makeModule(() =>
         component: Logger,
       }),
     ),
-  ),
-);
+  );

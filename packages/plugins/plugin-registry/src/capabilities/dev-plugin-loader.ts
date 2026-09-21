@@ -10,13 +10,9 @@ import { log } from '@dxos/log';
 
 import { RegistryCapabilities, type RegistryPluginOptions } from '#types';
 
-/**
- * Startup module that auto-loads a locally-served dev plugin when the user has
- * the toggle enabled in registry settings. Failures (dev server offline, 404,
- * timeout) are logged and swallowed so a stale dev URL never blocks app boot —
- * the toggle stays on, the next reload retries.
- */
-export default Capability.makeModule(
+export const DevPluginLoader = Capability.makeModule(
+  'DevPluginLoader',
+  { requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings], provides: [] },
   Effect.fnUntraced(function* ({ externalPlugins = true }: RegistryPluginOptions = {}) {
     if (!externalPlugins) {
       return [];

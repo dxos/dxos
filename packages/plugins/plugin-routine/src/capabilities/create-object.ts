@@ -9,6 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateRoutinePanel } from '#components';
@@ -16,7 +17,9 @@ import { RoutineOperation } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
-export default Capability.makeModule(
+// The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
+// module cannot be evaluated without React.
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Routine.Routine),
@@ -32,4 +35,7 @@ export default Capability.makeModule(
           : Operation.invoke(RoutineOperation.CreateRoutine, { db: options.db, templateId, name }),
     });
   }),
+  {
+    environments: [],
+  },
 );

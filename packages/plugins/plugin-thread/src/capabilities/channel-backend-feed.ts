@@ -12,6 +12,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, Message } from '@dxos/types';
 
 import { ThreadCapabilities } from '#types';
+import { ThreadEvents } from '#types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages in a `Feed`
@@ -50,10 +51,15 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
 };
 
 /** Contributes the default feed-backed channel provider. */
+
 export const ChannelBackendFeed = Capability.makeModule(
+  'ChannelBackendFeed',
+  {
+    provides: [ThreadCapabilities.ChannelBackend],
+    activatesOn: ThreadEvents.Start,
+    environments: ['node', 'workerd'],
+  },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ThreadCapabilities.ChannelBackend, feedChannelBackend);
   }),
 );
-
-export default ChannelBackendFeed;

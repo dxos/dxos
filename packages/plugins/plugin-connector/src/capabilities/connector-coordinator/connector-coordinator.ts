@@ -275,7 +275,20 @@ const finalizePendingEntry = (
     }
   });
 
-export default Capability.makeModule(
+// Coordination drives an interactive OAuth flow through the shell, as does `OAuthRedirect`, which
+// requires it.
+export const Coordinator = Capability.makeModule(
+  'ConnectorCoordination.ConnectorCoordinator',
+  {
+    environments: [],
+    requires: [
+      ClientCapabilities.Client,
+      ClientCapabilities.IdentityService,
+      Capabilities.OperationInvoker,
+      Capabilities.ServiceResolver,
+    ],
+    provides: [ConnectorCoordination.ConnectorCoordinator],
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const identityService = yield* ClientCapabilities.IdentityService;

@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -48,6 +49,9 @@ const AgentServiceSpec = LayerSpec.make(
     ),
 );
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(Capabilities.LayerSpec, AgentServiceSpec)),
+export const AgentRuntime = AppCapability.layerSpec(
+  () => Effect.succeed(Capability.contribute(Capabilities.LayerSpec, AgentServiceSpec)),
+  {
+    name: 'AgentRuntime',
+  },
 );

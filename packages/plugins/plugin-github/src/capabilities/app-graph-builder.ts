@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -15,11 +16,9 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { IMPORT_PULL_REQUEST_DIALOG, meta } from '#meta';
 import { GitHubOperation } from '#types';
 
-/**
- * Contributes "Import pull request" to the root, so the commands dialog carries it: a reviewer who
- * has a link in hand should not have to sync a repository to read the change.
- */
-export default Capability.makeModule(
+// Narrower than the `appGraphBuilder` family default: the action opens a dialog, which means
+// nothing without an app shell.
+export const GithubAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'importPullRequest',
@@ -44,4 +43,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: [],
+  },
 );

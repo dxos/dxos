@@ -7,22 +7,19 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { MigrationVersionAnnotation } from '@dxos/migrations';
 
 import { SpaceOperation } from '#types';
+import { SpaceSchema } from '#types';
 
 type ObservabilityMappingsOptions = {
   observability?: boolean;
 };
 
-/**
- * The events a space operation's invocation stands for, registered rather than emitted: the verbs
- * are invoked on headless hosts that have no telemetry plugin, and a handler that sends its own
- * event would bind them to one.
- */
-export default Capability.makeModule(
+export const ObservabilityMappings = AppCapability.observabilityMappings(
   Effect.fnUntraced(function* ({ observability }: ObservabilityMappingsOptions) {
     // Contributed even when the host opts out, so the capability the listener requires always
     // resolves; the empty registration is what turns the events off.
@@ -72,4 +69,7 @@ export default Capability.makeModule(
       ]),
     ];
   }),
+  {
+    props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+  },
 );

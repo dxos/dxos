@@ -11,15 +11,17 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
+import { TranscriptionEvents } from '#types';
 
 import { TranscriptionManagerImpl } from '../transcription-manager.ts';
 
-/**
- * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it
- * via DI. The low-level construction lives in `@dxos/react-ui-transcription`; this module is the
- * provision seam.
- */
-export default Capability.makeModule(
+export const Transcriber = Capability.makeModule(
+  'Transcriber',
+  {
+    activatesOn: TranscriptionEvents.Start,
+    requires: [Capabilities.AtomRegistry],
+    provides: [TranscriptionCapabilities.TranscriptionManagerProvider],
+  },
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;

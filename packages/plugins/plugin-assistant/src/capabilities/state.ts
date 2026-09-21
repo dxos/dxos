@@ -11,32 +11,43 @@ import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
+import { AssistantEvents } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    // NOTE: This needs to be a chat object rather than a string id to avoid a query race.
-    // TODO(wittjosiah): Handle serialization and hydration for this so it can be cached.
-    const stateAtom = createKvsStore({
-      key: meta.profile.key,
-      schema: AssistantCapabilities.StateSchema,
-      defaultValue: () => ({
-        currentChat: {},
-        pendingPrompts: {},
-      }),
-    });
+export const AssistantState = Capability.makeModule(
+  'AssistantState',
+  {
+    provides: [
+      AssistantCapabilities.State,
+      AssistantCapabilities.CompanionChatCache,
+      AssistantCapabilities.HomeSuggestionsCache,
+    ],
+    activatesOn: AssistantEvents.Start,
+  },
+  () =>
+    Effect.sync(() => {
+      // NOTE: This needs to be a chat object rather than a string id to avoid a query race.
+      // TODO(wittjosiah): Handle serialization and hydration for this so it can be cached.
+      const stateAtom = createKvsStore({
+        key: meta.profile.key,
+        schema: AssistantCapabilities.StateSchema,
+        defaultValue: () => ({
+          currentChat: {},
+          pendingPrompts: {},
+        }),
+      });
 
-    const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
+      const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
 
-    const homeSuggestionsCacheAtom = createKvsStore({
-      key: `${meta.profile.key}.home-suggestions`,
-      schema: AssistantCapabilities.HomeSuggestionsCacheSchema,
-      defaultValue: () => ({}),
-    });
+      const homeSuggestionsCacheAtom = createKvsStore({
+        key: `${meta.profile.key}.home-suggestions`,
+        schema: AssistantCapabilities.HomeSuggestionsCacheSchema,
+        defaultValue: () => ({}),
+      });
 
-    return [
-      Capability.contribute(AssistantCapabilities.State, stateAtom),
-      Capability.contribute(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
-      Capability.contribute(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
-    ];
-  }),
+      return [
+        Capability.contribute(AssistantCapabilities.State, stateAtom),
+        Capability.contribute(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
+        Capability.contribute(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
+      ];
+    }),
 );

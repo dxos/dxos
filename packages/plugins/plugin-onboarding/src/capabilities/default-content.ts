@@ -15,6 +15,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -29,7 +31,23 @@ const DEFAULT_SPACE_ICON_HUE = 'violet';
 
 export const README_DOCUMENT_NAME = 'README';
 
-export default Capability.makeModule(
+export const DefaultContent = Capability.makeModule(
+  'DefaultContent',
+  {
+    requires: [
+      Capabilities.OperationInvoker,
+      AppCapabilities.AppGraph,
+      ClientCapabilities.Client,
+      ClientCapabilities.SchemaRegistered,
+      SpaceCapabilities.OnCreateSpace,
+      SpaceCapabilities.DefaultSpace,
+    ],
+    provides: [],
+    // Runtime event: the default space exists once identity is created, not at startup.
+    // `DefaultSpace` orders this after plugin-space's `IdentityCreated` in the same wave;
+    // `SchemaRegistered` pulls the idle-gated schema registration into it, for the seeded README.
+    activatesOn: ClientEvents.IdentityCreated,
+  },
   Effect.fnUntraced(function* ({ generateDemoSpace }: OnboardingOptions) {
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));

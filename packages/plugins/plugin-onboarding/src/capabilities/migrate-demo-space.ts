@@ -8,10 +8,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 
-export default Capability.makeModule(
+export const MigrateDemoSpace = Capability.makeModule(
+  'MigrateDemoSpace',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const migrate = () => {

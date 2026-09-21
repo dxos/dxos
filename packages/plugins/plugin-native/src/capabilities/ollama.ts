@@ -20,6 +20,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -34,7 +35,17 @@ export type OllamaCapabilities =
   | Capability.Capability<typeof AppCapabilities.AiModelResolver>
   | Capability.Capability<typeof AssistantCapabilities.OllamaManager>;
 
-export default Capability.makeModule(
+// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+// require once during startup, so the sidecar resolver contributed in a later round is invisible to
+// it and every `built-in` model fails to resolve. Activation stays cheap — it builds the manager and
+// a lazy layer; the sidecar process spawns on first use, not here.
+export const NativeOllama = Capability.makeModule(
+  'Ollama',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.OllamaManager],
+    activatesOn: ActivationEvents.Startup,
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 

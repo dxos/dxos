@@ -10,7 +10,9 @@ import { RoutineCapabilities } from '#types';
 
 import { defaultTemplates } from '../templates/index.ts';
 
-export default Capability.makeModule(
+export const Templates = Capability.makeModule(
+  'Templates',
+  { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(RoutineCapabilities.Template, defaultTemplates);
   }),

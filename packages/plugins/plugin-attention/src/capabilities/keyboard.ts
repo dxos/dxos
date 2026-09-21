@@ -5,11 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { nestHotkeyScope, setHotkeyScope } from '@dxos/react-focus/store';
 
 import { AttentionCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const Keyboard = Capability.makeModule(
+  'Keyboard',
+  { requires: [AppCapabilities.AppGraph, AttentionCapabilities.Attention], provides: [] },
   Effect.fnUntraced(function* () {
     const attention = yield* AttentionCapabilities.Attention;
 

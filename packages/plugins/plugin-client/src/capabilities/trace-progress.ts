@@ -14,19 +14,18 @@ import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
-/**
- * Projects remote (edge-runtime) `status.update` trace events into the {@link AppCapabilities.ProgressRegistry}
- * (DX-1125). Subscribes to the aggregate {@link Process.Monitor.subscribeToTraceMessages}, whose remote
- * source is the swarm-backed monitor contributed by `remote-trace-monitor`.
- *
- * Only edge-runtime messages are projected here: local progress already flows through the
- * `plugin-progress` trace sink, and both write the same progress keys — projecting local messages
- * twice would let two writers clobber each other's registry handles.
- *
- * Cancel on this path always routes to {@link RemoteProcessManager} (edge) — local terminate is
- * handled by the `plugin-progress` sink, which never sees these messages.
- */
-export default Capability.makeModule(
+import { ClientEvents } from '#types';
+
+export const TraceProgress = Capability.makeModule(
+  'TraceProgress',
+  {
+    // ProgressRegistry is resolved lazily per message (a host without it degrades to a no-op sink).
+    requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
+    provides: [],
+    // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
+    // registry are all available by the time spaces are observed.
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
 

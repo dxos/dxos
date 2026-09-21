@@ -9,8 +9,16 @@ import { getEnvString } from '@dxos/config';
 import { HubHttpClient } from '@dxos/edge-client';
 
 import { ClientCapabilities } from '#types';
+import { ClientEvents } from '#types';
 
-export default Capability.makeModule(
+export const ClientHubHttpClient = Capability.makeModule(
+  'HubHttpClient',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ClientCapabilities.HubHttpClient],
+    // Reads `client.config` (initialized-only) for the hub URL.
+    activatesOn: ClientEvents.Initialized,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const hubUrl = getEnvString(client.config, 'DX_HUB_URL');

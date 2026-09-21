@@ -18,7 +18,9 @@ import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';
 
-export default Capability.makeModule(
+export const Keyboard = Capability.makeModule(
+  'Keyboard',
+  { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [], environments: [] },
   Effect.fnUntraced(function* () {
     const { graph } = yield* AppCapabilities.AppGraph;
     const invoker = yield* Capabilities.OperationInvoker;

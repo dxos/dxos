@@ -11,7 +11,7 @@ import { createKvsStore } from '@dxos/effect';
 import { meta } from '#meta';
 import { Settings, ThemeCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
@@ -27,5 +27,4 @@ export default Capability.makeModule(() =>
         atom: settingsAtom,
       }),
     ];
-  }),
-);
+  });

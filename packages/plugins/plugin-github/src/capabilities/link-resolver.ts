@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Filter } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
+import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { Issue, PullRequest, Repo } from '@dxos/types';
 
@@ -20,12 +21,9 @@ import { type GitHubLink, githubLinkIcon, parseGitHubLink } from '../extensions/
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 
-/**
- * Resolves a GitHub repository, pull-request or issue URL to an in-memory `Repo`, `PullRequest` or
- * `Issue` for the preview popover. The object comes from the contributed `LinkSource` when a host provides one and
- * from the GitHub API otherwise; either way it is built, not stored — a preview is not a sync.
- */
-export default Capability.makeModule(
+export const LinkResolver = Capability.makeModule(
+  'LinkResolver',
+  { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     return Capability.contribute(PreviewCapabilities.LinkResolver, [

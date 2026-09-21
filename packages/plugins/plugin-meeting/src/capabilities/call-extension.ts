@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
@@ -12,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type CallState, type MediaState } from '@dxos/plugin-calls';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { type buf } from '@dxos/protocols/buf';
@@ -19,12 +21,20 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Channel } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import { MeetingEvents } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default Capability.makeModule(
+export const CallExtension = Capability.makeModule(
+  'CallExtension',
+  {
+    requires: [MeetingCapabilities.State],
+    provides: [CallsCapabilities.EventHandler],
+    // Both features must be live: the handler extends calls but reads meeting state.
+    activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
+  },
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;

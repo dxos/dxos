@@ -10,7 +10,9 @@ import { TerraCapabilities } from '#types';
 
 import { PlanetCache } from '../engine/index.ts';
 
-export default Capability.makeModule(
+export const TerraPlanetCache = Capability.makeModule(
+  'PlanetCache',
+  { provides: [TerraCapabilities.PlanetCache] },
   Effect.fnUntraced(function* () {
     const cache = new PlanetCache();
     yield* Effect.addFinalizer(() => Effect.sync(() => cache.clear()));

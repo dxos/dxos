@@ -33,7 +33,7 @@ const TemplatesPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('com.example.plugin.templates'), name: 'Templates' }),
 ).pipe(
   Plugin.addModule(
-    AppCapability.spaceTemplates(() =>
+    AppCapability.lazySpaceTemplates(() =>
       Promise.resolve({
         default: [
           {

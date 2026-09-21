@@ -62,7 +62,7 @@ export const generate = (pluginDir: string): GenerateResult => {
     const included = [...valueMembers, ...modules];
     const stubbed = moduleMembers.filter((member) => !carries(member));
 
-    const text = renderBarrel({ env, genDir, included, stubbed });
+    const text = renderBarrel({ env, genDir, barrelPath: indexPath, included, stubbed });
     const outPath = path.join(genDir, `${env}.ts`);
     fs.writeFileSync(outPath, text);
     result.files.push({
@@ -80,11 +80,22 @@ export const generate = (pluginDir: string): GenerateResult => {
 type RenderOptions = {
   env: string;
   genDir: string;
+  /** The canonical barrel; members declared in it are sliced, members from other files re-exported. */
+  barrelPath: string;
   included: BarrelMember[];
   stubbed: BarrelMember[];
 };
 
-const renderBarrel = ({ env, genDir, included, stubbed }: RenderOptions): string => {
+const renderBarrel = ({ env, genDir, barrelPath, included: allIncluded, stubbed }: RenderOptions): string => {
+  // A member that lives in its own file is re-exported from there, which keeps that file's imports
+  // and helpers in scope without merging them into this one; only what the barrel itself declares
+  // is sliced. A file that also holds a module stubbed for this condition is sliced instead, so
+  // its browser-only imports never evaluate here.
+  const stubbedFiles = new Set(stubbed.map((member) => member.sourceFile));
+  const reexported = allIncluded.filter(
+    (member) => member.sourceFile !== barrelPath && !stubbedFiles.has(member.sourceFile),
+  );
+  const included = allIncluded.filter((member) => !reexported.includes(member));
   type Merged = { isTypeOnly: boolean; defaultName: string | null; namespaceName: string | null; named: Set<string> };
   const bySpecifier = new Map<string, Merged>();
   const importCache = new Map<string, ReturnType<typeof topLevelImportDeclarations>>();
@@ -121,7 +132,11 @@ const renderBarrel = ({ env, genDir, included, stubbed }: RenderOptions): string
       localCache.set(member.sourceFile, topLevelLocalDeclarations(parseFile(member.sourceFile)!));
     }
     const available = localCache.get(member.sourceFile)!;
-    const taken = new Set(locals.filter((local) => local.sourceFile === member.sourceFile).map((l) => l.name));
+    // A member the barrel already includes is never carried a second time as a local.
+    const taken = new Set([
+      ...locals.filter((local) => local.sourceFile === member.sourceFile).map((l) => l.name),
+      ...included.map((m) => m.name),
+    ]);
     const pending = [...collectFreeIdentifiers(member.statementText)];
     while (pending.length > 0) {
       const name = pending.pop()!;
@@ -192,8 +207,26 @@ const renderBarrel = ({ env, genDir, included, stubbed }: RenderOptions): string
   for (const member of included) {
     lines.push(rewriteRelativeSpecifiers(member.statementText, path.dirname(member.sourceFile), genDir), '');
   }
-  for (const member of [...stubbed].sort((a, b) => a.name.localeCompare(b.name))) {
-    lines.push(`export const ${member.name} = undefined;`);
+  const byFile = new Map<string, BarrelMember[]>();
+  for (const member of reexported) {
+    byFile.set(member.sourceFile, [...(byFile.get(member.sourceFile) ?? []), member]);
+  }
+  for (const [file, members] of [...byFile].sort(([a], [b]) => a.localeCompare(b))) {
+    let specifier = path.relative(genDir, file).split(path.sep).join('/');
+    if (!specifier.startsWith('.')) {
+      specifier = `./${specifier}`;
+    }
+    const names = members
+      .map((member) => (member.name === member.exportedName ? member.name : `${member.name} as ${member.exportedName}`))
+      .sort()
+      .join(', ');
+    lines.push(`export { ${names} } from '${specifier}';`);
+  }
+  if (byFile.size > 0) {
+    lines.push('');
+  }
+  for (const member of [...stubbed].sort((a, b) => a.exportedName.localeCompare(b.exportedName))) {
+    lines.push(`export const ${member.exportedName} = undefined;`);
   }
   return (
     lines

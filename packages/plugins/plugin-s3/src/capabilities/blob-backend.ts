@@ -9,16 +9,17 @@ import { S3_BACKEND, createS3BlobBackend } from '@dxos/blob/s3';
 import { accessTokenResolverFromEdge, createS3Host } from '@dxos/compute-runtime';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
+import * as FileEvents from '@dxos/plugin-file/FileEvents';
 
-/**
- * Registers the S3 backend for the browser.
- *
- * The backend itself lives in `@dxos/blob/s3` and its database bindings in `@dxos/compute-runtime`,
- * so the same code serves headless hosts — EDGE's `operation-service` registers it the same way,
- * from a `Database` rather than a `Client`. All this module supplies is the client-shaped way to
- * reach a space's database, plus the EDGE token resolver that a browser can actually reach.
- */
-export default Capability.makeModule(
+export const BlobBackend = Capability.makeModule(
+  'BlobBackend',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [FileCapabilities.Backend],
+    // The file plugin's start, not this plugin's own: it contributes no surface, so nothing would
+    // ever fire an own-start event for it.
+    activatesOn: FileEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const host = createS3Host({

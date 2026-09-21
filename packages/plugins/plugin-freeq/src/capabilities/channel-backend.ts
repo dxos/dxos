@@ -9,6 +9,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 import { Message } from '@dxos/types';
 
 import { FREEQ_BACKEND_KIND } from '../constants.ts';
@@ -155,6 +156,11 @@ export const makeFreeqChannelBackend = (
  * deadlocks activation; co-locating them removes the cross-module dependency.
  */
 export const ChannelBackend = Capability.makeModule(
+  'FreeqChannelBackend',
+  {
+    provides: [FreeqCapabilities.ConnectionManager, ThreadCapabilities.ChannelBackend],
+    activatesOn: ThreadEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const manager = new ConnectionManager();
     // TODO(Task 11): supply lookupCredential from stored AccessToken once server auth shapes are confirmed.
@@ -164,5 +170,3 @@ export const ChannelBackend = Capability.makeModule(
     ];
   }),
 );
-
-export default ChannelBackend;

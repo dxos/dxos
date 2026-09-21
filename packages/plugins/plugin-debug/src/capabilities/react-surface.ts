@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -16,6 +17,7 @@ import { Position } from '@dxos/util';
 import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
+import { Debug } from '#types';
 
 import { DebugCapabilities } from '../types/Debug.ts';
 import {
@@ -30,7 +32,7 @@ type ReactSurfaceOptions = {
   logStore?: IdbLogStore;
 };
 
-export default Capability.makeModule(
+export const ReactSurface = AppCapability.surface(
   Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
     const registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* DebugCapabilities.Settings;
@@ -125,4 +127,18 @@ export default Capability.makeModule(
       }),
     ]);
   }),
+  {
+    roles: [
+      'org.dxos.plugin.debug.surface.page',
+      'org.dxos.plugin.debug.surface.stats',
+      'org.dxos.role.article',
+      'org.dxos.role.deckCompanion.spaceObjects',
+      'org.dxos.role.devtoolsOverview',
+      'org.dxos.role.drawer',
+      'org.dxos.role.section',
+      'org.dxos.role.statusIndicator',
+    ],
+    requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
+    props: ({ logStore }: Debug.DebugPluginOptions) => ({ logStore }),
+  },
 );

@@ -12,7 +12,13 @@ import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const SchemaDefs = Capability.makeModule(
+  'SchemaDefs',
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
+    provides: [ClientCapabilities.SchemaRegistered],
+    environments: ['node'],
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const client = yield* ClientCapabilities.Client;

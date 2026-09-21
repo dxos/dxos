@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
 import { McpServer, Memory } from '@dxos/assistant-toolkit';
 import * as Agent from '@dxos/assistant/Agent';
@@ -34,4 +35,4 @@ const types: ReadonlyArray<Type.AnyEntity> = [
   Text.Text,
 ];
 
-export default types;
+export const Schema = AppCapability.schema(types);

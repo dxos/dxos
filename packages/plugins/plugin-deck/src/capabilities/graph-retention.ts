@@ -14,7 +14,12 @@ import { DeckCapabilities } from '#types';
 
 import { retainedWorkspaces } from '../util/index.ts';
 
-export default Capability.makeModule(
+export const GraphRetention = Capability.makeModule(
+  'GraphRetention',
+  {
+    requires: [DeckCapabilities.State, AppCapabilities.Layout],
+    provides: [AppCapabilities.AppGraphRetention],
+  },
   Effect.fnUntraced(function* () {
     const stateAtom = yield* DeckCapabilities.State;
     const layoutAtom = yield* AppCapabilities.Layout;

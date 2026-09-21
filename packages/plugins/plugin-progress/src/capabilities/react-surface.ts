@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ProgressStatusIndicator } from '#components';
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.succeed([
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -20,5 +20,4 @@ export default Capability.makeModule(() =>
         component: ProgressStatusIndicator,
       }),
     ]),
-  ]),
-);
+  ]);

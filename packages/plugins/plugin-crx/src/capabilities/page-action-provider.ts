@@ -8,40 +8,44 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 import { CrxCapabilities, CrxOperation, PageAction } from '#types';
+import { CrxEvents } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    // Picker-only: these actions back the extension's DOM-picker toolbar and
-    // are not surfaced in the popup or context menu.
-    const actions: PageAction.PageAction[] = [
-      {
-        id: `${meta.profile.key}/page-action/add-person`,
-        label: 'Person',
-        icon: 'ph--user--regular',
-        urlPatterns: ['http://*/*', 'https://*/*'],
-        extractor: { name: 'snapshot' },
-        contexts: ['picker'],
-        operation: CrxOperation.AddPersonFromSnapshot,
-      },
-      {
-        id: `${meta.profile.key}/page-action/add-organization`,
-        label: 'Organization',
-        icon: 'ph--building-office--regular',
-        urlPatterns: ['http://*/*', 'https://*/*'],
-        extractor: { name: 'snapshot' },
-        contexts: ['picker'],
-        operation: CrxOperation.AddOrganizationFromSnapshot,
-      },
-      {
-        id: `${meta.profile.key}/page-action/add-note`,
-        label: 'Note',
-        icon: 'ph--note--regular',
-        urlPatterns: ['http://*/*', 'https://*/*'],
-        extractor: { name: 'snapshot' },
-        contexts: ['picker'],
-        operation: CrxOperation.AddNoteFromSnapshot,
-      },
-    ];
-    return Capability.contribute(CrxCapabilities.PageAction, actions);
-  }),
+export const PageActionProvider = Capability.makeModule(
+  'PageActionProvider',
+  { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
+  () =>
+    Effect.sync(() => {
+      // Picker-only: these actions back the extension's DOM-picker toolbar and
+      // are not surfaced in the popup or context menu.
+      const actions: PageAction.PageAction[] = [
+        {
+          id: `${meta.profile.key}/page-action/add-person`,
+          label: 'Person',
+          icon: 'ph--user--regular',
+          urlPatterns: ['http://*/*', 'https://*/*'],
+          extractor: { name: 'snapshot' },
+          contexts: ['picker'],
+          operation: CrxOperation.AddPersonFromSnapshot,
+        },
+        {
+          id: `${meta.profile.key}/page-action/add-organization`,
+          label: 'Organization',
+          icon: 'ph--building-office--regular',
+          urlPatterns: ['http://*/*', 'https://*/*'],
+          extractor: { name: 'snapshot' },
+          contexts: ['picker'],
+          operation: CrxOperation.AddOrganizationFromSnapshot,
+        },
+        {
+          id: `${meta.profile.key}/page-action/add-note`,
+          label: 'Note',
+          icon: 'ph--note--regular',
+          urlPatterns: ['http://*/*', 'https://*/*'],
+          extractor: { name: 'snapshot' },
+          contexts: ['picker'],
+          operation: CrxOperation.AddNoteFromSnapshot,
+        },
+      ];
+      return Capability.contribute(CrxCapabilities.PageAction, actions);
+    }),
 );

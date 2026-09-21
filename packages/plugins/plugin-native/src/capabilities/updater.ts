@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
+import { NativeEvents } from '#types';
 
 import { TAURI_LOCALHOST_PORTS } from '../constants.ts';
 
@@ -59,7 +60,13 @@ const formatError = (error: unknown): string => {
   return String(error);
 };
 
-export default Capability.makeModule(
+export const NativeUpdater = Capability.makeModule(
+  'Updater',
+  {
+    requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker],
+    provides: [NativeCapabilities.UpdateManager],
+    activatesOn: NativeEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const platform = type();
     const isDevServer = !TAURI_LOCALHOST_PORTS.includes(window.location.port);

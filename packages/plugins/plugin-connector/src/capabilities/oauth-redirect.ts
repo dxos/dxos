@@ -10,6 +10,7 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { log } from '@dxos/log';
 
 import { ConnectorCoordination } from '#types';
+import { ConnectorEvents } from '#types';
 
 import { OAUTH_REDIRECT_PATH } from '../constants.ts';
 
@@ -43,18 +44,14 @@ const readRedirectTokens = (): { accessTokenId: string; accessToken: string } | 
   return tokens;
 };
 
-/**
- * Startup module that finalizes redirect-flow OAuth callbacks.
- *
- * Captures `accessTokenId` and `accessToken` from `/redirect/oauth?…` and rewrites
- * `window.location` to `/` synchronously, so the deck's URL handler doesn't try to interpret the
- * redirect path. On desktop nothing navigates there — the shell hosts the auth page and relays the
- * callback URL as an event instead — so the same tokens arrive on a stream.
- * `ConnectorCoordination.ConnectorCoordinator` is a declared dependency, so it is already active by
- * the time this module runs; the finalize work still runs on a daemon fiber so Startup completes
- * immediately and the rest of the boot sequence isn't blocked.
- */
-export default Capability.makeModule(
+export const OAuthRedirect = Capability.makeModule(
+  'OAuthRedirect',
+  {
+    requires: [ConnectorCoordination.ConnectorCoordinator],
+    provides: [],
+    activatesOn: ConnectorEvents.Start,
+    environments: [],
+  },
   Effect.fnUntraced(function* () {
     const coordinator = yield* ConnectorCoordination.ConnectorCoordinator;
     const finalize = (tokens: { accessTokenId: string; accessToken: string }) => {

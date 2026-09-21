@@ -12,14 +12,23 @@ import { getEnvString } from '@dxos/config';
 
 import { meta } from '#meta';
 import { ObservabilityCapabilities } from '#types';
+import { ObservabilityEvents } from '#types';
 
-/**
- * Shows the privacy notice toast once when an identity is first created.
- * Activates on `ClientEvents.IdentityCreated` — which only fires for genuinely
- * new identities, not for recovered or joined ones — so no HALO device-count
- * checks or session-storage flags are needed.
- */
-export default Capability.makeModule(
+export const PrivacyNotice = Capability.makeModule(
+  'PrivacyNotice',
+  {
+    environments: [],
+    requires: [
+      Capabilities.OperationInvoker,
+      Capabilities.AtomRegistry,
+      ObservabilityCapabilities.State,
+      ObservabilityCapabilities.ClientCapability,
+    ],
+    provides: [],
+    // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
+    // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
+    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
+  },
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const registry = yield* Capabilities.AtomRegistry;

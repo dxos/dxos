@@ -101,10 +101,7 @@ export const topLevelExportConsts = (sourceFile: SourceFile): ExportConst[] => {
   return out;
 };
 
-export type LocalDeclaration = {
-  name: string;
-  text: string;
-};
+export type LocalDeclaration = { name: string; text: string; exported: boolean };
 
 /**
  * Top-level declarations a file keeps to itself — `const` and `function` without `export`. A kept
@@ -119,17 +116,24 @@ export const topLevelLocalDeclarations = (sourceFile: SourceFile): LocalDeclarat
     ) ?? false;
 
   for (const stmt of sourceFile.statements) {
-    if (exported(stmt)) {
-      continue;
-    }
+    // An exported declaration is carried as a local: a module's file may export a value its
+    // sibling modules share, and the generated barrel only needs it in scope.
+    const text = statementTextWithLeadingComments(sourceFile, stmt).replace(/(^|\n)export /, '$1');
     if (ts.isVariableStatement(stmt)) {
       for (const decl of stmt.declarationList.declarations) {
         if (ts.isIdentifier(decl.name)) {
-          out.push({ name: decl.name.text, text: statementTextWithLeadingComments(sourceFile, stmt) });
+          out.push({ name: decl.name.text, text, exported: exported(stmt) });
         }
       }
-    } else if (ts.isFunctionDeclaration(stmt) && stmt.name) {
-      out.push({ name: stmt.name.text, text: statementTextWithLeadingComments(sourceFile, stmt) });
+    } else if (
+      (ts.isFunctionDeclaration(stmt) ||
+        ts.isTypeAliasDeclaration(stmt) ||
+        ts.isInterfaceDeclaration(stmt) ||
+        ts.isEnumDeclaration(stmt) ||
+        ts.isClassDeclaration(stmt)) &&
+      stmt.name
+    ) {
+      out.push({ name: stmt.name.text, text, exported: exported(stmt) });
     }
   }
   return out;

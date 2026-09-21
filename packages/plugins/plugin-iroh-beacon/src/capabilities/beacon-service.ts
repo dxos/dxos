@@ -10,6 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Identity } from '@dxos/halo';
 import { HaloServicesLayer } from '@dxos/plugin-client';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { meta } from '#meta';
 import { type BeaconState } from '#types';
@@ -28,7 +29,15 @@ const INITIAL_STATE: BeaconState = {
   status: 'connecting',
 };
 
-export default Capability.makeModule(
+export const BeaconServiceModule = Capability.makeModule(
+  'BeaconServiceModule',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [BeaconCapabilities.State],
+    // Genuine runtime event: spaces become ready when the client observes them, not at a fixed
+    // startup point.
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 

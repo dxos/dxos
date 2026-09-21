@@ -214,72 +214,68 @@ const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
 };
 
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
-const storyDeckSettings = Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const settingsAtom = Atom.make<Settings.Settings>({
-      showHints: false,
-      enableNativeRedirect: false,
-    }).pipe(Atom.keepAlive);
+const storyDeckSettings = Effect.fnUntraced(function* () {
+  const settingsAtom = Atom.make<Settings.Settings>({
+    showHints: false,
+    enableNativeRedirect: false,
+  }).pipe(Atom.keepAlive);
 
-    return [Capability.contribute(DeckCapabilities.Settings, settingsAtom)];
-  }),
-);
+  return [Capability.contribute(DeckCapabilities.Settings, settingsAtom)];
+});
 
 // In-memory deck state so each story starts from a clean deck; the real `DeckState()` capability
 // persists to localStorage, which otherwise leaks planks between stories.
-const storyDeckState = Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
-      sidebarState: 'closed',
-      complementarySidebarState: 'closed',
-      complementarySidebarPanel: undefined,
-      activeDeck: 'default',
-      previousDeck: 'default',
-      decks: { default: { ...DeckSchema.defaultDeck } },
-    }).pipe(Atom.keepAlive);
+const storyDeckState = Effect.fnUntraced(function* () {
+  const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
+    sidebarState: 'closed',
+    complementarySidebarState: 'closed',
+    complementarySidebarPanel: undefined,
+    activeDeck: 'default',
+    previousDeck: 'default',
+    decks: { default: { ...DeckSchema.defaultDeck } },
+  }).pipe(Atom.keepAlive);
 
-    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
-      fullscreen: undefined,
-      dialogContent: null,
-      dialogOpen: false,
-      dialogBlockAlign: undefined,
-      dialogType: undefined,
-      popoverContent: null,
-      popoverAnchor: undefined,
-      popoverAnchorId: undefined,
-      popoverOpen: false,
-      toasts: [],
-      currentUndoId: undefined,
-      scrollIntoView: undefined,
-      open: {},
-    }).pipe(Atom.keepAlive);
+  const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
+    fullscreen: undefined,
+    dialogContent: null,
+    dialogOpen: false,
+    dialogBlockAlign: undefined,
+    dialogType: undefined,
+    popoverContent: null,
+    popoverAnchor: undefined,
+    popoverAnchorId: undefined,
+    popoverOpen: false,
+    toasts: [],
+    currentUndoId: undefined,
+    scrollIntoView: undefined,
+    open: {},
+  }).pipe(Atom.keepAlive);
 
-    const layoutAtom = Atom.make((get) => {
-      const state = get(stateAtom);
-      const ephemeral = get(ephemeralAtom);
-      const deck = state.decks[state.activeDeck];
-      invariant(deck, `Deck not found: ${state.activeDeck}`);
-      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
-      return {
-        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
-        dialogOpen: ephemeral.dialogOpen,
-        sidebarOpen: state.sidebarState === 'expanded',
-        complementarySidebarOpen: state.complementarySidebarState === 'expanded',
-        workspace: state.activeDeck,
-        active: open.active,
-        inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView?.id,
-      } satisfies AppCapabilities.Layout;
-    }).pipe(Atom.keepAlive);
+  const layoutAtom = Atom.make((get) => {
+    const state = get(stateAtom);
+    const ephemeral = get(ephemeralAtom);
+    const deck = state.decks[state.activeDeck];
+    invariant(deck, `Deck not found: ${state.activeDeck}`);
+    const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
+    return {
+      mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
+      dialogOpen: ephemeral.dialogOpen,
+      sidebarOpen: state.sidebarState === 'expanded',
+      complementarySidebarOpen: state.complementarySidebarState === 'expanded',
+      workspace: state.activeDeck,
+      active: open.active,
+      inactive: open.inactive,
+      scrollIntoView: ephemeral.scrollIntoView?.id,
+    } satisfies AppCapabilities.Layout;
+  }).pipe(Atom.keepAlive);
 
-    return [
-      Capability.contribute(DeckCapabilities.State, stateAtom),
-      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
-      Capability.contribute(AppCapabilities.Layout, layoutAtom),
-    ];
-  }),
-);
+  return [
+    Capability.contribute(DeckCapabilities.State, stateAtom),
+    Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+    Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
+    Capability.contribute(AppCapabilities.Layout, layoutAtom),
+  ];
+});
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   // Shell state the Deck reads through the strict hooks on its first render, so it belongs on the
@@ -303,7 +299,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   }),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(
-    Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
+    Capability.makeModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(
         Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
@@ -353,7 +349,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     ),
   ),
   Plugin.addModule(
-    Capability.inlineModule(
+    Capability.makeModule(
       'story-graph',
       { provides: [AppCapabilities.AppGraphBuilder] },
       Effect.fnUntraced(function* () {

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -52,14 +53,15 @@ export const listen = (
     ),
   );
 
-/**
- * Sends the observability event a successful invocation stands for, for operations that registered
- * one via {@link AppCapabilities.ObservabilityMapping}.
- *
- * The listener owns telemetry so a portable verb (`space.addObject`, run equally on a headless
- * host) need not bind itself to this plugin's `SendEvent`.
- */
-export default Capability.makeModule(
+export const InvocationListener = Capability.makeModule(
+  'InvocationListener',
+  {
+    requires: [Capabilities.OperationInvoker, AppCapabilities.ObservabilityMapping],
+    provides: [],
+    // Idle rather than Startup: contributed mappings are read live, so the listener only has to be
+    // running before the first user action, not before the plugins that register events.
+    activatesOn: ActivationEvents.Idle,
+  },
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
     const mappings = yield* AppCapabilities.ObservabilityMapping;

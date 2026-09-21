@@ -13,25 +13,18 @@ import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { type Space } from '@dxos/react-client/echo';
 
-//
-// Capability Module
-//
-// Watches `space.properties.triggersDisabled` for every space and toggles
-// the per-space {@link TriggerDispatcher} accordingly:
-//
-//   - disabled (`true`)        → `dispatcher.stop()`
-//   - enabled (unset/`false`)  → `dispatcher.start()`
-//
-// Per-trigger local/edge routing is handled by the trigger's `remote` flag
-// (the dispatcher skips remote triggers); this space-wide flag is only the
-// kill-switch for local execution. The dispatcher itself is contributed
-// unconditionally via `TriggerDispatcherSpec` in `layer-specs.ts`, so this
-// capability is only responsible for driving its lifecycle.
-//
-
-export default Capability.makeModule(
+export const TriggerRuntimeController = Capability.makeModule(
+  'TriggerRuntimeController',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
+    provides: [],
+    // Runtime event: triggers only need to react to spaces once the client observes them.
+    activatesOn: ClientEvents.SpacesAvailable,
+    environments: ['node'],
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     const runtime = yield* Capabilities.ProcessManagerRuntime;

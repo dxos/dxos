@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { type SpaceDashboard, toMetrics, toSlots } from '@dxos/plugin-space/dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { getIconRegistry } from '@dxos/react-ui';
@@ -32,17 +33,14 @@ const focusWindow = async (): Promise<void> => {
   await window.setFocus();
 };
 
-/**
- * Owns the one connection to the device plugin and keeps it showing the active space.
- *
- * Headless on purpose: the keys must stay live whether or not the dashboard panel is on screen, and
- * the device accepts a single client — so this is the only thing that opens a bridge, and surfaces
- * read {@link StreamDeckCapabilities.BridgeStatus} rather than connecting themselves.
- *
- * The space itself is projected by `plugin-space`'s dashboard capability; this only maps those facts
- * onto Stream Deck geometry and pushes them.
- */
-export default Capability.makeModule(
+export const BridgeDriver = Capability.makeModule(
+  'BridgeDriver',
+  {
+    environments: [],
+    requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, SpaceCapabilities.Dashboard],
+    provides: [StreamDeckCapabilities.BridgeStatus],
+    activatesOn: ClientEvents.SpacesAvailable,
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);

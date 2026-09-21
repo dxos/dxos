@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
@@ -13,17 +14,9 @@ import { toPublicKey } from '@dxos/protocols/buf';
 
 import { ClientCapabilities } from '#types';
 
-/**
- * Contributes a swarm-backed {@link Capabilities.RemoteTraceMonitor} (DX-1125). Remote runtimes
- * (edge intrinsics / function-invoker) broadcast their ephemeral trace messages over the space swarm;
- * this monitor subscribes via the client's network service and decodes them so the aggregate
- * {@link Process.Monitor.subscribeToTraceMessages} surfaces remote progress.
- *
- * The client is resolved lazily inside the subscribe closure (invoked only when a consumer
- * subscribes, well after `ClientReady`), so this module can be collected at `SetupProcessManager`
- * before the client capability exists.
- */
-export default Capability.makeModule(
+export const ClientRemoteTraceMonitor = Capability.makeModule(
+  'RemoteTraceMonitor',
+  { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
 

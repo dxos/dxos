@@ -34,7 +34,7 @@ import { Home } from './Home.tsx';
  * plus one ordinary `disposition: 'menu'` action — the shape needed to prove Home dropped two of the
  * three and the navbar's main menu picked them back up as a distinct, later section.
  */
-const storyGraph = Capability.inlineModule(
+const storyGraph = Capability.makeModule(
   'home-story-graph',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {

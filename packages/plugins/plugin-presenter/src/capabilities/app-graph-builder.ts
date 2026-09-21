@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
@@ -29,7 +30,7 @@ const whenPresentable = (node: AppGraphNode.Node, get: Atom.AtomContext) =>
     AppNodeMatcher.whenEchoType(Markdown.Document)(node, get),
   );
 
-export default Capability.makeModule(
+export const PresenterAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read reactively so the extension establishes a dependency and heals once this
     // capability lands (dependency modules contribute individually, not batched per wave).
@@ -95,4 +96,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: ['node'],
+  },
 );

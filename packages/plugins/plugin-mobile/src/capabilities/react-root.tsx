@@ -7,12 +7,13 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { useDismissToast } from '@dxos/plugin-deck/hooks';
 
 import { MobileDeckLayout } from '#containers';
 import { meta } from '#meta';
 
-export default Capability.makeModule(
+export const ReactRoot = AppCapability.reactRoot(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,

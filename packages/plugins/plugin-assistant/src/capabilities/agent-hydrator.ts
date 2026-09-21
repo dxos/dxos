@@ -11,13 +11,16 @@ import * as AgentService from '@dxos/compute/AgentService';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { log } from '@dxos/log';
 
-//
-// Capability Module
-//
-// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
-//
+import { AssistantEvents } from '#types';
 
-export default Capability.makeModule(
+export const AgentHydrator = Capability.makeModule(
+  'AgentHydrator',
+  {
+    requires: [Capabilities.ProcessManagerRuntime],
+    provides: [],
+    activatesOn: AssistantEvents.Start,
+    environments: ['node'],
+  },
   Effect.fnUntraced(function* () {
     const runtime = yield* Capabilities.ProcessManagerRuntime;
 

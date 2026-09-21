@@ -10,6 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { meta } from '#meta';
+import { Debug } from '#types';
+import { DebugEvents } from '#types';
 
 type StatsPanelOptions = {
   /** Persist the store to localStorage (hydrate on load, save on write). */
@@ -18,14 +20,14 @@ type StatsPanelOptions = {
 
 const STORAGE_KEY = `${meta.profile.key}.statsPanel`;
 
-/**
- * Contributes the {@link AppCapabilities.StatsPanel} store: a single reactive atom holding one
- * compartment per plugin, keyed by plugin key. Read access spans the whole store; writes are scoped
- * to a compartment via `compartment(pluginKey)`. Kept alive with `Atom.keepAlive` so a background
- * writer (e.g. a sync operation) can populate it before any surface subscribes. When `persist` is set
- * the store hydrates from and saves to localStorage so stats survive a reload.
- */
-export default Capability.makeModule(
+export const StatsPanel = Capability.makeModule(
+  'StatsPanel',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.StatsPanel],
+    props: ({ persistStats }: Debug.DebugPluginOptions) => ({ persist: persistStats ?? true }),
+    activatesOn: DebugEvents.Start,
+  },
   Effect.fnUntraced(function* ({ persist = true }: StatsPanelOptions = {}) {
     const registry = yield* Capabilities.AtomRegistry;
     const canPersist = persist && typeof localStorage !== 'undefined';

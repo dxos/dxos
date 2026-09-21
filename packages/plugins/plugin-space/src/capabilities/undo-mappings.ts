@@ -7,18 +7,21 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Entity } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
+import { SpaceSchema } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers.ts';
+import { makeCreateInvitationUrl } from './helpers.ts';
 
 type UndoMappingsOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default Capability.makeModule(
+export const UndoMappings = AppCapability.undoMappings(
   Effect.fnUntraced(function* ({ createInvitationUrl }: UndoMappingsOptions) {
     return [
       Capability.contribute(Capabilities.UndoMapping, [
@@ -56,4 +59,11 @@ export default Capability.makeModule(
       Capability.contribute(SpaceOperationConfig, { createInvitationUrl }),
     ];
   }),
+  {
+    environments: ['node'],
+    provides: [SpaceOperationConfig],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({
+      createInvitationUrl: makeCreateInvitationUrl(options),
+    }),
+  },
 );

@@ -16,12 +16,13 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { isTruthy } from '@dxos/util';
 
 import { AssistantOperation, type AssistantOptions } from '#types';
 
-export default Capability.makeModule(
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* (pluginOptions: AssistantOptions.AssistantPluginOptions | void) {
     // Withholds the create entry, not the type, so an object made in a full-catalog build still opens.
     const experimentalTypes = pluginOptions?.experimentalTypes ?? true;
@@ -104,4 +105,7 @@ export default Capability.makeModule(
 
     return [Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, entries.filter(isTruthy))];
   }),
+  {
+    environments: ['node'],
+  },
 );

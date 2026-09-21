@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
@@ -36,75 +37,79 @@ const isArtifactCollection = (collection?: Collection.Collection): boolean => {
   return sawArtifact;
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'artifactArticle',
-        filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
-        component: MediaArtifactArticle,
-        // `nodeId` rides along for an article nested in another (a storyboard frame) — see the article.
-        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
-      }),
-      Surface.create({
-        id: 'storyboardArticle',
-        filter: AppSurface.object(AppSurface.Article, Storyboard.Storyboard),
-        component: StoryboardArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-      // The storyboard's frame companion (see the `frame` node in the graph builder).
-      Surface.create({
-        id: 'frameCompanion',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, FRAME_COMPANION),
-          AppSurface.companion(AppSurface.Article, Storyboard.Storyboard),
-        ),
-        component: FrameCompanion,
-        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
-      }),
-      Surface.create({
-        id: 'galleryArticle',
-        filter: AppSurface.object(AppSurface.Article, Collection.Collection, (data) =>
-          isArtifactCollection(data.subject),
-        ),
-        component: GalleryArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
+export const ReactSurface = AppCapability.surface(
+  () =>
+    Effect.succeed(
+      Capability.contribute(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'artifactArticle',
+          filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
+          component: MediaArtifactArticle,
+          // `nodeId` rides along for an article nested in another (a storyboard frame) — see the article.
+          props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
+        }),
+        Surface.create({
+          id: 'storyboardArticle',
+          filter: AppSurface.object(AppSurface.Article, Storyboard.Storyboard),
+          component: StoryboardArticle,
+          props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        }),
+        // The storyboard's frame companion (see the `frame` node in the graph builder).
+        Surface.create({
+          id: 'frameCompanion',
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, FRAME_COMPANION),
+            AppSurface.companion(AppSurface.Article, Storyboard.Storyboard),
+          ),
+          component: FrameCompanion,
+          props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
+        }),
+        Surface.create({
+          id: 'galleryArticle',
+          filter: AppSurface.object(AppSurface.Article, Collection.Collection, (data) =>
+            isArtifactCollection(data.subject),
+          ),
+          component: GalleryArticle,
+          props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        }),
 
-      Surface.create({
-        id: 'lightboxArticle',
-        filter: AppSurface.object(AppSurface.Article, Lightbox.Lightbox),
-        component: LightboxArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
+        Surface.create({
+          id: 'lightboxArticle',
+          filter: AppSurface.object(AppSurface.Article, Lightbox.Lightbox),
+          component: LightboxArticle,
+          props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        }),
 
-      // Card rendering of a MediaArtifact (cover thumbnail) — composes Artifacts into collections/boards.
-      Surface.create({
-        id: 'artifactCard',
-        filter: AppSurface.object(AppSurface.CardContent, MediaArtifact.MediaArtifact),
-        component: MediaArtifactCard,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
+        // Card rendering of a MediaArtifact (cover thumbnail) — composes Artifacts into collections/boards.
+        Surface.create({
+          id: 'artifactCard',
+          filter: AppSurface.object(AppSurface.CardContent, MediaArtifact.MediaArtifact),
+          component: MediaArtifactCard,
+          props: ({ data: { subject } }) => ({ subject }),
+        }),
 
-      // Default variant renderers (image/*, video/*), overridable per contentType via Position.first.
-      Surface.create({
-        id: 'imageVariant',
-        filter: Surface.makeFilter(
-          VariantRenderer,
-          (data) => typeof data.contentType === 'string' && data.contentType.startsWith('image/'),
-        ),
-        component: ImageVariant,
-        props: ({ data: { variant } }) => ({ variant }),
-      }),
-      Surface.create({
-        id: 'videoVariant',
-        filter: Surface.makeFilter(
-          VariantRenderer,
-          (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
-        ),
-        component: VideoVariant,
-        props: ({ data: { variant } }) => ({ variant }),
-      }),
-    ]),
-  ),
+        // Default variant renderers (image/*, video/*), overridable per contentType via Position.first.
+        Surface.create({
+          id: 'imageVariant',
+          filter: Surface.makeFilter(
+            VariantRenderer,
+            (data) => typeof data.contentType === 'string' && data.contentType.startsWith('image/'),
+          ),
+          component: ImageVariant,
+          props: ({ data: { variant } }) => ({ variant }),
+        }),
+        Surface.create({
+          id: 'videoVariant',
+          filter: Surface.makeFilter(
+            VariantRenderer,
+            (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
+          ),
+          component: VideoVariant,
+          props: ({ data: { variant } }) => ({ variant }),
+        }),
+      ]),
+    ),
+  {
+    roles: ['org.dxos.plugin.studio.role.variantRenderer', 'org.dxos.role.article', 'org.dxos.role.cardContent'],
+  },
 );

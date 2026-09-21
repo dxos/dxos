@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { SheetCapabilities } from '#types';
+import { SheetEvents } from '#types';
 
 const createGridRegistry = (): SheetCapabilities.GridRegistry => {
   const grids = new Map<string, SheetCapabilities.GridEntry>();
@@ -21,7 +22,9 @@ const createGridRegistry = (): SheetCapabilities.GridRegistry => {
   };
 };
 
-export default Capability.makeModule(
+export const SheetState = Capability.makeModule(
+  'SheetState',
+  { provides: [SheetCapabilities.GridInstances], activatesOn: SheetEvents.Start },
   Effect.fnUntraced(function* () {
     const gridInstances = createGridRegistry();
     return Capability.contribute(SheetCapabilities.GridInstances, gridInstances);

@@ -9,6 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -18,7 +19,7 @@ import { Ibkr } from '#types';
 
 import { meta } from '../meta.ts';
 
-export default Capability.makeModule(
+export const IbkrAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read reactively so the extension establishes a dependency and heals once this
     // capability lands (dependency modules contribute individually, not batched per wave).
@@ -63,4 +64,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension]);
   }),
+  {
+    requires: [AttentionCapabilities.ViewState],
+  },
 );

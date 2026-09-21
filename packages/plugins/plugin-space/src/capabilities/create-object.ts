@@ -12,8 +12,9 @@ import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Task } from '@dxos/types';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
+import { SpaceCapability } from '#types';
 
-export default Capability.makeModule(
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
@@ -101,4 +102,7 @@ export default Capability.makeModule(
       ]),
     ];
   }),
+  {
+    environments: ['node'],
+  },
 );

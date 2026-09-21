@@ -10,6 +10,7 @@ import { objectKey, probeAccess, regionFromHost } from '@dxos/blob/s3';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants.ts';
@@ -176,7 +177,9 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
     }),
 });
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'Connector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [createS3ConnectorEntry()]);
   }),

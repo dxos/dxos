@@ -9,8 +9,11 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 
 import { AssistantCapabilities } from '#types';
+import { AssistantEvents } from '#types';
 
-export default Capability.makeModule(
+export const SubjectContext = Capability.makeModule(
+  'SubjectContext',
+  { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
   Effect.fnUntraced(function* () {
     /** Type-specific providers add to these bindings, never replace them. */
     return Capability.contribute(AssistantCapabilities.SubjectContext, {

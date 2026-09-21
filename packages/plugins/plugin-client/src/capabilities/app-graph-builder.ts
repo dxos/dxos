@@ -10,6 +10,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { type Client } from '@dxos/client';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,8 +20,11 @@ import { Identity } from '@dxos/halo';
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { Account, ClientCapabilities } from '#types';
+import { ClientEvents } from '#types';
 
-export default Capability.makeModule(
+// Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
+// and a pre-init throw is not re-evaluated when initialization lands).
+export const ClientAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read the client through its atom so the extension establishes a reactive dependency:
     // the connector may evaluate before the client module finishes activating (dependency
@@ -221,4 +225,7 @@ export default Capability.makeModule(
       ...accountUsage,
     ]);
   }),
+  {
+    activatesOn: ClientEvents.Initialized,
+  },
 );

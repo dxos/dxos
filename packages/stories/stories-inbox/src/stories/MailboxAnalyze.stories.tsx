@@ -571,7 +571,7 @@ const StoryProcessPlugin = Plugin.define(
   }),
   // The mailbox→project pipelines (Projects button) without activating the full ProjectsPlugin.
   Plugin.addModule(
-    Capability.inlineModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
+    Capability.makeModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet.handlers)]),
     ),
   ),
@@ -579,7 +579,7 @@ const StoryProcessPlugin = Plugin.define(
   // directly rather than by installing AssistantPlugin, whose AiService LayerSpec would displace the
   // per-variant story AiService (the canned trip payloads broke with AiModelNotAvailableError).
   Plugin.addModule(
-    Capability.inlineModule('AssistantSettings', { provides: [AssistantCapabilities.Settings] }, () =>
+    Capability.makeModule('AssistantSettings', { provides: [AssistantCapabilities.Settings] }, () =>
       Effect.succeed([
         Capability.contribute(
           AssistantCapabilities.Settings,

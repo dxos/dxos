@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
@@ -19,12 +21,7 @@ import {
 } from '../operations/extractor/config.ts';
 import { Settings } from '../types/Settings.ts';
 
-/**
- * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and bridges the
- * configured `tripGapDays` to the headless extractor: the extractor only receives a `db`, so it
- * reads the gap from a process-level holder that this module keeps in sync with the settings atom.
- */
-export default Capability.makeModule(
+export const TripSettings = AppCapability.settings(
   Effect.fnUntraced(function* () {
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
@@ -48,4 +45,8 @@ export default Capability.makeModule(
       atom: settingsAtom,
     });
   }),
+  {
+    activatesOn: ActivationEvents.Idle,
+    requires: [Capabilities.AtomRegistry],
+  },
 );

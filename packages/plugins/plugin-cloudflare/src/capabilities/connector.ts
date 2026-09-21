@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -62,7 +63,9 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'CloudflareConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

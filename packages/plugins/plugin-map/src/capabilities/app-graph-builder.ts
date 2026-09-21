@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,7 +20,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { meta } from '#meta';
 import { Map, MapCapabilities, MapOperation } from '#types';
 
-export default Capability.makeModule(
+export const MapAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Hoisted so the connector below reads it reactively via `get` instead of a sync
     // `Capability.getAll` snapshot, which would never heal once the capability lands.
@@ -85,4 +86,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [extensions, companion]);
   }),
+  {
+    requires: [MapCapabilities.MarkerProvider],
+    environments: ['node'],
+  },
 );

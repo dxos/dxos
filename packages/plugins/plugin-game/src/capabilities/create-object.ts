@@ -9,6 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateGamePanel } from '#components';
@@ -16,7 +17,9 @@ import { Game, GameCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
-export default Capability.makeModule(
+// Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
+// collects its input.
+export const CreateObject = SpaceCapability.createObject(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Game.Game),
@@ -73,4 +76,7 @@ export default Capability.makeModule(
         }),
     });
   }),
+  {
+    environments: [],
+  },
 );

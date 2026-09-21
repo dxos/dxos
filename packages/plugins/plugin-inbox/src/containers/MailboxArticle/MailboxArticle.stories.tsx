@@ -46,7 +46,7 @@ import { MailboxArticle } from './MailboxArticle.tsx';
 // this story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin
 // (already in `corePlugins`), and a no-op here would swallow the selection the article publishes —
 // leaving `useSelection` empty and every selection-driven surface dead.
-const MockDeckOperations = Capability.inlineModule(
+const MockDeckOperations = Capability.makeModule(
   'operation-handler',
   { provides: [Capabilities.OperationHandler] },
   () =>

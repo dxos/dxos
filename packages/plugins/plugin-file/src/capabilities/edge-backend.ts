@@ -9,8 +9,16 @@ import { Blob } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { FileCapabilities } from '#types';
+import { FileEvents } from '#types';
 
-export default Capability.makeModule(
+export const EdgeBackend = Capability.makeModule(
+  'EdgeBackend',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [FileCapabilities.Backend],
+    activatesOn: FileEvents.Start,
+    environments: ['node', 'workerd'],
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     // `config` is initialized-only, and this event wave can land before the forked client

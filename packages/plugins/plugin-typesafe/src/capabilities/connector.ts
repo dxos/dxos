@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { TYPESAFE_API_KEYS_URL, TYPESAFE_CONNECTOR_ID, TYPESAFE_SOURCE } from '../constants.ts';
@@ -66,7 +67,9 @@ export const createTypeSafeConnectorEntry = () => ({
   credentialForm: typeSafeCredentialForm,
 });
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'Connector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [createTypeSafeConnectorEntry()]);
   }),

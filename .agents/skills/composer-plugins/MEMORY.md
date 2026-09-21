@@ -52,7 +52,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 - `Filter.tag(x)` matches a tag's **URI/EID**, NOT its label (`internal/Filter/match.ts` `matchesTag`). Query by label = resolve the `Tag` object first (`Filter.type(Tag.Tag)` + case-insensitive label match, keyless only per `Tag.isUserTag`), then `Filter.tag(Obj.getURI(tag))`. `Filter.tag('favorite')` silently matches nothing.
 - `GraphBuilder.createExtension({...})` returns an **Effect**, not an extension: the canonical shape is `const extensions = yield* Effect.all([createExtension(...), ...])` then `Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())`. Wrapping each call in `Effect.succeed` yields `Effect[]` and fails the `BuilderExtensions` typecheck.
-- Capability barrels use the `AppCapability.*` makers (`appGraphBuilder(() => import(...))`, `surface(() => import(...), { roles })`); bare `Capability.lazyModule(fn)` needs 3 args and bypasses the maker's activation gate.
+- Capability modules use the `AppCapability.*` makers in their own file (`export const ReactSurface = surface(body, { roles })`), re-exported by the barrel; `lazyX(() => import(...))` is the marked exception. Bare `Capability.makeModule(name, spec, body)` bypasses the maker's activation gate.
 - A story `render` fn must not return `null` — `ArgsStoryFn` rejects `JSX.Element | null` (`error TS2322`). Return `<div />` for the not-ready branch.
 - `withTheme`/`withLayout` come from `@dxos/react-ui/testing`, and `withTheme` is **called** (`withTheme()`); `@dxos/storybook-utils` does not export them.
 - Client-backed **container** stories do not render in an ad-hoc root-launched `storybook dev` (client worker never initialises; the reference `plugin-kanban` container story is equally blank). Verify container stories with `moon run <p>:test-storybook`; use component stories for visual/screenshot checks.
@@ -65,7 +65,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 ## 2026-08-20 — plugin-lingo (new plugin scaffold)
 
 - `Capability.contribute(Capabilities.OperationHandler, XOperationHandlerSet)` takes the SET, not `.handlers` — `.handlers` fails the overload (`plugin-bookmarks/src/capabilities/operation-handler.ts` is the reference).
-- A settings module must declare what it provides: `AppCapability.settings(() => import('./settings'), { provides: [XCapabilities.Settings] })`. Without `provides` the module type does not match.
+- A settings module must declare what it provides: `AppCapability.settings(body, { provides: [XCapabilities.Settings] })`. Without `provides` the module type does not match.
 - A `Capability` named `Settings` cannot live in a file importing `./Settings` — the `@dxos/rules(import-as-namespace)` lint forces `import * as Settings`, which collides. Name the schema module `<Plugin>Settings.ts` and namespace-export it as `<Plugin>Settings` (plugin-markdown dodges it instead by re-exporting Settings through `Markdown.ts`).
 - `@dxos/rules(dxos-subpath-exports)`: every namespace re-exported from `src/types/index.ts` needs its own `exports` entry in `package.json` AND a matching `vite.config.ts` entry. Adding a type is three edits, not one.
 - effect rc-108 API: `Schema.decodeUnknown` and `Effect.fromNullable` do NOT exist. Use `Schema.decodeUnknownEffect(schema)(value)` and `Option.match(..., { onNone, onSome })`.

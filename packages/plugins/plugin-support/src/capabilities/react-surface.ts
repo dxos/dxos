@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Hints, Keyshortcuts } from '@dxos/plugin-deck/DeckRole';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
@@ -29,76 +30,90 @@ import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'supportTicket',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Support.Ticket),
-          AppSurface.object(AppSurface.Section, Support.Ticket),
-        ),
-        component: SupportArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-      Surface.create({
-        id: 'feedback',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
-        component: FeedbackPanel,
-      }),
-      Surface.create({
-        id: 'discord',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
-        component: DiscordPanel,
-      }),
-      Surface.create({
-        id: 'helpMenu',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        position: Position.last,
-        component: HelpMenu,
-      }),
-      // Generic plank companion: shows the description from the plugin that
-      // owns the open article's typename. Matches any article via
-      // `companion(Article)` with no schema filter; the resolver inside the
-      // panel maps `companionTo` → owning plugin → `meta.description`.
-      Surface.create({
-        id: 'helpCompanion',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'help'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: SupportCompanion,
-        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
-      }),
-      Surface.create({
-        id: 'homeHelpCompanion',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'help'),
-          AppSurface.companion(AppSurface.Article, SpaceSchema.SPACE_HOME_NODE_TYPE),
-        ),
-        component: SupportHomeCompanion,
-      }),
-      Surface.create({
-        id: 'hints',
-        filter: Surface.makeFilter(Hints),
-        component: ShortcutsHints,
-      }),
-      Surface.create({
-        id: 'keyshortcuts',
-        filter: Surface.makeFilter(Keyshortcuts),
-        component: ShortcutsList,
-      }),
-      Surface.create({
-        id: SHORTCUTS_DIALOG,
-        filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
-        component: ShortcutsDialogContent,
-      }),
-      Surface.create({
-        id: 'settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: SupportSettings,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
-    ]),
-  ),
+export const ReactSurface = AppCapability.surface(
+  () =>
+    Effect.succeed(
+      Capability.contribute(Capabilities.ReactSurface, [
+        Surface.create({
+          id: 'supportTicket',
+          filter: AppSurface.oneOf(
+            AppSurface.object(AppSurface.Article, Support.Ticket),
+            AppSurface.object(AppSurface.Section, Support.Ticket),
+          ),
+          component: SupportArticle,
+          props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        }),
+        Surface.create({
+          id: 'feedback',
+          filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
+          component: FeedbackPanel,
+        }),
+        Surface.create({
+          id: 'discord',
+          filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
+          component: DiscordPanel,
+        }),
+        Surface.create({
+          id: 'helpMenu',
+          filter: Surface.makeFilter(AppSurface.StatusIndicator),
+          position: Position.last,
+          component: HelpMenu,
+        }),
+        // Generic plank companion: shows the description from the plugin that
+        // owns the open article's typename. Matches any article via
+        // `companion(Article)` with no schema filter; the resolver inside the
+        // panel maps `companionTo` → owning plugin → `meta.description`.
+        Surface.create({
+          id: 'helpCompanion',
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, 'help'),
+            AppSurface.companion(AppSurface.Article),
+          ),
+          component: SupportCompanion,
+          props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
+        }),
+        Surface.create({
+          id: 'homeHelpCompanion',
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, 'help'),
+            AppSurface.companion(AppSurface.Article, SpaceSchema.SPACE_HOME_NODE_TYPE),
+          ),
+          component: SupportHomeCompanion,
+        }),
+        Surface.create({
+          id: 'hints',
+          filter: Surface.makeFilter(Hints),
+          component: ShortcutsHints,
+        }),
+        Surface.create({
+          id: 'keyshortcuts',
+          filter: Surface.makeFilter(Keyshortcuts),
+          component: ShortcutsList,
+        }),
+        Surface.create({
+          id: SHORTCUTS_DIALOG,
+          filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
+          component: ShortcutsDialogContent,
+        }),
+        Surface.create({
+          id: 'settings',
+          filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+          component: SupportSettings,
+          props: ({ data: { subject } }) => ({ subject }),
+        }),
+      ]),
+    ),
+  {
+    roles: [
+      'org.dxos.plugin.space.role.homeContent',
+      'org.dxos.plugin.support.role.hints',
+      'org.dxos.plugin.support.role.keyshortcuts',
+      'org.dxos.role.article',
+      'org.dxos.role.deckCompanion.discord',
+      'org.dxos.role.deckCompanion.help',
+      'org.dxos.role.dialog',
+      'org.dxos.role.section',
+      'org.dxos.role.statusIndicator',
+    ],
+  },
 );

@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -35,7 +36,7 @@ const CRM_TYPE_NODE = `${meta.profile.key}/type-node`;
 /** Types surfaced as top-level nodes under the CRM group, in display order. */
 const CRM_TYPES: Type.AnyEntity[] = [Organization.Organization, Person.Person];
 
-export default Capability.makeModule(
+export const CrmAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // CRM section group — created here so it only appears when the CRM plugin is active and

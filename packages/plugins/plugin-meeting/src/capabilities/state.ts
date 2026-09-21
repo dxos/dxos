@@ -9,8 +9,15 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { MeetingCapabilities } from '#types';
+import { MeetingEvents } from '#types';
 
-export default Capability.makeModule(
+export const MeetingState = Capability.makeModule(
+  'MeetingState',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [MeetingCapabilities.State],
+    activatesOn: MeetingEvents.Start,
+  },
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const stateAtom = Atom.make<MeetingCapabilities.MeetingState>({}).pipe(Atom.keepAlive);

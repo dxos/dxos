@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 
-// Accept/Reject return the splice (`undo`) that reverses them; the inverse RestoreText re-applies it
-// — on the base for accept, on the author's branch for reject.
-export default Capability.makeModule(
+export const UndoMappings = AppCapability.undoMappings(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.UndoMapping, [
       UndoMapping.make({

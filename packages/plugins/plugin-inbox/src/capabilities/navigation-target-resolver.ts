@@ -6,7 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
@@ -14,7 +16,7 @@ import { Mailbox } from '#types';
 
 import { getMailboxPath } from '../paths.ts';
 
-export default Capability.makeModule(
+export const NavigationTargetResolver = AppCapability.navigationResolver(
   Effect.fnUntraced(function* () {
     return Capability.contribute(
       AppCapabilities.NavigationTargetResolver,
@@ -31,4 +33,8 @@ export default Capability.makeModule(
       }),
     );
   }),
+  {
+    environments: [],
+    requires: [ClientCapabilities.Client],
+  },
 );

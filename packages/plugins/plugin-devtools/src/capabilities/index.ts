@@ -6,7 +6,6 @@ import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Client } from '@dxos/react-client';
@@ -17,15 +16,10 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  requires: [AppCapabilities.AppGraph],
-  environments: ['node'],
-});
-export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.plugin.debug.surface.page', 'org.dxos.role.deckCompanion.devtoolsOverview'],
-});
-export const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }, () =>
+export { DevtoolsAppGraphBuilder as AppGraphBuilder } from './app-graph-builder.ts';
+export { ReactContext } from './react-context.tsx';
+export { ReactSurface } from './react-surface.ts';
+export const SetupDevtools = Capability.makeModule('setup-devtools', { provides: [] }, () =>
   Effect.sync(() => setupDevtools()),
 );
 export const Translations = AppCapability.translations(translations);

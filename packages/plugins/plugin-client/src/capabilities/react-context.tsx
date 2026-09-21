@@ -9,6 +9,7 @@ import React, { type ReactNode, useMemo } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { useCapability } from '@dxos/app-framework/ui';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Identity, Space } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider } from '@dxos/halo-react';
@@ -17,7 +18,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
+export const ReactContext = AppCapability.reactContext(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,

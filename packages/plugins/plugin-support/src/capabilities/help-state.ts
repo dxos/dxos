@@ -10,7 +10,7 @@ import { createKvsStore } from '@dxos/effect';
 import { meta } from '#meta';
 import { HelpCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
+export const HelpState = Capability.makeModule('HelpState', { provides: [HelpCapabilities.State] }, () =>
   Effect.sync(() => {
     const stateAtom = createKvsStore({
       key: `${meta.profile.key}.state`,

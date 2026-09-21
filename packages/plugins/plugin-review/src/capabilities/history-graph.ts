@@ -8,13 +8,14 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
 
-export default Capability.makeModule(
+export const HistoryGraph = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     // Read through the atom: a provider contributed after the relation expands has to reach the matcher.
     const historyProvidersAtom = yield* Capability.atom(ReviewCapabilities.HistoryProvider);
@@ -44,4 +45,8 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extension);
   }),
+  {
+    name: 'HistoryGraph',
+    environments: ['node'],
+  },
 );

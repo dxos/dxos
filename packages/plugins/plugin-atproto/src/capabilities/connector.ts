@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 import { ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
@@ -25,12 +26,9 @@ const atprotoCredentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typ
   onSubmit: ({ values }) => Effect.succeed({ kind: 'oauth', loginHint: values.handle.trim() }),
 };
 
-/**
- * The generic "Atmosphere" atproto connector: connects an atproto account (credential-only, no sync
- * targets) and is the connector the OAuth account-recovery flow routes its Connection to. Owned by
- * this plugin so the atproto connection capability lives with the rest of the atproto integration.
- */
-export default Capability.makeModule(
+export const AtprotoConnector = Capability.makeModule(
+  'AtprotoConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

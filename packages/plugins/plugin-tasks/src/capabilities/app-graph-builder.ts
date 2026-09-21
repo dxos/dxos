@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -15,7 +16,9 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
 import { OutlineOperation } from '#types';
 
-export default Capability.makeModule(
+// Narrower than the `appGraphBuilder` family default: its nodes invoke
+// `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
+export const TasksAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
@@ -42,4 +45,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
+  {
+    environments: [],
+  },
 );

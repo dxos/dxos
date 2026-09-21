@@ -51,7 +51,7 @@ export const Toolbar = () => {
   );
 };
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
@@ -61,5 +61,4 @@ export default Capability.makeModule(() =>
         component: Toolbar,
       }),
     ),
-  ),
-);
+  );

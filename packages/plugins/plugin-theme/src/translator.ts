@@ -24,27 +24,25 @@ export type TranslatorModuleOptions = {
  * `@dxos/i18n`; this module is the single place where resource bundles are registered so both React
  * and non-React consumers read the same translations.
  */
-export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ appName, resourceExtensions = [] }: TranslatorModuleOptions = {}) {
-    const registry = yield* Capabilities.AtomRegistry;
-    const translationsAtom = yield* Capability.atom(AppCapabilities.Translations);
+export default Effect.fnUntraced(function* ({ appName, resourceExtensions = [] }: TranslatorModuleOptions = {}) {
+  const registry = yield* Capabilities.AtomRegistry;
+  const translationsAtom = yield* Capability.atom(AppCapabilities.Translations);
 
-    // Static resources owned by the theme plugin and the embedding app. `@dxos/react-ui` contributes
-    // no plugin of its own, so its resources are registered here or its primitives render raw keys.
-    addResources([
-      ...reactUiTranslations,
-      ...translations,
-      ...resourceExtensions,
-      ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),
-    ]);
+  // Static resources owned by the theme plugin and the embedding app. `@dxos/react-ui` contributes
+  // no plugin of its own, so its resources are registered here or its primitives render raw keys.
+  addResources([
+    ...reactUiTranslations,
+    ...translations,
+    ...resourceExtensions,
+    ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),
+  ]);
 
-    // Plugin-contributed translations, registered reactively as plugins are enabled and disabled —
-    // the live contributions view means late (legacy-window) contributions still land.
-    const register = () => addResources(registry.get(translationsAtom).flat());
-    register();
-    const unsubscribe = registry.subscribe(translationsAtom, register);
+  // Plugin-contributed translations, registered reactively as plugins are enabled and disabled —
+  // the live contributions view means late (legacy-window) contributions still land.
+  const register = () => addResources(registry.get(translationsAtom).flat());
+  register();
+  const unsubscribe = registry.subscribe(translationsAtom, register);
 
-    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
-    return Capability.contribute(AppCapabilities.Translator, translator);
-  }),
-);
+  yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+  return Capability.contribute(AppCapabilities.Translator, translator);
+});

@@ -14,28 +14,25 @@ import { log } from '@dxos/log';
 
 import { LogOperation } from './schema.ts';
 
-const Toolbar = Capability.lazyModule(
+const Toolbar = Capability.makeLazyModule(
   'Toolbar',
   { provides: [Capabilities.ReactSurface] },
   () => import('./Toolbar.tsx'),
 );
 
-const OperationHandler = Capability.inlineModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () =>
-    Effect.succeed([
-      Capability.contribute(
-        Capabilities.OperationHandler,
-        OperationHandlerSet.make(
-          Operation.withHandler(LogOperation, ({ message }) =>
-            Effect.sync(() => {
-              log.info(message);
-            }),
-          ),
+const OperationHandler = Capability.makeModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+  Effect.succeed([
+    Capability.contribute(
+      Capabilities.OperationHandler,
+      OperationHandlerSet.make(
+        Operation.withHandler(LogOperation, ({ message }) =>
+          Effect.sync(() => {
+            log.info(message);
+          }),
         ),
       ),
-    ]),
+    ),
+  ]),
 );
 
 const meta = Plugin.makeMeta({

@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -150,18 +151,9 @@ const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
-/**
- * Contributes two `ConnectorSpec.Connector` entries for Discord:
- * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
- * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
- *
- * Both connectors share the same `GetDiscordChannels` discovery,
- * `materializeTarget` (empty feed-backed Channel per remote channel), and
- * `SyncDiscordChannel` sync operation. The auth difference is handled
- * transparently at the layer level: `makeDiscordUserLayerFromToken` rewrites
- * dfx's `Bot <token>` header to `Bearer <token>` inside the proxy fetch layer.
- */
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'DiscordConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

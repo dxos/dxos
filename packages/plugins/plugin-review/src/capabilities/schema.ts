@@ -2,10 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-/**
- * Schemas this plugin registers, loaded on demand: the capability activates at idle,
- * so naming them here keeps them out of the plugin body's module graph.
- */
-export default [AnchoredTo.AnchoredTo, Message.Message, Thread.Thread];
+export const Schema = AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread]);

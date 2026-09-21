@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Type } from '@dxos/echo';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
@@ -17,7 +18,9 @@ import { JmapOperation } from '#types';
 import { JMAP_DEFAULT_HOST, JMAP_MAIL_CONNECTOR_ID } from '../constants.ts';
 import { jmapCredentialForm } from './credential-form.ts';
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'JmapConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

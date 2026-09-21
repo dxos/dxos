@@ -16,8 +16,19 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { HelpCapabilities, HelpOperation } from '#types';
 
-/** Runs a matching `auto` tour the first time the reader attends something it applies to. */
-export default Capability.makeModule(
+export const TourAutoStart = Capability.makeModule(
+  'TourAutoStart',
+  {
+    requires: [
+      AppCapabilities.AppGraph,
+      AttentionCapabilities.Attention,
+      Capabilities.AtomRegistry,
+      Capabilities.OperationInvoker,
+      ClientCapabilities.Client,
+      HelpCapabilities.State,
+    ],
+    provides: [],
+  },
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
     if (!Account.isAuthEnabled(client.config)) {

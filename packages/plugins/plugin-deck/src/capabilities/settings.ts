@@ -6,30 +6,35 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { DeckCapabilities, Settings } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    const settingsAtom = createKvsStore({
-      key: meta.profile.key,
-      schema: Settings.Settings,
-      defaultValue: () => ({
-        showHints: false,
-        enableNativeRedirect: false,
-        flatten: true,
-      }),
-    });
-
-    return [
-      Capability.contribute(DeckCapabilities.Settings, settingsAtom),
-      Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+export const DeckSettings = AppCapability.settings(
+  () =>
+    Effect.sync(() => {
+      const settingsAtom = createKvsStore({
+        key: meta.profile.key,
         schema: Settings.Settings,
-        atom: settingsAtom,
-      }),
-    ];
-  }),
+        defaultValue: () => ({
+          showHints: false,
+          enableNativeRedirect: false,
+          flatten: true,
+        }),
+      });
+
+      return [
+        Capability.contribute(DeckCapabilities.Settings, settingsAtom),
+        Capability.contribute(AppCapabilities.Settings, {
+          prefix: meta.profile.key,
+          schema: Settings.Settings,
+          atom: settingsAtom,
+        }),
+      ];
+    }),
+  {
+    provides: [DeckCapabilities.Settings],
+  },
 );

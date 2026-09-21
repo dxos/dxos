@@ -60,7 +60,7 @@ describe('dx-plugin gen', () => {
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
           'export const SHARED_ID = 3;',
-          "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
+          "export const Headless = Capability.makeLazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
           '',
         ].join('\n'),
       },
@@ -71,7 +71,7 @@ describe('dx-plugin gen', () => {
 
         const node = read(dir, 'node');
         expect(node).toContain('export const SHARED_ID = 3;');
-        expect(node).toContain("Capability.lazyModule('Headless'");
+        expect(node).toContain("Capability.makeLazyModule('Headless'");
       },
     );
   });
@@ -83,8 +83,8 @@ describe('dx-plugin gen', () => {
         'src/capabilities/index.ts': [
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
-          "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
-          "export const BrowserOnly = Capability.lazyModule('BrowserOnly', { environments: [] }, () => import('./ui'));",
+          "export const Headless = Capability.makeLazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
+          "export const BrowserOnly = Capability.makeLazyModule('BrowserOnly', { environments: [] }, () => import('./ui'));",
           '',
         ].join('\n'),
       },
@@ -114,7 +114,7 @@ describe('dx-plugin gen', () => {
         'src/capabilities/headless-module.ts': [
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
-          "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
+          "export const Headless = Capability.makeLazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
           '',
         ].join('\n'),
         'src/util.ts': ['export const helper = () => 1;', ''].join('\n'),
@@ -124,9 +124,50 @@ describe('dx-plugin gen', () => {
         expect(result.environments).toEqual(['node']);
 
         const node = read(dir, 'node');
-        expect(node).toContain("Capability.lazyModule('Headless'");
-        // The re-exported helper lives two directories up from `gen/`; it must be carried, not lost.
-        expect(node).toContain('export const helper');
+        // Members that live in their own file are re-exported from it, at a path rebased to `gen/`.
+        expect(node).toContain("export { Headless } from '../headless-module.ts';");
+        expect(node).toContain("export { helper } from '../../util.ts';");
+      },
+    );
+  });
+
+  it('follows a maker pair to the defaults const they share', () => {
+    withPlugin(
+      {
+        'package.json': PACKAGE_JSON,
+        'node_modules/@dxos/makers/package.json': JSON.stringify({
+          name: '@dxos/makers',
+          exports: { '.': { source: './makers.ts' }, './package.json': './package.json' },
+        }),
+        'node_modules/@dxos/makers/makers.ts': [
+          "import * as Capability from '@dxos/app-framework/Capability';",
+          '',
+          "const handlerDefaults = { environments: ['node'] } satisfies Capability.MakerDefaults;",
+          "export const handler = Capability.moduleMaker('Handler', {} as any, handlerDefaults);",
+          "export const lazyHandler = Capability.lazyModuleMaker('Handler', {} as any, handlerDefaults);",
+          '',
+        ].join('\n'),
+        'src/capabilities/index.ts': [
+          "import * as Makers from '@dxos/makers';",
+          '',
+          "export { Handler } from './handler';",
+          "export const LazyHandler = Makers.lazyHandler(() => import('./lazy-handler'));",
+          '',
+        ].join('\n'),
+        'src/capabilities/handler.ts': [
+          "import * as Makers from '@dxos/makers';",
+          '',
+          'export const Handler = Makers.handler(() => []);',
+          '',
+        ].join('\n'),
+      },
+      (dir) => {
+        const result = generate(dir);
+        expect(result.environments).toEqual(['node']);
+
+        const node = read(dir, 'node');
+        expect(node).toContain("export { Handler } from '../handler.ts';");
+        expect(node).toContain('Makers.lazyHandler(');
       },
     );
   });
@@ -138,7 +179,7 @@ describe('dx-plugin gen', () => {
         'src/capabilities/index.ts': [
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
-          "export const Isomorphic = Capability.lazyModule('Isomorphic', {}, () => import('./iso'));",
+          "export const Isomorphic = Capability.makeLazyModule('Isomorphic', {}, () => import('./iso'));",
           '',
         ].join('\n'),
       },
@@ -159,7 +200,7 @@ describe('dx-plugin gen', () => {
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
           "const envs = ['node'];",
-          "export const Headless = Capability.lazyModule('Headless', { environments: envs }, () => import('./headless'));",
+          "export const Headless = Capability.makeLazyModule('Headless', { environments: envs }, () => import('./headless'));",
           '',
         ].join('\n'),
       },

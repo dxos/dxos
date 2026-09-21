@@ -69,7 +69,7 @@ export const Main = () => {
   );
 };
 
-export default Capability.makeModule(() =>
+export default () =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
@@ -79,5 +79,4 @@ export default Capability.makeModule(() =>
         component: Main,
       }),
     ),
-  ),
-);
+  );

@@ -99,7 +99,7 @@ const StoryGraphPlugin = () =>
     }),
   ).pipe(
     Plugin.addModule(
-      Capability.inlineModule(
+      Capability.makeModule(
         'AppGraphBuilder',
         // After the client is ready: a connector that throws before it subscribes to anything
         // reactive never re-runs, so an extension registered at startup would stay empty for good.

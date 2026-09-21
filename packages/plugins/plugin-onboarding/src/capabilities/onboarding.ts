@@ -6,14 +6,29 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { OnboardingManager } from '../onboarding-manager.ts';
 import { OnboardingCapabilities } from './capabilities.ts';
 
-export default Capability.makeModule(
+export const Onboarding = Capability.makeModule(
+  'Onboarding',
+  {
+    requires: [
+      AppCapabilities.AppGraph,
+      Capabilities.OperationInvoker,
+      AppCapabilities.Layout,
+      ClientCapabilities.Client,
+    ],
+    provides: [OnboardingCapabilities.Onboarding],
+    // The manager reads `client.halo` synchronously at construction, so it needs the forked
+    // client initialization to have completed.
+    activatesOn: ClientEvents.Initialized,
+  },
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const client = yield* ClientCapabilities.Client;

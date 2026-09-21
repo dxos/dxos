@@ -8,21 +8,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 
 import { CrmOperation } from '#types';
 
-/**
- * Injects sender research into plugin-inbox's per-message conversation menu: one entry that profiles
- * the sender and then fetches their image.
- *
- * Two invocations rather than one composite operation, run in order — the image pass reads whatever the
- * profile step wrote, and `EnrichImages` is set-scoped (it walks objects missing an image, bounded by
- * `limit`) rather than taking a subject, so there is nothing to fuse them into today.
- *
- * Only people are offered: `ResearchOrganization` needs an Organization, and a sender's employer is not
- * reliably known at this point — the record view's own Research action covers organizations.
- */
-export default Capability.makeModule(
+export const SenderAction = Capability.makeModule(
+  'SenderAction',
+  { requires: [ClientCapabilities.Client], provides: [InboxCapabilities.SenderAction], activatesOn: InboxEvents.Start },
   Effect.fnUntraced(function* () {
     // The operation takes the endpoint as input and has no other source that reaches the app, so
     // resolve it here where the client config is available.

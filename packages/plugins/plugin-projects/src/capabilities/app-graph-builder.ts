@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -27,15 +28,9 @@ import { ProjectOperation } from '#types';
 
 import { inboxResearch } from '../templates/index.ts';
 
-/**
- * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
- * a section root node plus a child per `Project`, each opening via the regular object/article surface
- * (`ProjectArticle`). The section's label and icon derive from the `Project` schema annotations; it is
- * suppressed when the space has no projects. The header `+` action creates a new Project (via the
- * `CreateObject` capability). Nesting under the AI group means the section only appears when the
- * assistant plugin is active (it owns the group node).
- */
-export default Capability.makeModule(
+// Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
+// `LayoutOperation` actions, which mean nothing without an app shell.
+export const ProjectsAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
       urlKey: 'project',
@@ -69,6 +64,9 @@ export default Capability.makeModule(
       ...mailboxExtensions,
     ]);
   }),
+  {
+    environments: [],
+  },
 );
 
 /**

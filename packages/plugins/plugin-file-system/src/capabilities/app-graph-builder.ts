@@ -12,6 +12,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -134,7 +135,7 @@ export const createFileSystemEntryExtensions = (
   ]).pipe(Effect.map((extensions) => extensions.flat()));
 };
 
-export default Capability.makeModule(
+export const FileSystemAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const stateCapabilitiesAtom = yield* Capability.atom(FileSystemCapabilities.State);
     const fileSystemManagerCapabilitiesAtom = yield* Capability.atom(FileSystemCapabilities.FileSystemManager);
@@ -265,6 +266,9 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...fileSystemEntryExtensions]);
   }),
+  {
+    requires: [Capabilities.AtomRegistry, FileSystemCapabilities.State],
+  },
 );
 
 /** Graph-facing subset of FileSystemManager used to resolve markdown nodes. */

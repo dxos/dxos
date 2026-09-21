@@ -16,6 +16,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Type } from '@dxos/echo';
 import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -122,7 +123,9 @@ const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
     }
   }).pipe(Effect.orDie);
 
-export default Capability.makeModule(
+export const Connector = Capability.makeModule(
+  'GoogleConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {

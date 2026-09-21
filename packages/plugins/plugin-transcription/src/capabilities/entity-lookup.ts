@@ -10,13 +10,11 @@ import { type EntityLookup, makeDatabaseLookup } from '@dxos/pipeline-transcript
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
+import { TranscriptionEvents } from '#types';
 
-/**
- * Contributes an {@link EntityLookup} backed by the default space's full-text index. Resolved lazily
- * per call so it reflects the current space. Consumers (e.g. the live-transcription driver) depend on
- * this function rather than the database — swap the backend (vector, space-aware, remote) here.
- */
-export default Capability.makeModule(
+export const TranscriptionEntityLookup = Capability.makeModule(
+  'EntityLookup',
+  { activatesOn: TranscriptionEvents.Start, provides: [TranscriptionCapabilities.EntityLookup] },
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     const lookup: EntityLookup = async (noun, context) => {

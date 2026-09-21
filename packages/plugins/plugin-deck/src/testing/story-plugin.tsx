@@ -37,78 +37,72 @@ random.seed(1234);
 // TODO(burdon): Show/hide companions.
 // TODO(burdon): Companion width.
 
-const storyDeckSettings = Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const settingsAtom = Atom.make<Settings.Settings>({
-      showHints: false,
-      enableNativeRedirect: false,
-    }).pipe(Atom.keepAlive);
+const storyDeckSettings = Effect.fnUntraced(function* () {
+  const settingsAtom = Atom.make<Settings.Settings>({
+    showHints: false,
+    enableNativeRedirect: false,
+  }).pipe(Atom.keepAlive);
 
-    return Capability.contribute(DeckCapabilities.Settings, settingsAtom);
-  }),
-);
+  return Capability.contribute(DeckCapabilities.Settings, settingsAtom);
+});
 
-const storyDeckState = Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const defaultStoredDeckState: DeckSchema.StoredDeckState = {
-      sidebarState: 'expanded',
-      complementarySidebarState: 'collapsed',
-      complementarySidebarPanel: undefined,
-      activeDeck: STORY_WORKSPACE_PATH,
-      previousDeck: STORY_WORKSPACE_PATH,
-      decks: {
-        [STORY_WORKSPACE_PATH]: { ...DeckSchema.defaultDeck },
-      },
-    };
+const storyDeckState = Effect.fnUntraced(function* () {
+  const defaultStoredDeckState: DeckSchema.StoredDeckState = {
+    sidebarState: 'expanded',
+    complementarySidebarState: 'collapsed',
+    complementarySidebarPanel: undefined,
+    activeDeck: STORY_WORKSPACE_PATH,
+    previousDeck: STORY_WORKSPACE_PATH,
+    decks: {
+      [STORY_WORKSPACE_PATH]: { ...DeckSchema.defaultDeck },
+    },
+  };
 
-    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
+  const stateAtom = Atom.make<DeckSchema.StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
-    const defaultEphemeralDeckState: DeckSchema.EphemeralDeckState = {
-      fullscreen: undefined,
-      dialogContent: null,
-      dialogOpen: false,
-      dialogBlockAlign: undefined,
-      dialogType: undefined,
-      popoverContent: null,
-      popoverAnchor: undefined,
-      popoverAnchorId: undefined,
-      popoverOpen: false,
-      toasts: [],
-      currentUndoId: undefined,
-      scrollIntoView: undefined,
-      open: {},
-    };
+  const defaultEphemeralDeckState: DeckSchema.EphemeralDeckState = {
+    fullscreen: undefined,
+    dialogContent: null,
+    dialogOpen: false,
+    dialogBlockAlign: undefined,
+    dialogType: undefined,
+    popoverContent: null,
+    popoverAnchor: undefined,
+    popoverAnchorId: undefined,
+    popoverOpen: false,
+    toasts: [],
+    currentUndoId: undefined,
+    scrollIntoView: undefined,
+    open: {},
+  };
 
-    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(
-      Atom.keepAlive,
-    );
+  const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(Atom.keepAlive);
 
-    const layoutAtom = Atom.make((get) => {
-      const state = get(stateAtom);
-      const ephemeral = get(ephemeralAtom);
-      const deck = state.decks[state.activeDeck];
-      invariant(deck, `Deck not found: ${state.activeDeck}`);
-      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
-      return {
-        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
-        dialogOpen: ephemeral.dialogOpen,
-        sidebarOpen: state.sidebarState === 'expanded',
-        complementarySidebarOpen: state.complementarySidebarState === 'expanded',
-        workspace: state.activeDeck,
-        active: open.active,
-        inactive: open.inactive,
-        scrollIntoView: ephemeral.scrollIntoView?.id,
-      } satisfies AppCapabilities.Layout;
-    }).pipe(Atom.keepAlive);
+  const layoutAtom = Atom.make((get) => {
+    const state = get(stateAtom);
+    const ephemeral = get(ephemeralAtom);
+    const deck = state.decks[state.activeDeck];
+    invariant(deck, `Deck not found: ${state.activeDeck}`);
+    const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
+    return {
+      mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
+      dialogOpen: ephemeral.dialogOpen,
+      sidebarOpen: state.sidebarState === 'expanded',
+      complementarySidebarOpen: state.complementarySidebarState === 'expanded',
+      workspace: state.activeDeck,
+      active: open.active,
+      inactive: open.inactive,
+      scrollIntoView: ephemeral.scrollIntoView?.id,
+    } satisfies AppCapabilities.Layout;
+  }).pipe(Atom.keepAlive);
 
-    return [
-      Capability.contribute(DeckCapabilities.State, stateAtom),
-      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, Error>()),
-      Capability.contribute(AppCapabilities.Layout, layoutAtom),
-    ];
-  }),
-);
+  return [
+    Capability.contribute(DeckCapabilities.State, stateAtom),
+    Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+    Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, Error>()),
+    Capability.contribute(AppCapabilities.Layout, layoutAtom),
+  ];
+});
 
 /** The workspace the story items live under. */
 const STORY_WORKSPACE = 'stories';
@@ -155,7 +149,7 @@ const toStoryItemNode = (item: StoryItem, index: number, depth: number): AppGrap
     nodes: (item.children ?? []).map((child, childIndex) => toStoryItemNode(child, childIndex, depth + 1)),
   });
 
-const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
+const storySurfaces = Capability.makeModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
@@ -215,7 +209,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
   ]),
 );
 
-const storyGraphBuilder = Capability.inlineModule(
+const storyGraphBuilder = Capability.makeModule(
   'story-graph',
   { provides: [AppCapabilities.AppGraphBuilder] },
   Effect.fnUntraced(function* () {

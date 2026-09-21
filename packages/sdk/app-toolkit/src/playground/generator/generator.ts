@@ -33,7 +33,7 @@ export const createNumberPlugin = (id: string) => {
 
   return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
     Plugin.addModule(
-      Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+      Capability.makeModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
         Effect.succeed([
           Capability.contribute(
             Capabilities.OperationHandler,
@@ -45,7 +45,7 @@ export const createNumberPlugin = (id: string) => {
       ),
     ),
     Plugin.addModule(
-      Capability.inlineModule('Main', { provides: [Number], activatesOn: CountEvent }, () =>
+      Capability.makeModule('Main', { provides: [Number], activatesOn: CountEvent }, () =>
         Effect.succeed([Capability.contribute(Number, number)]),
       ),
     ),

@@ -14,6 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
@@ -29,7 +30,7 @@ import { SampleItem, SampleOperation } from '#types';
 // A second extension matches this type to populate child nodes.
 const SAMPLE_SECTION_TYPE = 'sample-section';
 
-export default Capability.makeModule(
+export const SampleAppGraphBuilder = AppCapability.appGraphBuilder(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // --- Root-level action ---

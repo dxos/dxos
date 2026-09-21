@@ -6,26 +6,31 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { TypeSafeCapabilities, TypeSafeSettings } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    const settingsAtom = createKvsStore({
-      key: meta.profile.key,
-      schema: TypeSafeSettings.Settings,
-      defaultValue: TypeSafeSettings.defaults,
-    });
-
-    return [
-      Capability.contribute(TypeSafeCapabilities.Settings, settingsAtom),
-      Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+export const SettingsModule = AppCapability.settings(
+  () =>
+    Effect.sync(() => {
+      const settingsAtom = createKvsStore({
+        key: meta.profile.key,
         schema: TypeSafeSettings.Settings,
-        atom: settingsAtom,
-      }),
-    ];
-  }),
+        defaultValue: TypeSafeSettings.defaults,
+      });
+
+      return [
+        Capability.contribute(TypeSafeCapabilities.Settings, settingsAtom),
+        Capability.contribute(AppCapabilities.Settings, {
+          prefix: meta.profile.key,
+          schema: TypeSafeSettings.Settings,
+          atom: settingsAtom,
+        }),
+      ];
+    }),
+  {
+    provides: [TypeSafeCapabilities.Settings],
+  },
 );

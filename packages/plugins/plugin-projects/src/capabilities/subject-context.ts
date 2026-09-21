@@ -8,8 +8,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 
-export default Capability.makeModule(
+export const SubjectContext = Capability.makeModule(
+  'SubjectContext',
+  { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
   Effect.fnUntraced(function* () {
     /** The instructions travel by reference, so the chat follows later edits to the project's. */
     return Capability.contribute(AssistantCapabilities.SubjectContext, {

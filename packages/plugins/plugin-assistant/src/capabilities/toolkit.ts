@@ -8,6 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { WebSearchToolkitOpaque } from '@dxos/assistant-toolkit';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(AppCapabilities.Toolkit, WebSearchToolkitOpaque)),
+import { AssistantEvents } from '#types';
+
+export const Toolkit = Capability.makeModule(
+  'Toolkit',
+  {
+    provides: [AppCapabilities.Toolkit],
+    activatesOn: AssistantEvents.Start,
+    environments: ['node', 'workerd'],
+  },
+  () => Effect.succeed(Capability.contribute(AppCapabilities.Toolkit, WebSearchToolkitOpaque)),
 );
