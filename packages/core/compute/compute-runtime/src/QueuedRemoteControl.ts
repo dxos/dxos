@@ -44,12 +44,20 @@ const DEFAULT_BACKOFF: Backoff = { initial: Duration.seconds(1), max: Duration.m
 const IDLE_POLL = Duration.seconds(5);
 
 /**
- * Deliveries of one command before it is given up on.
+ * How long one command may keep failing before it, and its process, are given up on.
  *
- * At the default backoff this is hours of trying, so an outage never reaches it; what does is a
- * command the host keeps rejecting, which would otherwise hold the strictly-ordered queue forever.
+ * The queue is strictly ordered, so a command the host will never accept — a process it has dropped,
+ * a key it does not host — would otherwise hold every later command, for every OTHER process, behind
+ * it forever. `Control` reports a rejection and an outage identically (both are defects), so the
+ * only thing left to separate them is how long it has gone on.
+ *
+ * A day, because the cost of the two mistakes is not symmetric: giving up too early discards work a
+ * user asked for, while giving up late merely leaves a queue stalled somewhat longer. No outage a
+ * client is expected to ride out — a closed laptop, a flight, an edge deploy — comes close, and an
+ * attempt count would not do: the backoff caps out, so counting attempts is measuring elapsed time
+ * with the units filed off (twelve attempts is six minutes, not the hours it looks like).
  */
-const DEFAULT_MAX_ATTEMPTS = 12;
+const DEFAULT_GIVE_UP_AFTER = Duration.hours(24);
 
 export interface Options {
   /** Transport to the host. Its failures are defects, which is what marks a command for retry. */
@@ -58,8 +66,8 @@ export interface Options {
   readonly kvStore: KeyValueStore.KeyValueStore;
   readonly prefix?: string;
   readonly backoff?: Backoff;
-  /** Deliveries of one command before it is abandoned; see {@link DEFAULT_MAX_ATTEMPTS}. */
-  readonly maxAttempts?: number;
+  /** How long a command may keep failing before it is abandoned; see {@link DEFAULT_GIVE_UP_AFTER}. */
+  readonly giveUpAfter?: Duration.Duration;
   /** Injectable so a test can make command ids deterministic. */
   readonly newId?: () => string;
 }
@@ -111,7 +119,7 @@ export interface Queued extends RemoteProcessManager.Control {
  */
 export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope> =>
   Effect.gen(function* () {
-    const { control, kvStore, prefix, backoff = DEFAULT_BACKOFF, maxAttempts = DEFAULT_MAX_ATTEMPTS } = options;
+    const { control, kvStore, prefix, backoff = DEFAULT_BACKOFF, giveUpAfter = DEFAULT_GIVE_UP_AFTER } = options;
     const newId = options.newId ?? (() => globalThis.crypto.randomUUID());
     const queue = new RemoteCommandQueue(kvStore, prefix);
 
@@ -290,18 +298,16 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       if (Exit.isSuccess(exit)) {
         return yield* queue.complete(command.id);
       }
-      const attempts = yield* queue.recordAttempt(command.id);
-      if (attempts >= maxAttempts) {
-        // The queue is strictly ordered, so a command the host will never accept — a process it has
-        // dropped, a key it does not host, a payload it rejects — would hold every later command
-        // for every OTHER process behind it forever. `Control` reports a rejection and an outage
-        // identically (both are defects), so the only thing that can tell them apart is how many
-        // times it has happened: past this, the command and its process are given up on.
-        log.error('remote command abandoned after repeated failures', {
+      const { attempts, firstFailedAt } = yield* queue.recordAttempt(command.id);
+      if (Date.now() - firstFailedAt >= Duration.toMillis(giveUpAfter)) {
+        // See {@link DEFAULT_GIVE_UP_AFTER}: the whole GROUP goes, not just this command, since the
+        // ones behind it address a process that is never going to exist.
+        log.error('remote command abandoned after failing for too long', {
           command: command.payload._tag,
           id: command.id,
           pid: command.localPid,
           attempts,
+          failingForMs: Date.now() - firstFailedAt,
         });
         const snapshot = overlay.get(command.localPid);
         // Reported as FAILED rather than dropped silently: a caller waiting on this process has to

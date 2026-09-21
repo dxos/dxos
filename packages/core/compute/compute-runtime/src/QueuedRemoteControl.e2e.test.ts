@@ -199,8 +199,9 @@ describe('queued remote control (e2e against a local host)', () => {
             // Only the surviving spawn ever reached the host.
             expect((yield* host.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
           }),
-        // Three quick attempts, so the cap is reached inside the test rather than in hours.
-        { backoff: { initial: Duration.millis(1), max: Duration.millis(2) }, maxAttempts: 3 },
+        // A horizon of milliseconds, so the give-up point is reached inside the test rather than a
+        // day from now.
+        { backoff: { initial: Duration.millis(1), max: Duration.millis(2) }, giveUpAfter: Duration.millis(20) },
       );
     }),
   );
@@ -370,7 +371,7 @@ interface Harness {
  */
 const withHarness = (
   body: (harness: Harness) => Effect.Effect<void, never, Registry.AtomRegistry | Scope.Scope>,
-  options: { backoff?: QueuedRemoteControl.Backoff; maxAttempts?: number } = {},
+  options: { backoff?: QueuedRemoteControl.Backoff; giveUpAfter?: Duration.Duration } = {},
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -398,7 +399,7 @@ const withHarness = (
         control,
         kvStore,
         backoff: options.backoff ?? BACKOFF,
-        ...(options.maxAttempts !== undefined ? { maxAttempts: options.maxAttempts } : {}),
+        ...(options.giveUpAfter !== undefined ? { giveUpAfter: options.giveUpAfter } : {}),
       }).pipe(Effect.provideService(Scope.Scope, clients));
 
     const clientStore = KeyValueStore.prefix(kv, 'client/');
