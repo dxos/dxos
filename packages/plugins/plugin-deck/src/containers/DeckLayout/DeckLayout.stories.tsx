@@ -85,21 +85,28 @@ export const ClosingKeepsContentUntilExit: Story = {
     await waitFor(() => expect(dialog()).not.toBeNull());
 
     const orphaned: number[] = [];
+    let exiting = 0;
     let sampling = true;
     const sample = () => {
-      if (backdrop() && !dialog()) {
-        orphaned.push(Math.round(performance.now()));
+      if (backdrop()) {
+        if (dialog()) {
+          exiting += 1;
+        } else {
+          orphaned.push(Math.round(performance.now()));
+        }
       }
       if (sampling) {
         requestAnimationFrame(sample);
       }
     };
-    requestAnimationFrame(sample);
 
     await closeStoryDialog!();
+    requestAnimationFrame(sample);
     await waitFor(() => expect(backdrop()).toBeNull(), { timeout: 5_000 });
     sampling = false;
 
     await expect(orphaned).toEqual([]);
+    // Without this the test passes on an exit that never happened, which is every way it could break.
+    await expect(exiting).toBeGreaterThan(0);
   },
 };

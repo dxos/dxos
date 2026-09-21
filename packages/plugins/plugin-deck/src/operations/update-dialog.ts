@@ -13,17 +13,17 @@ import { DeckCapabilities } from '#types';
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDialog> = LayoutOperation.UpdateDialog.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
+      const open = input.state ?? Boolean(input.subject);
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
         ...state,
-        dialogOpen: input.state ?? Boolean(input.subject),
-        dialogType: input.type ?? 'default',
-        dialogBlockAlign: input.blockAlign ?? 'center',
-        dialogOverlayClasses: input.overlayClasses,
-        dialogOverlayStyle: input.overlayStyle,
-        dialogContent: input.subject
+        dialogOpen: open,
+        dialog: open
           ? {
-              component: input.subject,
-              props: input.props,
+              type: input.type ?? 'default',
+              blockAlign: input.blockAlign ?? 'center',
+              overlayClasses: input.overlayClasses,
+              overlayStyle: input.overlayStyle,
+              content: input.subject ? { component: input.subject, props: input.props } : undefined,
             }
           : null,
       }));

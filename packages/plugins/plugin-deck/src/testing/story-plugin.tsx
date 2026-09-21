@@ -67,10 +67,8 @@ const storyDeckState = Capability.makeModule(
 
     const defaultEphemeralDeckState: DeckSchema.EphemeralDeckState = {
       fullscreen: undefined,
-      dialogContent: null,
       dialogOpen: false,
-      dialogBlockAlign: undefined,
-      dialogType: undefined,
+      dialog: null,
       popoverContent: null,
       popoverAnchor: undefined,
       popoverAnchorId: undefined,

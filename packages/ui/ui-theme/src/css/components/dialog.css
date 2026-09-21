@@ -4,10 +4,6 @@
 
 @layer dx-components {
   .dx-dialog__overlay {
-    /* Named for the same reason every other fixed region is (see `layout/main.css`): the content's
-       group spans the viewport and paints above the root snapshot, so an unnamed dialog is hidden
-       under it for the length of a view transition and flickers back when it ends. */
-    view-transition-name: dx-dialog-overlay;
     @apply z-40 fixed grid inset-x-0 top-0 h-dvh py-[env(safe-area-inset-top)] place-items-center;
     @apply bg-scrim-surface backdrop-blur-xs;
 

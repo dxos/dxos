@@ -3,4 +3,4 @@
 '@dxos/ui-theme': patch
 ---
 
-Stop the dialog and the app behind it flickering while a view transition runs. A dialog overlay had no `view-transition-name`, so the content group painted over it and it vanished for the length of the transition; closing a dialog cleared its content and overlay styling while that overlay was still exiting; and an open that crossed workspaces swapped the whole chrome un-animated before starting a separate transition for the planks, which now land together in one.
+Stop the dialog and the app behind it flickering while a view transition runs. The app's dialog overlay now carries a `view-transition-name`, so the content group no longer paints over it and hides it for the length of every transition; the dialog's presentation is held as one value while it exits, so a closing dialog no longer loses its content, alignment and overlay styling while it is still on screen; and an open that crosses workspaces animates the chrome swap rather than hard-cutting to an empty deck.
