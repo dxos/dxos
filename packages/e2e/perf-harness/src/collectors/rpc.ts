@@ -73,6 +73,14 @@ export const readRpc = async (targets: Attached[]): Promise<RpcReading[]> => {
   return readings;
 };
 
+/**
+ * One realm's RPC activity over a stage, from its readings at the two boundaries.
+ *
+ * Counts are DIFFERENCED because the realm's totals are cumulative over its lifetime, while the
+ * percentiles and maxima are computed from the samples the realm still holds, filtered to the
+ * window. The two halves are read differently on purpose: a count cannot be recovered from a
+ * bounded sample ring once it has evicted, and a max cannot be differenced at all.
+ */
 const summarize = (before: RpcReading | undefined, after: RpcReading): RealmRpc => {
   // A realm that appeared mid-stage has no opening reading; everything it recorded happened
   // inside this stage, so the window opens at zero rather than being skipped.
