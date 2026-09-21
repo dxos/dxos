@@ -57,6 +57,18 @@ export type HeapReading = {
   /** Present on targets that report it; covers typed-array/wasm backing stores. */
   backingBytes?: number;
   embedderBytes?: number;
+  /**
+   * Wasm linear memory this realm holds, from `@dxos/util`'s instantiation probe.
+   *
+   * Its own reading because no JS-heap figure counts it: `usedBytes` is the V8 heap, and a wasm
+   * module's linear memory lives outside it. Before this, the only instrument that saw automerge's
+   * and SQLite's memory at all was `peakRssBytes`, which is the whole browser process tree.
+   *
+   * Absent when the realm published no probe, which is a different fact from holding no wasm —
+   * `wasmInstances` is what tells them apart.
+   */
+  wasmBytes?: number;
+  wasmInstances?: number;
 };
 
 /**
@@ -121,6 +133,38 @@ export type RealmLag = {
   maxMs: number;
   /** Samples over the floor. Zero means the realm was responsive, not that the probe was missing. */
   count: number;
+};
+
+/**
+ * One realm's RPC timings over the stage, from the app's own timing middleware.
+ *
+ * The counterpart to `RealmLag` measured from real traffic rather than a synthetic timer:
+ * `queueWait` is how long a request sat before this realm's event loop picked it up, which is
+ * exactly what a blocked loop does to everything waiting on it. `service` is what the handler then
+ * cost, and `roundTrip` — recorded in the realm that ISSUED the call — is the total the caller
+ * waited, which the other two cannot add up to because they do not include the transport.
+ */
+export type RealmRpc = {
+  kind: TargetKind;
+  name: string;
+  /** Requests this realm SERVED during the stage, from the running total's difference. */
+  calls: number;
+  queueWaitP95Ms: number;
+  queueWaitMaxMs: number;
+  serviceMaxMs: number;
+  /** Requests this realm ISSUED during the stage. */
+  clientCalls: number;
+  roundTripP95Ms: number;
+  roundTripMaxMs: number;
+  /**
+   * Samples the percentiles were taken over.
+   *
+   * The integrity pair with `calls`: the middleware keeps a bounded ring, so a stage that served
+   * more calls than the ring holds reports a percentile over its tail rather than over all of it,
+   * and `calls > samples` is the only thing that says so.
+   */
+  samples: number;
+  clientSamples: number;
 };
 
 /**
@@ -256,6 +300,8 @@ export type StageRow = {
   network: NetworkMetrics;
   /** SQLite's VFS-level disk I/O for this stage. Zeroes on node, which has no JS VFS. */
   disk: DiskMetrics;
+  /** RPC queue wait, service and round trip per realm. Empty when no realm published the counters. */
+  rpc: RealmRpc[];
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;

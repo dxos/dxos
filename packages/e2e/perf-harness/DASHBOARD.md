@@ -38,25 +38,34 @@ regression. Filter on them rather than trusting them to be constant.
 
 ### Measures
 
-| property                                                  | unit          | realm columns                                                                   |
-| --------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
-| `ciWallMs`                                                | ms            | —                                                                               |
-| `ciCpuMsTotal`                                            | ms            | — (every Chrome process, GPU included)                                          |
-| `ciCpuMs*`                                                | ms            | `…Tab` `…Worker` `…SharedWorker` `…ServiceWorker`, plus `ciCpuMsWorkers` rollup |
-| `ciHeapUsedBytes*`                                        | bytes         | same four suffixes, plus `ciHeapUsedTotalBytes`                                 |
-| `ciLagP95Ms*` / `ciLagMaxMs*`                             | ms            | same four suffixes, plus the pooled `ciLagP95Ms` / `ciLagMaxMs`                 |
-| `ciPeakRssBytes`                                          | bytes         | — (browser process tree)                                                        |
-| `ciDomNodes`, `ciDomListeners`                            | count         | —                                                                               |
-| `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                       |
-| `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                     |
-| `ciCodeBytes`, `ciApiBytes`, `ciApiRequests`              | bytes / count | —                                                                               |
-| `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                     |
-| `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                           |
-| `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable  |
-| `ciSqliteReadBytes`, `ciSqliteWriteBytes`                 | bytes         | SQLite's own VFS I/O, browser only                                              |
-| `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                   |
-| `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero  |
-| `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent             |
+| property                                                  | unit          | realm columns                                                                       |
+| --------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------- |
+| `ciWallMs`                                                | ms            | —                                                                                   |
+| `ciCpuMsTotal`                                            | ms            | — (every Chrome process, GPU included)                                              |
+| `ciCpuMs*`                                                | ms            | `…Tab` `…Worker` `…SharedWorker` `…ServiceWorker`, plus `ciCpuMsWorkers` rollup     |
+| `ciHeapUsedBytes*`                                        | bytes         | same four suffixes, plus `ciHeapUsedTotalBytes`                                     |
+| `ciLagP95Ms*` / `ciLagMaxMs*`                             | ms            | same four suffixes, plus the pooled `ciLagP95Ms` / `ciLagMaxMs`                     |
+| `ciLagSamples*`                                           | count         | **read this before a zero above**: `0` means the drift probe produced nothing       |
+| `ciHeapBackingBytes*`                                     | bytes         | same four suffixes — `ArrayBuffer` backing stores, where automerge's buffers sit    |
+| `ciWasmBytes*`                                            | bytes         | same four suffixes, plus `ciWasmBytesTotal`; counted by no heap column              |
+| `ciWasmRealms`                                            | count         | realms that published the wasm probe; `0` means uninstrumented, not "no wasm"       |
+| `ciRpcQueueWaitP95Ms*` / `ciRpcQueueWaitMaxMs*`           | ms            | same four suffixes — time a request waited for that realm's event loop              |
+| `ciRpcServiceMaxMs*`                                      | ms            | same four suffixes — worst handler duration in the realm that served it             |
+| `ciRpcRoundTripP95Ms*` / `ciRpcRoundTripMaxMs*`           | ms            | same four suffixes, attributed to the realm that ISSUED the call                    |
+| `ciRpcCalls*`                                             | count         | same four suffixes, plus `ciRpcCallsTotal`                                          |
+| `ciRpcSamples`, `ciRpcRealms`                             | count         | `ciRpcCallsTotal` above `ciRpcSamples` means the percentiles cover the stage's tail |
+| `ciPeakRssBytes`                                          | bytes         | — (browser process tree)                                                            |
+| `ciDomNodes`, `ciDomListeners`                            | count         | —                                                                                   |
+| `ciTaskMs`, `ciScriptMs`, `ciLayoutMs`, `ciRecalcStyleMs` | ms            | tab only, by construction                                                           |
+| `ciTbtMs`, `ciLongTaskMaxMs`                              | ms            | tab only — the Long Tasks API is a page API                                         |
+| `ciCodeBytes`, `ciApiBytes`, `ciApiRequests`              | bytes / count | —                                                                                   |
+| `ciEdgeApiBytes`, `ciEdgeSocketBytes`, `ciEdgeBytes`      | bytes         | the app's own backend only; `ciEdgeBytes` is the two summed                         |
+| `ciEdgeApiRequests`, `ciEdgeSocketFrames`                 | count         | frames are counted in both directions                                               |
+| `ciAnalyticsBytes`                                        | bytes         | telemetry, kept out of the edge columns and recorded so the split is auditable      |
+| `ciSqliteReadBytes`, `ciSqliteWriteBytes`                 | bytes         | SQLite's own VFS I/O, browser only                                                  |
+| `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                       |
+| `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero      |
+| `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent                 |
 
 **The realm columns are keyed by KIND, not by script name.** A name-keyed column
 (`cpuMs_shared_worker_client_js`) minted a new permanent property on every bundle rename and left

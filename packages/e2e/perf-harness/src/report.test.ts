@@ -119,8 +119,24 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     { kind: 'worker', name: 'worker:dedicated.js', ...EMPTY_REALM_THREAD },
   ],
   heap: [
-    { kind: 'page', name: 'page', usedBytes: 50_000_000, totalBytes: 80_000_000 },
-    { kind: 'shared_worker', name: 'shared_worker:worker.js', usedBytes: 120_000_000, totalBytes: 160_000_000 },
+    {
+      kind: 'page',
+      name: 'page',
+      usedBytes: 50_000_000,
+      totalBytes: 80_000_000,
+      backingBytes: 4_000_000,
+      wasmBytes: 16_777_216,
+      wasmInstances: 2,
+    },
+    {
+      kind: 'shared_worker',
+      name: 'shared_worker:worker.js',
+      usedBytes: 120_000_000,
+      totalBytes: 160_000_000,
+      backingBytes: 9_000_000,
+      wasmBytes: 67_108_864,
+      wasmInstances: 3,
+    },
   ],
   heapUsedTotalBytes: 170_000_000,
   peakRssBytes: 900_000_000,
@@ -140,6 +156,34 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     analyticsBytes: 500,
   },
   disk: { readBytes: 2_400_000, writeBytes: 900_000, reads: 600, writes: 210, syncs: 18, realms: 1 },
+  rpc: [
+    {
+      kind: 'page',
+      name: 'page',
+      calls: 0,
+      queueWaitP95Ms: 0,
+      queueWaitMaxMs: 0,
+      serviceMaxMs: 0,
+      clientCalls: 140,
+      roundTripP95Ms: 90,
+      roundTripMaxMs: 460,
+      samples: 0,
+      clientSamples: 100,
+    },
+    {
+      kind: 'worker',
+      name: 'worker:dedicated.js',
+      calls: 140,
+      queueWaitP95Ms: 55,
+      queueWaitMaxMs: 380,
+      serviceMaxMs: 120,
+      clientCalls: 0,
+      roundTripP95Ms: 0,
+      roundTripMaxMs: 0,
+      samples: 100,
+      clientSamples: 0,
+    },
+  ],
   responsiveness: {
     longTaskCount: 5,
     longTaskMaxMs: 400,
@@ -197,5 +241,101 @@ describe('disk columns', () => {
     expect(idle.properties.sqliteReadBytes).toBe(0);
     expect(uninstrumented.properties.sqliteRealms).toBe(0);
     expect(idle.properties.sqliteRealms).toBe(1);
+  });
+});
+
+describe('memory columns', () => {
+  test('wasm linear memory is its own per-realm series', ({ expect }) => {
+    // No heap column counts it — `usedBytes` is the V8 heap and a wasm module's memory lives
+    // outside it — so before this a worker holding 64 MB of automerge read as 120 MB total.
+    const event = toPosthogEvent(row());
+    expect(event.properties.wasmBytesTab).toBe(16_777_216);
+    expect(event.properties.wasmBytesSharedWorker).toBe(67_108_864);
+    expect(event.properties.wasmBytesWorker).toBe(0);
+    expect(event.properties.wasmBytesTotal).toBe(83_886_080);
+  });
+
+  test('an uninstrumented realm is distinguishable from one holding no wasm', ({ expect }) => {
+    const uninstrumented = toPosthogEvent(row({ heap: [{ kind: 'page', name: 'page', usedBytes: 1, totalBytes: 2 }] }));
+    const empty = toPosthogEvent(
+      row({ heap: [{ kind: 'page', name: 'page', usedBytes: 1, totalBytes: 2, wasmBytes: 0, wasmInstances: 0 }] }),
+    );
+
+    expect(uninstrumented.properties.wasmBytesTotal).toBe(0);
+    expect(empty.properties.wasmBytesTotal).toBe(0);
+    expect(uninstrumented.properties.wasmRealms).toBe(0);
+    expect(empty.properties.wasmRealms).toBe(1);
+  });
+
+  test('backing stores are published beside the heap', ({ expect }) => {
+    // Automerge moves documents as `Uint8Array`s, whose bytes are a backing store rather than heap.
+    const event = toPosthogEvent(row());
+    expect(event.properties.heapBackingBytesTab).toBe(4_000_000);
+    expect(event.properties.heapBackingBytesSharedWorker).toBe(9_000_000);
+  });
+});
+
+describe('rpc columns', () => {
+  test('queue wait is attributed to the realm that served the call', ({ expect }) => {
+    // Queue wait IS the serving realm's event-loop lag, measured from real traffic: a pooled
+    // figure would let the tab's calm dilute a worker that blocked for 380 ms.
+    const event = toPosthogEvent(row());
+    expect(event.properties.rpcQueueWaitMaxMsWorker).toBe(380);
+    expect(event.properties.rpcQueueWaitP95MsWorker).toBe(55);
+    expect(event.properties.rpcQueueWaitMaxMsTab).toBe(0);
+    expect(event.properties.rpcCallsWorker).toBe(140);
+  });
+
+  test('round trip is attributed to the realm that issued the call', ({ expect }) => {
+    // The caller's quantity, and not derivable from the server's two: it adds the transport in
+    // both directions, which is where a 460 ms wait behind a 120 ms handler went.
+    const event = toPosthogEvent(row());
+    expect(event.properties.rpcRoundTripMaxMsTab).toBe(460);
+    expect(event.properties.rpcRoundTripMaxMsWorker).toBe(0);
+  });
+
+  test('a truncated sample ring is visible rather than silent', ({ expect }) => {
+    // The middleware keeps a bounded ring, so a stage serving more calls than it holds reports a
+    // percentile over the stage's tail. `rpcCallsTotal` above `rpcSamples` is what says so.
+    const event = toPosthogEvent(row());
+    expect(event.properties.rpcCallsTotal).toBe(140);
+    expect(event.properties.rpcSamples).toBe(200);
+    expect(event.properties.rpcRealms).toBe(2);
+  });
+});
+
+describe('lag columns', () => {
+  test('a realm that produced no samples is distinguishable from a responsive one', ({ expect }) => {
+    // The bug this closes: every worker lag column read zero for weeks while the same rows showed
+    // the workers burning seconds of CPU, and nothing in the row said whether the probe had run.
+    const silent = toPosthogEvent(
+      row({
+        responsiveness: {
+          longTaskCount: 0,
+          longTaskMaxMs: 0,
+          tbtMs: 0,
+          lagP95Ms: 0,
+          lagMaxMs: 0,
+          lagByRealm: [{ kind: 'worker', name: 'worker:dedicated.js', p95Ms: 0, maxMs: 0, count: 0 }],
+        },
+      }),
+    );
+    const responsive = toPosthogEvent(
+      row({
+        responsiveness: {
+          longTaskCount: 0,
+          longTaskMaxMs: 0,
+          tbtMs: 0,
+          lagP95Ms: 0,
+          lagMaxMs: 0,
+          lagByRealm: [{ kind: 'worker', name: 'worker:dedicated.js', p95Ms: 0, maxMs: 0, count: 31 }],
+        },
+      }),
+    );
+
+    expect(silent.properties.lagMaxMsWorker).toBe(0);
+    expect(responsive.properties.lagMaxMsWorker).toBe(0);
+    expect(silent.properties.lagSamplesWorker).toBe(0);
+    expect(responsive.properties.lagSamplesWorker).toBe(31);
   });
 });

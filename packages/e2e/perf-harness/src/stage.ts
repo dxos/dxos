@@ -22,6 +22,7 @@ import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collecto
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
+import { type RpcReading, diffRpc, readRpc } from './collectors/rpc.ts';
 import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
@@ -83,6 +84,7 @@ type Boundary = {
   threadByRealm: RealmThreadMetrics[];
   network: NetworkMetrics;
   disk: DiskMetrics;
+  rpc: RpcReading[];
 };
 
 /**
@@ -188,6 +190,7 @@ export class StageRunner {
       threadByRealm: await readRealmThreadMetrics(this.#targets),
       network: network(),
       disk: await readDisk(this.#targets),
+      rpc: await readRpc(this.#targets),
     };
     const stopRss = trackPeakRss(browserPid);
 
@@ -228,6 +231,9 @@ export class StageRunner {
     // was missing from every run. A realm that appeared during the stage contributes its whole
     // counters, which is right: it did that work inside this stage.
     const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
+    // After the refresh for the same reason as disk: `boot` is the stage that creates the worker
+    // serving every later RPC, so a set captured at the opening boundary would miss it entirely.
+    const rpc = diffRpc(before.rpc, await readRpc(this.#targets));
 
     const responsiveness = await readResponsiveness(page, this.#targets);
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
@@ -269,6 +275,7 @@ export class StageRunner {
       domDocuments: domCounters.documents,
       network: networkDelta,
       disk: diskDelta,
+      rpc,
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),

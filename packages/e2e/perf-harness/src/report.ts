@@ -151,6 +151,70 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
     (realm) => realm.kind,
     (realm) => realm.maxMs,
   );
+  // The integrity column for the drift probe, and the one the lag columns were missing: a p95 of
+  // zero is either a responsive realm or a probe that produced nothing, and until this was
+  // published the two were indistinguishable — every worker lag column read zero for weeks.
+  const lagSamplesByRealm = byRealm(
+    'lagSamples',
+    row.responsiveness.lagByRealm,
+    (realm) => realm.kind,
+    (realm) => realm.count,
+  );
+
+  // Wasm linear memory, which no heap column counts. Summed per kind like the heap columns, so
+  // `wasmBytesWorker` is every worker's wasm rather than one target's.
+  const wasmByRealm = byRealm(
+    'wasmBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.wasmBytes ?? 0,
+  );
+  // Typed-array and wasm backing stores, which V8 reports beside the heap and the harness has
+  // always collected. Published because automerge moves its documents as `Uint8Array`s, so a realm
+  // can grow by hundreds of megabytes with `heapUsedBytes` flat.
+  const backingByRealm = byRealm(
+    'heapBackingBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.backingBytes ?? 0,
+  );
+
+  const rpcCallsByRealm = byRealm(
+    'rpcCalls',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.calls,
+  );
+  const rpcQueueWaitP95ByRealm = maxByRealm(
+    'rpcQueueWaitP95Ms',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.queueWaitP95Ms,
+  );
+  const rpcQueueWaitMaxByRealm = maxByRealm(
+    'rpcQueueWaitMaxMs',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.queueWaitMaxMs,
+  );
+  const rpcServiceMaxByRealm = maxByRealm(
+    'rpcServiceMaxMs',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.serviceMaxMs,
+  );
+  const rpcRoundTripP95ByRealm = maxByRealm(
+    'rpcRoundTripP95Ms',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.roundTripP95Ms,
+  );
+  const rpcRoundTripMaxByRealm = maxByRealm(
+    'rpcRoundTripMaxMs',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.roundTripMaxMs,
+  );
 
   // The workers rollup, so the headline "did the workers get busier" is one series rather than a
   // sum computed in every query that asks. The tab needs none: `cpuMsTab` is already a column.
@@ -183,6 +247,12 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       peakRssBytes: row.peakRssBytes,
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByRealm,
+      ...backingByRealm,
+      ...wasmByRealm,
+      wasmBytesTotal: row.heap.reduce((total, reading) => total + (reading.wasmBytes ?? 0), 0),
+      // Published so a zero byte count is readable as "nothing instrumented" rather than "no wasm",
+      // the same role `sqliteRealms` plays below.
+      wasmRealms: row.heap.filter((reading) => reading.wasmBytes !== undefined).length,
       domNodes: row.domNodes,
       domListeners: row.domListeners,
 
@@ -203,12 +273,25 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       // Published so a zero byte count is readable as "nothing instrumented" rather than "no I/O".
       sqliteRealms: row.disk.realms,
 
+      ...rpcCallsByRealm,
+      ...rpcQueueWaitP95ByRealm,
+      ...rpcQueueWaitMaxByRealm,
+      ...rpcServiceMaxByRealm,
+      ...rpcRoundTripP95ByRealm,
+      ...rpcRoundTripMaxByRealm,
+      // The pair that says whether a percentile above covers the whole stage: the middleware keeps
+      // a bounded sample ring, so `rpcCallsTotal` above `rpcSamples` means the tail of the stage.
+      rpcCallsTotal: row.rpc.reduce((total, realm) => total + realm.calls, 0),
+      rpcSamples: row.rpc.reduce((total, realm) => total + realm.samples + realm.clientSamples, 0),
+      rpcRealms: row.rpc.length,
+
       longTaskMaxMs: row.responsiveness.longTaskMaxMs,
       tbtMs: row.responsiveness.tbtMs,
       lagP95Ms: row.responsiveness.lagP95Ms,
       lagMaxMs: row.responsiveness.lagMaxMs,
       ...lagP95ByRealm,
       ...lagMaxByRealm,
+      ...lagSamplesByRealm,
       realms: row.heap.length,
 
       servingMode: row.comparability.servingMode,
