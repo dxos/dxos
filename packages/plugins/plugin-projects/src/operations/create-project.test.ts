@@ -42,6 +42,26 @@ describe('ProjectOperation.Create', () => {
     expect(project.artifacts).toEqual([]);
   });
 
+  // Parenting is set on the in-memory draft, so a create that never persisted the children would
+  // still satisfy the assertions above while leaving the project holding refs to nothing.
+  test('the scaffolded children are persisted in the space, not only parented on the draft', async ({ expect }) => {
+    await using harness = await setup();
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: spaceId(harness) }),
+    );
+
+    const instructions = await project.instructions?.tryLoad();
+    const taskSet = await project.taskSet?.tryLoad();
+    const outline = await project.outline?.tryLoad();
+    invariant(instructions && taskSet && outline, 'Expected the scaffolded children.');
+    const ids = [instructions.id, taskSet.id, outline.id];
+
+    const space = defaultSpace(harness);
+    const persisted = await space.db.query(Filter.id(...ids)).run();
+    expect(persisted.map((object) => object.id).sort()).toEqual([...ids].sort());
+  });
+
   test('the returned subject path addresses the project in the space graph', async ({ expect }) => {
     await using harness = await setup();
 

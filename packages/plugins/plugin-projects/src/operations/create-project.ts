@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ProjectCapabilities, ProjectOperation } from '#types';
 
@@ -33,22 +33,29 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
       invariant(template, `Unknown project template: ${templateId}`);
 
       // The scaffold returns a fully-wired in-memory project graph (owned instructions, artifacts
-      // collection, starter routines all parented); AddObject's `Database.add` cascades the whole graph.
+      // collection, starter routines all parented).
       const draft = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
+      invariant(Obj.instanceOf(Project.Project, draft), 'Expected a Project.');
 
-      const result = yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
-      invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
+      // Persisted and filed here rather than through `SpaceOperation.AddObject`: the scaffold's
+      // children are unsaved objects held in the draft's link cache, which only `Database.add`
+      // cascades, and the EDGE runtime backs every `Operation.invoke` with a remote worker call
+      // that serializes its input. Across that boundary the cache is dropped and the project
+      // persists alone, holding refs to children that were never created (DX-1296).
+      yield* Database.add(draft);
+      yield* CollectionModel.add({ object: draft });
+
       const nodePath = GraphPath.getSpacePath(
         db.spaceId,
         GraphPath.GroupSegments.ai,
         Type.getTypename(Project.Project),
       );
       return {
-        id: result.id,
-        subject: [GraphPath.getCollectionObjectPath(nodePath, result.object.id)],
-        project: result.object,
+        id: Obj.getURI(draft),
+        subject: [GraphPath.getCollectionObjectPath(nodePath, draft.id)],
+        project: draft,
       };
     }),
   ),
