@@ -3,11 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { describe, test } from 'vitest';
 
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { RuntimeProvider } from '@dxos/effect';
 import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
@@ -15,6 +17,7 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { AutomergeHost } from '../automerge/index.ts';
 import { QueryExecutor } from '../query/query-executor.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
 import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { SpaceStateManager } from './space-state-manager.ts';
 
@@ -48,9 +51,12 @@ const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const,
 /** Never run, so a `never`-typed placeholder satisfies every dependency's `RuntimeProvider<R>`. */
 const testRuntime = Effect.never;
 
-/** Real but never-opened QueryExecutor dependencies, shared across the fixtures below. */
+/**
+ * Real but never-opened QueryExecutor dependencies, shared across the fixtures below. The index
+ * engine holds a client, so it gets a real in-memory one — no query in this file reaches it.
+ */
 const testDeps = {
-  indexEngine: new IndexEngine(),
+  indexEngine: new IndexEngine(RuntimeProvider.getService(createTestSqliteRuntime().runtime, SqlClient.SqlClient)),
   runtime: testRuntime,
   automergeHost: new AutomergeHost({ runtime: testRuntime }),
   spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),

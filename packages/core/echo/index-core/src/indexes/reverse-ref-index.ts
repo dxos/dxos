@@ -95,6 +95,12 @@ export type Referrer = {
  * Only indexes references, not relations.
  */
 export class ReverseRefIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -103,6 +109,7 @@ export class ReverseRefIndex implements Index {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -110,9 +117,9 @@ export class ReverseRefIndex implements Index {
    * Query all references pointing to a target DXN.
    */
   query = Effect.fn('ReverseRefIndex.query')(
-    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const normalized = referenceIndexKey(targetDXN);
         if (normalized === undefined) {
           return [];
@@ -136,9 +143,9 @@ export class ReverseRefIndex implements Index {
     }: {
       spaceId: SpaceId;
       targetDXN: URI.URI;
-    }): Effect.Effect<readonly Referrer[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    }): Effect.Effect<readonly Referrer[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const normalized = referenceIndexKey(targetDXN);
         if (normalized === undefined) {
           return [];
@@ -161,9 +168,9 @@ export class ReverseRefIndex implements Index {
 
   /** Delete reverse-reference rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ReverseRefIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM reverseRef WHERE ${sql.in('recordId', chunk)}`;
         }
@@ -171,14 +178,14 @@ export class ReverseRefIndex implements Index {
   );
 
   update = Effect.fn('ReverseRefIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
 
         yield* Effect.forEach(
           objects,
           (object) =>
-            Effect.gen(function* () {
+            Effect.gen({ self: this }, function* () {
               const { recordId, data } = object;
               if (recordId === null) {
                 return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));

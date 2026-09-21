@@ -5,6 +5,7 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
@@ -20,7 +21,7 @@ describe('IndexTracker', () => {
   it.effect(
     'should store and retrieve index cursors',
     Effect.fnUntraced(function* () {
-      const tracker = new IndexTracker();
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
       yield* tracker.migrate();
 
       const cursor1: IndexCursor = {

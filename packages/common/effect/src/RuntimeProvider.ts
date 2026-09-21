@@ -39,6 +39,15 @@ export const currentRuntime = <R = never>(): Effect.Effect<RuntimeProvider<R>, n
   Effect.context<R>().pipe(Effect.map(Effect.succeed));
 
 /**
+ * Resolves one service out of a runtime provider, for a constructor that cannot be an effect.
+ *
+ * The provider only hands back a context, so this is synchronous; a provider whose layer build
+ * suspends is a programming error and fails loudly here rather than at first use.
+ */
+export const getService = <R, I extends R, S>(provider: RuntimeProvider<R>, key: Context.Key<I, S>): S =>
+  Context.get(Effect.runSync(provider), key);
+
+/**
  * Run effect, within runtime, clean errors and fix stack-traces.
  */
 export const runPromise =

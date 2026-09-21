@@ -240,6 +240,12 @@ const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefi
 };
 
 export class EntityMetaIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -248,6 +254,7 @@ export class EntityMetaIndex implements Index {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -263,12 +270,12 @@ export class EntityMetaIndex implements Index {
     (
       spaceId: SpaceId,
       convergenceKeys: readonly string[],
-    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (convergenceKeys.length === 0) {
           return [];
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         // Chunked to stay under SQLite's bound-variable limit — an initial index of a fresh
         // clone can present thousands of keys in one batch, and a thrown query here would skip
         // detection for the whole batch with no retry.
@@ -286,9 +293,9 @@ export class EntityMetaIndex implements Index {
   query = Effect.fn('EntityMetaIndex.query')(
     (
       query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
-    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
           yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${buildTypeDxnCondition(sql, [query.typeDXN])})`;
@@ -305,13 +312,13 @@ export class EntityMetaIndex implements Index {
       includeAllQueues?: boolean;
       queues?: readonly QueueRef[] | null;
       window?: QueueWindow;
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
           return [];
         }
 
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         const sourceCondition = buildSourceCondition(
           sql,
           query.spaceIds,
@@ -342,8 +349,8 @@ export class EntityMetaIndex implements Index {
       includeAllQueues?: boolean;
       queues?: readonly QueueRef[] | null;
       window?: QueueWindow;
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (spaceIds.length === 0 && (!queues || queues.length === 0)) {
           return [];
         }
@@ -353,7 +360,7 @@ export class EntityMetaIndex implements Index {
             return [];
           }
 
-          const sql = yield* SqlClient.SqlClient;
+          const sql = this.#sql;
           const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
           const rows =
             yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${buildQueueWindow(sql, window)}`;
@@ -362,7 +369,7 @@ export class EntityMetaIndex implements Index {
             deleted: !!row.deleted,
           }));
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
         const typeWhere = buildTypeDxnCondition(sql, typeDxns);
         const queueWindow = buildQueueWindow(sql, window);
@@ -383,12 +390,12 @@ export class EntityMetaIndex implements Index {
     }: {
       endpoint: 'source' | 'target';
       anchorDxns: readonly string[];
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (anchorDxns.length === 0) {
           return [];
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         const column = endpoint === 'source' ? 'source' : 'target';
         const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
           column,
@@ -403,14 +410,14 @@ export class EntityMetaIndex implements Index {
 
   // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
   update = Effect.fn('EntityMetaIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
 
         yield* Effect.forEach(
           objects,
           (object) =>
-            Effect.gen(function* () {
+            Effect.gen({ self: this }, function* () {
               const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
@@ -542,9 +549,9 @@ export class EntityMetaIndex implements Index {
    * Mutates the objects in place.
    */
   lookupRecordIds = Effect.fn('EntityMetaIndex.lookupRecordIds')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
 
         for (const object of objects) {
           const { spaceId, queueId, documentId, data } = object;
@@ -578,9 +585,9 @@ export class EntityMetaIndex implements Index {
    * Look up object metadata by recordIds.
    */
   lookupByRecordIds = Effect.fn('EntityMetaIndex.lookupByRecordIds')(
-    (recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         // Chunked: a widely-referenced object can put thousands of ids here, past
         // SQLITE_LIMIT_VARIABLE_NUMBER.
         const results: EntityMeta[] = [];
@@ -603,9 +610,9 @@ export class EntityMetaIndex implements Index {
       spaceId: SpaceId;
       documentIds: readonly string[];
       objects: readonly { documentId: string; objectId: string }[];
-    }): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    }): Effect.Effect<number[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const recordIds = new Set<number>();
 
         for (const chunk of chunkArray(query.documentIds)) {
@@ -632,9 +639,9 @@ export class EntityMetaIndex implements Index {
 
   /** Delete metadata rows by record id. */
   deleteByRecordIds = Effect.fn('EntityMetaIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM objectMeta WHERE ${sql.in('recordId', chunk)}`;
         }
@@ -648,13 +655,13 @@ export class EntityMetaIndex implements Index {
     (query: {
       spaceIds: readonly EntityMeta['spaceId'][];
       objectIds: readonly EntityMeta['objectId'][];
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (query.spaceIds.length === 0 || query.objectIds.length === 0) {
           return [];
         }
 
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         const rows =
           yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)} AND ${sql.in('objectId', query.objectIds)}`;
         return rows.map((row) => ({
@@ -672,9 +679,9 @@ export class EntityMetaIndex implements Index {
       objectId: string;
       spaceId: string;
       queueId: string;
-    }): Effect.Effect<EntityMeta | null, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    }): Effect.Effect<EntityMeta | null, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const rows =
           yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND objectId = ${query.objectId} LIMIT 1`;
 
@@ -701,13 +708,13 @@ export class EntityMetaIndex implements Index {
       createdBefore?: number;
       includeAllQueues?: boolean;
       queues?: readonly QueueRef[] | null;
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
           return [];
         }
 
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         const sourceCondition = buildSourceCondition(
           sql,
           query.spaceIds,
@@ -752,13 +759,13 @@ export class EntityMetaIndex implements Index {
     (query: {
       spaceId: SpaceId[];
       parentIds: EntityId[];
-    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (query.parentIds.length === 0) {
           return [];
         }
 
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         const parentDzns = query.parentIds.map((id) => EID.make({ entityId: id }));
         const parentDxns = parentDzns;
         const rows =

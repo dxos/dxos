@@ -112,6 +112,12 @@ const escapeFts5Query = (text: string): string => {
  * true })`.
  */
 export class FtsIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -120,6 +126,7 @@ export class FtsIndex implements Index {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -129,7 +136,7 @@ export class FtsIndex implements Index {
     includeAllQueues,
     queues,
     typeDxns,
-  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
+  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
@@ -141,7 +148,7 @@ export class FtsIndex implements Index {
         return [];
       }
 
-      const sql = yield* SqlClient.SqlClient;
+      const sql = this.#sql;
 
       // Trigram tokenizer requires at least 3 characters per term.
       // Check if ALL terms are at least 3 chars; otherwise use LIKE fallback.
@@ -225,9 +232,9 @@ export class FtsIndex implements Index {
 
   /** Delete index rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
         }
@@ -239,12 +246,12 @@ export class FtsIndex implements Index {
    * than from the snapshot store so that one pass writes one index.
    */
   update = Effect.fn('FtsIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (objects.length === 0) {
           return;
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
 
         const rows: { rowid: number; snapshot: string }[] = [];
         for (const object of objects) {

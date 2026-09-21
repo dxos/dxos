@@ -26,6 +26,12 @@ import type { Index, IndexerObject } from './interface.ts';
  * observing a stale row.
  */
 export class ObjectSnapshotIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -34,6 +40,7 @@ export class ObjectSnapshotIndex implements Index {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -44,12 +51,12 @@ export class ObjectSnapshotIndex implements Index {
    */
   querySnapshotsJSON(
     recordIds: number[],
-  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
+  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
       if (recordIds.length === 0) {
         return [];
       }
-      const sql = yield* SqlClient.SqlClient;
+      const sql = this.#sql;
 
       const results: { recordId: number; snapshot: Obj.JSON }[] = [];
       for (const chunk of chunkArray(recordIds)) {
@@ -68,9 +75,9 @@ export class ObjectSnapshotIndex implements Index {
 
   /** Delete snapshot rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ObjectSnapshotIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
         }
@@ -78,12 +85,12 @@ export class ObjectSnapshotIndex implements Index {
   );
 
   update = Effect.fn('ObjectSnapshotIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (objects.length === 0) {
           return;
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
 
         const pending: { recordId: number; object: IndexerObject }[] = [];
         for (const object of objects) {

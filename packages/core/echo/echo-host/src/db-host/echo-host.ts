@@ -211,8 +211,9 @@ export class EchoHost extends Resource {
       syncFeed: (ctx, request) => this.#syncFeed?.(ctx, request) ?? Promise.resolve(),
     });
 
-    // SQLite-based index engine for all queries.
-    this._indexEngine = new IndexEngine();
+    // SQLite-based index engine for all queries. Its client comes from the runtime the host was
+    // handed, since the engine holds one rather than taking it per call.
+    this._indexEngine = new IndexEngine(RuntimeProvider.getService(this._runtime, SqlClient.SqlClient));
 
     this._convergenceKeyMerger = new ConvergenceKeyMerger({
       queryByConvergenceKeys: (spaceId, keys) =>
