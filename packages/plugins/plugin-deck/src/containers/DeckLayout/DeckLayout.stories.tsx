@@ -67,16 +67,8 @@ export const ManyPlanks: Story = {
   },
 };
 
-/** Set by the story's render so its play function can drive the operation a hook cannot reach. */
 let closeStoryDialog: (() => Promise<unknown>) | undefined;
 
-/**
- * A closing dialog keeps its content until the overlay finishes exiting.
- *
- * `UpdateDialog` clears the content in the same update that closes the dialog, and the overlay
- * stays mounted for its exit — so dropping the content on that update left the overlay alone on
- * screen, a dimmed app with nothing on it, and the dialog's own exit animation never ran.
- */
 export const ClosingKeepsContent: Story = {
   tags: ['test'],
   render: () => {
@@ -92,7 +84,6 @@ export const ClosingKeepsContent: Story = {
     const backdrop = () => document.querySelector('[data-part="backdrop"]');
     await waitFor(() => expect(dialog()).not.toBeNull());
 
-    // Sampled per frame: the failure is any frame showing a backdrop with no dialog inside it.
     const orphaned: number[] = [];
     let sampling = true;
     const sample = () => {

@@ -46,7 +46,6 @@ describe('applyActive', () => {
     );
     expect(readEphemeral().dialogOpen).toBe(true);
 
-    // The navigation the create flow makes: it opens a transition and then waits for the browser.
     const navigating = harness.runPromise(
       applyActive([{ id: 'item-1', segment: Navigation.segmentOf(undefined, 'doc/1') }], { transition: true }),
     );
@@ -54,7 +53,6 @@ describe('applyActive', () => {
     const [callback] = callbacks;
     expect(callback).toBeDefined();
 
-    // The dialog closes while the transition is still capturing.
     await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { state: false }));
     expect(readEphemeral().dialogOpen).toBe(false);
 

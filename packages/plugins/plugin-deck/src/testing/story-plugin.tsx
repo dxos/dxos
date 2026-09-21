@@ -34,7 +34,6 @@ import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
 random.seed(1234);
 
-/** Subject of the dialog the story harness can open, for exercising the overlay's open/close. */
 export const STORY_DIALOG = 'dxos.org/plugin/deck/story-dialog';
 
 // TODO(burdon): Show/hide companions.

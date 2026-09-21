@@ -52,16 +52,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         AppGraph.expandPath(graph, subjectId);
       }
 
-      // A cross-workspace open swaps the whole chrome, so it animates that the way `SwitchWorkspace`
-      // does. The plank write below then lands under the running transition instead of starting a
-      // second one, which would skip the first mid-flight.
-      let switchedWorkspace = false;
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        if (input.workspace && state.activeDeck !== input.workspace) {
-          switchedWorkspace = true;
-          yield* withViewTransition(applyWorkspace(input.workspace));
-        }
+      const workspaceToEnter = yield* Effect.map(Capabilities.getAtomValue(DeckCapabilities.State), (state) =>
+        input.workspace && state.activeDeck !== input.workspace ? input.workspace : undefined,
+      );
+      if (workspaceToEnter) {
+        yield* withViewTransition(applyWorkspace(workspaceToEnter));
       }
 
       // Dedup subjects against the active deck using EID identity.
@@ -211,7 +206,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !switchedWorkspace },
+          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !workspaceToEnter },
         });
       }
 
