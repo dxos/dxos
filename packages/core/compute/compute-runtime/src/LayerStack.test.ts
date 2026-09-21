@@ -55,6 +55,87 @@ describe('LayerStack', () => {
     ),
   );
 
+  describe('ambient services', () => {
+    it.effect(
+      'satisfies a spec requirement from the services the embedder supplied',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolved = yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {}));
+        expect(resolved).toEqual({ value: 'b:ambient' });
+      }),
+    );
+
+    it.effect(
+      'resolves an ambient service no spec provides',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [],
+        });
+
+        expect(yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}))).toEqual({
+          value: 'ambient',
+        });
+      }),
+    );
+
+    it.effect(
+      'reaches a space-affinity spec as well',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          services: Context.make(ServiceA, { value: 'ambient' }),
+          layers: [
+            LayerSpec.make({ affinity: 'space', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+          ],
+        });
+
+        const resolved = yield* resolveWithScope(
+          stack.getServiceResolver().resolve(ServiceB, { space: SpaceId.random() }),
+        );
+        expect(resolved).toEqual({ value: 'b:ambient' });
+      }),
+    );
+
+    it.effect(
+      'prunes a spec whose ambient requirement is absent, leaving the others',
+      Effect.fn(function* ({ expect }) {
+        const stack = new LayerStack.LayerStack({
+          layers: [
+            LayerSpec.make({ affinity: 'application', requires: [ServiceA], provides: [ServiceB] }, () =>
+              Layer.effect(
+                ServiceB,
+                Effect.map(ServiceA, (service) => ({ value: `b:${service.value}` })),
+              ),
+            ),
+            LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceC] }, () =>
+              Layer.succeed(ServiceC, { value: 'c' }),
+            ),
+          ],
+        });
+
+        const exit = yield* Effect.exit(resolveWithScope(stack.getServiceResolver().resolve(ServiceB, {})));
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceC, {}))).toEqual({ value: 'c' });
+      }),
+    );
+  });
+
   describe('eager specs', () => {
     it.effect(
       'builds a side-effect-only spec nothing asks for',

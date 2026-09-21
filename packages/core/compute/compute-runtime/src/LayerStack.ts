@@ -26,15 +26,25 @@ import { LayerDependencyCycleError } from './errors.ts';
 
 interface LayerStackOpts {
   readonly layers: LayerSpec.LayerSpec[];
+
+  /**
+   * Services the embedder supplies, available to every slice as if a lower-affinity one provided
+   * them: a spec may `require` them, and a spec whose ambient requirement is absent is pruned like
+   * any other. The lowest slice has no slice below it, so this is the only way into it.
+   */
+  readonly services?: Context.Context<never>;
 }
 
 export class LayerStack {
   #slices: Slice[] = [];
   #semapphore = Effect.runSync(Semaphore.make(1));
   #layers: LayerSpec.LayerSpec[];
+  /** Ambient services; `Context` is contravariant, so the internal view is the widened one. */
+  #services: Context.Context<unknown>;
 
   constructor(opts: LayerStackOpts) {
     this.#layers = opts.layers;
+    this.#services = (opts.services ?? Context.empty()) as Context.Context<unknown>;
   }
 
   getServiceResolver(): ServiceResolver.ServiceResolver {
@@ -89,7 +99,9 @@ export class LayerStack {
       yield* this.#materializeTag(tag, context, topAffinity);
 
       const services = this.#resolveServices(topAffinity, context, [tag]);
-      const service = Context.getOption(services, tag);
+      const service = Context.getOption(services, tag).pipe(
+        Option.orElse(() => Context.getOption(this.#services, tag)),
+      );
       if (Option.isNone(service)) {
         return yield* Effect.fail(
           new ServiceNotAvailableError(tag.key, {
@@ -121,8 +133,8 @@ export class LayerStack {
           yield* this.#materializeTags(resolveAffinity, context, target.requires);
         }
         const requirements = resolveAffinity
-          ? this.#resolveServices(resolveAffinity, context, target.requires)
-          : (Context.empty() as Context.Context<unknown>);
+          ? Context.merge(this.#services, this.#resolveServices(resolveAffinity, context, target.requires))
+          : this.#services;
         yield* target.initOnce(requirements).pipe(
           Effect.tapCauseIf(isInitFailure, (cause) =>
             Effect.sync(() => {
@@ -277,7 +289,9 @@ export class LayerStack {
 
     const providers = this.#layers.filter((l) => l.provides.some((p) => p.key === tagKey));
     if (providers.length === 0) {
-      hints.push('no LayerSpec contributes this service — is the providing plugin activated on SetupProcessManager?');
+      hints.push(
+        'no LayerSpec contributes this service, and the embedder did not supply it ambiently — is the providing plugin activated on SetupProcessManager?',
+      );
     } else if (hints.length === 0) {
       const affinities = [...new Set(providers.map((l) => l.affinity))].join(', ');
       hints.push(`registered at affinity=[${affinities}] but not resolved in current context`);
