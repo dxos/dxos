@@ -314,7 +314,9 @@ const seededTask = () =>
               return false;
             }
             const loaded = await session.invoke(GET_PROJECT, { project: McpCall.ref(spaceId, id) }, spaceId);
-            return !loaded.isError && typeof loaded.structured.id === 'string';
+            // The id it answers with, not merely that it answered: a verb that resolved some other
+            // project would satisfy a bare success check and hide the very mismatch this asks about.
+            return !loaded.isError && loaded.structured.id === id;
           }),
         );
         const loadable = projectRows.length === PROJECT_NAMES.length && loads.every(Boolean);
