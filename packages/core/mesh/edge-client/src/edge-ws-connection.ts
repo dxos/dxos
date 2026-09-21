@@ -8,13 +8,13 @@ import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { EdgeWebsocketProtocol } from '@dxos/protocols';
+import { EdgeWebsocketProtocol, edgeFlowControlWindow } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
-import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketMuxer } from './edge-ws-muxer.ts';
+import { CLOUDFLARE_MESSAGE_MAX_BYTES, type FlowControlConfig, WebSocketMuxer } from './edge-ws-muxer.ts';
 import { toUint8Array } from './protocol.ts';
 import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
 
@@ -32,6 +32,24 @@ export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
   onMessage: (message: Message) => void;
   onRestartRequired: (reason: ReconnectReason) => void;
+};
+
+/**
+ * Flow-control config, or undefined when the peer did not negotiate `edge-ws-v2`.
+ *
+ * An overdraft here means EDGE ignored our grants. It is logged rather than acted on: the client is
+ * not the side at risk of being overwhelmed into a reset, and tearing down a working connection
+ * would cost more than the overrun.
+ */
+const flowControlConfig = (ws: WebSocket): FlowControlConfig | undefined => {
+  if (!ws.protocol?.includes(EdgeWebsocketProtocol.V2)) {
+    return undefined;
+  }
+  return {
+    windowFor: (serviceId) => edgeFlowControlWindow(serviceId),
+    onOverdraft: ({ channelId, outstanding, window }) =>
+      log.warn('edge exceeded its flow-control window', { channelId, outstanding, window }),
+  };
 };
 
 export class EdgeWsConnection extends Resource {
@@ -113,7 +131,7 @@ export class EdgeWsConnection extends Resource {
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
     this._messagesSent++;
-    if (this._ws?.protocol.includes(EdgeWebsocketProtocol.V0)) {
+    if (this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)) {
       const binary = buf.toBinary(MessageSchema, message);
       if (binary.length > CLOUDFLARE_MESSAGE_MAX_BYTES) {
         log.error('Message dropped because it was too large (>1MB).', {
@@ -135,21 +153,27 @@ export class EdgeWsConnection extends Resource {
 
   protected override async _open(): Promise<void> {
     const baseProtocols = [...Object.values(EdgeWebsocketProtocol)];
-    this._ws = new WebSocket(
+    const ws = new WebSocket(
       this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader
         ? [...baseProtocols, this._connectionInfo.protocolHeader]
         : [...baseProtocols],
       this._connectionInfo.headers ? { headers: this._connectionInfo.headers } : undefined,
     );
+    this._ws = ws;
     // Deliver frame data as `ArrayBuffer` rather than `Blob` so bytes are available
     // synchronously; avoids the async `blob.arrayBuffer()` reads that can otherwise
     // complete out of arrival order (see `_receiveChain`).
-    this._ws.binaryType = 'arraybuffer';
-    const muxer = new WebSocketMuxer(this._ws);
-    this._wsMuxer = muxer;
+    ws.binaryType = 'arraybuffer';
+    // Built on open rather than here: flow control is negotiated via the subprotocol, which is not
+    // known until the handshake completes. Nothing is sent before open, so nothing is missed. The
+    // handlers below close over this binding rather than reading `this._wsMuxer`, so a reconnect
+    // cannot make a late event from this socket act on the next socket's muxer.
+    let muxer: WebSocketMuxer | undefined;
 
-    this._ws.onopen = () => {
+    ws.onopen = () => {
+      muxer = new WebSocketMuxer(ws, { flowControl: flowControlConfig(ws) });
+      this._wsMuxer = muxer;
       if (this.isOpen) {
         log('connected');
         this._openTimestamp = Date.now();
@@ -160,15 +184,15 @@ export class EdgeWsConnection extends Resource {
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
     };
-    this._ws.onclose = (event: WebSocket.CloseEvent) => {
+    ws.onclose = (event: WebSocket.CloseEvent) => {
       if (this.isOpen) {
         const reason = classifyCloseCode(event.code, isOnline());
         log.warn('server disconnected', { code: event.code, reason: event.reason, classified: reason });
         this._callbacks.onRestartRequired(reason);
-        muxer.destroy();
+        muxer?.destroy();
       }
     };
-    this._ws.onerror = (event: WebSocket.ErrorEvent) => {
+    ws.onerror = (event: WebSocket.ErrorEvent) => {
       if (this.isOpen) {
         log.warn('edge connection socket error', { error: event.error, info: event.message });
         this._callbacks.onRestartRequired(classifySocketError(isOnline()));
@@ -179,7 +203,7 @@ export class EdgeWsConnection extends Resource {
     /**
      * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
      */
-    this._ws.onmessage = (event: WebSocket.MessageEvent) => {
+    ws.onmessage = (event: WebSocket.MessageEvent) => {
       if (!this.isOpen) {
         log.verbose('message ignored on closed connection', { event: event.type });
         return;
@@ -195,6 +219,10 @@ export class EdgeWsConnection extends Resource {
         return;
       }
 
+      if (!muxer) {
+        log.verbose('message ignored before open', { event: event.type });
+        return;
+      }
       // `_receiveMessage` serializes on `_receiveMutex`; `acquire` enqueues synchronously,
       // so locks are taken in arrival order regardless of async conversion timing.
       void this._receiveMessage(event.data, muxer).catch((err) => log.catch(err));
@@ -214,14 +242,21 @@ export class EdgeWsConnection extends Resource {
 
     this._messagesReceived++;
 
-    const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
-      ? buf.fromBinary(MessageSchema, bytes)
-      : muxer.receiveData(bytes);
+    if (this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)) {
+      const message = buf.fromBinary(MessageSchema, bytes);
+      log('received', { from: message.source, payload: protocol.getPayloadType(message) });
+      this._callbacks.onMessage(message);
+      return;
+    }
 
+    const { message, channelId, byteLength } = muxer.receiveData(bytes);
     if (message) {
       log('received', { from: message.source, payload: protocol.getPayloadType(message) });
       this._callbacks.onMessage(message);
     }
+    // Credited after dispatch, which for a synchronous listener fan-out is the best signal
+    // available; the streams surface replaces this with the consumer's own drain point.
+    muxer.consumed(channelId, byteLength);
   }
 
   protected override async _close(): Promise<void> {
