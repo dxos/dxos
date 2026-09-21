@@ -584,8 +584,11 @@ jobs:
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
 
       # Trends every test's outcome in PostHog (`ci.e2e-test`), which the "Composer e2e" dashboard
-      # charts. Only from main: a PR run measures a branch, a fork PR has no project token at all,
-      # and a trend that mixes the two answers nothing. The NIGHTLY is the authoritative sample —
+      # charts. From main, or from an explicit `workflow_dispatch`: a PR run measures a branch and a
+      # fork PR has no project token at all, so neither publishes on its own, but a dispatch is a
+      # maintainer asking for this run's results — which is how the dashboard is seeded or backfilled
+      # off-schedule. Every row carries `ciBranch` and `ciTrigger`, so a dispatched run stays
+      # attributable. The NIGHTLY is the authoritative sample —
       # `DX_E2E_RUN_ID` is set on `schedule`, so that run actually executes every suite instead of
       # replaying a moon cache hit; a push to main that replays the cache restores no report and the
       # script no-ops.
@@ -597,7 +600,9 @@ jobs:
       # directory, and publishing those would mint permanent property definitions and rows for
       # unrelated packages in Composer's PRODUCT analytics project, which nothing charts.
       - name: Publish results
-        if: ${{ always() && github.ref == 'refs/heads/main' && matrix.shard == 'composer' }}
+        if: >-
+          ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') &&
+          matrix.shard == 'composer' }}
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: node packages/e2e/composer-e2e/scripts/publish-results.mjs

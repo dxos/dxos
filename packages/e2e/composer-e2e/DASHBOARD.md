@@ -54,9 +54,11 @@ not know means the reporter changed, and a silent drop would show up as the suit
 
 ## What is published, and when
 
-**Only from `main`.** The publish step is gated on `github.ref == 'refs/heads/main'`: a PR run
-measures a branch, a fork PR has no project token at all, and a trend that mixes the two answers
-nothing.
+**From `main`, or an explicit dispatch.** The publish step is gated on
+`github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'`: a PR run measures a
+branch and a fork PR has no project token at all, so neither publishes on its own. A
+`workflow_dispatch` is a maintainer asking for this run's results — how the dashboard is seeded or
+backfilled off-schedule — and every row it publishes carries `ciBranch` and `ciTrigger`.
 
 **The nightly is the sample that matters.** `Check` runs on a `0 4 * * 1-5` schedule, where the
 affected resolver returns a full run and `DX_E2E_RUN_ID` is set — which forces the moon tasks to
@@ -116,8 +118,8 @@ are what a human re-runs by hand.
 
 ## Caveats
 
-- **Branch is not filtered in the queries**, only by the publish gate. Every row carries `ciBranch`
-  should a dispatch from a branch ever be published.
+- **Branch is not filtered in the queries**, only by the publish gate. A dispatch from a branch does
+  publish, so add `AND properties.ciBranch = 'main'` to a tile that must see only `main`.
 - **A day with several runs is summed**, not averaged: three browser cells publish independently
   into the same date, which is intended, but a dispatch on the same day adds to the same bar.
 - **`ciTestId` changes when a test is renamed.** That is a deliberate consequence of keying on the
