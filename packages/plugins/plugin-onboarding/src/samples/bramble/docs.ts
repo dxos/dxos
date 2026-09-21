@@ -13,9 +13,9 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 //
 
 export type DocsContent = {
-  /** `content/bramble/README.md` — the space tour the user lands on. */
+  /** `README.md` — the space tour the user lands on. */
   readonly tourMd: string;
-  /** `content/bramble/ABOUT.md` — the canonical reference for every Bramble world-fact. */
+  /** `ABOUT.md` — the canonical reference for every Bramble world-fact. */
   readonly aboutMd: string;
 };
 

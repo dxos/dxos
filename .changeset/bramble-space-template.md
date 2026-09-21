@@ -35,5 +35,5 @@ persisted tag and stay visible.
 First launch builds Bramble through its template instead of importing
 `plugin-onboarding/src/content/sample/space.dx.json`, which is deleted along with the script that
 generated it and the settings button that re-imported it. The content has one source now: the
-phases under `plugin-onboarding/src/samples/`, asserted by a test that builds the archive.
+phases under `plugin-onboarding/src/samples/bramble/`, asserted by a test that builds the archive.
 Building the whole world takes about a second.

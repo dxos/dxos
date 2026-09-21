@@ -10,10 +10,10 @@ import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
-import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
-// Raw imports keep the two welcome documents as Markdown files that render in editors and diff cleanly.
-import ABOUT_MD from '../content/bramble/ABOUT.md?raw';
-import TOUR_MD from '../content/bramble/README.md?raw';
+import { BRAMBLE_TEMPLATE_ID } from '../../constants.ts';
+// Raw imports keep the two welcome documents as Markdown files that render in editors and diff
+// cleanly, beside the phases that seed them.
+import ABOUT_MD from './ABOUT.md?raw';
 import { Schedule } from './calendar.ts';
 import { ContactsViews } from './contacts-views.ts';
 import { Docs } from './docs.ts';
@@ -22,6 +22,7 @@ import { Inbox } from './mailbox.ts';
 import { Notes } from './notes.ts';
 import { Organizations } from './organizations.ts';
 import { People } from './people.ts';
+import TOUR_MD from './README.md?raw';
 import { RoastLogs } from './roast-log.ts';
 import { Sheets } from './sheets.ts';
 import { SpringBlend } from './tasks.ts';
@@ -31,7 +32,7 @@ import { REFERENCE } from './util.ts';
  * The Bramble Coffee Roasters space template — the content every new identity gets on first launch,
  * and the template anyone can pick again from the create-space dialog.
  *
- * Content is grounded in `src/content/bramble/ABOUT.md`, the canonical reference for all Bramble
+ * Content is grounded in `ABOUT.md` beside it, the canonical reference for all Bramble
  * world-facts (company history, team, suppliers, customers, active initiatives, email conventions,
  * map coordinates). When extending a phase, read it first and update it if the world changes; all
  * generated content must agree with the facts and tone described there.
