@@ -66,22 +66,28 @@ type MoveProps = {
   index?: number;
 };
 
+/** Lists the object in the collection, leaving its parent alone; a no-op when it is already listed. */
+export const link = ({ object, to, index }: Omit<MoveProps, 'from'>): void => {
+  if (indexOf(to, object) > -1) {
+    return;
+  }
+  const objectRef = Ref.make(object);
+  Obj.update(to, (to) => {
+    if (index === undefined) {
+      to.objects.push(objectRef);
+    } else {
+      to.objects.splice(index, 0, objectRef);
+    }
+  });
+};
+
 /** Moves an object between collections; ownership follows only when `from` owned it. */
 export const move = ({ object, from, to, index }: MoveProps): void => {
   if (from?.id === to.id) {
     return;
   }
   const owned = Obj.isOwnedBy(object, from);
-  const objectRef = Ref.make(object);
-  Obj.update(to, (to) => {
-    if (indexOf(to, object) === -1) {
-      if (index === undefined) {
-        to.objects.push(objectRef);
-      } else {
-        to.objects.splice(index, 0, objectRef);
-      }
-    }
-  });
+  link({ object, to, index });
   if (from) {
     Obj.update(from, (from) => {
       const idx = indexOf(from, object);

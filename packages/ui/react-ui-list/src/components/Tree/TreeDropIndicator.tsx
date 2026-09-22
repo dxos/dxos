@@ -13,6 +13,9 @@ import { DEFAULT_INDENTATION } from './helpers.ts';
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
 
 type InstructionType = Exclude<Instruction, { type: 'instruction-blocked' }>['type'];
+
+/** What a drop does to the dragged item: `move` relocates it, `link` adds a reference and leaves it where it is. */
+export type DropEffect = 'move' | 'link';
 type Orientation = 'sibling' | 'child';
 
 const edgeToOrientationMap: Record<InstructionType, Orientation> = {
@@ -25,10 +28,15 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
   'reparent': 'sibling',
 };
 
-const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
-  sibling:
-    'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
-  child: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
+const orientationStyles: Record<Orientation, Record<DropEffect, HTMLAttributes<HTMLElement>['className']>> = {
+  sibling: {
+    move: 'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
+    link: 'h-0 border-t-[length:var(--line-thickness)] border-dashed border-accent-bg left-(--horizontal-indent) right-0 before:left-(--negative-terminal-size)',
+  },
+  child: {
+    move: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
+    link: 'inset-0 border-[length:var(--line-thickness)] border-dashed before:invisible',
+  },
 };
 
 // The line sits just INSIDE the row's edge rather than straddling it: a branch's content box clips
@@ -49,11 +57,12 @@ const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 /** Props for {@link TreeDropIndicator}. */
 export type TreeDropIndicatorProps = {
   instruction: Instruction;
+  effect?: DropEffect;
   gap?: number;
 };
 
 /** Themed drop indicator for a tree-item pragmatic-dnd `Instruction` (sibling reorder / make-child). */
-export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorProps) => {
+export const TreeDropIndicator = ({ instruction, effect = 'move', gap = 0 }: TreeDropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
@@ -80,7 +89,7 @@ export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorPro
           '--horizontal-indent': `${indentLevel * DEFAULT_INDENTATION + 4}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
+      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation][effect]} ${instructionStyles[desiredInstruction.type]}`}
     ></div>
   );
 };

@@ -17,7 +17,8 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -41,6 +42,13 @@ export default Capability.makeModule(
       urlKey: 'project',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
+      linkObject: (project, object) => {
+        if (Obj.instanceOf(Project.Project, project) && !isArtifactOf(project, object)) {
+          Obj.update(project, (project) => {
+            project.artifacts.push(Ref.make(object));
+          });
+        }
+      },
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -253,6 +261,23 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
+/** Whether `project.artifacts` lists the object. */
+export const isArtifactOf = (project: Project.Project, object: Obj.Unknown): boolean =>
+  project.artifacts.some((ref) => {
+    const eid = EID.tryParse(ref.uri);
+    return eid !== undefined && EID.getEntityId(eid) === object.id;
+  });
+
+/** Stable rearrange callback that persists a project's artifact order. Keyed by project URI. */
+const makeArtifactsRearrangeCallback = AppNode.createFactory(
+  (project: Project.Project) => (nextOrder: unknown[]) => {
+    Obj.update(project, (project) => {
+      project.artifacts = nextOrder.filter(Obj.isObject).map((object) => Ref.make(object));
+    });
+  },
+  (project) => Obj.getURI(project),
+);
+
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
 
@@ -338,9 +363,12 @@ export const createProjectArtifactsActionExtension = () =>
       }
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
+      const onRearrange = makeArtifactsRearrangeCallback(project);
+      // Artifacts only reorder among themselves; other objects link by dropping onto the project row.
+      const canDrop = ({ item }: { item: any }) => Obj.isObject(item?.data) && isArtifactOf(project, item.data);
       return Effect.succeed(
         objects
-          .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
+          .map((object) => AppNode.makeObject({ get, db, object, navigable: true, onRearrange, canDrop }))
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },

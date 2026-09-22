@@ -11,7 +11,7 @@ import { NavTreeNode } from '#types';
 export const getParent = (
   graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
-  path: string[],
+  path: readonly string[],
 ): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
   return AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child)).find(
@@ -19,47 +19,45 @@ export const getParent = (
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
-export const getPersistenceParent = (
-  graph: AppGraph.ReadableGraph,
-  node: NavTreeNode.NavTreeItemGraphNode,
-  path: string[],
-  persistenceClass: string,
-): NavTreeNode.NavTreeItemGraphNode | null => {
-  if (node.properties.acceptPersistenceClass?.has(persistenceClass)) {
-    return node;
-  } else {
-    const parent = getParent(graph, node, path);
-    return parent ? getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass) : null;
-  }
-};
+export type DropOperation = 'transfer' | 'link' | 'copy' | 'reject';
 
-export const resolveMigrationOperation = (
-  graph: AppGraph.ReadableGraph,
-  activeNode: NavTreeNode.NavTreeItemGraphNode,
-  destinationPath: string[],
-  destinationRelatedNode?: NavTreeNode.NavTreeItemGraphNode,
-): 'transfer' | 'copy' | 'reject' => {
-  const activeClass = activeNode.properties.persistenceClass;
-  if (destinationRelatedNode && activeClass) {
-    const persistenceParent = getPersistenceParent(graph, destinationRelatedNode, destinationPath, activeClass);
-    if (persistenceParent) {
-      const activeKey = activeNode.properties.persistenceKey;
-      if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
-        return persistenceParent.properties.acceptPersistenceKey.has(activeKey) &&
-          persistenceParent.properties.onTransferStart
-          ? 'transfer'
-          : persistenceParent.properties.onCopy
-            ? 'copy'
-            : 'reject';
-      } else {
-        return 'reject';
-      }
-    } else {
-      return 'reject';
-    }
-  } else {
+/**
+ * What dropping `source` into `destination` does. A move (`transfer`) stays inside one transfer scope,
+ * where the source's parent and the destination can keep each other consistent; a drop that crosses
+ * scopes links, so the source keeps the item.
+ */
+export const resolveDropOperation = ({
+  source,
+  sourceParent,
+  destination,
+}: {
+  source: NavTreeNode.NavTreeItemGraphNode;
+  sourceParent?: NavTreeNode.NavTreeItemGraphNode;
+  destination?: NavTreeNode.NavTreeItemGraphNode;
+}): DropOperation => {
+  const { persistenceClass, persistenceKey } = source.properties;
+  if (
+    !destination ||
+    destination.id === sourceParent?.id ||
+    !persistenceClass ||
+    !persistenceKey ||
+    !destination.properties.acceptPersistenceClass?.has(persistenceClass) ||
+    !destination.properties.acceptPersistenceKey
+  ) {
     return 'reject';
   }
+  if (!destination.properties.acceptPersistenceKey.has(persistenceKey)) {
+    return destination.properties.onCopy ? 'copy' : 'reject';
+  }
+
+  const scope = destination.properties.transferScope;
+  if (scope && sourceParent?.properties.transferScope === scope && destination.properties.onTransferStart) {
+    return 'transfer';
+  }
+  if (destination.properties.onLink) {
+    return 'link';
+  }
+  return destination.properties.onCopy ? 'copy' : 'reject';
 };
 
 // TODO(wittjosiah): Move into node implementation?

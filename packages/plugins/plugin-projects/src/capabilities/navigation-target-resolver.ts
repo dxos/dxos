@@ -13,6 +13,7 @@ import { DXN, EID } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
 import { getProjectArtifactPath, getProjectChatPath } from '../paths.ts';
+import { isArtifactOf } from './app-graph-builder.ts';
 
 /**
  * Places a project's chats on its Chats branch and the artifacts it is parent of on its Artifacts
@@ -46,13 +47,9 @@ export default Capability.makeModule(
           return [];
         }
 
-        const isArtifact = project.artifacts.some((ref) => {
-          const eid = EID.tryParse(ref.uri);
-          return eid !== undefined && EID.getEntityId(eid) === object.id;
-        });
         const path = Obj.instanceOf(Chat.Chat, object)
           ? getProjectChatPath(db.spaceId, project.id, object.id)
-          : isArtifact
+          : isArtifactOf(project, object)
             ? getProjectArtifactPath(db.spaceId, project.id, object.id)
             : undefined;
         if (!path) {

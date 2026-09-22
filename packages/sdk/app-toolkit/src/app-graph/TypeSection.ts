@@ -115,6 +115,11 @@ export const createTypeSectionExtension = (
      * then materialized on expand rather than inline.
      */
     sectionUrlKey?: string;
+    /**
+     * Links an object dropped onto one of the section's objects into it. Without it a section object
+     * only accepts objects of its own type, as reorders.
+     */
+    linkObject?: (target: Obj.Unknown, object: Obj.Unknown) => void;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -160,10 +165,29 @@ export const createTypeSectionExtension = (
     );
   };
 
+  const { linkObject } = options;
+  // Same-type objects reorder between rows; anything else links by dropping onto a row.
+  const blockLinkInstruction = (source: TreeData, instruction: AppNode.Instruction) =>
+    canDropSameType(source) ? instruction.type === 'make-child' : instruction.type !== 'make-child';
+  const makeOnLink = AppNode.createFactory(
+    (target: Obj.Unknown) => (node: AppGraphNode.Node<Obj.Unknown>) => linkObject?.(target, node.data),
+    (target) => Obj.getURI(target),
+  );
+
   const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
     const onRearrange = makeSectionRearrangeCallback(space, typename);
     return orderedObjects
-      .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
+      .map((object) =>
+        AppNode.makeObject({
+          get,
+          db: space.db,
+          object,
+          onRearrange,
+          ...(linkObject
+            ? { onLink: makeOnLink(object), canDrop: AppNode.CAN_DROP_OBJECT, blockInstruction: blockLinkInstruction }
+            : { canDrop: canDropSameType }),
+        }),
+      )
       .filter((node): node is NonNullable<typeof node> => node !== null);
   };
 

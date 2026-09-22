@@ -18,6 +18,9 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** Parents sharing a scope move items between them; a drop from outside it links instead. */
+      transferScope: string;
+      onLink: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
     }
   >
 >;

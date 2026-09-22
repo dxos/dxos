@@ -152,6 +152,7 @@ const L1PanelContent = ({
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
+            getDropEffect={navTreeContext.getDropEffect}
             canSelect={navTreeContext.canSelect}
             onOpenChange={navTreeContext.onOpenChange}
             onSelect={navTreeContext.onSelect}

@@ -144,6 +144,19 @@ describe('ownership', () => {
     expect(elsewhere.objects).toHaveLength(1);
   });
 
+  test('linking lists the object once and leaves its parent', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
+    CollectionModel.link({ object: person, to: linked });
+    CollectionModel.link({ object: person, to: linked });
+    await db.flush();
+
+    expect(linked.objects).toHaveLength(1);
+    expect(Obj.getParent(person)?.id).toBe(owner.id);
+  });
+
   test('unlinking drops the reference and leaves the object and its parent', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));

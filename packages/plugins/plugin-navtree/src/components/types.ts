@@ -19,7 +19,7 @@ export type NavTreeContextValue = {
   onTabChange?: (node: NavTreeNode.NavTreeItemGraphNode) => void;
 } & Pick<
   TreeProps<NavTreeNode.NavTreeItemGraphNode>,
-  'blockInstruction' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect' | 'onItemHover'
+  'blockInstruction' | 'canDrop' | 'canSelect' | 'getDropEffect' | 'onOpenChange' | 'onSelect' | 'onItemHover'
 > &
   Pick<L1PanelProps, 'onBack'>;
 

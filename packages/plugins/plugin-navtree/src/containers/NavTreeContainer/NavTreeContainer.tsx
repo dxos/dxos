@@ -27,7 +27,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveMigrationOperation } from '../../util.ts';
+import { type DropOperation, filterItems, getParent, resolveDropOperation } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -45,6 +45,30 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   return AppGraph.getConnections(graph, node?.id ?? GraphNode.RootId, 'child').filter((node) =>
     filterItems(node, disposition),
   );
+};
+
+/** Resolves a drop: a reorder among siblings rearranges, anything else lands in the target or its parent. */
+const resolveDrop = (
+  graph: AppGraph.ReadableGraph,
+  { source, target, instruction }: { source: TreeData; target: TreeData; instruction: Instruction },
+): {
+  operation: 'rearrange' | DropOperation;
+  sourceParent?: NavTreeNode.NavTreeItemGraphNode;
+  destination?: NavTreeNode.NavTreeItemGraphNode;
+} => {
+  const sourceNode = source.item as NavTreeNode.NavTreeItemGraphNode;
+  const targetNode = target.item as NavTreeNode.NavTreeItemGraphNode;
+  const sourceParent = getParent(graph, sourceNode, source.path);
+  if (source.path.slice(0, -1).join() === target.path.slice(0, -1).join() && instruction.type !== 'make-child') {
+    return { operation: 'rearrange', sourceParent };
+  }
+
+  const destination = instruction.type === 'make-child' ? targetNode : getParent(graph, targetNode, target.path);
+  return {
+    operation: resolveDropOperation({ source: sourceNode, sourceParent, destination }),
+    sourceParent,
+    destination,
+  };
 };
 
 export type NavTreeContainerProps = {
@@ -137,6 +161,12 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       return target.item.properties.canDrop?.(source) ?? false;
     }, []);
 
+    const getDropEffect = useCallback(
+      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }) =>
+        resolveDrop(graph, { source, target, instruction }).operation === 'link' ? 'link' : 'move',
+      [graph],
+    );
+
     const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
       return item.properties.selectable ?? true;
     }, []);
@@ -218,17 +248,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
             const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
-            const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
-            const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();
-            const operation =
-              sameParent && instruction.type !== 'make-child'
-                ? 'rearrange'
-                : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
-            const sourceParent = getParent(graph, sourceNode, sourcePath);
-            const targetParent = getParent(graph, targetNode, targetPath);
+            const { operation, sourceParent, destination } = resolveDrop(graph, {
+              source: source.data as TreeData,
+              target: target.data as TreeData,
+              instruction,
+            });
             const sourceItems = getItems(graph, sourceParent);
-            const targetItems = getItems(graph, targetParent);
+            const targetItems = getItems(graph, getParent(graph, targetNode, targetPath));
             const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
             const migrationIndex =
@@ -245,17 +272,18 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
                 break;
               }
               case 'copy': {
-                const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                void target?.properties.onCopy?.(sourceNode, migrationIndex);
+                void destination?.properties.onCopy?.(sourceNode, migrationIndex);
                 break;
               }
               case 'transfer': {
-                const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                if (!target?.properties.onTransferStart || target?.id === sourceParent?.id) {
-                  break;
+                if (destination) {
+                  void destination.properties.onTransferStart?.(sourceNode, migrationIndex);
+                  void sourceParent?.properties.onTransferEnd?.(sourceNode, destination);
                 }
-                void target?.properties.onTransferStart(sourceNode, migrationIndex);
-                void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
+                break;
+              }
+              case 'link': {
+                void destination?.properties.onLink?.(sourceNode, migrationIndex);
                 break;
               }
             }
@@ -305,6 +333,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         blockInstruction,
         canDrop,
         canSelect,
+        getDropEffect,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
         onSelect: handleSelect,
@@ -317,6 +346,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         blockInstruction,
         canDrop,
         canSelect,
+        getDropEffect,
         handleBack,
         handleOpenChange,
         handleSelect,

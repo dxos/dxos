@@ -113,26 +113,24 @@ export const makeCollectionRearrangeCallback = createFactory(
 // Collection partials.
 //
 
+/** Collections move items among themselves; a drop from anywhere else links. */
+const COLLECTION_TRANSFER_SCOPE = 'collection';
+
+const linkChild = (collection: Collection.Collection) => (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
+  if (CollectionModel.isCollectionItem(child.data)) {
+    CollectionModel.link({ object: child.data, to: collection, index });
+  }
+};
+
 /** Build collection partials for drag/drop behavior. */
 export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
-  onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
-    if (!CollectionModel.isCollectionItem(child.data)) {
-      return;
-    }
-    Obj.update(collection, (collection) => {
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
-        }
-      }
-    });
-  },
+  transferScope: COLLECTION_TRANSFER_SCOPE,
+  onTransferStart: linkChild(collection),
+  onLink: linkChild(collection),
   onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) => {
     const target =
       Obj.isObject(destination.data) && Collection.isCollection(destination.data) ? destination.data : undefined;
@@ -187,7 +185,9 @@ export const makeObject = ({
   navigable = false,
   deck,
   onRearrange,
+  onLink,
   canDrop: canDropOverride,
+  blockInstruction: blockInstructionOverride,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.AtomContext;
@@ -206,8 +206,12 @@ export const makeObject = ({
   deck?: DeckSpec.DeckSpec;
   /** Rearrange callback invoked with the next sibling order on drop. */
   onRearrange?: (nextOrder: unknown[]) => void;
+  /** Accepts an object dropped onto this row as a link to it. */
+  onLink?: (node: AppGraphNode.Node<Obj.Unknown>, index?: number) => void;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
+  /** Blocks drop instructions the row accepts from some sources but not others. */
+  blockInstruction?: (source: TreeData, instruction: Instruction) => boolean;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -252,7 +256,7 @@ export const makeObject = ({
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
   const objectUri = Obj.getURI(object);
-  let blockInstruction = blockInstructionCache.get(objectUri);
+  let blockInstruction = blockInstructionOverride ?? blockInstructionCache.get(objectUri);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
     blockInstructionCache.set(objectUri, blockInstruction);
@@ -280,6 +284,13 @@ export const makeObject = ({
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
       onRearrange,
+      ...(onLink
+        ? {
+            acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+            acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+            onLink,
+          }
+        : {}),
       blockInstruction,
       canDrop,
       [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
