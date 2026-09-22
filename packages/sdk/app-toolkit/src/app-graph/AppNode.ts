@@ -110,6 +110,24 @@ export const makeCollectionRearrangeCallback = createFactory(
 );
 
 //
+// Containers.
+//
+
+/** Node property on a branch whose children are listed in an object that may not own them. */
+export const CONTAINER_PROPERTY = 'container';
+
+export type Container = {
+  /** The object listing the children. */
+  object: Obj.Unknown;
+  /** Drops a child from the list, leaving the child itself alone. */
+  remove: (object: Obj.Unknown) => void;
+  removeLabel?: Translations.Label;
+};
+
+export const getContainer = (node: AppGraphNode.Node | undefined): Container | undefined =>
+  node?.properties[CONTAINER_PROPERTY];
+
+//
 // Collection partials.
 //
 
@@ -152,6 +170,10 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   //     }
   //   });
   // },
+  [CONTAINER_PROPERTY]: {
+    object: collection,
+    remove: (object) => CollectionModel.unlink({ object, from: collection }),
+  } satisfies Container,
 });
 
 export const getCollectionGraphNodePartials = ({

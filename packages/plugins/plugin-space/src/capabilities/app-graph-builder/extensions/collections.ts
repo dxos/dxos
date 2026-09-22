@@ -6,14 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -281,9 +279,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-        const parentNode = Option.getOrUndefined(AppGraph.getNode(appGraph.graph, parentId));
+        const parentNode = Option.getOrUndefined(get(appGraph.graph.node(parentId)));
         const parentCollection =
           parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
+        const container = AppNode.getContainer(parentNode);
+        // A query, so the actions follow the parent once it loads rather than keeping a first empty read.
+        const db = Obj.getDatabase(object);
+        const [parent] =
+          container && db ? get(db.query(Query.select(Filter.id(object.id)).parent()).atom) : [undefined];
+        const linkedFrom = container && parent && parent.id !== container.object.id ? container : undefined;
 
         return Effect.succeed(
           constructObjectActions({
@@ -293,6 +297,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
             parentCollection,
+            linkedFrom,
           }),
         );
       },
@@ -343,6 +348,7 @@ const constructObjectActions = ({
   navigable = false,
   shareableLinkOrigin,
   parentCollection,
+  linkedFrom,
 }: {
   object: Obj.Unknown;
   nodeId: string;
@@ -350,12 +356,13 @@ const constructObjectActions = ({
   deletable?: boolean;
   navigable?: boolean;
   parentCollection?: Collection.Collection;
+  /** The container listing the object without owning it. */
+  linkedFrom?: AppNode.Container;
 }) => {
   const db = Obj.getDatabase(object);
   invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
-  const linkedFrom = parentCollection && !Obj.isOwnedBy(object, parentCollection) ? parentCollection : undefined;
 
   const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
@@ -405,13 +412,13 @@ const constructObjectActions = ({
             },
           }),
           AppGraphNode.makeAction({
-            id: 'removeFromCollection',
-            data: () => Effect.sync(() => CollectionModel.unlink({ object, from: linkedFrom })),
+            id: 'removeFromContainer',
+            data: () => Effect.sync(() => linkedFrom.remove(object)),
             properties: {
-              label: REMOVE_FROM_COLLECTION_LABEL,
+              label: linkedFrom.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
               icon: 'ph--minus-circle--regular',
               disposition: 'list-item',
-              testId: 'spacePlugin.removeFromCollection',
+              testId: 'spacePlugin.removeFromContainer',
             },
           }),
         ]

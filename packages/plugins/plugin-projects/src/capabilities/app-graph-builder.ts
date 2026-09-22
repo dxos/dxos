@@ -261,12 +261,14 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
+const refersTo = (ref: Ref.Ref<Obj.Unknown>, object: Obj.Unknown): boolean => {
+  const eid = EID.tryParse(ref.uri);
+  return eid !== undefined && EID.getEntityId(eid) === object.id;
+};
+
 /** Whether `project.artifacts` lists the object. */
 export const isArtifactOf = (project: Project.Project, object: Obj.Unknown): boolean =>
-  project.artifacts.some((ref) => {
-    const eid = EID.tryParse(ref.uri);
-    return eid !== undefined && EID.getEntityId(eid) === object.id;
-  });
+  project.artifacts.some((ref) => refersTo(ref, object));
 
 /** Stable rearrange callback that persists a project's artifact order. Keyed by project URI. */
 const makeArtifactsRearrangeCallback = AppNode.createFactory(
@@ -333,6 +335,14 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
+            [AppNode.CONTAINER_PROPERTY]: {
+              object: project,
+              remove: (object) =>
+                Obj.update(project, (project) => {
+                  project.artifacts = project.artifacts.filter((ref) => !refersTo(ref, object));
+                }),
+              removeLabel: ['remove-from-project.label', { ns: meta.profile.key }],
+            } satisfies AppNode.Container,
           },
         }),
       ]),
