@@ -32,16 +32,11 @@ import { PublicKey } from '@dxos/keys';
 
 import { type TestSqliteRuntime, createTestSqliteRuntime } from '../../testing/index.ts';
 import { AutomergeHost } from '../automerge-host.ts';
+import { parseSignedFragmentRecord, selfCheckpointRepair } from '../fragment-checkpoints.ts';
 import { SqliteStorageAdapter, SUBDUCTION_PREFIX } from '../sqlite-storage-adapter.ts';
 import { deleteRemoteHeads } from './0001_delete_remote_heads.ts';
-import {
-  type ClientSubductionMigrationContext,
-  hasSubductionMigration,
-  runClientSubductionMigrations,
-} from './client.ts';
-import { parseSignedFragmentRecord, selfCheckpointRepair } from './fragment-checkpoints.ts';
-import { type SubductionMigration } from './framework.ts';
-import { selfCheckpointedFragments } from './self-checkpointed-fragments.ts';
+import { selfCheckpointedFragments } from './0002_self_checkpointed_fragments.ts';
+import { type SubductionMigration, hasSubductionMigration, runSubductionMigrations } from './index.ts';
 
 /**
  * What a client on `@automerge/automerge` 3.3.2 stored for one synthetic document, produced by that
@@ -109,11 +104,7 @@ describe('subduction migrations', () => {
     );
 
   describe('runner', () => {
-    const migration = (
-      name: string,
-      complete: boolean,
-      ran: string[],
-    ): SubductionMigration<ClientSubductionMigrationContext> => ({
+    const migration = (name: string, complete: boolean, ran: string[]): SubductionMigration => ({
       name,
       run: async () => {
         ran.push(name);
@@ -134,7 +125,7 @@ describe('subduction migrations', () => {
         migration('0005_after', true, ran),
       ];
 
-      await expect(runClientSubductionMigrations(context, migrations)).rejects.toThrow('boom');
+      await expect(runSubductionMigrations(context, migrations)).rejects.toThrow('boom');
       expect(ran).toEqual(['0001_first', '0002_partial', '0003_complete']);
       expect(await applied(runtime, '0001_first')).toBe(true);
       expect(await applied(runtime, '0002_partial')).toBe(false);
@@ -143,7 +134,7 @@ describe('subduction migrations', () => {
 
       // A second run picks up the partial one again and nothing that is recorded.
       ran.length = 0;
-      await runClientSubductionMigrations(context, migrations.slice(0, 3));
+      await runSubductionMigrations(context, migrations.slice(0, 3));
       expect(ran).toEqual(['0002_partial']);
     });
   });
@@ -183,7 +174,7 @@ describe('subduction migrations', () => {
     });
   });
 
-  describe('self_checkpointed_fragments', () => {
+  describe('0002_self_checkpointed_fragments', () => {
     /** A fragment-only document: its whole history in one blob, the old self-checkpointed shape. */
     const syntheticDocument = () => {
       let doc = A.from<{ text: string }>({ text: 'one' });
