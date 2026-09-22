@@ -35,21 +35,24 @@ comparable at all:
   measured on one flow, profiler-only costs +2.6% against `measure` — below the run-to-run noise —
   while adding the screencast costs +47%, because it encodes a JPEG per frame and waits on an ack
   before the next. Note also that Playwright's own Network domain makes Blink retain response
-  bodies in EVERY mode (the finding behind `scripts/memory/plain-soak.mjs`), so absolute RSS is
-  inflated by an unmeasured constant while a trend across runs stays valid.
+  bodies in EVERY mode (the finding behind `scripts/memory/plain-soak.mjs`), so the absolute
+  footprint is inflated by an unmeasured constant while a trend across runs stays valid.
 - **Per stage:** wall ms; total CPU ms across every Chrome process (`SystemInfo.getProcessInfo`);
   CPU per REALM from the profiler, the only instrument that reaches a worker — process CPU folds a
   dedicated worker into its renderer, and the `Performance` domain does not exist on a worker target
   at all; the page main thread's `script`/`layout`/`recalcStyle` split; JS heap per target after a
-  forced GC; peak RSS over the browser process tree; DOM node and listener counts; network bytes
+  forced GC; the renderers' private footprint, with Chrome's own processes reported separately;
+  DOM node and listener counts; network bytes
   split code-load vs API; long tasks and TBT for the page, and timer-drift lag per realm.
 - **Recorded on every row, or the trend is noise:** serving mode (`vite preview` over a production
   bundle — `vite serve` costs ~2.5x on the main thread), plugin set, profile state (first-run
   performs onboarding and loads a different module set), settle time, and which instruments were
   attached. Per `scripts/memory/README.md` §"Comparing runs".
-- **Memory means four different things** that differ by 3-5x. The trended one is peak RSS, because
-  it is what a user feels and the only one that counts wasm linear memory — where automerge
-  documents live, outside every JS-heap reading, never returned to the OS.
+- **Memory means four different things** that differ by 3-5x. The trended one is the renderers'
+  private footprint: it counts wasm linear memory, where automerge documents live outside every
+  JS-heap reading, and unlike RSS it is disjoint per process, so the renderers can be added. A peak
+  of RSS summed over the whole process tree, which this replaced, multi-counted the shared pages
+  every process maps and buried the app under ~218 MB of Chrome's own.
 
 ## QA
 

@@ -24,7 +24,7 @@ test.describe('Tour tests', () => {
     await host.close();
   });
 
-  test('the global tour runs from the Home help companion and advances', async () => {
+  test('the global tour runs from the Home help companion and advances', { tag: ['@QA-9'] }, async () => {
     await Support.startGlobal(host.page);
 
     await expect(Support.title(host.page)).toHaveText(GLOBAL_TOUR[0]);
@@ -35,7 +35,7 @@ test.describe('Tour tests', () => {
     await Support.walk(host.page, GLOBAL_TOUR);
   });
 
-  test('a document tour picks up steps contributed by other plugins', async () => {
+  test('a document tour picks up steps contributed by other plugins', { tag: ['@QA-9'] }, async () => {
     test.slow();
 
     await host.createSpace();

@@ -39,7 +39,7 @@ test.describe('Chat', () => {
     await host.close();
   });
 
-  test('sends a message and receives a response', async () => {
+  test('sends a message and receives a response', { tag: ['@QA-4'] }, async () => {
     // Boot, space creation and a live model round trip do not fit the default 60s timeout.
     test.slow();
 
