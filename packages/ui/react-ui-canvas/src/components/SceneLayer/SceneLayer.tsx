@@ -333,7 +333,7 @@ export const UnknownNodeView = ({ node }: NodeViewProps) => (
 export const TextNodeView = ({ node, editing }: NodeViewProps) => {
   const text = isTextNode(node) ? node.text : '';
   return (
-    <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3 text-description'>
+    <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3'>
       {text}
     </TextPart>
   );
