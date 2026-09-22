@@ -91,6 +91,23 @@ describe('scoreWalkthrough', () => {
     expect(dimension(correctness, 'citations-grounded').evidence).to.deep.eq(['retryPolicy.backoff()']);
   });
 
+  test('a number the diff never shows is an invented claim', () => {
+    const body = GOOD.replace(
+      'The second attempt runs on a warmed socket.',
+      'The second attempt runs after 250 milliseconds.',
+    );
+    const { correctness } = scoreWalkthrough(body, PATCH);
+
+    expect(dimension(correctness, 'numbers-grounded').score).to.eq(0);
+    expect(dimension(correctness, 'numbers-grounded').evidence).to.deep.eq(['250']);
+  });
+
+  test('a number the diff does show is grounded, sentence-final or not', () => {
+    const patch = PATCH.replace('+added();', '+const attempts = 5;');
+    const body = GOOD.replace('so it now runs twice.', 'so the count is 5.');
+    expect(dimension(scoreWalkthrough(body, patch).correctness, 'numbers-grounded').score).to.eq(1);
+  });
+
   test('a body with no H1 loses half the structure mark', () => {
     const { correctness } = scoreWalkthrough(GOOD.replace('# Retry the first call', '## Retry the first call'), PATCH);
     expect(dimension(correctness, 'structure').score).to.eq(0.5);
@@ -132,6 +149,30 @@ describe('scoreWalkthrough', () => {
     const { readability } = scoreWalkthrough(body, PATCH);
 
     expect(dimension(readability, 'prose-density').score).to.be.lessThan(0.5);
+  });
+
+  test('a changeset is not counted against coverage', () => {
+    const noisy = [
+      PATCH,
+      'diff --git a/.changeset/wild-pans-argue.md b/.changeset/wild-pans-argue.md',
+      '--- a/.changeset/wild-pans-argue.md',
+      '+++ b/.changeset/wild-pans-argue.md',
+      '@@ -0,0 +1,2 @@',
+      '+Retry the first call.',
+      '',
+    ].join('\n');
+    const { correctness } = scoreWalkthrough(GOOD, noisy);
+
+    // `fillWalkthrough` appends it either way, so prose about it would only cost the reader.
+    expect(dimension(correctness, 'hunk-coverage').score).to.eq(1);
+    expect(dimension(correctness, 'hunk-coverage').evidence).to.deep.eq([]);
+  });
+
+  test('a heading naming a symbol is not title case', () => {
+    const body = GOOD.replace('# Retry the first call', '# Retry added() before keep()');
+    const { readability } = scoreWalkthrough(body, PATCH);
+
+    expect(dimension(readability, 'sentence-case-headings').score).to.eq(1);
   });
 
   test('prose metrics never read the diff itself', () => {

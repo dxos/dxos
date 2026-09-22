@@ -62,6 +62,13 @@ export const SLOP_PHRASES = [
   'plays a key role',
 ];
 
+/**
+ * Files a reviewer does not need prose about, and which `fillWalkthrough` appends anyway. Counting
+ * them against coverage penalises exactly the choice the prompt asks for: cover what has to be
+ * understood, leave the rest to the appendix.
+ */
+const NOISE_FILE = /(^|\/)(\.changeset\/|pnpm-lock\.yaml$|package-lock\.json$|.*\.snap$)/;
+
 /** Sentences longer than this force the reader to backtrack, so they are graded against. */
 const MAX_SENTENCE_WORDS = 30;
 
@@ -114,6 +121,16 @@ const citationsOf = (prose: string): string[] => {
   return cited.filter((token) => /[./]|[a-z][A-Z]|_|\(\)/.test(token));
 };
 
+/**
+ * Numbers the prose asserts: a timeout, an interval, a count. Each one is a factual claim about the
+ * system, and a model with no source for it invents a plausible value — the failure a reviewer is
+ * least able to catch, because the number reads as evidence.
+ */
+const numbersOf = (prose: string): string[] =>
+  [...prose.replace(/`[^`\n]*`/g, '').matchAll(/(?<![\w.#])\d[\d_,.]*/g)]
+    // A sentence-final digit takes the full stop with it, and "5." grounds against nothing.
+    .map((match) => match[0].replace(/[.,]+$/, ''));
+
 /** Everything the diff says, for grounding citations. Paths included, since prose cites them. */
 const patchText = (patch: string): string =>
   parsePatch(patch)
@@ -136,10 +153,16 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   const paths = new Set(parsePatch(patch).map((file) => file.path));
   const code = patchText(patch);
 
+  const noiseHunks = parsePatch(patch)
+    .filter((file) => NOISE_FILE.test(file.path))
+    .reduce((count, file) => count + file.hunks.length, 0);
+  const missedSignal = filled.missed.filter((file) => !NOISE_FILE.test(file.path));
   const unresolvedFences = fences.filter((fence) => !fence.file || !paths.has(fence.file));
   const transcribed = fences.filter((fence) => !fence.empty);
   const citations = citationsOf(prose);
   const ungrounded = citations.filter((token) => !code.includes(token.replace(/\(\)$/, '')));
+  const numbers = numbersOf(prose);
+  const inventedNumbers = numbers.filter((number) => !code.includes(number));
   const longSentences = sentences.filter((sentence) => wordsOf(sentence).length > MAX_SENTENCE_WORDS);
   const slopHits = [...SLOP_WORDS, ...SLOP_PHRASES].filter((term) =>
     new RegExp(`\\b${term.replace(/ /g, '\\s+')}\\b`, 'i').test(prose),
@@ -149,7 +172,13 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   const headings = prose.match(/^#{1,6} .*$/gm) ?? [];
   const titleCased = headings.filter((heading) => {
     const rest = heading.replace(/^#+ \S+ ?/, '');
-    return wordsOf(rest).filter((word) => /^[A-Z][a-z]/.test(word)).length >= 2;
+    // A capitalised word naming something in the code is the code's spelling, not title case:
+    // "Declare Database.Service on RemoveObjects" is a sentence, and flagging it teaches the model
+    // to rename the symbol.
+    const capitalised = wordsOf(rest).filter(
+      (word) => /^[A-Z][a-z]/.test(word) && !code.includes(word.replace(/[^\w.]/g, '')),
+    );
+    return capitalised.length >= 2;
   });
 
   return {
@@ -170,9 +199,15 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
       },
       {
         name: 'hunk-coverage',
-        score: ratio(filled.covered, filled.total),
-        sampled: filled.total,
-        evidence: filled.missed.map((file) => `${file.path} (${file.hunks.length})`),
+        score: ratio(filled.covered, filled.total - noiseHunks),
+        sampled: filled.total - noiseHunks,
+        evidence: missedSignal.map((file) => `${file.path} (${file.hunks.length})`),
+      },
+      {
+        name: 'numbers-grounded',
+        score: ratio(numbers.length - inventedNumbers.length, numbers.length),
+        sampled: numbers.length,
+        evidence: inventedNumbers,
       },
       {
         name: 'citations-grounded',

@@ -36,7 +36,7 @@ Two loads to keep down:
 8. **Cut the connective em dash.** End the sentence or use a comma. (This repo's older docs are full
    of them, which is the habit, not the standard. Leave them where they are; do not add more.)
 9. **Bold leads end in a period and add new detail.** `**Schema in TypeScript.** Tables live in one
-   file.` is fine. `**Performance:** performance improved` is the line written twice.
+file.` is fine. `**Performance:** performance improved` is the line written twice.
 10. **Sentence case headings. No decorative emoji. Straight quotes.**
 
 ## Words that mark generated text

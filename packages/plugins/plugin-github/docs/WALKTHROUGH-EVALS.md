@@ -28,23 +28,23 @@ excerpts it scored on. Attribution is the point: a bare number is not actionable
 
 Correctness:
 
-| Dimension | Fails when |
-| --- | --- |
-| `fences-resolve` | A fence names a file the patch does not contain. |
-| `fences-empty` | The model wrote diff content itself instead of leaving the fence empty for `fillWalkthrough`. |
-| `hunk-coverage` | Hunks reach the reader only through the appended `## Also changed` section. |
-| `citations-grounded` | Prose cites an identifier or path that appears nowhere in the patch. |
-| `structure` | No single H1, or no H2 sections. |
+| Dimension            | Fails when                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `fences-resolve`     | A fence names a file the patch does not contain.                                              |
+| `fences-empty`       | The model wrote diff content itself instead of leaving the fence empty for `fillWalkthrough`. |
+| `hunk-coverage`      | Hunks reach the reader only through the appended `## Also changed` section.                   |
+| `citations-grounded` | Prose cites an identifier or path that appears nowhere in the patch.                          |
+| `structure`          | No single H1, or no H2 sections.                                                              |
 
 Readability:
 
-| Dimension | Fails when |
-| --- | --- |
-| `sentence-length` | A sentence runs past 30 words, so the reader backtracks to parse it. |
-| `slop-free` | Generated vocabulary (`crucial`, `robust`, `serves as`) per 1000 words. |
-| `no-inline-headers` | A bold label and colon restating the line it introduces. |
-| `sentence-case-headings` | Title Case Headings. |
-| `prose-density` | Fewer than ~25 words of prose per fence: a diff dump with headings. |
+| Dimension                | Fails when                                                              |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `sentence-length`        | A sentence runs past 30 words, so the reader backtracks to parse it.    |
+| `slop-free`              | Generated vocabulary (`crucial`, `robust`, `serves as`) per 1000 words. |
+| `no-inline-headers`      | A bold label and colon restating the line it introduces.                |
+| `sentence-case-headings` | Title Case Headings.                                                    |
+| `prose-density`          | Fewer than ~25 words of prose per fence: a diff dump with headings.     |
 
 Coverage is a floor, not a target. `fillWalkthrough` appends every unclaimed hunk, so the reader
 never loses a change; a walkthrough that describes every hunk equally has ordered nothing and is the
