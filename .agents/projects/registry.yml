@@ -7,7 +7,7 @@
 
 projects:
   - name: composer-e2e
-    status: active
+    status: done
     user: dmytro
     host: cloud
     created: 2026-09-20
@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/composer-e2e/TASKS.md
     design: .agents/projects/composer-e2e/DESIGN.md
     prs: [13247]
-    resume: 'PR #13247 GREEN and mergeable (2026-09-20, head 51b95495): package extraction, 28 live tests bound two-sided to mdl QA flows (+QA-5..QA-9), BEST-PRACTICES.md, ci.e2e-test published from main/composer shard, PostHog dashboard 963444. Four CI-fix commits followed the first — vitest project, two orphaned deps, and (three rounds) knip: this package has NO production code, so its deps belong in devDependencies, which is what react-ui-table/mosaic/lit-grid/testbench-app all do. table:QA-1 and inbox:QA-1 lost their automated claims (whole-suite skips). NEXT: awaiting review; then the TASKS.md follow-ups.'
+    resume: 'MERGED 2026-09-22 as 0918236c (PR #13247, squash of 15 commits). Delivered: package extraction; 28 live tests bound two-sided to mdl QA flows (+QA-5..QA-9); BEST-PRACTICES.md; `ci.e2e-test` published from main OR an explicit workflow_dispatch, composer shard only; PostHog dashboard 963444, seeded with 114 real rows from a dispatched run (57 passed / 57 skipped / 0 failed across three browsers). Review outcomes worth keeping: the coverage check is REFERENTIAL, not semantic — it proves both sides name each other and that the test runs, never that the spec exercises the flow steps (@wittjosiah, now stated in qa.mdl and BEST-PRACTICES.md); knip needs PRODUCTION usage for a `dependencies` entry, so a test-only package puts everything in devDependencies. table:QA-1 and inbox:QA-1 have no automated coverage (whole-suite skips). NEXT: the five TASKS.md follow-ups — restore inbox by seeding, fix tables.spec, attribute the chromium-only specs, a `ci.startup` trend for the perf harnesses, and document the test-update path.'
   - name: plugin-canvas
     status: active
     user: burdon
