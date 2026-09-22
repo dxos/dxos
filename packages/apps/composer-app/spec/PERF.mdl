@@ -167,9 +167,11 @@ test QA-1: A project with a large task set and long documents
       do: Click the Tasks tab.
       expect: the hierarchical task list renders and the first rows are visible
       note: |
-        The stage this flow exists for. `domNodes` is the diagnostic to read beside `wallMs`: a list
-        whose node count rises with the set rather than the viewport is not virtualized, and that is
-        a different fix from a slow query.
+        The stage this flow exists for. Whether the list is virtualized is read from the live tree —
+        the flow logs `task list windowing` with the mounted row count — and NOT from `domNodes`,
+        which counts detached and text nodes besides and did not move when the list went from 200
+        rendered rows to 18. A row count that rises with the set rather than the viewport is not
+        virtualized, and that is a different fix from a slow query.
     - name: Toggle a task
       id: toggle-task
       do: Check the first visible task's checkbox.

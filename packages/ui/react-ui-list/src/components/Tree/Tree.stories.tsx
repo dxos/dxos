@@ -29,12 +29,15 @@ const groupsTree = createTree(4, 4, { groups: true });
 const emptyTree = createTree(3, 1);
 // Flat and long, which is the shape `virtualize` is for.
 const longTree = createTree(120, 1);
+// Long AND disclosable: windowing follows the disclosure rather than giving up on the hierarchy.
+const longBranchTree = createTree(60, 2);
 
 const DefaultStory = ({
   draggable,
   groups,
   emptyBranches,
   virtualize,
+  deep,
 }: {
   draggable?: boolean;
   groups?: boolean;
@@ -42,8 +45,18 @@ const DefaultStory = ({
   emptyBranches?: boolean;
   /** Render a long list in a short scroller, windowed to what is in view. */
   virtualize?: boolean;
+  /** Give the windowed list branches to disclose. */
+  deep?: boolean;
 }) => {
-  const rootTree = virtualize ? longTree : emptyBranches ? emptyTree : groups ? groupsTree : tree;
+  const rootTree = virtualize
+    ? deep
+      ? longBranchTree
+      : longTree
+    : emptyBranches
+      ? emptyTree
+      : groups
+        ? groupsTree
+        : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -218,6 +231,9 @@ const DefaultStory = ({
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      // Paired with `draggable`: the strip is what makes "append at the end" a drop target, so a
+      // draggable story without it cannot exercise the end of the list at all.
+      dropAtEnd={draggable}
       virtualize={virtualize}
       renderColumns={() => (
         <div className='flex items-center'>
@@ -321,5 +337,40 @@ export const TestWindowMountsAVisibleSlice: Story = {
 
     scroller.scrollTo({ top: 0 });
     await waitFor(async () => expect(indices()[0]).toEqual(0), { timeout: 5_000 });
+  },
+};
+
+/**
+ * A windowed tree with branches mounts a slice of the disclosed rows, and disclosing one adds its
+ * children to that order rather than nesting them out of the window's reach.
+ *
+ * The regression this guards is the one the windowing gave up on before: a hierarchy rendered
+ * whole, so a task list of a few hundred rows paid its entire subtree on every mount.
+ */
+export const TestWindowFollowsDisclosure: Story = {
+  args: { virtualize: true, deep: true, draggable: true },
+  play: async ({ canvasElement }) => {
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    // A slice of the 60 branches, not all of them and none of their children.
+    await waitFor(async () => expect(rows().length).toBeLessThan(60), { timeout: 5_000 });
+
+    // The list's extent, not the mounted count: disclosure adds rows to the windowed order, and a
+    // window whose slice happens to stay the same size would pass a count assertion unchanged.
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const extent = scroller.scrollHeight;
+    const toggle = canvasElement.querySelectorAll<HTMLElement>('[data-testid="treeItem.toggle"]')[0];
+    await userEvent.click(toggle);
+
+    await waitFor(async () => expect(scroller.scrollHeight).toBeGreaterThan(extent), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(60);
+
+    // "Append at the end" is reachable windowed: the strip is a unit of the row order, so it is
+    // mounted once the window reaches the last row rather than living outside the window entirely.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(canvasElement.querySelector('[data-object-id="end-drop"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
   },
 };

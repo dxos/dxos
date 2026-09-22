@@ -1104,3 +1104,25 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     await waitFor(async () => expect(options()).toHaveLength(Task.PriorityOptions.length + 1), { timeout: 5_000 });
   },
 };
+
+/**
+ * A large hierarchical list mounts what is in view, not the whole disclosed tree.
+ *
+ * The shape a project's task set actually has — hundreds of tasks, one level of sub-tasks — and the
+ * regression this guards is the one that made it expensive: a disclosable branch used to disable
+ * the tree's windowing outright, so every row of the set rendered on every mount.
+ */
+export const TestHierarchyWindows: Story = {
+  args: {
+    seed: () => seedDeepHierarchy(2, 12),
+    hierarchical: true,
+    showDescription: true,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = () => canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]');
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 10_000 });
+    // 12 roots of 12 sub-tasks each: 156 rows, an order of magnitude more than a viewport holds.
+    await waitFor(async () => expect(rows().length).toBeLessThan(60), { timeout: 10_000 });
+  },
+};

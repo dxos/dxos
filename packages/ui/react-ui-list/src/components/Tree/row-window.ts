@@ -6,6 +6,7 @@ import { type RefObject, useEffect, useState } from 'react';
 
 import { type Label } from '@dxos/react-ui';
 
+import { type TreeData } from './tree-data.ts';
 import { type TreeNodeEntry } from './TreeContext.ts';
 
 /**
@@ -18,7 +19,13 @@ import { type TreeNodeEntry } from './TreeContext.ts';
 const NOMINAL_ROW_EXTENT = 40;
 
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
-export type RowUnit = { kind: 'header'; key: string; label: Label } | { kind: 'row'; key: string; node: TreeNodeEntry };
+export type RowUnit =
+  | { kind: 'header'; key: string; label: Label }
+  | { kind: 'row'; key: string; node: TreeNodeEntry }
+  // The strip that means "append at the end" is a unit like any other, because windowed it is only
+  // reachable if the window mounts it — and it sits after the last row, which is where the window
+  // stops.
+  | { kind: 'end'; key: string; data: TreeData };
 
 /**
  * The id the window measures a row against — the item's own, because that is what the row element
@@ -27,17 +34,32 @@ export type RowUnit = { kind: 'header'; key: string; label: Label } | { kind: 'r
 export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.node.id : unit.key);
 
 /**
+ * Rows below which windowing is not worth its cost.
+ *
+ * A window trades the whole list's DOM for the viewport's, and buys nothing on a list the viewport
+ * already holds — while costing the disclosure animation and making every row past the fold absent
+ * from the DOM rather than merely offscreen. A few screens' worth is where the trade turns.
+ */
+const WINDOW_MIN_ROWS = 50;
+
+/** The key the end-drop strip is measured and mounted under. */
+export const END_DROP_UNIT_KEY = 'end-drop';
+
+/**
  * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree
  * cannot be windowed.
  *
- * A disclosable branch is one case it gives up on: its children live inside an `ark` `Branch` whose
- * open state the machine animates, so they are not a flat run of siblings the way a group's
- * children are, and lifting them out would take the disclosure with them.
+ * A branch contributes its own row and, when open, the rows of its subtree, so a hierarchy windows
+ * exactly as deep as it is disclosed. The windowed tree renders those rows as a flat run rather
+ * than inside the `ark` `Branch` the unwindowed one nests them in: that wrapper is what animates
+ * the disclosure, and a row lifted out of it cannot be mounted by a window that owns the row order.
+ * The trade is deliberate — a task list of hundreds of rows costs its whole subtree on every mount
+ * otherwise, and the disclosure of a windowed row is instant instead of animated.
  *
- * A repeated item id is the other. The window keys a row's measured extent by the id the row
- * carries, so the same id twice would have each row read back the other's height — a row measured,
- * found to disagree and measured again, every commit. A tree that addresses one item at two paths
- * therefore renders whole, as every consumer did before this existed.
+ * A repeated item id is the one case it still gives up on. The window keys a row's measured extent
+ * by the id the row carries, so the same id twice would have each row read back the other's height
+ * — a row measured, found to disagree and measured again, every commit. A tree that addresses one
+ * item at two paths therefore renders whole, as every consumer did before this existed.
  */
 export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
   const units: RowUnit[] = [];
@@ -52,18 +74,24 @@ export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): 
         }
         continue;
       }
-      if (node.branch || ids.has(node.id)) {
+      if (ids.has(node.id)) {
         return false;
       }
 
       ids.add(node.id);
       units.push({ kind: 'row', key: node.value, node });
+
+      // An unopened branch's children are not visible, so they are not rows; the model may hold
+      // them anyway (it is built from the data, not from the disclosure).
+      if (node.branch && node.open && !visit(node.children)) {
+        return false;
+      }
     }
 
     return true;
   };
 
-  return visit(entries) ? units : undefined;
+  return visit(entries) && units.length >= WINDOW_MIN_ROWS ? units : undefined;
 };
 
 /**

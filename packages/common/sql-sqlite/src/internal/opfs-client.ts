@@ -92,6 +92,10 @@ const importDatabase = (
   pragmaOptions: OpfsConfig,
 ): void => {
   sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
+  // Page size BEFORE the vacuum, which is the only thing that can change it on a database that
+  // already has pages — an imported snapshot otherwise keeps whatever page size it was written
+  // with, and the pragmas below would be applying it too late to matter.
+  applyOpfsPragmas(sqlite3, db, { journalMode: 'off', synchronous: pragmaOptions.synchronous });
   vacuumDatabase(sqlite3, db);
   applyOpfsPragmas(sqlite3, db, {
     journalMode: pragmaOptions.journalMode ?? DEFAULT_JOURNAL_MODE,

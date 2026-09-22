@@ -295,8 +295,8 @@ export const TaskTreeContent = ({
       dropAtEnd
       // A task list is the long list in this app — a project's backlog runs to hundreds of rows,
       // each carrying a title, a description, four controls and a subscription, and a reader sees
-      // twenty of them. Applies to the flat list; a hierarchical one has branches to disclose and
-      // renders whole.
+      // twenty of them. A hierarchy windows to the depth it is disclosed to, at the cost of the
+      // disclosure animation.
       virtualize
       debug={debug}
       renderHeading={renderHeading}
