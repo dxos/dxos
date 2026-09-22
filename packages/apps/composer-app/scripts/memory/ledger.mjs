@@ -248,6 +248,9 @@ const LAUNCH_ARGS = [
   // Otherwise `performance.memory` is bucketed to 3 significant figures, which
   // is too coarse for the external-memory subtraction below.
   '--enable-precise-memory-info',
+  // Chrome's setuid sandbox refuses to start under uid 0, which is what a cloud
+  // container runs as; without it the browser exits before the debug port opens.
+  ...(process.getuid?.() === 0 ? ['--no-sandbox'] : []),
 ];
 
 /**
