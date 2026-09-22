@@ -851,6 +851,19 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('serves a space token from memory after its first read', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      const token = yield* feed.getServerToken(spaceId);
+
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM cursor_tokens WHERE spaceId = ${spaceId}`;
+      expect(yield* feed.getServerToken(spaceId)).toBe(token);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('honours position for a client that sends a matching token or none', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
