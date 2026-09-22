@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -44,6 +45,7 @@ export type ConnectorAuthMenuProps = {
  */
 export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const registry = useContext(RegistryContext);
   const runAction = useActionRunner();
   const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
@@ -63,12 +65,11 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
     if (actions.length === 0) {
       return undefined;
     }
-    // A registry of its own, as in `useMenuActions`: the graph is rebuilt when its inputs change and
-    // never written after, and in the app registry each rebuild's pinned nodes stayed for good.
-    const nextGraph = AppGraph.make();
+    // Unpinned, as in `useMenuActions`: rebuilt when its inputs change and never written after.
+    const nextGraph = AppGraph.make({ registry, retainAtoms: false });
     AppGraph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
-  }, [connectorIds, db, existingTarget, allConnectors, allConnections]);
+  }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);
 
   // Read the group's children (reuse / connect entries) as the menu content.
   const menuActions = useGraphMenuActions(graph, ConnectorAuth.GROUP_ID);

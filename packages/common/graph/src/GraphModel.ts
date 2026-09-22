@@ -101,6 +101,8 @@ export abstract class AbstractGraphModel<
 > {
   readonly #registry: Registry.AtomRegistry;
   readonly #version: Atom.Writable<number>;
+  /** Source of truth for {@link version}, so the atom can be dropped and re-read without restarting. */
+  #revision = 0;
   readonly #nodeIndex = new Map<string, EffectGraph.NodeIndex>();
   readonly #edgeIndex = new Map<string, EffectGraph.EdgeIndex>();
   // Adjacency by endpoint, maintained incrementally with the edge index rather than rebuilt per
@@ -130,11 +132,11 @@ export abstract class AbstractGraphModel<
   constructor({ registry, graph, change, retainAtoms }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
     this.#pins = retainAtoms ? new Map() : undefined;
-    // Mounted in the model's registry rather than `keepAlive`: a keep-alive atom is never dropped
-    // from ANY registry that reads it, so a model read from a longer-lived registry than its own
-    // left its version there for good.
-    this.#version = Atom.make(0);
-    this.#registry.mount(this.#version);
+    // Not `keepAlive`, which a registry never drops: a recreated atom reads the current revision.
+    this.#version = Atom.writable(
+      () => this.#revision,
+      (ctx, value: number) => ctx.setSelf(value),
+    );
     // Priming before any subscriber attaches; a first read of an observed-but-uninitialized atom
     // notifies in addition to the write that follows it.
     this.#registry.get(this.#version);
@@ -376,7 +378,7 @@ export abstract class AbstractGraphModel<
    * Immutable snapshot in the schema shape, recomputed only when the graph has changed.
    */
   get graph(): Data<Node, Edge> {
-    const version = this.#registry.get(this.#version);
+    const version = this.#revision;
     if (this.#snapshot?.version !== version) {
       this.#snapshot = { version, graph: this.#encode() };
     }
@@ -411,7 +413,8 @@ export abstract class AbstractGraphModel<
       this.#depth--;
       if (this.#depth === 0 && this.#dirty) {
         this.#dirty = false;
-        this.#registry.set(this.#version, this.#registry.get(this.#version) + 1);
+        this.#revision += 1;
+        this.#registry.set(this.#version, this.#revision);
       }
     }
   }

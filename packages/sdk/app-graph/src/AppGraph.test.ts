@@ -873,3 +873,23 @@ describe('Graph', () => {
     expect(path).to.deep.equal(['root', exampleId(1)]);
   });
 });
+
+describe('retainAtoms', () => {
+  test('an unpinned graph leaves nothing in the registry once its readers unsubscribe', async () => {
+    const registry = Registry.make();
+    const before = registry.getNodes().size;
+    const graph = Graph.make({ registry, retainAtoms: false });
+    Graph.addNodes(graph, [
+      { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} },
+      { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} },
+    ]);
+    Graph.addEdges(graph, [{ source: GraphNode.RootId, target: exampleId(1), relation: 'child' }]);
+    const unsubscribe = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), () => {});
+    expect(registry.get(graph.connections(GraphNode.RootId, 'child')).map((node) => node.id)).toEqual([exampleId(1)]);
+
+    unsubscribe();
+    // The registry drops unobserved nodes on its scheduler, not synchronously.
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().size).toBe(before);
+  });
+});

@@ -71,6 +71,12 @@ export type GraphProps = {
   edges?: Record<string, Edges>;
   onExpand?: (id: string, relation: Node.Relation) => void;
   onRemoveNode?: (id: string) => void;
+  /**
+   * Pin each node's atom in the registry while the node is in the graph (default). Off for a graph
+   * derived from something else and never written after it is built, such as a menu's: its atoms
+   * then live only while read, and nothing it holds outlives its readers.
+   */
+  retainAtoms?: boolean;
 };
 
 export type Edge = { source: string; target: string; relation: Node.RelationInput };
@@ -280,10 +286,11 @@ export class GraphImpl implements WritableGraph {
    * @internal
    */
   readonly _pins = new Map<string, CleanupFn>();
+  readonly _retainAtoms: boolean;
 
   /** @internal */
   _pin(id: string): void {
-    if (!this._pins.has(id)) {
+    if (this._retainAtoms && !this._pins.has(id)) {
       this._pins.set(id, this._registry.mount(this._node(id)));
     }
   }
@@ -381,8 +388,9 @@ export class GraphImpl implements WritableGraph {
     }).pipe(withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
+  constructor({ registry, nodes, edges, onExpand, onRemoveNode, retainAtoms = true }: GraphProps = {}) {
     this._registry = registry ?? AtomEx.makeRegistry();
+    this._retainAtoms = retainAtoms;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
