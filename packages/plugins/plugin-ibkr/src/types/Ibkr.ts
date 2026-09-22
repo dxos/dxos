@@ -234,7 +234,7 @@ export type Report = Type.InstanceType<typeof Report>;
 export const Portfolio = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Owned feed: `SetParent` cascades it with the portfolio. */
-  feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true)),
+  feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set()),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
   // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so

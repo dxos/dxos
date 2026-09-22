@@ -20,7 +20,7 @@ export class Storyboard extends Type.makeObject<Storyboard>(DXN.make('org.dxos.t
   Schema.Struct({
     name: Schema.optional(Schema.String),
     frames: Schema.Array(Ref.Ref(Frame.Frame)).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(

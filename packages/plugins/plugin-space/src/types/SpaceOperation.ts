@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
@@ -139,13 +138,6 @@ export const ObjectDraft = Schema.StructWithRest(
 );
 export type ObjectDraft = Schema.Schema.Type<typeof ObjectDraft>;
 
-/**
- * A `target` naming no collection at all, for a caller that holds the object itself — a project
- * filing into `Project.artifacts`. Distinct from an absent `target`, which files at the space root.
- */
-export const Unfiled = CollectionModel.Unfiled;
-export type Unfiled = CollectionModel.Unfiled;
-
 export const AddObject = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.addObject'),
@@ -153,8 +145,7 @@ export const AddObject = Operation.make({
     description:
       'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
       '`{ "@type": "<typename>", ...properties }`; the type must already be registered ' +
-      '(see queryObjects). Omit `target` to file it at the space root, or pass "unfiled" when the ' +
-      'caller holds the object itself.',
+      '(see queryObjects). Omit `target` to file it at the space root.',
     icon: 'ph--plus--regular',
   },
   // Required: the caller names the database — an explicit spaceId, or a database provided in the
@@ -171,12 +162,11 @@ export const AddObject = Operation.make({
     // target collection that way; in-process callers keep passing the live entity. Absent, the
     // object is filed at the space root of the database the runtime resolved from the space id —
     // a database is never an input, since it cannot cross a process boundary.
-    target: Schema.optional(
-      Schema.Union([Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection), Schema.Literal(Unfiled)]),
-    ).annotate({
+    target: Schema.optional(Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)])).annotate({
       description:
-        'The collection to add to, or a reference to it. Omit to file at the space root, or pass ' +
-        '"unfiled" to file nowhere because the caller holds the object.',
+        'The object that will hold this one, or a reference to it. A collection files it; any ' +
+        'other holder keeps what it owns its own way, so the object is only persisted. Omit to ' +
+        'file at the space root.',
     }),
   }),
   output: Schema.Struct({
@@ -332,11 +322,11 @@ export const OpenObjectForm = Operation.make({
     targetNodeId: Schema.optional(
       Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
     ),
-    unfiled: Schema.optional(
-      Schema.Boolean.annotate({
+    holder: Schema.optional(
+      Obj.Unknown.annotate({
         description:
-          'Files the created object into no collection, for a caller that holds it itself — a ' +
-          'project pushing onto its artifacts. `target` still names the database to create in.',
+          'The object that will hold the created one, when it is not the collection in `target` — ' +
+          'a project taking it into its artifacts. Such a holder files the object nowhere.',
       }),
     ),
   }),

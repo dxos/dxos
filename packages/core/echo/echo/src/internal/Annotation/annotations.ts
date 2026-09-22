@@ -574,11 +574,13 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
   schema: Schema.String,
 });
 
-/**
- * Value of {@link SetParentAnnotation}. `true` owns and overwrites; `{ override: false }` owns only
- * a target that has no parent yet.
- */
-export type SetParentAnnotationValue = boolean | { readonly override: boolean };
+/** Value of {@link SetParentAnnotation}. Always structured, so a reader never branches on its shape. */
+export type SetParentAnnotationValue = {
+  /** Whether the field owns its targets at all. */
+  readonly value: boolean;
+  /** Whether a write takes a target that already has a parent. */
+  readonly override: boolean;
+};
 
 /**
  * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
@@ -587,7 +589,7 @@ export type SetParentAnnotationValue = boolean | { readonly override: boolean };
  * `{ override: false }` makes the field claim only a target that has no parent, so the first field
  * to hold an object owns it and later holders reference it. Fields where several holders may
  * legitimately hold the same object (`Collection.objects`, `Project.artifacts`) use this; a field
- * whose targets are created for it keeps the default.
+ * whose targets are created for it takes the default.
  *
  * This is NOT an invariant: it does not guarantee that a target held here has this object as its
  * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
@@ -599,15 +601,33 @@ export type SetParentAnnotationValue = boolean | { readonly override: boolean };
  * @example
  * ```ts
  * Schema.Struct({
- *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
  *   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.SetParent.set({ override: false })),
  * })
  * ```
  */
-export const SetParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
+const setParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
   id: 'org.dxos.annotation.setParent',
-  schema: Schema.Union([Schema.Boolean, Schema.Struct({ override: Schema.Boolean })]),
+  schema: Schema.Struct({ value: Schema.Boolean, override: Schema.Boolean }),
 });
+
+/** @see SetParentAnnotationValue */
+export type SetParentAnnotationOptions = {
+  readonly value?: boolean;
+  readonly override?: boolean;
+};
+
+/**
+ * {@link setParentAnnotation}, with a `set` that owns by default: the common case declares an
+ * owning field with no argument at all, and only a field that qualifies ownership passes options.
+ */
+export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotationValue>, 'set'> & {
+  set: (options?: SetParentAnnotationOptions) => <S extends Schema.Top>(schema: S) => S;
+} = {
+  ...setParentAnnotation,
+  set: ({ value = true, override = true }: SetParentAnnotationOptions = {}) =>
+    setParentAnnotation.set({ value, override }),
+};
 
 /**
  * Options for {@link getLabel}.
@@ -711,7 +731,12 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
 
 export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
-export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+export const getFromAst = <T>(
+  ast: SchemaAST.AST,
+  // Only the key and schema are read, so an annotation wrapping `set` in a friendlier signature
+  // (see `SetParentAnnotation`) is still a valid argument.
+  annotation: Pick<Annotation.Annotation<T>, 'key' | 'schema'>,
+): Option.Option<T> => {
   const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);
   return Option.fromNullishOr(meta?.[annotation.key]).pipe(Option.map(Schema.decodeUnknownSync(annotation.schema)));
 };

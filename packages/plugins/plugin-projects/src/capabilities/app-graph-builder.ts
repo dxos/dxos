@@ -364,12 +364,12 @@ export const createProjectArtifactsActionExtension = () =>
                 return;
               }
 
-              // Unfiled: the project holds the artifact, so filing it into a collection as well
-              // would put the same object in the tree twice.
+              // The project holds the artifact, so it files into no collection; without that the
+              // same object would appear in the tree twice.
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                 target: db,
                 targetNodeId: nodeId,
-                unfiled: true,
+                holder: project,
               });
               // Dismissed dialog: nothing was created, so there is nothing to link.
               if (!ref) {

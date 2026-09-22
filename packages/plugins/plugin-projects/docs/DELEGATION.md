@@ -310,7 +310,7 @@ one overflow menu.
 
 ### Open question — `Chat.tasks` re-parents
 
-`Chat.tasks` carries `Annotation.SetParent.set(true)`, so putting an **existing** task into a chat
+`Chat.tasks` carries `Annotation.SetParent.set()`, so putting an **existing** task into a chat
 moves its ECHO parent edge from the `TaskSet` to the `Chat`. The task would leave the set's ownership
 and follow the chat's cascade delete. Three ways out, decision pending: reference the task without
 re-parenting (needs a non-`SetParent` field), copy it, or accept the move as the meaning of

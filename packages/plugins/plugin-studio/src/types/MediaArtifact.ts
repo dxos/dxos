@@ -61,7 +61,7 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
     ),
     /** Owned interchangeable alternatives of the primary output; each records its own generation. */
     variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),

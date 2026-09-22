@@ -175,10 +175,13 @@ describe('ownership', () => {
     expect(Obj.getDatabase(person)).toBeDefined();
   });
 
-  test('filing unfiled persists the object without joining a collection', async ({ expect }) => {
+  test('a holder that is not a collection persists the object without filing it', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = Obj.make(TestSchema.Person, { name: 'alice' });
-    await CollectionModel.add({ object: person, target: CollectionModel.Unfiled }).pipe(
+    // Stands in for a project: it holds the object in a ref array of its own, so the collection
+    // machinery must leave it alone rather than file it at the space root.
+    const holder = db.add(Obj.make(TestSchema.Person, { name: 'holder' }));
+    await CollectionModel.add({ object: person, target: holder }).pipe(
       Effect.provide(Database.layer(db)),
       Effect.runPromise,
     );

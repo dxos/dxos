@@ -7,10 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj } from '@dxos/echo';
+import { Annotation, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -148,10 +147,11 @@ export type CreateObject = (
   options: {
     db: Database.Database;
     /**
-     * The collection to file into; absent files at the space root of `db`. `'unfiled'` files
-     * nowhere, for a caller that holds the object itself — pass it straight through to `AddObject`.
+     * The object that will hold the created one; absent files at the space root of `db`. A
+     * collection files it, any other holder files it nowhere — pass it straight through to
+     * `AddObject`.
      */
-    target?: Collection.Collection | CollectionModel.Unfiled;
+    target?: Obj.Unknown;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;

@@ -36,15 +36,12 @@ export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.ta
     image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
 
     /** Every task in the set, flat and ordered — sub-tasks included, so enumeration is one read. */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(
-      Annotation.FormInputAnnotation.set(false),
-      Annotation.SetParent.set(true),
-    ),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false), Annotation.SetParent.set()),
 
     /** The set's milestones, in sequence. */
     milestones: Schema.Array(Ref.Ref(Milestone.Milestone)).pipe(
       Annotation.FormInputAnnotation.set(false),
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
     ),
   }).pipe(
     Schema.annotate({ title: 'Task Set' }),

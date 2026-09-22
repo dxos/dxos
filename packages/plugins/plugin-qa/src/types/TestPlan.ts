@@ -19,7 +19,7 @@ export class TestPlan extends Type.makeObject<TestPlan>(DXN.make('org.dxos.type.
     /** Ordered; the plan owns the ordering, the case does not. */
     cases: Schema.mutable(Schema.Array(Ref.Ref(TestCase.TestCase))).pipe(FormInputAnnotation.set(false)),
     /** Durable append-only log of executions; a child of the plan, so it cascade-deletes with it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     /** The `## QA` section this plan tracks, when generated from a spec. */
     source: Schema.optional(Schema.String),
   }).pipe(

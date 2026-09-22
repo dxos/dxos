@@ -82,7 +82,7 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     /** Opaque sync cursor — protocol-specific. */
     cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** Backing ECHO feed (queue) for Posts: immutable feed entries appended by sync. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     /**
      * Backing ECHO feed (queue) for fetched article bodies — one
      * {@link PostContent} entry per Post whose content has been loaded.
@@ -96,24 +96,20 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
      * that pre-date this feed; new subscriptions always have one via
      * {@link makeSubscription}.
      */
-    contentFeed: Ref.Ref(Feed.Feed).pipe(
-      Annotation.SetParent.set(true),
-      FormInputAnnotation.set(false),
-      Schema.optional,
-    ),
+    contentFeed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false), Schema.optional),
     /**
      * Per-Post mutable state keyed by Post id, shared across every Magazine that references the Post.
      * Posts live immutably in the `feed` queue; their `readAt` marker lives here. (`snippet`/`imageUrl`
      * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
      * are tags — see `tags`.)
      */
-    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     /**
      * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
      * {@link SYSTEM_TAGS}) are modelled as {@link Tag} objects so they
      * participate in the space-wide tag system. Stored as a child {@link TagIndex} object.
      */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name', 'url']),
     Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),

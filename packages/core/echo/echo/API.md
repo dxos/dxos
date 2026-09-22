@@ -76,8 +76,8 @@ is no imperative parent API.
 
 ```ts
 const Doc = Schema.Struct({
-  content: Ref.Ref(Text).pipe(Annotation.SetParent.set(true)),
-  sections: Ref.Array(Ref.Ref(Section).pipe(Annotation.SetParent.set(true))),
+  content: Ref.Ref(Text).pipe(Annotation.SetParent.set()),
+  sections: Ref.Array(Ref.Ref(Section).pipe(Annotation.SetParent.set())),
 }).pipe(Type.makeObject(DXN.make('com.example.type.doc', '0.1.0')));
 ```
 

@@ -95,7 +95,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       FormInlineAnnotation.set(true),
       Schema.optional,
     ),
@@ -104,7 +104,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
      * curation time and take precedence over the RSS-derived defaults in display.
      */
-    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     /**
      * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
      * Older posts beyond this bound are dropped; starred posts are preserved regardless.

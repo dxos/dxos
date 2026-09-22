@@ -699,9 +699,9 @@ describe('Annotation', () => {
 
     class Holder extends Type.makeObject<Holder>(DXN.make('com.example.type.setParentHolder', '0.1.0'))(
       Schema.Struct({
-        body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set(true))),
-        sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set(true)),
-        nested: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set(true)) })),
+        body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set())),
+        sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set()),
+        nested: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set()) })),
         linked: Schema.optional(Ref.Ref(Body)),
       }),
     ) {}

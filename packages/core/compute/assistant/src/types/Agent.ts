@@ -61,7 +61,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * receives when the agent is applied to it. Owned: `SetParent` cascades it with the agent.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Schema.annotate({ title: 'Instructions' }),
     ),
   }).pipe(

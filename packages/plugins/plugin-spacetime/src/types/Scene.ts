@@ -17,7 +17,7 @@ export class Scene extends Type.makeObject<Scene>(DXN.make('org.dxos.type.spacet
     /** Owned objects: `SetParent` cascades each with the scene. */
     objects: Ref.Ref(Model.Object).pipe(
       Schema.Array,
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(

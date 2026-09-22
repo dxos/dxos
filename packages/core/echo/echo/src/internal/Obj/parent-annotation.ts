@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
-import { SetParentAnnotation, type SetParentAnnotationValue, getFromAst } from '../Annotation/index.ts';
+import { SetParentAnnotation, getFromAst } from '../Annotation/index.ts';
 import { EntityKind } from '../common/types/entity.ts';
 import { KindId, ParentId, getSchema } from '../common/types/index.ts';
 import { Ref } from '../Ref/ref.ts';
@@ -24,20 +24,13 @@ type OwningField = { readonly path: readonly string[]; readonly override: boolea
  */
 const cache = new WeakMap<SchemaAST.AST, readonly OwningField[]>();
 
-/** The annotation's value where the field carries one, whatever its form. */
-const getOwning = (ast: SchemaAST.AST): SetParentAnnotationValue | undefined =>
-  Option.getOrUndefined(getFromAst(ast, SetParentAnnotation));
-
 /**
- * The field's ownership, or undefined when it owns nothing — the annotation is absent, or is the
- * explicit `false`. `{ override: false }` claims only a parentless target; `true` overwrites.
+ * The field's ownership, or undefined when it owns nothing — no annotation, or one turned off.
+ * `override: false` claims only a parentless target.
  */
 const getOwnership = (ast: SchemaAST.AST): { override: boolean } | undefined => {
-  const value = getOwning(ast);
-  if (value === undefined || value === false) {
-    return undefined;
-  }
-  return { override: value === true ? true : value.override };
+  const value = Option.getOrUndefined(getFromAst(ast, SetParentAnnotation));
+  return value?.value ? { override: value.override } : undefined;
 };
 
 const collect = (ast: SchemaAST.AST): readonly OwningField[] => {

@@ -15,16 +15,14 @@ import { CollectionItemAnnotation } from '@dxos/schema';
 
 import { AppAnnotation } from '../echo/index.ts';
 
-/**
- * A `target` naming no collection at all, for a caller that holds the object itself. Distinct from
- * an absent `target`, which files at the space root.
- */
-export const Unfiled = 'unfiled';
-export type Unfiled = typeof Unfiled;
-
 type AddProps = {
   object: Obj.Unknown;
-  target?: Collection.Collection | Unfiled;
+  /**
+   * The object that will hold this one. A collection files it; any other holder — a project taking
+   * it into its artifacts — files it nowhere, since only the holder knows how it keeps what it
+   * owns. Absent, the object files at the space root.
+   */
+  target?: Obj.Unknown;
 };
 
 /**
@@ -160,9 +158,9 @@ export const add = Effect.fn(function* ({ object, target }: AddProps) {
   // Two reasons an object joins no collection, one about the type and one about this call.
   // A hidden type is an implementation detail reached through a ref on its owner (a sketch's
   // canvas, a game's variant state), so it never files anywhere; filing one would surface it as a
-  // sibling of the object that owns it. `Unfiled` is the caller saying it holds this object
-  // itself — a project filing into its artifacts — so a collection would show it a second time.
-  if (isHidden(object) || target === Unfiled) {
+  // sibling of the object that owns it. A holder that is not a collection keeps what it owns its
+  // own way — a project in its artifacts — and filing here as well would show the object twice.
+  if (isHidden(object) || (target !== undefined && !Collection.isCollection(target))) {
     if (!Obj.getDatabase(object)) {
       yield* Database.add(object);
     }

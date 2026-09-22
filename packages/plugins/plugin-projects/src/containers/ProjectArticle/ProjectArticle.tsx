@@ -195,8 +195,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject, db],
   );
 
-  // Unfiled: the project holds the artifact, so filing it into a collection as well would put the
-  // same object in the tree twice. A dismissed dialog returns nothing and leaves the project alone.
+  // The project holds the artifact, so it files into no collection; without that the same object
+  // would appear in the tree twice. A dismissed dialog returns nothing and leaves the project alone.
   const handleAddArtifact = useCallback(async () => {
     if (!db) {
       return;
@@ -206,7 +206,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       target: db,
       targetNodeId: attendableId,
       navigable: false,
-      unfiled: true,
+      // The live object, not the render snapshot: the holder is written to, not read.
+      holder: subject,
     });
     if (!ref) {
       return;
@@ -215,7 +216,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     updateProject((project) => {
       project.artifacts = [...project.artifacts, ref];
     });
-  }, [db, attendableId, invokePromise, updateProject]);
+  }, [db, subject, attendableId, invokePromise, updateProject]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {

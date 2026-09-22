@@ -39,10 +39,11 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
   shouldNavigate?: (object: Obj.Unknown) => boolean;
   targetNodeId?: string;
   /**
-   * Files the created object nowhere, because the caller holds it — a project pushing onto
-   * `Project.artifacts`. Without this it would also join a collection and appear in the tree twice.
+   * The object that will hold the created one, when it is not the collection in `target` — a
+   * project pushing onto `Project.artifacts`. Such a holder keeps what it owns its own way, so the
+   * object joins no collection and does not appear in the tree twice.
    */
-  unfiled?: boolean;
+  holder?: Obj.Unknown;
 };
 
 /**
@@ -65,7 +66,7 @@ export const ObjectFormDialog = ({
   handle,
   shouldNavigate: _shouldNavigate,
   targetNodeId,
-  unfiled,
+  holder,
 }: ObjectFormDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
@@ -267,12 +268,9 @@ export const ObjectFormDialog = ({
     };
   }, [mode, db, type]);
 
-  // Where the created object is filed: the chosen collection, nothing at all when the caller holds
-  // it, or the space root (an absent target) when the picker names a database.
-  const fileTarget = useMemo(
-    () => (unfiled ? SpaceOperation.Unfiled : Collection.isCollection(target) ? target : undefined),
-    [unfiled, target],
-  );
+  // Who holds the created object: the caller's holder when it named one, otherwise the chosen
+  // collection, or the space root (an absent target) when the picker names a database.
+  const fileTarget = useMemo(() => holder ?? (Collection.isCollection(target) ? target : undefined), [holder, target]);
 
   const handleConfirm = useCallback(() => {
     if (!object || !target) {
