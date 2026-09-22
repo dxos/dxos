@@ -171,7 +171,7 @@ const readRollup = (pid) => {
     }
     for (const line of readFileSync(`/proc/${pid}/smaps_rollup`, 'utf8').split('\n')) {
       const field = line.match(
-        /^(Pss|Pss_Anon|Pss_File|Pss_Shmem|Shared_Clean|Shared_Dirty|Private_Clean|Private_Dirty):\s+(\d+) kB/,
+        /^(Pss|Pss_Anon|Pss_File|Pss_Shmem|Shared_Clean|Shared_Dirty|Private_Clean|Private_Dirty|SwapPss):\s+(\d+) kB/,
       );
       if (field) {
         rollup[field[1]] = Number(field[2]) * 1024;
@@ -204,7 +204,12 @@ const browserPids = () => {
           // resolved one where Playwright's `executablePath()` may be a link.
           const argv0 = readFileSync(`/proc/${entry}/cmdline`, 'utf8').split(/[\0\s]/)[0];
           return path.basename(argv0) === executable;
-        } catch {
+        } catch (error) {
+          // A process that exited mid-scan is ordinary; anything else drops a browser
+          // process from the sample, and a silent drop reads as memory nobody holds.
+          if (error.code !== 'ENOENT' && error.code !== 'ESRCH') {
+            console.error(`  cannot read /proc/${entry}/cmdline: ${error.code ?? error.message}`);
+          }
           return false;
         }
       })
@@ -726,34 +731,15 @@ try {
       }
     }
     const dirtyBytes = Object.values(regions).reduce((total, bytes) => total + bytes, 0);
-    // The kernel's own rollup beside the per-mapping sum, because the two answer
-    // different questions and a residual is only real if they disagree: `RssShmem`
-    // is memory the process maps but does not privately own, and memory-infra's
-    // private footprint on Linux counts it, while `Private_*` by definition does not.
-    const rollup = {};
-    try {
-      for (const line of readFileSync(`/proc/${pid}/status`, 'utf8').split('\n')) {
-        const field = line.match(/^(VmRSS|RssAnon|RssFile|RssShmem|VmSwap):\s+(\d+) kB/);
-        if (field) {
-          rollup[field[1]] = Number(field[2]) * 1024;
-        }
-      }
-      for (const line of readFileSync(`/proc/${pid}/smaps_rollup`, 'utf8').split('\n')) {
-        const field = line.match(
-          /^(Pss|Pss_Anon|Pss_File|Pss_Shmem|Shared_Clean|Shared_Dirty|Private_Clean|Private_Dirty):\s+(\d+) kB/,
-        );
-        if (field) {
-          rollup[field[1]] = Number(field[2]) * 1024;
-        }
-      }
-    } catch {
-      // A process that exited between the dump and this read; the regions still stand.
-    }
     return {
       regions: Object.fromEntries(Object.entries(regions).sort((a, b) => b[1] - a[1])),
       dirtyBytes,
       footprintBytes: dirtyBytes,
-      rollup,
+      // The kernel's own rollup beside the per-mapping sum, because the two answer
+      // different questions and a residual is only real if they disagree: `RssShmem`
+      // is memory the process maps but does not privately own, and memory-infra's
+      // private footprint on Linux counts it, while `Private_*` by definition does not.
+      rollup: readRollup(pid) ?? {},
     };
   };
 
