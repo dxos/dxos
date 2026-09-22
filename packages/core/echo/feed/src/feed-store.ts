@@ -157,10 +157,7 @@ export class FeedStore {
       }).pipe(Effect.withSpan('FeedStore.ensureFeed'), SpanAttributes.annotateSpace(spaceId)),
   );
 
-  /**
-   * Ensures cursor token exists for a space and returns it.
-   */
-  /** A space's token is written once and never changes, so one read per store instance serves every poll. */
+  /** Keyed by space; safe to hold unbounded and never invalidate because a space's token is written once. */
   readonly #cursorTokens = new Map<string, string>();
 
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(

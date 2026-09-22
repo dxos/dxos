@@ -175,11 +175,6 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
-  /**
-   * Set by every event the indexer's data sources read behind (saved documents, feed blocks,
-   * an unfinished batch) and cleared when a pass starts. An `updateIndexes` request that finds it
-   * clear has nothing to index: the pass in flight, if any, began after the last change.
-   */
   private _indexInputsChanged = true;
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
@@ -246,8 +241,7 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      // A query that reads a feed scope awaits indexing before its first result (see
-      // `QueryEntry.feedScoped`), so opening one is its own request reason.
+      // `QueryEntry.feedScoped` is what decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
     });
 
@@ -450,8 +444,6 @@ export class EchoHost extends Resource {
    * an unhandled rejection at the fire-and-forget originating caller. Other
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
-   *
-   * @param reason Attributes the pass on its trace span; a call that omits it contributes nothing.
    */
   async updateIndexes({
     secondaryIndexes = false,
@@ -460,8 +452,7 @@ export class EchoHost extends Resource {
     if (this._ctx.disposed) {
       return;
     }
-    // A pass in flight may schedule a continuation (it indexes in batches) or a change may land
-    // while it runs; both re-arm the flag, so the check repeats after every wait until it holds.
+    // A pass in flight re-arms the flag when it schedules a continuation, so the check repeats.
     while (this._indexInputsChanged || !this._indexesUpToDate) {
       if (reason) {
         this.#noteIndexRunReason(reason);

@@ -851,8 +851,6 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // Every poll validates the client's cursor against the space token, so the token is read from
-  // SQLite once per store and served from memory after that.
   it.effect('serves a space token from memory after its first read', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
