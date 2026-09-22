@@ -4,8 +4,7 @@
 
 //
 // Anchors as the scene engine's ports (MIGRATION.md §2.2): an anchor is a point relative to the shape's
-// centre, a port is a side and an offset along it. Function anchors stack per row, so their ports keep
-// their exact offset instead of snapping to the grid; the anchor id says which way a link may run.
+// centre, a port is a side and an offset along it; the anchor id says which way a link may run.
 //
 
 import { type Anchor } from '@dxos/react-ui-canvas-editor';
@@ -26,7 +25,6 @@ export const anchorsToPorts = (anchors: Record<string, Anchor>, size: Size): Por
       id,
       side,
       offset: Math.min(Math.max(along, 0), 1),
-      snap: false,
       ...(kind === 'input' ? { accepts: 'in' as const } : kind === 'output' ? { accepts: 'out' as const } : {}),
     };
   });

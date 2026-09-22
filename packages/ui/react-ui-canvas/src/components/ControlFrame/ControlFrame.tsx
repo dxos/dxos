@@ -64,10 +64,8 @@ export type ControlFrameProps = {
   selectedPoint?: ControlPointRef;
   zoom: number;
   drag?: Drag;
-  /** Show every node's ports (a link tool); otherwise only the hovered node's, and only while `connect` holds. */
+  /** Show every node's ports (a link tool); otherwise only the hovered node's. */
   showPorts: boolean;
-  /** The command key is held: hovering a node reveals its ports so a link can start from one. */
-  connect: boolean;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -86,7 +84,6 @@ export const ControlFrame = memo(
     zoom,
     drag,
     showPorts,
-    connect,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -99,12 +96,11 @@ export const ControlFrame = memo(
     const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
-    // With a link tool every node offers its ports; otherwise ports stay out of the way until the command
-    // key is held over a node (or a link is being dragged, when every node under the pointer is a target).
-    const linking = drag?.kind === 'link' || drag?.kind === 'end';
+    // With a link tool every node offers its ports; otherwise only the node under the pointer does, so
+    // ports stay out of the way of everything but the node a link could start from.
     const portNodes = new Set<Node>(showPorts && capabilities.link ? Object.values(scene.nodes) : []);
     const hovered = hover ? scene.nodes[hover] : undefined;
-    if (hovered && capabilities.link && (connect || linking)) {
+    if (hovered && capabilities.link) {
       portNodes.add(hovered);
     }
     // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.

@@ -13,7 +13,7 @@ import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { createSceneTree } from '../../utils/testing.ts';
-import { Properties } from '../Properties/Properties.tsx';
+import { Properties } from '../Properties/index.ts';
 import { SceneView } from './SceneView.tsx';
 
 /**

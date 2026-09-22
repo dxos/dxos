@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../model/registry.ts';
-import { type Bounds, MAJOR_GRID, type Port } from '../model/types.ts';
+import { type Bounds, type Port } from '../model/types.ts';
 import { defaultPorts, nodePorts, pairPorts, portAccepts, portPoint, sidePorts } from './ports.ts';
 import { curvePath, curvePoint } from './route.ts';
 import { createNode } from './shapes.ts';
@@ -35,33 +35,30 @@ describe('ports', () => {
     expect(sidePorts(2).map((port) => port.offset)).toEqual([1 / 3, 2 / 3, 1 / 3, 2 / 3, 1 / 3, 2 / 3, 1 / 3, 2 / 3]);
   });
 
-  test('portPoint snaps the port to the major grid line nearest its offset, within the side', ({ expect }) => {
+  test('portPoint places the port exactly at its offset along the side', ({ expect }) => {
     expect(portPoint(left, { id: 'e2', side: 'e', offset: 0.5 })).toEqual({ x: 256, y: 128 });
     expect(portPoint(left, { id: 'n1', side: 'n', offset: 0.25 })).toEqual({ x: 64, y: 0 });
-    // Off-grid offsets and frames snap to the absolute grid.
+    // An off-grid offset or frame stays off the grid rather than jumping to a line.
     expect(portPoint({ x: 40, y: 0, width: 100, height: 100 }, { id: 'n1', side: 'n', offset: 0.25 })).toEqual({
-      x: 64,
+      x: 65,
       y: 0,
     });
-    // Never a corner: the nearest grid line inside the side wins.
     expect(portPoint({ x: 0, y: 0, width: 100, height: 100 }, { id: 'e3', side: 'e', offset: 0.9 })).toEqual({
       x: 100,
-      y: 64,
+      y: 90,
     });
-    // A side with no grid line inside puts the port at its centre.
+    // A side shorter than a grid cell still spreads its ports.
     expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, { id: 'n1', side: 'n', offset: 0.25 })).toEqual({
-      x: 32,
+      x: 16,
       y: 0,
     });
-    // A port that opts out of snapping sits exactly at its offset, however small the side.
-    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, { id: 'w', side: 'w', offset: 0.3, snap: false })).toEqual({
+    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, { id: 'w', side: 'w', offset: 0.3 })).toEqual({
       x: 0,
       y: 19.2,
     });
-    expect(portPoint(left, { id: 'e2', side: 'e', offset: 0.5 }, 1)).toEqual({ x: 256, y: 128 });
   });
 
-  test('nodePorts collapses ports that snap to the same point and honours the type count', ({ expect }) => {
+  test('nodePorts keeps every distinct point and honours the type count', ({ expect }) => {
     const wide = createNode({
       type: 'rect',
       id: 'r',
@@ -70,10 +67,10 @@ describe('ports', () => {
       size: { width: 256, height: 128 },
     });
     const ports = nodePorts(defaultNodeRegistry, wide);
-    // North keeps three (64, 128, 192); the east side holds one grid line (64), so its three collapse into `e2`.
+    // Three to a side, wherever the side's length puts them (north at 64, 128, 192; east at 32, 64, 96).
     expect(ports.filter((port) => port.side === 'n').map((port) => port.id)).toEqual(['n2', 'n1', 'n3']);
-    expect(ports.filter((port) => port.side === 'e').map((port) => port.id)).toEqual(['e2']);
-    // One cell wide: no grid line inside any side, so each side keeps its centre port only.
+    expect(ports.filter((port) => port.side === 'e').map((port) => port.id)).toEqual(['e2', 'e1', 'e3']);
+    // One cell wide keeps all three a side too: the offsets no longer collapse onto one grid line.
     const narrow = createNode({
       type: 'rect',
       id: 'r',
@@ -81,10 +78,23 @@ describe('ports', () => {
       center: { x: 32, y: 32 },
       size: { width: 64, height: 64 },
     });
-    expect(nodePorts(defaultNodeRegistry, narrow).map((port) => port.id)).toEqual(['n2', 'e2', 's2', 'w2']);
+    expect(nodePorts(defaultNodeRegistry, narrow).map((port) => port.side)).toEqual([
+      ...'nnn',
+      ...'eee',
+      ...'sss',
+      ...'www',
+    ]);
     const ellipse = createNode({ type: 'ellipse', id: 'e', z: 'a', center: { x: 128, y: 128 } });
     expect(nodePorts(defaultNodeRegistry, ellipse).map((port) => port.id)).toEqual(['n1', 'e1', 's1', 'w1']);
-    expect(MAJOR_GRID).toBe(64);
+    // Two ports at one point collapse to the first, so a definition cannot stack them.
+    const stacked = {
+      ...narrow,
+      ports: [
+        { id: 'a', side: 'n' as const, offset: 0.5 },
+        { id: 'b', side: 'n' as const, offset: 0.5 },
+      ],
+    };
+    expect(nodePorts(defaultNodeRegistry, stacked).map((port) => port.id)).toEqual(['a']);
   });
 
   test('automatic pairing picks the closest pair and re-pairs after a move', ({ expect }) => {

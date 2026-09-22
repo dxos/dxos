@@ -95,7 +95,6 @@ describe('compute scene', () => {
     const outputs = ports.filter((port) => port.accepts === 'out');
     expect(inputs.map((port) => port.side)).toEqual(['w', 'w', 'w']);
     expect(outputs.map((port) => port.side)).toEqual(['e']);
-    expect(inputs.every((port) => port.snap === false)).toBe(true);
     // Rows keep their order down the side.
     const offsets = inputs.map((port) => port.offset);
     expect([...offsets].sort((left, right) => left - right)).toEqual(offsets);

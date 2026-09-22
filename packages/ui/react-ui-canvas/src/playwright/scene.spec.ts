@@ -68,15 +68,14 @@ test.describe('SceneView', () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
   });
 
-  test('hovering outlines the node, the command key reveals its ports and D labels every frame', async () => {
+  test('hovering outlines the node and reveals its ports, and D labels every frame', async () => {
+    const ports = page.locator('[data-testid="scene-view"] circle.cursor-crosshair');
+    await expect(ports).toHaveCount(0);
     const box = await scene.box(scene.node('scene:root/a'));
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect(scene.node('scene:root/a')).toHaveClass(/border-primary-500\/50/);
-    const ports = page.locator('[data-testid="scene-view"] circle.cursor-crosshair');
-    await expect(ports).toHaveCount(0);
-    await page.keyboard.down('Meta');
     await expect(ports).not.toHaveCount(0);
-    await page.keyboard.up('Meta');
+    await page.mouse.move(box.x + box.width + 200, box.y + box.height + 200);
     await expect(ports).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press('d');
@@ -174,9 +173,9 @@ test.describe('SceneView', () => {
     await scene.clickNode('scene:root/a');
     expect(await scene.selectedNodes()).toEqual(['scene:root/a']);
     await expect(page.locator('[data-testid="scene-view"] svg rect[style*="cursor"]')).toHaveCount(0);
-    await page.keyboard.down('Meta');
+    const hovered = await scene.box(scene.node('scene:root/a'));
+    await page.mouse.move(hovered.x + hovered.width / 2, hovered.y + hovered.height / 2);
     await expect(page.locator('[data-testid="scene-view"] circle.cursor-crosshair')).toHaveCount(0);
-    await page.keyboard.up('Meta');
     await page.keyboard.press('Delete');
     expect(await scene.nodeCount()).toBe(before);
     // Only the select and pan tools remain, and nothing on the toolbar can change the scene.

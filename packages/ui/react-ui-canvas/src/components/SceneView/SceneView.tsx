@@ -24,7 +24,7 @@ import {
   type SceneViewAtoms,
   createSceneViewAtoms,
 } from '../../model/atoms.ts';
-import { hasCommandKey, isCommandKey, isToolKey, keyAction } from '../../model/keys.ts';
+import { isToolKey, keyAction } from '../../model/keys.ts';
 import {
   type FreehandProjectionOptions,
   type Projection,
@@ -96,9 +96,6 @@ const AUTO_DRILL_MS = 150;
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
 const NAVIGATION_SETTLE_MS = 150;
 const FIT_INSET = 40;
-
-/** Snapping that does nothing, for the geometry a gesture shows while it lasts. */
-const unsnapped = (value: number) => value;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
 /**
@@ -185,25 +182,6 @@ export const SceneView = ({
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
 
-  // The command key held reveals the hovered node's ports; tracked on the window so a press without pointer
-  // movement shows them, and cleared on blur so a switch away never leaves them stuck on.
-  const [connect, setConnect] = useState(false);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (isCommandKey(event.key)) {
-        setConnect(event.type === 'keydown');
-      }
-    };
-    const onBlur = () => setConnect(false);
-    window.addEventListener('keydown', onKey);
-    window.addEventListener('keyup', onKey);
-    window.addEventListener('blur', onBlur);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('keyup', onKey);
-      window.removeEventListener('blur', onBlur);
-    };
-  }, []);
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
   const clipboard = useAtomValue(atoms.clipboard);
@@ -539,7 +517,8 @@ export const SceneView = ({
         return;
       } else if (currentTool.kind === 'node') {
         if (capabilities.create) {
-          startDrag({ kind: 'create', type: currentTool.type, from: point, to: point }, event);
+          const from = { x: snap(point.x), y: snap(point.y) };
+          startDrag({ kind: 'create', type: currentTool.type, from, to: from }, event);
         }
       } else if (currentTool.kind === 'link') {
         // A link tool on empty canvas draws a free-ended link (decision 3); dropping on a node attaches that end.
@@ -557,7 +536,7 @@ export const SceneView = ({
         startDrag({ kind: 'marquee', from: point, to: point, mode }, event);
       }
     },
-    [registry, atoms.tool, toScene, startDrag, select, capabilities.create, capabilities.link],
+    [registry, atoms.tool, toScene, startDrag, select, capabilities.create, capabilities.link, snap],
   );
 
   /** Click selection shared by nodes and links: shift toggles, a plain click on an unselected element replaces. */
@@ -612,10 +591,7 @@ export const SceneView = ({
       }
       event.stopPropagation();
       const start = nodeBounds(node);
-      startDrag(
-        { kind: 'resize', id: node.id, handle, start, delta: { x: 0, y: 0 }, symmetric: false, bounds: start },
-        event,
-      );
+      startDrag({ kind: 'resize', id: node.id, handle, start, bounds: start }, event);
     },
     [capabilities.resize, startDrag],
   );
@@ -845,21 +821,6 @@ export const SceneView = ({
     [registry, atoms.camera, atoms.hover, scene],
   );
 
-  /** The bounds a resize drag makes of its node, its moving edges through `snapEdge`. */
-  const resized = useCallback(
-    (current: Extract<Drag, { kind: 'resize' }>, snapEdge: (value: number) => number): Bounds => {
-      const node = scene.nodes[current.id];
-      const def = node && nodeDef(nodeRegistry, node);
-      return resizeBounds(current.start, current.handle, current.delta, {
-        minSize: def?.minSize ?? { width: major, height: major },
-        maxSize: def?.maxSize,
-        symmetric: current.symmetric,
-        snap: snapEdge,
-      });
-    },
-    [scene.nodes, nodeRegistry, major],
-  );
-
   const onPointerMove = useCallback(
     (event: React.PointerEvent) => {
       const current = registry.get(atoms.drag);
@@ -867,7 +828,6 @@ export const SceneView = ({
         if (!navigatingRef.current) {
           updateHover(toScene(event));
         }
-        setConnect(hasCommandKey(event));
         return;
       }
       switch (current.kind) {
@@ -881,36 +841,51 @@ export const SceneView = ({
         }
         case 'marquee':
         case 'create': {
-          setDrag({ ...current, to: toScene(event) });
+          const point = toScene(event);
+          setDrag({ ...current, to: current.kind === 'create' ? { x: snap(point.x), y: snap(point.y) } : point });
           break;
         }
         case 'move': {
+          // Snap the pressed node's top-left to the minor grid; the selection moves by the same offset.
           const point = toScene(event);
-          setDrag({ ...current, delta: { x: point.x - current.origin.x, y: point.y - current.origin.y } });
+          const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
+          setDrag({
+            ...current,
+            delta: {
+              x: snapMinor(current.anchor.x + raw.x) - current.anchor.x,
+              y: snapMinor(current.anchor.y + raw.y) - current.anchor.y,
+            },
+          });
           break;
         }
         case 'resize': {
           const point = toScene(event);
           const anchor = handlePoint(current.start, current.handle);
-          const next = {
-            ...current,
-            delta: { x: point.x - anchor.x, y: point.y - anchor.y },
+          const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
+          const node = scene.nodes[current.id];
+          const def = node && nodeDef(nodeRegistry, node);
+          const bounds = resizeBounds(current.start, current.handle, delta, {
+            minSize: def?.minSize ?? { width: major, height: major },
+            maxSize: def?.maxSize,
             symmetric: event.shiftKey,
-          };
-          setDrag({ ...next, bounds: resized(next, unsnapped) });
+            snap,
+          });
+          setDrag({ ...current, bounds });
           break;
         }
         case 'link': {
+          // The band follows the pointer exactly; it snaps as it lands (`settle`). A free source keeps
+          // facing the far end.
           const point = toScene(event);
           const target = linkTarget(point, endpointNode(current.source), 'in');
-          // A free source keeps facing the far end.
           const fromSide = isPointEndpoint(current.source) ? sideToward(current.from, point) : current.fromSide;
           setDrag({ ...current, to: point, fromSide, target });
           break;
         }
         case 'point': {
+          const point = toScene(event);
           const points = [...current.points];
-          points[current.index] = toScene(event);
+          points[current.index] = { x: snap(point.x), y: snap(point.y) };
           setDrag({ ...current, points });
           break;
         }
@@ -924,29 +899,32 @@ export const SceneView = ({
         }
       }
     },
-    [registry, atoms.drag, atoms.camera, setCamera, setDrag, toScene, scene.links, resized, linkTarget, updateHover],
+    [
+      registry,
+      atoms.drag,
+      atoms.camera,
+      setCamera,
+      setDrag,
+      toScene,
+      snap,
+      snapMinor,
+      scene.nodes,
+      scene.links,
+      nodeRegistry,
+      major,
+      linkTarget,
+      updateHover,
+    ],
   );
 
   /**
-   * A gesture's geometry follows the pointer exactly; this is where it snaps, once, as it lands: a node's
-   * top-left to the minor grid, everything else to the major grid, and nothing that is dropped on a node.
+   * A link band follows the pointer exactly while it is drawn; this is where its free ends snap to the
+   * major grid, once, as it lands. An end dropped on a node keeps the node.
    */
   const settle = useCallback(
     (current: Drag): Drag => {
       const snapPoint = (point: Point): Point => ({ x: snap(point.x), y: snap(point.y) });
       switch (current.kind) {
-        case 'create':
-          return { ...current, from: snapPoint(current.from), to: snapPoint(current.to) };
-        case 'move':
-          return {
-            ...current,
-            delta: {
-              x: snapMinor(current.anchor.x + current.delta.x) - current.anchor.x,
-              y: snapMinor(current.anchor.y + current.delta.y) - current.anchor.y,
-            },
-          };
-        case 'resize':
-          return { ...current, bounds: resized(current, snap) };
         case 'link': {
           const free = isPointEndpoint(current.source);
           const from = free ? snapPoint(current.from) : current.from;
@@ -957,18 +935,13 @@ export const SceneView = ({
             to: current.target ? current.to : snapPoint(current.to),
           };
         }
-        case 'point': {
-          const points = [...current.points];
-          points[current.index] = snapPoint(points[current.index]);
-          return { ...current, points };
-        }
         case 'end':
           return current.target ? current : { ...current, to: snapPoint(current.to) };
         default:
           return current;
       }
     },
-    [snap, snapMinor, resized],
+    [snap],
   );
 
   // The node the current create gesture made, re-framed by every ghost frame and by the drop, so a
@@ -1549,7 +1522,6 @@ export const SceneView = ({
           drag={drag}
           capabilities={capabilities}
           showPorts={tool.kind === 'link'}
-          connect={connect}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}

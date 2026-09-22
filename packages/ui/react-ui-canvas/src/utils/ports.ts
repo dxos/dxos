@@ -9,15 +9,7 @@
 //
 
 import { type NodeRegistry, nodeDef } from '../model/registry.ts';
-import {
-  type Bounds,
-  MAJOR_GRID,
-  type Node,
-  type Point,
-  type Port,
-  type PortDirection,
-  type Side,
-} from '../model/types.ts';
+import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '../model/types.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
@@ -42,7 +34,7 @@ export const defaultPorts: readonly Port[] = sidePorts();
 
 /**
  * A node's ports: its own when it carries them, else its type's, else `portsPerSide` of the type. Ports
- * that snap onto the same grid point collapse to the first (a small node keeps fewer ports).
+ * landing on the same point collapse to the first, so a definition cannot stack two at one place.
  */
 export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
   const def = nodeDef(registry, node);
@@ -60,35 +52,19 @@ export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =
   });
 };
 
-/**
- * A port's point on the frame: its offset along the side, snapped to the nearest major grid line inside
- * the side unless the port opts out. A side too short to contain a grid line puts every snapped port at
- * its centre; a snapped port is never at a corner.
- */
-export const portPoint = (bounds: Bounds, port: Port, unit = MAJOR_GRID): Point => {
-  const place = port.snap === false ? exact : along;
+/** A port's point on the frame: exactly its offset along the side, whatever the grid. */
+export const portPoint = (bounds: Bounds, port: Port): Point => {
+  const along = (origin: number, length: number) => origin + length * port.offset;
   switch (port.side) {
     case 'n':
-      return { x: place(bounds.x, bounds.width, port.offset, unit), y: bounds.y };
+      return { x: along(bounds.x, bounds.width), y: bounds.y };
     case 's':
-      return { x: place(bounds.x, bounds.width, port.offset, unit), y: bounds.y + bounds.height };
+      return { x: along(bounds.x, bounds.width), y: bounds.y + bounds.height };
     case 'w':
-      return { x: bounds.x, y: place(bounds.y, bounds.height, port.offset, unit) };
+      return { x: bounds.x, y: along(bounds.y, bounds.height) };
     case 'e':
-      return { x: bounds.x + bounds.width, y: place(bounds.y, bounds.height, port.offset, unit) };
+      return { x: bounds.x + bounds.width, y: along(bounds.y, bounds.height) };
   }
-};
-
-const exact = (origin: number, length: number, offset: number): number => origin + length * offset;
-
-const along = (origin: number, length: number, offset: number, unit: number): number => {
-  const position = origin + length * offset;
-  const first = Math.floor(origin / unit) * unit + unit;
-  const last = Math.ceil((origin + length) / unit) * unit - unit;
-  if (first > last) {
-    return origin + length / 2;
-  }
-  return Math.min(Math.max(Math.round(position / unit) * unit, first), last);
 };
 
 const OPPOSITE: Record<Side, Side> = { n: 's', s: 'n', e: 'w', w: 'e' };
