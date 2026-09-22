@@ -419,7 +419,47 @@ export enum EdgeWebsocketProtocol {
    * Enables message framing and muxing by service-id.
    */
   V1 = 'edge-ws-v1',
+  /**
+   * Adds per-channel credit-based flow control on top of V1 framing.
+   *
+   * Must be negotiated rather than sniffed: a V1 reader tests only `FLAG_SEGMENT_SEQ`, so it decodes
+   * a V2 credit frame as a message body and throws. See docs/design/flow-control/DESIGN.md in
+   * dxos/edge.
+   */
+  V2 = 'edge-ws-v2',
 }
+
+/**
+ * Per-channel credit window in payload bytes, by service.
+ *
+ * Sized from the bandwidth-delay product: below `throughput * RTT` the window caps throughput
+ * however fast either end is. Replication is throughput-bound; swarm and signal are low-volume and
+ * latency-sensitive, so a large window would only delay the backpressure signal.
+ */
+export const EDGE_FLOW_CONTROL_WINDOWS = {
+  replicator: 4 * 1024 * 1024,
+  swarm: 256 * 1024,
+  default: 1024 * 1024,
+} as const;
+
+/** Credit window for the channel carrying `serviceId`, per {@link EDGE_FLOW_CONTROL_WINDOWS}. */
+export const edgeFlowControlWindow = (serviceId?: string): number => {
+  if (!serviceId) {
+    return EDGE_FLOW_CONTROL_WINDOWS.default;
+  }
+  const [serviceName] = serviceId.split(':');
+  switch (serviceName) {
+    case EdgeService.SUBDUCTION_REPLICATOR:
+    case EdgeService.FEED_REPLICATOR:
+    case EdgeService.QUEUE_REPLICATOR:
+      return EDGE_FLOW_CONTROL_WINDOWS.replicator;
+    case EdgeService.SWARM:
+    case EdgeService.SIGNAL:
+      return EDGE_FLOW_CONTROL_WINDOWS.swarm;
+    default:
+      return EDGE_FLOW_CONTROL_WINDOWS.default;
+  }
+};
 
 // TODO(mykola): Reconcile with type in EDGE repo.
 export type EdgeStatus = {

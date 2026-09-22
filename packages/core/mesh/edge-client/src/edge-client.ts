@@ -17,7 +17,7 @@ import {
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
-import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
+import { EdgeCredentialsHeaderCodec, edgeFlowControlWindow } from '@dxos/protocols';
 import {
   type EdgeStatus,
   EdgeStatus_ConnectionState,
@@ -46,6 +46,23 @@ const STATUS_REFRESH_INTERVAL = 1000;
 
 export type MessageListener = (message: Message) => void;
 export type ReconnectListener = () => void;
+
+export type EdgeStreamOptions = {
+  /**
+   * Service every message on this stream is addressed to. It also selects the mux channel, and so
+   * the credit window the stream is bounded by.
+   */
+  serviceId: string;
+
+  /**
+   * Bytes the stream buffers before `writer.ready` stops resolving. Defaults to the service's
+   * credit window, which is the point at which the peer stops granting anyway.
+   */
+  highWaterMark?: number;
+
+  /** Aborts the stream, failing any write waiting on credit. */
+  signal?: AbortSignal;
+};
 
 export type MessengerConfig = {
   socketEndpoint: string;
@@ -155,6 +172,21 @@ export class EdgeClient extends Resource implements EdgeConnection {
     });
   }
 
+  /** @see EdgeWsConnection.pendingSendBytes */
+  get pendingSendBytes(): number {
+    return this._currentConnection?.pendingSendBytes ?? 0;
+  }
+
+  /** @see EdgeWsConnection.unacknowledgedBytes */
+  get unacknowledgedBytes(): number {
+    return this._currentConnection?.unacknowledgedBytes ?? 0;
+  }
+
+  /** @see EdgeWsConnection.flowControlEnabled */
+  get flowControlEnabled(): boolean {
+    return this._currentConnection?.flowControlEnabled ?? false;
+  }
+
   get identityDid() {
     return this._identity.identityDid;
   }
@@ -177,6 +209,15 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
   public async send(ctx: Context, message: Message) {
+    const connection = await this._prepareSend(ctx, message);
+    connection.send(message);
+  }
+
+  /**
+   * Wait for a live connection, validate the message against this identity, and stamp its trace
+   * context. Shared so the awaited path cannot drift from the fire-and-forget one.
+   */
+  private async _prepareSend(ctx: Context, message: Message): Promise<EdgeWsConnection> {
     if (this._ready.state !== TriggerState.RESOLVED) {
       log('waiting for websocket');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
@@ -203,7 +244,50 @@ export class EdgeClient extends Resource implements EdgeConnection {
       };
     }
 
-    this._currentConnection.send(message);
+    return this._currentConnection;
+  }
+
+  /**
+   * {@link send}, resolving once the message has reached the socket rather than once it is queued.
+   *
+   * Under flow control that waits for the peer's credit, which is what {@link createStream} builds
+   * backpressure out of.
+   */
+  public async sendAndWait(ctx: Context, message: Message): Promise<void> {
+    const connection = await this._prepareSend(ctx, message);
+    await connection.sendAndWait(message);
+  }
+
+  /**
+   * A stream of outbound messages on one service, with real end-to-end backpressure.
+   *
+   * Each write resolves only once the message has reached the socket, which under `edge-ws-v2`
+   * requires the peer to have extended credit for it -- so `writer.ready` reflects whether EDGE is
+   * keeping up, and `pipeTo` slows its source instead of buffering without bound. Without flow
+   * control negotiated the writes resolve as fast as the socket accepts them, the same as
+   * {@link send}.
+   *
+   * The stream is bound to the connection live at creation: a reconnect fails subsequent writes
+   * rather than silently resuming on a socket whose credit state is unrelated, so callers recreate
+   * it from `onReconnected`.
+   */
+  public createStream({ serviceId, highWaterMark, signal }: EdgeStreamOptions): WritableStream<Message> {
+    return new WritableStream<Message>(
+      {
+        write: async (message) => {
+          signal?.throwIfAborted();
+          message.serviceId ??= serviceId;
+          await this.sendAndWait(Context.default(), message);
+        },
+      },
+      {
+        highWaterMark: highWaterMark ?? edgeFlowControlWindow(serviceId),
+        // Bytes, not messages: every limit in play (the credit window, the 1MB frame cap, the 32MB
+        // message cap) is a byte budget, so counting messages would make the mark meaningless
+        // across mixed sizes.
+        size: (message) => message.payload?.value?.byteLength ?? 0,
+      },
+    );
   }
 
   public onMessage(listener: MessageListener) {
