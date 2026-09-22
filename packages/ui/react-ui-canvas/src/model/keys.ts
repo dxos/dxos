@@ -70,9 +70,6 @@ export type KeyEventLike = {
 /** The command modifier, held: the same test on a pointer event reveals a node's ports for linking. */
 export const hasCommandKey = (event: { metaKey: boolean; ctrlKey: boolean }): boolean => event.metaKey || event.ctrlKey;
 
-/** Whether the event's key is the command modifier itself (a key-down or key-up of it). */
-export const isCommandKey = (key: string): boolean => key === 'Meta' || key === 'Control';
-
 export const matchesBinding = (event: KeyEventLike, binding: KeyBinding): boolean => {
   const key =
     binding.key.length === 1 ? event.key.toLowerCase() === binding.key.toLowerCase() : event.key === binding.key;
