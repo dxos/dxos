@@ -94,118 +94,6 @@ describe('toPosthogEvent', () => {
   });
 });
 
-const row = (overrides: Partial<StageRow> = {}): StageRow => ({
-  flow: 'projects-tasks',
-  stage: 'open-tasks',
-  stageIndex: 3,
-  mode: 'measure',
-  scale: 'tasks=2000,depth=3,projects=5',
-  iteration: 0,
-  ok: true,
-  wallMs: 1234,
-  cpuMsTotal: 4321,
-  cpuMsByProcess: { 'renderer:42': 3000, 'utility:43': 1321 },
-  thread: {
-    taskMs: 900,
-    scriptMs: 700,
-    layoutMs: 120,
-    recalcStyleMs: 80,
-    v8CompileMs: 10,
-    threadTimeMs: 950,
-    processTimeMs: 1100,
-    layoutCount: 12,
-    recalcStyleCount: 30,
-  },
-  threadByRealm: [
-    { kind: 'page', name: 'page', ...EMPTY_REALM_THREAD },
-    { kind: 'worker', name: 'worker:dedicated.js', ...EMPTY_REALM_THREAD },
-  ],
-  heap: [
-    {
-      kind: 'page',
-      name: 'page',
-      usedBytes: 50_000_000,
-      totalBytes: 80_000_000,
-      backingBytes: 4_000_000,
-      wasmBytes: 16_777_216,
-      wasmInstances: 2,
-    },
-    {
-      kind: 'shared_worker',
-      name: 'shared_worker:worker.js',
-      usedBytes: 120_000_000,
-      totalBytes: 160_000_000,
-      backingBytes: 9_000_000,
-      wasmBytes: 67_108_864,
-      wasmInstances: 3,
-    },
-  ],
-  heapUsedTotalBytes: 170_000_000,
-  footprint: [
-    { pid: 10, process: 'Renderer', bytes: 300_000_000 },
-    { pid: 11, process: 'Renderer', bytes: 120_000_000 },
-    { pid: 12, process: 'GPU Process', bytes: 80_000_000 },
-  ],
-  appFootprintBytes: 420_000_000,
-  domNodes: 24_000,
-  domListeners: 3_100,
-  domDocuments: 2,
-  network: {
-    codeBytes: 1_000,
-    apiBytes: 2_000,
-    otherBytes: 3,
-    requests: 9,
-    apiRequests: 4,
-    edgeApiBytes: 1_500,
-    edgeApiRequests: 3,
-    edgeSocketBytes: 640_000,
-    edgeSocketFrames: 210,
-    analyticsBytes: 500,
-  },
-  disk: { readBytes: 2_400_000, writeBytes: 900_000, reads: 600, writes: 210, syncs: 18, realms: 1 },
-  rpc: [
-    {
-      kind: 'page',
-      name: 'page',
-      calls: 0,
-      queueWaitP95Ms: 0,
-      queueWaitMaxMs: 0,
-      serviceMaxMs: 0,
-      clientCalls: 140,
-      roundTripP95Ms: 90,
-      roundTripMaxMs: 460,
-      samples: 0,
-      clientSamples: 100,
-    },
-    {
-      kind: 'worker',
-      name: 'worker:dedicated.js',
-      calls: 140,
-      queueWaitP95Ms: 55,
-      queueWaitMaxMs: 380,
-      serviceMaxMs: 120,
-      clientCalls: 0,
-      roundTripP95Ms: 0,
-      roundTripMaxMs: 0,
-      samples: 100,
-      clientSamples: 0,
-    },
-  ],
-  responsiveness: {
-    longTaskCount: 5,
-    longTaskMaxMs: 400,
-    tbtMs: 700,
-    lagP95Ms: 60,
-    lagMaxMs: 812,
-    lagByRealm: [
-      { kind: 'page', name: 'page', p95Ms: 40, maxMs: 90, count: 12 },
-      { kind: 'worker', name: 'worker:dedicated.js', p95Ms: 300, maxMs: 812, count: 4 },
-    ],
-  },
-  comparability,
-  ...overrides,
-});
-
 describe('writePosthogBatch', () => {
   test('accumulates across iterations rather than truncating', ({ expect }) => {
     // The regression this exists for: the batch name carries the flow and mode but NOT the
@@ -453,6 +341,41 @@ describe('disjoint memory categories', () => {
     expect(split).toBe(event.properties.wasmBytesWorker);
   });
 
+  test('wasm the module map does not account for still lands in a bucket', ({ expect }) => {
+    // A realm can report bytes with no map — a probe predating per-module attribution does exactly
+    // that — and the libraries summing to zero against a non-zero total would make the partition
+    // this file documents false.
+    const event = toPosthogEvent(
+      row({
+        heap: [{ kind: 'worker', name: 'worker', usedBytes: 1, totalBytes: 2, wasmBytes: 9_000, wasmInstances: 1 }],
+      }),
+    );
+
+    expect(event.properties.wasmOtherBytesWorker).toBe(9_000);
+    expect(event.properties.wasmBytesWorker).toBe(9_000);
+  });
+
+  test('a partial module map has its remainder attributed rather than dropped', ({ expect }) => {
+    const event = toPosthogEvent(
+      row({
+        heap: [
+          {
+            kind: 'worker',
+            name: 'worker',
+            usedBytes: 1,
+            totalBytes: 2,
+            wasmBytes: 10_000,
+            wasmInstances: 2,
+            wasmByModule: { 'automerge_wasm_bg.wasm': 4_000 },
+          },
+        ],
+      }),
+    );
+
+    expect(event.properties.wasmAutomergeBytesWorker).toBe(4_000);
+    expect(event.properties.wasmOtherBytesWorker).toBe(6_000);
+  });
+
   test('an unrecognised module lands in Other rather than vanishing', ({ expect }) => {
     const event = toPosthogEvent(
       row({
@@ -473,4 +396,116 @@ describe('disjoint memory categories', () => {
     expect(event.properties.wasmOtherBytesTab).toBe(655_360);
     expect(event.properties.wasmAutomergeBytesTab).toBe(0);
   });
+});
+
+const row = (overrides: Partial<StageRow> = {}): StageRow => ({
+  flow: 'projects-tasks',
+  stage: 'open-tasks',
+  stageIndex: 3,
+  mode: 'measure',
+  scale: 'tasks=2000,depth=3,projects=5',
+  iteration: 0,
+  ok: true,
+  wallMs: 1234,
+  cpuMsTotal: 4321,
+  cpuMsByProcess: { 'renderer:42': 3000, 'utility:43': 1321 },
+  thread: {
+    taskMs: 900,
+    scriptMs: 700,
+    layoutMs: 120,
+    recalcStyleMs: 80,
+    v8CompileMs: 10,
+    threadTimeMs: 950,
+    processTimeMs: 1100,
+    layoutCount: 12,
+    recalcStyleCount: 30,
+  },
+  threadByRealm: [
+    { kind: 'page', name: 'page', ...EMPTY_REALM_THREAD },
+    { kind: 'worker', name: 'worker:dedicated.js', ...EMPTY_REALM_THREAD },
+  ],
+  heap: [
+    {
+      kind: 'page',
+      name: 'page',
+      usedBytes: 50_000_000,
+      totalBytes: 80_000_000,
+      backingBytes: 4_000_000,
+      wasmBytes: 16_777_216,
+      wasmInstances: 2,
+    },
+    {
+      kind: 'shared_worker',
+      name: 'shared_worker:worker.js',
+      usedBytes: 120_000_000,
+      totalBytes: 160_000_000,
+      backingBytes: 9_000_000,
+      wasmBytes: 67_108_864,
+      wasmInstances: 3,
+    },
+  ],
+  heapUsedTotalBytes: 170_000_000,
+  footprint: [
+    { pid: 10, process: 'Renderer', bytes: 300_000_000 },
+    { pid: 11, process: 'Renderer', bytes: 120_000_000 },
+    { pid: 12, process: 'GPU Process', bytes: 80_000_000 },
+  ],
+  appFootprintBytes: 420_000_000,
+  domNodes: 24_000,
+  domListeners: 3_100,
+  domDocuments: 2,
+  network: {
+    codeBytes: 1_000,
+    apiBytes: 2_000,
+    otherBytes: 3,
+    requests: 9,
+    apiRequests: 4,
+    edgeApiBytes: 1_500,
+    edgeApiRequests: 3,
+    edgeSocketBytes: 640_000,
+    edgeSocketFrames: 210,
+    analyticsBytes: 500,
+  },
+  disk: { readBytes: 2_400_000, writeBytes: 900_000, reads: 600, writes: 210, syncs: 18, realms: 1 },
+  rpc: [
+    {
+      kind: 'page',
+      name: 'page',
+      calls: 0,
+      queueWaitP95Ms: 0,
+      queueWaitMaxMs: 0,
+      serviceMaxMs: 0,
+      clientCalls: 140,
+      roundTripP95Ms: 90,
+      roundTripMaxMs: 460,
+      samples: 0,
+      clientSamples: 100,
+    },
+    {
+      kind: 'worker',
+      name: 'worker:dedicated.js',
+      calls: 140,
+      queueWaitP95Ms: 55,
+      queueWaitMaxMs: 380,
+      serviceMaxMs: 120,
+      clientCalls: 0,
+      roundTripP95Ms: 0,
+      roundTripMaxMs: 0,
+      samples: 100,
+      clientSamples: 0,
+    },
+  ],
+  responsiveness: {
+    longTaskCount: 5,
+    longTaskMaxMs: 400,
+    tbtMs: 700,
+    lagP95Ms: 60,
+    lagMaxMs: 812,
+    lagByRealm: [
+      { kind: 'page', name: 'page', p95Ms: 40, maxMs: 90, count: 12 },
+      { kind: 'worker', name: 'worker:dedicated.js', p95Ms: 300, maxMs: 812, count: 4 },
+    ],
+  },
+  comparability,
+  ...overrides,
 });

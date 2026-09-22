@@ -145,9 +145,16 @@ const wasmByLibrary = (readings: readonly HeapReading[]): Record<string, number>
     }
   }
   for (const reading of readings) {
+    let attributed = 0;
     for (const [module, bytes] of Object.entries<number>(reading.wasmByModule ?? {})) {
       columns[`wasm${wasmLibrary(module)}Bytes${REALM_SUFFIX[reading.kind]}`] += bytes;
+      attributed += bytes;
     }
+    // Whatever the module map does not account for lands in Other, so the four columns partition
+    // `wasmBytes` even when the map is absent or incomplete — a realm running a probe that predates
+    // per-module attribution reports bytes with no map at all, and without this the libraries would
+    // sum to zero against a non-zero total and the partition this file documents would be false.
+    columns[`wasmOtherBytes${REALM_SUFFIX[reading.kind]}`] += Math.max(0, (reading.wasmBytes ?? 0) - attributed);
   }
   return columns;
 };
