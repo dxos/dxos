@@ -22,8 +22,7 @@ import {
 /**
  * Plans by name, each importing its own spec module on demand.
  *
- * A static barrel import would load every plan's dependencies to run any one of them, and
- * `edge-sync` transitively pulls the function bundler (parsimmon), which fails to load as ESM.
+ * A static barrel import would load every plan's dependencies to run any one of them.
  */
 const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
   edgeStress: async () => new (await import('./spec/edge-stress/index.ts')).EdgeStress(),
