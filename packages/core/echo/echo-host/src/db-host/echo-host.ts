@@ -87,11 +87,11 @@ export type IndexRunReason =
   | 'documents-saved'
   | 'batch-continuation'
   | 'rpc-update-indexes'
-  | 'feed-query-open'
+  | 'feed-scoped-query'
   | 'epoch';
 
 /** Requests that drive the indexer directly, as opposed to the events that schedule it. */
-export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 'feed-query-open' | 'epoch'>;
+export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 'feed-scoped-query' | 'epoch'>;
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -248,7 +248,9 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      updateIndexes: () => this.updateIndexes({ reason: 'feed-query-open' }),
+      // A query that reads a feed scope awaits indexing before its first result (see
+      // `QueryEntry.feedScoped`), so opening one is its own request reason.
+      updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
     });
 
     this._dataService = new DataServiceImpl({
@@ -256,7 +258,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
-      updateIndexes: (request) => this.updateIndexes(request),
+      updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
@@ -445,10 +447,12 @@ export class EchoHost extends Resource {
    * an unhandled rejection at the fire-and-forget originating caller. Other
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
+   *
+   * @param reason Attributes the pass on its trace span; a call that omits it contributes nothing.
    */
   async updateIndexes({
     secondaryIndexes = false,
-    reason = 'rpc-update-indexes',
+    reason,
   }: { secondaryIndexes?: boolean; reason?: IndexRequestReason } = {}): Promise<void> {
     if (this._ctx.disposed) {
       return;
@@ -456,7 +460,9 @@ export class EchoHost extends Resource {
     // A pass in flight may schedule a continuation (it indexes in batches) or a change may land
     // while it runs; both re-arm the flag, so the check repeats after every wait until it holds.
     while (this._indexInputsChanged || !this._indexesUpToDate) {
-      this.#noteIndexRunReason(reason);
+      if (reason) {
+        this.#noteIndexRunReason(reason);
+      }
       await this._updateIndexes.runBlocking();
       if (this._ctx.disposed) {
         return;
