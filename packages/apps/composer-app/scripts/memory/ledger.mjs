@@ -17,7 +17,7 @@
 
 import { chromium } from '@playwright/test';
 import { execFileSync, spawn } from 'node:child_process';
-import { closeSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs';
+import { closeSync, mkdtempSync, openSync, readFileSync, readdirSync, rmSync, writeFileSync, writeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -153,6 +153,48 @@ class Cdp {
 }
 
 /**
+ * The kernel's memory rollup for one process.
+ *
+ * Read beside every dump because the two disagree: memory-infra's private
+ * footprint is a snapshot taken inside the process, while `Private_*` is what the
+ * kernel has actually charged to it, and an allocator that decommits after the
+ * dump moves the second without moving the first.
+ */
+const readRollup = (pid) => {
+  const rollup = {};
+  try {
+    for (const line of readFileSync(`/proc/${pid}/status`, 'utf8').split('\n')) {
+      const field = line.match(/^(VmRSS|RssAnon|RssFile|RssShmem|VmSwap):\s+(\d+) kB/);
+      if (field) {
+        rollup[field[1]] = Number(field[2]) * 1024;
+      }
+    }
+    for (const line of readFileSync(`/proc/${pid}/smaps_rollup`, 'utf8').split('\n')) {
+      const field = line.match(
+        /^(Pss|Pss_Anon|Pss_File|Pss_Shmem|Shared_Clean|Shared_Dirty|Private_Clean|Private_Dirty):\s+(\d+) kB/,
+      );
+      if (field) {
+        rollup[field[1]] = Number(field[2]) * 1024;
+      }
+    }
+  } catch {
+    // Not Linux, or a process that has exited; the caller reports what it has.
+  }
+  return Object.keys(rollup).length ? rollup : null;
+};
+
+/** Every live pid, for a rollup sample taken at the instant of a dump. */
+const livePids = () => {
+  try {
+    return readdirSync('/proc')
+      .filter((entry) => /^\d+$/.test(entry))
+      .map(Number);
+  } catch {
+    return [];
+  }
+};
+
+/**
  * One detailed dump keyed by pid, merging the separate events that carry the OS
  * totals and the allocator tree for the same process.
  */
@@ -173,7 +215,27 @@ const takeDump = async (pageWs, rawLabel = 'dump') => {
     transferMode: 'ReportEvents',
   });
   // `deterministic` forces a GC first, so the ledger describes live memory.
+  // Sampled on both sides of the dump, because `deterministic` forces a GC inside
+  // it: a rollup read afterwards describes a process that has already given the
+  // collected pages back, and the difference is memory the dump still counted.
+  const rollupsBefore = {};
+  for (const pid of livePids()) {
+    const rollup = readRollup(pid);
+    if (rollup) {
+      rollupsBefore[pid] = rollup;
+    }
+  }
   await cdp.send('Tracing.requestMemoryDump', { deterministic: true, levelOfDetail: 'detailed' });
+  // Sampled here rather than with the regions below, which run seconds later: a
+  // renderer keeps decommitting after the dump, and comparing a footprint against
+  // a rollup read afterwards reads that decommit as memory nobody can name.
+  const rollups = {};
+  for (const pid of livePids()) {
+    const rollup = readRollup(pid);
+    if (rollup) {
+      rollups[pid] = rollup;
+    }
+  }
   await new Promise((resolve) => setTimeout(resolve, 3000));
   await cdp.send('Tracing.end');
   await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 60_000))]);
@@ -232,7 +294,7 @@ const takeDump = async (pageWs, rawLabel = 'dump') => {
     writeFileSync(file, JSON.stringify(byPid));
     console.log(`  wrote raw dump ${file}`);
   }
-  return { byPid, kindByPid, frames: frames.filter((frame) => frame?.processId) };
+  return { byPid, kindByPid, rollups, rollupsBefore, frames: frames.filter((frame) => frame?.processId) };
 };
 
 if (detached && work) {
@@ -597,6 +659,80 @@ try {
   const parseSize = (text) => parseFloat(text) * (SIZE_UNITS[text.slice(-1)] ?? 1);
 
   /**
+   * The same closure, from `/proc/<pid>/smaps`, which is where CI runs.
+   *
+   * `vmmap` is macOS only, so every Linux run — the nightly perf flow included —
+   * had a residual with no instrument that could name it. Private dirty plus
+   * private clean plus swap IS the private footprint memory-infra reports, so
+   * these rows close the same books the allocator tree leaves open.
+   *
+   * Grouped by mapping rather than by allocator, because that is the only
+   * distinction the kernel makes: anonymous regions are whatever the allocators
+   * took from `mmap`, while a file-backed row is code or data paged in from a
+   * binary and is counted by no dump provider at all.
+   */
+  const readProcRegions = (pid) => {
+    let smaps;
+    try {
+      smaps = readFileSync(`/proc/${pid}/smaps`, 'utf8');
+    } catch {
+      return null;
+    }
+    const regions = {};
+    let group = null;
+    for (const line of smaps.split('\n')) {
+      const header = line.match(/^[0-9a-f]+-[0-9a-f]+ \S+ \S+ \S+ \S+\s*(.*)$/);
+      if (header) {
+        const mapping = header[1].trim();
+        // The basename alone: a renderer maps the same binary and the same locale
+        // pak through dozens of regions, and the absolute path makes the table
+        // unreadable without telling the reader anything the name does not.
+        group = mapping === '' ? '[anon]' : mapping.startsWith('[') ? mapping : path.basename(mapping);
+        continue;
+      }
+      const field = group && line.match(/^(Private_Dirty|Private_Clean|Swap):\s+(\d+) kB/);
+      if (field) {
+        regions[group] = (regions[group] ?? 0) + Number(field[2]) * 1024;
+      }
+    }
+    for (const [name, bytes] of Object.entries(regions)) {
+      if (bytes === 0) {
+        delete regions[name];
+      }
+    }
+    const dirtyBytes = Object.values(regions).reduce((total, bytes) => total + bytes, 0);
+    // The kernel's own rollup beside the per-mapping sum, because the two answer
+    // different questions and a residual is only real if they disagree: `RssShmem`
+    // is memory the process maps but does not privately own, and memory-infra's
+    // private footprint on Linux counts it, while `Private_*` by definition does not.
+    const rollup = {};
+    try {
+      for (const line of readFileSync(`/proc/${pid}/status`, 'utf8').split('\n')) {
+        const field = line.match(/^(VmRSS|RssAnon|RssFile|RssShmem|VmSwap):\s+(\d+) kB/);
+        if (field) {
+          rollup[field[1]] = Number(field[2]) * 1024;
+        }
+      }
+      for (const line of readFileSync(`/proc/${pid}/smaps_rollup`, 'utf8').split('\n')) {
+        const field = line.match(
+          /^(Pss|Pss_Anon|Pss_File|Pss_Shmem|Shared_Clean|Shared_Dirty|Private_Clean|Private_Dirty):\s+(\d+) kB/,
+        );
+        if (field) {
+          rollup[field[1]] = Number(field[2]) * 1024;
+        }
+      }
+    } catch {
+      // A process that exited between the dump and this read; the regions still stand.
+    }
+    return {
+      regions: Object.fromEntries(Object.entries(regions).sort((a, b) => b[1] - a[1])),
+      dirtyBytes,
+      footprintBytes: dirtyBytes,
+      rollup,
+    };
+  };
+
+  /**
    * Every VM region of one process, grouped by kind.
    *
    * The closure instrument on macOS: memory-infra's `process_mmaps` provider is
@@ -605,6 +741,9 @@ try {
    * add up to the footprint where the allocator tree does not.
    */
   const readRegions = (pid) => {
+    if (process.platform === 'linux') {
+      return readProcRegions(pid);
+    }
     let output;
     try {
       output = execFileSync('vmmap', ['--summary', String(pid)], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -759,7 +898,7 @@ try {
     const pageTarget = (await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`)).json()).find(
       (target) => target.type === 'page' && target.url === currentUrl,
     );
-    const { byPid, kindByPid, frames } = await takeDump(
+    const { byPid, kindByPid, rollups, rollupsBefore, frames } = await takeDump(
       pageTarget?.webSocketDebuggerUrl ?? version.webSocketDebuggerUrl,
     );
     const ourPids = new Set(frames.map((frame) => frame.processId));
@@ -837,6 +976,10 @@ try {
         viewBytes,
         sizeOnly: Object.keys(attrs).filter((name) => !name.includes('/') && !attrs[name].effective),
         ...(ours || kind === 'gpu' ? { vm: readRegions(Number(pid)) } : {}),
+        // The rollup sampled at the dump, which is the one that compares with the
+        // footprint; `vm.rollup` is the same process seconds later.
+        ...(rollups[pid] ? { rollupAtDump: rollups[pid] } : {}),
+        ...(rollupsBefore[pid] ? { rollupBeforeDump: rollupsBefore[pid] } : {}),
         ...(ours && kind === 'renderer' ? { anon: readAnonRegions(Number(pid)) } : {}),
         ...(vmOut && ours && kind === 'renderer' ? { vmDetailFile: writeVmDetail(Number(pid)) } : {}),
       });
@@ -964,6 +1107,19 @@ try {
         `  private ${String(MB(row.privateBytes)).padStart(7)}MB  shared-backed ${String(MB(row.sharedBackedBytes)).padStart(6)}MB` +
         `  unattributed ${String(MB(row.unattributedBytes)).padStart(6)}MB`,
     );
+    if (row.rollupAtDump?.VmRSS) {
+      const dump = row.rollupAtDump;
+      console.log(
+        `      vm (at dump)  rss ${MB(dump.VmRSS)}MB  anon ${MB(dump.RssAnon)}MB  file ${MB(dump.RssFile)}MB` +
+          `  shmem ${MB(dump.RssShmem)}MB  private ${MB((dump.Private_Clean ?? 0) + (dump.Private_Dirty ?? 0) + (dump.VmSwap ?? 0))}MB` +
+          `  pss ${MB(dump.Pss ?? 0)}MB  vs footprint ${MB(row.footprintBytes)}MB`,
+      );
+      if (row.rollupBeforeDump?.RssAnon) {
+        console.log(
+          `      vm (before)   anon ${MB(row.rollupBeforeDump.RssAnon)}MB  rss ${MB(row.rollupBeforeDump.VmRSS)}MB`,
+        );
+      }
+    }
     if (!row.ours && row.kind !== 'gpu') {
       continue;
     }
@@ -981,6 +1137,24 @@ try {
           ` + wasm ${MB(row.wasmBytes ?? 0)}MB + residual ${MB(row.residualBytes)}MB` +
           ` = footprint ${MB(row.footprintBytes)}MB` +
           `  (${(100 * Math.abs(row.residualBytes / row.footprintBytes)).toFixed(1)}% unattributed)`,
+      );
+    }
+    // The residual's own decomposition, printed rather than left in the JSON: it is
+    // the only rows that say what the allocator tree does not account for.
+    for (const [mapping, bytes] of Object.entries(row.vm?.regions ?? {}).slice(0, 12)) {
+      console.log(`      vm ${mapping.padEnd(31)} ${String(MB(bytes)).padStart(6)}MB`);
+    }
+    if (row.vm?.rollup?.VmRSS) {
+      const rollup = row.vm.rollup;
+      console.log(
+        `      vm (kernel)  rss ${MB(rollup.VmRSS)}MB = anon ${MB(rollup.RssAnon)}MB` +
+          ` + file ${MB(rollup.RssFile)}MB + shmem ${MB(rollup.RssShmem)}MB` +
+          `  swap ${MB(rollup.VmSwap ?? 0)}MB  private-mappings ${MB(row.vm.dirtyBytes)}MB`,
+      );
+      console.log(
+        `      vm (rollup)  pss ${MB(rollup.Pss ?? 0)}MB  private ${MB((rollup.Private_Clean ?? 0) + (rollup.Private_Dirty ?? 0))}MB` +
+          `  shared ${MB((rollup.Shared_Clean ?? 0) + (rollup.Shared_Dirty ?? 0))}MB` +
+          `  pss-anon ${MB(rollup.Pss_Anon ?? 0)}MB  pss-file ${MB(rollup.Pss_File ?? 0)}MB  pss-shmem ${MB(rollup.Pss_Shmem ?? 0)}MB`,
       );
     }
   }
