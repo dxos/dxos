@@ -36,15 +36,61 @@ with the profile's service-worker precache cleared so each arm runs its own
 bundle. Footprint is the app renderer's private footprint in MiB; the other
 columns are the map's, defined under "The map after the fix".
 
-| arm           | footprint |    Δ |  live | slack |    v8 |  wasm | sampled | notes                                         |
-| ------------- | --------: | ---: | ----: | ----: | ----: | ----: | ------: | --------------------------------------------- |
-| baseline      |     876.3 |    – | 509.7 | 255.3 | 174.1 | 109.0 |   442.8 | #13250's tree                                 |
-| fix 1         |     684.6 | -192 | 228.2 | 183.9 | 176.3 | 111.3 |   179.6 | #13251, log store sweeps from keys            |
-| fix 1 + fix 2 |     617.1 |  -67 | 134.0 | 153.0 | 177.4 | 112.8 |    97.5 | #13281, track entries gated out of production |
+| arm           | footprint |    Δ |  live | slack |    v8 |  wasm | sampled | notes                                          |
+| ------------- | --------: | ---: | ----: | ----: | ----: | ----: | ------: | ---------------------------------------------- |
+| baseline      |     876.3 |    – | 509.7 | 255.3 | 174.1 | 109.0 |   442.8 | #13250's tree                                  |
+| fix 1         |     684.6 | -192 | 228.2 | 183.9 | 176.3 | 111.3 |   179.6 | #13251, log store sweeps from keys             |
+| fix 1 + fix 2 |     617.1 |  -67 | 134.0 | 153.0 | 177.4 | 112.8 |    97.5 | #13281, track entries gated out of production  |
+| fix 1 + 2 + 3 |     603.8 |   -8 | 146.3 | 140.6 | 175.7 | 130.0 |    94.5 | capability modules eager, one chunk per plugin |
 
-Per-run spread: baseline 830–939, fix 1 676–691, fix 1 + 2 575–647. The baseline
-and the last arm swing by ±50 MB run to run; fix 1 is tight. Read a delta under
-~30 MB as noise until it has more runs behind it.
+Per-run spread: baseline 830–939, fix 1 676–691, fix 1 + 2 575–647, fix 1 + 2 + 3
+578–641. The baseline and the last two arms swing by ±50 MB run to run; fix 1 is
+tight. Read a delta under ~30 MB as noise until it has more runs behind it. The fix 3
+row was measured against a same-session control of fix 1 + 2 (583.7 / 679.6 / 571.1,
+mean 611.5, in agreement with the row above), the two arms interleaved on one port; its
+-8 is noise, and what it changed is under "Fix 3" below.
+
+## Fix 3: one chunk per plugin
+
+A returning tab fetched 988 scripts, 15.5 MB, within eight seconds of navigation; 558 of them
+under 2 KB. Almost every small one was a plugin capability body: each `() => import('./x.ts')`
+in a plugin's `capabilities/index.ts` was its own dynamic entry and so its own chunk, 555 of them
+across 106 plugins. They all load in the same wave, so the split bought nothing at rest and cost
+a module record and a request each.
+
+The fix is in the framework, not the bundler. `Capability.makeModule(name, spec, body)` is now the
+default and `makeLazyModule` the marked form; every maker in `AppCapability` has a `lazyX` pairing
+that takes a loader. A plugin's capability files define their modules and the barrel re-exports
+them, so the bodies land in the one chunk `Plugin.lazy` already fetches for the plugin on enable.
+Rolldown does the grouping with no configuration: the boot closure is unchanged because the
+barrel is still behind the plugin's dynamic import, and a body that must stay out of the plugin's
+chunk keeps the old spelling. Two bundler-side attempts were measured and rejected first: a
+package-level partition (bytes at rest 15.5 to 21.9 MB, since it grouped by the parse graph and
+welded lazy halves in) and rolldown groups (25.1 MB recursive, no merge non-recursive, ~3 MB of
+tree-shaking lost to `strictExecutionOrder` either way).
+
+Three plugins keep lazy bodies because the app reaches them statically rather than through
+`Plugin.lazy`, so their barrels are in the boot closure: `plugin-progress` (the boot loader's
+activation row), `plugin-theme`, and the framework's own process manager. Making the last one
+eager put the compute runtime and the AI client into the boot graph (4.41 to 6.79 MB), which is
+what `check-boot-budget` exists to catch.
+
+Measured on the #13250 tree, seeded three-space profile, returning tab, `vite preview` on
+localhost:
+
+|                                             |              before |               after |
+| ------------------------------------------- | ------------------: | ------------------: |
+| scripts fetched at rest                     |                 988 |                 718 |
+| bytes at rest                               |            15.49 MB |            15.41 MB |
+| boot graph                                  | 22 entries, 4.41 MB | 22 entries, 4.44 MB |
+| ready (account item in the tree; mean of 3) |              6.19 s |              4.10 s |
+| last startup-pass activation (mean of 3)    |              6.59 s |              3.79 s |
+| scripts fetched by ready                    |                 833 |                 674 |
+
+The tab activates the same 257 modules by ready; it gets there 2 s sooner because 160 fewer
+requests stand between navigation and the last of them. Local preview serves over HTTP/1.1 on
+~6 connections, which is the worst case for per-request cost, so read the timing as an upper
+bound on what a deployed origin would show; the script and byte counts are deterministic.
 
 ## The measurement
 
