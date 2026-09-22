@@ -741,7 +741,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     const select = Query.select(Filter.id(objectId));
     const scoped = options?.deleted === 'include' ? select.options({ deleted: 'include' }) : select;
     const [obj] = await db.query(scoped.from(db, { includeFeeds: true })).run();
-    if (obj) {
+    // A merged-away loser is a redirect, not a tombstone to hand back, so it follows the chain even
+    // when the caller asked for deleted entities.
+    if (obj && !(isEchoObject(obj) && getObjectCore(obj).getMergedInto() != null)) {
       return obj;
     }
     return await this._followMergeRedirectAsync(db, objectId);

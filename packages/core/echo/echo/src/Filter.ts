@@ -114,7 +114,10 @@ export const id = (...ids: EntityId[]): Any => {
  * db.query(Query.select(Filter.entity(task)).reference('watchers'));
  * ```
  */
-export const entity = <T extends Entity.Unknown>(entity: T | Entity.Snapshot): Filter<T> => id(entity.id);
+export const entity: {
+  <T extends Entity.Unknown>(entity: T): Filter<T>;
+  <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Filter<T>;
+} = (entity: Entity.Unknown | Entity.Snapshot): Filter<any> => id(entity.id);
 
 /**
  * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).

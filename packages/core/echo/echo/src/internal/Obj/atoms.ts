@@ -79,7 +79,7 @@ const refFamily = Atom.family(
         return read(target);
       };
 
-      return loadRefTarget(ref, get, setupTargetSubscription);
+      return loadRefTarget(ref, get, setupTargetSubscription, includeDeleted ? { deleted: 'include' } : undefined);
     });
   },
 );

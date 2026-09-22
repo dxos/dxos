@@ -774,6 +774,19 @@ describe('Database', () => {
       expect(Obj.atom(first)).not.toBe(Obj.atom(first, { deleted: 'include' }));
     });
 
+    test('Obj.atom(ref, { deleted: "include" }) resolves a target removed before the atom is read', async ({
+      expect,
+    }) => {
+      const { db, refs, tasks } = await setup();
+      const registry = AtomRegistry.make();
+      const [ref] = refs;
+      db.remove(tasks[0]);
+
+      const atom = Obj.atom(ref, { deleted: 'include' });
+      registry.subscribe(atom, () => {});
+      await expect.poll(() => registry.get(atom)).toMatchObject({ id: tasks[0].id });
+    });
+
     test('Obj.atom(ref, { deleted: "include" }) keeps a removed target', async ({ expect }) => {
       const { db, refs, tasks } = await setup();
       const registry = AtomRegistry.make();

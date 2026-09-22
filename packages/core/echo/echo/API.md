@@ -151,8 +151,8 @@ const program = Effect.gen(function* () {
 });
 ```
 
-A ref to a deleted object keeps its URI — id comparison and grouping keep working — but its target
-behaves as absent everywhere.
+A ref to a deleted object keeps its URI — id comparison and grouping keep working — and its target
+behaves as absent unless the read opts into deleted entities.
 
 ### Ref arrays
 

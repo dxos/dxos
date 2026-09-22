@@ -107,9 +107,11 @@ describe('entity', () => {
     expect(Filter.entity(alice).ast).toEqual(Filter.id(alice.id).ast);
   });
 
-  test('accepts a snapshot', () => {
+  test('accepts a snapshot, keeping its entity type', () => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
-    expect(Filter.toPredicate(Filter.entity(Obj.getSnapshot(alice)))(alice)).toBe(true);
+    // The annotation is the assertion: a snapshot must not widen to `Filter<Entity.Unknown>`.
+    const filter: Filter.Filter<TestSchema.Person> = Filter.entity(Obj.getSnapshot(alice));
+    expect(Filter.toPredicate(filter)(alice)).toBe(true);
   });
 });
 
