@@ -82,7 +82,7 @@ const storyOptions = {
         // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
         TasksPlugin.make(),
         CrmPlugin.make(),
-        // Contributes the sample spaces (Northwind Sales, Tidepool, Chess MCP) as space
+        // Contributes the space templates (Northwind Sales, Tidepool, Chess MCP) as space
         // templates — the ones the app's create-space dialog offers.
         DebugPlugin.make(),
         // Contributes the Sandbox skill and its operations: without it the agent has no

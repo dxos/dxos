@@ -5,17 +5,20 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { SpaceId } from '@dxos/keys';
 
 import { ActivityIndex } from './activity-index.ts';
 
-const TestLayer = SqliteClient.layer({ filename: ':memory:' });
+const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('ActivityIndex', () => {
   it.effect('buckets changes by hour and sums changes and ops across record calls', () =>
     Effect.gen(function* () {
-      const index = new ActivityIndex();
+      const index = new ActivityIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();

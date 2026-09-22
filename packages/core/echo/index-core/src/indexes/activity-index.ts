@@ -28,6 +28,12 @@ export type ActivityRow = {
  * time is immutable.
  */
 export class ActivityIndex {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -36,17 +42,18 @@ export class ActivityIndex {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
   /** Bucket and accumulate changes into the ledger, one upsert per `(spaceId, hour)`. */
   record = Effect.fn('ActivityIndex.record')(
-    (changes: readonly ChangeSummary[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    (changes: readonly ChangeSummary[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (changes.length === 0) {
           return;
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
 
         const buckets = new Map<string, { spaceId: SpaceId; hour: number; changes: number; ops: number }>();
         for (const change of changes) {
@@ -80,9 +87,9 @@ export class ActivityIndex {
       spaceId: string;
       from?: number;
       to?: number;
-    }): Effect.Effect<readonly ActivityRow[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    }): Effect.Effect<readonly ActivityRow[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         if (from !== undefined && to !== undefined && from >= to) {
           return [];
         }

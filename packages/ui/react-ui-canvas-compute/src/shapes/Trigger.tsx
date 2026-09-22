@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import * as Trigger from '@dxos/compute/Trigger';
 import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { useResolveRef } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
@@ -19,7 +20,7 @@ export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
 export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   const [space] = useSpaces();
-  const functionTrigger = shape.functionTrigger?.target;
+  const functionTrigger = useResolveRef(shape.functionTrigger);
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {

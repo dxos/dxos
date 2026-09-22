@@ -20,11 +20,15 @@ const setup = () => {
 describe('firstOpenableChild', () => {
   test('resolves with the first child once one arrives', async ({ expect }) => {
     const { registry, graph } = setup();
+    const connections = graph.connections('root/w', 'child');
     const waiting = EffectEx.runPromise(firstOpenableChild(registry, graph, 'root/w', 1_000));
-    setTimeout(() => {
-      AppGraph.addNode(graph, { id: 'root/w/a', type: 'test', data: {} });
-      AppGraph.addEdge(graph, { source: 'root/w', target: 'root/w/a', relation: 'child' });
-    }, 5);
+
+    // Wait for `firstOpenableChild`'s own subscription to register before adding the child, so the
+    // test exercises the "arrives later" path deterministically rather than racing a fixed delay.
+    await expect.poll(() => registry.getNodes().get(connections)?.listeners.size).toBe(1);
+
+    AppGraph.addNode(graph, { id: 'root/w/a', type: 'test', data: {} });
+    AppGraph.addEdge(graph, { source: 'root/w', target: 'root/w/a', relation: 'child' });
     expect(await waiting).toBe('root/w/a');
   });
 

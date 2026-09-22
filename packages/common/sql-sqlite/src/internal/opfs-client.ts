@@ -34,7 +34,7 @@ import {
   applyOpfsPragmas,
   checkpointWal,
 } from './opfs-pragmas.ts';
-import { logSqliteQuery, summarizeLoggedParams } from './query-log.ts';
+import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
 import { instrumentVfs } from './vfs-metrics.ts';
 
 export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
@@ -96,33 +96,6 @@ const importDatabase = (
   applyOpfsPragmas(sqlite3, db, {
     journalMode: pragmaOptions.journalMode ?? DEFAULT_JOURNAL_MODE,
     synchronous: pragmaOptions.synchronous ?? DEFAULT_SYNCHRONOUS,
-  });
-};
-
-const recordSqliteQueryMetrics = (
-  sql: string,
-  params: ReadonlyArray<unknown>,
-  resultCount: number,
-  begin: number,
-): void => {
-  const end = performance.now();
-  logSqliteQuery({ sql, params, results: resultCount, time: end - begin });
-  performance.measure(sql.slice(0, 128), {
-    start: begin,
-    end: end,
-    detail: {
-      devtools: {
-        dataType: 'track-entry',
-        track: 'Query',
-        trackGroup: 'SQlite',
-        color: 'tertiary-dark',
-        properties: [
-          ['sql', sql],
-          ['params', params],
-          ['resultCount', resultCount],
-        ],
-      },
-    },
   });
 };
 

@@ -3,9 +3,11 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
@@ -20,6 +22,7 @@ import { iconValues } from '@dxos/ui-types';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
 import { SpaceNotReadyError, TemplateApplyError, TemplateNotFoundError } from '../errors.ts';
+import { getTemplateIcon } from '../util/index.ts';
 
 /** Bounds how long space creation waits for the new space's properties object to become available. */
 const SPACE_READY_TIMEOUT = Duration.seconds(10);
@@ -28,21 +31,26 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication, template }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
-      const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
 
       // Resolved before the space exists: the form is uncontrolled, so it keeps the template's id,
       // name, icon and hue even if the contributing plugin deactivates while the dialog is open.
       // Matching afterwards would create a space styled as a template and silently leave it empty.
-      const templates = template ? yield* Capability.getAll(SpaceCapabilities.SpaceTemplate) : [];
+      if (template) {
+        yield* Plugin.activate(ActivationEvents.SpaceTemplatesRequested);
+      }
+      const templates = template ? yield* Capability.getAll(AppCapabilities.SpaceTemplate) : [];
       const match = template ? templates.find(({ id }) => id === template) : undefined;
       if (template && !match) {
         return yield* Effect.fail(new TemplateNotFoundError({ context: { template } }));
       }
+
+      const hue = hue_ ?? match?.hue ?? hues[Math.floor(Math.random() * hues.length)];
+      const icon = icon_ ?? getTemplateIcon(match) ?? iconValues[Math.floor(Math.random() * iconValues.length)];
+
       const space = yield* Effect.promise(() =>
         client.spaces.create(
           {
-            name,
+            name: name ?? match?.label,
             hue,
             icon,
           },
@@ -68,6 +76,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {
         Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
+        if (match) {
+          Annotation.set(properties, AppAnnotation.SpaceTemplateAnnotation, match.id);
+        }
         if (Migrations.targetVersion) {
           Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
         }

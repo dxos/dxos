@@ -27,9 +27,6 @@ const rowName = (type: { presetLabel?: string }, typename: string | undefined): 
   (typeof type.presetLabel === 'string' ? type.presetLabel : undefined) ?? typename ?? '';
 
 export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }: SchemaTableProps) => {
-  // A sample space takes seconds to build. Without holding the row that is running, the click
-  // dropped the handler's promise: nothing showed the work in flight, a second click raced the
-  // first, and a rejection after the panel unmounted surfaced as an unhandled rejection.
   const [pending, setPending] = useState<string>();
   const handleClick = useCallback(
     async (typename: string) => {

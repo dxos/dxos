@@ -58,15 +58,13 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
       </Panel.Toolbar>
       <Panel.Content classNames='overflow-y-auto'>
         {questions.length === 0 ? (
-          <p className='p-2 text-subdued-text'>No questions yet.</p>
+          <p className='p-2 text-subdued'>No questions yet.</p>
         ) : (
           <dl className='flex flex-col gap-2 p-2'>
             {questions.map((question) => (
               <div key={question.id}>
                 <dt className='font-medium'>{question.text}</dt>
-                <dd className={question.status === 'answered' ? '' : 'text-subdued-text'}>
-                  {question.answer ?? 'open'}
-                </dd>
+                <dd className={question.status === 'answered' ? '' : 'text-subdued'}>{question.answer ?? 'open'}</dd>
               </div>
             ))}
           </dl>
