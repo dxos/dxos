@@ -33,8 +33,10 @@ const defaultDeckState: DeckSchema.StoredDeckState = {
 /** Default ephemeral state. */
 const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
   fullscreen: undefined,
+  dialogContent: null,
   dialogOpen: false,
-  dialog: null,
+  dialogBlockAlign: undefined,
+  dialogType: undefined,
   popoverContent: null,
   popoverAnchor: undefined,
   popoverAnchorId: undefined,

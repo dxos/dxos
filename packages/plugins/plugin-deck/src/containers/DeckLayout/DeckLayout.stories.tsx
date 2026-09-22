@@ -100,8 +100,8 @@ export const ClosingKeepsContentUntilExit: Story = {
       }
     };
 
-    await closeStoryDialog!();
     requestAnimationFrame(sample);
+    await closeStoryDialog!();
     await waitFor(() => expect(backdrop()).toBeNull(), { timeout: 5_000 });
     sampling = false;
 

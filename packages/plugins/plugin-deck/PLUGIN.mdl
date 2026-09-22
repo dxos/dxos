@@ -76,7 +76,9 @@ type EphemeralDeckState
   fields:
     fullscreen?: string           # item ID of the plank currently displayed fullscreen (headless); never in the URL
     dialogOpen: boolean
-    dialog?: { type?: default | alert; blockAlign?: start | center | end; overlayClasses?: string; overlayStyle?: any; content?: { component: string; props?: any } }
+    dialogType?: default | alert
+    dialogBlockAlign?: start | center | end
+    dialogContent?: { component: string; props?: any }
     popoverOpen: boolean
     popoverSide?: top | right | bottom | left
     popoverKind?: base | card

@@ -52,17 +52,6 @@ export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
 
 export const defaultOpenDeck: OpenDeck = { active: [], inactive: [] };
 
-/** How a dialog is presented, and what it shows. */
-export const DialogPresentation = Schema.Struct({
-  type: Schema.optional(Schema.Literals(['default', 'alert'])),
-  blockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),
-  overlayClasses: Schema.optional(Schema.String),
-  overlayStyle: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
-  /** Data to be passed to the dialog Surface. */
-  content: Schema.optional(Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) })),
-});
-export type DialogPresentation = Schema.Schema.Type<typeof DialogPresentation>;
-
 /** A workspace's persisted deck preferences: how its planks look, not which ones are open. */
 export const StoredDeck = Schema.Struct({
   /**
@@ -207,11 +196,12 @@ export const EphemeralDeckState = Schema.Struct({
    */
   open: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(OpenDeck))),
   dialogOpen: Schema.Boolean,
-  /**
-   * Everything the open dialog is presented with, as one value: the view holds it for the length of
-   * the exit, so a field of it reverting on close would restyle a dialog that is still on screen.
-   */
-  dialog: Schema.NullOr(DialogPresentation),
+  dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
+  dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),
+  dialogOverlayClasses: Schema.optional(Schema.String),
+  dialogOverlayStyle: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  /** Data to be passed to the dialog Surface. */
+  dialogContent: Schema.NullOr(Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) })),
   popoverOpen: Schema.Boolean,
   popoverSide: Schema.optional(Schema.Literals(['top', 'right', 'bottom', 'left'])),
   popoverAnchor: Schema.optional(Schema.Any),

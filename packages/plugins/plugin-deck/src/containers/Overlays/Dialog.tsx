@@ -9,20 +9,16 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
-import { useDeckState, useLastPresent } from '#hooks';
+import { useDeckState } from '#hooks';
 
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
 export const Dialog = () => {
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
-  const { dialogOpen, dialog } = state;
-  // Held as one value for the length of the exit: the overlay is still on screen after the state that
-  // fed it is gone, and a field of it reverting there would restyle a dialog the reader can still see.
-  const presentation = useLastPresent(dialogOpen, dialog);
-  const Root = presentation?.type === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
-  const Overlay = presentation?.type === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
-  const blockAlign = presentation?.blockAlign;
+  const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
+  const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
+  const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -35,27 +31,27 @@ export const Dialog = () => {
 
   // TODO(thure): End block alignment affecting `modal` and whether the surface renders in an overlay is tailored to the needs of the ambient chat dialog. As the feature matures, consider separating concerns.
   return (
-    <Root modal={blockAlign !== 'end'} open={dialogOpen} onOpenChange={handleOpenChange}>
-      {blockAlign === 'end' ? (
+    <Root modal={dialogBlockAlign !== 'end'} open={dialogOpen} onOpenChange={handleOpenChange}>
+      {dialogBlockAlign === 'end' ? (
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
         <Surface.Surface
           type={AppSurface.Dialog}
-          data={presentation?.content}
+          data={dialogContent ?? undefined}
           limit={1}
           fallback={PlankErrorFallback}
           placeholder={<div />}
         />
       ) : (
         // `dx-main-dialog` names this overlay for view transitions. The shared component class cannot
-        // carry the name: a transition aborts outright when two rendered elements claim the same one.
+        // carry the name: a transition is abandoned when two rendered elements claim the same one.
         <Overlay
-          blockAlign={blockAlign}
-          classNames={['dx-main-dialog', presentation?.overlayClasses]}
-          style={presentation?.overlayStyle}
+          blockAlign={dialogBlockAlign}
+          classNames={['dx-main-dialog', dialogOverlayClasses]}
+          style={dialogOverlayStyle}
         >
           <Surface.Surface
             type={AppSurface.Dialog}
-            data={presentation?.content}
+            data={dialogContent ?? undefined}
             limit={1}
             fallback={PlankErrorFallback}
           />

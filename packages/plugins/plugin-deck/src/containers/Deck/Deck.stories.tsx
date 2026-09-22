@@ -240,8 +240,10 @@ const storyDeckState = Capability.makeModule(
 
     const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
       fullscreen: undefined,
+      dialogContent: null,
       dialogOpen: false,
-      dialog: null,
+      dialogBlockAlign: undefined,
+      dialogType: undefined,
       popoverContent: null,
       popoverAnchor: undefined,
       popoverAnchorId: undefined,
