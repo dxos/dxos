@@ -345,7 +345,7 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, sceneBounds(child)) : undefined), [node, child]);
   return (
-    <div className={mx('dx-fullscreen', !opening && 'bg-hover-surface', tier === 'dot' && 'bg-primary-500/40')}>
+    <div className={mx('dx-fullscreen', tier === 'dot' && 'bg-primary-500/40')}>
       {tier === 'preview' && child && (
         <div className='dx-fullscreen flex flex-col items-center justify-center gap-1 pointer-events-none'>
           <span className='text-2xl'>{child.name ?? child.id}</span>
