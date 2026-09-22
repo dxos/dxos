@@ -4,6 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
@@ -74,7 +75,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
    * reloads.
    */
   'reset'(): Effect.Effect<void> {
-    return Effect.gen({ self: this }, function* () {
+    const chain = Effect.gen({ self: this }, function* () {
       log.info('resetting...');
       this.#resetting = true;
       this.#statusChanged.emit(SystemStatus.INACTIVE);
@@ -87,6 +88,14 @@ export class SystemServiceImpl implements SystemService.Handlers {
       log.info('reset');
       yield* Hook.emit(Reset, undefined);
     }).pipe(Effect.provideService(Hook.Controller, this.#options.controller));
+
+    // Detached from the request fiber: `Closing` above closes the RPC route this very call is
+    // served on, which would interrupt the chain before it ever wipes storage. Joining keeps the
+    // caller's timing — the join is interrupted, the chain is not.
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkDetach(chain);
+      yield* Fiber.join(fiber);
+    });
   }
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, BaseError> {
