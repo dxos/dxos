@@ -867,12 +867,14 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
 
   return (
     <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
-      {/* Windowed, the branch's rows are units of the window's own order, so this row is just a
-          row: the `Branch` wrapper would nest the subtree the window is already mounting. */}
-      {node.branch && windowIndex === undefined ? (
+      {node.branch ? (
+        // The `Branch` wrapper carries the row's `treeitem` role and its disclosure state, so it
+        // stays in both modes; windowed, only its CONTENT is dropped — the subtree is already
+        // units of the window's own order, and nesting it here would put it out of the window's
+        // reach.
         <TreeView.Branch className='contents'>
-          <TreeNodeRowContent node={node} />
-          <TreeBranchContent node={node} />
+          <TreeNodeRowContent node={node} windowIndex={windowIndex} />
+          {windowIndex === undefined && <TreeBranchContent node={node} />}
         </TreeView.Branch>
       ) : (
         <TreeNodeRowContent node={node} windowIndex={windowIndex} />
