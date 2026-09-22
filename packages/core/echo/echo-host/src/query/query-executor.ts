@@ -1906,7 +1906,7 @@ export class QueryExecutor extends Resource {
     // The reverse-ref index is keyed by record id alone, so it spans registry rows too. Those
     // belong to no space and are not part of any query's contents, so a reference held by one is
     // not an incoming reference the caller asked about.
-    return referrers.filter((row) => row.registryKey === '');
+    return referrers.filter((row) => row.origin !== 'registry');
   }
 
   /**

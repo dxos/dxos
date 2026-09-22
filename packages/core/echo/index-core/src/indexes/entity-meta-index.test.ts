@@ -14,6 +14,7 @@ import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
 import { IndexTracker } from '../index-tracker.ts';
+import { ORIGIN_AUTOMERGE } from '../registry-keys.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
 
@@ -44,6 +45,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -82,6 +84,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -121,6 +124,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -137,6 +141,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -175,6 +180,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -190,6 +196,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: null,
         documentId: 'doc-123',
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -208,7 +215,7 @@ describe('EntityMetaIndex', () => {
       const results = yield* index.query({ spaceId, typeDXN: TYPE_PERSON });
       expect(results.length).toBe(1);
       expect(results[0].objectId).toBe(objectId1);
-      expect(results[0].version).toBe(1);
+      expect(results[0].seq).toBe(1);
 
       const relationResults = yield* index.query({ spaceId, typeDXN: TYPE_RELATION });
       expect(relationResults.length).toBe(1);
@@ -216,7 +223,7 @@ describe('EntityMetaIndex', () => {
       expect(relationResults[0].entityKind).toBe('relation');
       expect(relationResults[0].source).toBe(item2.data[ATTR_RELATION_SOURCE]);
       expect(relationResults[0].target).toBe(item2.data[ATTR_RELATION_TARGET]);
-      expect(relationResults[0].version).toBe(2);
+      expect(relationResults[0].seq).toBe(2);
 
       // 2. Update existing object (item1 matches by queueId)
       const item1Update: IndexerObject = {
@@ -234,7 +241,7 @@ describe('EntityMetaIndex', () => {
       // Current implementation is SELECT * without deleted filter for queryType
       expect(updatedResults.length).toBe(1);
       expect(updatedResults[0].deleted).toBe(true);
-      expect(updatedResults[0].version).toBe(3); // Incremented globally
+      expect(updatedResults[0].seq).toBe(3); // Incremented globally
 
       // 3. Update existing object by documentId (item2)
       const item2Update: IndexerObject = {
@@ -249,7 +256,7 @@ describe('EntityMetaIndex', () => {
 
       const newTypeResults = yield* index.query({ spaceId, typeDXN: TYPE_RELATION_UPDATED });
       expect(newTypeResults.length).toBe(1);
-      expect(newTypeResults[0].version).toBe(4);
+      expect(newTypeResults[0].seq).toBe(4);
       expect(newTypeResults[0].objectId).toBe(objectId2);
 
       const oldTypeResults = yield* index.query({ spaceId, typeDXN: TYPE_RELATION });
@@ -273,6 +280,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -288,6 +296,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -303,6 +312,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -400,6 +410,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: insertTimestamp,
         data: {
@@ -447,6 +458,7 @@ describe('EntityMetaIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: earlyTimestamp,
           data: { id: objectId1, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
@@ -460,6 +472,7 @@ describe('EntityMetaIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: null,
           updatedAt: lateTimestamp,
           data: { id: objectId2, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
@@ -504,6 +517,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'trace',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         data: {
@@ -541,6 +555,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: null,
         documentId: `doc-${id}`,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         createdAt: null,
         updatedAt: Date.now(),
         // Parsed from JSON because the malformed meta shape under test has no static type.
@@ -650,6 +665,7 @@ describe('EntityMetaIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           queuePosition: position,
           createdAt: null,
           updatedAt: Date.now(),
@@ -663,6 +679,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         queuePosition: null,
         createdAt: null,
         updatedAt: Date.now(),
@@ -722,6 +739,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         queuePosition: null,
         createdAt: null,
         updatedAt: Date.now(),
@@ -752,6 +770,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         queuePosition: null,
         createdAt: null,
         updatedAt: Date.now(),
@@ -791,6 +810,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        origin: ORIGIN_AUTOMERGE,
         // Unpositioned, as a locally appended block is: a natural read still has to see it.
         queuePosition: null,
         createdAt: null,

@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
  * End-to-end coverage of registry indexing: the client mirrors its in-process registry to the host
  * (`RegistryPublisher` → `QueryService.updateRegistry` → `RegistryDataSource`), the indexer writes
  * those entities into the same `objectMeta` and snapshot tables as everything else, and the
- * `registryKey` mark keeps them out of every space-scoped read.
+ * `origin = 'registry'` mark keeps them out of every space-scoped read.
  */
 
 class Widget extends Type.makeObject<Widget>(DXN.make('com.example.type.widget', '0.1.0'))(
@@ -51,7 +51,7 @@ describe('registry indexing', () => {
       await publish();
 
       const row = await only([`dxn:${KEY}:1.0.0`]);
-      expect(row.registryKey).toBe(`dxn:${KEY}:1.0.0`);
+      expect(identityOf(row)).toBe(`dxn:${KEY}:1.0.0`);
       expect(row.contentHash).toBeTruthy();
       expect(row.entityKind).toBe('object');
       // Registry rows carry no space or document of their own.
@@ -98,7 +98,7 @@ describe('registry indexing', () => {
       const after = await only([`dxn:${KEY}:1.0.0`]);
 
       expect(after.recordId).toBe(before.recordId);
-      expect(after.version).toBe(before.version);
+      expect(after.seq).toBe(before.seq);
       expect(after.contentHash).toBe(before.contentHash);
     });
 
@@ -116,7 +116,7 @@ describe('registry indexing', () => {
       expect(after.recordId).toBe(before.recordId);
       expect(after.objectId).toBe(replacement.id);
       expect(after.contentHash).not.toBe(before.contentHash);
-      expect(after.version).toBeGreaterThan(before.version);
+      expect(after.seq).toBeGreaterThan(before.seq);
     });
 
     test('an unchanged registry survives a restart without being re-indexed', async () => {
@@ -136,7 +136,7 @@ describe('registry indexing', () => {
 
       const after = await only([`dxn:${KEY}:1.0.0`]);
       expect(after.recordId).toBe(before.recordId);
-      expect(after.version).toBe(before.version);
+      expect(after.seq).toBe(before.seq);
       expect(after.contentHash).toBe(before.contentHash);
     });
 
@@ -160,7 +160,7 @@ describe('registry indexing', () => {
       const after = await rowsFor(keys);
       expect(after).toHaveLength(120);
       // Nothing was rewritten: every row kept the sequence it was first indexed with.
-      expect(after.map((row) => row.version).sort()).toEqual(before.map((row) => row.version).sort());
+      expect(after.map((row) => row.seq).sort()).toEqual(before.map((row) => row.seq).sort());
     });
   });
 
@@ -173,7 +173,7 @@ describe('registry indexing', () => {
 
       const rows = await rowsFor([`dxn:${KEY}:1.0.0`, `dxn:${KEY}:2.0.0`]);
       expect(rows).toHaveLength(2);
-      expect(new Set(rows.map((row) => row.registryKey))).toEqual(new Set([`dxn:${KEY}:1.0.0`, `dxn:${KEY}:2.0.0`]));
+      expect(new Set(rows.map(identityOf))).toEqual(new Set([`dxn:${KEY}:1.0.0`, `dxn:${KEY}:2.0.0`]));
     });
 
     test('an unversioned key matches every version, newest registration first', async () => {
@@ -183,7 +183,7 @@ describe('registry indexing', () => {
       await publish();
 
       const rows = await rowsFor([`dxn:${KEY}`]);
-      expect(rows.map((row) => row.registryKey)).toEqual([`dxn:${KEY}:2.0.0`, `dxn:${KEY}:1.0.0`]);
+      expect(rows.map(identityOf)).toEqual([`dxn:${KEY}:2.0.0`, `dxn:${KEY}:1.0.0`]);
     });
 
     test('the object registered last is primary, even when it is the older version', async () => {
@@ -194,13 +194,13 @@ describe('registry indexing', () => {
 
       const rows = await rowsFor([`dxn:${KEY}`]);
       // Primacy follows registration order, not version order.
-      expect(rows[0].registryKey).toBe(`dxn:${KEY}:1.0.0`);
+      expect(identityOf(rows[0])).toBe(`dxn:${KEY}:1.0.0`);
 
       // Re-registering the newer version with a change puts it back in front.
       client.graph.registry.add([makeKeyed(KEY, '2.0.0', { label: 'v2 revised' })]);
       await publish();
       const reordered = await rowsFor([`dxn:${KEY}`]);
-      expect(reordered[0].registryKey).toBe(`dxn:${KEY}:2.0.0`);
+      expect(identityOf(reordered[0])).toBe(`dxn:${KEY}:2.0.0`);
     });
 
     test('a versioned key matches only its own version', async () => {
@@ -208,7 +208,7 @@ describe('registry indexing', () => {
       await publish();
 
       const rows = await rowsFor([`dxn:${KEY}:1.0.0`]);
-      expect(rows.map((row) => row.registryKey)).toEqual([`dxn:${KEY}:1.0.0`]);
+      expect(rows.map(identityOf)).toEqual([`dxn:${KEY}:1.0.0`]);
     });
   });
 
@@ -418,6 +418,9 @@ describe('registry indexing', () => {
     expect(rows).toHaveLength(1);
     return rows[0];
   };
+
+  /** A row's registry identity recomposed, so assertions can name the key the entity was registered under. */
+  const identityOf = (row: EntityMeta): string => (row.version === '' ? row.name : `${row.name}:${row.version}`);
 
   /** The indexed snapshot behind a row, for asserting which registration is the active one. */
   const labelOf = async (row: EntityMeta): Promise<string | undefined> => {

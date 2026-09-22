@@ -9,6 +9,8 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Obj } from '@dxos/echo';
 import type { EntityId, SpaceId } from '@dxos/keys';
 
+import type { IndexOrigin } from '../registry-keys.ts';
+
 /**
  * Data describing objects returned from sources to the indexer.
  */
@@ -38,16 +40,27 @@ export interface IndexerObject {
   queuePosition?: number | null;
 
   /**
-   * Canonical registry entry key this object was registered under (see `registry-keys.ts`), or
-   * null for an object sourced from a space. Non-null identifies a registry row: it is the row's
-   * identity in place of `documentId`/`queueId`, so a re-registration under the same key replaces
-   * the row and a different version — a different key — is a separate row.
+   * Which source this object came from. `registry` is what every space-scoped scan excludes on,
+   * and what makes `name`/`version` the row identity in place of `documentId`/`queueId`.
    */
-  registryKey?: string | null;
+  origin: IndexOrigin;
+
+  /**
+   * Registry name, taken from the entity's own metadata — its meta key, or its EID when it carries
+   * none. Empty for an object sourced from a space.
+   */
+  name?: string | null;
+
+  /**
+   * Registry version, taken from the entity's own metadata. Empty when the entity carries no
+   * version, and for an object sourced from a space. Paired with `name` it is the row identity, so
+   * a re-registration replaces the row while a different version is a separate row.
+   */
+  version?: string | null;
 
   /**
    * Digest of the registered snapshot, carried so an unchanged re-push can be recognised without
-   * rewriting the row. Set together with `registryKey`; null otherwise.
+   * rewriting the row. Set for registry objects; null otherwise.
    */
   contentHash?: string | null;
 

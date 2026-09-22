@@ -11,6 +11,7 @@ import type * as Statement from 'effect/unstable/sql/Statement';
 import type { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
+import { ORIGIN_REGISTRY } from '../registry-keys.ts';
 import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
 import { type Index, type IndexerObject } from './interface.ts';
@@ -193,7 +194,7 @@ export class FtsIndex implements Index {
 
       // Registry snapshots live in the same virtual table but belong to no space, so a text search
       // — which is always space- or queue-scoped — must never surface one.
-      conditions.push(sql`m.registryKey = ''`);
+      conditions.push(sql`m.origin != ${ORIGIN_REGISTRY}`);
 
       // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `snapshot`.
       if (typeDxns && typeDxns.length > 0) {

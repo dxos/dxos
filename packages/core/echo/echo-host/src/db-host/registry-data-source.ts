@@ -7,17 +7,40 @@ import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
-import { type ObjectJSON } from '@dxos/echo/internal';
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import {
   type DataSourceCursor,
   type IndexDataSource,
   type IndexerObject,
+  ORIGIN_REGISTRY,
   REGISTRY_SPACE_ID,
+  type RegistryIdentity,
   contentHash,
+  splitRegistryKey,
 } from '@dxos/index-core';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+/**
+ * The name and version a registry row is filed under, read from the entity's own metadata.
+ *
+ * The entity is the authority on what it is called: `meta.key` and `meta.version` are what the
+ * in-process registry keyed it by, so taking them from the object rather than re-parsing the key
+ * the client composed keeps one source of truth. The key is the fallback for an entity that
+ * carries no metadata of its own — an unkeyed object filed under its EID.
+ */
+const registryIdentity = (key: string, data: ObjectJSON): RegistryIdentity => {
+  const meta = data[ATTR_META];
+  const metaKey = typeof meta?.key === 'string' && meta.key !== '' ? meta.key : undefined;
+  if (metaKey === undefined) {
+    return splitRegistryKey(key);
+  }
+  // Canonicalised to the DXN form a lookup key splits into, since a meta key may be written either
+  // bare or prefixed and the two have to land on one name for an unversioned lookup to match.
+  const name = metaKey.startsWith('dxn:') ? metaKey : `dxn:${metaKey}`;
+  return { name, version: typeof meta?.version === 'string' ? meta.version : '' };
+};
 
 /**
  * One entity as the client registered it.
@@ -99,7 +122,7 @@ const isIndexableObject = (value: unknown): value is ObjectJSON => {
  * there is nothing on the host to poll. {@link submit} takes a full snapshot of the client's
  * registry and this source turns it into the same `IndexerObject` stream the pull sources produce,
  * so registry entities land in `objectMeta` and the FTS snapshot table alongside everything else —
- * marked by a non-empty `registryKey`, which is what keeps them out of every space-scoped read.
+ * marked by `origin = 'registry'`, which is what keeps them out of every space-scoped read.
  *
  * Three things decide what an update pass sees:
  *
@@ -299,7 +322,8 @@ export class RegistryDataSource implements IndexDataSource {
           queueId: null,
           queueNamespace: null,
           documentId: null,
-          registryKey: entry.key,
+          origin: ORIGIN_REGISTRY,
+          ...registryIdentity(entry.key, entry.active.data),
           contentHash: entry.active.hash,
           recordId: null,
           data: entry.active.data,

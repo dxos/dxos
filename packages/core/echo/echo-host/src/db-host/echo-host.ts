@@ -510,8 +510,9 @@ export class EchoHost extends Resource {
       const live = this._registryDataSource.keys;
       const indexed = await this._indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
       for (const row of indexed) {
-        if (!live.has(row.registryKey)) {
-          stale.add(row.registryKey);
+        const indexedKey = row.version === '' ? row.name : `${row.name}:${row.version}`;
+        if (!live.has(indexedKey)) {
+          stale.add(indexedKey);
         }
       }
     }
