@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from '@effect/vitest';
+import { describe, expect, test } from '@effect/vitest';
 
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId } from '@dxos/keys';
@@ -11,8 +11,8 @@ import { extractIndexableText } from './text-extractor.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 
-describe('extractIndexableText', ({ expect }) => {
-  test('collects string values', ({ expect }) => {
+describe('extractIndexableText', () => {
+  test('collects string values', () => {
     const text = extractIndexableText({
       id: EntityId.random(),
       [ATTR_TYPE]: TYPE_PERSON,
@@ -23,7 +23,7 @@ describe('extractIndexableText', ({ expect }) => {
     expect(text.split('\n')).toEqual(['Hello Effect', 'A message about SQL.']);
   });
 
-  test('omits property names', ({ expect }) => {
+  test('omits property names', () => {
     const text = extractIndexableText({
       id: EntityId.random(),
       [ATTR_TYPE]: TYPE_PERSON,
@@ -34,7 +34,7 @@ describe('extractIndexableText', ({ expect }) => {
     expect(text).not.toContain('description');
   });
 
-  test('omits the id, the type and the meta block', ({ expect }) => {
+  test('omits the id, the type and the meta block', () => {
     const objectId = EntityId.random();
     const text = extractIndexableText({
       id: objectId,
@@ -49,7 +49,7 @@ describe('extractIndexableText', ({ expect }) => {
     expect(text).not.toContain('external-key');
   });
 
-  test('omits references but keeps text beside them', ({ expect }) => {
+  test('omits references but keeps text beside them', () => {
     const text = extractIndexableText({
       id: EntityId.random(),
       [ATTR_TYPE]: TYPE_PERSON,
@@ -60,7 +60,7 @@ describe('extractIndexableText', ({ expect }) => {
     expect(text).toBe('Task');
   });
 
-  test('descends into nested objects and arrays', ({ expect }) => {
+  test('descends into nested objects and arrays', () => {
     const text = extractIndexableText({
       id: EntityId.random(),
       [ATTR_TYPE]: TYPE_PERSON,
@@ -72,7 +72,7 @@ describe('extractIndexableText', ({ expect }) => {
     expect(text.split('\n')).toEqual(['alpha', 'beta', 'Lisbon', '1000', 'nested body']);
   });
 
-  test('drops non-string values and blank strings', ({ expect }) => {
+  test('drops non-string values and blank strings', () => {
     const text = extractIndexableText({
       id: EntityId.random(),
       [ATTR_TYPE]: TYPE_PERSON,
@@ -86,7 +86,7 @@ describe('extractIndexableText', ({ expect }) => {
     expect(text).toBe('Trimmed');
   });
 
-  test('returns an empty string for an object with no text', ({ expect }) => {
+  test('returns an empty string for an object with no text', () => {
     expect(extractIndexableText({ id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON })).toBe('');
   });
 });
