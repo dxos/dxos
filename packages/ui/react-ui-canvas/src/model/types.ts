@@ -215,10 +215,17 @@ export const SplineLink = Schema.Struct({
 });
 export type SplineLink = Schema.Schema.Type<typeof SplineLink>;
 
-export const Link = Schema.Union([LineLink, CurveLink, SplineLink]);
+/**
+ * Routed between its ends rather than drawn: a stub leaves each port along its side's normal and the
+ * route joins the two. Nothing is stored, so the path follows the nodes as they move.
+ */
+export const SmartLink = Schema.Struct({ type: Schema.Literal('smart'), ...linkBase });
+export type SmartLink = Schema.Schema.Type<typeof SmartLink>;
+
+export const Link = Schema.Union([LineLink, CurveLink, SplineLink, SmartLink]);
 export type Link = Schema.Schema.Type<typeof Link>;
 export type LinkType = Link['type'];
-export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline'];
+export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline', 'smart'];
 
 export type Element = Node | Link;
 

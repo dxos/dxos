@@ -13,6 +13,7 @@ import { type NodeRegistry } from '../model/registry.ts';
 import {
   type Endpoint,
   type Link,
+  MAJOR_GRID,
   type Point,
   type Port,
   type PortEndpoint,
@@ -28,6 +29,9 @@ const TANGENT_RATIO = 0.4;
 
 /** How far a rounded corner reaches back along each of its segments, in scene px (half a major cell). */
 const CORNER_RADIUS = 32;
+
+/** How far a smart link's stub leaves its port, in scene px (half a major cell). */
+const SMART_STUB = MAJOR_GRID / 2;
 
 export type RouteEnd = { point: Point; side: Side };
 
@@ -108,7 +112,25 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd): string => {
       return curvePath(from, to);
     case 'spline':
       return splinePath([from.point, ...link.points, to.point]);
+    case 'smart':
+      return splinePath(smartPoints(from, to));
   }
+};
+
+/**
+ * The polyline a smart link follows: a stub out of each port along its side's normal, then one segment
+ * joining them. `splinePath` rounds where they meet, so a pair of facing ports reads as the elbow the
+ * ports imply rather than a straight line cutting across their own nodes.
+ */
+export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+  const fromNormal = sideNormal(from.side);
+  const toNormal = sideNormal(to.side);
+  return [
+    from.point,
+    { x: from.point.x + fromNormal.x * SMART_STUB, y: from.point.y + fromNormal.y * SMART_STUB },
+    { x: to.point.x + toNormal.x * SMART_STUB, y: to.point.y + toNormal.y * SMART_STUB },
+    to.point,
+  ];
 };
 
 export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };

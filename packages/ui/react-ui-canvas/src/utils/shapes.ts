@@ -116,6 +116,7 @@ export const createLink = ({ type, id, z, source, target, midpoint, directed, en
   switch (type) {
     case 'line':
     case 'curve':
+    case 'smart':
       return { type, ...base };
     case 'spline':
       return { type, ...base, points: midpoint ? [midpoint] : [] };

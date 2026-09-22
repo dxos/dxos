@@ -99,19 +99,22 @@ type NodeStyle
     fill?: boolean
     border?: boolean
     guide?: boolean                   # dashed and unfilled: an annotation, not content
+    fontSize?: number                 # text size in the node's own scene units; overrides the view's class
     className?: string                # a host's own look
 ```
 
 ```mdl
 type Link
   desc: >
-    A typed edge: `line` (straight), `curve` (cubic Bézier leaving each port along its side's normal) or
+    A typed edge: `line` (straight), `curve` (cubic Bézier leaving each port along its side's normal),
     `spline` (the polyline through its control `points`, each interior point rounded by a quadratic that
-    takes the point as its control, so a corner reads as a corner). A link is NOT a node with a special
+    takes the point as its control, so a corner reads as a corner) or `smart` (routed rather than drawn:
+    a stub leaves each port along its normal by half a major cell and one segment joins them, rounded the
+    same way — nothing stored, so the route follows the nodes). A link is NOT a node with a special
     kind — node-only operations never have to filter links out (decision 9).
   fields:
     id: LinkId
-    type: 'line' | 'curve' | 'spline'
+    type: 'line' | 'curve' | 'spline' | 'smart'
     z: string
     locked?: boolean
     source: Endpoint
@@ -481,13 +484,18 @@ feat F-1: Depth and navigation
 
 ```mdl
 feat F-2: Grid and snapping
-  req F-2.1: The grid is always drawn; the toggle (G) is SNAP only.
-  req F-2.2: A created node arrives on the major grid (64px); a move, a resize or a dragged control
-    point snaps to the minor grid (16px) as the gesture runs, so placement is not coarse while a node's
-    size and ports stay aligned.
-  req F-2.3: An arrow nudges by the minor grid, Shift+arrow by a major cell.
-  req F-2.4: A link band follows the pointer exactly and snaps once, as it lands.
-  req F-2.5: Snapping off means every gesture is free; nothing else changes.
+  req F-2.1: The grid is drawn only while snapping is on (G toggles both): its lines are what a gesture
+    lands on, so drawing them when nothing snaps states a constraint the canvas is not applying.
+  req F-2.2: Gestures snap to the FINEST LEVEL THE GRID ACTUALLY DRAWS, read back through the same rule
+    the component filters by, so the lines and the snap cannot part company. A unit fixed in scene units
+    diverges as soon as the zoom moves: far enough in the drawn lines are finer than the snap, and in a
+    nested scene — entered at a fraction of the parent's zoom — they are coarser and the snap lands on
+    nothing visible.
+  req F-2.3: A created node arrives on the major level; a move, a resize or a dragged control point
+    snaps to the minor one, so placement is not coarse while a node's size and ports stay aligned.
+  req F-2.4: An arrow nudges by the minor grid, Shift+arrow by a major cell.
+  req F-2.5: A link band follows the pointer exactly and snaps once, as it lands.
+  req F-2.6: Snapping off means every gesture is free and the grid is hidden; nothing else changes.
 ```
 
 ```mdl
@@ -500,8 +508,17 @@ feat F-3: Selection and editing
     there and moves it in the same gesture.
   req F-3.5: A create drag previews the bounds the node will land in; a palette drop shows that frame
     alone, since the pointer already carries the drag's own preview.
-  req F-3.6: Double-click edits a node's text part in place; Enter commits, Escape rejects.
-  req F-3.7: The properties panel edits the selected element's own schema through `update` intents.
+  req F-3.6: A box drawn on the canvas is exactly what the pointer swept — no minimum and no fallback to
+    the type's default — and a gesture that snapped to nothing creates nothing rather than planting a
+    default-sized node under the click.
+  req F-3.7: A create with NO drawn box (a palette drop, the toolbar's create menu) takes the type's
+    default size divided by the camera zoom, so it covers the same screen area at any zoom and any
+    depth. The camera is the right quantity because it is independent of content: the portal's own
+    factor grows with the child's bounds, so scaling by it would feed back, each node enlarging the next.
+  req F-3.8: Picking a shape or link tool clears the selection; the node the gesture makes becomes it.
+  req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
+  req F-3.10: The properties panel edits the selected element's own schema through `update` intents,
+    `style.fontSize` among them: set, it overrides the view's own size class for every text part.
 ```
 
 ```mdl
@@ -540,6 +557,20 @@ feat F-7: Persistence (M4)
     takes the memory one.
   req F-7.3: `plugin-conductor`'s `CanvasArticle` renders `SceneView` with the compute projection over
     that store.
+```
+
+```mdl
+feat F-8: Links between shapes
+  req F-8.1: With a link tool a node's BODY is a source like a port is, so two shapes can be joined
+    without aiming at their dots; the endpoint carries no port and routing picks the side.
+  req F-8.2: A drop resolves the same way: a port claims it only while the pointer is within reach,
+    anywhere else on the node binds to the body, and a node whose ports all refuse the end takes a body
+    link rather than refusing the drop.
+  req F-8.3: Ports are drawn for the node under the pointer alone (and a drop target mid-drag, which
+    pointer capture hides from hover) — every node's ports at once is a field of dots over the diagram.
+  req F-8.4: A `smart` link is routed, not drawn: a stub leaves each port along its side's normal by
+    half a major cell and one segment joins them. Nothing is stored, so it follows the nodes; two ports
+    on the same side double back through the middle rather than cutting across their own nodes.
 ```
 
 ## Rules

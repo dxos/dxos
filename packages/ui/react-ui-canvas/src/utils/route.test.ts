@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { defaultNodeRegistry } from '../model/registry.ts';
 import { type Link } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
-import { insertIndex, linkGeometry, linkPath, sideToward, splinePath } from './route.ts';
+import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath } from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -21,6 +21,26 @@ describe('route', () => {
     expect(linkPath(line, from, to)).toBe('M 0 0 L 300 0');
     expect(linkPath(curve, from, to)).toMatch(/^M 0 0 C .* 300 0$/);
     expect(linkPath(spline, from, to)).toMatch(/^M 0 0 L .* Q 150 100, .* L 300 0$/);
+    const smart: Link = { type: 'smart', id: 'm', ...ends };
+    expect(linkPath(smart, from, to)).toMatch(/^M 0 0 L .* L 300 0$/);
+  });
+
+  test('a smart link stubs out of each port along its normal by half a major cell', ({ expect }) => {
+    // Facing ports, so the stubs point at each other and the middle segment joins them.
+    expect(smartPoints(from, to)).toEqual([
+      { x: 0, y: 0 },
+      { x: 32, y: 0 },
+      { x: 268, y: 0 },
+      { x: 300, y: 0 },
+    ]);
+    // Two ports on the same side leave the same way, so the route doubles back through the middle
+    // segment rather than cutting across either node — the elbow the ports imply.
+    expect(smartPoints({ point: { x: 0, y: 0 }, side: 'e' }, { point: { x: 0, y: 200 }, side: 'e' })).toEqual([
+      { x: 0, y: 0 },
+      { x: 32, y: 0 },
+      { x: 32, y: 200 },
+      { x: 0, y: 200 },
+    ]);
   });
 
   test('a spline is a rounded polyline that bends around its control points', ({ expect }) => {

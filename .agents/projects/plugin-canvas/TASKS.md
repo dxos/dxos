@@ -93,3 +93,38 @@ Package `packages/plugins/plugin-canvas` (private), registered in Composer's plu
 ### References
 
 - Muse: https://museapp.com · infinitecanvas.tools · tldraw · @xyflow/react
+
+## Phase 5: post-M4 fixes (started 2026-09-22, PR #13254)
+
+Reported from Composer and the storybook after M4 landed, then measured in Chromium
+(`src/playwright/create.spec.ts`) rather than reasoned about — the first two attempts at the sizing
+were wrong in ways only a measurement showed.
+
+- [x] `plugin-canvas` parity with tldraw / excalidraw: `dependsOn: ['org.dxos.plugin.illustrator']`, a
+      `Settings` schema (`showToolbar`, `showPalette`, `liveDepth`) behind `CanvasCapabilities.Settings`
+      and `AppCapabilities.Settings`, read by `CanvasArticle`.
+- [x] `withRegistry` moved to `@dxos/react-ui/testing` beside `withTheme` / `withLayout`; the four
+      hand-rolled copies in the canvas stories replaced (they built a bare `Registry.make()` rather than
+      `AtomEx.makeRegistry`, so they ran without the idle TTL ECHO atoms need).
+- [x] `createClassSceneTree`: a three-level class diagram fixture (five scenes, invented domain) beside
+      the element-type tree the projection / undo / clipboard tests assert against by id.
+- [x] Create sizing by the camera zoom, not the portal factor. The factor grows with the child's own
+      bounds, so scaling by it fed back — a larger node enlarged the next one. A create with no drawn box
+      (palette drop, toolbar menu) divides the type's default by the zoom and so covers the same screen
+      area at any zoom and depth: measured 261 / 247 / 257px wide at 45 / 64 / 100%.
+- [x] A box drawn on the canvas is exactly what the pointer swept — no minimum, no default fallback — and
+      a gesture that snapped to nothing creates nothing.
+- [x] Snapping follows the grid that is drawn. The unit was fixed in scene units while `Grid` keeps a
+      level only while its cells are legible, so they parted company with the zoom: in a nested scene the
+      lines were coarser than the snap and it landed on nothing visible.
+- [x] Grid drawn only while snapping is on; the toolbar's zoom readout divided by the portal product, so
+      entering a portal no longer drops it fourfold without anything visibly changing.
+- [x] `NodeStyle.fontSize` in the node's own units, overriding the view's size class (the views drop the
+      Tailwind class when it is set, which would otherwise win over the inherited value).
+- [x] Link from and to a node body: with a link tool the body is a source like a port, and a drop binds to
+      the body unless the pointer is within reach of a port. Ports are drawn for the hovered node alone.
+- [x] Picking a shape or link tool clears the selection.
+- [x] `smart` link type: a stub leaves each port along its side's normal by half a major cell and one
+      segment joins them, rounded by `splinePath`. Nothing is stored, so the route follows the nodes.
+- [ ] Smart routing proper: avoid crossing the nodes it connects and other nodes in the way (phase 2,
+      over `@dxos/diagram`'s `ortho-router`).

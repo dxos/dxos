@@ -21,6 +21,7 @@ import { Obj } from '@dxos/echo';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import {
   type Link,
+  LINK_TYPES,
   type LinkType,
   type Node,
   type NodeStyle,
@@ -40,9 +41,10 @@ type Layout = { nodes: CanvasBoard.Shape[]; edges: CanvasBoard.Connection[] };
 /** The scene id a board's own layout takes; a board holds one scene, so it is the board's id. */
 export const boardSceneId = (board: CanvasBoard.CanvasBoard): SceneId => board.id;
 
-/** The engine's link types; an edge naming something else is drawn as a curve, which is what the editor drew. */
-const LINK_TYPES: readonly string[] = ['line', 'curve', 'spline'];
+/** An edge naming a type the engine does not have is drawn as a curve, which is what the editor drew. */
 const DEFAULT_LINK_TYPE: LinkType = 'curve';
+const linkType = (type: string | undefined): LinkType =>
+  LINK_TYPES.find((candidate) => candidate === type) ?? DEFAULT_LINK_TYPE;
 
 //
 // Read
@@ -98,7 +100,7 @@ const linkFromEdge = (edge: CanvasBoard.Connection, z: string): Link => {
   const { id, source, target, input, output, type } = edge;
   return {
     id,
-    type: (LINK_TYPES.includes(type ?? '') ? type : DEFAULT_LINK_TYPE) as LinkType,
+    type: linkType(type),
     z,
     source: { node: source, port: createAnchorId('output', output ?? DEFAULT_OUTPUT) },
     target: { node: target, port: createAnchorId('input', input ?? DEFAULT_INPUT) },
