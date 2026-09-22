@@ -13,7 +13,7 @@ import {
 } from '@automerge/automerge-subduction';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { parseSignedFragmentRecord, selfCheckpointRepair } from './fragment-checkpoints.ts';
+import { parseSignedFragmentRecord, selfCheckpointRepair } from './0002_self_checkpointed_fragments.ts';
 
 const ID_LENGTH = 32;
 const PREFIX_LENGTH = 12;

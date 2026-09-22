@@ -32,10 +32,13 @@ import { PublicKey } from '@dxos/keys';
 
 import { type TestSqliteRuntime, createTestSqliteRuntime } from '../../testing/index.ts';
 import { AutomergeHost } from '../automerge-host.ts';
-import { parseSignedFragmentRecord, selfCheckpointRepair } from '../fragment-checkpoints.ts';
 import { SqliteStorageAdapter, SUBDUCTION_PREFIX } from '../sqlite-storage-adapter.ts';
 import { deleteRemoteHeads } from './0001_delete_remote_heads.ts';
-import { selfCheckpointedFragments } from './0002_self_checkpointed_fragments.ts';
+import {
+  parseSignedFragmentRecord,
+  selfCheckpointedFragments,
+  selfCheckpointRepair,
+} from './0002_self_checkpointed_fragments.ts';
 import { type SubductionMigration, hasSubductionMigration, runSubductionMigrations } from './index.ts';
 
 /**

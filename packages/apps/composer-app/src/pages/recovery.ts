@@ -147,7 +147,7 @@ const recoveryHelpers: RecoveryHelpers = {
     );
     const elapsedMs = Math.round(performance.now() - started);
     print(
-      deleted > 0
+      deleted > 0 || reclaimedBytes > 0
         ? `Deleted ${deleted.toLocaleString()} record(s) and reclaimed ${(reclaimedBytes / 1_000_000).toFixed(1)} MB ` +
             `in ${elapsedMs} ms — Boot to reopen Composer.`
         : 'No stored sync heads — nothing to delete.',
