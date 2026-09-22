@@ -14,6 +14,7 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
 import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index.ts';
 import { type Index, type IndexerObject } from './interface.ts';
+import { extractIndexableText } from './text-extractor.ts';
 
 /** Each indexed row binds two variables, so the batch is half what a single-column `IN` allows. */
 const INSERT_CHUNK_SIZE = SQL_CHUNK_SIZE / 2;
@@ -106,12 +107,20 @@ const escapeFts5Query = (text: string): string => {
  *
  * Deferring it matters because re-tokenizing is what made editing expensive: FTS5 cannot update a
  * row in place and a trigram tokenizer emits one token per 3-character window, so one changed
- * property rewrote hundreds of kilobytes. Nothing but `MATCH` reads this table — every other read,
- * the sub-trigram `LIKE` fallback included, goes to the snapshot store, which is never behind. A
- * caller that needs its own write matched drains first, via `Database.flush({ secondaryIndexes:
- * true })`.
+ * property rewrote hundreds of kilobytes. Only search reads this table — every read of object data
+ * goes to the snapshot store, which is never behind. A caller that needs its own write matched
+ * drains first, via `Database.flush({ secondaryIndexes: true })`.
+ *
+ * The indexed column holds the object's extracted text, not its JSON (see
+ * {@link extractIndexableText}), so property names are not searchable.
  */
 export class FtsIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -120,6 +129,7 @@ export class FtsIndex implements Index {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -129,7 +139,7 @@ export class FtsIndex implements Index {
     includeAllQueues,
     queues,
     typeDxns,
-  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
+  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
@@ -141,7 +151,7 @@ export class FtsIndex implements Index {
         return [];
       }
 
-      const sql = yield* SqlClient.SqlClient;
+      const sql = this.#sql;
 
       // Trigram tokenizer requires at least 3 characters per term.
       // Check if ALL terms are at least 3 chars; otherwise use LIKE fallback.
@@ -155,10 +165,10 @@ export class FtsIndex implements Index {
 
       const conditions =
         minTermLength < 3
-          ? // LIKE fallback - scan the entire snapshot store, AND all terms.
-            terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
+          ? // LIKE fallback - scan the index text column, AND all terms.
+            terms.map((term) => sql`f.text LIKE ${'%' + term + '%'}`)
           : // MATCH - fast index lookup.
-            [sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`];
+            [sql`f.text MATCH ${escapeFts5Query(trimmed)}`];
 
       // Space and queue constraints are combined with OR.
       const sourceConditions: Statement.Statement<{}>[] = [];
@@ -191,7 +201,7 @@ export class FtsIndex implements Index {
         conditions.push(sql`(${sql.or(sourceConditions)})`);
       }
 
-      // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `snapshot`.
+      // `typeDXN` is unambiguous in the join: the FTS virtual table only exposes `text`.
       if (typeDxns && typeDxns.length > 0) {
         conditions.push(sql`(${buildTypeDxnCondition(sql, typeDxns)})`);
       }
@@ -210,12 +220,12 @@ export class FtsIndex implements Index {
         `;
         return rows;
       } else {
-        // LIKE fallback - no ranking available, default to 1. Scans the snapshot store directly,
-        // so a term below the trigram minimum matches writes the index has not caught up with.
+        // LIKE fallback - no ranking available, default to 1. A term below the trigram minimum
+        // has no tokens to match, so this scans the stored text of every row instead.
         const rows = yield* sql<EntityMeta>`
           SELECT m.* 
-          FROM objectSnapshot AS f 
-          JOIN objectMeta AS m ON f.recordId = m.recordId 
+          FROM ftsIndex AS f 
+          JOIN objectMeta AS m ON f.rowid = m.recordId 
           WHERE ${sql.and(conditions)}
         `;
         return rows.map((row) => ({ ...row, rank: 1 }));
@@ -225,9 +235,9 @@ export class FtsIndex implements Index {
 
   /** Delete index rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
         }
@@ -236,31 +246,31 @@ export class FtsIndex implements Index {
 
   /**
    * Re-tokenizes the given objects, whose text this reads from {@link IndexerObject.data} rather
-   * than from the snapshot store so that one pass writes one index.
+   * than from the snapshot store so that one pass writes one index. Only the text
+   * {@link extractIndexableText} pulls out of the object is stored — never its property names.
    */
-  update = Effect.fn('FtsIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        if (objects.length === 0) {
-          return;
-        }
-        const sql = yield* SqlClient.SqlClient;
+  update = Effect.fn('FtsIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      if (objects.length === 0) {
+        return;
+      }
+      const sql = this.#sql;
 
-        const rows: { rowid: number; snapshot: string }[] = [];
-        for (const object of objects) {
-          if (object.recordId === null) {
-            return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
-          }
-          rows.push({ rowid: object.recordId, snapshot: JSON.stringify(object.data) });
+      const rows: { rowid: number; text: string }[] = [];
+      for (const object of objects) {
+        if (object.recordId === null) {
+          return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
         }
+        rows.push({ rowid: object.recordId, text: extractIndexableText(object.data) });
+      }
 
-        // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
-        for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
-          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
-        }
-        for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
-          yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
-        }
-      }),
+      // FTS5 has no UPDATE; an upsert is a delete followed by an insert.
+      for (const chunk of chunkArray(rows.map((row) => row.rowid))) {
+        yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+      }
+      for (const chunk of chunkArray(rows, INSERT_CHUNK_SIZE)) {
+        yield* sql`INSERT INTO ftsIndex ${sql.insert(chunk)}`;
+      }
+    }),
   );
 }

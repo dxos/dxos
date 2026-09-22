@@ -30,8 +30,8 @@ describe('FtsIndex', () => {
   it.effect(
     'should create an FTS5 table on migrate',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
 
@@ -40,16 +40,16 @@ describe('FtsIndex', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].sql).toMatch(/fts5/i);
-      expect(result[0].sql).toMatch(/snapshot/i);
+      expect(result[0].sql).toMatch(/text/i);
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should insert snapshots and query them via MATCH',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -95,9 +95,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should upsert objects on update',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -163,9 +163,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should handle non-sequential recordIds',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -244,9 +244,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should query from one space only',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -324,9 +324,9 @@ describe('FtsIndex', () => {
   it.effect(
     'partial word matches',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -412,9 +412,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should query from specific queues',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -497,9 +497,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should query with includeAllQueues',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -566,9 +566,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should OR space and queue constraints',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -646,9 +646,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should scope matches by typeDxns',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -713,6 +713,113 @@ describe('FtsIndex', () => {
       // Empty scope matches nothing.
       const none = yield* index.query({ ...defaultQuery, typeDxns: [] });
       expect(none).toHaveLength(0);
+    }, Effect.provide(TestLayer)),
+  );
+  it.effect(
+    'should match text content but not property names',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+      yield* store.migrate();
+      yield* metaIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectId = EntityId.random();
+      const objects: IndexerObject[] = [
+        {
+          spaceId,
+          queueId: null,
+          queueNamespace: null,
+          documentId: 'doc-1',
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: {
+            id: objectId,
+            [ATTR_TYPE]: TYPE_PERSON,
+            description: 'Ada Lovelace wrote the first algorithm.',
+            tags: ['mathematics'],
+            address: { city: 'London' },
+            employer: { '/': 'dxn:echo:@:01JXXXXXXXXXXXXXXXXXXXXXXX' },
+            headcount: 1843,
+          },
+        },
+      ];
+
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
+      yield* store.update(objects);
+      yield* index.update(objects);
+
+      const defaults = { spaceId: null, includeAllQueues: false, queues: null } as const;
+      const query = (text: string) => index.query({ ...defaults, query: text });
+
+      // Positive: values, at every depth.
+      for (const term of ['Lovelace', 'algorithm', 'mathematics', 'London', 'ovelac']) {
+        expect(yield* query(term), term).toHaveLength(1);
+      }
+      expect((yield* query('Lovelace'))[0].objectId).toBe(objectId);
+
+      // Negative: property names, the type, the id, reference targets and numbers.
+      for (const term of [
+        'description',
+        'tags',
+        'address',
+        'city',
+        'employer',
+        'headcount',
+        'com.example.type.person',
+        objectId,
+        '01JXXXXXXXXXXXXXXXXXXXXXXX',
+        '1843',
+      ]) {
+        expect(yield* query(term), term).toHaveLength(0);
+      }
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'should not match property names below the trigram minimum',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+      yield* store.migrate();
+      yield* metaIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const objects: IndexerObject[] = [
+        {
+          spaceId,
+          queueId: null,
+          queueNamespace: null,
+          documentId: 'doc-1',
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: {
+            id: EntityId.random(),
+            [ATTR_TYPE]: TYPE_PERSON,
+            title: 'Ok then',
+          },
+        },
+      ];
+
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
+      yield* store.update(objects);
+      yield* index.update(objects);
+
+      const defaults = { spaceId: null, includeAllQueues: false, queues: null } as const;
+
+      // A sub-trigram term takes the LIKE path, which now scans the extracted text.
+      expect(yield* index.query({ ...defaults, query: 'Ok' })).toHaveLength(1);
+      // `id` and `ti` (of `title`) are substrings of the JSON but not of the text.
+      expect(yield* index.query({ ...defaults, query: 'id' })).toHaveLength(0);
+      expect(yield* index.query({ ...defaults, query: 'ti' })).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
 });

@@ -275,18 +275,18 @@ const walkthroughSidebarTheme = EditorView.theme({
   '.cm-walkthrough-sidebar': {
     position: 'absolute',
     insetBlock: '0',
-    insetInlineStart: '0',
+    insetInlineEnd: '0',
     width: 'var(--cm-walkthrough-width)',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.125rem',
     padding: '1rem 0.5rem',
     overflowY: 'auto',
-    borderInlineEnd: '1px solid var(--color-subdued-separator)',
+    borderInlineStart: '1px solid var(--color-subdued-separator)',
     fontFamily: 'var(--font-body)',
   },
   // The rail overlays the editor, so the text is inset by exactly its width.
-  '.cm-scroller': { paddingInlineStart: 'var(--cm-walkthrough-width)' },
+  '.cm-scroller': { paddingInlineEnd: 'var(--cm-walkthrough-width)' },
 
   '.cm-walkthrough-entry': {
     display: 'grid',

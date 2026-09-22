@@ -89,11 +89,11 @@ class MockIndexDataSource implements IndexDataSource {
 
 describe('IndexEngine', () => {
   const setup = Effect.gen(function* () {
-    const engine = new IndexEngine();
+    const engine = new IndexEngine(yield* SqlClient.SqlClient);
     yield* engine.migrate();
     // The stores are stateless accessors over the same `SqlClient` the engine writes through, so
     // one constructed here reads exactly what the engine wrote.
-    return { engine, metaIndex: new EntityMetaIndex() };
+    return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
 
   it.effect(
@@ -195,6 +195,7 @@ describe('IndexEngine', () => {
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
+            title: 'Alpha one',
             val: 1,
           },
         },
@@ -209,6 +210,7 @@ describe('IndexEngine', () => {
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
+            title: 'Alpha two',
             val: 2,
           },
         },
@@ -223,6 +225,7 @@ describe('IndexEngine', () => {
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_B,
+            title: 'Beta three',
             val: 3,
           },
         },
@@ -239,13 +242,21 @@ describe('IndexEngine', () => {
       expect(resultsB).toHaveLength(1);
 
       yield* engine.updateSecondaryIndexes(Context.default());
+      // The index holds text, not the object's JSON, so the typename is not a search term.
       const ftsResults = yield* engine.queryText({
-        query: 'TypeA',
+        query: 'Alpha',
         spaceId: null,
         includeAllQueues: false,
         queues: null,
       });
       expect(ftsResults).toHaveLength(2);
+      const byTypename = yield* engine.queryText({
+        query: 'TypeA',
+        spaceId: null,
+        includeAllQueues: false,
+        queues: null,
+      });
+      expect(byTypename).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
 

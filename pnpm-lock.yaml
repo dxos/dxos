@@ -2692,9 +2692,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/shell':
-        specifier: workspace:*
-        version: link:../../sdk/shell
       '@dxos/solid-ui-geo':
         specifier: workspace:*
         version: link:../../ui/solid-ui-geo
@@ -7389,6 +7386,36 @@ importers:
       chart.js:
         specifier: 'catalog:'
         version: 4.5.0
+
+  packages/e2e/composer-e2e:
+    devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-google':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-google
+      '@dxos/plugin-jmap':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-jmap
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../sdk/shell
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
 
   packages/e2e/perf-harness:
     devDependencies:
@@ -22552,6 +22579,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
+      '@dxos/react-ui-virtual':
+        specifier: workspace:*
+        version: link:../react-ui-virtual
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
