@@ -46,7 +46,11 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciHeapUsedBytes*`                                        | bytes         | same four suffixes, plus `ciHeapUsedTotalBytes`                                     |
 | `ciLagP95Ms*` / `ciLagMaxMs*`                             | ms            | same four suffixes, plus the pooled `ciLagP95Ms` / `ciLagMaxMs`                     |
 | `ciLagSamples*`                                           | count         | **read this before a zero above**: `0` means the drift probe produced nothing       |
-| `ciHeapBackingBytes*`                                     | bytes         | same four suffixes — `ArrayBuffer` backing stores, where automerge's buffers sit    |
+| `ciHeapBackingBytes*`                                     | bytes         | RAW backing: wasm AND `ArrayBuffer`s. **Do not stack beside `ciWasmBytes*`**        |
+| `ciHeapBackingNonWasmBytes*`                              | bytes         | backing with wasm removed — the disjoint column, safe to stack                      |
+| `ciEmbedderBytes*`                                        | bytes         | Blink-side objects for the realm: DOM, listeners, the document                      |
+| `ciWasmAutomergeBytes*` / `ciWasmSubductionBytes*`        | bytes         | wasm by library; subduction is matched first, its module is `automerge_subduction…` |
+| `ciWasmSqliteBytes*` / `ciWasmOtherBytes*`                | bytes         | the other two libraries; the four partition `ciWasmBytes*` exactly                  |
 | `ciWasmBytes*`                                            | bytes         | same four suffixes, plus `ciWasmBytesTotal`; counted by no heap column              |
 | `ciWasmRealms`                                            | count         | realms that published the wasm probe; `0` means uninstrumented, not "no wasm"       |
 | `ciRpcQueueWaitP95Ms*` / `ciRpcQueueWaitMaxMs*`           | ms            | same four suffixes — time a request waited for that realm's event loop              |

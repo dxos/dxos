@@ -379,3 +379,98 @@ describe('lag columns', () => {
     expect(responsive.properties.lagSamplesWorker).toBe(31);
   });
 });
+
+describe('disjoint memory categories', () => {
+  test('backing is published with wasm removed, so the two can be stacked', ({ expect }) => {
+    // `backingStorageSize` counts wasm linear memory AND `ArrayBuffer`s, so a chart stacking the
+    // raw column beside `wasmBytes` draws every wasm byte twice. The disjoint set is
+    // {heapUsedBytes, wasmBytes, heapBackingNonWasmBytes, embedderBytes}.
+    const event = toPosthogEvent(
+      row({
+        heap: [
+          {
+            kind: 'page',
+            name: 'page',
+            usedBytes: 1_000,
+            totalBytes: 2_000,
+            backingBytes: 26_121_045,
+            embedderBytes: 11_330_104,
+            wasmBytes: 4_521_984,
+            wasmInstances: 3,
+          },
+        ],
+      }),
+    );
+
+    expect(event.properties.heapBackingBytesTab).toBe(26_121_045);
+    expect(event.properties.heapBackingNonWasmBytesTab).toBe(26_121_045 - 4_521_984);
+    expect(event.properties.embedderBytesTab).toBe(11_330_104);
+  });
+
+  test('a realm that grew a memory mid-read cannot draw a negative segment', ({ expect }) => {
+    const event = toPosthogEvent(
+      row({
+        heap: [{ kind: 'page', name: 'page', usedBytes: 1, totalBytes: 2, backingBytes: 10, wasmBytes: 40 }],
+      }),
+    );
+
+    expect(event.properties.heapBackingNonWasmBytesTab).toBe(0);
+  });
+
+  test('wasm is split by library, and subduction is not counted as automerge', ({ expect }) => {
+    // Subduction ships as `automerge_subduction_wasm_bg.wasm`, so an automerge-first match would
+    // attribute all of it to automerge — the whole reason the classifier tests subduction first.
+    const event = toPosthogEvent(
+      row({
+        heap: [
+          {
+            kind: 'worker',
+            name: 'worker',
+            usedBytes: 1,
+            totalBytes: 2,
+            wasmBytes: 23_396_352,
+            wasmInstances: 3,
+            wasmByModule: {
+              'sqlite3.wasm': 17_432_576,
+              'automerge_wasm_bg.wasm': 3_080_192,
+              'automerge_subduction_wasm_bg.wasm': 2_883_584,
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(event.properties.wasmSqliteBytesWorker).toBe(17_432_576);
+    expect(event.properties.wasmAutomergeBytesWorker).toBe(3_080_192);
+    expect(event.properties.wasmSubductionBytesWorker).toBe(2_883_584);
+    expect(event.properties.wasmOtherBytesWorker).toBe(0);
+    // The libraries partition the realm's wasm exactly.
+    const split =
+      (event.properties.wasmSqliteBytesWorker as number) +
+      (event.properties.wasmAutomergeBytesWorker as number) +
+      (event.properties.wasmSubductionBytesWorker as number) +
+      (event.properties.wasmOtherBytesWorker as number);
+    expect(split).toBe(event.properties.wasmBytesWorker);
+  });
+
+  test('an unrecognised module lands in Other rather than vanishing', ({ expect }) => {
+    const event = toPosthogEvent(
+      row({
+        heap: [
+          {
+            kind: 'page',
+            name: 'page',
+            usedBytes: 1,
+            totalBytes: 2,
+            wasmBytes: 655_360,
+            wasmInstances: 1,
+            wasmByModule: { 'chunk-hypercore-crypto-CpKxpBdJ.js': 655_360 },
+          },
+        ],
+      }),
+    );
+
+    expect(event.properties.wasmOtherBytesTab).toBe(655_360);
+    expect(event.properties.wasmAutomergeBytesTab).toBe(0);
+  });
+});

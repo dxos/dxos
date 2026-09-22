@@ -69,6 +69,12 @@ const origin = (): string => {
   return strip(caller).split('/').filter(Boolean).pop() ?? 'document';
 };
 
+/** The `.wasm` file's own name, or `undefined` for a module with no URL behind it. */
+const moduleName = (url: string | undefined): string | undefined => {
+  const file = url?.split('?')[0].split('/').filter(Boolean).pop();
+  return file?.endsWith('.wasm') ? file : undefined;
+};
+
 /**
  * Records a memory once, whatever route reached it.
  *
@@ -188,9 +194,14 @@ export const installWasmMemoryProbe = (): void => {
     source: Response | PromiseLike<Response>,
     imports?: WebAssembly.Imports,
   ): Promise<WebAssembly.WebAssemblyInstantiatedSource> => {
-    const where = origin();
+    const resolved = await source;
+    // The module's own URL in preference to the creating script, because it is the only stable
+    // identity available: a chunk name carries a content hash and changes on every build, while
+    // `automerge_wasm_bg.wasm` names the library. `origin()` remains the fallback for a module
+    // instantiated from bytes, which carries no URL at all.
+    const where = moduleName(resolved?.url) ?? origin();
     trackImports(imports, where);
-    const result = await originalInstantiateStreaming(source, imports);
+    const result = await originalInstantiateStreaming(resolved, imports);
     trackExports(result.instance, where);
     return result;
   };

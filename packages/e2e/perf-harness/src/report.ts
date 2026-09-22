@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { type StageRow, type TargetKind } from './types.ts';
+import { type HeapReading, type StageRow, type TargetKind } from './types.ts';
 
 /** Repo-root-relative, alongside the startup harness's rows. */
 export const reportDir = (workspaceRoot: string): string => path.join(workspaceRoot, 'test-results', 'perf');
@@ -112,6 +112,47 @@ const maxByRealm = <T>(
 };
 
 /**
+ * Which library a wasm memory belongs to, from the module name the probe recorded.
+ *
+ * Semantic rather than keyed by the module itself: a per-module column would mint a new permanent
+ * PostHog series whenever a bundle or a wasm file is renamed, the mistake `REALM_SUFFIX` exists to
+ * avoid. Four buckets are stable across those renames because they name libraries.
+ *
+ * SUBDUCTION IS TESTED FIRST, and the order is load-bearing: its module ships as
+ * `automerge_subduction_wasm_bg.wasm`, so an automerge-first match would report every byte of
+ * subduction as automerge — the same trap the network collector has with analytics hosts that sit
+ * under an edge subdomain.
+ */
+const wasmLibrary = (module: string): 'Sqlite' | 'Subduction' | 'Automerge' | 'Other' => {
+  if (/sqlite/i.test(module)) {
+    return 'Sqlite';
+  }
+  if (/subduction/i.test(module)) {
+    return 'Subduction';
+  }
+  if (/automerge/i.test(module)) {
+    return 'Automerge';
+  }
+  return 'Other';
+};
+
+/** Per-realm wasm bytes split by library, zero-filled so a series never gaps. */
+const wasmByLibrary = (readings: readonly HeapReading[]): Record<string, number> => {
+  const columns: Record<string, number> = {};
+  for (const suffix of Object.values(REALM_SUFFIX)) {
+    for (const library of ['Automerge', 'Subduction', 'Sqlite', 'Other'] as const) {
+      columns[`wasm${library}Bytes${suffix}`] = 0;
+    }
+  }
+  for (const reading of readings) {
+    for (const [module, bytes] of Object.entries<number>(reading.wasmByModule ?? {})) {
+      columns[`wasm${wasmLibrary(module)}Bytes${REALM_SUFFIX[reading.kind]}`] += bytes;
+    }
+  }
+  return columns;
+};
+
+/**
  * Maps one stage row to its PostHog event, refusing the rows that must not be trended.
  *
  * Throws rather than returning undefined: both refusals are caller errors, and a silent skip here
@@ -177,6 +218,25 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
     row.heap,
     (reading) => reading.kind,
     (reading) => reading.backingBytes ?? 0,
+  );
+
+  // Backing WITHOUT wasm, which is the disjoint quantity: `backingStorageSize` counts wasm linear
+  // memory and `ArrayBuffer`s alike, so stacking it beside `wasmBytes` double counts every wasm
+  // byte. Floored at zero — the two readings are taken in the same evaluation but a realm that
+  // grew a memory between them would otherwise draw a negative segment.
+  const backingNonWasmByRealm = byRealm(
+    'heapBackingNonWasmBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => Math.max(0, (reading.backingBytes ?? 0) - (reading.wasmBytes ?? 0)),
+  );
+  // Blink-side objects — DOM nodes, listeners, the document — attributed to the realm holding
+  // them. Disjoint from the V8 heap and collected all along without being published.
+  const embedderByRealm = byRealm(
+    'embedderBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.embedderBytes ?? 0,
   );
 
   const rpcCallsByRealm = byRealm(
@@ -260,7 +320,10 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByRealm,
       ...backingByRealm,
+      ...backingNonWasmByRealm,
+      ...embedderByRealm,
       ...wasmByRealm,
+      ...wasmByLibrary(row.heap),
       // EXCLUSIVE memory only, so the total is exact. A `SharedArrayBuffer`-backed memory is
       // visible in every realm it was posted to, and nothing in the probe's readings identifies
       // one allocation across realms — so a deduplicated total cannot be computed here at all.

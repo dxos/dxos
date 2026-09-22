@@ -169,6 +169,28 @@ rather than adding the two.
 `kind` is `page`, `worker` or `shared_worker`; `name` carries the script name, which is how you tell
 the coordinator worker from the observability worker.
 
+### The disjoint set, and what not to stack
+
+Four per-realm columns partition a realm's memory and can be stacked without double counting:
+
+| column                     | what it holds                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `heapUsedBytes*`           | live JS objects                                                                |
+| `wasmBytes*`               | wasm linear memory, committed                                                  |
+| `heapBackingNonWasmBytes*` | external backing stores that are NOT wasm — `ArrayBuffer`s and friends         |
+| `embedderBytes*`           | Blink-side objects attributed to the realm: DOM nodes, listeners, the document |
+
+`heapBackingBytes*` is the RAW reading and is **not** in that set: `backingStorageSize` counts wasm
+linear memory and `ArrayBuffer`s alike, so stacking it beside `wasmBytes` draws every wasm byte
+twice. It is published because it is the cross-check that validated the probe — on a real boot the
+worker read 31,949,677 backing against 23,396,352 wasm, and the difference is its non-wasm buffers.
+
+`wasmBytes*` is split by library into `wasmAutomergeBytes*`, `wasmSubductionBytes*`,
+`wasmSqliteBytes*` and `wasmOtherBytes*`, which partition it exactly. The classifier keys on the
+`.wasm` module's own filename rather than the chunk that created it, because a chunk name carries a
+content hash and changes on every build. **It tests subduction before automerge**: subduction ships
+as `automerge_subduction_wasm_bg.wasm`, so the other order reports all of it as automerge.
+
 ### `heapUsedTotalBytes`
 
 Sum of `usedBytes` across realms. Convenient, and lossy: it hides which realm grew, and still
