@@ -247,10 +247,8 @@ absent, with `{ deleted: 'include' }` as the opt-in in both places. Ref arrays a
 dangling entry stays in the stored array, and readers enumerate the live members through a query
 rather than by dereferencing entries (see [Working with Refs](#working-with-refs)).
 
-```ts
-// Permanent destruction; also prunes dangling array entries pointing at collected objects.
-await db.runGarbageCollection({ pruneDanglingRefs: true });
-```
+Nothing rewrites a ref that dangles — not deletion, not garbage collection. An entry lives until the
+object holding it writes it away, so read through dangling refs rather than sweeping them.
 
 ## Feed Operations
 
