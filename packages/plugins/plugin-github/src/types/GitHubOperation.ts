@@ -182,12 +182,18 @@ export const GenerateWalkthrough = Operation.make({
   services: [Trace.TraceService, AiService.AiService],
 }).pipe(Operation.visible);
 
-/** Submit an approving review on a pull request, as the space's GitHub connection. */
+/**
+ * Submit an approving review on a pull request, as the space's GitHub connection.
+ *
+ * Falls back to a marked conversation comment where GitHub refuses the review — the author's own
+ * pull request, or a token with no review permission — so the approval is still recorded and still
+ * detectable by an agent deciding whether the pull request is good to land.
+ */
 export const SubmitPullRequestApproval = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.submitPullRequestApproval'),
     name: 'Submit Pull Request Approval',
-    description: 'Submit an approving review on a pull request.',
+    description: 'Submit an approving review on a pull request, or record the approval as a comment.',
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
@@ -196,7 +202,13 @@ export const SubmitPullRequestApproval = Operation.make({
     body: Schema.String.pipe(Schema.optional),
   }),
   output: Schema.Struct({
-    reviewId: Schema.Number,
+    /** Set where the approving review was accepted. */
+    reviewId: Schema.Number.pipe(Schema.optional),
+    /** Set instead where the approval was recorded as a comment. */
+    commentId: Schema.Number.pipe(Schema.optional),
+    url: Schema.String.pipe(Schema.optional),
+    /** Whether the approval is a comment rather than a review. */
+    commented: Schema.Boolean,
   }),
   types: [PullRequest.PullRequest],
 });

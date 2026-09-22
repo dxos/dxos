@@ -252,6 +252,25 @@ op ImportPullRequestFromSnapshot
     GitHubPullRequestReferenceError: the page's URL names no pull request
 ```
 
+```mdl
+op SubmitPullRequestApproval
+  key: org.dxos.operation.github.submitPullRequestApproval
+  desc: |
+    Approve a pull request as the space's GitHub connection.  Where GitHub refuses the
+    review -- 422 on the author's own pull request, 403 on a token without review
+    permission -- the approval is posted as a conversation comment carrying the
+    `<!-- dxos:approval state=approved -->` marker instead, so the verdict is recorded
+    and an agent polling the conversation can still read "good to land".  Any other
+    failure (401, network) surfaces rather than becoming a comment.
+  input:
+    pullRequest: Ref<PullRequest>
+    body?: string                 # review summary, kept above the marker in the comment
+  output: { reviewId?: number, commentId?: number, url?: string, commented: boolean }
+  effects: [echo:read, http]
+  errors:
+    Unauthorized: token missing or revoked
+```
+
 ## Features
 
 ```mdl
