@@ -99,8 +99,8 @@ const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => str
     .line(elementId('ac'), elementId('a'), elementId('c'), { directed: true })
     .spline(elementId('bc'), elementId('b'), elementId('c'), [
       {
-        x: scale(13),
-        y: scale(22),
+        x: scale(10),
+        y: scale(12),
       },
     ]);
 

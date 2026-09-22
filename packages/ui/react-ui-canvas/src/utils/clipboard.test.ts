@@ -47,7 +47,7 @@ describe('clipboard', () => {
     expect(Object.keys(next.nodes).length).toBe(6);
     expect(next.nodes['ellipse-1'].center).toEqual({ x: 768, y: 256 });
     const spline = next.links['spline-3'];
-    expect(spline.type === 'spline' && spline.points).toEqual([{ x: 480, y: 768 }]);
+    expect(spline.type === 'spline' && spline.points).toEqual([{ x: 480, y: 448 }]);
     expect(endpointNode(spline.source)).toBe('ellipse-1');
     expect(endpointNode(spline.target)).toBe('class-2');
     // The originals are untouched.
