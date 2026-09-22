@@ -11,6 +11,26 @@ import { SpaceId } from '@dxos/keys';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost } from './echo-host.ts';
 
+describe('EchoHost.updateIndexes', () => {
+  test('runs a pass only when something was saved since the last one', async () => {
+    const { host, saveDocs } = await setup();
+    const update = vi.spyOn(host.indexEngine, 'update');
+
+    await saveDocs();
+    await host.updateIndexes();
+    const passes = update.mock.calls.length;
+    expect(passes).toBeGreaterThan(0);
+
+    await host.updateIndexes();
+    await host.updateIndexes();
+    expect(update.mock.calls.length).toBe(passes);
+
+    await saveDocs();
+    await host.updateIndexes();
+    expect(update.mock.calls.length).toBeGreaterThan(passes);
+  });
+});
+
 const setup = async () => {
   const { runtime, dispose } = createTestSqliteRuntime();
   const host = new EchoHost({ runtime });
@@ -35,23 +55,3 @@ const setup = async () => {
 
   return { host, saveDocs };
 };
-
-describe('EchoHost.updateIndexes', () => {
-  test('runs a pass only when something was saved since the last one', async () => {
-    const { host, saveDocs } = await setup();
-    const update = vi.spyOn(host.indexEngine, 'update');
-
-    await saveDocs();
-    await host.updateIndexes();
-    const passes = update.mock.calls.length;
-    expect(passes).toBeGreaterThan(0);
-
-    await host.updateIndexes();
-    await host.updateIndexes();
-    expect(update.mock.calls.length).toBe(passes);
-
-    await saveDocs();
-    await host.updateIndexes();
-    expect(update.mock.calls.length).toBeGreaterThan(passes);
-  });
-});
