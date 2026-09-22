@@ -436,8 +436,6 @@ export class RepoProxy extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const onChange = ({ patchInfo }: ChangeEvent<T>) => {
-      // Bytes the host delivered are already saved there; only a change made here has something to
-      // send, and only it is an unsaved change for `saveStateChanged` to report.
       if (patchInfo.source !== 'change') {
         return;
       }
@@ -483,7 +481,6 @@ export class RepoProxy extends Resource {
     };
 
     const onChange = ({ patchInfo }: ChangeEvent<T>) => {
-      // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
       if (handle.documentId == null || patchInfo.source !== 'change') {
         return;
       }
@@ -754,11 +751,6 @@ export class RepoProxy extends Resource {
     }
   }
 
-  /**
-   * Emits only when the unsaved set differs from the last one reported. A send that carried only
-   * subscription changes lands here too, and reporting "nothing unsaved" again would make a
-   * listener act on a save that did not happen.
-   */
   private _emitSaveStateEvent(): void {
     const unsavedDocuments = Array.from(this._pendingUpdateIds);
     const key = unsavedDocuments.join(',');
