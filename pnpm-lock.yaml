@@ -9394,6 +9394,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute

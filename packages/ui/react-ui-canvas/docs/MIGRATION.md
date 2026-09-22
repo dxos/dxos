@@ -184,12 +184,19 @@ for M1–M3.
   the circuit factories to scenes; `scene.test.ts` and the twelve `scene` stories over `SceneView`. The engine gained
   `Port.snap`, `data-link-id`, an `overlay` slot, a host-owned `projection` and keyless palette entries. The
   controller, `useComputeNodeState`, `node-defs.ts` and the conductor runtime are untouched.
-- **M4: persistence and the plugin switch.** `createEchoStore(board)` over `CanvasBoard.layout` (nodes ↔
-  `layout.nodes`, links ↔ `layout.edges`, z from array order on first read) so every existing board opens
-  unchanged; a `layout` intent handled by the projection (dagre / ELK through `@dxos/diagram`, dropping `@antv`);
+- **M4: persistence and the plugin switch** — done. `createEchoStore(board)` over `CanvasBoard.layout` (nodes ↔
+  `layout.nodes`, links ↔ `layout.edges`, z from array order, and back out in that order) so every existing board
+  opens unchanged; writes reconcile element by element rather than rebuilding the arrays, since a drag would
+  otherwise send one Automerge delta covering the whole board per frame. Three translations, no migration: z-order,
+  a shape's `guide` / `classNames` ↔ a node's `style` (mirrored back so the old editor still reads them), and an
+  edge's `input` / `output` property names ↔ a link endpoint's anchor-id port. A `layout` intent handled by the
+  projection, ranking the scene into rows through `@dxos/diagram`'s `Layout.rank` — the engine the dynamic
+  projection already uses — rather than dagre / ELK: `@antv` is dropped and, unlike it, every node keeps its type,
+  size and content and only its centre moves. `Capabilities.layout` enables the toolbar's button.
   `plugin-conductor`'s `CanvasArticle` renders `SceneView` with the compute projection and the ECHO store, hotkey
-  scopes wired by the container; `plugin-debug` presets on the new factories; Composer `optimizeDeps` and the
-  app-framework allowlist updated. canvas-editor and canvas-compute keep exporting until M5.
+  scope still wired by `KeyboardContainer`; Composer's `optimizeDeps` regenerated. `plugin-debug`'s presets are
+  untouched **by design** — they write shapes into `layout` exactly as the editor did, which is what the store
+  reads. canvas-editor and canvas-compute keep exporting until M5.
 - **M5: retire.** Delete `react-ui-canvas-editor` and the old `react-ui-canvas` `Canvas` exports (DESIGN phase 4);
   `react-ui-canvas-compute` keeps only the compute-specific code (controller, projection, shapes, bullets). Text
   inline editing and undo (phase 2) are independent of this step but should precede the user-facing switch in M4

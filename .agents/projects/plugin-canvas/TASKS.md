@@ -88,7 +88,7 @@ Package `packages/plugins/plugin-canvas` (private), registered in Composer's plu
 - [x] M1: `NodeBase` with `size`, open `Node` + built-in guards, `NodeDef.schema` / `create` / `defaultSize` / `group`, `createSceneSchema`; `Port.accepts` in pairing and drops; `Link.directed` arrowheads; palette groups; tests.
 - [x] M2: editor parity: `{point}` endpoints and `ends` markers, `guide` / `className` style, hover border and selected-on-top, ghost create preview and pdnd palette drops, `resize.ts` (symmetric, `maxSize`, tests), alt-subtract marquee, `debug` atom (D), optional `Toolbar` + story, Home, Playwright `e2e` over the Freehand story (PR #13254).
 - [x] M3: canvas-compute on the engine: `scene/defs.ts` (every `ShapeDef` as a `NodeDef`, anchors → ports), `createComputeProjection` over the shared `graph/sync.ts`, runtime ports, `Bullets` overlay, `sceneFromCircuit`, `scene.test.ts`, twelve `scene` stories; engine hooks `Port.snap`, `data-link-id`, `overlay`, `projection` (PR #13254).
-- [ ] M4: persistence and the plugin switch (`createEchoStore(board)` over `CanvasBoard.layout`, `layout` intent, `plugin-conductor` on `SceneView`).
+- [x] M4: persistence and the plugin switch (`createEchoStore(board)` over `CanvasBoard.layout` with its three translations, the `layout` intent over `@dxos/diagram`'s ranking, `plugin-conductor`'s `CanvasArticle` on `SceneView`, Composer's `optimizeDeps` regenerated).
 
 ### References
 
