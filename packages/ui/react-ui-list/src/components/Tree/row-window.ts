@@ -33,6 +33,15 @@ export type RowUnit =
  */
 export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.node.id : unit.key);
 
+/**
+ * Rows below which windowing is not worth its cost.
+ *
+ * A window trades the whole list's DOM for the viewport's, and buys nothing on a list the viewport
+ * already holds — while costing the disclosure animation and making every row past the fold absent
+ * from the DOM rather than merely offscreen. A few screens' worth is where the trade turns.
+ */
+const WINDOW_MIN_ROWS = 50;
+
 /** The key the end-drop strip is measured and mounted under. */
 export const END_DROP_UNIT_KEY = 'end-drop';
 
@@ -82,7 +91,7 @@ export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): 
     return true;
   };
 
-  return visit(entries) ? units : undefined;
+  return visit(entries) && units.length >= WINDOW_MIN_ROWS ? units : undefined;
 };
 
 /**
