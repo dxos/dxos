@@ -747,7 +747,7 @@ describe('Database', () => {
       const [ref] = refs;
       const exit = await Effect.runPromiseExit(Database.load(ref));
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(await EffectEx.runPromise(Database.loadIncludingDeleted(ref))).toMatchObject({ id: tasks[0].id });
+      expect(await EffectEx.runPromise(Database.load(ref, { deleted: 'include' }))).toMatchObject({ id: tasks[0].id });
     });
 
     test('Ref.loadAll keeps order, skips deleted targets and de-duplicates', async ({ expect }) => {
