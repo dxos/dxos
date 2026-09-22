@@ -24,7 +24,7 @@ import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
 import { QueryError } from '../errors.ts';
 import { GroupBy } from '../group-by.ts';
-import { type QueryPlan } from '../plan.ts';
+import { QueryPlan } from '../plan.ts';
 import { QueryPlanner } from '../query-planner.ts';
 
 /**
@@ -58,8 +58,8 @@ const INDEX_SPACE_TARGET = 'idx_object_index_targetId';
 /** One row of a compiled query's final projection. */
 export type CompiledRow = {
   recordId: number;
-  objectId: string;
-  spaceId: string;
+  objectId: EntityId;
+  spaceId: SpaceId;
   documentId: string;
   queueId: string;
   queueNamespace: string;
@@ -83,6 +83,8 @@ export type CompiledQuery = {
   statement: Statement.Statement<CompiledRow>;
   /** The statement's SQL text with placeholders, for traces. */
   sql: string;
+  /** The compiled plan: one `SqlStep` standing for every step the statement absorbed. */
+  plan: QueryPlan.Plan;
 };
 
 /**
@@ -151,7 +153,12 @@ export class SqlPlanCompiler {
     const final = this.#final(root);
     const withClause = sql.join(', ', false)(this.#ctes);
     const statement = sql<CompiledRow>`WITH RECURSIVE ${withClause} ${final}`;
-    return { statement, sql: statement.compile()[0] };
+    const [text, params] = statement.compile();
+    return {
+      statement,
+      sql: text,
+      plan: QueryPlan.Plan.make([{ _tag: 'SqlStep', sql: text, params, steps: plan.steps }]),
+    };
   }
 
   #fresh(prefix: string): string {

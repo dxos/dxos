@@ -34,6 +34,7 @@ import {
   openCompanionPlank,
   resolveDeckSpec,
   updateActiveDeck,
+  withViewTransition,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -51,11 +52,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         AppGraph.expandPath(graph, subjectId);
       }
 
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        if (input.workspace && state.activeDeck !== input.workspace) {
-          yield* applyWorkspace(input.workspace);
-        }
+      const workspaceToEnter = yield* Effect.map(Capabilities.getAtomValue(DeckCapabilities.State), (state) =>
+        input.workspace && state.activeDeck !== input.workspace ? input.workspace : undefined,
+      );
+      if (workspaceToEnter) {
+        yield* withViewTransition(applyWorkspace(workspaceToEnter));
       }
 
       // Dedup subjects against the active deck using EID identity.
@@ -205,7 +206,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          intent: { scrollIntoView: scrolled, focus: input.focus, transition: true },
+          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !workspaceToEnter },
         });
       }
 

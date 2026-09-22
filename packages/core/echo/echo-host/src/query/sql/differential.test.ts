@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -135,8 +136,9 @@ describe('SqlPlanCompiler differential', () => {
   it.effect('agrees with the in-memory matcher on random filters over random bodies', () =>
     Effect.gen(function* () {
       const random = makeRandom(20260917);
-      const meta = new EntityMetaIndex();
-      const bodies = new ObjectSnapshotIndex();
+      const sqlClient = yield* SqlClient.SqlClient;
+      const meta = new EntityMetaIndex(sqlClient);
+      const bodies = new ObjectSnapshotIndex(sqlClient);
       yield* meta.migrate();
       yield* bodies.migrate();
 

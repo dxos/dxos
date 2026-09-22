@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Aggregate, Filter, Order, Query } from '@dxos/echo';
 import {
@@ -39,9 +40,10 @@ type Fixture = {
 
 /** Seeds the three index tables the compiler reads, the way `IndexEngine.#update` would. */
 const seed = Effect.gen(function* () {
-  const meta = new EntityMetaIndex();
-  const bodies = new ObjectSnapshotIndex();
-  const refs = new ReverseRefIndex();
+  const sqlClient = yield* SqlClient.SqlClient;
+  const meta = new EntityMetaIndex(sqlClient);
+  const bodies = new ObjectSnapshotIndex(sqlClient);
+  const refs = new ReverseRefIndex(sqlClient);
   yield* meta.migrate();
   yield* bodies.migrate();
   yield* refs.migrate();

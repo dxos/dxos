@@ -24,7 +24,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity/index.ts';
-import { DataSpacesReady } from '../services/events.ts';
+import { DataSpacesAvailable } from '../services/events.ts';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
@@ -233,8 +233,8 @@ export const EdgeAgentManagerLayer = (
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => edgeAgentManager.close()));
       yield* Hook.on(
-        DataSpacesReady,
-        Effect.fn('EdgeAgentManager.onDataSpacesReady')(function* () {
+        DataSpacesAvailable,
+        Effect.fn('EdgeAgentManager.onDataSpacesAvailable')(function* () {
           yield* Effect.promise(() => edgeAgentManager.open(ctx));
         }),
       );

@@ -22,10 +22,10 @@ const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provid
 /** `EXPLAIN QUERY PLAN` rows of a compiled query, against the real index migrations. */
 const explain = (query: Query.Any) =>
   Effect.gen(function* () {
-    yield* new EntityMetaIndex().migrate();
-    yield* new ObjectSnapshotIndex().migrate();
-    yield* new ReverseRefIndex().migrate();
     const sql = yield* SqlClient.SqlClient;
+    yield* new EntityMetaIndex(sql).migrate();
+    yield* new ObjectSnapshotIndex(sql).migrate();
+    yield* new ReverseRefIndex(sql).migrate();
     const plan = new QueryPlanner().createPlan(query.ast);
     const compiled = yield* compilePlan(plan);
     const rows = yield* sql.unsafe<{ detail: string }>(

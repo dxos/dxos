@@ -88,6 +88,7 @@ export type WorkingSetDataProvider = {
   allCores(): ObjectCore[];
   getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
+  areStrongDepsResolved(core: ObjectCore): boolean;
 };
 
 /**
@@ -197,7 +198,11 @@ export class WorkingSetQueryExecutor {
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
             const core = this._provider.getCoreById(id, true);
-            const item = core && this._provider.areStrongDepsSatisfied(core) ? this._coreToItem(core) : undefined;
+            // Resolved, not satisfied: an id selector names one object the caller already holds an
+            // id for, so a dependency that is settled unreachable must still surface it. Requiring
+            // satisfaction here left an object that `getObjectById` returns unloadable by its own
+            // reference, with `Ref.tryLoad` waiting on a closure that will never complete.
+            const item = core && this._provider.areStrongDepsResolved(core) ? this._coreToItem(core) : undefined;
             if (item) {
               newItems.push(item);
             }

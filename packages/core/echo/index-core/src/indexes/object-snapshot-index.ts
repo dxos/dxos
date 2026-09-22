@@ -26,6 +26,12 @@ import type { Index, IndexerObject } from './interface.ts';
  * observing a stale row.
  */
 export class ObjectSnapshotIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -34,6 +40,7 @@ export class ObjectSnapshotIndex implements Index {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -44,12 +51,12 @@ export class ObjectSnapshotIndex implements Index {
    */
   querySnapshotsJSON(
     recordIds: number[],
-  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
+  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
       if (recordIds.length === 0) {
         return [];
       }
-      const sql = yield* SqlClient.SqlClient;
+      const sql = this.#sql;
 
       const results: { recordId: number; snapshot: Obj.JSON }[] = [];
       for (const chunk of chunkArray(recordIds)) {
@@ -82,76 +89,75 @@ export class ObjectSnapshotIndex implements Index {
 
   /** Delete snapshot rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ObjectSnapshotIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
         }
       }),
   );
 
-  update = Effect.fn('ObjectSnapshotIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        if (objects.length === 0) {
-          return;
+  update = Effect.fn('ObjectSnapshotIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      if (objects.length === 0) {
+        return;
+      }
+      const sql = this.#sql;
+
+      const pending: { recordId: number; object: IndexerObject }[] = [];
+      for (const object of objects) {
+        if (object.recordId === null) {
+          return yield* Effect.die(new Error('ObjectSnapshotIndex.update requires recordId to be set'));
         }
-        const sql = yield* SqlClient.SqlClient;
+        pending.push({ recordId: object.recordId, object });
+      }
 
-        const pending: { recordId: number; object: IndexerObject }[] = [];
-        for (const object of objects) {
-          if (object.recordId === null) {
-            return yield* Effect.die(new Error('ObjectSnapshotIndex.update requires recordId to be set'));
-          }
-          pending.push({ recordId: object.recordId, object });
+      // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }` tombstone
+      // appended by `Feed.remove`. Feed blocks are stored wholesale, so such a block is merged onto
+      // the prior snapshot below to retain the body and type while layering the new marker;
+      // otherwise the upsert would replace the full snapshot with the bare partial and the client
+      // could not hydrate the deleted object (`Obj.fromJSON` needs `@type` to decode). Only those
+      // blocks need the prior row, so the common case reads nothing at all.
+      // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
+      // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
+      const isPartialBlock = ({ object }: { object: IndexerObject }) =>
+        (object.data as Record<string, unknown>)[ATTR_TYPE] === undefined;
+      const partial = pending.filter(isPartialBlock).map(({ recordId }) => recordId);
+      const prior = new Map<number, string>();
+      for (const chunk of chunkArray(partial)) {
+        const rows = yield* sql<{
+          recordId: number;
+          snapshot: string;
+        }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
+        for (const row of rows) {
+          prior.set(row.recordId, row.snapshot);
         }
+      }
 
-        // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }` tombstone
-        // appended by `Feed.remove`. Feed blocks are stored wholesale, so such a block is merged onto
-        // the prior snapshot below to retain the body and type while layering the new marker;
-        // otherwise the upsert would replace the full snapshot with the bare partial and the client
-        // could not hydrate the deleted object (`Obj.fromJSON` needs `@type` to decode). Only those
-        // blocks need the prior row, so the common case reads nothing at all.
-        // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
-        // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
-        const isPartialBlock = ({ object }: { object: IndexerObject }) =>
-          (object.data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-        const partial = pending.filter(isPartialBlock).map(({ recordId }) => recordId);
-        const prior = new Map<number, string>();
-        for (const chunk of chunkArray(partial)) {
-          const rows = yield* sql<{
-            recordId: number;
-            snapshot: string;
-          }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
-          for (const row of rows) {
-            prior.set(row.recordId, row.snapshot);
-          }
-        }
+      const rows = pending.map(({ recordId, object }) => {
+        const existing = prior.get(recordId);
+        const merged =
+          isPartialBlock({ object }) && existing !== undefined
+            ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
+            : object.data;
+        // Document objects carry `@meta` only so the entity-meta index can extract the
+        // convergence key, and this store is what the full-text index is built from — so
+        // keeping it would let a search match on foreign keys and identity strings the
+        // visible content never contains. Queue blocks always carried meta in their snapshot
+        // (clients hydrate from it), so theirs stays.
+        const stored = object.documentId
+          ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
+          : merged;
+        return { recordId, snapshot: JSON.stringify(stored) };
+      });
 
-        const rows = pending.map(({ recordId, object }) => {
-          const existing = prior.get(recordId);
-          const merged =
-            isPartialBlock({ object }) && existing !== undefined
-              ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
-              : object.data;
-          // Document objects carry `@meta` only so the entity-meta index can extract the
-          // convergence key, and this store is what the full-text index is built from — so
-          // keeping it would let a search match on foreign keys and identity strings the
-          // visible content never contains. Queue blocks always carried meta in their snapshot
-          // (clients hydrate from it), so theirs stays.
-          const stored = object.documentId
-            ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
-            : merged;
-          return { recordId, snapshot: JSON.stringify(stored) };
-        });
-
-        for (const chunk of chunkArray(rows, UPSERT_CHUNK_SIZE)) {
-          yield* sql`
+      for (const chunk of chunkArray(rows, UPSERT_CHUNK_SIZE)) {
+        yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
             ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
           `;
-        }
-      }),
+      }
+    }),
   );
 }

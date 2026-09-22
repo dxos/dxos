@@ -134,6 +134,12 @@ type QueryItem = {
    * `AggregateStep` kept one member per group and the result ships only `groupKey`/`aggregates`.
    */
   collapsed?: { size: number };
+
+  /**
+   * The shipped form, already built by a `SqlStep` from the row SQLite returned. Such an item
+   * carries no document, data or meta, so it is only ever produced by the plan's last step.
+   */
+  result?: QueryService.QueryResult;
 };
 
 const QueryItem = Object.freeze({
@@ -643,8 +649,8 @@ export class QueryExecutor extends Resource {
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
   readonly #mode: QueryExecutorMode;
-  /** Set on the `sql` path, where rows come from the statement rather than from a working set. */
-  #compiledResults: QueryService.QueryResult[] | null = null;
+  /** The plan the compiled path runs: one `SqlStep`. Null until the first compiled execution. */
+  #compiledPlan: QueryPlan.Plan | null = null;
   /** Whether the compiled path can answer this plan at all; see {@link planReadsObjectMeta}. */
   readonly #compilable: boolean;
 
@@ -690,7 +696,7 @@ export class QueryExecutor extends Resource {
   }
 
   get plan(): QueryPlan.Plan {
-    return this._plan;
+    return this.#compiledPlan ?? this._plan;
   }
 
   get trace(): ExecutionTrace {
@@ -703,9 +709,6 @@ export class QueryExecutor extends Resource {
   }
 
   getResults(): QueryService.QueryResult[] {
-    if (this.#compiledResults !== null) {
-      return this.#compiledResults;
-    }
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -717,6 +720,9 @@ export class QueryExecutor extends Resource {
     }
 
     return this._lastResultSet.map((item): QueryService.QueryResult => {
+      if (item.result !== undefined) {
+        return item.result;
+      }
       const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
       if (item.collapsed !== undefined && serializedGroupKey !== undefined) {
         return {
@@ -777,52 +783,29 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * The compiled path: one statement over the index tables, no document loads. Document rows ship
-   * identity only, since the client hydrates them from the document itself; feed rows carry the
-   * indexed snapshot.
+   * The compiled path: the plan is compiled into a single `SqlStep` and run through the same step
+   * loop as any other plan. One statement over the index tables, no document loads — document rows
+   * ship identity only, since the client hydrates them from the document itself; feed rows carry
+   * the indexed snapshot.
    */
   async #execCompiled(): Promise<QueryExecutionResult> {
-    const trace: ExecutionTrace = { ...ExecutionTrace.makeEmpty(), beginTs: performance.now() };
     const plan = this._plan;
-    const { rows, sql, explain } = await this._runInRuntime(
-      Effect.gen(function* () {
-        const compiled = yield* compilePlan(plan);
-        const rows = yield* compiled.statement;
-        const explain = TRACE_QUERY_EXECUTION
-          ? (yield* (yield* SqlClient.SqlClient).unsafe<{ detail: string }>(
-              `EXPLAIN QUERY PLAN ${compiled.sql}`,
-              compiled.statement.compile()[1],
-            )).map((row) => row.detail)
-          : undefined;
-        return { rows, sql: compiled.sql, explain };
-      }),
-    );
-    trace.indexQueryTime = performance.now() - trace.beginTs;
-    trace.indexHits = rows.length;
-    trace.objectCount = rows.length;
-    trace.sql = sql;
-    trace.explain = explain;
+    const compiled = await this._runInRuntime(compilePlan(plan));
+    this.#compiledPlan = compiled.plan;
+
+    const previous = this._lastResultSet;
+    const { workingSet, trace } = await this._execPlan(compiled.plan, []);
+    this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
-    ExecutionTrace.markEnd(trace);
+    // The statement ran one level down, in the step; surface it on the root the trace prints.
+    trace.sql = compiled.sql;
+    trace.explain = trace.children[0]?.explain;
     this._trace = trace;
 
-    const previous = this.#compiledResults ?? [];
-    const results = rows.map(compiledRowToResult);
-    this.#compiledResults = results;
     const changed =
-      previous.length !== results.length ||
-      previous.some(
-        (item, index) =>
-          results[index].id !== item.id ||
-          results[index].spaceId !== item.spaceId ||
-          results[index].documentId !== item.documentId ||
-          results[index].queueId !== item.queueId ||
-          results[index].queueNamespace !== item.queueNamespace ||
-          results[index].groupKey !== item.groupKey ||
-          results[index].groupCount !== item.groupCount ||
-          results[index].aggregates !== item.aggregates,
-      );
+      previous.length !== workingSet.length ||
+      previous.some((item, index) => !_sameCompiledResult(workingSet[index].result, item.result));
 
     if (TRACE_QUERY_EXECUTION) {
       // eslint-disable-next-line no-console
@@ -934,6 +917,9 @@ export class QueryExecutor extends Resource {
         break;
       case 'AggregateStep':
         ({ workingSet: newWorkingSet, trace } = await this._execAggregateStep(step, workingSet));
+        break;
+      case 'SqlStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execSqlStep(step));
         break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
@@ -1811,6 +1797,33 @@ export class QueryExecutor extends Resource {
     };
   }
 
+  /**
+   * Runs a compiled statement. A source step: it ignores the incoming working set, because the
+   * statement already stands for every step that produced one.
+   */
+  private async _execSqlStep(step: QueryPlan.SqlStep): Promise<StepExecutionResult> {
+    const trace = ExecutionTrace.makeEmpty();
+    const begin = performance.now();
+    const { rows, explain } = await this._runInRuntime(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql.unsafe<CompiledRow>(step.sql, step.params);
+        const explain = TRACE_QUERY_EXECUTION
+          ? (yield* sql.unsafe<{ detail: string }>(`EXPLAIN QUERY PLAN ${step.sql}`, step.params)).map(
+              (row) => row.detail,
+            )
+          : undefined;
+        return { rows, explain };
+      }),
+    );
+    trace.indexQueryTime = performance.now() - begin;
+    trace.indexHits = rows.length;
+    trace.objectCount = rows.length;
+    trace.sql = step.sql;
+    trace.explain = explain;
+    return { workingSet: rows.map(compiledRowToItem), trace };
+  }
+
   private async _execAggregateStep(
     step: QueryPlan.AggregateStep,
     workingSet: QueryItem[],
@@ -2531,27 +2544,58 @@ function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
 const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.stringify(node.subquery)}\0${node.property}`;
 
 /**
- * A compiled row as a service result. A collapsed group stands for its members, so it ships no
- * object fields and its id is the serialized group key.
+ * A compiled row as a working-set item. The shipped form is built here rather than in
+ * `getResults`, since the row already carries everything the client needs and the item carries no
+ * document to derive it from. A collapsed group stands for its members, so it ships no object
+ * fields and its id is the serialized group key.
  */
-const compiledRowToResult = (row: CompiledRow): QueryService.QueryResult =>
-  row.aggregates !== null && row.groupKey !== null
-    ? {
-        id: row.groupKey,
-        spaceId: row.spaceId,
-        rank: row.rank,
-        groupKey: row.groupKey,
-        groupCount: row.groupCount ?? undefined,
-        aggregates: row.aggregates,
-      }
-    : {
-        id: row.objectId,
-        spaceId: row.spaceId,
-        documentId: row.documentId !== '' ? row.documentId : undefined,
-        queueId: row.queueId !== '' ? row.queueId : undefined,
-        queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
-        rank: row.rank,
-        documentJson: row.documentJson ?? undefined,
-        groupKey: row.groupKey ?? undefined,
-        groupCount: row.groupCount ?? undefined,
-      };
+const compiledRowToItem = (row: CompiledRow): QueryItem => {
+  const result: QueryService.QueryResult =
+    row.aggregates !== null && row.groupKey !== null
+      ? {
+          id: row.groupKey,
+          spaceId: row.spaceId,
+          rank: row.rank,
+          groupKey: row.groupKey,
+          groupCount: row.groupCount ?? undefined,
+          aggregates: row.aggregates,
+        }
+      : {
+          id: row.objectId,
+          spaceId: row.spaceId,
+          documentId: row.documentId !== '' ? row.documentId : undefined,
+          queueId: row.queueId !== '' ? row.queueId : undefined,
+          queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
+          rank: row.rank,
+          documentJson: row.documentJson ?? undefined,
+          groupKey: row.groupKey ?? undefined,
+          groupCount: row.groupCount ?? undefined,
+        };
+  return {
+    objectId: row.objectId,
+    spaceId: row.spaceId,
+    documentId: row.documentId !== '' ? (row.documentId as DocumentId) : null,
+    queueId: row.queueId !== '' ? (row.queueId as EntityId) : null,
+    queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : null,
+    doc: null,
+    data: null,
+    rank: row.rank,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    result,
+  };
+};
+
+/** Whether two compiled rows would ship the same record, for reactive change detection. */
+const _sameCompiledResult = (
+  a: QueryService.QueryResult | undefined,
+  b: QueryService.QueryResult | undefined,
+): boolean =>
+  a?.id === b?.id &&
+  a?.spaceId === b?.spaceId &&
+  a?.documentId === b?.documentId &&
+  a?.queueId === b?.queueId &&
+  a?.queueNamespace === b?.queueNamespace &&
+  a?.groupKey === b?.groupKey &&
+  a?.groupCount === b?.groupCount &&
+  a?.aggregates === b?.aggregates;

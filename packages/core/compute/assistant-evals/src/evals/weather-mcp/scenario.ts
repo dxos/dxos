@@ -16,7 +16,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EchoError from '@dxos/echo/Error';
 import type { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -120,7 +120,7 @@ export const evaluateHandOff = (invocations: readonly ToolInvocation[], options:
 export class SeedError extends Data.TaggedError('SeedError')<{ message: string }> {}
 
 /**
- * Stands the run up on the template: applies the sample space, binds the project's skills to the
+ * Stands the run up on the template: applies the template, binds the project's skills to the
  * run's instructions, and files a chat carrying the four steps under the project. Returns what the
  * runner binds into the session context.
  */
@@ -141,7 +141,7 @@ export const seed = ({
     if (!space) {
       return yield* new SeedError({ message: `Space not found: ${spaceId}` });
     }
-    yield* SampleSpace.applyTo(WeatherSpace(), space);
+    yield* SampleSpace.applyTo(WeatherSpace.make(), space);
 
     const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
     if (!project?.taskSet || !project.instructions) {

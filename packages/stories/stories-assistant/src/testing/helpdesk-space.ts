@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Outline, Question, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -57,7 +57,7 @@ const TASKS: { title: string; description: string }[] = [
  * Space template for the question loop: a project whose first task is deliberately undecidable from
  * the space alone, so the agent must ask the reader and resume on the answer.
  */
-export const helpdeskSpace: SpaceCapabilities.SpaceTemplate = {
+export const helpdeskSpace: AppCapabilities.SpaceTemplate = {
   id: HELPDESK_SPACE_ID,
   label: 'Helpdesk',
   description: 'A project whose first task cannot be finished without asking the user a question.',
@@ -102,8 +102,8 @@ const HelpdeskSpacePluginBuilder = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'com.example.plugin.helpdeskSpace.module.template',
-    provides: [SpaceCapabilities.SpaceTemplate],
-    activate: () => Effect.succeed([Capability.contribute(SpaceCapabilities.SpaceTemplate, helpdeskSpace)]),
+    provides: [AppCapabilities.SpaceTemplate],
+    activate: () => Effect.succeed([Capability.contribute(AppCapabilities.SpaceTemplate, helpdeskSpace)]),
   }),
 );
 
