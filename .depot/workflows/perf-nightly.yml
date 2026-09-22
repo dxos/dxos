@@ -134,7 +134,8 @@ jobs:
                 for (const line of input.split("\n").filter(Boolean)) {
                   const row = JSON.parse(line);
                   const mb = (bytes) => Math.round(bytes / 1024 / 1024);
-                  // Chrome's own processes, beside the app rather than inside it.
+                  // Chrome process totals, beside the app rather than inside it. No
+                  // apostrophes in this program: it is single-quoted for bash, so one ends the quote.
                   const chrome = (r) =>
                     (r.footprint ?? []).reduce((t, p) => t + (p.process === "Renderer" ? 0 : p.bytes), 0);
                   console.log(
