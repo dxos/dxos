@@ -28,7 +28,7 @@ Percent, four fixtures averaged.
 | ---------------------- | ------ | ------ | ------ | ------ |
 | fences-resolve         | 100    | 100    | 100    | 100    |
 | fences-empty           | 100    | 100    | 100    | 100    |
-| hunk-coverage          | 79     | 88     | 74     | 70     |
+| hunk-coverage          | 75     | 88     | 74     | 67     |
 | ranges-valid           | 91     | 100    | 100    | 94     |
 | numbers-grounded       | 100    | 100    | 100    | 100    |
 | citations-grounded     | 100    | 100    | 98     | 100    |
@@ -48,6 +48,10 @@ better.
 
 The reader rules did the one thing they were written to do: long sentences fell from 23% of the
 corpus to 5%.
+
+Coverage here is the scorer's second definition, derived from the fences above `## Also changed`
+rather than from `fillWalkthrough`. The rewrite moved v1 from 79 to 75 and v4 from 70 to 67; it did
+not change which variant leads.
 
 Coverage moved the other way by design. `v3` and `v4` are told to fence a repeated mechanical change
 once, so on the nineteen-file PR they emit two fences where `v2` emits fourteen. The unclaimed hunks
