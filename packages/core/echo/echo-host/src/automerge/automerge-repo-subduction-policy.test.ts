@@ -10,10 +10,11 @@ import { sleep } from '@dxos/async';
 
 import {
   FIND_STATES,
-  NEGATIVE_ASSERTION_DELAY_MS,
+  NO_TRAFFIC_WINDOW_MS,
   PERMISSIVE_POLICY,
   connectAdapters,
   createCountingPolicy,
+  createDenyGate,
   createHostClientRepoTopology,
   createRepoTopology,
   createStarTopology,
@@ -23,7 +24,7 @@ import {
   findInStates,
   peekDoc,
   reconnectAdapters,
-  waitForReadyWithRedrive,
+  waitForQueryState,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
 
@@ -58,12 +59,13 @@ describe('SubductionPolicy', () => {
     // Implication for client-side gating: ✅ `authorizePut` is the
     // primary lever for refusing inbound replication.
     test('authorizePut on client denies inbound writes from permissive server', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
           client: {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -75,7 +77,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
       const docHandle = client.handles[parseAutomergeUrl(handle.url).documentId] as
         | DocHandle<{ text?: string }>
@@ -351,12 +354,13 @@ describe('SubductionPolicy', () => {
     // proactive push by denying `authorizeFetch`. This is a stronger
     // client-side capability than the SKILL doc currently documents.
     test('authorizeFetch on client DOES gate outbound proactive push (empirical correction)', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
           client: {
             ...PERMISSIVE_POLICY,
             authorizeFetch: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -368,7 +372,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       const progress = host.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(1_500);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
     });
 
@@ -408,12 +413,13 @@ describe('SubductionPolicy', () => {
     // to a specific peer, `authorizeConnect` is the only mechanism the
     // current bridge offers — and it severs both directions.
     test('authorizeConnect on client (initiator) nukes the channel (nuclear control)', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
           client: {
             ...PERMISSIVE_POLICY,
             authorizeConnect: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -429,7 +435,8 @@ describe('SubductionPolicy', () => {
       const hostProgressOfClientDoc = host.findWithProgress<{ text?: string }>(clientHandle.url);
       // Client never gets server's doc.
       const clientProgressOfHostDoc = client.findWithProgress<{ text?: string }>(hostHandle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(hostProgressOfClientDoc.peek().state).to.not.equal('ready');
       expect(clientProgressOfHostDoc.peek().state).to.not.equal('ready');
     });
@@ -495,13 +502,14 @@ describe('SubductionPolicy', () => {
     // Implication: ✅ either side denying `authorizeConnect` is
     // sufficient.
     test('authorizeConnect: denial on responder side also blocks handshake', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         roles: { host: 'accept', client: 'connect' },
         subductionPolicies: {
           host: {
             ...PERMISSIVE_POLICY,
             authorizeConnect: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -513,7 +521,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
     });
 
@@ -571,61 +580,57 @@ describe('SubductionPolicy', () => {
     // gate for both directions.
     // Two topologies with a 5s poll and a 10s wait between them, so the 15s default cannot cover it —
     // same reason the two-phase `authorizePut` test below names its own budget.
-    test(
-      'authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)',
-      { timeout: 30_000 },
-      async () => {
-        // Half 1: proactive push. Hook fires when host broadcasts.
-        const { policy: pushPolicy, counters: pushCounters } = createCountingPolicy();
-        const {
-          repos: pushRepos,
-          repoPairs: pushRepoPairs,
-          adapters: pushAdapters,
-        } = await createHostClientRepoTopology({
-          subductionPolicies: { host: pushPolicy },
-        });
-        const [pushHost, pushClient] = pushRepos;
-        await connectAdapters(pushAdapters, { repoPairs: pushRepoPairs });
-        const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
-        await waitForSubductionSave(pushRepos);
-        // Assert the host-side hook fired BEFORE the client issues any
-        // explicit `find` — proves it was the proactive broadcast (not a
-        // later fetch) that consulted `authorizeFetch`.
-        // Empirical: >= 1 (observed 2 locally). Don't pin an exact
-        // count — the bridge may batch or invoke twice per broadcast
-        // (once at connect-time-sync, once per `#save`).
-        // Polled rather than read once: the broadcast is asynchronous, and polling the counter
-        // issues no `find`, so the "before any explicit fetch" property still holds.
-        await expect.poll(() => pushCounters.authorizeFetch, { timeout: 5_000 }).toBeGreaterThan(0);
-        await expect
-          .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
-            timeout: 5_000,
-          })
-          .toEqual('pushed');
+    test('authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)', async () => {
+      // Half 1: proactive push. Hook fires when host broadcasts.
+      const { policy: pushPolicy, counters: pushCounters } = createCountingPolicy();
+      const {
+        repos: pushRepos,
+        repoPairs: pushRepoPairs,
+        adapters: pushAdapters,
+      } = await createHostClientRepoTopology({
+        subductionPolicies: { host: pushPolicy },
+      });
+      const [pushHost, pushClient] = pushRepos;
+      await connectAdapters(pushAdapters, { repoPairs: pushRepoPairs });
+      const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
+      await waitForSubductionSave(pushRepos);
+      // Assert the host-side hook fired BEFORE the client issues any
+      // explicit `find` — proves it was the proactive broadcast (not a
+      // later fetch) that consulted `authorizeFetch`.
+      // Empirical: >= 1 (observed 2 locally). Don't pin an exact
+      // count — the bridge may batch or invoke twice per broadcast
+      // (once at connect-time-sync, once per `#save`).
+      // Polled rather than read once: the broadcast is asynchronous, and polling the counter
+      // issues no `find`, so the "before any explicit fetch" property still holds.
+      await expect.poll(() => pushCounters.authorizeFetch, { timeout: 5_000 }).toBeGreaterThan(0);
+      await expect
+        .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
+          timeout: 5_000,
+        })
+        .toEqual('pushed');
 
-        // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
-        // the client's fetch BEFORE peers learn about each other so the
-        // eventual `reconnectAdapters` drives an explicit fetch flow
-        // (rather than collapsing into the proactive-push path). Hook
-        // still fires; pin > 0.
-        const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
-        const {
-          repos: fetchRepos,
-          repoPairs: fetchRepoPairs,
-          adapters: fetchAdapters,
-        } = await createHostClientRepoTopology({
-          subductionPolicies: { host: fetchPolicy },
-        });
-        const [fetchHost, fetchClient] = fetchRepos;
-        await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
-        const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
-        await waitForSubductionSave(fetchRepos);
-        const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
-        await reconnectAdapters(fetchAdapters, { repoPairs: fetchRepoPairs });
-        await waitForReadyWithRedrive(fetchClient, fetchProgress, { timeout: 10_000 });
-        expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
-      },
-    );
+      // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
+      // the client's fetch BEFORE peers learn about each other so the
+      // eventual `reconnectAdapters` drives an explicit fetch flow
+      // (rather than collapsing into the proactive-push path). Hook
+      // still fires; pin > 0.
+      const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
+      const {
+        repos: fetchRepos,
+        repoPairs: fetchRepoPairs,
+        adapters: fetchAdapters,
+      } = await createHostClientRepoTopology({
+        subductionPolicies: { host: fetchPolicy },
+      });
+      const [fetchHost, fetchClient] = fetchRepos;
+      await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
+      const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
+      await waitForSubductionSave(fetchRepos);
+      const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
+      await reconnectAdapters(fetchAdapters, { repoPairs: fetchRepoPairs });
+      await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
+      expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
+    });
 
     // Hypothesis: `filterAuthorizedFetch` is consulted by
     // `get_authorized_subscriber_conns` ONLY for peers that explicitly
@@ -756,11 +761,16 @@ describe('SubductionPolicy', () => {
           subductionPolicies: { C: policyC },
         },
       });
-      const [repoA, , repoC] = repos;
+      const [repoA, repoB, repoC] = repos;
       await connectAdapters(adapters, { repoPairs });
 
       const docA = repoA.create<{ text?: string }>({ text: 'from-A' });
       await waitForSubductionSave(repos);
+      // Sequence the hop: a fetch C issues while B is still empty settles success-empty and is
+      // never re-asked, so B has to be observed holding the doc before C asks for it.
+      await expect
+        .poll(async () => (await repoB.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: 10_000 })
+        .toEqual('from-A');
       await expect
         .poll(async () => (await repoC.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: 10_000 })
         .toEqual('from-A');
@@ -865,7 +875,8 @@ describe('SubductionPolicy', () => {
     //      cycle on both sides) does deliver the doc — the connection-
     //      generation bump re-drives the holder's stuck
     //      `lastSyncResult === 'all-failed'` push.
-    test('authorizePut deny → allow recovers via reconnect', { timeout: 20_000 }, async () => {
+    test('authorizePut deny → allow recovers via reconnect', async () => {
+      const gate = createDenyGate();
       let allowPut = false;
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
@@ -873,7 +884,7 @@ describe('SubductionPolicy', () => {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
               if (!allowPut) {
-                throw new Error('denied');
+                gate.deny();
               }
             },
           },
@@ -886,7 +897,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
 
       // Flipping the policy + shareConfigChanged alone does not recover: it
@@ -895,7 +907,9 @@ describe('SubductionPolicy', () => {
       allowPut = true;
       host.shareConfigChanged();
       client.shareConfigChanged();
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // A flipped policy that fails to re-drive a stuck push emits nothing, so this
+      // negative rests on a bounded window.
+      await sleep(NO_TRAFFIC_WINDOW_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
       // Reconnect recovers: the connection-generation bump re-drives the
@@ -918,6 +932,7 @@ describe('SubductionPolicy', () => {
     // denial and natural recovery is non-trivial and `shareConfigChanged`
     // is the only fast path.
     test('authorizePut deny → allow without shareConfigChanged() stays denied within window', async () => {
+      const gate = createDenyGate();
       let allowPut = false;
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
@@ -925,7 +940,7 @@ describe('SubductionPolicy', () => {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
               if (!allowPut) {
-                throw new Error('denied');
+                gate.deny();
               }
             },
           },
@@ -939,14 +954,17 @@ describe('SubductionPolicy', () => {
 
       // Initial denial settled.
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
 
       // Flip but DO NOT kick. The heal scheduler's behaviour on
       // `'all-failed'` is the known fork gap from the SKILL doc;
       // we assert it stays denied for at least 1500 ms.
       allowPut = true;
-      await sleep(1_500);
+      // A flipped policy that fails to re-drive a stuck push emits nothing, so this
+      // negative rests on a bounded window.
+      await sleep(NO_TRAFFIC_WINDOW_MS);
       expect(progress.peek().state).to.not.equal('ready');
     });
 
@@ -969,6 +987,7 @@ describe('SubductionPolicy', () => {
     // delivering the commit anyway. See the `subduction-policy` skill
     // for the source-level breakdown.
     test('authorizePut allow → deny blocks subsequent pushes', async () => {
+      const gate = createDenyGate();
       let denyPut = false;
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
@@ -976,7 +995,7 @@ describe('SubductionPolicy', () => {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
               if (denyPut) {
-                throw new Error('denied');
+                gate.deny();
               }
             },
           },
@@ -997,7 +1016,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       // Within the negative window the client's view must NOT advance.
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(clientHandle.doc()?.text).to.equal('initial');
     });
   });
@@ -1017,18 +1037,19 @@ describe('SubductionPolicy', () => {
     // Implication: ✅ this is the formal recipe under the current
     // bridge. Heavy-handed but reliable.
     test('authorizePut(receiver) + authorizeFetch(server) blocks via both paths', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
           host: {
             ...PERMISSIVE_POLICY,
             authorizeFetch: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
           client: {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -1040,7 +1061,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
     });
 
@@ -1055,12 +1077,13 @@ describe('SubductionPolicy', () => {
     // Implication (predicted): ✅ `authorizePut` covers both push and
     // fetch ingest paths.
     test('authorizePut(receiver) also blocks explicit fetch', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
           client: {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -1073,7 +1096,8 @@ describe('SubductionPolicy', () => {
       await reconnectAdapters(adapters, { repoPairs });
 
       const progress = client.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
     });
   });
@@ -1096,12 +1120,13 @@ describe('SubductionPolicy', () => {
     // the only fix is a DO-side `authorizePut` (or upstream advertise
     // hook).
     test('server-side authorizePut is the only effective gate against client outbound push', async () => {
+      const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         subductionPolicies: {
           host: {
             ...PERMISSIVE_POLICY,
             authorizePut: async () => {
-              throw new Error('denied');
+              gate.deny();
             },
           },
         },
@@ -1113,7 +1138,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       const progress = host.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // Wait for the refusal itself, not for a span in which it might have happened.
+      await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
     });
   });

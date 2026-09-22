@@ -21,10 +21,11 @@ import { asyncTimeout, sleep } from '@dxos/async';
 import { TestAdapter } from '../testing/index.ts';
 import {
   FIND_STATES,
-  NEGATIVE_ASSERTION_DELAY_MS,
+  NO_TRAFFIC_WINDOW_MS,
   SUBDUCTION_MESSAGE_TYPE,
   SUBDUCTION_SERVICE_NAME,
   connectAdapters,
+  createDenyGate,
   createHostClientRepoTopology,
   createRepo,
   createRepoTopology,
@@ -34,7 +35,7 @@ import {
   findInStates,
   reconnectAdapters,
   shutdownRepo,
-  waitForReadyWithRedrive,
+  waitForQueryState,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
 
@@ -129,7 +130,7 @@ describe('AutomergeRepo with Subduction', () => {
     // Sequencing the waits keeps each hop on the happy path (upstream peer has
     // the doc by the time the next downstream peer opens its source), avoiding
     // the cascading heal backoffs while still exercising the full chain.
-    test('replication through a 4 peer chain', { timeout: 15_000 }, async () => {
+    test('replication through a 4 peer chain', async () => {
       const { repos, adapters, repoPairs } = await createRepoTopology({
         peers: ['A', 'B', 'C', 'D'],
         connections: [
@@ -157,7 +158,7 @@ describe('AutomergeRepo with Subduction', () => {
       await expect.poll(() => docD.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
     });
 
-    test('documents loaded from disk get replicated', { timeout: 15_000 }, async () => {
+    test('documents loaded from disk get replicated', async () => {
       const storage = await createSqliteAdapter();
       let url: AutomergeUrl | undefined;
 
@@ -291,7 +292,7 @@ describe('AutomergeRepo with Subduction', () => {
     // nothing for days) away from peer-to-peer subduction: two JS peers recover from exactly that
     // state here, including when the doc is denied on a second connection, so the reported failure
     // is not in this path.
-    test('partitioned concurrent edits converge on reconnect', { timeout: 60_000 }, async () => {
+    test('partitioned concurrent edits converge on reconnect', async () => {
       let connectionState: 'on' | 'off' = 'on';
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         connectionStateProvider: () => connectionState,
@@ -305,7 +306,7 @@ describe('AutomergeRepo with Subduction', () => {
       });
       await waitForSubductionSave(repos);
       const handleB = await findInStates<{ fromHost?: string; fromClient?: string }>(client, handleA.url, FIND_STATES);
-      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 20_000 }).toEqual('initial');
+      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 10_000 }).toEqual('initial');
 
       // Gate the transport rather than `disconnectAdapters`, which clears the peer ids
       // `reconnectAdapters` needs, then edit both sides so neither head descends from the other.
@@ -322,8 +323,8 @@ describe('AutomergeRepo with Subduction', () => {
       connectionState = 'on';
       await reconnectAdapters(adapters, { repoPairs });
 
-      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 30_000 }).toEqual('host-offline');
-      await expect.poll(() => handleA.doc()?.fromClient, { timeout: 30_000 }).toEqual('client-offline');
+      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 10_000 }).toEqual('host-offline');
+      await expect.poll(() => handleA.doc()?.fromClient, { timeout: 10_000 }).toEqual('client-offline');
     });
 
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,
@@ -340,7 +341,7 @@ describe('AutomergeRepo with Subduction', () => {
     //     subduction source's `lastSyncResult` may already be in
     //     `'no-peers'` from prior recompute cycles; `reconnectAdapters`
     //     bumps the connection generation and forces a re-sync.
-    test('replicate document after request', { timeout: 15_000 }, async () => {
+    test('replicate document after request', async () => {
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology();
       const [host, client] = repos;
       await connectAdapters(adapters, { noEmitPeerCandidate: true });
@@ -364,7 +365,7 @@ describe('AutomergeRepo with Subduction', () => {
       // source re-syncs. We must reconnect on BOTH sides; with only one side
       // emitting `peer-candidate`, only one transport is initiated.
       await reconnectAdapters(adapters, { repoPairs });
-      await waitForReadyWithRedrive(client, progress, { timeout: 10_000 });
+      await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
     });
 
     // Regression test for the concurrent-shutdown stall in
@@ -372,61 +373,57 @@ describe('AutomergeRepo with Subduction', () => {
     // `patches/@automerge__automerge-repo@2.6.0-subduction.17.patch`.
     // Without the patch, `Promise.all([repoA.shutdown(), repoB.shutdown()])`
     // takes ~30s (the Rust-side per-request timeout); with it, single-digit ms.
-    test(
-      'concurrent shutdown completes quickly when both peers have in-flight pushes',
-      { timeout: 15_000 },
-      async () => {
-        const adapters = TestAdapter.createPair() as [TestAdapter, TestAdapter];
-        const repoA = createRepo(
-          {
-            peerId: 'A' as PeerId,
-            network: [],
-            subductionAdapters: [{ adapter: adapters[0], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
-          },
-          { registerCleanup: false },
-        );
-        const repoB = createRepo(
-          {
-            peerId: 'B' as PeerId,
-            network: [],
-            subductionAdapters: [{ adapter: adapters[1], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
-          },
-          { registerCleanup: false },
-        );
+    test('concurrent shutdown completes quickly when both peers have in-flight pushes', async () => {
+      const adapters = TestAdapter.createPair() as [TestAdapter, TestAdapter];
+      const repoA = createRepo(
+        {
+          peerId: 'A' as PeerId,
+          network: [],
+          subductionAdapters: [{ adapter: adapters[0], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+        },
+        { registerCleanup: false },
+      );
+      const repoB = createRepo(
+        {
+          peerId: 'B' as PeerId,
+          network: [],
+          subductionAdapters: [{ adapter: adapters[1], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+        },
+        { registerCleanup: false },
+      );
 
-        // Belt-and-braces cleanup: bound shutdown so a regression
-        // doesn't hang the runner for ~30s.
-        onTestFinished(async () => {
-          disconnectAdapters([adapters]);
-          await Promise.all([
-            asyncTimeout(repoA.shutdown(), 2_000).catch(() => {}),
-            asyncTimeout(repoB.shutdown(), 2_000).catch(() => {}),
-          ]);
-        });
+      // Belt-and-braces cleanup: bound shutdown so a regression
+      // doesn't hang the runner for ~30s.
+      onTestFinished(async () => {
+        disconnectAdapters([adapters]);
+        await Promise.all([
+          asyncTimeout(repoA.shutdown(), 2_000).catch(() => {}),
+          asyncTimeout(repoB.shutdown(), 2_000).catch(() => {}),
+        ]);
+      });
 
-        await connectAdapters([adapters], { repoPairs: [[repoA, repoB]] });
+      await connectAdapters([adapters], { repoPairs: [[repoA, repoB]] });
 
-        // Get a doc onto both sides so each peer has a running entry.
-        // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
-        // so repoB has actually replicated the doc before the next mutation
-        // — otherwise the symmetric in-flight push state this test relies on
-        // is not reliably set up.
-        const handle = repoA.create<{ text?: string }>();
-        handle.change((doc: any) => {
-          doc.text = 'initial';
-        });
-        await waitForSubductionSave([repoA, repoB]);
-        await findInStates(repoB, handle.url, ['ready']);
+      // Get a doc onto both sides so each peer has a running entry.
+      // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
+      // so repoB has actually replicated the doc before the next mutation
+      // — otherwise the symmetric in-flight push state this test relies on
+      // is not reliably set up.
+      const handle = repoA.create<{ text?: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'initial';
+      });
+      await waitForSubductionSave([repoA, repoB]);
+      await findInStates(repoB, handle.url, ['ready']);
 
-        // Pending throttled save at the moment of shutdown — required
-        // to put an `addBatch` in flight when both sides hit step 4.
-        handle.change((doc: any) => {
-          doc.text = 'pre-close write';
-        });
+      // Pending throttled save at the moment of shutdown — required
+      // to put an `addBatch` in flight when both sides hit step 4.
+      handle.change((doc: any) => {
+        doc.text = 'pre-close write';
+      });
 
-        await asyncTimeout(Promise.all([repoA.shutdown(), repoB.shutdown()]), 1_500);
-      },
-    );
+      await asyncTimeout(Promise.all([repoA.shutdown(), repoB.shutdown()]), 1_500);
+    });
   });
 
   // The contract block below tests subduction-specific behavior described in
@@ -456,7 +453,7 @@ describe('AutomergeRepo with Subduction', () => {
           .toEqual('connect/accept');
       });
 
-      test('accept/connect syncs', { timeout: 15_000 }, async () => {
+      test('accept/connect syncs', async () => {
         const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           roles: { host: 'accept', client: 'connect' },
         });
@@ -497,11 +494,10 @@ describe('AutomergeRepo with Subduction', () => {
         await waitForSubductionSave(repos);
 
         const progress = client.findWithProgress<{ text?: string }>(handle.url);
-        // Stays in `'loading'` (or worst case never reaches `'ready'`) within the
-        // window. We can't assert `'loading'` strictly because the dormant
-        // subduction source could transition to `'unavailable'`; what we CAN
-        // assert is that the query never reaches `'ready'`.
-        await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+        // Two `accept` peers never handshake, so there is no refusal to observe and no traffic to
+        // drain — the bounded window is the assertion. We can't assert `'loading'` strictly either,
+        // because the dormant source may go `'unavailable'`; what we CAN assert is never `'ready'`.
+        await sleep(NO_TRAFFIC_WINDOW_MS);
         expect(progress.peek().state).to.not.equal('ready');
         const docHandle = client.handles[parseAutomergeUrl(handle.url).documentId] as
           | DocHandle<{ text?: string }>
@@ -537,11 +533,10 @@ describe('AutomergeRepo with Subduction', () => {
       // `'ready'` within the timeout. With the host permissive, the same
       // setup DOES sync (verified by the parallel control test below).
       test('authorizeFetch denial on server blocks fetcher', async () => {
+        const gate = createDenyGate();
         const denyingPolicy: SubductionPolicy = {
           authorizeConnect: async () => {},
-          authorizeFetch: async () => {
-            throw new Error('denied');
-          },
+          authorizeFetch: async () => gate.deny(),
           authorizePut: async () => {},
           filterAuthorizedFetch: async (_peerId, ids) => ids,
         };
@@ -559,7 +554,8 @@ describe('AutomergeRepo with Subduction', () => {
         // denial should prevent the response. We rely on `findWithProgress`
         // staying out of `'ready'` and the doc body remaining empty.
         const progress = client.findWithProgress<{ text?: string }>(handle.url);
-        await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+        // Wait for the host to actually refuse, rather than for a duration in which it might have.
+        await gate.waitForDenial();
         expect(progress.peek().state).to.not.equal('ready');
         const docHandle = client.handles[parseAutomergeUrl(handle.url).documentId] as
           | DocHandle<{ text?: string }>
@@ -590,12 +586,11 @@ describe('AutomergeRepo with Subduction', () => {
       });
 
       test('authorizePut denial blocks writes from peer', async () => {
+        const gate = createDenyGate();
         const denyingPolicy: SubductionPolicy = {
           authorizeConnect: async () => {},
           authorizeFetch: async () => {},
-          authorizePut: async () => {
-            throw new Error('denied');
-          },
+          authorizePut: async () => gate.deny(),
           filterAuthorizedFetch: async (_peerId, ids) => ids,
         };
 
@@ -617,7 +612,8 @@ describe('AutomergeRepo with Subduction', () => {
         clientHandle.change((doc: any) => {
           doc.text = 'should-be-rejected';
         });
-        await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+        // The push reached the host and was refused; no need to guess how long that takes.
+        await gate.waitForDenial();
 
         // Host should not have accepted client's change.
         expect(getHeads(hostHandle.doc()!)).to.deep.equal(initialHostHeads);
@@ -645,11 +641,12 @@ describe('AutomergeRepo with Subduction', () => {
       // depends entirely on the heal scheduler's exponential backoff.
       test('shareConfigChanged() retries after subductionPolicy denial flips to allow', async () => {
         let allowFetch = false;
+        const gate = createDenyGate();
         const mutablePolicy: SubductionPolicy = {
           authorizeConnect: async () => {},
           authorizeFetch: async () => {
             if (!allowFetch) {
-              throw new Error('denied');
+              gate.deny();
             }
           },
           authorizePut: async () => {},
@@ -667,7 +664,7 @@ describe('AutomergeRepo with Subduction', () => {
 
         // (1) Initial denial: query does not reach `'ready'`, doc stays empty.
         const progress = client.findWithProgress<{ text?: string }>(handle.url);
-        await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+        await gate.waitForDenial();
         expect(progress.peek().state).to.not.equal('ready');
         const docHandle = client.handles[parseAutomergeUrl(handle.url).documentId] as
           | DocHandle<{ text?: string }>
@@ -698,7 +695,8 @@ describe('AutomergeRepo with Subduction', () => {
       });
 
       const progress = peer2.findWithProgress<{ text?: string }>(handle.url);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
+      // No transport of any kind between these peers, so there is nothing to observe or drain.
+      await sleep(NO_TRAFFIC_WINDOW_MS);
       expect(progress.peek().state).to.not.equal('ready');
     });
 
@@ -735,6 +733,11 @@ describe('AutomergeRepo with Subduction', () => {
       });
       await waitForSubductionSave(repos);
 
+      // Wait for the doc to reach B before C asks for it. A fetch C issues while B is still empty
+      // settles success-empty and is never re-asked, so the hop has to be observed, not assumed.
+      const docB = await findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES);
+      await expect.poll(() => docB.doc()?.text, { timeout: 10_000 }).toEqual('relayed');
+
       const docC = await findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES);
       await expect.poll(() => docC.doc()?.text, { timeout: 10_000 }).toEqual('relayed');
 
@@ -751,7 +754,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     await initSubduction();
   });
 
-  test('a peer offered again mid-round does not hold back later edits', { timeout: 30_000 }, async () => {
+  test('a peer offered again mid-round does not hold back later edits', async () => {
     let framesDelivered: 'on' | 'off' = 'on';
     const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
       connectionStateProvider: () => framesDelivered,
@@ -783,7 +786,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
   });
 
-  test('losing one peer mid-round does not hold back edits for the others', { timeout: 30_000 }, async () => {
+  test('losing one peer mid-round does not hold back edits for the others', async () => {
     let server1Reachable: 'on' | 'off' = 'on';
     const { repos, adapters, repoPairs } = await createStarTopology({
       connectionStateProviderByConnection: { 0: () => server1Reachable },
@@ -816,7 +819,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
   });
 
-  test('a peer lost before its handshake completes does not hold back edits', { timeout: 30_000 }, async () => {
+  test('a peer lost before its handshake completes does not hold back edits', async () => {
     let server1Reachable: 'on' | 'off' = 'on';
     const { repos, adapters, repoPairs } = await createStarTopology({
       connectionStateProviderByConnection: { 0: () => server1Reachable },
