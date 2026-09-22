@@ -88,7 +88,7 @@ export const LineCommentPopover = ({ open, anchorRef, ...props }: LineCommentPop
   >
     <Popover.VirtualTrigger virtualRef={anchorRef} />
     <Popover.Portal>
-      <Popover.Content side='bottom' align='start' classNames='is-[28rem] max-is-[90cqi]'>
+      <Popover.Content side='bottom' align='start' classNames='w-[28rem] max-w-[90cqi]'>
         <Popover.Viewport classNames='flex flex-col gap-2 p-2'>
           <CommentComposer {...props} />
         </Popover.Viewport>
