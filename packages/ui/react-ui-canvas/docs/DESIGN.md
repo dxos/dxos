@@ -338,12 +338,12 @@ Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to to
    major cells), drawing every level whose cells are between 6 and 2048 screen px. A line's opacity comes from
    its on-screen spacing alone (a step darker per fourfold), so a level fades in as the view zooms rather than
    popping, and drilling through a grid-aligned portal (a quarter scale) draws the same lines at the same weight
-   on both sides of the swap: the major grid is preserved across levels. `g` and the Snap button toggle snapping only. **Creation and
-   resizing snap to the major grid** (`MAJOR_GRID`, 64 scene px), the derived scene bounds grow outward to it,
-   and the fixture and the solver / layout defaults (pitch, size, origin) are multiples of it, so an untouched
-   layout is already snapped and the frame sits on lines. **Moving snaps to the minor grid** (a drag, or an
-   arrow nudge; shift nudges by a major cell): a placed node keeps its major-grid size while its position is
-   not coarse. Ports are exempt: each sits exactly at its offset along its side, so a short side still
+   on both sides of the swap: the major grid is preserved across levels. `g` and the Snap button toggle snapping only. **Creation snaps to the major grid**
+   (`MAJOR_GRID`, 64 scene px), the derived scene bounds grow outward to it, and the fixture and the solver /
+   layout defaults (pitch, size, origin) are multiples of it, so an untouched layout is already snapped and the
+   frame sits on lines. **Moving and resizing snap to the minor grid** (a drag, a resize handle, or an
+   arrow nudge; shift nudges by a major cell): a node arrives on the major grid, and neither its position nor
+   its size is coarse thereafter. Ports are exempt: each sits exactly at its offset along its side, so a short side still
    spreads them.
 2. **Scene layer**: one `div` whose transform is `scale(zoom) translate(x, y)`, set **imperatively from the
    camera atom** (no React re-render on pan/zoom). Inside, one `div` per placed cell positioned at its bounds, and

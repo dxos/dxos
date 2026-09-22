@@ -868,7 +868,9 @@ export const SceneView = ({
             minSize: def?.minSize ?? { width: major, height: major },
             maxSize: def?.maxSize,
             symmetric: event.shiftKey,
-            snap,
+            // The moving edge lands on the minor grid, as a move does: a node's size is no coarser than
+            // its position, while a new node still arrives on the major one.
+            snap: snapMinor,
           });
           setDrag({ ...current, bounds });
           break;
