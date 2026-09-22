@@ -108,6 +108,21 @@ describe('scoreWalkthrough', () => {
     expect(dimension(scoreWalkthrough(body, patch).correctness, 'numbers-grounded').score).to.eq(1);
   });
 
+  test('an inverted or unmatched line range is invalid, even though the fill hides it', () => {
+    const body = GOOD.replace('lines=10-13', 'lines=394-224');
+    const { correctness } = scoreWalkthrough(body, PATCH);
+
+    expect(dimension(correctness, 'ranges-valid').score).to.eq(0.5);
+    expect(dimension(correctness, 'ranges-valid').evidence).to.deep.eq(['src/a.ts lines=394-224']);
+  });
+
+  test('a number the code writes with separators or in another unit is grounded', () => {
+    const patch = PATCH.replace('+added();', '+const timeout = 10_000;');
+    const body = GOOD.replace('so it now runs twice.', 'so it gives the socket 10 seconds.');
+
+    expect(dimension(scoreWalkthrough(body, patch).correctness, 'numbers-grounded').score).to.eq(1);
+  });
+
   test('a body with no H1 loses half the structure mark', () => {
     const { correctness } = scoreWalkthrough(GOOD.replace('# Retry the first call', '## Retry the first call'), PATCH);
     expect(dimension(correctness, 'structure').score).to.eq(0.5);

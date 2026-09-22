@@ -1,0 +1,38 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 3,
+    "trust": 2,
+    "reasons": {
+      "order": "Leads with the operation's new service declaration and follows with call-site fallout, the right core-then-consequence order, but only three call sites are shown as if representative of 'every call site' without saying how many exist.",
+      "why": "States the real constraint clearly: the space 'can always be derived from the input itself' was the broken assumption on a host with no client Space, matching the changeset's edge-worker explanation.",
+      "load": "Citing only PublicationArticle.tsx, collections.ts, and TableArticle.tsx while the diff touches roughly fourteen call sites across ten packages leaves the reader without a sense of the change's real footprint.",
+      "trust": "The diff citation `file=packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts lines=394-224` is an inverted, impossible line range — the actual hunk is `@@ -394,10 +394,11 @@` — a fabricated-looking reference a reviewer would catch immediately."
+    }
+  },
+  "B": {
+    "order": 5,
+    "why": 4,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "Leads with the service declaration, then groups every call site by how it sources spaceId (already-in-scope db, derived from the entity, useCallback dependency growth, Effect-based caller, error-cleanup path, and commerce's two actions), each group building on the pattern before it.",
+      "why": "Explains the operation-level reasoning ('an invoke without a spaceId fails to resolve the service instead of silently operating on the wrong space, or none') and, for each group, why that particular source is available, e.g. cleanup paths reusing 'the same options it used to create the object.'",
+      "load": "Every one of the roughly fourteen call-site changes is covered by name and grouped by a clear organizing principle, and every diff citation's line range checks against the corresponding hunk header in the patch.",
+      "trust": "Spot-checked line ranges (e.g. EventArticle.tsx lines=106-114 against `@@ -106,7 +106,11 @@`, ConnectorCompanion.tsx lines=71-78 against `@@ -71,8 +71,8 @@`) all match the actual hunks, and no claim goes beyond what the diff shows."
+    }
+  },
+  "C": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Leads with the service declaration and its rationale, then covers the call-site fallout as one consequence, a correct but coarser two-section structure than a document that groups sites by pattern.",
+      "why": "States the same core constraint as the others — the space could not be recovered from entities/refs on a host with no client Space — and frames the fix as making spaceId 'a required input the invoker resolves' rather than merely describing the diff.",
+      "load": "The one diff citation (plugin-blogger's app-graph-builder.ts) stands for a pattern described only in prose for the remaining dozen sites, so a reader must trust the enumeration without a code anchor for most of it.",
+      "trust": "The phrase 'the same three lines at each of the dozen call sites' is a rough but defensible estimate — the diff shows roughly fourteen such edits — and every named package (blogger, commerce, connector, game, illustrator, inbox, projects, space, studio, table) does appear in the patch."
+    }
+  }
+}

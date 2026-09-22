@@ -31,6 +31,6 @@ tasks:
   # runs on node's type stripping so it needs no workspace install.
   eval-walkthrough:
     command: node --experimental-strip-types scripts/score-walkthrough.ts evals/walkthrough --evidence
-    local: true
     options:
       cache: false
+      runInCI: false

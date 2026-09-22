@@ -96,18 +96,45 @@ const wordsOf = (text: string): string[] => text.split(/\s+/).filter((word) => /
  * Fences the model emitted, by path — the same shape {@link fillWalkthrough} reads, parsed again
  * here so scoring an already-filled body and scoring raw model output give the same answer.
  */
-const fencesOf = (body: string): { file?: string; empty: boolean }[] => {
+const fencesOf = (body: string): { file?: string; lines?: string; empty: boolean }[] => {
   const pattern = /^( {0,3})(`{3,}|~{3,})[ \t]*diff\b([^\n]*)\n([\s\S]*?)^[ \t]*\2/gm;
-  const fences: { file?: string; empty: boolean }[] = [];
+  const fences: { file?: string; lines?: string; empty: boolean }[] = [];
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(body))) {
     const [, , , info, contents] = match;
     const file = info.match(/\bfile=(?:"([^"]*)"|'([^']*)'|(\S+))/);
-    fences.push({ file: file?.[1] ?? file?.[2] ?? file?.[3], empty: contents.trim().length === 0 });
+    fences.push({
+      file: file?.[1] ?? file?.[2] ?? file?.[3],
+      lines: info.match(/\blines=(\S+)/)?.[1],
+      empty: contents.trim().length === 0,
+    });
   }
 
   return fences;
 };
+
+/**
+ * A `lines=` that names no hunk of the file it points at: inverted (`394-224`), or simply wrong.
+ *
+ * {@link fillWalkthrough} falls back to the whole file rather than emitting an empty chunk, so the
+ * reader sees code and never learns the prose was pointing somewhere else. Only the score says so.
+ */
+const badRanges = (
+  fences: { file?: string; lines?: string }[],
+  files: Map<string, { hunks: { afterStart: number; afterEnd: number }[] }>,
+): string[] =>
+  fences
+    .filter((fence) => fence.file && fence.lines && files.has(fence.file))
+    .filter((fence) => {
+      const range = fence.lines!.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+      if (!range) {
+        return true;
+      }
+      const start = Number(range[1]);
+      const end = range[2] === undefined ? start : Number(range[2]);
+      return end < start || !files.get(fence.file!)!.hunks.some((hunk) => hunk.afterStart <= end && hunk.afterEnd >= start);
+    })
+    .map((fence) => `${fence.file} lines=${fence.lines}`);
 
 /**
  * Inline-code tokens in the prose that name something in the code: a path, an identifier, a
@@ -131,10 +158,32 @@ const numbersOf = (prose: string): string[] =>
     // A sentence-final digit takes the full stop with it, and "5." grounds against nothing.
     .map((match) => match[0].replace(/[.,]+$/, ''));
 
+/**
+ * Numeric literals the patch contains, separators stripped and scaled by a thousand both ways.
+ *
+ * A constant reads `10_000` in the code and "10 seconds" in the prose, so a plain substring test
+ * calls a grounded number invented — which is the worst way for this dimension to be wrong, because
+ * it teaches the model to drop the detail that made the walkthrough worth reading.
+ */
+const patchNumbers = (patch: string): Set<string> => {
+  const numbers = new Set<string>();
+  for (const match of patch.replace(/[_,]/g, '').matchAll(/\d+(?:\.\d+)?/g)) {
+    const value = Number(match[0]);
+    numbers.add(match[0]);
+    numbers.add(String(value));
+    numbers.add(String(value * 1000));
+    numbers.add(String(value / 1000));
+  }
+
+  return numbers;
+};
+
 /** Everything the diff says, for grounding citations. Paths included, since prose cites them. */
 const patchText = (patch: string): string =>
   parsePatch(patch)
-    .map((file) => [file.path, ...file.hunks.flatMap((hunk) => hunk.lines)].join('\n'))
+    // The `@@` header's trailing section text is code context too, and a constant that sits there
+    // rather than on a context line would otherwise make its own value look invented.
+    .map((file) => [file.path, ...file.hunks.flatMap((hunk) => [hunk.header, ...hunk.lines])].join('\n'))
     .join('\n');
 
 /**
@@ -150,7 +199,8 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   const prose = proseOf(body);
   const sentences = sentencesOf(prose);
   const words = wordsOf(prose);
-  const paths = new Set(parsePatch(patch).map((file) => file.path));
+  const files = new Map(parsePatch(patch).map((file) => [file.path, file]));
+  const paths = new Set(files.keys());
   const code = patchText(patch);
 
   const noiseHunks = parsePatch(patch)
@@ -159,10 +209,12 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   const missedSignal = filled.missed.filter((file) => !NOISE_FILE.test(file.path));
   const unresolvedFences = fences.filter((fence) => !fence.file || !paths.has(fence.file));
   const transcribed = fences.filter((fence) => !fence.empty);
+  const invalidRanges = badRanges(fences, files);
   const citations = citationsOf(prose);
   const ungrounded = citations.filter((token) => !code.includes(token.replace(/\(\)$/, '')));
   const numbers = numbersOf(prose);
-  const inventedNumbers = numbers.filter((number) => !code.includes(number));
+  const grounded = patchNumbers(code);
+  const inventedNumbers = numbers.filter((number) => !grounded.has(number.replace(/[_,]/g, '')));
   const longSentences = sentences.filter((sentence) => wordsOf(sentence).length > MAX_SENTENCE_WORDS);
   const slopHits = [...SLOP_WORDS, ...SLOP_PHRASES].filter((term) =>
     new RegExp(`\\b${term.replace(/ /g, '\\s+')}\\b`, 'i').test(prose),
@@ -202,6 +254,12 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
         score: ratio(filled.covered, filled.total - noiseHunks),
         sampled: filled.total - noiseHunks,
         evidence: missedSignal.map((file) => `${file.path} (${file.hunks.length})`),
+      },
+      {
+        name: 'ranges-valid',
+        score: ratio(fences.length - invalidRanges.length, fences.length),
+        sampled: fences.length,
+        evidence: invalidRanges,
       },
       {
         name: 'numbers-grounded',
