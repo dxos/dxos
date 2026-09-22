@@ -56,6 +56,18 @@ describe('walkCollectionChainToRoot', () => {
     expect(await walk(leaf.id, root.id)).toEqual([outer.id, inner.id]);
   });
 
+  test('an object listed in two collections walks through its parent', async ({ expect }) => {
+    const { db, walk } = await setup();
+    const leaf = db.add(Collection.make());
+    const other = addCollection(db, [leaf]);
+    const parent = addCollection(db, [leaf]);
+    Obj.setParent(leaf, parent);
+    const root = addCollection(db, [other, parent]);
+    await db.flush({ indexes: true });
+
+    expect(await walk(leaf.id, root.id)).toEqual([parent.id]);
+  });
+
   test('an object outside the root collection tree has no chain', async ({ expect }) => {
     const { db, walk } = await setup();
     const orphan = db.add(Collection.make());

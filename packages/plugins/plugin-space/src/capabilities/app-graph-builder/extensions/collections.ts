@@ -389,12 +389,8 @@ const constructObjectActions = ({
             id: 'showOriginal',
             data: () =>
               Effect.gen(function* () {
-                const parent = Obj.getParent(object);
-                if (!parent) {
-                  return;
-                }
                 const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
-                  query: { uri: Obj.getURI(parent) },
+                  query: { uri: Obj.getURI(object) },
                 });
                 const target = targets[0];
                 if (target) {

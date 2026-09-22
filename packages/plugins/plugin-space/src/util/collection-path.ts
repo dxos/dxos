@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { SpaceProperties } from '@dxos/client/echo';
-import { Annotation, Collection, Database, Filter } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 /** Depth cap for the collection-ancestry walk; the composer nav tree is shallow, this only guards bad data. */
@@ -49,10 +49,10 @@ export const resolveCollectionObjectPath = ({
 
 /**
  * Walk up a space's collection tree from `objectId` to the root collection. A single query loads the
- * space's collections — each already carries its child refs — so the ancestry is a pure in-memory walk
- * of a child→parent index rather than a query per step. The composer ontology guarantees a tree (an
- * object lives in one collection, no cycles); on bad data the first indexed parent wins, and a
- * visited-set plus depth cap stop a cycle from looping. Returns the intermediate collection ids in
+ * space's collections — each already carries its child refs — so the ancestry is a walk of a
+ * child→collections index rather than a query per step. An object listed in several collections walks
+ * through the one that is its parent, else the first indexed; a visited-set plus depth cap stop a cycle
+ * from looping. Returns the intermediate collection ids in
  * root→leaf order (excluding the root collection, whose objects sit directly under
  * `content/collections`), or null if no path to the root exists.
  */
@@ -65,12 +65,12 @@ export const walkCollectionChainToRoot = ({
 }): Effect.Effect<string[] | null, never, Database.Service> =>
   Effect.gen(function* () {
     const collections = yield* Database.query(Filter.type(Collection.Collection)).run;
-    const parentOf = new Map<string, string>();
+    const listedIn = new Map<string, string[]>();
     for (const collection of collections) {
       for (const ref of collection.objects ?? []) {
         const childId = EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined;
-        if (childId && !parentOf.has(childId)) {
-          parentOf.set(childId, collection.id);
+        if (childId) {
+          listedIn.set(childId, [...(listedIn.get(childId) ?? []), collection.id]);
         }
       }
     }
@@ -80,7 +80,14 @@ export const walkCollectionChainToRoot = ({
     const chain: string[] = [];
     let current = objectId;
     for (let depth = 0; depth < COLLECTION_WALK_MAX_DEPTH; depth++) {
-      const parent = parentOf.get(current);
+      const candidates = listedIn.get(current) ?? [];
+      const owner =
+        candidates.length > 1
+          ? yield* Database.query(Filter.id(current)).run.pipe(
+              Effect.map(([object]) => (Obj.isObject(object) ? Obj.getParent(object)?.id : undefined)),
+            )
+          : undefined;
+      const parent = candidates.find((id) => id === owner) ?? candidates[0];
       if (!parent) {
         return null;
       }
