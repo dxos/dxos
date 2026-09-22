@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 import { type Dimension, meanScore, scoreWalkthrough } from '../src/walkthrough/score.ts';
