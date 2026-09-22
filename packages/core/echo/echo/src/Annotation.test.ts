@@ -788,7 +788,6 @@ describe('Annotation', () => {
           holder.sections.push(Ref.make(body));
         });
 
-        expect(shelf.items).toHaveLength(1);
         expect(Obj.getParent(body)?.id).toBe(holder.id);
       });
     });

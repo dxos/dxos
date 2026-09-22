@@ -90,8 +90,8 @@ describe('collection partials: transfer', () => {
 
   test('dragging between collections re-parents the object', async ({ expect }) => {
     const doc = db.add(Obj.make(Doc, { name: 'doc' }));
-    const from = db.add(Collection.make({ name: 'From', objects: [Ref.make(doc)] }));
-    const to = db.add(Collection.make({ name: 'To', objects: [] }));
+    const from = db.add(Collection.make({ objects: [Ref.make(doc)] }));
+    const to = db.add(Collection.make({ objects: [] }));
     await db.flush();
     expect(Obj.getParent(doc)?.id).toBe(from.id);
 
@@ -105,12 +105,12 @@ describe('collection partials: transfer', () => {
 
   test('dragging a linked object moves the link and leaves ownership where it is', async ({ expect }) => {
     const doc = db.add(Obj.make(Doc, { name: 'doc' }));
-    const owner = db.add(Collection.make({ name: 'Owner', objects: [Ref.make(doc)] }));
-    const linked = db.add(Collection.make({ name: 'Linked', objects: [] }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(doc)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
     Obj.update(linked, (linked) => {
       linked.objects.push(Ref.make(doc));
     });
-    const to = db.add(Collection.make({ name: 'To', objects: [] }));
+    const to = db.add(Collection.make({ objects: [] }));
     await db.flush();
 
     drop(doc, linked, to);

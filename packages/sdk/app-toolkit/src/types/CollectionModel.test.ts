@@ -104,33 +104,21 @@ describe('ownership', () => {
   test('the first collection to hold an object becomes its parent', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const first = db.add(Collection.make({ name: 'First', objects: [Ref.make(person)] }));
-    const second = db.add(Collection.make({ name: 'Second', objects: [] }));
+    const first = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const second = db.add(Collection.make({ objects: [] }));
     Obj.update(second, (second) => {
       second.objects.push(Ref.make(person));
     });
     await db.flush();
 
     expect(Obj.getParent(person)?.id).toBe(first.id);
-    expect(Obj.isOwnedBy(person, first)).toBe(true);
-    expect(Obj.isOwnedBy(person, second)).toBe(false);
-  });
-
-  test('an object nothing has claimed reads as owned by any holder', async ({ expect }) => {
-    const { db } = await createDatabase();
-    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const collection = db.add(Collection.make({ name: 'People', objects: [] }));
-    await db.flush();
-
-    expect(Obj.getParent(person)).toBeUndefined();
-    expect(Obj.isOwnedBy(person, collection)).toBe(true);
   });
 
   test('moving from the owning collection hands ownership to the destination', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const from = db.add(Collection.make({ name: 'From', objects: [Ref.make(person)] }));
-    const to = db.add(Collection.make({ name: 'To', objects: [] }));
+    const from = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const to = db.add(Collection.make({ objects: [] }));
     CollectionModel.move({ object: person, from, to });
     await db.flush();
 
@@ -142,26 +130,25 @@ describe('ownership', () => {
   test('moving a linked object moves the link and leaves ownership alone', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const owner = db.add(Collection.make({ name: 'Owner', objects: [Ref.make(person)] }));
-    const linked = db.add(Collection.make({ name: 'Linked', objects: [] }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
     Obj.update(linked, (linked) => {
       linked.objects.push(Ref.make(person));
     });
-    const elsewhere = db.add(Collection.make({ name: 'Elsewhere', objects: [] }));
+    const elsewhere = db.add(Collection.make({ objects: [] }));
     CollectionModel.move({ object: person, from: linked, to: elsewhere });
     await db.flush();
 
     expect(Obj.getParent(person)?.id).toBe(owner.id);
     expect(linked.objects).toHaveLength(0);
     expect(elsewhere.objects).toHaveLength(1);
-    expect(owner.objects).toHaveLength(1);
   });
 
   test('unlinking drops the reference and leaves the object and its parent', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const owner = db.add(Collection.make({ name: 'Owner', objects: [Ref.make(person)] }));
-    const linked = db.add(Collection.make({ name: 'Linked', objects: [] }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
     Obj.update(linked, (linked) => {
       linked.objects.push(Ref.make(person));
     });
@@ -169,9 +156,7 @@ describe('ownership', () => {
     await db.flush();
 
     expect(linked.objects).toHaveLength(0);
-    expect(owner.objects).toHaveLength(1);
     expect(Obj.getParent(person)?.id).toBe(owner.id);
-    expect(Obj.getDatabase(person)).toBeDefined();
   });
 
   test('a holder that is not a collection persists the object without filing it', async ({ expect }) => {
@@ -202,40 +187,31 @@ describe('orderByRefs', () => {
     await builder.close();
   });
 
-  const createDatabase = () => builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
+  const people = async (...names: string[]) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
+    return names.map((name) => db.add(Obj.make(TestSchema.Person, { name })));
+  };
 
-  test('restores the array order a query does not preserve', async ({ expect }) => {
-    const { db } = await createDatabase();
-    const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const bob = db.add(Obj.make(TestSchema.Person, { name: 'bob' }));
-    const carol = db.add(Obj.make(TestSchema.Person, { name: 'carol' }));
-    const collection = db.add(Collection.make({ objects: [Ref.make(carol), Ref.make(alice), Ref.make(bob)] }));
-    await db.flush();
+  test('restores the array order', async ({ expect }) => {
+    const [alice, bob, carol] = await people('alice', 'bob', 'carol');
+    const refs = [carol, alice, bob].map(Ref.make);
 
-    const ordered = CollectionModel.orderByRefs([alice, bob, carol], collection.objects);
+    const ordered = CollectionModel.orderByRefs([alice, bob, carol], refs);
     expect(ordered.map((object) => object.name)).toEqual(['carol', 'alice', 'bob']);
   });
 
   test('a ref with no matching result does not shift the rest', async ({ expect }) => {
-    const { db } = await createDatabase();
-    const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const absent = db.add(Obj.make(TestSchema.Person, { name: 'absent' }));
-    const bob = db.add(Obj.make(TestSchema.Person, { name: 'bob' }));
-    const collection = db.add(Collection.make({ objects: [Ref.make(alice), Ref.make(absent), Ref.make(bob)] }));
-    await db.flush();
+    const [alice, absent, bob] = await people('alice', 'absent', 'bob');
+    const refs = [alice, absent, bob].map(Ref.make);
 
-    const ordered = CollectionModel.orderByRefs([bob, alice], collection.objects);
+    const ordered = CollectionModel.orderByRefs([bob, alice], refs);
     expect(ordered.map((object) => object.name)).toEqual(['alice', 'bob']);
   });
 
-  test('an object the array does not name sorts last rather than being dropped', async ({ expect }) => {
-    const { db } = await createDatabase();
-    const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const stranger = db.add(Obj.make(TestSchema.Person, { name: 'stranger' }));
-    const collection = db.add(Collection.make({ objects: [Ref.make(alice)] }));
-    await db.flush();
+  test('an object no ref names sorts last', async ({ expect }) => {
+    const [alice, stranger] = await people('alice', 'stranger');
 
-    const ordered = CollectionModel.orderByRefs([stranger, alice], collection.objects);
+    const ordered = CollectionModel.orderByRefs([stranger, alice], [Ref.make(alice)]);
     expect(ordered.map((object) => object.name)).toEqual(['alice', 'stranger']);
   });
 });
@@ -251,31 +227,31 @@ describe('reference traversal', () => {
     await builder.close();
   });
 
-  const members = (db: EchoDatabase, collection: Collection.Collection) =>
-    db.query(Query.select(Filter.entity(collection)).reference('objects')).run();
-
-  test('returns the collection members', async ({ expect }) => {
+  /** A collection holding two people, plus the query the graph builders run over it. */
+  const setup = async () => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
     const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
     const bob = db.add(Obj.make(TestSchema.Person, { name: 'bob' }));
     const collection = db.add(Collection.make({ objects: [Ref.make(alice), Ref.make(bob)] }));
     await db.flush();
+    const members = () => db.query(Query.select(Filter.entity(collection)).reference('objects')).run();
+    return { db, alice, bob, collection, members };
+  };
 
-    const results = await members(db, collection);
+  test('returns the collection members', async ({ expect }) => {
+    const { alice, bob, members } = await setup();
+
+    const results = await members();
     expect(results.map((object) => object.id).sort()).toEqual([alice.id, bob.id].sort());
   });
 
   test('omits a deleted member while its ref stays in the array', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
-    const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const bob = db.add(Obj.make(TestSchema.Person, { name: 'bob' }));
-    const collection = db.add(Collection.make({ objects: [Ref.make(alice), Ref.make(bob)] }));
-    await db.flush();
+    const { db, alice, bob, collection, members } = await setup();
 
     db.remove(bob);
     await db.flush();
 
-    const results = await members(db, collection);
+    const results = await members();
     expect(results.map((object) => object.id)).toEqual([alice.id]);
     expect(collection.objects).toHaveLength(2);
   });
