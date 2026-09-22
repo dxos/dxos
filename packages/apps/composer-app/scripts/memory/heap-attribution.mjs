@@ -22,6 +22,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { readHeapSnapshot } from './read-heap-snapshot.mjs';
+
 /**
  * Names that identify a container rather than what it holds.
  *
@@ -382,9 +384,8 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop()
     process.exit(1);
   }
   try {
-    process.stdout.write(JSON.stringify(attribute(JSON.parse(readFileSync(file, 'utf8')), { distDir })));
+    process.stdout.write(JSON.stringify(attribute(readHeapSnapshot(file), { distDir })));
   } catch (error) {
-    // A snapshot past V8's string cap cannot be read this way at any heap size.
     console.error(`${file}: ${error.message}`);
     process.exit(2);
   }

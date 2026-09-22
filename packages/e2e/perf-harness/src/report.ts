@@ -398,6 +398,9 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       profileState: row.comparability.profileState,
       settleMs: row.comparability.settleMs,
       instruments: row.comparability.instruments,
+      ...(row.comparability.snapshotStages?.length
+        ? { snapshotStages: row.comparability.snapshotStages.join(',') }
+        : {}),
     },
   };
 };

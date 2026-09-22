@@ -23,6 +23,7 @@ import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
 import { type RpcReading, diffRpc, readRpc } from './collectors/rpc.ts';
+import { takeMemorySnapshot } from './collectors/snapshot.ts';
 import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
@@ -72,6 +73,13 @@ export type RunnerOptions = {
    * outside the measured window rather than because it is fast.
    */
   screenshotDir?: string;
+  /**
+   * Stages to take a memory snapshot after (`takeMemorySnapshot`), written under
+   * `snapshotDir/<stage>/`. Taken last, after the row is complete; list the stages on
+   * `comparability.snapshotStages` too, since every later stage inherits the snapshot's cost.
+   */
+  snapshotStages?: ReadonlySet<string>;
+  snapshotDir?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -252,7 +260,15 @@ export class StageRunner {
     // paint and a PNG encode, and neither belongs in this stage's numbers or the next one's.
     const shot = await this.#screenshot(id);
 
-    const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : [])];
+    const { snapshotStages, snapshotDir } = this.#options;
+    const snapshot =
+      snapshotDir && snapshotStages?.has(id)
+        ? await takeMemorySnapshot({ browserCdp, targets: this.#targets, dir: path.join(snapshotDir, id) }).catch(
+            () => undefined,
+          )
+        : undefined;
+
+    const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : []), ...(snapshot?.files ?? [])];
     const row: StageRow = {
       flow: this.#options.flow,
       stage: id,

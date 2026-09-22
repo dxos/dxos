@@ -6,6 +6,8 @@ import { defineConfig } from '@playwright/test';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
+import { PERF_PORT } from './perf/server.ts';
+
 /**
  * Performance-flow config — `vite preview` over a production bundle, scoped to `perf-*.spec.ts`.
  *
@@ -45,8 +47,8 @@ export default defineConfig({
   // Two flows measured at once would contend for the same 4 cores and measure each other.
   fullyParallel: false,
   webServer: {
-    command: 'pnpm vite preview --configLoader native',
-    port: 4173,
+    command: `pnpm vite preview --configLoader native${PERF_PORT ? ` --port ${PERF_PORT} --strictPort` : ''}`,
+    port: PERF_PORT ?? 4173,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
   },

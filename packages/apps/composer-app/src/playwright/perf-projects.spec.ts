@@ -13,6 +13,7 @@ import {
   StageRunner,
   appendRows,
   attachAll,
+  detachAll,
   installProbes,
   launchInstrumentedBrowser,
   publishPosthogBatch,
@@ -21,6 +22,7 @@ import {
   startScreencast,
   startTracing,
   sumAppFootprint,
+  takeMemorySnapshot,
   trackNetwork,
   writePosthogBatch,
   writeRunReport,
@@ -29,6 +31,7 @@ import {
 import { INITIAL_URL } from './harness-helpers.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 import { describeReplication, waitForReplication } from './perf/replication.ts';
+import { PERF_PORT } from './perf/server.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -88,6 +91,16 @@ const SETTLE_MS = 20_000;
  * stage exists to remove. Overridable for a run against a slow or local backend.
  */
 const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_TIMEOUT_MS ?? '', 10) || 180_000;
+
+/** Moved off the shared e2e port by `DX_PERF_PORT`, which the config serves on too. */
+const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
+
+/**
+ * Where to take a memory snapshot (`DX_PERF_SNAPSHOTS`, comma-separated): any stage id, or `idle`
+ * for the settled app before the fixture exists. Off by default — a snapshot of a loaded tab takes
+ * minutes and writes hundreds of megabytes.
+ */
+const SNAPSHOTS = new Set((process.env.DX_PERF_SNAPSHOTS ?? '').split(',').filter(Boolean));
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
@@ -184,7 +197,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       profileState: 'first-run',
       settleMs: SETTLE_MS,
       instruments: mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler',
+      ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
     };
+    const snapshotDir = path.join(artifactDir, 'snapshots');
 
     const runner = new StageRunner({
       flow: FLOW,
@@ -199,6 +214,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       // Both modes: a reviewer reading a regression wants to see the stage it is in, and one
       // capture per stage outside the measured window costs nothing the run can feel.
       screenshotDir: path.join(artifactDir, 'stages'),
+      snapshotStages: SNAPSHOTS,
+      snapshotDir,
     });
 
     // `boot` is its own stage and the profiler cannot start before it: there is no target to attach
@@ -214,7 +231,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
 
     await runner.stage('boot', async () => {
-      await page.goto(`${INITIAL_URL}/?profiler=1`, { timeout: 120_000 });
+      await page.goto(`${BASE_URL}/?profiler=1`, { timeout: 120_000 });
       await waitForReady(page);
     });
 
@@ -254,6 +271,22 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     }
 
     await page.waitForTimeout(SETTLE_MS);
+
+    // Outside every stage, like the fixture: the settled app with no data in it, the floor the
+    // end-of-flow snapshot is read against.
+    if (SNAPSHOTS.has('idle')) {
+      const idleTargets = await attachAll(debugPort);
+      try {
+        const snapshot = await takeMemorySnapshot({
+          browserCdp,
+          targets: idleTargets,
+          dir: path.join(snapshotDir, 'idle'),
+        });
+        log.info('idle snapshot', { dir: snapshot.dir, realms: snapshot.realms.length });
+      } finally {
+        detachAll(idleTargets);
+      }
+    }
 
     // Fixture generation is deliberately OUTSIDE any stage: it is setup, and its cost is not a
     // number anyone reads.

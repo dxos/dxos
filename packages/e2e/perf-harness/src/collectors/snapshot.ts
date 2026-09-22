@@ -1,0 +1,288 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { closeSync, mkdirSync, openSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
+import path from 'node:path';
+
+import { type Attached, type Cdp } from '../cdp.ts';
+import { type TargetKind } from '../types.ts';
+
+/**
+ * Allocator nodes describing pages another process owns.
+ *
+ * A renderer's `gpu`, `cc` and `shared_memory` nodes are regions shared with the GPU process, so
+ * counting them pushes the allocator sum past a footprint that never included them. The same set
+ * `composer-app/scripts/memory/ledger.mjs` excludes.
+ */
+const SHARED_BACKED = new Set(['cc', 'gpu', 'ioaccelerator', 'iosurface', 'shared_memory']);
+
+/** One process's detailed dump, reduced to the allocator breakdown that explains its footprint. */
+export type ProcessAllocators = {
+  pid: number;
+  process: string;
+  footprintBytes: number;
+  /** Top-level allocator nodes, less shared-backed nodes and cross-tree ownership views. */
+  privateAllocatorBytes: number;
+  sharedBackedBytes: number;
+  /** Footprint no allocator claims. Wasm linear memory lands here: it has no dump provider. */
+  unattributedBytes: number;
+  /** Top-level nodes, view-deducted, largest first. */
+  allocators: Record<string, number>;
+  /** Every nested node's `effective_size`, largest first, for naming what a big allocator holds. */
+  children: Record<string, number>;
+};
+
+type DumpNode = { guid?: string; attrs?: Record<string, { value?: string }> };
+
+type DumpEvent = {
+  ph?: string;
+  pid?: number;
+  name?: string;
+  args?: {
+    name?: string;
+    dumps?: {
+      process_totals?: Record<string, string>;
+      allocators?: Record<string, DumpNode>;
+      allocators_graph?: { source: string; target: string; type: string }[];
+    };
+  };
+};
+
+type RawProcess = {
+  totals?: Record<string, string>;
+  allocators: Record<string, DumpNode>;
+  graph: { source: string; target: string; type: string }[];
+};
+
+/** Hex without an `0x` prefix, throughout memory-infra. */
+const hex = (value: string | undefined): number => (value ? parseInt(value, 16) : Number.NaN);
+
+/**
+ * Reduces a detailed memory-infra dump to one allocator breakdown per process.
+ *
+ * Ownership edges that cross allocator trees are views, not memory: every `blink_objects` node owns
+ * a `blink_gc` node, so summing both double counts Oilpan. The view side is subtracted.
+ */
+export const parseDetailedDump = (events: DumpEvent[]): ProcessAllocators[] => {
+  const names = new Map<number, string>();
+  const byPid = new Map<number, RawProcess>();
+  for (const event of events) {
+    if (event.pid == null) {
+      continue;
+    }
+    if (event.ph === 'M' && event.name === 'process_name' && event.args?.name) {
+      names.set(event.pid, event.args.name);
+    }
+    const dumps = event.args?.dumps;
+    if (event.ph !== 'v' || !dumps) {
+      continue;
+    }
+    // One process's totals and its allocator tree can arrive in separate events.
+    const raw = byPid.get(event.pid) ?? { allocators: {}, graph: [] };
+    raw.totals = dumps.process_totals ?? raw.totals;
+    Object.assign(raw.allocators, dumps.allocators ?? {});
+    raw.graph.push(...(dumps.allocators_graph ?? []));
+    byPid.set(event.pid, raw);
+  }
+
+  const result: ProcessAllocators[] = [];
+  for (const [pid, raw] of byPid) {
+    const footprintBytes = hex(raw.totals?.private_footprint_bytes);
+    if (!Number.isFinite(footprintBytes) || footprintBytes === 0) {
+      continue;
+    }
+    const sizes = new Map<string, number>();
+    const nameByGuid = new Map<string, string>();
+    for (const [name, node] of Object.entries(raw.allocators)) {
+      const bytes = hex(node.attrs?.effective_size?.value ?? node.attrs?.size?.value);
+      if (Number.isFinite(bytes)) {
+        sizes.set(name, bytes);
+      }
+      if (node.guid) {
+        nameByGuid.set(node.guid, name);
+      }
+    }
+
+    const viewBytes = new Map<string, number>();
+    for (const edge of raw.graph) {
+      const source = edge.type === 'ownership' ? nameByGuid.get(edge.source) : undefined;
+      const target = source ? nameByGuid.get(edge.target) : undefined;
+      if (!source || !target || !sizes.get(source)) {
+        continue;
+      }
+      const root = source.split('/')[0];
+      // Within one tree `effective_size` already resolves the edge; a zero target means the graph
+      // processor resolved it on that side.
+      if (root !== target.split('/')[0] && (sizes.get(target) ?? 0) > 0) {
+        viewBytes.set(root, (viewBytes.get(root) ?? 0) + sizes.get(source)!);
+      }
+    }
+
+    const allocators: [string, number][] = [];
+    const children: [string, number][] = [];
+    let sharedBackedBytes = 0;
+    for (const [name, bytes] of sizes) {
+      if (name.includes('/')) {
+        children.push([name, bytes]);
+      } else if (SHARED_BACKED.has(name)) {
+        sharedBackedBytes += bytes;
+      } else {
+        allocators.push([name, Math.max(0, bytes - (viewBytes.get(name) ?? 0))]);
+      }
+    }
+    const privateAllocatorBytes = allocators.reduce((total, [, bytes]) => total + bytes, 0);
+    const byBytes = (a: [string, number], b: [string, number]) => b[1] - a[1];
+    result.push({
+      pid,
+      process: names.get(pid) ?? 'unknown',
+      footprintBytes,
+      privateAllocatorBytes,
+      sharedBackedBytes,
+      unattributedBytes: footprintBytes - privateAllocatorBytes,
+      allocators: Object.fromEntries(allocators.sort(byBytes)),
+      children: Object.fromEntries(children.sort(byBytes)),
+    });
+  }
+  return result.sort((a, b) => b.footprintBytes - a.footprintBytes);
+};
+
+/**
+ * Records one detailed memory-infra dump over the browser target.
+ *
+ * `deterministic` forces a GC in every process first, so the dump describes live memory.
+ */
+const recordDetailedDump = async (browserCdp: Cdp): Promise<DumpEvent[]> => {
+  const events: DumpEvent[] = [];
+  const collect = (params: { value?: DumpEvent[] }) => {
+    events.push(...(params?.value ?? []));
+  };
+  let settle: () => void = () => {};
+  const complete = new Promise<void>((resolve) => {
+    settle = resolve;
+  });
+  browserCdp.on('Tracing.dataCollected', collect);
+  browserCdp.on('Tracing.tracingComplete', settle);
+  try {
+    const started = await browserCdp.trySend('Tracing.start', {
+      traceConfig: {
+        excludedCategories: ['*'],
+        includedCategories: ['disabled-by-default-memory-infra', '__metadata'],
+      },
+      transferMode: 'ReportEvents',
+    });
+    if (started === undefined) {
+      return [];
+    }
+    await browserCdp.trySend('Tracing.requestMemoryDump', { deterministic: true, levelOfDetail: 'detailed' });
+    await browserCdp.trySend('Tracing.end');
+    await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 60_000))]);
+  } finally {
+    browserCdp.off('Tracing.dataCollected', collect);
+    browserCdp.off('Tracing.tracingComplete', settle);
+  }
+  return events;
+};
+
+/** Upper bound on one realm's snapshot; a loaded page serializes in well under a minute. */
+const HEAP_SNAPSHOT_TIMEOUT_MS = 300_000;
+
+/**
+ * Streams one realm's V8 heap snapshot to `file`.
+ *
+ * Written chunk by chunk: joined first, a loaded realm's snapshot passes V8's string cap.
+ */
+const writeHeapSnapshot = async (target: Attached, file: string): Promise<boolean> => {
+  const handle = openSync(file, 'w');
+  let written = 0;
+  const onChunk = ({ chunk }: { chunk: string }) => {
+    writeSync(handle, chunk);
+    written += chunk.length;
+  };
+  target.cdp.on('HeapProfiler.addHeapSnapshotChunk', onChunk);
+  try {
+    const taken = await Promise.race([
+      target.cdp.trySend('HeapProfiler.takeHeapSnapshot', {
+        captureNumericValue: false,
+        reportProgress: false,
+        treatGlobalObjectsAsRoots: true,
+      }),
+      new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), HEAP_SNAPSHOT_TIMEOUT_MS)),
+    ]);
+    return taken !== undefined && written > 0;
+  } finally {
+    target.cdp.off('HeapProfiler.addHeapSnapshotChunk', onChunk);
+    closeSync(handle);
+  }
+};
+
+export type RealmSnapshot = { name: string; kind: TargetKind; file?: string; bytes?: number };
+
+export type MemorySnapshot = {
+  dir: string;
+  /** Every file written, for the row's artifact list. */
+  files: string[];
+  processes: ProcessAllocators[];
+  realms: RealmSnapshot[];
+};
+
+/**
+ * A whole-browser memory snapshot: a detailed allocator dump per process and a V8 heap snapshot
+ * per realm, written under `dir`.
+ *
+ * The dump comes first because a heap snapshot allocates hundreds of megabytes in the realm it
+ * serializes, which would otherwise land in the footprint the dump reports. Neither is cheap —
+ * seconds to minutes on a loaded tab — so this runs outside every measured window.
+ *
+ * Files: `memory-infra.json` (raw dump events), `allocators.json` (the parsed breakdown),
+ * `<realm>.heapsnapshot` (loadable in DevTools' Memory panel), and `summary.json` indexing them.
+ */
+export const takeMemorySnapshot = async ({
+  browserCdp,
+  targets,
+  dir,
+}: {
+  browserCdp: Cdp;
+  targets: Attached[];
+  dir: string;
+}): Promise<MemorySnapshot> => {
+  mkdirSync(dir, { recursive: true });
+  const files: string[] = [];
+  const write = (name: string, value: unknown) => {
+    const file = path.join(dir, name);
+    writeFileSync(file, JSON.stringify(value, null, 2));
+    files.push(file);
+  };
+
+  const events = await recordDetailedDump(browserCdp);
+  write(
+    'memory-infra.json',
+    events.filter((event) => event.ph === 'v' || event.name === 'process_name'),
+  );
+  const processes = parseDetailedDump(events);
+  write('allocators.json', processes);
+
+  const realms: RealmSnapshot[] = [];
+  const used = new Map<string, number>();
+  for (const target of targets) {
+    // Two dedicated workers running one bundle share a name.
+    const count = used.get(target.name) ?? 0;
+    used.set(target.name, count + 1);
+    const base = `${target.name}${count > 0 ? `-${count}` : ''}`.replace(/[^\w.-]/g, '_');
+    const file = path.join(dir, `${base}.heapsnapshot`);
+    if (await writeHeapSnapshot(target, file)) {
+      files.push(file);
+      realms.push({ name: target.name, kind: target.kind, file, bytes: statSync(file).size });
+    } else {
+      rmSync(file, { force: true });
+      realms.push({ name: target.name, kind: target.kind });
+    }
+  }
+
+  // Relative, so a run directory stays readable after it is moved out of `test-results`.
+  write('summary.json', {
+    processes: processes.map(({ children: _, ...rest }) => rest),
+    realms: realms.map((realm) => (realm.file ? { ...realm, file: path.basename(realm.file) } : realm)),
+  });
+  return { dir, files, processes, realms };
+};

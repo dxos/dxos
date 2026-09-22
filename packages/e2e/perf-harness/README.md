@@ -81,3 +81,11 @@ Written under `test-results/perf/`:
   `node scripts/ci-event.mjs --batch`.
 - `artifacts/<mode>-<scale>-<runId>/` — `.cpuprofile` per stage per realm, and each stage's first
   and last frame, plus one screenshot per stage. ~19 MB for a whole run. Never committed.
+- `artifacts/.../snapshots/<checkpoint>/` — only with `DX_PERF_SNAPSHOTS` (stage ids, or `idle` for
+  the settled app before the fixture): a detailed memory-infra dump per process (`allocators.json`,
+  raw `memory-infra.json`) and a `.heapsnapshot` per realm. Hundreds of MB. Every stage after a
+  checkpoint inherits what the snapshot committed, so measure clean runs separately; rows carry
+  `comparability.snapshotStages`. `composer-app/scripts/memory/perf-snapshot-report.mjs` reads it.
+
+Running beside another worktree: `DX_PERF_PORT` serves the bundle on its own port (locally the
+config reuses whatever already listens on 4173) and `DX_PERF_DEBUG_PORT` moves the CDP port.
