@@ -47,7 +47,7 @@ test.describe('HALO tests', () => {
     }
   });
 
-  test('join new identity', async () => {
+  test('join new identity', { tag: ['@QA-7'] }, async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
@@ -81,7 +81,7 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  test('settings sync across devices, and one device can keep its own', async () => {
+  test('settings sync across devices, and one device can keep its own', { tag: ['@QA-7'] }, async () => {
     test.setTimeout(180_000);
 
     // Both boots have to land first: the navigation to the default space arrives seconds after the
@@ -122,7 +122,7 @@ test.describe('HALO tests', () => {
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
   });
 
-  test('deleting a space replicates across devices', async () => {
+  test('deleting a space replicates across devices', { tag: ['@QA-7'] }, async () => {
     test.setTimeout(120_000);
 
     // Host creates a space; guest joins the host's identity and inherits it.

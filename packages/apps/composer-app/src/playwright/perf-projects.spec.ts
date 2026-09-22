@@ -16,15 +16,17 @@ import {
   installProbes,
   launchInstrumentedBrowser,
   publishPosthogBatch,
+  readProcessFootprint,
   startProfiling,
   startScreencast,
   startTracing,
+  sumAppFootprint,
   trackNetwork,
   writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
 
-import { INITIAL_URL } from './app-manager.ts';
+import { INITIAL_URL } from './harness-helpers.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 import { describeReplication, waitForReplication } from './perf/replication.ts';
 
@@ -169,7 +171,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
   const budget = locatorTimeout(mode);
   const instrumented = await launchInstrumentedBrowser();
-  const { browser, browserCdp, browserPid, debugPort } = instrumented;
+  const { browser, browserCdp, debugPort } = instrumented;
 
   try {
     const context = await browser.newContext();
@@ -191,7 +193,6 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       iteration,
       page,
       browserCdp,
-      browserPid,
       debugPort,
       network,
       comparability,
@@ -239,6 +240,17 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       if (bootRow && perRealm) {
         bootRow.tracedCpuMsByRealm = perRealm;
       }
+    }
+
+    // Backfilled here because CDP records one trace at a time: `boot`'s own footprint read could
+    // not start a trace of its own while this one was still recording, so it left an empty
+    // reading. Taken now, which is a few seconds after boot closed rather than at the instant —
+    // the same offset every run, so the trend is comparable even though the absolute is not the
+    // boundary value the other stages report.
+    const bootRow = runner.rows.find((row) => row.stage === 'boot');
+    if (bootRow && bootRow.footprint.length === 0) {
+      bootRow.footprint = await readProcessFootprint(browserCdp);
+      bootRow.appFootprintBytes = sumAppFootprint(bootRow.footprint);
     }
 
     await page.waitForTimeout(SETTLE_MS);
@@ -406,7 +418,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
         ok: row.ok,
         wallMs: row.wallMs,
         cpuMsTotal: row.cpuMsTotal,
-        peakRssMB: Math.round(row.peakRssBytes / 1024 / 1024),
+        appFootprintMB: Math.round(row.appFootprintBytes / 1024 / 1024),
         heapMB: Math.round(row.heapUsedTotalBytes / 1024 / 1024),
         domNodes: row.domNodes,
         lagMaxMs: row.responsiveness.lagMaxMs,

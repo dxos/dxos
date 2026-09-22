@@ -24,7 +24,7 @@ test.describe('Comments tests', () => {
     await host.close();
   });
 
-  test('create', async () => {
+  test('create', { tag: ['@QA-3', '@review:QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -38,7 +38,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  test('edit message', async () => {
+  test('edit message', { tag: ['@QA-3', '@review:QA-1'] }, async () => {
     test.slow();
 
     await host.createSpace();
@@ -78,7 +78,7 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  test('delete message', async () => {
+  test('delete message', { tag: ['@QA-3', '@review:QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -110,7 +110,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  test('delete thread', async () => {
+  test('delete thread', { tag: ['@QA-3', '@review:QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -131,7 +131,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  test('undo delete thread', async () => {
+  test('undo delete thread', { tag: ['@QA-3', '@review:QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -157,7 +157,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  test('selecting comment highlights thread and vice versa', async () => {
+  test('selecting comment highlights thread and vice versa', { tag: ['@QA-3', '@review:QA-1'] }, async () => {
     test.slow();
 
     await host.createSpace();
@@ -194,7 +194,7 @@ test.describe('Comments tests', () => {
   });
 
   // TODO(wittjosiah): Paste doesn't work in headless mode.
-  test.skip('cut & paste comment', async () => {
+  test.skip('cut & paste comment', { tag: ['@QA-3'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 

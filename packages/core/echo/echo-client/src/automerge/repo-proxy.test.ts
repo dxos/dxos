@@ -133,6 +133,44 @@ describe('RepoProxy', () => {
     }
   });
 
+  test('a change the host delivers is not an unsaved change', async () => {
+    const peer1 = await setup();
+    const [repo1] = createProxyRepos(peer1.dataService);
+    await openAndClose(repo1);
+
+    const peer2 = await setup();
+    const [repo2] = createProxyRepos(peer2.dataService);
+    await openAndClose(repo2);
+    const network = await new TestReplicationNetwork().open();
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+
+    const handle1 = repo1.create<{ text: string }>({ text: 'one' });
+    await handle1.whenReady();
+    await repo1.flush();
+    const handle2 = repo2.find<{ text: string }>(handle1.url!);
+    await handle2.whenReady();
+    await peer1.host.flush(Context.default());
+
+    const saveStates: string[][] = [];
+    repo1.saveStateChanged.on(({ unsavedDocuments }) => {
+      saveStates.push(unsavedDocuments);
+    });
+    const receivedChange = new Trigger();
+    handle1.once('change', () => receivedChange.wake());
+    handle2.change((doc: any) => {
+      doc.text = 'two';
+    });
+    await receivedChange.wait();
+    expect(handle1.doc().text).to.equal('two');
+    expect(saveStates).to.deep.equal([]);
+
+    handle1.change((doc: any) => {
+      doc.text = 'three';
+    });
+    expect(saveStates).to.deep.equal([[handle1.documentId]]);
+  });
+
   test('load document from disk', async () => {
     const dbPath = createTmpPath();
 

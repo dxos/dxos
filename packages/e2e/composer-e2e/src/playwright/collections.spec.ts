@@ -18,7 +18,7 @@ test.describe('Collection tests', () => {
     await host.close();
   });
 
-  test('create collection', async () => {
+  test('create collection', { tag: ['@QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection' });
     await host.expandSection('spacePlugin.collectionsSection');
@@ -31,7 +31,7 @@ test.describe('Collection tests', () => {
       'TODO(thure): Issue #7387: Firefox/Webkit is unable to click on the item actions menu, only in CI.',
     );
 
-    test('re-order collections', async () => {
+    test('re-order collections', { tag: ['@QA-6'] }, async () => {
       await host.createSpace();
       await host.createObject({ type: 'Collection' });
       await host.createObject({ type: 'Collection' });
@@ -54,7 +54,7 @@ test.describe('Collection tests', () => {
   test.describe(() => {
     test.skip(({ browserName }) => browserName !== 'chromium', 'TODO(wittjosiah): This test is quite flaky in webkit.');
 
-    test('drag object into collection', async () => {
+    test('drag object into collection', { tag: ['@QA-6'] }, async () => {
       await host.createSpace();
       await host.createObject({ type: 'Collection' });
       await host.createObject({ type: 'Collection' });
@@ -75,7 +75,7 @@ test.describe('Collection tests', () => {
     });
   });
 
-  test('delete a collection', async () => {
+  test('delete a collection', { tag: ['@QA-6'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection' });
     await host.expandSection('spacePlugin.collectionsSection');
@@ -89,7 +89,7 @@ test.describe('Collection tests', () => {
     await expect(host.getObjectLinks()).toHaveCount(0);
   });
 
-  test('deletion undo restores collection', async () => {
+  test('deletion undo restores collection', { tag: ['@QA-2', '@QA-6'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection' });
     await host.expandSection('spacePlugin.collectionsSection');

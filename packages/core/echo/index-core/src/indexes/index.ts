@@ -8,3 +8,4 @@ export * from './fts-index.ts';
 export * from './interface.ts';
 export * from './object-snapshot-index.ts';
 export * from './reverse-ref-index.ts';
+export * from './text-extractor.ts';

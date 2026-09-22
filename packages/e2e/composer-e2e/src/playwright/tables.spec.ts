@@ -25,7 +25,7 @@ test.describe.skip('Table tests', () => {
     await host.close();
   });
 
-  test('create', async () => {
+  test('create', { tag: ['@table:QA-1'] }, async () => {
     await host.createObject({ type: 'Table' });
 
     const title = random.lorem.sentence();
@@ -34,7 +34,7 @@ test.describe.skip('Table tests', () => {
     await expect(Table.getDataRow(host.page)).toHaveCount(1);
   });
 
-  test('can add rows', async () => {
+  test('can add rows', { tag: ['@table:QA-1'] }, async () => {
     await host.createObject({ type: 'Table' });
 
     const title = random.lorem.sentence();
@@ -57,7 +57,7 @@ test.describe.skip('Table tests', () => {
     await expect(Table.getDataRow(host.page)).toHaveCount(3);
   });
 
-  test('can delete rows', async () => {
+  test('can delete rows', { tag: ['@table:QA-1'] }, async () => {
     await host.createObject({ type: 'Table' });
     const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
@@ -82,7 +82,7 @@ test.describe.skip('Table tests', () => {
     await expect(Table.getDataRow(host.page)).toHaveCount(1);
   });
 
-  test('can add columns', async () => {
+  test('can add columns', { tag: ['@table:QA-1'] }, async () => {
     await host.createObject({ type: 'Table' });
     const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
@@ -93,7 +93,7 @@ test.describe.skip('Table tests', () => {
     await expect(Table.getHeaderCell(host.page)).toHaveCount(3);
   });
 
-  test('can delete columns', async () => {
+  test('can delete columns', { tag: ['@table:QA-1'] }, async () => {
     await host.createObject({ type: 'Table' });
     const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
@@ -118,7 +118,7 @@ test.describe.skip('Table tests', () => {
     await expect(Table.getHeaderCell(host.page)).toHaveCount(2);
   });
 
-  test('can rename columns', async () => {
+  test('can rename columns', { tag: ['@table:QA-1'] }, async () => {
     await host.createObject({ type: 'Table' });
     const title = random.lorem.sentence();
 
