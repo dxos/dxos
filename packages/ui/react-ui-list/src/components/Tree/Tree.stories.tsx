@@ -231,6 +231,9 @@ const DefaultStory = ({
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      // Paired with `draggable`: the strip is what makes "append at the end" a drop target, so a
+      // draggable story without it cannot exercise the end of the list at all.
+      dropAtEnd={draggable}
       virtualize={virtualize}
       renderColumns={() => (
         <div className='flex items-center'>
