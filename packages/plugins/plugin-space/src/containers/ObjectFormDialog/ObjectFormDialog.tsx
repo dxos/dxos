@@ -261,9 +261,9 @@ export const ObjectFormDialog = ({
     };
   }, [mode, db, type]);
 
-  // The target IS the holder, except a database, which names the space rather than an object in it
-  // and so means the space root — which downstream is the absence of a holder.
-  const fileTarget = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
+  // A database names the space rather than an object in it, so it means the space root, which
+  // downstream is the absence of a holder. Every other target holds what it creates.
+  const holder = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
 
   const handleConfirm = useCallback(() => {
     if (!object || !target) {
@@ -278,15 +278,16 @@ export const ObjectFormDialog = ({
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
     void Effect.gen(function* () {
-      // The object is already persisted; this files it under the target collection, if there is one.
-      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: fileTarget }, { spaceId: db?.spaceId });
+      // The object is already persisted; this hands it to its holder, which files it if it is a
+      // collection and otherwise only records that the object exists.
+      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: holder }, { spaceId: db?.spaceId });
       yield* navigateTo(object);
     }).pipe(
       Effect.provideService(Capability.Service, manager.capabilities),
       Effect.provideService(Operation.Service, operationInvoker),
       EffectEx.runAndForwardErrors,
     );
-  }, [object, target, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+  }, [object, target, holder, db, navigateTo, handle, manager.capabilities, operationInvoker]);
 
   //
   // Draft mode.
@@ -312,7 +313,7 @@ export const ObjectFormDialog = ({
         invariant(db, 'Missing database');
         // The dialog targets a database to mean "the space root"; downstream that is the absence of
         // a collection, since `db` already says which space.
-        const result = yield* metadata.createObject(data, { db, target: fileTarget, targetNodeId });
+        const result = yield* metadata.createObject(data, { db, target: holder, targetNodeId });
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
@@ -328,7 +329,7 @@ export const ObjectFormDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         EffectEx.runAndForwardErrors,
       ),
-    [target, fileTarget, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
+    [target, holder, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
   );
 
   return (
