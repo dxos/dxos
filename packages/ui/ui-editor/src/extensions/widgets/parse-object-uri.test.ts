@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseObjectUri } from './parse-object-uri.ts';
+import { parseObjectUri } from './object-links.ts';
 
 const SPACE = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
 const OBJECT = '01J00J9B45YHYSGZQTQMSKMGJ6';
@@ -15,16 +15,25 @@ describe('parseObjectUri', () => {
   });
 
   test('both local forms are resolvable, in their original spelling', ({ expect }) => {
-    // The legacy single-slash form is still present in persisted documents; returning it verbatim
-    // keeps it resolving against the containing document's own database.
     expect(parseObjectUri(`echo:/${OBJECT}`)).toBe(`echo:/${OBJECT}`);
     expect(parseObjectUri(`echo:///${OBJECT}`)).toBe(`echo:///${OBJECT}`);
   });
 
-  // Every prefix of a URI being typed reaches the embed widget, and resolving one that names no
-  // entity throws out of render — which replaced the document's whole plank with an error boundary.
-  test('a URI being typed is not resolvable', ({ expect }) => {
-    for (const prefix of ['e', 'ec', 'echo', 'echo:', 'echo:/', 'echo://', `echo://${SPACE}`, `echo://${SPACE}/`]) {
+  // Every prefix of a URI being typed (or streamed) reaches the widget, and resolving one that names
+  // no entity throws out of render — which replaced the document's whole plank with an error boundary.
+  test('a partial URI is not resolvable', ({ expect }) => {
+    const prefixes = [
+      'e',
+      'ec',
+      'echo',
+      'echo:',
+      'echo:/',
+      'echo://',
+      'echo:///',
+      `echo://${SPACE}`,
+      `echo://${SPACE}/`,
+    ];
+    for (const prefix of prefixes) {
       expect(parseObjectUri(prefix), prefix).toBeUndefined();
     }
   });

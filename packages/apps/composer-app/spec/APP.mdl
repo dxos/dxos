@@ -667,7 +667,7 @@ test QA-10: From the README to a diagram embedded in a document
     which is why it lives here rather than in any one PLUGIN.mdl.
   actors: both
   status: passing           # 2026-09-22, driven end to end against a dev server while recording the demo
-  covers: [review:F-1]
+  covers: [markdown:F-1, markdown:F-4.3, review:F-5.1, review:F-5.3]
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - readme: the seeded "README" document in the default space — a first-run profile has one; without it the walkthrough has no starting point, so the test is blocked, not failed
@@ -700,13 +700,16 @@ test QA-10: From the README to a diagram embedded in a document
       expect: a second document row appears under the space; the deck is unchanged
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
-          { typename: 'org.dxos.type.document' }, { spaceId: $given.defaultSpace.id });
+          { typename: 'org.dxos.type.document', limit: 100 }, { spaceId: $given.defaultSpace.id });
         return rows.results.some((o) => o.dxn === $doc.id) && $stepErrors.length === 0;
       note: |
         Document declares neither an `inputSchema` nor a `customPanel`, so `CreateObjectPanel`
         short-circuits: there is no name field and no Save. The created document is NOT opened —
         that is the next step, not a description of this one. It is created with the name the UI
         gives it so both actors are in the same state; the real name arrives with the heading.
+        Every `queryObjects` here passes `limit`, because the default is 10 and this test runs in
+        the default space, which a real profile fills — past ten documents a bare call drops this
+        test's own artifacts off the page and the assert reports the opposite of the truth.
     - name: Open it
       do: Click the new row in the navtree.
       invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$doc.objectId"] }
@@ -726,21 +729,24 @@ test QA-10: From the README to a diagram embedded in a document
       space: $given.defaultSpace.id
       expect: the paragraphs render in the editor AND the navtree row stops reading "New document" — it takes its name from the first heading
       assert: |
-        const text = document.querySelector('[data-testid="composer.markdownRoot"]')?.innerText ?? '';
+        const text = document.querySelector('[data-testid="composer.markdownRoot"] [role="textbox"]')?.innerText ?? '';
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
-          { typename: 'org.dxos.type.document' }, { spaceId: $given.defaultSpace.id });
+          { typename: 'org.dxos.type.document', limit: 100 }, { spaceId: $given.defaultSpace.id });
         const row = rows.results.find((o) => o.dxn === $doc.id);
         return text.includes('local-first workspace') && text.includes('first-class citizen') &&
           row?.label !== 'New document' && $stepErrors.length === 0;
       note: |
-        An edit with no `oldString` appends. Two things ride on this step's exact text. The name is
+        An edit with no `oldString` appends. Three things ride on this step's exact text. The name is
         derived from the first heading, not typed into a title field — there is no
         `composer.documentTitle` in this build, and the derived label drops punctuation
-        (`# QA: Composer` lists as "QA Composer"), which is why the heading carries none. And the
-        three comment steps below are character offsets into this text, so changing a word moves
-        every anchor; `$runId` is on the LAST line for the same reason.
-        The DOM check is deliberate: the step's claim is that the text RENDERS, and a document
-        updated behind an unbound editor satisfies a database check while showing the reader nothing.
+        (`# QA: Composer` lists as "QA Composer"), which is why the heading carries none. The three
+        comment steps below are character offsets into this text, so changing a word moves every
+        anchor — and that is also why the heading holds no `$runId`, which would shift all six
+        offsets by its length: the run id rides the LAST line instead, and this test's
+        falsifiability comes from asserting on `$doc.id` rather than on the name (qa.mdl Rule 5),
+        with the `given` refusing to run over a leftover "QA " object.
+        The editor is read through its `textbox` role because `composer.markdownRoot` alone matches
+        once per artifact card on a Home/Overview plank as well as on the real editor.
     - name: Comment on "local-first workspace"
       do: |
         Select the words "local-first workspace" in the first paragraph and click the comment button
@@ -792,22 +798,26 @@ test QA-10: From the README to a diagram embedded in a document
       space: $given.defaultSpace.id
       capture: created
       expect: a Drawing backed by an empty tldraw canvas exists
-      assert: return !!$created.object
+      assert: |
+        return dxos.Obj.getTypename($created.object) === 'org.dxos.type.drawing' &&
+          (await $created.object.canvas.load()).schema === 'tldraw.com/2';
       note: |
         `variant` is the canvas schema the renderer registers, `tldraw.com/2`
         (`plugin-tldraw/src/types/Tldraw.ts`) — not the plugin id. The renderer list shows the
         variant's `label` ("tldraw") and sends that same id. Drawing DOES declare a `customPanel`,
         so unlike Document it gets a second step — but the panel is the renderer picker and nothing
-        else, so no name is collected here either.
+        else, so no name is collected here either. The assert reads the canvas rather than the
+        return code because the operation returns `{ object }` unconditionally: the thing that can
+        actually go wrong is the variant resolving to the wrong renderer.
     - name: File it in the space
-      do: (no separate gesture — picking the renderer files the drawing and opens it)
+      do: (no separate gesture — picking the renderer files the drawing)
       invoke: org.dxos.operation.space.addObject { object: $created.object }
       space: $given.defaultSpace.id
       capture: drawing
-      expect: a row reading "New drawing" appears in the navtree, and it opens in a plank
+      expect: a row reading "New drawing" appears in the navtree
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
-          { typename: 'org.dxos.type.drawing' }, { spaceId: $given.defaultSpace.id });
+          { typename: 'org.dxos.type.drawing', limit: 100 }, { spaceId: $given.defaultSpace.id });
         return rows.results.some((o) => o.dxn === $drawing.id);
       note: |
         `illustrator.create` is a factory: it returns a live, unfiled object, so this step exists and
@@ -816,6 +826,17 @@ test QA-10: From the README to a diagram embedded in a document
         the embed step writes into the document. Adding the Drawing is enough: the `Canvas` it
         references is persisted with it, even though the UI's own create path adds the two
         separately (`plugin-illustrator/src/capabilities/create-object.ts`).
+    - name: Open it
+      do: (no separate gesture — the create dialog opens the new drawing)
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$drawing.objectId"] }
+      expect: the drawing replaces the document in the deck and a blank tldraw canvas renders
+      assert: |
+        return $snapshot.planks.length === 1 && $snapshot.planks[0].subject?.dxn === $drawing.id &&
+          document.querySelectorAll('[data-testid="canvas"]').length === 1;
+      note: |
+        Its own step because `addObject` opens nothing: without it the agent would stay on the
+        document while the human is looking at the canvas, and every later step would be judging a
+        different deck for each actor.
     - name: Name it
       do: Open the row's ⋮ menu, choose Rename, and enter "QA Architecture $runId".
       invoke: org.dxos.operation.space.updateObject { object: Ref($drawing.id), properties: { name: "QA Architecture $runId" } }
@@ -823,7 +844,7 @@ test QA-10: From the README to a diagram embedded in a document
       expect: the navtree row and the plank heading read "QA Architecture $runId"
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
-          { typename: 'org.dxos.type.drawing' }, { spaceId: $given.defaultSpace.id });
+          { typename: 'org.dxos.type.drawing', limit: 100 }, { spaceId: $given.defaultSpace.id });
         return rows.results.find((o) => o.dxn === $drawing.id)?.label === `QA Architecture ${$runId}`;
       note: |
         A drawing has no heading to take a name from, so unlike the document it has to be renamed
@@ -842,17 +863,21 @@ test QA-10: From the README to a diagram embedded in a document
       space: $given.defaultSpace.id
       expect: four labelled boxes render on the tldraw canvas — DXOS above ECHO, HALO and MESH, one containment connector to each — and the layout report carries no `error`
       assert: |
-        return ['DXOS', 'ECHO', 'HALO', 'MESH'].every((id) => $result.upserted.includes(id)) &&
+        const { scene } = await composer.invoke('org.dxos.operation.illustrator.read',
+          { drawing: dxos.Ref.make(dxos.spaces($given.defaultSpace.id).db.getObjectById($drawing.objectId)) },
+          { spaceId: $given.defaultSpace.id });
+        return ['DXOS', 'ECHO', 'HALO', 'MESH'].every((id) => scene.objects.some((o) => o.id === id)) &&
           !$result.diagnostics.some((d) => d.severity === 'error') && $stepErrors.length === 0;
       note: |
         The mermaid dialect owns the layout, so no coordinates are supplied; `o-->` is the
-        containment edge (`packages/common/diagram/src/mermaid.ts`). A `diagnostics` entry of
-        severity `error` (an overlap, a connector through a box, a label that overflows) means the
-        diagram is illegible even though the operation succeeded — that is why the report is checked
-        rather than the return code. One `edge-crossing` WARNING is expected here and is cosmetic.
-        Generating does not move the viewport, so the diagram lands off-screen at the canvas origin
-        until something fits it; tldraw's zoom-to-fit is Shift+1 and there is no toolbar button for
-        it. That is presentation only — it changes nothing the assert reads.
+        containment edge (`packages/common/diagram/src/mermaid.ts`). The scene is read back rather
+        than taken from `upserted`, which is the same call reporting on itself; `diagnostics` has to
+        come from the return, since it exists nowhere else. A `diagnostics` entry of severity
+        `error` (an overlap, a connector through a box, a label that overflows) means the diagram is
+        illegible even though the operation succeeded. One `edge-crossing` WARNING is expected here
+        and is cosmetic. Generating does not move the viewport, so the diagram lands off-screen at
+        the canvas origin until something fits it; tldraw's zoom-to-fit is Shift+1 and there is no
+        toolbar button for it. That is presentation only — it changes nothing the assert reads.
     - name: Back to the document
       do: Click the document in the navtree.
       invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$doc.objectId"] }
@@ -874,8 +899,8 @@ test QA-10: From the README to a diagram embedded in a document
       space: $given.defaultSpace.id
       expect: the document ends with an "Architecture" heading and the drawing rendered inline, not a bare link and not the markdown source
       assert: |
-        const editor = document.querySelector('[data-testid="composer.markdownRoot"]');
-        return document.querySelectorAll('[data-testid="markdown.embed"]').length === 1 &&
+        const editor = document.querySelector('[data-testid="composer.markdownRoot"] [role="textbox"]');
+        return document.querySelectorAll('[data-testid="markdown.embed"]').length >= 1 &&
           !editor?.innerText.includes('![') && $stepErrors.length === 0;
       note: |
         A link whose URL is an `echo://` URI is replaced by a widget: alone on its line (the `!`
@@ -887,11 +912,11 @@ test QA-10: From the README to a diagram embedded in a document
         Typing this URI by hand is the step that found the plank crash fixed in
         `PreviewComponent`/`parse-object-uri.ts`: the widget is claimed by scheme alone, so every
         prefix — `echo:`, `echo://<spaceId>` — reached a resolver that threw out of render and took
-        the whole plank down. A human run types it; an agent run pastes it in one operation and
+        the whole plank down. A human run types it; an agent run applies it in one operation and
         would never see it, which is why the human `do:` says "type".
     - name: Navigate into the diagram
       id: into
-      do: Click the ⧉ button in the top-right corner of the embedded canvas. (The first click lands on the embed and gives it focus; the button takes the second.)
+      do: Click the ⧉ button in the top-right corner of the embedded canvas.
       invoke: |
         org.dxos.operation.appToolkit.open {
           subject: ["root/$given.defaultSpace.id/system/database/org.dxos.type.drawing/$drawing.objectId"],
@@ -900,31 +925,52 @@ test QA-10: From the README to a diagram embedded in a document
           navigation: "immediate"
         }
       expect: |
-        the plank's content becomes the full drawing and its header grows a breadcrumb,
-        "QA Composer ≫ QA Architecture $runId". The deck still holds ONE plank — this is navigation
-        inside it, not a second plank beside it.
+        the full drawing takes over the plank and its header grows a breadcrumb,
+        "QA Composer ≫ QA Architecture $runId". The document is still open behind it — this is
+        navigation into the object, not a jump to it.
       assert: |
-        return $snapshot.planks.length === 1 &&
-          $snapshot.planks[0].subject?.dxn === $drawing.id &&
-          $snapshot.planks[0].subject?.typename === 'org.dxos.type.drawing' &&
-          $stepErrors.length === 0;
+        const docPath = `root/${$given.defaultSpace.id}/content/collections/${$doc.objectId}`;
+        const drawingPath = `root/${$given.defaultSpace.id}/system/database/org.dxos.type.drawing/${$drawing.objectId}`;
+        return $snapshot.layout.active.at(-1) === drawingPath &&
+          $snapshot.layout.active.includes(docPath) &&
+          $snapshot.planks.some((p) => p.subject?.dxn === $drawing.id &&
+            p.subject?.typename === 'org.dxos.type.drawing') && $stepErrors.length === 0;
       note: |
-        Two things here are not guessable. The embed opens the object at its DATABASE path
+        Three things here are not guessable. The embed opens the object at its DATABASE path
         (`system/database/<typename>/<id>`, what `GraphPath.getObjectPathFromObject` answers), not
-        the collections path the navtree uses — the same object under a different route. And
-        `disposition: 'add'` with the document as `pivotId` is in-plank navigation, which anchors at
-        the pivot's origin and REPLACES the plank's subject, leaving one plank with a breadcrumb; a
-        run that ends with two planks, or with the drawing alone and no breadcrumb, is a regression
-        in either case (`plugin-markdown/src/components/PreviewComponent/PreviewComponent.tsx`).
+        the collections path the navtree uses — the same object under a different route.
+        `disposition: 'add'` INSERTS beside the pivot and never replaces
+        (`plugin-deck/src/operations/open.ts`), so `layout.active` — and therefore
+        `$snapshot.planks` — grows to two; counting planks here and expecting one is the trap. What
+        the viewer sees as a single plank with a breadcrumb is the `flatten` setting collapsing the
+        stack at render time only (`plugin-deck/src/util/companion-anchor.ts`). A run that leaves
+        the drawing alone, with the document gone from `active`, is the `solo` disposition and a
+        regression (`plugin-markdown/src/components/PreviewComponent/PreviewComponent.tsx`).
     - name: And back again
       do: Click "QA Composer" in the plank's breadcrumb.
-      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$doc.objectId"] }
+      invoke: org.dxos.operation.appToolkit.close { subject: ["root/$given.defaultSpace.id/system/database/org.dxos.type.drawing/$drawing.objectId"] }
       expect: the plank is the document again, still showing the embedded diagram and the three threads
       assert: |
         const plank = $snapshot.planks.find((p) => p.subject?.dxn === $doc.id);
         return $snapshot.planks.length === 1 && !!plank && plank.comments?.length === 3 &&
-          document.querySelectorAll('[data-testid="markdown.embed"]').length === 1 &&
+          document.querySelectorAll('[data-testid="markdown.embed"]').length >= 1 &&
           $stepErrors.length === 0;
+      note: |
+        The breadcrumb closes everything after the crumb clicked
+        (`plugin-deck/src/containers/Deck/DeckPlank.tsx`), so `close` is the operation, not `open`:
+        re-opening the document would be a no-op, since `solo` leaves `active` untouched when every
+        subject it names is already open — the drawing would stay and the step would pass having
+        done nothing.
+    - name: It survives a reload
+      do: Reload the page and open the document again.
+      invoke: org.dxos.operation.markdown.open { doc: Ref($doc.id) }
+      space: $given.defaultSpace.id
+      expect: the document still carries the embed line, and its three threads are still listed
+      assert: |
+        const plank = $snapshot.planks.find((p) => p.subject?.dxn === $doc.id);
+        return $result.content.includes(`![QA Architecture ${$runId}](${$drawing.id})`) &&
+          plank?.comments?.length === 3;
+      note: An agent cannot reload without losing the port, so it judges from the database instead.
   after:
     - name: Remove the document and the drawing
       do: Delete both rows from their ⋮ menus.
@@ -933,14 +979,16 @@ test QA-10: From the README to a diagram embedded in a document
       expect: both rows leave the navtree and their plank closes
       assert: |
         const docs = await composer.invoke('org.dxos.operation.space.queryObjects',
-          { typename: 'org.dxos.type.document' }, { spaceId: $given.defaultSpace.id });
+          { typename: 'org.dxos.type.document', limit: 100 }, { spaceId: $given.defaultSpace.id });
         const drawings = await composer.invoke('org.dxos.operation.space.queryObjects',
-          { typename: 'org.dxos.type.drawing' }, { spaceId: $given.defaultSpace.id });
-        return !docs.results.some((o) => o.dxn === $doc.id) &&
+          { typename: 'org.dxos.type.drawing', limit: 100 }, { spaceId: $given.defaultSpace.id });
+        return !docs.truncated && !drawings.truncated &&
+          !docs.results.some((o) => o.dxn === $doc.id) &&
           !drawings.results.some((o) => o.dxn === $drawing.id);
       note: |
         The drawing's `Canvas` is hidden and reachable only through `Drawing.canvas`, so removing the
         drawing is what makes it unreachable; it is not a navtree row to delete separately.
+        `truncated` is checked because an absence on a capped page is not an absence.
     - name: Return to the README
       do: Click "README" in the navtree.
       invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$given.readme.objectId"] }
@@ -949,8 +997,6 @@ test QA-10: From the README to a diagram embedded in a document
         return $snapshot.planks.length === 1 &&
           $snapshot.planks[0].subject?.dxn === $given.readme.id &&
           !$snapshot.planks.some((p) => p.label?.startsWith('QA ')) && $stepErrors.length === 0;
-  then:
-    - the document survives a reload with its three threads and its embedded drawing intact
 ```
 
 ## Suites
