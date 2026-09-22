@@ -107,6 +107,16 @@ export const id = (...ids: EntityId[]): Any => {
 };
 
 /**
+ * Filter by the id of an entity already in hand, keeping its type for the rest of the chain.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.entity(task)).reference('watchers'));
+ * ```
+ */
+export const entity = <T extends Entity.Unknown>(entity: T | Entity.Snapshot): Filter<T> => id(entity.id);
+
+/**
  * Filter by type.
  *
  * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /

@@ -29,6 +29,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '../Annotation/annotations';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
+import { ObjectDeletedId } from '../common/types/model-symbols';
 import { type JsonSchemaType } from '../JsonSchema';
 import * as RefAtoms from './atoms';
 
@@ -172,6 +173,17 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
 };
 
 /**
+ * Disposition of a deleted target, mirroring the query option of the same name.
+ */
+export type LoadOptions = {
+  deleted?: 'exclude' | 'include';
+};
+
+/** Reads the deletion marker off a value of unconstrained target type. */
+const isTargetDeleted = (target: unknown): boolean =>
+  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
+
+/**
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
@@ -205,13 +217,13 @@ export interface Ref<T> extends Pipeable.Pipeable {
    *   uses: {@link load}
    *   related: org.dxos.echo-react.useObjectReactive
    */
-  load(): Promise<T>;
+  load(options?: LoadOptions): Promise<T>;
 
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
 
-  tryLoad(): Promise<T | undefined>;
+  tryLoad(options?: LoadOptions): Promise<T | undefined>;
 
   /**
    * Subscribe to the ref's resolution event.
@@ -465,7 +477,7 @@ export interface RefResolver {
    * Resolver ref asynchronously.
    * @deprecated Use {@link resolve} with `{ source: 'network' }`. Removed in Task 11.
    */
-  resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined>;
+  resolveLegacy(uri: URI.URI, options?: LoadOptions): Promise<AnyProperties | undefined>;
 
   /**
    * @deprecated Use {@link resolve} + `Type.getSchema`. Removed in Task 11.
@@ -557,27 +569,25 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  async load(): Promise<T> {
-    if (this.#target) {
-      return this.#target;
-    }
-    invariant(this.#resolver, 'Resolver is not set');
-    const obj = await this.#resolver.resolveLegacy(this.#uri);
+  async load(options?: LoadOptions): Promise<T> {
+    const obj = await this.tryLoad(options);
     if (obj == null) {
       throw new Error('Object not found');
     }
-    return obj as T;
+    return obj;
   }
 
   /**
    * @inheritdoc
    */
-  async tryLoad(): Promise<T | undefined> {
+  async tryLoad(options?: LoadOptions): Promise<T | undefined> {
     if (this.#target) {
-      return this.#target;
+      // An inlined target never reaches the resolver, so it is checked here instead.
+      const hidden = options?.deleted !== 'include' && isTargetDeleted(this.#target);
+      return hidden ? undefined : this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    return (await this.#resolver.resolveLegacy(this.#uri)) as T | undefined;
+    return (await this.#resolver.resolveLegacy(this.#uri, options)) as T | undefined;
   }
 
   /**

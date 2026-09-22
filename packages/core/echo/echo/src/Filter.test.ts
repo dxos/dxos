@@ -93,6 +93,26 @@ describe('Filter timestamp builders', () => {
   });
 });
 
+describe('entity', () => {
+  test('matches the anchor and nothing else', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
+    const match = Filter.toPredicate(Filter.entity(alice));
+    expect(match(alice)).toBe(true);
+    expect(match(bob)).toBe(false);
+  });
+
+  test('is Filter.id on the anchor id', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    expect(Filter.entity(alice).ast).toEqual(Filter.id(alice.id).ast);
+  });
+
+  test('accepts a snapshot', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    expect(Filter.toPredicate(Filter.entity(Obj.getSnapshot(alice)))(alice)).toBe(true);
+  });
+});
+
 describe('toPredicate', () => {
   test('matches by type', () => {
     const expando = Obj.make(TestSchema.Expando, { title: 'test' });

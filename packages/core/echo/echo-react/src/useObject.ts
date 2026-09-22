@@ -47,6 +47,18 @@ export const useObject: {
   <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): [Obj.Snapshot<T> | undefined, ObjectUpdateCallback<T>];
 
   /**
+   * Hook to subscribe to a Ref's target object, resolving a target that has been deleted.
+   *
+   * @param ref - The Ref to dereference and subscribe to
+   * @param options - `{ deleted: 'include' }` keeps a tombstoned target instead of reading it as undefined
+   * @returns The current target snapshot (or undefined if not loaded) and update callback
+   */
+  <T extends Obj.Unknown>(
+    ref: Ref.Ref<T> | undefined,
+    options: Ref.LoadOptions,
+  ): [Obj.Snapshot<T> | undefined, ObjectUpdateCallback<T>];
+
+  /**
    * Hook to subscribe to an entire Echo object.
    * Returns a snapshot of the current object value and automatically re-renders when the object changes.
    *
@@ -117,7 +129,13 @@ export const useObject: {
    * @returns The current property value (or undefined) and update callback
    */
   <T, K extends keyof T>(ref: Ref.Ref<T> | undefined, property: K): [T[K] | undefined, ObjectPropUpdateCallback<T[K]>];
-} = (<T extends Obj.Unknown, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
+} = (<T extends Obj.Unknown, K extends keyof T>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+  propertyOrOptions?: K | Ref.LoadOptions,
+): any => {
+  const isOptions = typeof propertyOrOptions === 'object' && propertyOrOptions !== null;
+  const property = isOptions ? undefined : propertyOrOptions;
+  const options = isOptions ? propertyOrOptions : undefined;
   const isRef = Ref.isRef(objOrRef);
   const liveObj = useResolveRef(objOrRef);
 
@@ -151,7 +169,7 @@ export const useObject: {
   if (property !== undefined) {
     return [useObjectProperty(liveObj, property), callback];
   } else {
-    return [useObjectValue(objOrRef), callback];
+    return [useObjectValue(objOrRef, options), callback];
   }
 }) as any;
 
@@ -160,19 +178,22 @@ export const useObject: {
  */
 export const useObjectValue = <T extends Obj.Unknown | Obj.Snapshot>(
   objOrRef: T | Ref.Ref<T> | undefined,
+  options?: Ref.LoadOptions,
 ): T extends Obj.Snapshot ? T : Obj.Snapshot<T & Obj.Unknown> | undefined => {
+  const deleted = options?.deleted;
   const atom = useMemo(() => {
     if (objOrRef == null) {
       return Atom.make<Obj.Snapshot<T & Obj.Unknown> | undefined>(() => undefined);
     }
     if (Ref.isRef(objOrRef)) {
-      return Obj.atom(objOrRef);
+      return Obj.atom(objOrRef, { deleted });
     }
     if (Obj.isSnapshot(objOrRef)) {
       return Atom.make<T>(() => objOrRef);
     }
     return Obj.atom(objOrRef as T & Obj.Unknown);
-  }, [objOrRef]);
+    // Keyed on the option's value: an inline options object is a new identity on every render.
+  }, [objOrRef, deleted]);
   return useAtomValue(atom as any);
 };
 
