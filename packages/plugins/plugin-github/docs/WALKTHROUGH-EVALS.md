@@ -61,8 +61,10 @@ same as the model output it was built from.
 
 `scripts/generate-walkthrough.ts` produces walkthroughs, one-shot or chaptered, and fills them.
 `scripts/judge-walkthrough.ts` runs the judge over blind packets. Both read `DX_ANTHROPIC_API_KEY`
-and need `@anthropic-ai/sdk` on the resolution path. Neither is wired into CI: both spend money per
-run.
+and need `@anthropic-ai/sdk`, which they resolve from the workspace store rather than from this
+package's manifest — it is declared in `SCRIPT_STORE_RESOLVED` in `.config/knip.ts`, so the package
+does not carry a dependency only a hand-run eval uses. Neither script is wired into CI: both spend
+money per run.
 
 ```bash
 node --experimental-strip-types scripts/generate-walkthrough.ts evals/walkthrough/13288-large --mode=chaptered
