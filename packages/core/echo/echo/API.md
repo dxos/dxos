@@ -165,7 +165,9 @@ deletion into account, so no caller handles dangling entries by hand:
 const members = await db.query(Filter.childOf(taskSet)).run();
 
 // Objects a specific property references, deletion respected on both sides.
-const watchers = await db.query(Query.select(Filter.id(task.id)).reference('watchers')).run();
+// Filter.entity anchors on an object you hold — same AST as Filter.id(task.id), but typed,
+// so the traversal prop and the result type are checked.
+const watchers = await db.query(Query.select(Filter.entity(task)).reference('watchers')).run();
 ```
 
 Reach for the array itself when writing membership or when its order matters. Mutate it in place
@@ -178,6 +180,10 @@ targets in array order; it skips dangling entries.
 // Build queries
 const query = Query.select(Filter.type(Task));
 const query2 = Query.type(Task, { completed: false });
+
+// Anchor on an entity you hold — typed Filter.id: same AST, but the entity's type flows
+// through the chain (traversal props and result types are checked).
+const query3 = Query.select(Filter.entity(task)).referencedBy(TaskSet, 'tasks');
 
 // Chaining
 query
