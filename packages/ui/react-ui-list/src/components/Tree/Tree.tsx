@@ -739,7 +739,21 @@ const TreeWindow = ({
 }) => {
   const scrollerRef = useRef<HTMLElement | null>(scroller);
   scrollerRef.current = scroller;
+  const { closingValues, commitClose } = useTreeRender();
   const model = useListModel(units, rowUnitId);
+
+  // A windowed branch has no `BranchContent` element, so there is no conceal animation to wait on
+  // and the deferral `TreeBranchContent` exists for would strand the branch open forever.
+  useEffect(() => {
+    if (closingValues.size === 0) {
+      return;
+    }
+    for (const unit of units) {
+      if (unit.kind === 'row' && closingValues.has(unit.node.value)) {
+        commitClose(unit.node);
+      }
+    }
+  }, [closingValues, units, commitClose]);
   const controllerRef = useRef<WindowController>(null);
   const {
     layout: { visible },
@@ -853,7 +867,9 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
 
   return (
     <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
-      {node.branch ? (
+      {/* Windowed, the branch's rows are units of the window's own order, so this row is just a
+          row: the `Branch` wrapper would nest the subtree the window is already mounting. */}
+      {node.branch && windowIndex === undefined ? (
         <TreeView.Branch className='contents'>
           <TreeNodeRowContent node={node} />
           <TreeBranchContent node={node} />

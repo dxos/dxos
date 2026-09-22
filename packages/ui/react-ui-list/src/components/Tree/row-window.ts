@@ -30,14 +30,17 @@ export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.
  * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree
  * cannot be windowed.
  *
- * A disclosable branch is one case it gives up on: its children live inside an `ark` `Branch` whose
- * open state the machine animates, so they are not a flat run of siblings the way a group's
- * children are, and lifting them out would take the disclosure with them.
+ * A branch contributes its own row and, when open, the rows of its subtree, so a hierarchy windows
+ * exactly as deep as it is disclosed. The windowed tree renders those rows as a flat run rather
+ * than inside the `ark` `Branch` the unwindowed one nests them in: that wrapper is what animates
+ * the disclosure, and a row lifted out of it cannot be mounted by a window that owns the row order.
+ * The trade is deliberate — a task list of hundreds of rows costs its whole subtree on every mount
+ * otherwise, and the disclosure of a windowed row is instant instead of animated.
  *
- * A repeated item id is the other. The window keys a row's measured extent by the id the row
- * carries, so the same id twice would have each row read back the other's height — a row measured,
- * found to disagree and measured again, every commit. A tree that addresses one item at two paths
- * therefore renders whole, as every consumer did before this existed.
+ * A repeated item id is the one case it still gives up on. The window keys a row's measured extent
+ * by the id the row carries, so the same id twice would have each row read back the other's height
+ * — a row measured, found to disagree and measured again, every commit. A tree that addresses one
+ * item at two paths therefore renders whole, as every consumer did before this existed.
  */
 export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
   const units: RowUnit[] = [];
@@ -52,12 +55,18 @@ export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): 
         }
         continue;
       }
-      if (node.branch || ids.has(node.id)) {
+      if (ids.has(node.id)) {
         return false;
       }
 
       ids.add(node.id);
       units.push({ kind: 'row', key: node.value, node });
+
+      // An unopened branch's children are not visible, so they are not rows; the model may hold
+      // them anyway (it is built from the data, not from the disclosure).
+      if (node.branch && node.open && !visit(node.children)) {
+        return false;
+      }
     }
 
     return true;
