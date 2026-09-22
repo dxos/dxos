@@ -10,7 +10,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
-import { createSceneTree } from '../../utils/testing.ts';
+import { createClassSceneTree, createSceneTree } from '../../utils/testing.ts';
 import { Properties } from '../Properties/index.ts';
 import { SceneView } from './SceneView.tsx';
 
@@ -27,7 +27,7 @@ import { SceneView } from './SceneView.tsx';
  * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
  */
-type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean };
+type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean; fixture?: 'elements' | 'classes' };
 
 type EditorProps = {
   store: ReturnType<typeof createMemoryStore>;
@@ -47,11 +47,12 @@ const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => {
   );
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    const tree = createSceneTree(depth);
+    // The class fixture is a fixed three levels, so `depth` does not apply to it.
+    const tree = fixture === 'classes' ? createClassSceneTree() : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
-  }, [depth]);
+  }, [depth, fixture]);
 
   // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.
   return <Editor key={root} store={store} root={root} liveDepth={liveDepth} readonly={readonly} />;
@@ -95,4 +96,9 @@ export const Nested: Story = {
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
 export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
+};
+
+/** A three-level class model: drill into a subsystem's portal to open its own classes. */
+export const Classes: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'classes' },
 };

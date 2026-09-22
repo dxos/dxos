@@ -8,6 +8,107 @@ import { portId } from './ports.ts';
 
 export type SceneTree = { scenes: Scene[]; root: SceneId };
 
+//
+// A three-level class diagram: the fixture for anything that needs a scene tree to look like a real
+// model rather than one of every element type. The domain is invented — a document editor — so it
+// stays readable without tracking any package's actual classes.
+//
+
+/** The class fixture's unit: a major cell, so every box lands on the grid move and resize snap to. */
+const cell = (units: number) => units * 64;
+
+const CLASS_SIZE = { width: cell(4), height: cell(3) };
+const PORTAL_SIZE = { width: cell(8), height: cell(5) };
+
+type ClassDef = { key: string; name: string; attributes: string[]; methods: string[] };
+type LevelDef = { key: string; title: string; classes: ClassDef[]; children?: LevelDef[] };
+
+/**
+ * Each level names a subsystem: the root holds one class per subsystem with a portal beneath it,
+ * and drilling in opens that subsystem's own classes. Three levels deep, a handful of classes each.
+ */
+const MODEL: LevelDef = {
+  key: 'app',
+  title: 'App',
+  classes: [
+    { key: 'workspace', name: 'Workspace', attributes: ['id: string'], methods: ['open(doc)'] },
+    { key: 'session', name: 'Session', attributes: ['user: string'], methods: ['close()'] },
+  ],
+  children: [
+    {
+      key: 'editor',
+      title: 'Editor',
+      classes: [
+        { key: 'view', name: 'View', attributes: ['root: Node'], methods: ['render()'] },
+        { key: 'selection', name: 'Selection', attributes: ['anchor: number'], methods: ['collapse()'] },
+      ],
+      children: [
+        {
+          key: 'commands',
+          title: 'Commands',
+          classes: [
+            { key: 'command', name: 'Command', attributes: ['label: string'], methods: ['run()'] },
+            { key: 'history', name: 'History', attributes: ['depth: number'], methods: ['undo()'] },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'model',
+      title: 'Model',
+      classes: [
+        { key: 'document', name: 'Document', attributes: ['title: string'], methods: ['insert(node)'] },
+        { key: 'node', name: 'Node', attributes: ['kind: string'], methods: ['children()'] },
+      ],
+      children: [
+        {
+          key: 'schema',
+          title: 'Schema',
+          classes: [
+            { key: 'type', name: 'Type', attributes: ['name: string'], methods: ['validate(node)'] },
+            { key: 'field', name: 'Field', attributes: ['optional: boolean'], methods: ['parse(value)'] },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+/**
+ * A three-level class diagram over {@link MODEL}: one scene per subsystem, each holding its classes
+ * in a row joined by an association, with a portal per child subsystem below them. Ids are
+ * deterministic (`scene:app/editor`, `scene:app/editor/view`) so tests and stories can name elements.
+ */
+export const createClassSceneTree = (prefix = 'app'): SceneTree => {
+  const scenes: Scene[] = [];
+  const root = buildLevel(MODEL, prefix, scenes);
+  return { scenes, root };
+};
+
+const buildLevel = (level: LevelDef, path: string, scenes: Scene[]): SceneId => {
+  const id = `scene:${path}`;
+  const builder = SceneBuilder.create(id, level.title);
+
+  // Classes sit in a row; each child subsystem gets a portal in the row below, under its own column.
+  level.classes.forEach(({ key, name, attributes, methods }, index) => {
+    const x = cell(2) + index * cell(6);
+    builder.class(`${id}/${key}`, { x, y: cell(2), ...CLASS_SIZE }, name, attributes, methods);
+  });
+  for (let index = 1; index < level.classes.length; ++index) {
+    const from = `${id}/${level.classes[index - 1].key}`;
+    const to = `${id}/${level.classes[index].key}`;
+    builder.line(`${id}/assoc${index}`, `${from}#${portId('e')}`, `${to}#${portId('w')}`, { directed: true });
+  }
+
+  (level.children ?? []).forEach((child, index) => {
+    const childId = buildLevel(child, `${path}/${child.key}`, scenes);
+    builder.portal(`${id}/${child.key}`, { x: cell(2) + index * cell(10), y: cell(7), ...PORTAL_SIZE }, childId);
+  });
+
+  scenes.push(builder.build());
+  return id;
+};
+
 /**
  * A tree of scenes `depth` levels deep, written with the chainable builder; depth 0 is one empty scene,
  * the blank canvas a new diagram starts from. The root holds a
