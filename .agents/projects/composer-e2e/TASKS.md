@@ -41,3 +41,7 @@
       cause for one of them, the others are unattributed.
 - [ ] Consider a `ci.e2e-run` companion event if a "suite duration" trend is ever wanted — do NOT
       derive it by summing `ciDurationMs`, which excludes fixture and boot time.
+- [ ] Trend the startup/perf harnesses too (@wittjosiah on #13247). They need their own event —
+      `ci.e2e-test` carries `ciStatus`/`ciDurationMs`, where a startup sample is milliseconds and
+      module counts against a budget line, with no pass/fail to stack. Emit `ci.startup` from the
+      report `collectStartupReport` already writes and give it its own tile.
