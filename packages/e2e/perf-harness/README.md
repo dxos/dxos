@@ -87,6 +87,16 @@ Written under `test-results/perf/`:
   raw `memory-infra.json`) and a `.heapsnapshot` per realm. Hundreds of MB. Every stage after a
   checkpoint inherits what the snapshot committed, so measure clean runs separately; rows carry
   `comparability.snapshotStages`. `composer-app/scripts/memory/perf-snapshot-report.mjs` reads it.
+  A stage checkpoint also records the same dump and a per-realm heap read taken before the heap
+  read's forced GC (`allocators-pre-gc.json`, `heap-pre-gc.json`): the difference is garbage and
+  young-generation space the stage's footprint includes.
+- `artifacts/.../allocations/` — only with `DX_PERF_ALLOC_SAMPLE=1`: a `.heapprofile` per realm
+  from V8's sampling heap profiler, run from the fixture through `await-replication`, collected
+  objects included. `composer-app/scripts/memory/alloc-report.mjs` names the code behind it.
+
+`DX_PERF_JS_FLAGS` passes V8 flags to Chromium for an experiment, e.g.
+`--max-semi-space-size=1` to cap the young generation. A run with flags is not comparable to one
+without.
 
 Running beside another worktree: `DX_PERF_PORT` serves the bundle on its own port (locally the
 config reuses whatever already listens on 4173) and `DX_PERF_DEBUG_PORT` moves the CDP port.

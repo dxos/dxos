@@ -4,6 +4,7 @@
 
 export * from './browser.ts';
 export * from './cdp.ts';
+export * from './collectors/allocation.ts';
 export * from './collectors/cpu.ts';
 export * from './collectors/frames.ts';
 export * from './collectors/memory.ts';

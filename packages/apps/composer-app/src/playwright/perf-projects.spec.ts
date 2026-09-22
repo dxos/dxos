@@ -18,6 +18,7 @@ import {
   launchInstrumentedBrowser,
   publishPosthogBatch,
   readProcessFootprint,
+  startAllocationSampling,
   startProfiling,
   startScreencast,
   startTracing,
@@ -102,6 +103,13 @@ const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
  * megabytes.
  */
 const SNAPSHOTS = new Set((process.env.DX_PERF_SNAPSHOTS ?? '').split(',').filter(Boolean));
+
+/**
+ * Sample allocations from the start of the fixture to the end of `await-replication`
+ * (`DX_PERF_ALLOC_SAMPLE=1`), written to `allocations/` beside the snapshots: the write burst that
+ * sets the flow's peak footprint, attributed to the code that allocated it.
+ */
+const ALLOC_SAMPLE = process.env.DX_PERF_ALLOC_SAMPLE === '1';
 
 /**
  * Wait before the `end` snapshot: twice the app registry's 5 s idle TTL, so atoms nothing reads any
@@ -203,7 +211,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',
       settleMs: SETTLE_MS,
-      instruments: mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler',
+      instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}`,
       ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
     };
     const snapshotDir = path.join(artifactDir, 'snapshots');
@@ -300,6 +308,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await snapshotCheckpoint('idle');
     }
 
+    const allocationTargets = ALLOC_SAMPLE ? await attachAll(debugPort) : [];
+    const allocations = ALLOC_SAMPLE ? await startAllocationSampling(allocationTargets) : undefined;
+
     // Fixture generation is deliberately OUTSIDE any stage: it is setup, and its cost is not a
     // number anyone reads.
     const fixture = await createProjectsFixture(page, scale, runId);
@@ -345,6 +356,11 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       }
       log.info('replication settled', { ...result.final, outcome: result.outcome, summary: described });
     });
+
+    if (allocations) {
+      await allocations.stop(path.join(artifactDir, 'allocations'));
+      detachAll(allocationTargets);
+    }
 
     await runner.stage('open-space', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', {

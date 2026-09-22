@@ -6,7 +6,7 @@ import { closeSync, mkdirSync, openSync, rmSync, statSync, writeFileSync, writeS
 import path from 'node:path';
 
 import { type Attached, type Cdp } from '../cdp.ts';
-import { type TargetKind } from '../types.ts';
+import { type HeapReading, type TargetKind } from '../types.ts';
 
 /**
  * Allocator nodes describing pages another process owns.
@@ -35,7 +35,7 @@ export type ProcessAllocators = {
 
 type DumpNode = { guid?: string; attrs?: Record<string, { value?: string }> };
 
-type DumpEvent = {
+export type DumpEvent = {
   ph?: string;
   pid?: number;
   name?: string;
@@ -150,9 +150,13 @@ export const parseDetailedDump = (events: DumpEvent[]): ProcessAllocators[] => {
 /**
  * Records one detailed memory-infra dump over the browser target.
  *
- * `deterministic` forces a GC in every process first, so the dump describes live memory.
+ * `deterministic` forces a GC in every process first, so the dump describes live memory; without
+ * it the dump includes garbage the next collection would free.
  */
-const recordDetailedDump = async (browserCdp: Cdp): Promise<DumpEvent[]> => {
+export const recordDetailedDump = async (
+  browserCdp: Cdp,
+  { deterministic = true }: { deterministic?: boolean } = {},
+): Promise<DumpEvent[]> => {
   const events: DumpEvent[] = [];
   const collect = (params: { value?: DumpEvent[] }) => {
     events.push(...(params?.value ?? []));
@@ -174,7 +178,7 @@ const recordDetailedDump = async (browserCdp: Cdp): Promise<DumpEvent[]> => {
     if (started === undefined) {
       return [];
     }
-    await browserCdp.trySend('Tracing.requestMemoryDump', { deterministic: true, levelOfDetail: 'detailed' });
+    await browserCdp.trySend('Tracing.requestMemoryDump', { deterministic, levelOfDetail: 'detailed' });
     await browserCdp.trySend('Tracing.end');
     await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 60_000))]);
   } finally {
@@ -236,15 +240,21 @@ export type MemorySnapshot = {
  *
  * Files: `memory-infra.json` (raw dump events), `allocators.json` (the parsed breakdown),
  * `<realm>.heapsnapshot` (loadable in DevTools' Memory panel), and `summary.json` indexing them.
+ * With `preGc`, a dump recorded before anything forced a collection, also `allocators-pre-gc.json`;
+ * with `preGcHeap`, the per-realm heap read at the same point, `heap-pre-gc.json`.
  */
 export const takeMemorySnapshot = async ({
   browserCdp,
   targets,
   dir,
+  preGc,
+  preGcHeap,
 }: {
   browserCdp: Cdp;
   targets: Attached[];
   dir: string;
+  preGc?: DumpEvent[];
+  preGcHeap?: HeapReading[];
 }): Promise<MemorySnapshot> => {
   mkdirSync(dir, { recursive: true });
   const files: string[] = [];
@@ -261,6 +271,13 @@ export const takeMemorySnapshot = async ({
   );
   const processes = parseDetailedDump(events);
   write('allocators.json', processes);
+  const preGcProcesses = preGc ? parseDetailedDump(preGc) : undefined;
+  if (preGcProcesses) {
+    write('allocators-pre-gc.json', preGcProcesses);
+  }
+  if (preGcHeap) {
+    write('heap-pre-gc.json', preGcHeap);
+  }
 
   const realms: RealmSnapshot[] = [];
   const used = new Map<string, number>();
@@ -282,6 +299,7 @@ export const takeMemorySnapshot = async ({
   // Relative, so a run directory stays readable after it is moved out of `test-results`.
   write('summary.json', {
     processes: processes.map(({ children: _, ...rest }) => rest),
+    ...(preGcProcesses ? { preGcProcesses: preGcProcesses.map(({ children: _, ...rest }) => rest) } : {}),
     realms: realms.map((realm) => (realm.file ? { ...realm, file: path.basename(realm.file) } : realm)),
   });
   return { dir, files, processes, realms };

@@ -40,6 +40,9 @@ export const launchInstrumentedBrowser = async (): Promise<InstrumentedBrowser> 
     ...(sandboxProxy ? { executablePath: '/opt/pw-browsers/chromium' } : {}),
     args: [
       `--remote-debugging-port=${DEBUG_PORT}`,
+      // V8 flags for an experiment (`DX_PERF_JS_FLAGS='--max-semi-space-size=1'`); a run with them is
+      // not comparable to one without.
+      ...(process.env.DX_PERF_JS_FLAGS ? [`--js-flags=${process.env.DX_PERF_JS_FLAGS}`] : []),
       ...(sandboxProxy
         ? [
             '--no-sandbox',
