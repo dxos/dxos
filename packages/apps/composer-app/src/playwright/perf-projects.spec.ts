@@ -323,6 +323,14 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
     });
 
+    // Read between the stages, not inside one: the task list is only worth measuring if it is
+    // windowed, and a tree that fails to find its scroller renders whole while looking identical.
+    const windowing = await page.evaluate(() => ({
+      windowed: !!document.querySelector('[role="tree"][data-windowed]'),
+      rows: document.querySelectorAll('[data-testid="taskList.item"]').length,
+    }));
+    log.info('task list windowing', windowing);
+
     await runner.stage('toggle-task', async () => {
       await page.getByTestId('taskList.item.checkbox').first().click({ timeout: budget });
       await page.waitForTimeout(500);
