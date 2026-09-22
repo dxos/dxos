@@ -371,10 +371,11 @@ export const PreviewComponent = ({
 
           <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
             <IconButton
+              data-testid='markdown.embed.open'
               density='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly
-              label='Open'
+              label={t('open-embed.label')}
               variant='ghost'
               onClick={handleOpen}
             />

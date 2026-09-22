@@ -4,6 +4,8 @@
 
 import { type Locator, type Page } from '@playwright/test';
 
+import { EID, type EntityId, type SpaceId } from '@dxos/keys';
+
 // TODO(wittjosiah): If others find this useful, factor out the markdown plugin.
 export const Markdown = {
   select: async (locator: Locator, text: string) => {
@@ -36,6 +38,16 @@ export const Markdown = {
   },
 
   getDocumentTitleInput: (page: Page) => page.getByTestId('composer.documentTitle'),
+
+  /** An object embedded in the document — `![label](echo://…)` rendered as the object itself. */
+  getEmbed: (locator: Locator) => locator.getByTestId('markdown.embed'),
+
+  /** The section embed's control for opening its object; a card embed renders none. */
+  openEmbed: (locator: Locator) => locator.getByTestId('markdown.embed.open').click(),
+
+  /** The markdown that embeds an object; alone on its line it renders as the object itself. */
+  embedLink: (label: string, { spaceId, objectId }: { spaceId: SpaceId; objectId: EntityId }) =>
+    `![${label}](${EID.make({ spaceId, entityId: objectId })})`,
 
   /**
    * @deprecated This method is deprecated. Try to use the plank scoped version instead.

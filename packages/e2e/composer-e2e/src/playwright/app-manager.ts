@@ -6,6 +6,7 @@ import { type Browser, type ConsoleMessage, type Frame, type Locator, type Page,
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
+import { type EntityId, EntityId as EntityIdSchema, type SpaceId, SpaceId as SpaceIdSchema } from '@dxos/keys';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
@@ -33,6 +34,19 @@ const WORKSPACE_KEY = 'w';
 // localStorage prefix of the navtree's `navtree-open` view-state aspect, restated for the same reason;
 // the key's suffix is the tree path joined with `+`.
 const NAVTREE_OPEN_STORAGE_PREFIX = 'dxos:view-state:navtree-open:';
+
+/**
+ * The space and object a navtree row's graph path addresses, or `undefined` when it addresses no
+ * single object. Validated rather than indexed: a workspace token is not always a space id, and a
+ * node reached through a view discriminator carries its object id in an interior segment
+ * (`GraphPath.tryGetEidCandidates`).
+ */
+export const objectIdsFromPath = (graphPath: string): { spaceId: SpaceId; objectId: EntityId } | undefined => {
+  const segments = graphPath.split('/');
+  const spaceId = segments.find((segment): segment is SpaceId => SpaceIdSchema.isValid(segment));
+  const objectId = segments.findLast((segment): segment is EntityId => EntityIdSchema.isValid(segment));
+  return spaceId && objectId ? { spaceId, objectId } : undefined;
+};
 
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
 const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
@@ -65,6 +79,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Chat: 'org.dxos.type.assistant.chat',
   Collection: 'org.dxos.type.collection',
   Document: 'org.dxos.type.document',
+  Drawing: 'org.dxos.type.drawing',
   Mailbox: 'org.dxos.type.mailbox',
   Project: 'org.dxos.type.project',
   Table: 'org.dxos.type.table',
@@ -449,7 +464,18 @@ export class AppManager {
     await this.#expandRow(section, timeout);
   }
 
-  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+  async createObject({
+    type,
+    name,
+    nth,
+    variant,
+  }: {
+    type: string;
+    name?: string;
+    nth?: number;
+    /** The choice a type's `customPanel` collects before creating — a Drawing's renderer, by id. */
+    variant?: string;
+  }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
@@ -467,9 +493,14 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
     const objectForm = this.page.getByTestId('create-object-form');
     const openDialog = this.page.locator('[data-scope="dialog"][data-part="content"][data-state="open"]');
+
+    if (variant) {
+      await openDialog.getByTestId(`create-drawing-panel.variant.${variant}`).click({ timeout: 15_000 });
+    }
+
+    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
     await expect
       .poll(async () => (await objectForm.isVisible()) || !(await openDialog.isVisible()), { timeout: 30_000 })
       .toBe(true);

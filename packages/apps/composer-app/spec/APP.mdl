@@ -668,6 +668,8 @@ test QA-10: From the README to a diagram embedded in a document
   actors: both
   status: passing           # 2026-09-22, driven end to end against a dev server while recording the demo
   covers: [markdown:F-1, markdown:F-4.3, review:F-5.1, review:F-5.3]
+  automated:
+    - composer-e2e:embeds.spec.ts#Embed tests › navigate into an embedded object and back
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - readme: the seeded "README" document in the default space — a first-run profile has one; without it the walkthrough has no starting point, so the test is blocked, not failed

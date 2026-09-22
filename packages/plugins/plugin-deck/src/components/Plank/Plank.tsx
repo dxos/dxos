@@ -171,6 +171,10 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                       <Breadcrumb.ListItem asChild>
                         <button
                           type='button'
+                          // The path it returns to, so a caller addresses a crumb by something no
+                          // translation can move.
+                          data-testid='plankHeading.breadcrumb'
+                          data-crumb-id={crumb.id}
                           className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
                           onClick={() => onSelectBreadcrumb?.(crumb.id)}
                         >

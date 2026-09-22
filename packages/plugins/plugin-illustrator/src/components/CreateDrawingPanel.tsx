@@ -56,6 +56,7 @@ export const CreateDrawingPanel = ({ onCreateObject, variants: variantsProp }: C
         {results.map((variant) => (
           <SearchList.Item
             key={variant.id}
+            data-testid={`create-drawing-panel.variant.${variant.id}`}
             value={variant.id}
             label={variant.label}
             icon={variant.icon ?? 'ph--compass-tool--regular'}
