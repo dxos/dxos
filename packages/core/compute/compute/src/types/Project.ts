@@ -40,9 +40,12 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
       ),
     ),
 
-    /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
+    /** Artifacts (documents, outliners, tables, ...), in order. Owned only where no other holder claimed one first. */
     // TODO(burdon): Change to Collection?
-    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
+    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+      Annotation.SetParent.set({ override: false }),
+      Annotation.FormInputAnnotation.set(false),
+    ),
 
     /** Routines the project owns, in order, parented so they cascade-delete with it. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)).pipe(

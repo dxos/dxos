@@ -575,8 +575,19 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
 });
 
 /**
+ * Value of {@link SetParentAnnotation}. `true` owns and overwrites; `{ override: false }` owns only
+ * a target that has no parent yet.
+ */
+export type SetParentAnnotationValue = boolean | { readonly override: boolean };
+
+/**
  * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
  * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * `{ override: false }` makes the field claim only a target that has no parent, so the first field
+ * to hold an object owns it and later holders reference it. Fields where several holders may
+ * legitimately hold the same object (`Collection.objects`, `Project.artifacts`) use this; a field
+ * whose targets are created for it keeps the default.
  *
  * This is NOT an invariant: it does not guarantee that a target held here has this object as its
  * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
@@ -589,12 +600,13 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
  * ```ts
  * Schema.Struct({
  *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ *   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.SetParent.set({ override: false })),
  * })
  * ```
  */
-export const SetParentAnnotation = makeUserAnnotation<boolean>({
+export const SetParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
   id: 'org.dxos.annotation.setParent',
-  schema: Schema.Boolean,
+  schema: Schema.Union([Schema.Boolean, Schema.Struct({ override: Schema.Boolean })]),
 });
 
 /**

@@ -195,8 +195,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject, db],
   );
 
-  // The create dialog places the object in the space; the ref array is what makes it this project's,
-  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
+  // Unfiled: the project holds the artifact, so filing it into a collection as well would put the
+  // same object in the tree twice. A dismissed dialog returns nothing and leaves the project alone.
   const handleAddArtifact = useCallback(async () => {
     if (!db) {
       return;
@@ -206,6 +206,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       target: db,
       targetNodeId: attendableId,
       navigable: false,
+      unfiled: true,
     });
     if (!ref) {
       return;

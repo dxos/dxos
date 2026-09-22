@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj } from '@dxos/echo';
@@ -146,8 +147,11 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    /** The collection to file into; absent files at the space root of `db`. */
-    target?: Collection.Collection;
+    /**
+     * The collection to file into; absent files at the space root of `db`. `'unfiled'` files
+     * nowhere, for a caller that holds the object itself — pass it straight through to `AddObject`.
+     */
+    target?: Collection.Collection | CollectionModel.Unfiled;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;

@@ -27,6 +27,7 @@ export {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   SetParentAnnotation as SetParent,
+  type SetParentAnnotationValue as SetParentValue,
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,

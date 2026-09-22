@@ -15,12 +15,12 @@ import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app/index.ts';
 import { Translations } from '../app/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
+import * as CollectionModel from '../types/CollectionModel.ts';
 import * as DeckSpec from './DeckSpec.ts';
 
 //
@@ -87,19 +87,10 @@ export const CAN_DROP_OBJECT = (source: TreeData) =>
   AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
 /**
- * Returns true when the object is eligible to live inside a collection:
- * collections are always eligible; other types require {@link CollectionItemAnnotation}.
+ * Returns true when the object is eligible to live inside a collection.
+ * @see CollectionModel.isCollectionItem
  */
-export const isCollectionItem = (object: Obj.Unknown): boolean => {
-  if (Obj.instanceOf(Collection.Collection, object)) {
-    return true;
-  }
-  const type = Obj.getType(object);
-  if (!type) {
-    return false;
-  }
-  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
-};
+export const isCollectionItem = CollectionModel.isCollectionItem;
 
 /** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
 export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
@@ -146,13 +137,17 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
       }
     });
   },
-  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, _destination: AppGraphNode.Node) => {
-    Obj.update(collection, (collection) => {
-      const idx = collection.objects.findIndex((object) => object.target === child.data);
-      if (idx > -1) {
-        collection.objects.splice(idx, 1);
-      }
-    });
+  // Runs after the destination has taken the ref, so this both drops the source's ref and hands
+  // ownership over when this collection was the object's canonical holder. A drag of a link moves
+  // only the link.
+  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) => {
+    const target =
+      Obj.isObject(destination.data) && Collection.isCollection(destination.data) ? destination.data : undefined;
+    if (target) {
+      CollectionModel.move({ object: child.data, from: collection, to: target });
+    } else {
+      CollectionModel.unlink({ object: child.data, from: collection });
+    }
   },
   // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
   // onCopy: async (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {

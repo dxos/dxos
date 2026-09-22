@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // The space id names the database, so the target has to live in it: one from another space
       // would take the reference there while the object persists here, and a detached one would
       // take it nowhere at all — either way the two halves of the write come apart.
-      if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
+      if (target && target !== SpaceOperation.Unfiled && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
         return yield* Effect.fail(
           new SpaceOperationError({ message: `Target collection does not belong to space ${db.spaceId}.` }),
         );

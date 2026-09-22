@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -29,8 +30,10 @@ export const AddMailbox = Operation.make({
   input: Schema.Struct({
     object: Obj.Unknown,
     // The database comes from the invocation's space id, never from the input; absent, the mailbox
-    // is filed at the space root.
-    target: Schema.optional(Type.getSchema(Collection.Collection)),
+    // is filed at the space root, and 'unfiled' files it nowhere.
+    target: Schema.optional(
+      Schema.Union([Type.getSchema(Collection.Collection), Schema.Literal(CollectionModel.Unfiled)]),
+    ),
   }),
   output: Schema.Struct({
     id: Schema.String,

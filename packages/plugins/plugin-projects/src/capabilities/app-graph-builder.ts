@@ -11,13 +11,14 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -340,18 +341,12 @@ export const createProjectArtifactsActionExtension = () =>
       // Subscribe to the project itself: the children are its ref array, so a new artifact changes no
       // query this connector would otherwise re-run on.
       get(Obj.atom(project));
-      const ids = project.artifacts.flatMap((ref) => {
-        const uri = EID.tryParse(ref.uri);
-        const entityId = uri && EID.getEntityId(uri);
-        return entityId ? [entityId] : [];
-      });
-      if (ids.length === 0) {
-        return Effect.succeed([]);
-      }
 
-      // Query rather than read `ref.target`: on a cold load the targets are not in memory yet, and a
-      // sync read would leave the branch permanently empty.
-      const objects = get(db.query(Query.select(Filter.id(...ids))).atom);
+      // Traverse the reference rather than dereference the array: targets are not in memory on a
+      // cold load, and the query engine treats a deleted target as absent, so a dangling entry
+      // never reaches the tree. Order is the array's, which a query does not preserve.
+      const members = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
+      const objects = CollectionModel.orderByRefs(members, project.artifacts);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
@@ -369,9 +364,12 @@ export const createProjectArtifactsActionExtension = () =>
                 return;
               }
 
+              // Unfiled: the project holds the artifact, so filing it into a collection as well
+              // would put the same object in the tree twice.
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                 target: db,
                 targetNodeId: nodeId,
+                unfiled: true,
               });
               // Dismissed dialog: nothing was created, so there is nothing to link.
               if (!ref) {

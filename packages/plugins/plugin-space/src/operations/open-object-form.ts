@@ -36,6 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenObjectForm> = Spa
           schema: input.schema,
           defaults: input.defaults,
           targetNodeId: input.targetNodeId,
+          unfiled: input.unfiled,
           handle,
           shouldNavigate: navigable
             ? (object: Obj.Unknown) => {

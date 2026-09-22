@@ -10,13 +10,21 @@ import * as Option from 'effect/Option';
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
-import * as AppNode from '../app-graph/AppNode.ts';
 import { AppAnnotation } from '../echo/index.ts';
+
+/**
+ * A `target` naming no collection at all, for a caller that holds the object itself. Distinct from
+ * an absent `target`, which files at the space root.
+ */
+export const Unfiled = 'unfiled';
+export type Unfiled = typeof Unfiled;
 
 type AddProps = {
   object: Obj.Unknown;
-  target?: Collection.Collection;
+  target?: Collection.Collection | Unfiled;
 };
 
 /**
@@ -35,12 +43,126 @@ const isHidden = (object: Obj.Unknown): boolean => {
   return type ? Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
 };
 
+/**
+ * Returns true when the object is eligible to live inside a collection:
+ * collections are always eligible; other types require {@link CollectionItemAnnotation}.
+ */
+export const isCollectionItem = (object: Obj.Unknown): boolean => {
+  if (Obj.instanceOf(Collection.Collection, object)) {
+    return true;
+  }
+  const type = Obj.getType(object);
+  if (!type) {
+    return false;
+  }
+  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+};
+
+/**
+ * Whether `holder` is where the object really lives, as opposed to holding a link to it.
+ *
+ * An object with no parent reads as canonical everywhere: nothing has claimed it, which is the
+ * state of every object filed before collections began claiming what they hold.
+ */
+export const isCanonicalHolder = (object: Obj.Unknown, holder: Obj.Unknown | undefined): boolean => {
+  const parent = Obj.getParent(object);
+  return parent === undefined || parent.id === holder?.id;
+};
+
+/** Index of the object's ref in the collection, or -1. Matched by entity id, since the same object
+ * may be addressed by a local or a space-qualified URI. */
+const indexOf = (collection: Collection.Collection, object: Obj.Unknown): number =>
+  collection.objects.findIndex((ref) => {
+    const eid = EID.tryParse(ref.uri);
+    return eid ? EID.getEntityId(eid) === object.id : false;
+  });
+
+type MoveProps = {
+  object: Obj.Unknown;
+  /** The collection the object is leaving, when it is leaving one. */
+  from?: Collection.Collection;
+  to: Collection.Collection;
+  /** Position in the destination; appended when absent. */
+  index?: number;
+};
+
+/**
+ * Moves an object between collections, carrying ownership with it.
+ *
+ * Ownership follows only when `from` was the object's canonical holder — moving a link moves the
+ * link and leaves the object where it lives. Removing a ref never clears a parent on its own, so a
+ * move cannot be expressed as an unlink followed by an add.
+ */
+export const move = ({ object, from, to, index }: MoveProps): void => {
+  if (from?.id === to.id) {
+    return;
+  }
+  const canonical = isCanonicalHolder(object, from);
+  const objectRef = Ref.make(object);
+  Obj.update(to, (to) => {
+    if (indexOf(to, object) === -1) {
+      if (index === undefined) {
+        to.objects.push(objectRef);
+      } else {
+        to.objects.splice(index, 0, objectRef);
+      }
+    }
+  });
+  if (from) {
+    Obj.update(from, (from) => {
+      const idx = indexOf(from, object);
+      if (idx > -1) {
+        from.objects.splice(idx, 1);
+      }
+    });
+  }
+  // After the destination holds the ref, so the parent edge it declares is already there.
+  if (canonical) {
+    Obj.setParent(object, to);
+  }
+};
+
+/**
+ * Sorts the results of a reference traversal back into the holder's array order.
+ *
+ * Membership is read with `Query.select(Filter.entity(holder)).reference('<prop>')` rather than by
+ * dereferencing the array, because the query engine treats a deleted target as absent and so never
+ * hands a caller a dangling entry. A query does not preserve order and the array is the order, so
+ * the two halves belong together. An object the array does not name sorts last.
+ */
+export const orderByRefs = <T extends Obj.Unknown>(objects: readonly T[], refs: readonly Ref.Ref<any>[]): T[] => {
+  const position = new Map<string, number>();
+  refs.forEach((ref, index) => {
+    const eid = EID.tryParse(ref.uri);
+    const id = eid ? EID.getEntityId(eid) : undefined;
+    // First occurrence wins: concurrent edits can merge the same ref into an array twice.
+    if (id !== undefined && !position.has(id)) {
+      position.set(id, index);
+    }
+  });
+  return [...objects].sort(
+    (a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  );
+};
+
+/** Drops the object's ref from the collection, leaving the object and its parent alone. */
+export const unlink = ({ object, from }: { object: Obj.Unknown; from: Collection.Collection }): void => {
+  Obj.update(from, (from) => {
+    const idx = indexOf(from, object);
+    if (idx > -1) {
+      from.objects.splice(idx, 1);
+    }
+  });
+};
+
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);
-  // Hidden objects are implementation details reached through a ref on their owner (e.g. a
-  // sketch's canvas, a game's variant state). Collection membership is what the navtree renders,
-  // so filing one would surface it as a sibling of the object that owns it.
-  if (isHidden(object)) {
+  // Two reasons an object joins no collection, one about the type and one about this call.
+  // A hidden type is an implementation detail reached through a ref on its owner (a sketch's
+  // canvas, a game's variant state), so it never files anywhere; filing one would surface it as a
+  // sibling of the object that owns it. `Unfiled` is the caller saying it holds this object
+  // itself — a project filing into its artifacts — so a collection would show it a second time.
+  if (isHidden(object) || target === Unfiled) {
     if (!Obj.getDatabase(object)) {
       yield* Database.add(object);
     }
@@ -51,7 +173,7 @@ export const add = Effect.fn(function* ({ object, target }: AddProps) {
     Obj.update(target, (target) => {
       target.objects.push(objectRef);
     });
-  } else if (!AppNode.isCollectionItem(object)) {
+  } else if (!isCollectionItem(object)) {
     yield* Database.add(object);
   } else {
     const objects = yield* Database.query(Query.type(SpaceProperties)).run;

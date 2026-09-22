@@ -752,5 +752,45 @@ describe('Annotation', () => {
 
       expect(Obj.getParent(section)?.id).toBe(holder.id);
     });
+
+    describe('override: false', () => {
+      class Shelf extends Type.makeObject<Shelf>(DXN.make('com.example.type.setParentShelf', '0.1.0'))(
+        Schema.Struct({
+          items: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set({ override: false })),
+        }),
+      ) {}
+
+      test('claims a target that has no parent', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
+
+        expect(Obj.getParent(body)?.id).toBe(shelf.id);
+      });
+
+      test('leaves a target that already has a parent', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const holder = Obj.make(Holder, { sections: [Ref.make(body)] });
+        const shelf = Obj.make(Shelf, { items: [] });
+
+        Obj.update(shelf, (shelf) => {
+          shelf.items.push(Ref.make(body));
+        });
+
+        expect(Obj.getParent(body)?.id).toBe(holder.id);
+      });
+
+      test('a later overriding field still takes the target', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
+        const holder = Obj.make(Holder, { sections: [] });
+
+        Obj.update(holder, (holder) => {
+          holder.sections.push(Ref.make(body));
+        });
+
+        expect(shelf.items).toHaveLength(1);
+        expect(Obj.getParent(body)?.id).toBe(holder.id);
+      });
+    });
   });
 });
