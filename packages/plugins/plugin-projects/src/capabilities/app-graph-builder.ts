@@ -11,7 +11,6 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
@@ -338,12 +337,7 @@ export const createProjectArtifactsActionExtension = () =>
         return Effect.succeed([]);
       }
 
-      // Subscribe to the project itself: the children are its ref array, so a new artifact changes no
-      // query this connector would otherwise re-run on.
-      get(Obj.atom(project));
-
-      const members = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
-      const objects = CollectionModel.orderByRefs(members, project.artifacts);
+      const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))

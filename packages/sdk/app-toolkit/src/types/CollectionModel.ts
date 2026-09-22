@@ -49,7 +49,6 @@ export const isCollectionItem = (object: Obj.Unknown): boolean => {
   return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
 };
 
-/** Index of the object's ref in the collection, or -1. */
 /** The entity a ref names, whether it is addressed locally or space-qualified. */
 const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
   const eid = EID.tryParse(ref.uri);
@@ -94,24 +93,6 @@ export const move = ({ object, from, to, index }: MoveProps): void => {
   if (owned) {
     Obj.setParent(object, to);
   }
-};
-
-/**
- * Sorts the results of a reference traversal back into the holder's array order.
- * An object the array does not name sorts last.
- */
-export const orderByRefs = <T extends Obj.Unknown>(objects: readonly T[], refs: readonly Ref.Ref<any>[]): T[] => {
-  const position = new Map<string, number>();
-  refs.forEach((ref, index) => {
-    const id = refEntityId(ref);
-    // First occurrence wins: concurrent edits can merge the same ref into an array twice.
-    if (id !== undefined && !position.has(id)) {
-      position.set(id, index);
-    }
-  });
-  return [...objects].sort(
-    (a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
-  );
 };
 
 /** Drops the object's ref from the collection, leaving the object and its parent alone. */

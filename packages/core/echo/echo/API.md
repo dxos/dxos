@@ -169,8 +169,10 @@ const members = await db.query(Filter.childOf(taskSet)).run();
 ```
 
 Reach for the array itself to write membership, and mutate it in place (wholesale reassignment is a
-reactivity anti-pattern — splice instead). The array is also the canonical order, which a query does
-not preserve: sort the results by it when order matters.
+reactivity anti-pattern — splice instead). The array is also the canonical order, and a property
+traversal keeps it: `reference('<prop>')` returns each holder's targets in array order, holders in
+natural order. Other membership queries, `childOf` among them, have no array to follow and return
+natural order.
 
 ## Querying
 

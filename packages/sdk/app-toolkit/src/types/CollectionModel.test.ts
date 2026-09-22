@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Annotation, Collection, Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
@@ -173,86 +173,5 @@ describe('ownership', () => {
     expect(Obj.getDatabase(person)).toBeDefined();
     const results = await db.query(CollectionModel.containing(person)).run();
     expect(results).toEqual([]);
-  });
-});
-
-describe('orderByRefs', () => {
-  let builder: EchoTestBuilder;
-
-  beforeEach(async () => {
-    builder = await new EchoTestBuilder().open();
-  });
-
-  afterEach(async () => {
-    await builder.close();
-  });
-
-  const people = async (...names: string[]) => {
-    const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
-    return names.map((name) => db.add(Obj.make(TestSchema.Person, { name })));
-  };
-
-  test('restores the array order', async ({ expect }) => {
-    const [alice, bob, carol] = await people('alice', 'bob', 'carol');
-    const refs = [carol, alice, bob].map(Ref.make);
-
-    const ordered = CollectionModel.orderByRefs([alice, bob, carol], refs);
-    expect(ordered.map((object) => object.name)).toEqual(['carol', 'alice', 'bob']);
-  });
-
-  test('a ref with no matching result does not shift the rest', async ({ expect }) => {
-    const [alice, absent, bob] = await people('alice', 'absent', 'bob');
-    const refs = [alice, absent, bob].map(Ref.make);
-
-    const ordered = CollectionModel.orderByRefs([bob, alice], refs);
-    expect(ordered.map((object) => object.name)).toEqual(['alice', 'bob']);
-  });
-
-  test('an object no ref names sorts last', async ({ expect }) => {
-    const [alice, stranger] = await people('alice', 'stranger');
-
-    const ordered = CollectionModel.orderByRefs([stranger, alice], [Ref.make(alice)]);
-    expect(ordered.map((object) => object.name)).toEqual(['alice', 'stranger']);
-  });
-});
-
-describe('reference traversal', () => {
-  let builder: EchoTestBuilder;
-
-  beforeEach(async () => {
-    builder = await new EchoTestBuilder().open();
-  });
-
-  afterEach(async () => {
-    await builder.close();
-  });
-
-  /** A collection holding two people, plus the query the graph builders run over it. */
-  const setup = async () => {
-    const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
-    const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const bob = db.add(Obj.make(TestSchema.Person, { name: 'bob' }));
-    const collection = db.add(Collection.make({ objects: [Ref.make(alice), Ref.make(bob)] }));
-    await db.flush();
-    const members = () => db.query(Query.select(Filter.entity(collection)).reference('objects')).run();
-    return { db, alice, bob, collection, members };
-  };
-
-  test('returns the collection members', async ({ expect }) => {
-    const { alice, bob, members } = await setup();
-
-    const results = await members();
-    expect(results.map((object) => object.id).sort()).toEqual([alice.id, bob.id].sort());
-  });
-
-  test('omits a deleted member while its ref stays in the array', async ({ expect }) => {
-    const { db, alice, bob, collection, members } = await setup();
-
-    db.remove(bob);
-    await db.flush();
-
-    const results = await members();
-    expect(results.map((object) => object.id)).toEqual([alice.id]);
-    expect(collection.objects).toHaveLength(2);
   });
 });

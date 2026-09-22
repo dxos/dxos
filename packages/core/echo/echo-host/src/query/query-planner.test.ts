@@ -746,6 +746,15 @@ describe('QueryPlanner', () => {
             },
           },
           {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+          {
             "_tag": "TraverseStep",
             "traversal": {
               "_tag": "ReferenceTraversal",
@@ -756,15 +765,6 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
-          },
-          {
-            "_tag": "OrderStep",
-            "order": [
-              {
-                "direction": "asc",
-                "kind": "natural",
-              },
-            ],
           },
         ],
       }
@@ -2087,6 +2087,15 @@ describe('QueryPlanner', () => {
             },
           },
           {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+          {
             "_tag": "TraverseStep",
             "traversal": {
               "_tag": "ReferenceTraversal",
@@ -2097,15 +2106,6 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
-          },
-          {
-            "_tag": "OrderStep",
-            "order": [
-              {
-                "direction": "asc",
-                "kind": "natural",
-              },
-            ],
           },
         ],
       }

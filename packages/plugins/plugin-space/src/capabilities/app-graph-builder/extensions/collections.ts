@@ -13,7 +13,6 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -170,12 +169,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed([]);
         }
 
-        const rawRefs = collection.objects ?? [];
         const available = getAvailableTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
-
-        const members = get(space.db.query(Query.select(Filter.entity(collection)).reference('objects')).atom);
-        const objects = CollectionModel.orderByRefs(members, rawRefs).filter((object: Obj.Unknown) =>
-          isTypeAvailable(available, object),
+        const objects = get(space.db.query(Query.select(Filter.entity(collection)).reference('objects')).atom).filter(
+          (object: Obj.Unknown) => isTypeAvailable(available, object),
         );
 
         return Effect.succeed(
@@ -236,16 +232,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
-        const collectionSnapshot = get(Obj.atom(collection));
-        const refs = collectionSnapshot.objects ?? [];
         const available = db ? getAvailableTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
-
-        const members = db
-          ? get(db.query(Query.select(Filter.entity(collection)).reference('objects')).atom)
-          : undefined;
-        const objects = CollectionModel.orderByRefs(members ?? [], refs).filter(
-          (object: Obj.Unknown) => !available || isTypeAvailable(available, object),
-        );
+        const members = db ? get(db.query(Query.select(Filter.entity(collection)).reference('objects')).atom) : [];
+        const objects = members.filter((object: Obj.Unknown) => !available || isTypeAvailable(available, object));
 
         return Effect.succeed(
           objects
