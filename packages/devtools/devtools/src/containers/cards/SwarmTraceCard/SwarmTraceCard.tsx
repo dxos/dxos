@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 
 import * as Trace from '@dxos/compute/Trace';
 import { IconButton } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
         const summary = formatSummary(received);
         const open = expanded === received.id;
         return (
-          <React.Fragment key={received.id}>
+          <Fragment key={received.id}>
             <StatCard.Row
               label={summary}
               tooltip={summary}
@@ -70,7 +70,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
                 />
               </StatCard.Content>
             )}
-          </React.Fragment>
+          </Fragment>
         );
       })}
     </StatCard.Root>

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, useState } from 'react';
+import React, { Fragment, type ReactNode, useState } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
@@ -43,7 +43,7 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
         <div className='text-xs text-subdued uppercase'>label + icon</div>
         <div className='text-xs text-subdued uppercase'>Button (reference)</div>
         {densities.map((density) => (
-          <React.Fragment key={density}>
+          <Fragment key={density}>
             <div className='text-xs font-mono'>density={density}</div>
             <IconButton
               square
@@ -55,7 +55,7 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
             />
             <IconButton classNames='w-fit' density={density} size={densityIconSize[density]} {...props} />
             <Button density={density}>{props.label}</Button>
-          </React.Fragment>
+          </Fragment>
         ))}
       </div>
     </Tooltip.Provider>

@@ -1919,10 +1919,10 @@ export const ResultDetail = ({ result }: ResultDetailProps) => {
       </div>
       <dl className='grid grid-cols-[auto_1fr] gap-x-2'>
         {Object.entries(result.properties).map(([key, value]) => (
-          <React.Fragment key={key}>
+          <Fragment key={key}>
             <dt className='text-description'>{key}</dt>
             <dd>{String(value)}</dd>
-          </React.Fragment>
+          </Fragment>
         ))}
       </dl>
     </div>
