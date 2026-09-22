@@ -1,5 +1,6 @@
 ---
-'@dxos/echo': minor
+'@dxos/react-ui-list': minor
+'@dxos/react-ui-task': minor
 ---
 
 `Tree` takes a `virtualize` prop, which mounts only the rows in view using `@dxos/react-ui-virtual`
