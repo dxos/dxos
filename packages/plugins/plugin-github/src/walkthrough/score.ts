@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { fillWalkthrough } from './fill.ts';
-import { parsePatch } from './patch.ts';
+import { isGeneratedPath } from './generated.ts';
+import { type PatchFile, parsePatch } from './patch.ts';
 
 /**
  * One graded dimension.
@@ -62,13 +62,6 @@ export const SLOP_PHRASES = [
   'plays a key role',
 ];
 
-/**
- * Files a reviewer does not need prose about, and which `fillWalkthrough` appends anyway. Counting
- * them against coverage penalises exactly the choice the prompt asks for: cover what has to be
- * understood, leave the rest to the appendix.
- */
-const NOISE_FILE = /(^|\/)(\.changeset\/|pnpm-lock\.yaml$|package-lock\.json$|.*\.snap$)/;
-
 /** Sentences longer than this force the reader to backtrack, so they are graded against. */
 const MAX_SENTENCE_WORDS = 30;
 
@@ -81,6 +74,15 @@ const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 const ratio = (good: number, total: number): number => (total === 0 ? 1 : clamp(good / total));
 
 /** Body with every fenced block removed, so prose metrics never grade the diff itself. */
+/**
+ * The document without its appendix.
+ *
+ * `fillWalkthrough` appends every unclaimed hunk under `## Also changed`, so a stored walkthrough
+ * contains a fence for every hunk in the patch. Counting those would score full coverage for a
+ * document that described nothing.
+ */
+export const withoutAppendix = (body: string): string => body.split(/^## Also changed\s*$/m)[0];
+
 export const proseOf = (body: string): string => body.replace(/^( {0,3})(`{3,}|~{3,})[\s\S]*?^\1\2.*$/gm, '');
 
 const sentencesOf = (prose: string): string[] =>
@@ -96,9 +98,9 @@ const wordsOf = (text: string): string[] => text.split(/\s+/).filter((word) => /
  * Fences the model emitted, by path — the same shape {@link fillWalkthrough} reads, parsed again
  * here so scoring an already-filled body and scoring raw model output give the same answer.
  */
-const fencesOf = (body: string): { file?: string; lines?: string; empty: boolean }[] => {
+const fencesOf = (body: string): { file?: string; lines?: string; empty: boolean; contents: string }[] => {
   const pattern = /^( {0,3})(`{3,}|~{3,})[ \t]*diff\b([^\n]*)\n([\s\S]*?)^[ \t]*\2/gm;
-  const fences: { file?: string; lines?: string; empty: boolean }[] = [];
+  const fences: { file?: string; lines?: string; empty: boolean; contents: string }[] = [];
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(body))) {
     const [, , , info, contents] = match;
@@ -107,6 +109,7 @@ const fencesOf = (body: string): { file?: string; lines?: string; empty: boolean
       file: file?.[1] ?? file?.[2] ?? file?.[3],
       lines: info.match(/\blines=(\S+)/)?.[1],
       empty: contents.trim().length === 0,
+      contents,
     });
   }
 
@@ -191,6 +194,50 @@ const patchText = (patch: string): string =>
     .join('\n');
 
 /**
+ * Hunks the document points at, over the hunks worth pointing at.
+ *
+ * Derived from the fences rather than from `fillWalkthrough`, so a stored walkthrough — whose
+ * fences already carry their code — scores the same as the model output it was built from.
+ */
+const coverage = (
+  files: Map<string, PatchFile>,
+  fences: { file?: string; lines?: string }[],
+): { claimedHunks: number; signalHunks: number; uncoveredFiles: string[] } => {
+  const claimed = new Set<string>();
+  for (const fence of fences) {
+    const file = fence.file ? files.get(fence.file) : undefined;
+    if (!file || isGeneratedPath(file.path)) {
+      continue;
+    }
+    const range = fence.lines?.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+    const start = range ? Number(range[1]) : undefined;
+    const end = range ? (range[2] === undefined ? Number(range[1]) : Number(range[2])) : undefined;
+    file.hunks.forEach((hunk, index) => {
+      // No range claims the whole file, which is what the fence renders.
+      const hit = start === undefined || end === undefined || (hunk.afterStart <= end && hunk.afterEnd >= start);
+      if (hit) {
+        claimed.add(`${file.path}#${index}`);
+      }
+    });
+  }
+
+  const signal = [...files.values()].filter((file) => !isGeneratedPath(file.path));
+  const uncoveredFiles = signal
+    .map((file) => ({
+      path: file.path,
+      missing: file.hunks.filter((_, index) => !claimed.has(`${file.path}#${index}`)).length,
+    }))
+    .filter((file) => file.missing > 0)
+    .map((file) => `${file.path} (${file.missing})`);
+
+  return {
+    claimedHunks: claimed.size,
+    signalHunks: signal.reduce((count, file) => count + file.hunks.length, 0),
+    uncoveredFiles,
+  };
+};
+
+/**
  * Grades a walkthrough against the patch it describes.
  *
  * Deterministic on purpose: these are the checks that need no model, run on every generation, and
@@ -198,21 +245,37 @@ const patchText = (patch: string): string =>
  * ask whether the document lies; readability dimensions ask what it costs to read.
  */
 export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore => {
-  const filled = fillWalkthrough(body, patch);
-  const fences = fencesOf(body);
-  const prose = proseOf(body);
+  const narrated = withoutAppendix(body);
+  const fences = fencesOf(narrated);
+  const prose = proseOf(narrated);
   const sentences = sentencesOf(prose);
   const words = wordsOf(prose);
   const files = new Map(parsePatch(patch).map((file) => [file.path, file]));
   const paths = new Set(files.keys());
   const code = patchText(patch);
 
-  const noiseHunks = parsePatch(patch)
-    .filter((file) => NOISE_FILE.test(file.path))
-    .reduce((count, file) => count + file.hunks.length, 0);
-  const missedSignal = filled.missed.filter((file) => !NOISE_FILE.test(file.path));
+  const { claimedHunks, signalHunks, uncoveredFiles } = coverage(files, fences);
   const unresolvedFences = fences.filter((fence) => !fence.file || !paths.has(fence.file));
-  const transcribed = fences.filter((fence) => !fence.empty);
+  // A filled fence carries the patch's own lines; an invented one does not. Checked line by line so
+  // a stored walkthrough (always filled) grades the same as the model output it came from.
+  const patchLines = new Set(
+    patch
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0),
+  );
+  const invented = fences.filter(
+    (fence) =>
+      !fence.empty &&
+      fence.contents
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .some((line) => !patchLines.has(line)),
+  );
+  const generatedFences = fences
+    .map((fence) => fence.file)
+    .filter((path): path is string => !!path && isGeneratedPath(path));
   const invalidRanges = badRanges(fences, files);
   const citations = citationsOf(prose);
   const ungrounded = citations.filter((token) => !code.includes(token.replace(/\(\)$/, '')));
@@ -243,21 +306,30 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
         name: 'fences-resolve',
         score: ratio(fences.length - unresolvedFences.length, fences.length),
         sampled: fences.length,
-        evidence: filled.unresolved,
+        evidence: unresolvedFences.map((fence) => fence.file ?? '(a fence with no file)'),
       },
       {
-        name: 'fences-empty',
-        // A fence the model filled itself is diff content it invented, and the real hunk is then
-        // appended below it — the reader sees the change twice, once wrongly.
-        score: ratio(fences.length - transcribed.length, fences.length),
+        name: 'fences-authentic',
+        // Content inside a fence is either the patch's own lines, spliced in by `fillWalkthrough`,
+        // or the model transcribing a diff from memory — which gets lines subtly wrong and makes
+        // the reader see the change twice, once wrongly.
+        score: ratio(fences.length - invented.length, fences.length),
         sampled: fences.length,
-        evidence: transcribed.map((fence) => fence.file ?? '(a fence with no file)'),
+        evidence: invented.map((fence) => fence.file ?? '(a fence with no file)'),
       },
       {
         name: 'hunk-coverage',
-        score: ratio(filled.covered, filled.total - noiseHunks),
-        sampled: filled.total - noiseHunks,
-        evidence: missedSignal.map((file) => `${file.path} (${file.hunks.length})`),
+        score: ratio(claimedHunks, signalHunks),
+        sampled: signalHunks,
+        evidence: uncoveredFiles,
+      },
+      {
+        name: 'generated-ignored',
+        // A fence on a lockfile or a binary spends the reader's attention on machine output, and
+        // the appendix already names those files.
+        score: ratio(fences.length - generatedFences.length, fences.length),
+        sampled: fences.length,
+        evidence: generatedFences,
       },
       {
         name: 'ranges-valid',
@@ -282,7 +354,8 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
         // One H1 naming the change, then sections: the shape the prompt asks for, and the shape the
         // reader navigates by.
         score:
-          (body.match(/^# .+$/gm)?.length === 1 ? 0.5 : 0) + ((body.match(/^## .+$/gm)?.length ?? 0) > 0 ? 0.5 : 0),
+          (narrated.match(/^# .+$/gm)?.length === 1 ? 0.5 : 0) +
+          ((narrated.match(/^## .+$/gm)?.length ?? 0) > 0 ? 0.5 : 0),
         sampled: 1,
         evidence: headings.slice(0, 5),
       },

@@ -1,0 +1,50 @@
+{
+  "A": {
+    "order": 5,
+    "why": 4,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "The summary states the dropped-frame behavior, then the source guard section (`re-reads duplex after that await and bails out`) carries the real change, and the test section follows as confirmation — core first, consequence after.",
+      "why": "It gives both the constraint (`Blob.arrayBuffer() is the only await ... so it is the only point where disposal can happen`) and the counterfactual (`duplex.push(data) ran unconditionally after the await ... and threw`), though it says little about alternatives considered.",
+      "load": "Each term is introduced before use — `duplex`, the await, the dispose ordering — and the test paragraph explains the release-after-dispose sequencing without requiring a look back at the source hunk.",
+      "trust": "Every claim maps to the patch: the guard `if (!duplex) return`, the in-code comment about the single await, and the test's `await expect(delivered).resolves.toBeUndefined()` backing 'resolves rather than rejects'."
+    }
+  },
+  "B": {
+    "order": 5,
+    "why": 5,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "The opening paragraph establishes the failure (push 'has nothing to push to and throws on the torn-down stream'), then the source hunk section, then the regression test — nothing is file-sorted and the test comes after the behavior it pins.",
+      "why": "It names the constraint ('the only await on the inbound path, so it is the only place disposal can land between the read and the push') and the rejected alternative ('rather than pushing into a stream that no longer exists'), matching the patch's own inline comment.",
+      "load": "Two short sections, each self-contained; 'duplex stream' is introduced in the first sentence and the test description follows the hold/dispose/resolve order the code actually uses.",
+      "trust": "No invented symbols or numbers: `arrayBuffer()`, `duplex`, dispose-during-await and the 'settles without throwing' assertion all correspond to `resolves.toBeUndefined()` in the added test."
+    }
+  },
+  "C": {
+    "order": 3,
+    "why": 4,
+    "load": 3,
+    "trust": 3,
+    "reasons": {
+      "order": "The source hunk is attached to the 'one await' section and then a second section, 'Re-checking after the await', re-describes the same twelve lines with no new code, so the middle of the document loops rather than advances.",
+      "why": "It does supply the constraint that `arrayBuffer()` 'is the only point in the message handler where control yields back to the event loop' and why a best-effort timing test was rejected, which is more than narration.",
+      "load": "'the binding that was captured before the await is stale' forces a reader to reconcile it with the fix re-reading the same variable, and the vague 'wheth1er the channel is still bound' never names the actual `if (!duplex)` check, prompting backtracking.",
+      "trust": "The stale-captured-reference mechanism is not in the diff and sits at odds with the fix — the original `duplex.push(data)` already reads the variable after the await — so this is an invented explanation of intent."
+    }
+  },
+  "D": {
+    "order": 4,
+    "why": 4,
+    "load": 3,
+    "trust": 4,
+    "reasons": {
+      "order": "Intro states the failure, the guard section holds the source hunk, and the test section follows; ordering is correct though the intro largely restates what the first section then repeats.",
+      "why": "'`duplex` is captured by closure, so disposal during the suspension clears the binding' gives the mechanism and the failure avoided, but offers no rejected alternative beyond the implicit unconditional push.",
+      "load": "The sentence 'disposal during the suspension clears the binding the handler still holds a reference to' is self-tangling — cleared yet still referenced — and needs a second pass before the re-check makes sense.",
+      "trust": "The closure claim is a fair inference from `if (!duplex)`, but 'Before the fix this rejected' is stated as fact about prior behavior that the diff only hints at via the test comment 'pushing anyway threw'."
+    }
+  }
+}

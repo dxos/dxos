@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { isGeneratedFile } from './generated.ts';
 import { parsePatch } from './patch.ts';
 
 /** What the model is told about the change. */
@@ -88,16 +89,21 @@ export const SYSTEM_PROMPT = [
 
 /** Trims the patch to the budget, keeping as many files as fit and naming what was left out. */
 const budgetDiff = (diff: string, maxChars: number): { diff: string; omitted: string[] } => {
-  if (diff.length <= maxChars) {
-    return { diff, omitted: [] };
+  const parsed = parsePatch(diff);
+  const generated = parsed.filter((file) => isGeneratedFile(file)).map((file) => file.path);
+  const files = parsed
+    // Generated files go first, whatever the budget: a lockfile is the largest thing in most pull
+    // requests and the one the reader skips, so it would otherwise push out code that matters.
+    .filter((file) => !isGeneratedFile(file))
+    .map((file) => ({
+      path: file.path,
+      text: [...file.preamble, ...file.hunks.flatMap((hunk) => [hunk.header, ...hunk.lines])].join('\n'),
+    }));
+  const withoutGenerated = files.map((file) => file.text).join('\n');
+  if (withoutGenerated.length <= maxChars) {
+    return { diff: generated.length > 0 ? withoutGenerated : diff, omitted: generated };
   }
 
-  // Whole files, smallest first: a walkthrough of many small files is more useful than one of a
-  // single generated blob, and the lockfiles this drops are exactly what a reviewer skips anyway.
-  const files = parsePatch(diff).map((file) => ({
-    path: file.path,
-    text: [...file.preamble, ...file.hunks.flatMap((hunk) => [hunk.header, ...hunk.lines])].join('\n'),
-  }));
   const order = [...files].sort((left, right) => left.text.length - right.text.length);
   const kept = new Set<string>();
   let used = 0;
@@ -114,7 +120,7 @@ const budgetDiff = (diff: string, maxChars: number): { diff: string; omitted: st
       .filter((file) => kept.has(file.path))
       .map((file) => file.text)
       .join('\n'),
-    omitted: files.filter((file) => !kept.has(file.path)).map((file) => file.path),
+    omitted: [...generated, ...files.filter((file) => !kept.has(file.path)).map((file) => file.path)],
   };
 };
 

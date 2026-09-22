@@ -28,13 +28,14 @@ excerpts it scored on. Attribution is the point: a bare number is not actionable
 
 Correctness:
 
-| Dimension            | Fails when                                                                                    |
-| -------------------- | --------------------------------------------------------------------------------------------- |
-| `fences-resolve`     | A fence names a file the patch does not contain.                                              |
-| `fences-empty`       | The model wrote diff content itself instead of leaving the fence empty for `fillWalkthrough`. |
-| `hunk-coverage`      | Hunks reach the reader only through the appended `## Also changed` section.                   |
-| `citations-grounded` | Prose cites an identifier or path that appears nowhere in the patch.                          |
-| `structure`          | No single H1, or no H2 sections.                                                              |
+| Dimension            | Fails when                                                                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `fences-resolve`     | A fence names a file the patch does not contain.                                                                                   |
+| `fences-authentic`   | A fence carries lines the patch does not contain: the model transcribed a diff instead of leaving the fence for `fillWalkthrough`. |
+| `hunk-coverage`      | Hunks reach the reader only through the appended `## Also changed` section.                                                        |
+| `citations-grounded` | Prose cites an identifier or path that appears nowhere in the patch.                                                               |
+| `generated-ignored`  | A fence points at a lockfile, a binary or another generated file.                                                                  |
+| `structure`          | No single H1, or no H2 sections.                                                                                                   |
 
 Readability:
 
@@ -49,6 +50,34 @@ Readability:
 Coverage is a floor, not a target. `fillWalkthrough` appends every unclaimed hunk, so the reader
 never loses a change; a walkthrough that describes every hunk equally has ordered nothing and is the
 diff again. Read `hunk-coverage` together with `prose-density` rather than maximising it.
+
+Scoring reads the document above `## Also changed` only. `fillWalkthrough` appends every unclaimed
+hunk under that heading, so a stored walkthrough carries a fence for every hunk in the patch;
+counting them would score full coverage for a document that described nothing. Fence content counts
+as authentic when its lines come from the patch, which is what makes a stored walkthrough score the
+same as the model output it was built from.
+
+## Running it against the real model
+
+`scripts/generate-walkthrough.ts` produces walkthroughs, one-shot or chaptered, and fills them.
+`scripts/judge-walkthrough.ts` runs the judge over blind packets. Both read `DX_ANTHROPIC_API_KEY`
+and need `@anthropic-ai/sdk` on the resolution path. Neither is wired into CI: both spend money per
+run.
+
+```bash
+node --experimental-strip-types scripts/generate-walkthrough.ts evals/walkthrough/13288-large --mode=chaptered
+node --experimental-strip-types scripts/judge-packet.ts prepare evals/walkthrough evals/judge-api
+node --experimental-strip-types scripts/judge-walkthrough.ts evals/judge-api
+node --experimental-strip-types scripts/judge-packet.ts report evals/judge-api
+```
+
+## Two-stage generation
+
+A diff over 32 KB is planned into chapters rather than narrated in one prompt (`plan.ts`,
+`DEFAULT_CHAPTER_THRESHOLD_CHARS`). The planner sees the file list and sizes, never contents, and
+assigns every file to exactly one chapter; each chapter is then narrated against its own files. An
+unreadable plan falls back to the one-shot path, because a walkthrough of part of the change beats
+no walkthrough. Measurements are in `WALKTHROUGH-EVAL-RESULTS.md`.
 
 ## The judge rubric
 

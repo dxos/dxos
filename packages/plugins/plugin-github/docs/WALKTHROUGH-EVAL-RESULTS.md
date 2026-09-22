@@ -54,11 +54,73 @@ once, so on the nineteen-file PR they emit two fences where `v2` emits fourteen.
 still reach the reader through the appended `## Also changed` section. This is the tension the design
 doc names: maximising coverage produces the diff again.
 
+## Large pull requests: one prompt is not enough
+
+The corpus above tops out at nineteen files. Run the generator on a 263 KB, 31-file change
+(dxos/dxos#13288, a SQLite query executor) and the one-shot path fails in a specific way: it writes
+the first sections in full, runs out of room, and leaves the rest to the appended `## Also changed`
+section. The reader gets a walkthrough of the first tenth of the pull request and a diff dump for
+the other nine.
+
+`plan.ts` adds a two-stage path for diffs over 32 KB. A planner sees the file list and their sizes,
+never their contents, and returns chapters: a title, a one-sentence brief, and the files that belong
+to each. Each chapter is then narrated against its own files only, and the chapters are concatenated
+under the planner's title. Generated files never reach the planner, so a lockfile cannot become a
+chapter.
+
+Measured on #13288 with `claude-sonnet-5`, the model the operation pins:
+
+| run                      | calls | tokens | hunk coverage | sentence length | correctness | readability |    judge |
+| ------------------------ | ----: | -----: | ------------: | --------------: | ----------: | ----------: | -------: |
+| one-shot                 |     1 |    14k |           15% |              73 |          88 |          95 |     2.75 |
+| chaptered, first prompt  |     6 |   122k |           31% |              21 |          91 |          84 |     3.25 |
+| chaptered, second prompt |     6 |   132k |       **71%** |              76 |          96 |          93 | **4.00** |
+
+The first chaptered prompt bought coverage and lost the prose: chapter writers wrote 30-word
+sentences stitched with semicolons, and `sentence-length` fell to 21. Two lines fixed both halves.
+A completeness bar — "every file listed in your chapter appears in at least one fence" — took
+coverage from 31% to 71%. Promoting the sentence rule to the top of the chapter prompt, stated as a
+ban on semicolons and dashes carrying a second clause, took `sentence-length` back to 76.
+
+The cost is nine times the tokens for six calls instead of one. That buys a document covering 71% of
+a change the single call covered 15% of, and the blind judge ranked it 4.00 against 2.75.
+
+## Generated files
+
+A lockfile is the largest hunk in most pull requests and the one nobody reads. `generated.ts`
+detects them by path and by patch shape: lockfiles by name, `dist/`-style directories, minified
+bundles, source maps, snapshots, generated protobuf and codegen suffixes, binary extensions, and
+anything git wrote as `Binary files … differ`. Changesets count too, since a changeset is a
+consequence of the change the walkthrough already describes.
+
+Three places use it. The prompt drops generated files before it drops anything else, so a lockfile
+never pushes code out of the budget. `fillWalkthrough` names them in the appendix rather than
+rendering their hunks, so the tail of the document stays readable. And `generated-ignored` scores a
+fence pointing at one, because prose spent on machine output is the reader's time spent on nothing.
+
 ## Judge scores
 
 Blind: variants copied under opaque letters, key withheld. Mean of order, why, load and trust, 1-5.
 
-Round one, all three variants per packet:
+The judge runs through the Anthropic API on `claude-opus-5` (`scripts/judge-walkthrough.ts`, one
+request per fixture so the rubric's ranking has something to rank against, structured outputs for
+the verdict). Grading all four variants of the small corpus in one pass:
+
+| fixture              | v1   | v2       | v3   | v4   |
+| -------------------- | ---- | -------- | ---- | ---- |
+| 13115 one-line bump  | 3.50 | 4.00     | 3.75 | 3.00 |
+| 13149 eight files    | 4.25 | 4.75     | 4.00 | 3.75 |
+| 13150 nineteen files | 3.00 | 4.25     | 3.50 | 4.00 |
+| 13153 bug fix        | 3.25 | 3.75     | 5.00 | 4.75 |
+| mean                 | 3.50 | **4.19** | 4.06 | 3.88 |
+
+v1 scores 2.50 on trust, at least a point and a quarter below every other variant, which is the same finding the
+subagent rounds reported: the baseline earns its "why" by asserting motives the diff cannot support.
+
+The earlier rounds below were graded by Claude Code subagents rather than by an API call, before the
+judge script existed. They are kept because the variance between them is itself a result.
+
+Subagent round one, all three variants per packet:
 
 | fixture              | v1   | v2   | v3   |
 | -------------------- | ---- | ---- | ---- |
@@ -68,7 +130,7 @@ Round one, all three variants per packet:
 | 13153 bug fix        | 4.25 | 4.25 | 4.50 |
 | mean                 | 4.13 | 4.44 | 4.06 |
 
-Round two, `v2` against `v4`:
+Subagent round two, `v2` against `v4`:
 
 | fixture              | v2   | v4   |
 | -------------------- | ---- | ---- |
@@ -120,6 +182,11 @@ coverage at all: the loser carried the inverted line range.
 - **Judging with labels visible.** Not attempted, deliberately. The packets are letters and the key
   is written outside the packet, since a judge told which document came from the newer prompt grades
   the label.
+- **Scoring a stored walkthrough with the first scorer.** It graded raw model output only: a stored
+  body has its fences filled from the patch and an appendix listing everything the prose missed, so
+  the scorer read filled fences as invented content and the appendix as full coverage. Coverage is
+  now derived from the fences above `## Also changed`, and fence content counts as authentic when
+  its lines come from the patch.
 - **A moon task with `local: true`.** Not a field in this moon version, and an unparseable `moon.yml`
   fails every job in the workflow. It is `options.runInCI: false`.
 

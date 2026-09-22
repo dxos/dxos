@@ -11,6 +11,18 @@ import { PullRequest } from '@dxos/types';
 import { Walkthrough } from '#types';
 
 import { fillWalkthrough } from './fill.ts';
+import { isGeneratedFile } from './generated.ts';
+import { parsePatch } from './patch.ts';
+import {
+  CHAPTER_SYSTEM_PROMPT,
+  DEFAULT_CHAPTER_THRESHOLD_CHARS,
+  PLANNER_SYSTEM_PROMPT,
+  assembleWalkthrough,
+  buildChapterPrompt,
+  buildPlannerPrompt,
+  chapterDiff,
+  parsePlan,
+} from './plan.ts';
 import { SYSTEM_PROMPT, buildPrompt } from './prompt.ts';
 
 /** What the pull request looks like on GitHub right now, as against the local mirror of it. */
@@ -40,10 +52,17 @@ export type GenerateOptions<R = never> = {
   narrate: (prompt: string) => Effect.Effect<string, never, R>;
   /** Phase reporter; `current` counts against {@link GENERATE_PHASES}. */
   report?: (message: string, current: number) => void;
+  /**
+   * Diff size past which the walkthrough is planned into chapters and narrated a chapter at a time.
+   * Zero forces the two-stage path; `Infinity` forces the one-shot path.
+   */
+  chapterThresholdChars?: number;
 };
 
 export type GenerateResult = {
   walkthrough: Walkthrough.Walkthrough;
+  /** How the body was written: one prompt, or a plan plus a prompt per chapter. */
+  strategy?: 'one-shot' | 'chaptered';
   /** Whether the model ran, as against an existing walkthrough being returned unchanged. */
   generated: boolean;
   covered: number;
@@ -67,6 +86,7 @@ export const generateWalkthrough = <R = never>({
   model,
   narrate,
   report = () => {},
+  chapterThresholdChars = DEFAULT_CHAPTER_THRESHOLD_CHARS,
 }: GenerateOptions<R>): Effect.Effect<GenerateResult, never, Database.Service | R> =>
   Effect.gen(function* () {
     const existing = yield* findWalkthrough(pullRequest);
@@ -83,7 +103,7 @@ export const generateWalkthrough = <R = never>({
     }
 
     report('Writing the walkthrough', 3);
-    const prompt = buildPrompt({
+    const facts = {
       owner: pullRequest.owner,
       repo: pullRequest.repo,
       number: pullRequest.number,
@@ -91,9 +111,10 @@ export const generateWalkthrough = <R = never>({
       description: remote.description ?? pullRequest.description,
       baseBranch: remote.baseBranch ?? pullRequest.baseBranch,
       headBranch: remote.headBranch ?? pullRequest.headBranch,
-      diff,
-    });
-    const narration = yield* narrate(`${SYSTEM_PROMPT}\n\n---\n\n${prompt}`);
+    };
+    const chaptered =
+      diff.length > chapterThresholdChars ? yield* narrateChapters(facts, diff, narrate, report) : undefined;
+    const narration = chaptered ?? (yield* narrate(`${SYSTEM_PROMPT}\n\n---\n\n${buildPrompt({ ...facts, diff })}`));
 
     report('Filling the chunks', 4);
     const filled = fillWalkthrough(narration, diff);
@@ -109,7 +130,50 @@ export const generateWalkthrough = <R = never>({
     });
 
     report(PROGRESS_STATUS_COMPLETE, GENERATE_PHASES);
-    return { walkthrough, generated: true, covered: filled.covered, total: filled.total };
+    return {
+      walkthrough,
+      strategy: chaptered ? ('chaptered' as const) : ('one-shot' as const),
+      generated: true,
+      covered: filled.covered,
+      total: filled.total,
+    };
+  });
+
+/**
+ * Plans the chapters, then narrates each one against its own files.
+ *
+ * Returns undefined when the plan cannot be read, so the caller falls back to one prompt rather
+ * than failing: a walkthrough of part of the change beats no walkthrough.
+ */
+const narrateChapters = <R>(
+  facts: Parameters<typeof buildPlannerPrompt>[0],
+  diff: string,
+  narrate: (prompt: string) => Effect.Effect<string, never, R>,
+  report: (message: string, current: number) => void,
+): Effect.Effect<string | undefined, never, R> =>
+  Effect.gen(function* () {
+    const files = parsePatch(diff).filter((file) => !isGeneratedFile(file));
+    const planned = yield* narrate(`${PLANNER_SYSTEM_PROMPT}\n\n---\n\n${buildPlannerPrompt(facts, diff)}`);
+    const plan = parsePlan(
+      planned,
+      files.map((file) => file.path),
+    );
+    if (!plan) {
+      return undefined;
+    }
+
+    const chapters: string[] = [];
+    for (const chapter of plan.chapters) {
+      report(`Writing "${chapter.title}"`, 3);
+      // Serial rather than concurrent: a chapter is written against a document the reader meets in
+      // order, and the model's own rate limit is the binding constraint on a large change anyway.
+      const body = yield* narrate(
+        `${CHAPTER_SYSTEM_PROMPT}\n\n---\n\n${buildChapterPrompt(plan, chapter, chapterDiff(files, chapter))}`,
+      );
+      chapters.push(body);
+    }
+
+    return assembleWalkthrough(plan, chapters);
   });
 
 /** The walkthrough already written for this pull request, if any. */

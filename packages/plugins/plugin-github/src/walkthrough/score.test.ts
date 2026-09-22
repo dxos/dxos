@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { fillWalkthrough } from './fill.ts';
 import { type Dimension, meanScore, proseOf, scoreWalkthrough } from './score.ts';
 
 const PATCH = [
@@ -72,12 +73,11 @@ describe('scoreWalkthrough', () => {
     expect(dimension(correctness, 'fences-resolve').evidence).to.deep.eq(['src/gone.ts']);
   });
 
-  test('a fence the model filled itself is counted as transcription, not coverage', () => {
-    const body = GOOD.replace('```diff file=src/a.ts lines=10-13\n```', '```diff file=src/a.ts\n+is();\n```');
+  test('a fence carrying lines the patch never had is invented, not filled', () => {
+    const body = GOOD.replace('```diff file=src/a.ts lines=10-13\n```', '```diff file=src/a.ts\n+invented();\n```');
     const { correctness } = scoreWalkthrough(body, PATCH);
 
-    expect(dimension(correctness, 'fences-empty').score).to.eq(0.5);
-    expect(dimension(correctness, 'hunk-coverage').score).to.eq(0.5);
+    expect(dimension(correctness, 'fences-authentic').score).to.eq(0.5);
   });
 
   test('prose that cites a symbol the change never touches is ungrounded', () => {
@@ -183,11 +183,46 @@ describe('scoreWalkthrough', () => {
     expect(dimension(correctness, 'hunk-coverage').evidence).to.deep.eq([]);
   });
 
+  test('a fence on a lockfile is prose spent on machine output', () => {
+    const patch = [
+      PATCH,
+      'diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml',
+      '--- a/pnpm-lock.yaml',
+      '+++ b/pnpm-lock.yaml',
+      '@@ -1,1 +1,2 @@',
+      ' lockfileVersion: 9',
+      '+  resolution: {}',
+      '',
+    ].join('\n');
+    const body = GOOD + '\n## Dependencies\n\nThe lockfile moved with it.\n\n```diff file=pnpm-lock.yaml\n```\n';
+    const { correctness } = scoreWalkthrough(body, patch);
+
+    expect(dimension(correctness, 'generated-ignored').score).to.be.lessThan(1);
+    expect(dimension(correctness, 'generated-ignored').evidence).to.deep.eq(['pnpm-lock.yaml']);
+  });
+
+  test('a walkthrough that leaves generated files alone scores full marks for it', () => {
+    expect(dimension(scoreWalkthrough(GOOD, PATCH).correctness, 'generated-ignored').score).to.eq(1);
+  });
+
   test('a heading naming a symbol is not title case', () => {
     const body = GOOD.replace('# Retry the first call', '# Retry added() before keep()');
     const { readability } = scoreWalkthrough(body, PATCH);
 
     expect(dimension(readability, 'sentence-case-headings').score).to.eq(1);
+  });
+
+  test('a filled body scores like the model output it was built from', () => {
+    const { body: filled } = fillWalkthrough(GOOD, PATCH);
+    const raw = scoreWalkthrough(GOOD, PATCH);
+    const stored = scoreWalkthrough(filled, PATCH);
+
+    // The stored walkthrough carries the patch's own lines in its fences and an appendix of
+    // everything it did not claim; neither may change what it scores.
+    expect(dimension(stored.correctness, 'fences-authentic').score).to.eq(1);
+    expect(dimension(stored.correctness, 'hunk-coverage').score).to.eq(
+      dimension(raw.correctness, 'hunk-coverage').score,
+    );
   });
 
   test('prose metrics never read the diff itself', () => {
