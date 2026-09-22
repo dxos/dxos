@@ -11,10 +11,10 @@ import { describe, onTestFinished, test } from 'vitest';
 import { InvalidOperationInputError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
-import { Filter, Hypergraph, Query, Registry } from '@dxos/echo';
+import { Database, Filter, Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FunctionProtocol, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
@@ -199,6 +199,95 @@ describe('EDGE Hypergraph.Service', () => {
     await expect(
       wrapFunctionHandler(ReachGraph).handler({ data: { spaceId: SpaceId.random() }, context: { services: {} } }),
     ).rejects.toThrow('Hypergraph not available');
+  });
+});
+
+describe('ref decoding through the input schema', () => {
+  // `decodeRefsFromSchema` is what turns the wire form `{'/': 'echo:///<id>'}` into a live `Ref`
+  // before the input is validated against the TYPE side of the schema, which accepts only a `Ref`
+  // instance. Whether it recurses into a field therefore decides whether that field is usable at
+  // all over the wire, and its `Union` case gives up as soon as a union has more than one
+  // non-undefined branch.
+  //
+  // That is the difference between these two operations, and between `tasks.create` and
+  // `tasks.update` in `@dxos/plugin-tasks`, which declare the same field the same two ways:
+  //   create: milestone: Schema.optional(Ref.Ref(Milestone))                  -> union [Ref, Undefined]
+  //   update: milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone)))   -> union [Ref, Null, Undefined]
+  // The nullable form exists only so a patch can CLEAR the field, so the cost of the gap is that a
+  // field can be cleared but never set.
+
+  const Target = Type.makeObject(DXN.make('com.example.type.target', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  // The handler contract in both cases: a ref field arrives as a live `Ref`, never as the wire
+  // envelope. Declared twice rather than through a factory so each `input` keeps its own inferred
+  // type and the handler is checked against it.
+  const decodedHandler = Effect.fnUntraced(function* ({ milestone }: { readonly milestone?: unknown }) {
+    return { decoded: Ref.isRef(milestone) };
+  });
+
+  // `Schema.optional(Ref)` -> union [Ref, Undefined] -> one non-undefined branch -> recursed into.
+  const Optional = Operation.make({
+    meta: { key: DXN.make('com.example.operation.optionalRef'), name: 'Optional Ref' },
+    services: [Database.Service],
+    input: Schema.Struct({ milestone: Schema.optional(Ref.Ref(Target)) }),
+    output: Schema.Struct({ decoded: Schema.Boolean }),
+  }).pipe(Operation.withHandler(decodedHandler));
+
+  // `Schema.optional(Schema.NullOr(Ref))` -> union [Ref, Null, Undefined] -> two non-undefined
+  // branches -> `decodeRefsFromSchema` returns the value untouched.
+  const OptionalNullable = Operation.make({
+    meta: { key: DXN.make('com.example.operation.optionalNullableRef'), name: 'Optional Nullable Ref' },
+    services: [Database.Service],
+    input: Schema.Struct({ milestone: Schema.optional(Schema.NullOr(Ref.Ref(Target))) }),
+    output: Schema.Struct({ decoded: Schema.Boolean }),
+  }).pipe(Operation.withHandler(decodedHandler));
+
+  // Conversion is what is under test, not resolution, so the envelope need only be well-formed:
+  // `decodeRefsFromSchema` builds the `Ref` from the URI without loading the target.
+  const envelope = () => ({ '/': `echo:///${EntityId.random()}` });
+
+  const invokeWithEnvelope = async (op: Operation.WithHandler<Operation.Definition.Any>, data: unknown) => {
+    const { peer, services } = await openPeer();
+    // A db must be reachable from the context: `wrapFunctionHandler` skips ref decoding entirely
+    // when `funcContext.db` is unset, which would hide the difference being tested.
+    const db = await peer.createDatabase();
+
+    return wrapFunctionHandler(op).handler({
+      data,
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+  };
+
+  test('decodes an encoded reference for an optional ref field', async ({ expect }) => {
+    await expect(invokeWithEnvelope(Optional, { milestone: envelope() })).resolves.toEqual({ decoded: true });
+  });
+
+  // Same envelope, same target, same handler — the only difference is that the field may also be
+  // null. Fails today: the envelope reaches the type-side check unconverted and is rejected as
+  // `Expected <Declaration>`, so a nullable ref field cannot be SET over the wire at all.
+  test('decodes an encoded reference for an optional NULLABLE ref field', async ({ expect }) => {
+    await expect(invokeWithEnvelope(OptionalNullable, { milestone: envelope() })).resolves.toEqual({ decoded: true });
+  });
+
+  // Clearing still works, which is what makes the gap easy to miss: the null branch needs no
+  // conversion, so the only broken case is the one that carries a reference.
+  test('clears a nullable ref field', async ({ expect }) => {
+    await expect(invokeWithEnvelope(OptionalNullable, { milestone: null })).resolves.toEqual({ decoded: false });
+  });
+
+  // The message is the whole diagnostic a remote caller gets: it cannot see its own payload in our
+  // logs, so a rejection naming neither the expected type nor the value it sent is unactionable.
+  test('names the expected type and the rejected value when a ref field is malformed', async ({ expect }) => {
+    const error = await invokeWithEnvelope(Optional, { milestone: 42 }).then(
+      () => undefined,
+      (err: any) => err,
+    );
+
+    expect(error).toBeDefined();
+    expect(error.message).toContain('Ref<');
+    expect(error.message).toContain('com.example.type.target');
+    expect(error.message).toContain('42');
+    expect(error.message).toContain('["milestone"]');
   });
 });
 

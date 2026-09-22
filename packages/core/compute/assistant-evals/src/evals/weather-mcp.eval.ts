@@ -15,7 +15,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { EDGE_URLS } from '@dxos/config';
 import { Blob, Collection, Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
@@ -180,7 +180,7 @@ const task = createEvalRunner({
   ],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make(), SandboxPlugin.make()],
   types: [
-    ...WeatherSpace().schemas,
+    ...WeatherSpace.make().schemas,
     Collection.Collection,
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.

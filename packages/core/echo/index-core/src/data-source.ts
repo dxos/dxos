@@ -3,7 +3,6 @@
 //
 
 import type * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
@@ -51,5 +50,5 @@ export interface IndexDataSource {
     ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError, SqlClient.SqlClient>;
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError>;
 }

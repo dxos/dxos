@@ -25,6 +25,12 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-inten
  * forever, since that keyed write is never re-presented to the indexing loop.
  */
 export class ConvergenceKeyIntentStore {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -33,6 +39,7 @@ export class ConvergenceKeyIntentStore {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -43,14 +50,12 @@ export class ConvergenceKeyIntentStore {
    * later pass re-presents it.
    */
   record = Effect.fn('ConvergenceKeyIntentStore.record')(
-    (
-      intents: readonly { spaceId: SpaceId; convergenceKey: string }[],
-    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    (intents: readonly { spaceId: SpaceId; convergenceKey: string }[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (intents.length === 0) {
           return;
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         for (const { spaceId, convergenceKey } of intents) {
           yield* sql`INSERT INTO convergenceKeyIntents (spaceId, convergenceKey) VALUES (${spaceId}, ${convergenceKey})`;
         }
@@ -63,9 +68,9 @@ export class ConvergenceKeyIntentStore {
    * so a concurrent indexing pass cannot have its trigger erased.
    */
   take = Effect.fn('ConvergenceKeyIntentStore.take')(
-    (): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const rows = yield* sql<{ id: number; spaceId: SpaceId; convergenceKey: string }>`
           SELECT id, spaceId, convergenceKey FROM convergenceKeyIntents`;
         let maxId = 0;
@@ -84,13 +89,9 @@ export class ConvergenceKeyIntentStore {
    * Clear a serviced convergence-key intent, bounded by the id captured at read time.
    */
   clear = Effect.fn('ConvergenceKeyIntentStore.clear')(
-    (
-      spaceId: SpaceId,
-      convergenceKey: string,
-      upToId: number,
-    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (spaceId: SpaceId, convergenceKey: string, upToId: number): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         yield* sql`DELETE FROM convergenceKeyIntents WHERE spaceId = ${spaceId} AND convergenceKey = ${convergenceKey} AND id <= ${upToId}`;
       }),
   );

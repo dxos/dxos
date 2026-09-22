@@ -89,11 +89,11 @@ class MockIndexDataSource implements IndexDataSource {
 
 describe('IndexEngine', () => {
   const setup = Effect.gen(function* () {
-    const engine = new IndexEngine();
+    const engine = new IndexEngine(yield* SqlClient.SqlClient);
     yield* engine.migrate();
     // The stores are stateless accessors over the same `SqlClient` the engine writes through, so
     // one constructed here reads exactly what the engine wrote.
-    return { engine, metaIndex: new EntityMetaIndex() };
+    return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
 
   it.effect(

@@ -57,7 +57,7 @@ const captureSpaceFor =
     storySpaces.set(key, space);
   };
 
-/** `onInit` runs on SpacesReady, which the play function can reach first. */
+/** `onInit` runs on SpacesAvailable, which the play function can reach first. */
 const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -70,7 +70,7 @@ const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
   throw new Error('onInit never ran — the story has no space');
 };
 
-/** Waits for the chat the story plugin creates asynchronously on SpacesReady. */
+/** Waits for the chat the story plugin creates asynchronously on SpacesAvailable. */
 const waitForChat = async (space: Space, timeout = 30_000): Promise<ChatSchema.Chat> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
