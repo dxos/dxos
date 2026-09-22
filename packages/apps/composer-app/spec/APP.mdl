@@ -658,6 +658,234 @@ test QA-9: The guided tours
       expect: it runs from "Sharing" to "Feedback" as before
 ```
 
+```mdl
+test QA-10: From the README to a diagram embedded in a document
+  desc: |
+    The walkthrough a newcomer is shown: land on the seeded README, write a document, comment on
+    it three times, draw the architecture on a tldraw canvas, embed that drawing in the document,
+    and step into it and back. Four plugins (markdown, review, illustrator, tldraw) plus the deck,
+    which is why it lives here rather than in any one PLUGIN.mdl.
+  actors: both
+  status: unverified        # 2026-09-22, written for the demo recording
+  covers: [review:F-1]
+  given:
+    - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
+    - readme: the seeded "README" document in the default space — a first-run profile has one; without it the tour has no starting point and the test is blocked, not failed
+    - the illustrator and tldraw plugins are enabled (both are on by default; `$snapshot.plugins` names them)
+    - no document or drawing whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
+    - `$snapshot.errors` is empty
+  steps:
+    - name: Composer opens with the README
+      id: readme
+      do: Boot Composer. It lands on the default space's Home; click "README" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$given.readme.objectId"] }
+      expect: one plank shows the README in the editor
+      assert: |
+        return $snapshot.planks.some((p) => p.label === 'README' &&
+          p.subject?.typename === 'org.dxos.type.document');
+      note: |
+        Onboarding seeds the README into the default space's root collection and opens Home, not the
+        README itself (`plugin-onboarding/src/capabilities/default-content.ts`), so the click is a
+        real step rather than a description of where boot already left you.
+    - name: Create a new Markdown document
+      do: Click + on the space in the navtree, choose Document, and name it "QA: Composer $runId".
+      invoke: org.dxos.operation.markdown.create { name: "QA: Composer $runId", content: "# QA: Composer\n" }
+      space: $given.defaultSpace.id
+      capture: doc
+      expect: the new document appears in the navtree below the README
+      assert: return typeof $doc.id === 'string' && $doc.id.startsWith('echo://') && $stepErrors.length === 0
+      note: The result's `id` is the `echo://<spaceId>/<objectId>` URI; later steps name the object through it.
+    - name: Open it
+      do: Click the new document in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$doc.objectId"] }
+      expect: the document opens in its own plank, replacing the README, and the editor is empty but for its heading
+      assert: |
+        const path = `root/${$given.defaultSpace.id}/content/collections/${$doc.objectId}`;
+        return $snapshot.layout.active.includes(path);
+      note: |
+        Opening is what binds the editor to the document. An edit invoked against an unopened
+        document lands in the database with no surface ever showing it, which reads as a silent pass.
+    - name: Write a short product description of Composer
+      id: prose
+      do: Type three paragraphs describing Composer into the editor, under the heading.
+      invoke: |
+        org.dxos.operation.markdown.update {
+          doc: Ref($doc.id),
+          edits: [{ newString: "\nComposer is a local-first workspace: documents, diagrams, tables and conversations all live in\none end-to-end encrypted space that syncs peer to peer.\n\nEverything you create is an ECHO object, so two people editing at once converge without a server\narbitrating, and the same data is reachable from the assistant, an automation, or your own code.\n\nPlugins supply the surfaces — markdown, tldraw, kanban, sheets — and each one is a first-class\ncitizen of the same graph rather than a silo.\n" }]
+        }
+      space: $given.defaultSpace.id
+      expect: the three paragraphs render in the editor under the heading
+      assert: |
+        const { content } = await composer.invoke('org.dxos.operation.markdown.open',
+          { doc: dxos.Ref.make(dxos.spaces('${$given.defaultSpace.id}').db.getObjectById('${$doc.objectId}')) },
+          { spaceId: $given.defaultSpace.id });
+        return content.includes('local-first workspace') && content.includes('first-class') &&
+          $stepErrors.length === 0;
+      note: |
+        An edit with no `oldString` appends. The exact text matters to the next three steps: their
+        ranges are character offsets into the document this step produces, so changing a word here
+        moves every comment anchor.
+    - name: Comment on "local-first workspace"
+      do: Select the words "local-first workspace" in the first paragraph, click Comment in the toolbar, type "Is this the line we lead with?" and send.
+      invoke: org.dxos.operation.review.create { subject: Obj($doc.id), range: { from: 30, to: 51 }, text: "Is this the line we lead with?", sender: { name: "QA" } }
+      space: $given.defaultSpace.id
+      capture: comment1
+      expect: the comments companion opens with one active thread carrying that message, and the phrase is highlighted in the editor
+      assert: |
+        const plank = $snapshot.planks.find((p) => p.label === `QA: Composer ${$runId}`);
+        const thread = plank?.comments?.[0];
+        return plank?.comments?.length === 1 && thread.status === 'active' &&
+          thread.messages[0].text === 'Is this the line we lead with?' && !!thread.anchor &&
+          $stepErrors.length === 0;
+      note: |
+        `range` is the selection's character offsets, which the operation turns into the editor's
+        cursor anchor. 30–51 is "local-first workspace" in the text written by the previous step;
+        an offset that misses the phrase still creates a thread, anchored to the wrong words.
+    - name: Comment on "converge without a server"
+      do: Select "converge without a server" in the second paragraph and comment "Say CRDT here, or keep it plain?".
+      invoke: org.dxos.operation.review.create { subject: Obj($doc.id), range: { from: 239, to: 264 }, text: "Say CRDT here, or keep it plain?", sender: { name: "QA" } }
+      space: $given.defaultSpace.id
+      capture: comment2
+      expect: a second thread appears below the first, both active
+      assert: |
+        const plank = $snapshot.planks.find((p) => p.label === `QA: Composer ${$runId}`);
+        return plank?.comments?.length === 2 && plank.comments.every((t) => t.status === 'active') &&
+          $stepErrors.length === 0;
+    - name: Comment on "first-class"
+      do: Select "first-class" in the third paragraph and comment "Name three plugins a reader will recognise.".
+      invoke: org.dxos.operation.review.create { subject: Obj($doc.id), range: { from: 446, to: 457 }, text: "Name three plugins a reader will recognise.", sender: { name: "QA" } }
+      space: $given.defaultSpace.id
+      capture: comment3
+      expect: three active threads are listed, and three highlights are visible in the editor
+      assert: |
+        const plank = $snapshot.planks.find((p) => p.label === `QA: Composer ${$runId}`);
+        const texts = plank?.comments?.map((t) => t.messages[0].text) ?? [];
+        return texts.length === 3 && new Set(texts).size === 3 && $stepErrors.length === 0;
+    - name: Create a tldraw drawing
+      do: Click + on the space in the navtree, choose Drawing, then pick "tldraw" in the variant list.
+      invoke: org.dxos.operation.illustrator.create { name: "QA: Architecture $runId", variant: "tldraw.com/2" }
+      space: $given.defaultSpace.id
+      capture: created
+      expect: a Drawing backed by an empty tldraw canvas exists
+      assert: return !!$created.object
+      note: |
+        `variant` is the canvas schema the renderer registers, `tldraw.com/2`
+        (`plugin-tldraw/src/types/Tldraw.ts`) — not the plugin id. The UI's variant picker shows the
+        variant's `label` ("tldraw") and sends the same id.
+    - name: File it in the space
+      do: (no separate gesture — the create dialog files the drawing for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object }
+      space: $given.defaultSpace.id
+      capture: drawing
+      expect: "QA: Architecture $runId" appears as a row in the navtree
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.drawing' }, { spaceId: $given.defaultSpace.id });
+        return rows.results.some((o) => o.dxn === $drawing.id);
+      note: |
+        `illustrator.create` is a factory: it returns a live, unfiled object, so this step exists and
+        must be coalesced with the previous one (qa.mdl Execution Rule 2 — a live object cannot cross
+        a snippet boundary). `addObject` returns `{ id }`, the object's `echo://` URI, which is what
+        the embed step writes into the document.
+    - name: Draw the box diagram
+      do: On the canvas, draw a box each for DXOS, ECHO, HALO and MESH and connect them — or ask the assistant to render the flowchart below.
+      invoke: |
+        org.dxos.operation.illustrator.generate {
+          drawing: Ref($drawing.id),
+          source: "flowchart TB\n  DXOS[DXOS]\n  ECHO[ECHO]\n  HALO[HALO]\n  MESH[MESH]\n  DXOS o--> ECHO\n  DXOS o--> HALO\n  DXOS o--> MESH\n  ECHO -->|identity| HALO\n  ECHO -->|replication| MESH\n"
+        }
+      space: $given.defaultSpace.id
+      expect: four labelled boxes render on the tldraw canvas — DXOS above ECHO, HALO and MESH — with the containment and reference connectors between them, and the layout report carries no `error`
+      assert: |
+        return $result.upserted.length >= 4 &&
+          !$result.diagnostics.some((d) => d.severity === 'error') && $stepErrors.length === 0;
+      note: |
+        The mermaid dialect owns the layout, so no coordinates are supplied. `o-->` is the
+        containment edge and `-->` a plain reference (`packages/common/diagram/src/mermaid.ts`).
+        A `diagnostics` entry of severity `error` (an overlap, a connector through a box, a label
+        that overflows) means the diagram is illegible even though the operation succeeded — that is
+        the point of checking it rather than the return code.
+    - name: Insert the diagram into the document
+      id: embed
+      do: Back in the document, put the cursor at the end and paste a link to the drawing on its own line; it renders as an embedded canvas.
+      invoke: |
+        org.dxos.operation.markdown.update {
+          doc: Ref($doc.id),
+          edits: [{ newString: "\n## Architecture\n\n![QA: Architecture $runId]($drawing.id)\n" }]
+        }
+      space: $given.defaultSpace.id
+      expect: the document ends with an "Architecture" heading and the drawing rendered inline, not a bare link
+      assert: |
+        const { content } = await composer.invoke('org.dxos.operation.markdown.open',
+          { doc: dxos.Ref.make(dxos.spaces('${$given.defaultSpace.id}').db.getObjectById('${$doc.objectId}')) },
+          { spaceId: $given.defaultSpace.id });
+        return content.includes(`![QA: Architecture ${$runId}](${$drawing.id})`) &&
+          document.querySelectorAll('[data-testid="markdown.embed"]').length >= 1 &&
+          $stepErrors.length === 0;
+      note: |
+        A link whose URL is an `echo://` URI is rendered by a widget rather than as text: alone on its
+        line (the `!` form) it becomes a block embed, inside a sentence an inline chip
+        (`ui-editor/src/extensions/widgets/link-widgets.ts`). The DOM check is deliberate — the
+        markdown alone would be satisfied by a document that renders the link as literal text, which
+        is exactly what a broken widget registration looks like.
+    - name: Navigate into the diagram
+      id: into
+      do: Click the ⧉ button in the corner of the embedded canvas.
+      invoke: |
+        org.dxos.operation.appToolkit.open {
+          subject: ["root/$given.defaultSpace.id/content/collections/$drawing.objectId"],
+          pivotId: "root/$given.defaultSpace.id/content/collections/$doc.objectId",
+          disposition: "add"
+        }
+      expect: the drawing opens as its own plank beside the document — the document stays open, it is not replaced
+      assert: |
+        const docPath = `root/${$given.defaultSpace.id}/content/collections/${$doc.objectId}`;
+        const drawingPath = `root/${$given.defaultSpace.id}/content/collections/${$drawing.objectId}`;
+        return $snapshot.layout.active.includes(drawingPath) && $snapshot.layout.active.includes(docPath) &&
+          $snapshot.planks.some((p) => p.subject?.typename === 'org.dxos.type.drawing') &&
+          $stepErrors.length === 0;
+      note: |
+        The embed's Open button passes `disposition: 'add'` with the document as `pivotId`
+        (`plugin-markdown/src/components/PreviewComponent/PreviewComponent.tsx`), so the deck slides
+        rather than navigates. A step that ends with only the drawing open is the `solo` disposition,
+        which is a different gesture and a regression here.
+    - name: And back again
+      do: Close the drawing's plank from its ⋮ menu (or press Escape and click the document).
+      invoke: org.dxos.operation.appToolkit.close { subject: ["root/$given.defaultSpace.id/content/collections/$drawing.objectId"] }
+      expect: the deck is back to the document alone, still showing the embedded diagram and the three threads
+      assert: |
+        const docPath = `root/${$given.defaultSpace.id}/content/collections/${$doc.objectId}`;
+        const drawingPath = `root/${$given.defaultSpace.id}/content/collections/${$drawing.objectId}`;
+        const plank = $snapshot.planks.find((p) => p.label === `QA: Composer ${$runId}`);
+        return $snapshot.layout.active.includes(docPath) && !$snapshot.layout.active.includes(drawingPath) &&
+          plank?.comments?.length === 3 && $stepErrors.length === 0;
+  after:
+    - name: Remove the document and the drawing
+      do: Delete "QA: Composer $runId" and "QA: Architecture $runId" from their ⋮ menus.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc.id), Obj($drawing.id)] }
+      space: $given.defaultSpace.id
+      expect: both rows leave the navtree and their planks close
+      assert: |
+        const docs = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $given.defaultSpace.id });
+        const drawings = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.drawing' }, { spaceId: $given.defaultSpace.id });
+        return !docs.results.some((o) => o.dxn === $doc.id) &&
+          !drawings.results.some((o) => o.dxn === $drawing.id);
+      note: |
+        The drawing's `Canvas` is hidden and reached only through `Drawing.canvas`, so removing the
+        drawing is what makes it unreachable; it is not a navtree row to delete separately.
+    - name: Return to the README
+      do: Click "README" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.defaultSpace.id/content/collections/$given.readme.objectId"] }
+      expect: the README is the only plank, no "QA:" object remains, and no error is logged
+      assert: |
+        return $snapshot.planks.some((p) => p.label === 'README') &&
+          !$snapshot.planks.some((p) => p.label?.startsWith('QA:')) && $stepErrors.length === 0;
+  then:
+    - the document survives a reload with its three threads and its embedded drawing intact
+```
+
 ## Suites
 
 ```mdl
@@ -696,6 +924,15 @@ suite assistant: Journeys that need an AI provider
   desc: Runs only where the assistant settings name a reachable provider; otherwise reports blocked.
   tags: [ai]
   tests: [QA-4]
+```
+
+```mdl
+suite walkthrough: The newcomer's tour, end to end
+  desc: |
+    One journey across markdown, review, illustrator and tldraw — the flow the demo recording
+    follows. Its own suite because it is the only test that embeds one object in another.
+  tags: [nightly, demo]
+  tests: [QA-10]
 ```
 
 ```mdl
