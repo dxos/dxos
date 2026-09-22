@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Database, Entity, Obj } from '@dxos/echo';
@@ -13,7 +14,7 @@ import { DXN, EID } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
 import { getProjectArtifactPath, getProjectChatPath } from '../paths.ts';
-import { isArtifactOf } from './app-graph-builder.ts';
+import { artifacts } from './app-graph-builder.ts';
 
 /**
  * Places a project's chats on its Chats branch and the artifacts it is parent of on its Artifacts
@@ -49,7 +50,7 @@ export default Capability.makeModule(
 
         const path = Obj.instanceOf(Chat.Chat, object)
           ? getProjectChatPath(db.spaceId, project.id, object.id)
-          : isArtifactOf(project, object)
+          : ContainerModel.includes(artifacts(project), object)
             ? getProjectArtifactPath(db.spaceId, project.id, object.id)
             : undefined;
         if (!path) {

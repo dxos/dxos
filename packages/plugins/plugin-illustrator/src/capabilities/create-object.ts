@@ -37,7 +37,7 @@ export default Capability.makeModule(
                 .pipe(Effect.provideService(Database.Service, Database.makeService(options.db)))
             : Drawing.makeCanvas({ schema: variant.id });
 
-          // Add the canvas to the database. It carries HiddenAnnotation, so `CollectionModel.add`
+          // Add the canvas to the database. It carries HiddenAnnotation, so `ContainerModel.add`
           // persists it without filing it into the target collection.
           yield* Operation.invoke(
             SpaceOperation.AddObject,

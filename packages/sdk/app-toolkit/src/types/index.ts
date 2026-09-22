@@ -3,5 +3,5 @@
 //
 
 export * as AppSettings from './AppSettings.ts';
-export * as CollectionModel from './CollectionModel.ts';
 export * as ConnectorSync from './ConnectorSync.ts';
+export * as ContainerModel from './ContainerModel.ts';

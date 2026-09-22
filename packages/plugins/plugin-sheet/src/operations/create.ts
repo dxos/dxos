@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.Create> = SheetOperat
   Operation.withHandler(
     Effect.fn(function* ({ name, rows, columns }) {
       const object = yield* Database.add(Sheet.make({ name, rows, columns }));
-      yield* CollectionModel.add({ object }).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.void));
+      yield* ContainerModel.add({ object }).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.void));
       yield* Database.flush();
       return { id: Obj.getURI(object) };
     }),

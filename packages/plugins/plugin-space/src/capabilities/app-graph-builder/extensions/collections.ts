@@ -12,6 +12,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -185,7 +186,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 deck: collectionDeck(object, ephemeralState.navigableCollections),
                 canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                 onRearrange: collectionRef?.target
-                  ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
+                  ? AppNode.makeRearrangeCallback(ContainerModel.collection(collectionRef.target))
                   : undefined,
               }),
             )
@@ -248,7 +249,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   navigable: true,
                   deck: collectionDeck(object, ephemeralState.navigableCollections),
                   canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
-                  onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
+                  onRearrange: AppNode.makeRearrangeCallback(ContainerModel.collection(collection)),
                 }),
             )
             .filter(isNonNullable),
@@ -287,7 +288,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const db = Obj.getDatabase(object);
         const [parent] =
           container && db ? get(db.query(Query.select(Filter.id(object.id)).parent()).atom) : [undefined];
-        const linkedFrom = container && parent && parent.id !== container.object.id ? container : undefined;
+        const linkedFrom = container && ContainerModel.isLink(container, parent) ? container : undefined;
 
         return Effect.succeed(
           constructObjectActions({
@@ -357,7 +358,7 @@ const constructObjectActions = ({
   navigable?: boolean;
   parentCollection?: Collection.Collection;
   /** The container listing the object without owning it. */
-  linkedFrom?: AppNode.Container;
+  linkedFrom?: ContainerModel.Container;
 }) => {
   const db = Obj.getDatabase(object);
   invariant(db, 'Database not found');
@@ -413,7 +414,7 @@ const constructObjectActions = ({
           }),
           AppGraphNode.makeAction({
             id: 'removeFromContainer',
-            data: () => Effect.sync(() => linkedFrom.remove(object)),
+            data: () => Effect.sync(() => ContainerModel.unlink({ container: linkedFrom, object })),
             properties: {
               label: linkedFrom.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
               icon: 'ph--minus-circle--regular',

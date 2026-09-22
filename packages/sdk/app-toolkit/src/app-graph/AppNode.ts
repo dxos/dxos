@@ -20,7 +20,7 @@ import { type Position } from '@dxos/util';
 import { NotFound } from '../app/index.ts';
 import { Translations } from '../app/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
-import * as CollectionModel from '../types/CollectionModel.ts';
+import * as ContainerModel from '../types/ContainerModel.ts';
 import * as DeckSpec from './DeckSpec.ts';
 
 //
@@ -90,7 +90,7 @@ export const CAN_DROP_OBJECT = (source: TreeData) =>
 export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
   AppGraphNode.isGraphNode(source.item) &&
   Obj.isObject(source.item.data) &&
-  CollectionModel.isCollectionItem(source.item.data);
+  ContainerModel.isCollectionItem(source.item.data);
 
 //
 // Module-level caches.
@@ -98,66 +98,68 @@ export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
 
 export const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
 export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
+export const containerPartialsCache = new Map<string, ReturnType<typeof buildContainerPartials>>();
 
-/** Stable rearrange callback that reorders a Collection's objects array. Keyed by collection URI. */
-export const makeCollectionRearrangeCallback = createFactory(
-  (collection: Collection.Collection) => (nextOrder: unknown[]) => {
-    Obj.update(collection, (collection) => {
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-    });
-  },
-  (collection) => Obj.getURI(collection),
+const containerKey = (container: ContainerModel.Container): string =>
+  `${Obj.getURI(container.object)}#${container.property}`;
+
+/** Stable rearrange callback that reorders a container's list. Keyed by container. */
+export const makeRearrangeCallback = createFactory(
+  (container: ContainerModel.Container) => (nextOrder: unknown[]) =>
+    ContainerModel.reorder({ container, objects: nextOrder.filter(Obj.isObject) }),
+  containerKey,
 );
 
 //
 // Containers.
 //
 
-/** Node property on a branch whose children are listed in an object that may not own them. */
+/** Node property on a branch whose children are a container's list. */
 export const CONTAINER_PROPERTY = 'container';
 
-export type Container = {
-  /** The object listing the children. */
-  object: Obj.Unknown;
-  /** Drops a child from the list, leaving the child itself alone. */
-  remove: (object: Obj.Unknown) => void;
-  removeLabel?: Translations.Label;
+export const getContainer = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[CONTAINER_PROPERTY];
+
+/** Drop handling for a node showing a container's list: a drop from its move scope moves, any other links. */
+const buildContainerPartials = (container: ContainerModel.Container, db: Database.Database) => {
+  const link = (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+    ContainerModel.link({ container, object: child.data, index });
+
+  return {
+    acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+    acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+    transferScope: container.moveScope,
+    onTransferStart: link,
+    onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) => {
+      const to = getContainer(destination);
+      if (to) {
+        ContainerModel.move({ object: child.data, from: container, to });
+      }
+    },
+    onLink: link,
+    [CONTAINER_PROPERTY]: container,
+  };
 };
 
-export const getContainer = (node: AppGraphNode.Node | undefined): Container | undefined =>
-  node?.properties[CONTAINER_PROPERTY];
+export const getContainerPartials = (container: ContainerModel.Container, db: Database.Database) => {
+  const key = containerKey(container);
+  let cached = containerPartialsCache.get(key);
+  if (!cached) {
+    cached = buildContainerPartials(container, db);
+    containerPartialsCache.set(key, cached);
+  }
+  return cached;
+};
 
 //
 // Collection partials.
 //
 
-/** Collections move items among themselves; a drop from anywhere else links. */
-const COLLECTION_TRANSFER_SCOPE = 'collection';
-
-const linkChild = (collection: Collection.Collection) => (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
-  if (CollectionModel.isCollectionItem(child.data)) {
-    CollectionModel.link({ object: child.data, to: collection, index });
-  }
-};
-
 /** Build collection partials for drag/drop behavior. */
 export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
-  acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-  acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
-  transferScope: COLLECTION_TRANSFER_SCOPE,
-  onTransferStart: linkChild(collection),
-  onLink: linkChild(collection),
-  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) => {
-    const target =
-      Obj.isObject(destination.data) && Collection.isCollection(destination.data) ? destination.data : undefined;
-    if (target) {
-      CollectionModel.move({ object: child.data, from: collection, to: target });
-    } else {
-      CollectionModel.unlink({ object: child.data, from: collection });
-    }
-  },
+  ...getContainerPartials(ContainerModel.collection(collection), db),
   // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
   // onCopy: async (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
   //   const newObject = await cloneObject(child.data, resolve, db);
@@ -170,10 +172,6 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   //     }
   //   });
   // },
-  [CONTAINER_PROPERTY]: {
-    object: collection,
-    remove: (object) => CollectionModel.unlink({ object, from: collection }),
-  } satisfies Container,
 });
 
 export const getCollectionGraphNodePartials = ({
@@ -207,7 +205,7 @@ export const makeObject = ({
   navigable = false,
   deck,
   onRearrange,
-  onLink,
+  container,
   canDrop: canDropOverride,
   blockInstruction: blockInstructionOverride,
 }: {
@@ -228,8 +226,8 @@ export const makeObject = ({
   deck?: DeckSpec.DeckSpec;
   /** Rearrange callback invoked with the next sibling order on drop. */
   onRearrange?: (nextOrder: unknown[]) => void;
-  /** Accepts an object dropped onto this row as a link to it. */
-  onLink?: (node: AppGraphNode.Node<Obj.Unknown>, index?: number) => void;
+  /** The list this row stands for; objects dropped onto the row join it. */
+  container?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
   /** Blocks drop instructions the row accepts from some sources but not others. */
@@ -306,13 +304,7 @@ export const makeObject = ({
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
       onRearrange,
-      ...(onLink
-        ? {
-            acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-            acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
-            onLink,
-          }
-        : {}),
+      ...(container ? getContainerPartials(container, db) : {}),
       blockInstruction,
       canDrop,
       [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,

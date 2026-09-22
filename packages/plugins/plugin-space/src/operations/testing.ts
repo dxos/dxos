@@ -21,7 +21,7 @@ export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.exampl
 ) {}
 
 /**
- * A type eligible to live in a collection, which is what routes `CollectionModel.add` through its
+ * A type eligible to live in a collection, which is what routes `ContainerModel.add` through its
  * root-collection branch — the one that files a ref without persisting the object itself.
  */
 export class TestCollectionItem extends Type.makeObject<TestCollectionItem>(

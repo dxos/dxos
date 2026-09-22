@@ -11,14 +11,14 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -42,13 +42,8 @@ export default Capability.makeModule(
       urlKey: 'project',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
-      linkObject: (project, object) => {
-        if (Obj.instanceOf(Project.Project, project) && !isArtifactOf(project, object)) {
-          Obj.update(project, (project) => {
-            project.artifacts.push(Ref.make(object));
-          });
-        }
-      },
+      // The section only lists projects.
+      container: (project) => artifacts(project as Project.Project),
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -261,24 +256,9 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
-const refersTo = (ref: Ref.Ref<Obj.Unknown>, object: Obj.Unknown): boolean => {
-  const eid = EID.tryParse(ref.uri);
-  return eid !== undefined && EID.getEntityId(eid) === object.id;
-};
-
-/** Whether `project.artifacts` lists the object. */
-export const isArtifactOf = (project: Project.Project, object: Obj.Unknown): boolean =>
-  project.artifacts.some((ref) => refersTo(ref, object));
-
-/** Stable rearrange callback that persists a project's artifact order. Keyed by project URI. */
-const makeArtifactsRearrangeCallback = AppNode.createFactory(
-  (project: Project.Project) => (nextOrder: unknown[]) => {
-    Obj.update(project, (project) => {
-      project.artifacts = nextOrder.filter(Obj.isObject).map((object) => Ref.make(object));
-    });
-  },
-  (project) => Obj.getURI(project),
-);
+/** A project's artifacts, as a container. */
+export const artifacts = (project: Project.Project): ContainerModel.Container =>
+  ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
 
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
@@ -335,14 +315,7 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
-            [AppNode.CONTAINER_PROPERTY]: {
-              object: project,
-              remove: (object) =>
-                Obj.update(project, (project) => {
-                  project.artifacts = project.artifacts.filter((ref) => !refersTo(ref, object));
-                }),
-              removeLabel: ['remove-from-project.label', { ns: meta.profile.key }],
-            } satisfies AppNode.Container,
+            [AppNode.CONTAINER_PROPERTY]: artifacts(project),
           },
         }),
       ]),
@@ -373,9 +346,11 @@ export const createProjectArtifactsActionExtension = () =>
       }
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
-      const onRearrange = makeArtifactsRearrangeCallback(project);
+      const container = artifacts(project);
+      const onRearrange = AppNode.makeRearrangeCallback(container);
       // Artifacts only reorder among themselves; other objects link by dropping onto the project row.
-      const canDrop = ({ item }: { item: any }) => Obj.isObject(item?.data) && isArtifactOf(project, item.data);
+      const canDrop = ({ item }: { item: any }) =>
+        Obj.isObject(item?.data) && ContainerModel.includes(container, item.data);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true, onRearrange, canDrop }))

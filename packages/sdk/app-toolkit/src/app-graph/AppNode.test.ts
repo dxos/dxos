@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Annotation, Collection, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 import * as AppNode from './AppNode.ts';
 
@@ -17,6 +18,7 @@ const TYPENAME = 'com.example.type.doc';
 const Doc = Type.makeObject(DXN.make(TYPENAME, '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
+    CollectionItemAnnotation.set(true),
   ),
 );
 
@@ -85,7 +87,9 @@ describe('collection partials: transfer', () => {
   const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
     const node = { data: doc } as any;
     AppNode.buildCollectionPartials(to, db).onTransferStart(node);
-    AppNode.buildCollectionPartials(from, db).onTransferEnd(node, { data: to } as any);
+    AppNode.buildCollectionPartials(from, db).onTransferEnd(node, {
+      properties: AppNode.buildCollectionPartials(to, db),
+    } as any);
   };
 
   test('dragging between collections re-parents the object', async ({ expect }) => {

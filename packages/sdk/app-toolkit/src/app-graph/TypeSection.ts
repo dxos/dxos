@@ -20,6 +20,7 @@ import { Position, inferObjectOrder } from '@dxos/util';
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
+import * as ContainerModel from '../types/ContainerModel.ts';
 
 /** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
 export const makeSectionRearrangeCallback = AppNode.createFactory(
@@ -116,10 +117,10 @@ export const createTypeSectionExtension = (
      */
     sectionUrlKey?: string;
     /**
-     * Links an object dropped onto one of the section's objects into it. Without it a section object
-     * only accepts objects of its own type, as reorders.
+     * The list each section object stands for; an object dropped onto its row joins that list. Without
+     * it a section object only accepts objects of its own type, as reorders.
      */
-    linkObject?: (target: Obj.Unknown, object: Obj.Unknown) => void;
+    container?: (object: Obj.Unknown) => ContainerModel.Container;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -165,14 +166,10 @@ export const createTypeSectionExtension = (
     );
   };
 
-  const { linkObject } = options;
-  // Same-type objects reorder between rows; anything else links by dropping onto a row.
-  const blockLinkInstruction = (source: TreeData, instruction: AppNode.Instruction) =>
+  const { container } = options;
+  // Same-type objects reorder between rows; anything else joins a row's list by dropping onto it.
+  const blockListInstruction = (source: TreeData, instruction: AppNode.Instruction) =>
     canDropSameType(source) ? instruction.type === 'make-child' : instruction.type !== 'make-child';
-  const makeOnLink = AppNode.createFactory(
-    (target: Obj.Unknown) => (node: AppGraphNode.Node<Obj.Unknown>) => linkObject?.(target, node.data),
-    (target) => Obj.getURI(target),
-  );
 
   const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
     const onRearrange = makeSectionRearrangeCallback(space, typename);
@@ -183,8 +180,8 @@ export const createTypeSectionExtension = (
           db: space.db,
           object,
           onRearrange,
-          ...(linkObject
-            ? { onLink: makeOnLink(object), canDrop: AppNode.CAN_DROP_OBJECT, blockInstruction: blockLinkInstruction }
+          ...(container
+            ? { container: container(object), canDrop: AppNode.CAN_DROP_OBJECT, blockInstruction: blockListInstruction }
             : { canDrop: canDropSameType }),
         }),
       )

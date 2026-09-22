@@ -10,8 +10,9 @@ import { Annotation, Collection, Database, DXN, Obj, Ref, Type } from '@dxos/ech
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
-import * as CollectionModel from './CollectionModel.ts';
+import * as ContainerModel from './ContainerModel.ts';
 
 describe('containing', () => {
   let builder: EchoTestBuilder;
@@ -31,7 +32,7 @@ describe('containing', () => {
     db.add(Collection.make({ name: 'Other', objects: [] }));
     await db.flush();
 
-    const results = await db.query(CollectionModel.containing(person)).run();
+    const results = await db.query(ContainerModel.containing(person)).run();
     expect(results.map((result) => result.id)).toEqual([collection.id]);
   });
 
@@ -41,7 +42,7 @@ describe('containing', () => {
     db.add(Collection.make({ name: 'People', objects: [] }));
     await db.flush();
 
-    const results = await db.query(CollectionModel.containing(person)).run();
+    const results = await db.query(ContainerModel.containing(person)).run();
     expect(results).toEqual([]);
   });
 });
@@ -63,7 +64,7 @@ describe('add', () => {
   ) {}
 
   const add = (db: EchoDatabase, props: { object: Obj.Unknown; target?: Collection.Collection }) =>
-    CollectionModel.add(props).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
+    ContainerModel.add(props).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
 
   test('files a visible object into the target collection', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
@@ -88,6 +89,11 @@ describe('add', () => {
   });
 });
 
+/** A type collections accept. */
+const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }).pipe(CollectionItemAnnotation.set(true)),
+);
+
 describe('ownership', () => {
   let builder: EchoTestBuilder;
 
@@ -99,11 +105,11 @@ describe('ownership', () => {
     await builder.close();
   });
 
-  const createDatabase = () => builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
+  const createDatabase = () => builder.createDatabase({ types: [Collection.Collection, Item] });
 
   test('the first collection to reference an object becomes its parent', async ({ expect }) => {
     const { db } = await createDatabase();
-    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const person = db.add(Obj.make(Item, { name: 'alice' }));
     const first = db.add(Collection.make({ objects: [Ref.make(person)] }));
     const second = db.add(Collection.make({ objects: [] }));
     Obj.update(second, (second) => {
@@ -116,10 +122,10 @@ describe('ownership', () => {
 
   test('moving from the owning collection hands ownership to the destination', async ({ expect }) => {
     const { db } = await createDatabase();
-    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const person = db.add(Obj.make(Item, { name: 'alice' }));
     const from = db.add(Collection.make({ objects: [Ref.make(person)] }));
     const to = db.add(Collection.make({ objects: [] }));
-    CollectionModel.move({ object: person, from, to });
+    ContainerModel.move({ object: person, from: ContainerModel.collection(from), to: ContainerModel.collection(to) });
     await db.flush();
 
     expect(from.objects).toHaveLength(0);
@@ -129,14 +135,18 @@ describe('ownership', () => {
 
   test('moving a linked object moves the link and leaves ownership alone', async ({ expect }) => {
     const { db } = await createDatabase();
-    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const person = db.add(Obj.make(Item, { name: 'alice' }));
     const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
     const linked = db.add(Collection.make({ objects: [] }));
     Obj.update(linked, (linked) => {
       linked.objects.push(Ref.make(person));
     });
     const elsewhere = db.add(Collection.make({ objects: [] }));
-    CollectionModel.move({ object: person, from: linked, to: elsewhere });
+    ContainerModel.move({
+      object: person,
+      from: ContainerModel.collection(linked),
+      to: ContainerModel.collection(elsewhere),
+    });
     await db.flush();
 
     expect(Obj.getParent(person)?.id).toBe(owner.id);
@@ -146,11 +156,11 @@ describe('ownership', () => {
 
   test('linking lists the object once and leaves its parent', async ({ expect }) => {
     const { db } = await createDatabase();
-    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const person = db.add(Obj.make(Item, { name: 'alice' }));
     const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
     const linked = db.add(Collection.make({ objects: [] }));
-    CollectionModel.link({ object: person, to: linked });
-    CollectionModel.link({ object: person, to: linked });
+    ContainerModel.link({ container: ContainerModel.collection(linked), object: person });
+    ContainerModel.link({ container: ContainerModel.collection(linked), object: person });
     await db.flush();
 
     expect(linked.objects).toHaveLength(1);
@@ -159,13 +169,13 @@ describe('ownership', () => {
 
   test('unlinking drops the reference and leaves the object and its parent', async ({ expect }) => {
     const { db } = await createDatabase();
-    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const person = db.add(Obj.make(Item, { name: 'alice' }));
     const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
     const linked = db.add(Collection.make({ objects: [] }));
     Obj.update(linked, (linked) => {
       linked.objects.push(Ref.make(person));
     });
-    CollectionModel.unlink({ object: person, from: linked });
+    ContainerModel.unlink({ container: ContainerModel.collection(linked), object: person });
     await db.flush();
 
     expect(linked.objects).toHaveLength(0);
@@ -174,14 +184,14 @@ describe('ownership', () => {
 
   test('a target that is not a collection persists the object without filing it', async ({ expect }) => {
     const { db } = await createDatabase();
-    const person = Obj.make(TestSchema.Person, { name: 'alice' });
+    const person = Obj.make(Item, { name: 'alice' });
     // Stands in for a project.
-    const target = db.add(Obj.make(TestSchema.Person, { name: 'target' }));
-    await CollectionModel.add({ object: person, target }).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
+    const target = db.add(Obj.make(Item, { name: 'target' }));
+    await ContainerModel.add({ object: person, target }).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
     await db.flush();
 
     expect(Obj.getDatabase(person)).toBeDefined();
-    const results = await db.query(CollectionModel.containing(person)).run();
+    const results = await db.query(ContainerModel.containing(person)).run();
     expect(results).toEqual([]);
   });
 });
