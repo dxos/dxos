@@ -96,11 +96,18 @@ const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_T
 const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
 
 /**
- * Where to take a memory snapshot (`DX_PERF_SNAPSHOTS`, comma-separated): any stage id, or `idle`
- * for the settled app before the fixture exists. Off by default — a snapshot of a loaded tab takes
- * minutes and writes hundreds of megabytes.
+ * Where to take a memory snapshot (`DX_PERF_SNAPSHOTS`, comma-separated): any stage id, `idle` for
+ * the settled app before the fixture exists, or `end` for the app {@link END_SETTLE_MS} after the
+ * last stage. Off by default — a snapshot of a loaded tab takes minutes and writes hundreds of
+ * megabytes.
  */
 const SNAPSHOTS = new Set((process.env.DX_PERF_SNAPSHOTS ?? '').split(',').filter(Boolean));
+
+/**
+ * Wait before the `end` snapshot: twice the app registry's 5 s idle TTL, so atoms nothing reads any
+ * more have been dropped and what remains is what the app retains.
+ */
+const END_SETTLE_MS = 10_000;
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
@@ -272,20 +279,25 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     await page.waitForTimeout(SETTLE_MS);
 
-    // Outside every stage, like the fixture: the settled app with no data in it, the floor the
-    // end-of-flow snapshot is read against.
-    if (SNAPSHOTS.has('idle')) {
-      const idleTargets = await attachAll(debugPort);
+    // A snapshot outside every stage, on its own sessions so the runner's stay untouched.
+    const snapshotCheckpoint = async (checkpoint: string) => {
+      const checkpointTargets = await attachAll(debugPort);
       try {
         const snapshot = await takeMemorySnapshot({
           browserCdp,
-          targets: idleTargets,
-          dir: path.join(snapshotDir, 'idle'),
+          targets: checkpointTargets,
+          dir: path.join(snapshotDir, checkpoint),
         });
-        log.info('idle snapshot', { dir: snapshot.dir, realms: snapshot.realms.length });
+        log.info('checkpoint snapshot', { checkpoint, dir: snapshot.dir, realms: snapshot.realms.length });
       } finally {
-        detachAll(idleTargets);
+        detachAll(checkpointTargets);
       }
+    };
+
+    // Outside every stage, like the fixture: the settled app with no data in it, the floor the
+    // end-of-flow snapshot is read against.
+    if (SNAPSHOTS.has('idle')) {
+      await snapshotCheckpoint('idle');
     }
 
     // Fixture generation is deliberately OUTSIDE any stage: it is setup, and its cost is not a
@@ -444,6 +456,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     }
 
     runner.dispose();
+
+    // After the rows are written, so the wait and the snapshot touch no measured stage.
+    if (SNAPSHOTS.has('end')) {
+      await page.waitForTimeout(END_SETTLE_MS);
+      await snapshotCheckpoint('end');
+    }
 
     for (const row of rows) {
       log.info('stage', {
