@@ -82,7 +82,6 @@ describe('collection partials: transfer', () => {
     await testBuilder.close();
   });
 
-  /** The two calls the navtree makes on a cross-collection drop, in the order it makes them. */
   const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
     const node = { data: doc } as any;
     AppNode.buildCollectionPartials(to, db).onTransferStart(node);

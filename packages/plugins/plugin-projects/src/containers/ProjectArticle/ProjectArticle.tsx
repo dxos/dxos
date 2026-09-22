@@ -195,16 +195,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject, db],
   );
 
-  // The project is the target, so it holds the artifact and the object files into no collection;
-  // targeting the database instead would file it at the space root as well, and the same object
-  // would appear in the tree twice. A dismissed dialog leaves the project alone.
   const handleAddArtifact = useCallback(async () => {
     if (!db) {
       return;
     }
 
     const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
-      // The live object, not the render snapshot: the target is written to, not read.
       target: subject,
       targetNodeId: attendableId,
       navigable: false,

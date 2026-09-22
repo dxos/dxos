@@ -261,8 +261,6 @@ export const ObjectFormDialog = ({
     };
   }, [mode, db, type]);
 
-  // A database names the space rather than an object in it, so it means the space root, which
-  // downstream is the absence of a holder. Every other target holds what it creates.
   const holder = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
 
   const handleConfirm = useCallback(() => {
@@ -278,8 +276,7 @@ export const ObjectFormDialog = ({
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
     void Effect.gen(function* () {
-      // The object is already persisted; this hands it to its holder, which files it if it is a
-      // collection and otherwise only records that the object exists.
+      // The object is already persisted; this only hands it to its holder.
       yield* Operation.invoke(SpaceOperation.AddObject, { object, target: holder }, { spaceId: db?.spaceId });
       yield* navigateTo(object);
     }).pipe(
@@ -311,8 +308,6 @@ export const ObjectFormDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        // The dialog targets a database to mean "the space root"; downstream that is the absence of
-        // a collection, since `db` already says which space.
         const result = yield* metadata.createObject(data, { db, target: holder, targetNodeId });
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.

@@ -145,7 +145,6 @@ describe('deleting a project', () => {
 
   test('an artifact the project claimed is removed with it', async ({ expect }) => {
     const { db, project } = await setup();
-    // Nothing else held this object, so filing it made the project its parent.
     const artifact = db.add(Feed.make());
     Obj.update(project, (project) => {
       project.artifacts.push(Ref.make(artifact));
@@ -163,7 +162,6 @@ describe('deleting a project', () => {
   test('an artifact owned elsewhere survives, because the project only links it', async ({ expect }) => {
     const { db, project } = await setup();
     const artifact = db.add(Feed.make());
-    // A collection held it first, so the project's ref is a link and claims nothing.
     const collection = db.add(Collection.make({ objects: [Ref.make(artifact)] }));
     Obj.update(project, (project) => {
       project.artifacts.push(Ref.make(artifact));

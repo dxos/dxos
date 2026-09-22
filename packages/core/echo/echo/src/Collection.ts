@@ -20,7 +20,7 @@ import * as Type from './Type.ts';
 export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.type.collection', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    /** Members, in order. Owned only where no other holder claimed the object first. */
+    /** Members, in order. */
     objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
       Annotation.SetParent.set({ override: false }),
       internal.FormInputAnnotation.set(false),

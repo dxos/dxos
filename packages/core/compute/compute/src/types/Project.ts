@@ -37,7 +37,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
       Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(), Annotation.FormInlineAnnotation.set(true)),
     ),
 
-    /** Artifacts (documents, outliners, tables, ...), in order. Owned only where no other holder claimed one first. */
+    /** Artifacts (documents, outliners, tables, ...), in order. */
     artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
       Annotation.SetParent.set({ override: false }),
       Annotation.FormInputAnnotation.set(false),

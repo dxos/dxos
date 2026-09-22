@@ -142,7 +142,6 @@ describe('ownership', () => {
   test('moving a linked object moves the link and leaves ownership alone', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    // `owner` holds the object; `linked` gets a second reference to it, which claims nothing.
     const owner = db.add(Collection.make({ name: 'Owner', objects: [Ref.make(person)] }));
     const linked = db.add(Collection.make({ name: 'Linked', objects: [] }));
     Obj.update(linked, (linked) => {
@@ -178,8 +177,7 @@ describe('ownership', () => {
   test('a holder that is not a collection persists the object without filing it', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = Obj.make(TestSchema.Person, { name: 'alice' });
-    // Stands in for a project: it holds the object in a ref array of its own, so the collection
-    // machinery must leave it alone rather than file it at the space root.
+    // Stands in for a project: a holder that is not a collection.
     const holder = db.add(Obj.make(TestSchema.Person, { name: 'holder' }));
     await CollectionModel.add({ object: person, target: holder }).pipe(
       Effect.provide(Database.layer(db)),
@@ -214,20 +212,18 @@ describe('orderByRefs', () => {
     const collection = db.add(Collection.make({ objects: [Ref.make(carol), Ref.make(alice), Ref.make(bob)] }));
     await db.flush();
 
-    // Query results arrive in whatever order the engine produced them.
     const ordered = CollectionModel.orderByRefs([alice, bob, carol], collection.objects);
     expect(ordered.map((object) => object.name)).toEqual(['carol', 'alice', 'bob']);
   });
 
-  test('a dangling entry simply has no result and does not shift the rest', async ({ expect }) => {
+  test('a ref with no matching result does not shift the rest', async ({ expect }) => {
     const { db } = await createDatabase();
     const alice = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
-    const gone = db.add(Obj.make(TestSchema.Person, { name: 'gone' }));
+    const absent = db.add(Obj.make(TestSchema.Person, { name: 'absent' }));
     const bob = db.add(Obj.make(TestSchema.Person, { name: 'bob' }));
-    const collection = db.add(Collection.make({ objects: [Ref.make(alice), Ref.make(gone), Ref.make(bob)] }));
+    const collection = db.add(Collection.make({ objects: [Ref.make(alice), Ref.make(absent), Ref.make(bob)] }));
     await db.flush();
 
-    // The query omits the deleted target; its ref stays in the array as a dangling entry.
     const ordered = CollectionModel.orderByRefs([bob, alice], collection.objects);
     expect(ordered.map((object) => object.name)).toEqual(['alice', 'bob']);
   });
@@ -255,7 +251,6 @@ describe('reference traversal', () => {
     await builder.close();
   });
 
-  // The query the graph builders run in place of dereferencing `Collection.objects`.
   const members = (db: EchoDatabase, collection: Collection.Collection) =>
     db.query(Query.select(Filter.entity(collection)).reference('objects')).run();
 
@@ -282,7 +277,6 @@ describe('reference traversal', () => {
 
     const results = await members(db, collection);
     expect(results.map((object) => object.id)).toEqual([alice.id]);
-    // Nobody sweeps holders on deletion, so the count must come from the query, not the array.
     expect(collection.objects).toHaveLength(2);
   });
 });

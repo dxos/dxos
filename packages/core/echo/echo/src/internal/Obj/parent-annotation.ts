@@ -11,10 +11,7 @@ import { EntityKind } from '../common/types/entity.ts';
 import { KindId, ParentId, getSchema } from '../common/types/index.ts';
 import { Ref } from '../Ref/ref.ts';
 
-/**
- * An owning field: its path relative to the holder (nested inside plain structs, e.g.
- * `backend.config`) and whether a write through it takes a target that already has a parent.
- */
+/** An owning field; `path` is relative to the holder and may nest inside plain structs, e.g. `backend.config`. */
 type OwningField = { readonly path: readonly string[]; readonly override: boolean };
 
 /**
@@ -24,10 +21,6 @@ type OwningField = { readonly path: readonly string[]; readonly override: boolea
  */
 const cache = new WeakMap<SchemaAST.AST, readonly OwningField[]>();
 
-/**
- * The field's ownership, or undefined when it owns nothing — no annotation, or one turned off.
- * `override: false` claims only a parentless target.
- */
 const getOwnership = (ast: SchemaAST.AST): { override: boolean } | undefined => {
   const value = Option.getOrUndefined(getFromAst(ast, SetParentAnnotation));
   return value?.value ? { override: value.override } : undefined;
@@ -92,8 +85,6 @@ const setParent = (value: unknown, parent: unknown, override: boolean): void => 
   if (current?.id === (parent as any)?.id) {
     return;
   }
-  // A non-overriding field claims only what nobody owns, so the first holder to write the ref keeps
-  // the object and later holders merely reference it.
   if (!override && current != null) {
     return;
   }

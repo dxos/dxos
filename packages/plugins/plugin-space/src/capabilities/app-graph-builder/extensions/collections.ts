@@ -173,9 +173,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const rawRefs = collection.objects ?? [];
         const available = getAvailableTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
 
-        // Traverse the reference rather than dereference the array: the query engine treats a
-        // deleted target as absent, so a dangling entry never reaches the tree. Order is the
-        // array's, which a query does not preserve.
         const members = get(space.db.query(Query.select(Filter.entity(collection)).reference('objects')).atom);
         const objects = CollectionModel.orderByRefs(members, rawRefs).filter((object: Obj.Unknown) =>
           isTypeAvailable(available, object),
@@ -243,9 +240,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const refs = collectionSnapshot.objects ?? [];
         const available = db ? getAvailableTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
 
-        // Traverse the reference rather than dereference the array: the query engine treats a
-        // deleted target as absent, so a dangling entry never reaches the tree. Order is the
-        // array's, which a query does not preserve.
         const members = db
           ? get(db.query(Query.select(Filter.entity(collection)).reference('objects')).atom)
           : undefined;
@@ -370,7 +364,6 @@ const constructObjectActions = ({
   invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
-  // The collection this node sits under, when it only links the object rather than owning it.
   const linkedFrom = parentCollection && !Obj.isOwnedBy(object, parentCollection) ? parentCollection : undefined;
 
   const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
@@ -399,9 +392,6 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    // Delete belongs only where the object lives. A collection that merely links it offers the way
-    // back to its home instead, so the gesture cannot destroy it from somewhere it is a guest.
-    // Dropping the link is the counterpart and arrives with the action that creates one.
     ...(linkedFrom
       ? [
           AppGraphNode.makeAction({

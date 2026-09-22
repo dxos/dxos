@@ -342,9 +342,6 @@ export const createProjectArtifactsActionExtension = () =>
       // query this connector would otherwise re-run on.
       get(Obj.atom(project));
 
-      // Traverse the reference rather than dereference the array: targets are not in memory on a
-      // cold load, and the query engine treats a deleted target as absent, so a dangling entry
-      // never reaches the tree. Order is the array's, which a query does not preserve.
       const members = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       const objects = CollectionModel.orderByRefs(members, project.artifacts);
       return Effect.succeed(
@@ -364,9 +361,6 @@ export const createProjectArtifactsActionExtension = () =>
                 return;
               }
 
-              // The project is the target, so it holds the artifact and the object files into no
-              // collection; targeting the database instead would file it at the space root as
-              // well, and the same object would appear in the tree twice.
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                 target: project,
                 targetNodeId: nodeId,

@@ -17,11 +17,7 @@ import { AppAnnotation } from '../echo/index.ts';
 
 type AddProps = {
   object: Obj.Unknown;
-  /**
-   * The object that will hold this one. A collection files it; any other holder — a project taking
-   * it into its artifacts — files it nowhere, since only the holder knows how it keeps what it
-   * owns. Absent, the object files at the space root.
-   */
+  /** The object that will hold this one; absent, the object files at the space root. */
   target?: Obj.Unknown;
 };
 
@@ -41,10 +37,7 @@ const isHidden = (object: Obj.Unknown): boolean => {
   return type ? Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
 };
 
-/**
- * Returns true when the object is eligible to live inside a collection:
- * collections are always eligible; other types require {@link CollectionItemAnnotation}.
- */
+/** Returns true when the object is eligible to live inside a collection. */
 export const isCollectionItem = (object: Obj.Unknown): boolean => {
   if (Obj.instanceOf(Collection.Collection, object)) {
     return true;
@@ -56,30 +49,25 @@ export const isCollectionItem = (object: Obj.Unknown): boolean => {
   return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
 };
 
-/** Index of the object's ref in the collection, or -1. Matched by entity id, since the same object
- * may be addressed by a local or a space-qualified URI. */
+/** Index of the object's ref in the collection, or -1. */
+/** The entity a ref names, whether it is addressed locally or space-qualified. */
+const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
+  const eid = EID.tryParse(ref.uri);
+  return eid ? EID.getEntityId(eid) : undefined;
+};
+
 const indexOf = (collection: Collection.Collection, object: Obj.Unknown): number =>
-  collection.objects.findIndex((ref) => {
-    const eid = EID.tryParse(ref.uri);
-    return eid ? EID.getEntityId(eid) === object.id : false;
-  });
+  collection.objects.findIndex((ref) => refEntityId(ref) === object.id);
 
 type MoveProps = {
   object: Obj.Unknown;
-  /** The collection the object is leaving, when it is leaving one. */
   from?: Collection.Collection;
   to: Collection.Collection;
   /** Position in the destination; appended when absent. */
   index?: number;
 };
 
-/**
- * Moves an object between collections, carrying ownership with it.
- *
- * Ownership follows only when `from` owned the object — moving a link moves the link and leaves
- * the object where it lives. Removing a ref never clears a parent on its own, so a
- * move cannot be expressed as an unlink followed by an add.
- */
+/** Moves an object between collections; ownership follows only when `from` owned it. */
 export const move = ({ object, from, to, index }: MoveProps): void => {
   if (from?.id === to.id) {
     return;
@@ -103,7 +91,6 @@ export const move = ({ object, from, to, index }: MoveProps): void => {
       }
     });
   }
-  // After the destination holds the ref, so the parent edge it declares is already there.
   if (owned) {
     Obj.setParent(object, to);
   }
@@ -111,17 +98,12 @@ export const move = ({ object, from, to, index }: MoveProps): void => {
 
 /**
  * Sorts the results of a reference traversal back into the holder's array order.
- *
- * Membership is read with `Query.select(Filter.entity(holder)).reference('<prop>')` rather than by
- * dereferencing the array, because the query engine treats a deleted target as absent and so never
- * hands a caller a dangling entry. A query does not preserve order and the array is the order, so
- * the two halves belong together. An object the array does not name sorts last.
+ * An object the array does not name sorts last.
  */
 export const orderByRefs = <T extends Obj.Unknown>(objects: readonly T[], refs: readonly Ref.Ref<any>[]): T[] => {
   const position = new Map<string, number>();
   refs.forEach((ref, index) => {
-    const eid = EID.tryParse(ref.uri);
-    const id = eid ? EID.getEntityId(eid) : undefined;
+    const id = refEntityId(ref);
     // First occurrence wins: concurrent edits can merge the same ref into an array twice.
     if (id !== undefined && !position.has(id)) {
       position.set(id, index);
@@ -142,14 +124,13 @@ export const unlink = ({ object, from }: { object: Obj.Unknown; from: Collection
   });
 };
 
+/** A holder that is not a collection keeps what it owns its own way, so filing is not ours to do. */
+const filesItself = (target: Obj.Unknown | undefined): boolean =>
+  target !== undefined && !Collection.isCollection(target);
+
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);
-  // Two reasons an object joins no collection, one about the type and one about this call.
-  // A hidden type is an implementation detail reached through a ref on its owner (a sketch's
-  // canvas, a game's variant state), so it never files anywhere; filing one would surface it as a
-  // sibling of the object that owns it. A holder that is not a collection keeps what it owns its
-  // own way — a project in its artifacts — and filing here as well would show the object twice.
-  if (isHidden(object) || (target !== undefined && !Collection.isCollection(target))) {
+  if (isHidden(object) || filesItself(target)) {
     if (!Obj.getDatabase(object)) {
       yield* Database.add(object);
     }

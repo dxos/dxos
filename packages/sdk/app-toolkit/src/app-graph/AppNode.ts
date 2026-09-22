@@ -86,10 +86,6 @@ export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Se
 export const CAN_DROP_OBJECT = (source: TreeData) =>
   AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
-/**
- * Returns true when the object is eligible to live inside a collection.
- * @see CollectionModel.isCollectionItem
- */
 export const isCollectionItem = CollectionModel.isCollectionItem;
 
 /** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
@@ -137,9 +133,6 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
       }
     });
   },
-  // Runs after the destination has taken the ref, so this both drops the source's ref and hands
-  // ownership over when this collection was the object's canonical holder. A drag of a link moves
-  // only the link.
   onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) => {
     const target =
       Obj.isObject(destination.data) && Collection.isCollection(destination.data) ? destination.data : undefined;
