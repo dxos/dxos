@@ -147,6 +147,12 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
+ * Passes after which non-convergence is reported at `error` rather than `warn`: at a ~10s poll this
+ * is ~15min of a pair making no progress, which no in-flight replication explains.
+ */
+const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
+
+/**
  * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
  *
  * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
@@ -1545,24 +1551,35 @@ export class AutomergeHost extends Resource {
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
-      log.warn('collection sync not converging', {
+      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
+      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
+      // got a handle" when the document is resident and the remote holds a headless fragment for it.
+      const stuck = [...different, ...missingOnRemote];
+      const context = {
         collectionId,
         peerId,
         passes,
         missingOnLocal,
         missingOnRemote,
         different,
-        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
         // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the diverged document's storage or policy activity.
+        // searched for the stuck document's storage or policy activity.
         sedimentreeIds: Object.fromEntries(
-          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
         ),
         handleStates: Object.fromEntries(
-          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
         ),
-      });
+      };
+      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
+      // the call site, so an alias loses its file and line.
+      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
+        log.error('collection sync not converging', context);
+      } else {
+        log.warn('collection sync not converging', context);
+      }
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
