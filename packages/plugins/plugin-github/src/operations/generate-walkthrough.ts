@@ -21,7 +21,7 @@ import { GitHubOperation } from '#types';
 import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 import { GENERATE_PHASES, generateWalkthrough } from '../walkthrough/index.ts';
-import { githubToken } from './pull-request.ts';
+import { credentialsFor, githubToken, withAnonymousFallback } from './pull-request.ts';
 
 /**
  * One-shot for now; a multi-turn agent that reads the repository is the obvious next step.
@@ -65,13 +65,21 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
         return yield* Effect.gen(function* () {
           report(label, 0);
           const { owner, repo, number } = pullRequest;
-          const credentials = Layer.succeed(GitHubApi.GitHubCredentials, { token: yield* githubToken() });
+          const token = yield* githubToken();
+          // Both reads take the same anonymous retry the import path takes, and for the same reason:
+          // a public pull request must not fail because of a credential. A GitHub App token reaching
+          // only its own installations answers 404 on a public repository outside them, so a space
+          // that imported a pull request anonymously could not then narrate it (DX-1307).
+          const read = <T>(fetch: (owner: string, repo: string, number: number) => GitHubApi.GitHubEffect<T>) =>
+            withAnonymousFallback(token, (token) =>
+              fetch(owner, repo, number).pipe(Effect.provide(credentialsFor(token))),
+            );
 
           report(`${label}: reading the pull request`, 1);
-          const remote = yield* GitHubApi.fetchPullRequest(owner, repo, number).pipe(Effect.provide(credentials));
+          const remote = yield* read(GitHubApi.fetchPullRequest);
 
           report(`${label}: fetching the diff`, 2);
-          const diff = yield* GitHubApi.fetchPullRequestDiff(owner, repo, number).pipe(Effect.provide(credentials));
+          const diff = yield* read(GitHubApi.fetchPullRequestDiff);
 
           const result = yield* generateWalkthrough({
             pullRequest,

@@ -53,20 +53,27 @@ describe('generateWalkthrough', () => {
     await db.flush();
 
     const phases: { message: string; current: number }[] = [];
-    const run = (options: { commit?: string; force?: boolean; narration?: string } = {}) =>
-      EffectEx.runPromise(
+    const prompts: string[] = [];
+    // `narrations` answers a different thing per call, which is what the empty-answer retry needs.
+    const run = (options: { commit?: string; force?: boolean; narration?: string; narrations?: string[] } = {}) => {
+      const queued = options.narrations ? [...options.narrations] : undefined;
+      return EffectEx.runPromise(
         generateWalkthrough({
           pullRequest,
           remote: { commit: options.commit ?? 'sha-1' },
           diff: DIFF,
           force: options.force,
           model: 'test-model',
-          narrate: () => Effect.succeed(options.narration ?? NARRATION),
+          narrate: (prompt) => {
+            prompts.push(prompt);
+            return Effect.succeed(queued ? (queued.shift() ?? '') : (options.narration ?? NARRATION));
+          },
           report: (message, current) => phases.push({ message, current }),
         }).pipe(Effect.provide(Database.layer(db))),
       );
+    };
 
-    return { db, pullRequest, phases, run };
+    return { db, pullRequest, phases, prompts, run };
   };
 
   test('creates a walkthrough, filling the chunk from the patch', async () => {
@@ -101,6 +108,37 @@ describe('generateWalkthrough', () => {
     expect(second.walkthrough).to.eq(first.walkthrough);
     expect(second.walkthrough.body).to.contain('# A change');
     expect(second.covered).to.eq(1);
+  });
+
+  // The output allowance covers the model's reasoning as well as its answer, and adaptive reasoning
+  // occasionally spends all of it — the response carries a reasoning block and no text (DX-1307).
+  test('an empty answer is retried once', async () => {
+    const { run, prompts } = await setup();
+    const result = await run({ narrations: ['', NARRATION] });
+
+    expect(prompts).to.have.length(2);
+    expect(prompts[1]).to.eq(prompts[0]);
+    expect(result.generated).to.eq(true);
+    expect(result.walkthrough.body).to.contain('# A change');
+  });
+
+  test('whitespace alone counts as empty', async () => {
+    const { run, prompts } = await setup();
+    const result = await run({ narrations: ['   \n  ', NARRATION] });
+
+    expect(prompts).to.have.length(2);
+    expect(result.walkthrough.body).to.contain('# A change');
+  });
+
+  test('a second empty answer fails rather than storing a walkthrough with no prose', async () => {
+    const { run, db } = await setup();
+    await expect(run({ narrations: ['', ''] })).rejects.toThrow();
+
+    // Nothing was written: an appendix-only document reads as a walkthrough of an undescribed change.
+    const stored = await EffectEx.runPromise(
+      Database.query(Filter.type(Walkthrough.Walkthrough)).run.pipe(Effect.provide(Database.layer(db))),
+    );
+    expect(stored).to.have.length(0);
   });
 
   test('regenerates when forced', async () => {

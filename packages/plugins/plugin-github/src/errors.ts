@@ -30,6 +30,12 @@ export class GitHubPullRequestReferenceError extends BaseError.extend(
   'Not a pull request reference.',
 ) {}
 
+/** The model answered with no prose, so there is no walkthrough to store. */
+export class GitHubWalkthroughEmptyError extends BaseError.extend(
+  'GitHubWalkthroughEmptyError',
+  'Model produced no walkthrough.',
+) {}
+
 /** The local Project could not be re-resolved after its upsert. */
 export class GitHubProjectMissingError extends BaseError.extend(
   'GitHubProjectMissingError',

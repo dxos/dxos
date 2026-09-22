@@ -10,6 +10,7 @@ import { PullRequest } from '@dxos/types';
 
 import { Walkthrough } from '#types';
 
+import { GitHubWalkthroughEmptyError } from '../errors.ts';
 import { fillWalkthrough } from './fill.ts';
 import { SYSTEM_PROMPT, buildPrompt } from './prompt.ts';
 
@@ -93,7 +94,7 @@ export const generateWalkthrough = <R = never>({
       headBranch: remote.headBranch ?? pullRequest.headBranch,
       diff,
     });
-    const narration = yield* narrate(`${SYSTEM_PROMPT}\n\n---\n\n${prompt}`);
+    const narration = yield* narrateOrFail(narrate, `${SYSTEM_PROMPT}\n\n---\n\n${prompt}`);
 
     report('Filling the chunks', 4);
     const filled = fillWalkthrough(narration, diff);
@@ -110,6 +111,37 @@ export const generateWalkthrough = <R = never>({
 
     report(PROGRESS_STATUS_COMPLETE, GENERATE_PHASES);
     return { walkthrough, generated: true, covered: filled.covered, total: filled.total };
+  });
+
+/**
+ * The narration, retried once where the model answered with nothing at all.
+ *
+ * The output allowance covers the model's reasoning as well as its answer, and adaptive reasoning
+ * occasionally spends all of it: the response comes back `finishReason: 'length'` carrying a
+ * reasoning block and NO text. It is intermittent on one unchanged pull request — the same prompt
+ * that returns nothing answers in full on the next attempt — so a retry recovers it where a smaller
+ * diff budget only makes it rarer.
+ *
+ * A second empty answer is reported rather than stored. `fillWalkthrough` would otherwise turn it
+ * into a document that is nothing but the appended "Also changed" section, which reads as a
+ * successful walkthrough of a change nobody described.
+ */
+const narrateOrFail = <R>(
+  narrate: (prompt: string) => Effect.Effect<string, never, R>,
+  prompt: string,
+): Effect.Effect<string, never, R> =>
+  Effect.gen(function* () {
+    const first = yield* narrate(prompt);
+    if (first.trim().length > 0) {
+      return first;
+    }
+
+    const second = yield* narrate(prompt);
+    if (second.trim().length > 0) {
+      return second;
+    }
+
+    return yield* Effect.die(new GitHubWalkthroughEmptyError());
   });
 
 /** The walkthrough already written for this pull request, if any. */

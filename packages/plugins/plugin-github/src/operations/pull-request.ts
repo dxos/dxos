@@ -15,6 +15,56 @@ import { GITHUB_PROVIDER_ID } from '../constants.ts';
 import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 
+/** Credentials for one GitHub read; empty is the anonymous request a space with no connection makes. */
+export const credentialsFor = (token: string) => Layer.succeed(GitHubApi.GitHubCredentials, { token });
+
+/**
+ * Statuses that say nothing about what an anonymous reader can see, because the credential itself
+ * could have caused them.
+ *
+ * 404 is the load-bearing one. GitHub answers 404 rather than 403 wherever a credential lacks
+ * access, so as not to confirm what it cannot show, and a GitHub App user-to-server token — what
+ * this connector holds — reaches only the repositories the App is installed on. A public repository
+ * the App was never installed on therefore reads as absent. (A fine-grained PAT would not behave
+ * this way: those carry read access to every public repository regardless of their selection.)
+ */
+export const MAY_REFLECT_TOKEN_SCOPE = new Set([401, 403, 404]);
+
+/**
+ * Runs a GitHub read as the space's connection, retrying it anonymously whenever the token is what
+ * stood in the way.
+ *
+ * A public pull request must never fail because of a credential, and every read on the way to one
+ * has to honour that — not just the first. Three separate conditions make a reachable pull request
+ * look unreachable: a revoked token (401), a suspended or SSO-blocked one (403), and a repository
+ * outside the App installation the token belongs to (404). The anonymous retry, which is the same
+ * request a space with no connection would make, resolves all three; the cost is one extra request
+ * on a pull request that genuinely does not exist.
+ *
+ * `onTokenRejected` reports the authenticated attempt's status, so a caller that fails anyway can
+ * tell a rejected credential from a resource no one can reach.
+ */
+export const withAnonymousFallback = <A, E, R>(
+  token: string,
+  read: (token: string) => Effect.Effect<A, E, R>,
+  onTokenRejected: (status: number | undefined) => void = () => {},
+): Effect.Effect<A, E, R> =>
+  // Suspended so each run starts clean, rather than sharing the first run's decision.
+  Effect.suspend(() =>
+    read(token).pipe(
+      Effect.catchIf(
+        (error) => {
+          const status = GitHubApi.responseStatus(error);
+          return token !== '' && status !== undefined && MAY_REFLECT_TOKEN_SCOPE.has(status);
+        },
+        (error) => {
+          onTokenRejected(GitHubApi.responseStatus(error));
+          return read('');
+        },
+      ),
+    ),
+  );
+
 /**
  * The first GitHub connection token in the space, or empty for anonymous — which reaches any public
  * pull request, and is the only option in a space that has not connected GitHub.
