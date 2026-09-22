@@ -138,48 +138,52 @@ export class WebSocketMuxer {
       return buf.fromBinary(MessageSchema, data.slice(1));
     }
 
-    const [flags, channelId, ...payload] = data;
-    const chunkPayload = new Uint8Array(payload);
+    const flags = data[0];
+    const channelId = data[1];
+    // Measured before the copy, so an over-limit chunk is rejected without allocating it.
+    const chunkLength = Math.max(0, data.byteLength - 2);
     let chunkAccumulator = this._inMessageAccumulator.get(channelId);
-    if (chunkAccumulator) {
-      const totalBytes = (this._inMessageAccumulatorBytes.get(channelId) ?? 0) + chunkPayload.byteLength;
-      if (
-        totalBytes > MAX_INBOUND_MESSAGE_BYTES ||
-        chunkAccumulator.length >= MAX_INBOUND_CHUNK_COUNT ||
-        this._inMessageAccumulatedBytes + chunkPayload.byteLength > MAX_INBOUND_TOTAL_BYTES
-      ) {
-        this._dropAccumulator(channelId);
-        log.error('muxer dropped oversized segmented message', {
-          channelId,
-          chunkCount: chunkAccumulator.length + 1,
-          byteLength: totalBytes,
-          maxByteLength: MAX_INBOUND_MESSAGE_BYTES,
-          maxChunkCount: MAX_INBOUND_CHUNK_COUNT,
-          maxTotalByteLength: MAX_INBOUND_TOTAL_BYTES,
-        });
-        throw new SegmentedMessageLimitError(channelId, chunkAccumulator.length + 1, totalBytes);
-      }
 
+    // A first chunk is bounded like any other: an unchecked one would let a single oversized
+    // segment, or a fresh channel opened once the aggregate is full, past the limits entirely.
+    const chunkCount = (chunkAccumulator?.length ?? 0) + 1;
+    const channelBytes = (this._inMessageAccumulatorBytes.get(channelId) ?? 0) + chunkLength;
+    if (
+      channelBytes > MAX_INBOUND_MESSAGE_BYTES ||
+      chunkCount > MAX_INBOUND_CHUNK_COUNT ||
+      this._inMessageAccumulatedBytes + chunkLength > MAX_INBOUND_TOTAL_BYTES
+    ) {
+      this._dropAccumulator(channelId);
+      log.error('muxer dropped oversized segmented message', {
+        channelId,
+        chunkCount,
+        byteLength: channelBytes,
+        maxByteLength: MAX_INBOUND_MESSAGE_BYTES,
+        maxChunkCount: MAX_INBOUND_CHUNK_COUNT,
+        maxTotalByteLength: MAX_INBOUND_TOTAL_BYTES,
+      });
+      throw new SegmentedMessageLimitError(channelId, chunkCount, channelBytes);
+    }
+
+    const chunkPayload = data.slice(2);
+    if (chunkAccumulator) {
       chunkAccumulator.push(chunkPayload);
-      this._inMessageAccumulatorBytes.set(channelId, totalBytes);
-      this._inMessageAccumulatedBytes += chunkPayload.byteLength;
     } else {
       chunkAccumulator = [chunkPayload];
       this._inMessageAccumulator.set(channelId, chunkAccumulator);
-      this._inMessageAccumulatorBytes.set(channelId, chunkPayload.byteLength);
-      this._inMessageAccumulatedBytes += chunkPayload.byteLength;
       log.debug('muxer started receiving segmented message', {
         channelId,
-        firstChunkBytes: chunkPayload.byteLength,
+        firstChunkBytes: chunkLength,
       });
     }
+    this._inMessageAccumulatorBytes.set(channelId, channelBytes);
+    this._inMessageAccumulatedBytes += chunkLength;
 
     if ((flags & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
       return undefined;
     }
 
     const reassembled = concatUint8Arrays(chunkAccumulator);
-    const chunkCount = chunkAccumulator.length;
     this._dropAccumulator(channelId);
     try {
       const message = buf.fromBinary(MessageSchema, reassembled);

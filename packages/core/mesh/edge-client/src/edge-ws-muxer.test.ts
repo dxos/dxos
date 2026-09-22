@@ -50,6 +50,15 @@ describe('WebSocketMuxerTest', () => {
     expect(muxer.receiveData(chunk)).toBeUndefined();
   });
 
+  test('a first chunk is bounded like any other', async () => {
+    const { muxer } = await createMuxer();
+    const oversized = segmentChunk(new Uint8Array(MAX_INBOUND_MESSAGE_BYTES + 1));
+
+    expect(() => muxer.receiveData(oversized)).toThrow(SegmentedMessageLimitError);
+    // Nothing was retained, so a well-sized sequence still starts on the channel.
+    expect(muxer.receiveData(segmentChunk(new Uint8Array(1)))).toBeUndefined();
+  });
+
   test('unterminated sequence is capped by accumulated bytes', async () => {
     const { muxer } = await createMuxer();
     const chunkBytes = Math.ceil(MAX_INBOUND_MESSAGE_BYTES / 8);
