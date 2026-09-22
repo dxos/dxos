@@ -57,7 +57,7 @@ const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => str
     .ellipse(elementId('b'), { x: scale(16), y: scale(4), width: scale(8), height: scale(4) }, `${name} · B`)
     .text(
       elementId('t'),
-      { x: scale(34), y: scale(4), width: scale(12), height: scale(4) },
+      { x: scale(16), y: scale(24), width: scale(12), height: scale(4) },
       `Scene "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
     )
     .class(
