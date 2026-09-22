@@ -73,12 +73,13 @@ export const nodeList = (scene: Scene): Node[] => Object.values(scene.nodes);
 
 /**
  * Derived scene bounds (decision 6): the union of nodes plus padding, grown to the major grid so the
- * frame sits on grid lines; an empty scene gets a default extent so a portal to it still has
- * something to map.
+ * frame sits on grid lines. The default extent is a floor rather than a fallback for an empty scene:
+ * content only ever grows the frame, so drawing the first node does not collapse the scene around it.
  */
 export const sceneBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds => {
-  const union = unionBounds(nodeList(scene).map(nodeBounds));
-  return union ? alignBounds(padBounds(union, padding), unit) : DEFAULT_EXTENT;
+  const content = unionBounds(nodeList(scene).map(nodeBounds));
+  const union = unionBounds(content ? [DEFAULT_EXTENT, padBounds(content, padding)] : [DEFAULT_EXTENT]);
+  return alignBounds(union ?? DEFAULT_EXTENT, unit);
 };
 
 /** Topmost node under `point`, or none; `margin` widens every node, e.g. to reach its ports. */

@@ -40,9 +40,19 @@ describe('hit', () => {
     expect(nodesIntersecting(scene, boundsFromPoints({ x: 0, y: 0 }, { x: 600, y: 600 })).length).toBe(3);
   });
 
-  test('sceneBounds is the padded union of nodes grown to the grid, or the default extent', ({ expect }) => {
-    expect(sceneBounds(scene, 10, 1)).toEqual({ x: 40, y: 40, width: 495, height: 480 });
-    expect(sceneBounds(scene, 10)).toEqual({ x: 0, y: 0, width: 576, height: 576 });
+  test('sceneBounds grows the default extent by the padded union of the nodes', ({ expect }) => {
+    // Content inside the default extent leaves it as it is, whatever the padding or grid.
+    expect(sceneBounds(scene, 10, 1)).toEqual(DEFAULT_EXTENT);
+    expect(sceneBounds(scene, 10)).toEqual(DEFAULT_EXTENT);
     expect(sceneBounds({ id: 'empty', nodes: {}, links: {} })).toEqual(DEFAULT_EXTENT);
+    // A node beyond it grows the frame that way, and the default still holds the other three sides.
+    const far: BuiltinNode = {
+      type: 'rect',
+      id: 'far',
+      z: 'Z',
+      center: { x: 2000, y: -400 },
+      size: { width: 100, height: 100 },
+    };
+    expect(sceneBounds({ ...scene, nodes: { ...nodes, far } })).toEqual({ x: -64, y: -576, width: 2240, height: 1600 });
   });
 });
