@@ -54,12 +54,10 @@ import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
-import { selfCheckpointRepair } from './fragment-checkpoints.ts';
 import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
-import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runSubductionMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
@@ -261,13 +259,6 @@ export class AutomergeHost extends Resource {
 
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
   private _onHeadsChangedTask?: DeferredTask;
-  /**
-   * Sedimentrees whose just-stored fragment record has the pre-3.5 self-checkpointed shape (a
-   * not-yet-upgraded peer's), by hex id; {@link _repairFragmentsTask} rewrites them. The store-wide
-   * migration ran once at open, so arrivals after it are repaired here.
-   */
-  private readonly _fragmentsToRepair = new Set<string>();
-  private _repairFragmentsTask?: DeferredTask;
 
   /**
    * Documents created in this session.
@@ -364,7 +355,7 @@ export class AutomergeHost extends Resource {
     this._storage = new SqliteStorageAdapter({
       runtime,
       callbacks: {
-        afterSave: async (key, data) => this._afterSave(key, data),
+        afterSave: async (key) => this._afterSave(key),
       },
       monitor: dataMonitor,
     });
@@ -479,18 +470,6 @@ export class AutomergeHost extends Resource {
     // attach a document or start a sync round until `open()` returns, so a rewrite the migrations
     // make lands before the engine's in-memory view of that tree exists.
     await this._runSubductionMigrations();
-    this._repairFragmentsTask = new DeferredTask(this._ctx, async () => {
-      const sedimentrees = [...this._fragmentsToRepair];
-      this._fragmentsToRepair.clear();
-      const subduction = await this._repo.subduction;
-      for (const sedimentreeHex of sedimentrees) {
-        const result = await repairSelfCheckpointedFragments(subduction, this._storage, { sedimentreeHex });
-        log.info('subduction fragment migration: repaired sedimentree on fragment arrival', {
-          documentId: sedimentreeHexToDocumentId(sedimentreeHex),
-          ...result,
-        });
-      }
-    });
 
     // An auth-scope change and a transport reset both re-announce a peer that never left, and
     // dropping its collection state costs a diff over every document in the collection (DX-1275).
@@ -589,7 +568,6 @@ export class AutomergeHost extends Resource {
     // Drain any in-flight `_onHeadsChangedTask` before the `Resource` base
     // disposes `this._ctx`.
     await this._onHeadsChangedTask?.join();
-    await this._repairFragmentsTask?.join();
 
     await this._collectionSynchronizer.close(ctx);
 
@@ -626,7 +604,9 @@ export class AutomergeHost extends Resource {
   /**
    * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
    * Contained: a failed migration is logged and the host opens on the records as stored, since
-   * every migration is a repair of data the host can already read.
+   * every migration is a repair of data the host can already read. Only stored records are
+   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
+   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
    */
   private async _runSubductionMigrations(): Promise<void> {
     try {
@@ -1220,7 +1200,7 @@ export class AutomergeHost extends Resource {
    * Called by SqliteStorageAdapter after a chunk is committed to SQLite.
    * Updates heads store and schedules collection sync notification.
    */
-  private async _afterSave(path: StorageKey, data: Uint8Array): Promise<void> {
+  private async _afterSave(path: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return undefined;
     }
@@ -1235,14 +1215,6 @@ export class AutomergeHost extends Resource {
           documentId: sedimentreeHexToDocumentId(sedimentreeId),
           sedimentreeId,
         });
-      }
-      // The tree is loaded by now (the engine just ingested the fragment), so the rewrite fixes
-      // storage while the live view may keep the old copy until the next open — the same headless
-      // state as before the repair, bounded to this session. The rewrite's own save is valid and
-      // does not re-enter here.
-      if (family === 'fragments' && sedimentreeId && selfCheckpointRepair(data)) {
-        this._fragmentsToRepair.add(sedimentreeId);
-        this._repairFragmentsTask?.schedule();
       }
       return;
     }

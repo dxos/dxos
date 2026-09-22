@@ -27,7 +27,7 @@ export type SqliteStorageAdapterProps = {
 };
 
 export type SqliteStorageCallbacks = {
-  afterSave?(path: StorageKey, data: Uint8Array): MaybePromise<void>;
+  afterSave?(path: StorageKey): MaybePromise<void>;
 };
 
 /**
@@ -109,7 +109,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     );
     this.#monitor?.recordBytesStored(binary.byteLength);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
-    await this.#callbacks?.afterSave?.(keyArray, binary);
+    await this.#callbacks?.afterSave?.(keyArray);
   }
 
   async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
@@ -134,7 +134,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     let bytesStored = 0;
     for (const [keyArray, binary] of entries) {
       bytesStored += binary.byteLength;
-      await this.#callbacks?.afterSave?.(keyArray, binary);
+      await this.#callbacks?.afterSave?.(keyArray);
     }
     this.#monitor?.recordBytesStored(bytesStored);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);

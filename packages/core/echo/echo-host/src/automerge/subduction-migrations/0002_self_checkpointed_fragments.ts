@@ -44,19 +44,16 @@ export type FragmentRepairResult = {
  * as it was. Idempotent — a rewritten record no longer matches. One `storeBuiltBatch` per
  * sedimentree.
  *
- * Best run before the engine loads the tree: a loaded tree keeps one in-memory fragment per head
- * (the lower digest wins), so rewriting under it fixes storage while the live view may keep the
- * old copy until the tree is next loaded. `sedimentreeHex` narrows the sweep to one tree.
+ * Runs before the engine loads any tree: a loaded tree keeps one in-memory fragment per head (the
+ * lower digest wins), so rewriting under it would fix storage while the live view kept the old
+ * copy until the tree was next loaded.
  */
 export const repairSelfCheckpointedFragments = async (
   subduction: Subduction,
   storage: SqliteStorageAdapter,
-  { sedimentreeHex }: { sedimentreeHex?: string } = {},
 ): Promise<FragmentRepairResult> => {
   const result: FragmentRepairResult = { scanned: 0, rewritten: 0, skipped: 0, failed: 0 };
-  const chunks = await storage.loadRange(
-    sedimentreeHex ? [SUBDUCTION_PREFIX, FRAGMENTS_FAMILY, sedimentreeHex] : [SUBDUCTION_PREFIX, FRAGMENTS_FAMILY],
-  );
+  const chunks = await storage.loadRange([SUBDUCTION_PREFIX, FRAGMENTS_FAMILY]);
   const bySedimentree = new Map<string, Array<{ headHex: string; repair: SelfCheckpointRepair }>>();
   for (const { key, data } of chunks) {
     if (key.length !== 4 || !data) {

@@ -26,7 +26,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
@@ -276,24 +275,6 @@ describe('subduction migrations', () => {
       expect(await adapter.load(planted.blobKey)).toEqual(blob);
     });
 
-    test('repairs a fragment that arrives after the migration was recorded', async () => {
-      const { runtime, adapter } = await setup();
-      const { headBytes, blob } = syntheticDocument();
-      const sedimentreeBytes = padTo32(PublicKey.random().asUint8Array().slice(0, 16));
-      const host = await openHost(runtime);
-      expect(await applied(runtime, selfCheckpointedFragments.name)).toBe(true);
-
-      // Through the host's own adapter, as the engine's storage bridge stores what a peer sent.
-      const planted = await plantOldShapeFragment(host.storage, { sedimentreeBytes, headBytes, blob });
-      const rewritten = await waitForRewrite(adapter, planted.fragmentKey, planted.signed);
-      expect(selfCheckpointRepair(rewritten)).toBeUndefined();
-      expect(parseSignedFragmentRecord(rewritten)?.head).toEqual(headBytes);
-      expect(await adapter.load(planted.blobKey)).toEqual(blob);
-      expect(await headsSeenBy(adapter)).toEqual([
-        { id: bytesToHex(sedimentreeBytes), heads: [bytesToHex(headBytes)] },
-      ]);
-    });
-
     // What a client on @automerge/automerge 3.3.2 stored for a document whose last edit closed a
     // fragment: one fragment at the document's head listing itself as a checkpoint, produced by
     // that version's own `getFragmentMetadata` / `bundleFragmentMetadata` (see the fixture).
@@ -384,21 +365,6 @@ const plantOldShapeFragment = async (adapter: SqliteStorageAdapter, fragment: Ol
   ]);
   return { fragmentKey, blobKey, signed: row.signed };
 };
-
-/** Polls until the record under `key` differs from `planted`; the arrival repair runs from a deferred task. */
-const waitForRewrite = async (adapter: SqliteStorageAdapter, key: string[], planted: Uint8Array) => {
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const current = await adapter.load(key);
-    if (current && !bytesEqual(current, planted)) {
-      return current;
-    }
-    await sleep(20);
-  }
-  throw new Error('fragment record was not rewritten');
-};
-
-const bytesEqual = (left: Uint8Array, right: Uint8Array): boolean =>
-  left.length === right.length && left.every((byte, index) => right[index] === byte);
 
 /**
  * Stores the fixture into the adapter through a throwaway engine, with the inputs the old client
