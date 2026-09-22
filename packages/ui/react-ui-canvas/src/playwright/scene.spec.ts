@@ -154,7 +154,17 @@ test.describe('SceneView', () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     await page.getByTestId('toolbar-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
-    await expect(page.getByTestId('toolbar-layout')).toBeDisabled();
+    // Freehand offers auto layout; a → b → c ranks into three rows, whatever the fixture's own layout.
+    await expect(page.getByTestId('toolbar-layout')).toBeEnabled();
+    await page.getByTestId('toolbar-layout').click();
+    await expect
+      .poll(async () => {
+        const rows = await Promise.all(
+          ['scene:root/a', 'scene:root/b', 'scene:root/c'].map(async (id) => (await scene.box(scene.node(id))).y),
+        );
+        return rows[0] < rows[1] && rows[1] < rows[2];
+      })
+      .toBe(true);
     // A portal made from the toolbar gets its child scene, so Enter opens it.
     await page.getByTestId('toolbar-create').click();
     await page.getByTestId('create-scene').click();

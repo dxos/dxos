@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
+import { layoutScene } from '../utils/layout.ts';
 import { resizeNode } from '../utils/shapes.ts';
 import { type SceneStore, putScene, updateScene } from './store.ts';
 import {
@@ -120,6 +121,9 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
       return scene;
     }
 
+    case 'layout':
+      return layoutScene(scene, intent.ids);
+
     case 'batch':
       return intent.intents.reduce(reduceIntent, scene);
 
@@ -152,6 +156,7 @@ export const freehandCapabilities: Capabilities = {
   create: true,
   delete: true,
   update: true,
+  layout: true,
 };
 
 /** What a read-only view may do: look, select and navigate, nothing that reaches the model. */
@@ -162,6 +167,7 @@ export const readonlyCapabilities: Capabilities = {
   create: false,
   delete: false,
   update: false,
+  layout: false,
 };
 
 /** Identity projection over the store: what the surface asks for is what the model becomes. */

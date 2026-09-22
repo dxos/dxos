@@ -1471,6 +1471,10 @@ export const SceneView = ({
       paste: () => paste(),
       delete: deleteSelection,
       create: createAtCentre,
+      // A selection of two or more is what the user asked to tidy; one node alone means the board.
+      layout: capabilities.layout
+        ? () => projection.apply({ kind: 'layout', ids: selection.size > 1 ? [...selection] : undefined })
+        : undefined,
     }),
     [
       path,
@@ -1488,13 +1492,15 @@ export const SceneView = ({
       canRedo,
       onUndo,
       onRedo,
-      selection.size,
+      selection,
       clipboard,
       cut,
       copy,
       paste,
       deleteSelection,
       createAtCentre,
+      capabilities.layout,
+      projection,
     ],
   );
 

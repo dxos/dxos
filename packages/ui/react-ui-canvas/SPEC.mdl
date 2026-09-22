@@ -430,14 +430,19 @@ op batch
 ```mdl
 op layout
   desc: >
-    M4. Auto-arrange the scene through `@dxos/diagram`'s layout engines (dagre / ELK), as an intent
-    rather than a view action, so a constrained or dynamic projection may rewrite or refuse it and a
-    read-only view cannot invoke it. Until it exists the toolbar's layout button is disabled and says
-    the projection does not offer it.
+    Arrange the scene into ranked rows along its links, through `@dxos/diagram`'s ranking — the engine
+    the dynamic projection already lays its graph out with, rather than a second one. Unlike the old
+    editor's `@antv` layout it keeps every node: type, size and content are untouched and only the
+    centre moves. An intent rather than a view action, so a projection that owns its own positions may
+    rewrite or refuse it, and a read-only view cannot invoke it.
   input:
     ids?: ElementId[]                 # absent: the whole scene
   output: Scene
-  note: The toolbar button and the `Capabilities` entry land with this op, not before.
+  note: >
+    A row is as tall as its tallest node and a column as wide as its widest, so mixed sizes do not
+    overlap; every centre lands on the major grid; a locked node stays where it is. The toolbar's
+    button is enabled by `Capabilities.layout` and lays out the selection when two or more are
+    selected, otherwise the board.
 ```
 
 ## Features

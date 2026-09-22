@@ -270,6 +270,11 @@ export type Intent =
   | { kind: 'reorder'; id: ElementId; z: string }
   /** Property edits (label, text, geometry, control points); `id` and `type` never change. */
   | { kind: 'update'; id: ElementId; values: NodeValues | LinkValues }
+  /**
+   * Arrange the scene (or just `ids`, when the selection is what the user asked to tidy). An intent
+   * rather than a view action, so a projection that owns its own positions may rewrite or refuse it.
+   */
+  | { kind: 'layout'; ids?: ElementId[] }
   /** Several intents applied as one model change (one undo step), e.g. a paste. */
   | { kind: 'batch'; intents: Intent[] };
 
@@ -280,6 +285,7 @@ export type Capabilities = {
   create?: boolean;
   delete?: boolean;
   update?: boolean;
+  layout?: boolean;
 };
 
 /** The active tool: a node type draws that node, a link type is what port drags create. */

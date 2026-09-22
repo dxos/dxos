@@ -42,7 +42,7 @@ export type ToolbarActions = {
   delete: () => void;
   /** A new node of `type` at the centre of the view. */
   create: (type: NodeType) => void;
-  /** Auto layout; absent until a projection offers it (M4). */
+  /** Auto layout; absent when the projection does not offer it (`Capabilities.layout`). */
   layout?: () => void;
 };
 
