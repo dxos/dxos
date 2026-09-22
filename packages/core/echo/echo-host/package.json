@@ -32,6 +32,11 @@
       "source": "./src/query/planner.ts",
       "types": "./dist/types/src/query/planner.d.ts",
       "import": "./dist/lib/query/planner.mjs"
+    },
+    "./subduction-migrations": {
+      "source": "./src/automerge/subduction-migrations/index.ts",
+      "types": "./dist/types/src/automerge/subduction-migrations/index.d.ts",
+      "import": "./dist/lib/subduction-migrations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

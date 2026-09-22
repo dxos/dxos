@@ -9,6 +9,7 @@ export default defineConfig({
     'filter': 'src/filter/index.ts',
     'index': 'src/index.ts',
     'query/planner': 'src/query/planner.ts',
+    'subduction-migrations': 'src/automerge/subduction-migrations/index.ts',
     'testing': 'src/testing/index.ts',
   },
   test: { node: true },
