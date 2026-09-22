@@ -11094,6 +11094,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-crx':
+        specifier: workspace:*
+        version: link:../plugin-crx
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
