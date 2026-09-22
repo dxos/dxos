@@ -321,14 +321,16 @@ attributable: page and worker samples in one distribution let whichever realm sa
 the other, so a wedged worker could hide behind a calm page. `count: 0` means the realm stayed
 responsive, not that the probe was missing.
 
-Read this rather than `lagP95Ms` when a stall needs an owner. In the reference run every stall was
-the page's: 298 page samples, worst p95 2,943 ms, and zero samples over the floor in any worker.
+Read this rather than `lagP95Ms` when a stall needs an owner.
 
-**Read `count` before believing a zero.** Every worker lag column in the nightly read zero for
-weeks on rows that also showed the dedicated workers burning 1,464 ms of CPU in `edit-document`,
-and nothing published said whether the probe had produced anything. `lagSamples{Tab,Worker,…}` is
-now trended for exactly that reason — it is to the drift probe what `sqliteRealms` is to the disk
-counters.
+**Read `count` before believing a zero.** Every worker lag column read zero for weeks on rows that
+also showed the dedicated workers burning 1,464 ms of CPU in `edit-document`, and nothing published
+said whether the probe had produced anything. It was the probe: the drain expression defines
+`globalThis.__perfLag`, and the installer's idempotence guard tested that same array, so a realm
+first drained at the closing boundary of the stage that created it answered `present` for the rest
+of the run with no interval ever armed. The guard is now a separate `__perfLagArmed` marker. Those
+zeros were an instrument reading its own absence, which is why `lagSamples{Tab,Worker,…}` is
+trended — it is to the drift probe what `sqliteRealms` is to the disk counters.
 
 ### `rpc[]` — lag measured from real traffic
 
@@ -494,14 +496,13 @@ Recorded here so nobody rediscovers them as bugs.
    from an instantiation probe rather than inferring it from a backing-store total that also counts
    every `Uint8Array` automerge passes around.
 
-6. **Worker timer drift has never produced a sample.** Every `lagP95Ms`/`lagMaxMs` worker column in
-   the nightly reads exactly zero, on every stage of every iteration, while the same rows carry
-   1,464 ms of dedicated-worker CPU in `edit-document`. The mechanism itself is sound — installing
-   the same probe over CDP into a worker that blocks 200 ms out of every 300 captures 16 samples
-   with a 192 ms max — so something about the app's realms defeats it and the cause is not yet
-   established. Two things now make the state of it readable instead of silent: `lagSamples{realm}`
-   says whether the probe produced anything, and `rpc[]`'s queue wait measures the same
-   responsiveness from traffic the app generates itself.
+6. ~~Worker timer drift has never produced a sample.~~ Done: the installer's idempotence guard
+   tested `globalThis.__perfLag`, which the drain expression itself defines, so every worker realm
+   — first drained at the closing boundary of the stage that created it — answered `present`
+   forever and never armed an interval. Instrumenting a full flow showed 40 installs, all
+   `present`, none `installed`. The guard is a separate `__perfLagArmed` marker now, and
+   `lagSamples{realm}` is what made the failure visible rather than plausible; `rpc[]`'s queue wait
+   measures the same responsiveness from traffic the app generates itself.
 7. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
    first ten-iteration run corrected the premise. WITHIN a run the spread is tiny (CV 1.6% on total
    wall time, 0.11% on DOM nodes); the ~20% figure below came from comparing separate RUNS, which
