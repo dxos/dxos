@@ -1270,6 +1270,12 @@ export const SceneView = ({
   // Render.
   //
 
+  /** The node a create gesture would land while one is in flight; the ghost and the frame both read it. */
+  const createPreview = useMemo(
+    () => (drag?.kind === 'create' ? createdNode(drag, PREVIEW_NODE_ID) : undefined),
+    [drag, createdNode],
+  );
+
   // Transient drag state is rendered by projecting it onto a copy, so links re-route while dragging and
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped.
   const displayScene = useMemo<Scene>(() => {
@@ -1299,13 +1305,16 @@ export const SceneView = ({
       const end: Endpoint = drag.target ?? { point: drag.to };
       return reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } });
     }
+    // A node drawn on the canvas previews as the type's own view; one dragged in from the palette shows
+    // the frame alone, since the pointer is already carrying the palette's preview of it.
     if (drag?.kind === 'create') {
-      // The type's own view as a ghost, so the preview is the node that will land.
-      const node = createdNode(drag, PREVIEW_NODE_ID);
-      return node ? reduceIntent(scene, { kind: 'create', node }) : scene;
+      return createPreview && !drag.dropped ? reduceIntent(scene, { kind: 'create', node: createPreview }) : scene;
     }
     return scene;
-  }, [scene, drag, createdNode]);
+  }, [scene, drag, createPreview]);
+
+  /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
+  const createFrame = useMemo(() => (createPreview ? nodeBounds(createPreview) : undefined), [createPreview]);
 
   const onPartCommit = useCallback(
     (node: Node, part: PartKey, text: string) => {
@@ -1362,7 +1371,7 @@ export const SceneView = ({
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
       const from = { x: snap(point.x), y: snap(point.y) };
-      return { kind: 'create', type, from, to: from };
+      return { kind: 'create', type, from, to: from, dropped: true };
     };
     return dropTargetForElements({
       element,
@@ -1540,6 +1549,7 @@ export const SceneView = ({
           drag={drag}
           capabilities={capabilities}
           showPorts={tool.kind === 'link'}
+          createFrame={createFrame}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}

@@ -66,6 +66,8 @@ export type ControlFrameProps = {
   drag?: Drag;
   /** Show every node's ports (a link tool); otherwise only the hovered node's. */
   showPorts: boolean;
+  /** The bounds a create gesture in flight would land, drawn as a provisional frame. */
+  createFrame?: Bounds;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -95,6 +97,7 @@ export const ControlFrame = memo(
     zoom,
     drag,
     showPorts,
+    createFrame,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -272,6 +275,16 @@ export const ControlFrame = memo(
             y={marquee.y}
             width={marquee.width}
             height={marquee.height}
+            className='fill-primary-500/10 stroke-primary-500'
+            strokeWidth={unit}
+          />
+        )}
+        {createFrame && (
+          <rect
+            x={createFrame.x}
+            y={createFrame.y}
+            width={createFrame.width}
+            height={createFrame.height}
             className='fill-primary-500/10 stroke-primary-500'
             strokeWidth={unit}
           />

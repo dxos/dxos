@@ -50,8 +50,11 @@ export type Drag =
    * valid drop, and the link is then previewed as created.
    */
   | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
-  /** Drawing a new node with a tool. */
-  | { kind: 'create'; type: NodeType; from: Point; to: Point }
+  /**
+   * Drawing a new node with a tool. `dropped` marks one dragged in from the palette or a host's
+   * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
+   */
+  | { kind: 'create'; type: NodeType; from: Point; to: Point; dropped?: boolean }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
