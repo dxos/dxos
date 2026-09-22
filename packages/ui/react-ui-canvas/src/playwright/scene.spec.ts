@@ -129,17 +129,22 @@ test.describe('SceneView', () => {
     const view = await scene.box(scene.root);
     await scene.focus();
     await page.keyboard.press('l');
-    const from = { x: view.x + view.width * 0.55, y: view.y + view.height * 0.85 };
-    await scene.drag(from, { x: from.x + 200, y: from.y - 40 });
+    // The band right of every node, so the whole gesture lands on empty canvas however the fixture is laid out.
+    const right = await scene.nodesRight();
+    const band = view.x + view.width - right;
+    expect(band).toBeGreaterThan(120);
+    const from = { x: right + band * 0.2, y: view.y + view.height / 2 };
+    await scene.drag(from, { x: right + band * 0.8, y: from.y - 40 });
     expect(await scene.linkCount()).toBe(4);
     expect(await scene.nodeCount()).toBe(4);
   });
 
   test('the toolbar zooms, creates at the centre and deletes the selection', async () => {
-    const readout = page.getByTestId('canvas-toolbar');
-    await expect(readout).toContainText('70%');
+    // The fit zoom follows the fixture's bounds, so the step is read against it rather than named.
+    const fitted = await scene.zoom();
     await page.getByTestId('toolbar-zoom-in').click();
-    await expect(readout).toContainText('87%');
+    // One step is ×1.25; both readouts round, so they can disagree by a point.
+    await expect.poll(async () => Math.abs((await scene.zoom()) - fitted * 1.25)).toBeLessThanOrEqual(1);
     await page.getByTestId('toolbar-create').click();
     await page.getByTestId('create-class').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);

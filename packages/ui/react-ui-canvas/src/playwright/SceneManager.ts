@@ -36,6 +36,22 @@ export class SceneManager {
     return this.page.locator('[data-node-id]').count();
   }
 
+  /** Right edge of the rightmost node in screen space: canvas beyond it is empty whatever the layout. */
+  async nodesRight(): Promise<number> {
+    const boxes = await Promise.all((await this.page.locator('[data-node-id]').all()).map((node) => this.box(node)));
+    return Math.max(...boxes.map(({ x, width }) => x + width));
+  }
+
+  /** The toolbar's zoom readout, as whole percent. */
+  async zoom(): Promise<number> {
+    const readout = await this.page.getByTestId('canvas-toolbar').textContent();
+    const percent = readout?.match(/(\d+)%/);
+    if (!percent) {
+      throw new Error(`toolbar shows no zoom: ${readout}`);
+    }
+    return Number(percent[1]);
+  }
+
   /** Ids of the nodes whose frame shows the selection border. */
   selectedNodes(): Promise<string[]> {
     return this.page.evaluate(() =>
