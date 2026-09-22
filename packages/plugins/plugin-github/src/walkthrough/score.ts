@@ -132,7 +132,9 @@ const badRanges = (
       }
       const start = Number(range[1]);
       const end = range[2] === undefined ? start : Number(range[2]);
-      return end < start || !files.get(fence.file!)!.hunks.some((hunk) => hunk.afterStart <= end && hunk.afterEnd >= start);
+      return (
+        end < start || !files.get(fence.file!)!.hunks.some((hunk) => hunk.afterStart <= end && hunk.afterEnd >= start)
+      );
     })
     .map((fence) => `${fence.file} lines=${fence.lines}`);
 
