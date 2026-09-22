@@ -29,15 +29,15 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
-import { connectionDeckSubject } from './constants';
+import { connectionDeckSubject } from './constants.ts';
 import {
   ConnectionAuthExpiredError,
   ConnectionSyncError,
   SyncRoutineMissingError,
   TargetAccountMismatchError,
   isUnauthorizedError,
-} from './errors';
-import * as SyncTemplate from './SyncTemplate';
+} from './errors.ts';
+import * as SyncTemplate from './SyncTemplate.ts';
 
 /**
  * The binding between a local object (a Mailbox, a Calendar) and the remote feed a `Connection` syncs

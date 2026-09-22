@@ -5,10 +5,10 @@
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
-import { type BlobBackend } from '../backend';
-import { S3_SCHEME } from './constants';
-import { type S3Credentials, getObject, getObjectUrl, headObject, putObject } from './s3-client';
-import { formatUri, objectKey, parseUri } from './s3-uri';
+import { type BlobBackend } from '../backend.ts';
+import { S3_SCHEME } from './constants.ts';
+import { type S3Credentials, getObject, getObjectUrl, headObject, putObject } from './s3-client.ts';
+import { formatUri, objectKey, parseUri } from './s3-uri.ts';
 
 /**
  * How the host answers the two questions this backend cannot answer itself.

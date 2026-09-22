@@ -68,19 +68,21 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "node-datachannel": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-browser": "catalog:",
     "fetch-mock": "catalog:"
   },
   "publishConfig": {

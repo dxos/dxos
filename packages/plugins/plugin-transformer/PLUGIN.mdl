@@ -18,10 +18,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -212,7 +212,7 @@ feat F-4: RAG Embedding Pipeline (Testing)
 ## Acceptance
 
 ```mdl
-test T-1: Model loads and transitions isLoaded
+scenario T-1: Model loads and transitions isLoaded
   given: Voice component mounts with active = true and model = 'Xenova/whisper-base'
   when: model download and ONNX compilation complete
   then:
@@ -222,7 +222,7 @@ test T-1: Model loads and transitions isLoaded
 ```
 
 ```mdl
-test T-2: Model load failure sets error state
+scenario T-2: Model load failure sets error state
   given: the model download throws a network error
   when: usePipeline attempts to load the model
   then:
@@ -232,7 +232,7 @@ test T-2: Model load failure sets error state
 ```
 
 ```mdl
-test T-3: Microphone capture populates stream state
+scenario T-3: Microphone capture populates stream state
   given: getUserMedia is granted
   when: useAudioStream activates
   then:
@@ -241,7 +241,7 @@ test T-3: Microphone capture populates stream state
 ```
 
 ```mdl
-test T-4: Audio chunk triggers transcription
+scenario T-4: Audio chunk triggers transcription
   given: model is loaded and stream is active
   when: AudioWorklet posts a 32000-sample chunk
   then:
@@ -251,7 +251,7 @@ test T-4: Audio chunk triggers transcription
 ```
 
 ```mdl
-test T-5: Concurrent transcription calls are dropped
+scenario T-5: Concurrent transcription calls are dropped
   given: isTranscribing is true
   when: a second audio chunk arrives
   then: the chunk is discarded and no second pipeline call is made
@@ -261,18 +261,18 @@ test T-5: Concurrent transcription calls are dropped
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Load the Whisper model and transcribe from the microphone
+test QA-1: Load the Whisper model and transcribe from the microphone
   desc: |
     plugin-transformer has no user-visible surface at all: it is not wired into
     `plugin-defs.tsx` (searched — no import, no `.make()` call anywhere under
     `packages/apps/composer-app/src`), it contributes no ECHO type and no navtree entry, and it
     registers no `Operation.make` (there is no `operations/` module under `src/`) — `Voice` is a
     plain React component + hooks (`usePipeline`, `useAudioStream`) meant to be composed
-    directly into a host app, not something Composer currently mounts. The flow below is honest
+    directly into a host app, not something Composer currently mounts. The test below is honest
     about that: every step is blocked at the level of "there is no running application surface
     to drive it from".
   actors: human
@@ -281,7 +281,7 @@ flow QA-1: Load the Whisper model and transcribe from the microphone
   given:
     - the Voice component is mounted somewhere reachable in a running app, with active = true
       and model = 'Xenova/whisper-base' — NOT currently true of Composer
-  test:
+  steps:
     - name: Load the model
       do: Observe the DebugInfo panel after mounting Voice.
       expect: gpuInfo reports the adapter (or a WASM/CPU fallback message), isLoading transitions
@@ -330,8 +330,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

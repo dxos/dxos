@@ -9,7 +9,6 @@ import { Button, Toast as NaturalToast, type ToastRootProps, toLocalizedString, 
 
 import { meta } from '#meta';
 
-// TODO(wittjosiah): Render remaining duration as a progress bar within the toast.
 export const Toast = ({
   id,
   title,

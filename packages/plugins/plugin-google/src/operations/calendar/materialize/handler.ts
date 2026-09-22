@@ -10,8 +10,8 @@ import * as Calendar from '@dxos/plugin-inbox/Calendar';
 
 import { GoogleOperation } from '#types';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { CalendarForeignKeyWrongTypeError } from '../../../errors';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
+import { CalendarForeignKeyWrongTypeError } from '../../../errors.ts';
 
 /**
  * Find-or-create the local Calendar materialized for this remote calendar id.

@@ -2,7 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Event } from '@dxos/async';
@@ -10,8 +13,14 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { type LogLevel, type LogProcessor, type LogEntry as NaturalLogEntry, log } from '@dxos/log';
-import { type LogEntry, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { type LoggingService } from '@dxos/protocols/rpc';
+import {
+  type LogEntry,
+  LogEntrySchema,
+  type QueryLogsRequest,
+  type QueryLogsRequest_Filter,
+  QueryLogsRequest_MatchingOptions,
+} from '@dxos/protocols/buf/dxos/client/logging_pb';
+import { LoggingService } from '@dxos/protocols/rpc';
 import { numericalValues, tracer } from '@dxos/util';
 
 /**
@@ -118,11 +127,11 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
           recordContext.error = entry.computedError;
         }
 
-        const record: LogEntry = {
+        const record: LogEntry = create(LogEntrySchema, {
           level: entry.level,
           message: entry.message ?? entry.computedError ?? '',
           context: recordContext,
-          timestamp: new Date(entry.timestamp),
+          timestamp: timestampFromDate(new Date(entry.timestamp)),
           meta: {
             // TODO(dmaretskyi): Fix proto.
             file: filename ?? '',
@@ -133,7 +142,7 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
               name: scopeName ?? '',
             },
           },
-        };
+        });
 
         try {
           LOG_PROCESSING++;
@@ -154,15 +163,15 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
 }
 
 const matchFilter = (
-  filter: QueryLogsRequest.Filter,
+  filter: QueryLogsRequest_Filter,
   level: LogLevel,
   path: string,
-  options: QueryLogsRequest.MatchingOptions,
+  options: QueryLogsRequest_MatchingOptions,
 ) => {
   switch (options) {
-    case QueryLogsRequest.MatchingOptions.INCLUSIVE:
+    case QueryLogsRequest_MatchingOptions.INCLUSIVE:
       return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
-    case QueryLogsRequest.MatchingOptions.EXPLICIT:
+    case QueryLogsRequest_MatchingOptions.EXPLICIT:
       return level === filter.level && (!filter.pattern || path.includes(filter.pattern));
   }
 };
@@ -171,15 +180,37 @@ const matchFilter = (
  * Determines if the current line should be logged (called by the processor).
  */
 const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean => {
-  const options = request.options ?? QueryLogsRequest.MatchingOptions.INCLUSIVE;
-  if (request.filters === undefined) {
-    return options === QueryLogsRequest.MatchingOptions.INCLUSIVE;
-  } else {
-    return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? '', options));
+  // buf represents an unset `repeated` as `[]` and an unset enum as its zero value, never
+  // `undefined`, so absence is read off those rather than off `undefined` — the previous
+  // `filters === undefined` branch is unreachable here and an empty filter list would otherwise
+  // flip "log everything" into "log nothing".
+  const options =
+    request.options === undefined || request.options === QueryLogsRequest_MatchingOptions.NONE
+      ? QueryLogsRequest_MatchingOptions.INCLUSIVE
+      : request.options;
+  if (request.filters.length === 0) {
+    return options === QueryLogsRequest_MatchingOptions.INCLUSIVE;
   }
+  return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? '', options));
 };
 
 /**
  * Counter that is used to track whether we are processing a log entry.
  */
 let LOG_PROCESSING = 0;
+
+/**
+ * The impl installs a log processor on open and removes it on close, so its lifecycle is bound to
+ * the layer scope.
+ */
+export const LoggingServiceLayer: Layer.Layer<LoggingService.Tag> = Layer.effect(
+  LoggingService.Tag,
+  Effect.gen(function* () {
+    const service = new LoggingServiceImpl();
+    yield* Effect.acquireRelease(
+      Effect.promise(() => service.open()),
+      () => Effect.promise(() => service.close()),
+    );
+    return service;
+  }),
+);

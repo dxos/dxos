@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './edgar-field';
+export * from './edgar-field.ts';

@@ -9,10 +9,10 @@ import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { type AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { type AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
 
 export const make = () =>
   AiModelResolver.fromModelMap(

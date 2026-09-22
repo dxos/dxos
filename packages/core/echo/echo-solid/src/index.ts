@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useObject';
-export * from './useQuery';
-export * from './useType';
+export * from './useObject.ts';
+export * from './useQuery.ts';
+export * from './useType.ts';

@@ -5,6 +5,7 @@
 import { DiscordREST } from 'dfx';
 import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -18,9 +19,9 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 import { DiscordOperation } from '#types';
 
-import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
-import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors';
-import { makeDiscordLayerFromToken } from '../services';
+import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants.ts';
+import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors.ts';
+import { makeDiscordLayerFromToken } from '../services/index.ts';
 
 /**
  * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value
@@ -218,7 +219,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 newestId = messages[messages.length - 1].id;
 
                 return { pulled: { added: mapped.length } };
-              }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayerFromToken(accessToken.token))),
+              }).pipe(
+                Effect.provide(Layer.provideMerge(Database.layer(db), makeDiscordLayerFromToken(accessToken.token))),
+              ),
             );
 
             if (outcome._tag === 'Success') {

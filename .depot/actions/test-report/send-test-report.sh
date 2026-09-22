@@ -11,7 +11,11 @@ ROLE_ID=1166483404066402414
 GREEN=4783872
 ORANGE=16744192
 RED=16711680
-GH_BUILD_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+# The nightly runs on Depot CI, so `$GITHUB_RUN_ID` names a run GitHub never created and the Actions URL
+# built from it 404s. `DEPOT_JOB_URL` is this job's page in the Depot UI, which is where the run and its
+# other jobs are reachable; the Actions URL remains the fallback for a caller on GitHub's own runner.
+BUILD_URL="${DEPOT_JOB_URL:-$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID}"
 
 # Workflow commands are newline-delimited, so an unescaped webhook response could forge annotations.
 function escape() {
@@ -31,7 +35,7 @@ function notify() {
   local message response status body
   message=$(
     printf '{ "content": %s, "embeds": [{ "title": %s, "description": %s, "color": %s }] }' \
-      "\"$1\"" "\"$2: $NAME\"" "\"$GH_BUILD_URL\"" "$3"
+      "\"$1\"" "\"$2: $NAME\"" "\"$BUILD_URL\"" "$3"
   )
   echo "$message"
   response=$(

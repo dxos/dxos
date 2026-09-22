@@ -5,8 +5,8 @@
 import { select } from 'd3';
 import { useEffect } from 'react';
 
-import { geoInertiaDrag } from '../util';
-import { type GlobeController } from './context';
+import { geoInertiaDrag } from '../util/index.ts';
+import { type GlobeController } from './context.ts';
 
 export type GlobeDragEvent = {
   type: 'start' | 'move' | 'end';
@@ -71,7 +71,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
     );
 
     return () => {
-      cancelDrag(select(canvas));
+      select(canvas).on('.drag', null);
       // Stop any in-flight inertia: otherwise its d3-timer keeps writing
       // through the (stable) setRotation closure into the live React state,
       // even after this effect has been replaced.
@@ -79,5 +79,3 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
     };
   }, [controller, JSON.stringify(options)]);
 };
-
-const cancelDrag = (node) => node.on('.drag', null);

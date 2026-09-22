@@ -10,7 +10,9 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig, copyToClipboard, openBrowser, print } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+
+import { CommandError } from '../../errors.ts';
 
 export const handler = Effect.fn(function* ({
   lifetime,
@@ -28,12 +30,12 @@ export const handler = Effect.fn(function* ({
   // is already hosted, without printing the codes.
   yield* Effect.try({
     try: () => new URL(host),
-    catch: () => new Error(`--host must be an absolute URL: ${host}`),
+    catch: () => new CommandError({ message: '--host must be an absolute URL.', context: { host } }),
   });
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = client.halo.share({
-    authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    authMethod: Invitation_AuthMethod.SHARED_SECRET,
     persistent: true,
     lifetime,
   });
@@ -75,7 +77,7 @@ export const handler = Effect.fn(function* ({
         {
           invitationCode: InvitationEncoder.encode(invitation),
           authCode: invitation.authCode,
-          state: Invitation.State[invitation.state],
+          state: Invitation_State[invitation.state],
         },
         null,
         2,
@@ -85,7 +87,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'HALO Invitation' }).pipe(
       FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
       FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
-      FormBuilder.set('state', Invitation.State[invitation.state]),
+      FormBuilder.set('state', Invitation_State[invitation.state]),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }
@@ -94,12 +96,15 @@ export const handler = Effect.fn(function* ({
 export const share = Command.make(
   'share',
   {
-    lifetime: Options.integer('lifetime').pipe(
+    lifetime: Options.Int('lifetime').pipe(
       Options.withDescription('Lifetime of the invitation in seconds.'),
       Options.withDefault(12 * 60 * 60), // 12 hours - HALO invitations are typically shorter-lived
     ),
-    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.string('host').pipe(
+    open: Options.Boolean('open').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Open browser with invitation.'),
+    ),
+    host: Options.String('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

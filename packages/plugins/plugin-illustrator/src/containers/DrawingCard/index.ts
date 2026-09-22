@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './DrawingCard';
+export * from './DrawingCard.tsx';

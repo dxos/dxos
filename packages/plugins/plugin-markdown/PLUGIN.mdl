@@ -18,11 +18,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## External types & capabilities
@@ -217,7 +217,7 @@ op SuggestEdit
 
 op scrollToAnchor
   desc: Scrolls the editor for the attendable surface to a cursor position.
-  input: { subject: string, cursor: string, ref?: string }
+  input: { subject: string, cursor: string, id?: Ref<Thread> }
 ```
 
 ## Features
@@ -325,7 +325,7 @@ feat F-11: Independence
 ## Acceptance
 
 ```mdl
-test T-1: Create document
+scenario T-1: Create document
   given: user has an open space
   when: op:create invoked with { name: "Notes", content: "# Hello" }
   then:
@@ -333,34 +333,34 @@ test T-1: Create document
     - Document.name === "Notes"
     - Document.content target contains "# Hello"
 
-test T-2: Apply edit
+scenario T-2: Apply edit
   given: Document.content is "There is a tyop."
   when: op:update invoked with edits [{ oldString: "tyop", newString: "typo" }]
   then:
     - Document.content becomes "There is a typo."
 
-test T-3: Toggle view mode
+scenario T-3: Toggle view mode
   given: Document open, settings.defaultViewMode === source
   when: user toggles view mode
   then:
     - editor renders preview
     - reload restores preview mode for this Document
 
-test T-4: Reference autocomplete
+scenario T-4: Reference autocomplete
   given: Document open, space contains object "ProjectX"
   when: user types `@Proj`
   then:
     - link query shows ProjectX
     - selecting it inserts a DXN link at the cursor
 
-test T-5: Branch, edit, merge
+scenario T-5: Branch, edit, merge
   given: A document on main
   when: A branch is created, edited, and merged back
   then:
     - the branch edit lands on main after merge; a `merge:` checkpoint is recorded
     - the branch edit never appeared on main before merge
 
-test T-6: Ambient overlay + mode
+scenario T-6: Ambient overlay + mode
   given: A document with two seeded suggestion branches, selection === current
   when: mode is Editing
   then:
@@ -369,7 +369,7 @@ test T-6: Ambient overlay + mode
   then:
     - suggestions are hidden, comments remain, the editor is read-only
 
-test T-7: Suggesting mode authors on the user's branch
+scenario T-7: Suggesting mode authors on the user's branch
   given: A document, selection === current, mode === suggesting
   when: the user types
   then:
@@ -380,13 +380,13 @@ test T-7: Suggesting mode authors on the user's branch
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
 invocable operation, an agent binding (`invoke`). `expect` is the success criterion both actors
 judge; `assert` is an optional deterministic check evaluated in the debug port. Report failures
-by flow and step number (e.g. `QA-1.3`).
+by test and step number (e.g. `QA-1.3`).
 
 ```mdl
-flow QA-1: Create, place, open and edit a document
+test QA-1: Create, place, open and edit a document
   desc: The core markdown round-trip through the running app.
   actors: both
   covers: [F-1.1, F-1.3, T-1, T-2]
@@ -398,8 +398,8 @@ flow QA-1: Create, place, open and edit a document
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no document named "QA Notes" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no document named "QA Notes" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the document
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
       invoke: [op:createDraft] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
@@ -453,7 +453,7 @@ flow QA-1: Create, place, open and edit a document
 
 
 ```mdl
-flow QA-2: Link one page to another
+test QA-2: Link one page to another
   desc: Two documents and a reference between them — the `@` link path end to end.
   actors: both
   covers: [F-4.1, F-4.2, F-4.3, T-4]
@@ -462,9 +462,9 @@ flow QA-2: Link one page to another
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no documents named "Page 1" or "Page 2" exist — ABORT rather than deleting ones this flow
+    - no documents named "Page 1" or "Page 2" exist — ABORT rather than deleting ones this test
       did not create
-  test:
+  steps:
     - name: Create Page 1
       do: In the navtree, click + on a collection and choose Markdown. Name it "Page 1" and type a heading and a sentence.
       invoke: [op:createDraft] { name: "Page 1", content: "# Page 1\n\nThe first page.\n" }
@@ -529,7 +529,7 @@ flow QA-2: Link one page to another
 ```
 
 ```mdl
-flow QA-3: A contributed slash-command runs
+test QA-3: A contributed slash-command runs
   desc: The MenuExtension capability end to end, using plugin-debug's Lorem ipsum command.
   actors: both
   covers: [F-1.1]
@@ -539,13 +539,13 @@ flow QA-3: A contributed slash-command runs
     - plugin-debug is enabled
     - attendableId: the id of an empty document already open in the editor, the attention target
       `insertLoremIpsum` inserts into
-  test:
+  steps:
     - name: Open the command menu
       do: With the caret on an empty line, type `/`.
       expect: the popup lists a "Debug" group containing "Lorem ipsum", below the built-in groups
       note: |
         NO `invoke` — opening the popup is a real keystroke, and CodeMirror does not observe
-        synthetic input events. This step is human-only; an agent runs the flow from the next step
+        synthetic input events. This step is human-only; an agent runs the test from the next step
         and reports this one as unverified rather than asserting it passed.
     - name: Insert a paragraph
       do: Select "Lorem ipsum".
@@ -587,8 +587,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

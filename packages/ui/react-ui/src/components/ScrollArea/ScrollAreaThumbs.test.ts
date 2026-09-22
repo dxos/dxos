@@ -4,15 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { measure } from './ScrollAreaThumbs';
+import { measure } from './ScrollAreaThumbs.tsx';
 
 // Viewport of 200 over content of 800, inset 10 at both ends: track 180, thumb 45, travel 135.
 // Sized so the proportional length clears MIN_THUMB, which the clamping case covers separately.
 const VIEWPORT = 200;
 const CONTENT = 800;
 const PADDING = 10;
-
-const at = (scrollOffset: number) => measure(scrollOffset, CONTENT, VIEWPORT, PADDING);
 
 describe('ScrollArea thumb geometry', () => {
   test('hides the thumb when the content fits', ({ expect }) => {
@@ -22,14 +20,14 @@ describe('ScrollArea thumb geometry', () => {
   });
 
   test('scales the thumb to the visible fraction of the content', ({ expect }) => {
-    expect(at(0)).toEqual({ visible: true, offset: PADDING, length: 45 });
+    expect(measure(0, CONTENT, VIEWPORT, PADDING)).toEqual({ visible: true, offset: PADDING, length: 45 });
   });
 
   test('maps scroll offset onto the track, inset at both ends', ({ expect }) => {
     // Fully scrolled: the thumb ends flush with the far inset rather than the viewport edge.
-    const end = at(CONTENT - VIEWPORT);
+    const end = measure(CONTENT - VIEWPORT, CONTENT, VIEWPORT, PADDING);
     expect(end.offset + end.length).toBe(VIEWPORT - PADDING);
-    expect(at((CONTENT - VIEWPORT) / 2).offset).toBe(PADDING + 67.5);
+    expect(measure((CONTENT - VIEWPORT) / 2, CONTENT, VIEWPORT, PADDING).offset).toBe(PADDING + 67.5);
   });
 
   test('hides the thumb when the track cannot seat the minimum length', ({ expect }) => {

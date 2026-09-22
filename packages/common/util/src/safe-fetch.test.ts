@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { isBlockedHost, safeFetchBytes, validateExternalUrl } from './safe-fetch';
+import { isBlockedHost, safeFetchBytes, validateExternalUrl } from './safe-fetch.ts';
 
 describe('isBlockedHost', () => {
   test('blocks loopback and unspecified addresses', ({ expect }) => {

@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { loadWorkspace, openDirectoryPicker } from '../util';
+import { loadWorkspace, openDirectoryPicker } from '../util.ts';
 
 export default FileSystemOperation.OpenDirectory.pipe(
   Operation.withHandler(
@@ -44,7 +45,7 @@ export default FileSystemOperation.OpenDirectory.pipe(
       yield* fileSystemManager.activateWorkspace(workspace);
       yield* fileSystemManager.persistState();
 
-      return { id: workspace.id, subject: [workspace.id] };
+      return { id: workspace.id, subject: [GraphPath.getSpacePath(workspace.id)] };
     }),
   ),
 );

@@ -14,8 +14,8 @@ import { Example } from '@dxos/schema/testing';
 
 import { translations } from '#translations';
 
-import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../../testing';
-import { FieldEditor, type FieldEditorProps } from './FieldEditor';
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../../testing/index.ts';
+import { FieldEditor, type FieldEditorProps } from './FieldEditor.tsx';
 
 export type FieldEditorDebugObjects = {
   props: FieldEditorProps;

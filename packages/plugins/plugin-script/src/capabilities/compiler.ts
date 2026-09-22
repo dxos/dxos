@@ -17,7 +17,8 @@ import { trim } from '@dxos/util';
 
 import { ScriptCapabilities } from '#types';
 
-import { Compiler } from '../compiler';
+import { Compiler } from '../compiler/index.ts';
+import { CompilerError } from './errors.ts';
 
 // TODO(burdon): Document.
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';
@@ -28,7 +29,7 @@ export default Capability.makeModule(() =>
   Effect.gen(function* () {
     yield* Effect.tryPromise({
       try: () => initializeBundler({ wasmUrl }),
-      catch: (error) => new Error(`Failed to initialize bundler: ${error}`),
+      catch: (error) => new CompilerError({ message: 'Failed to initialize bundler.', cause: error }),
     });
 
     const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
@@ -51,7 +52,7 @@ export default Capability.makeModule(() =>
         declare module 'https://*';
         ${NO_TYPES ? '' : 'declare module "*";'}
       `),
-      catch: (error) => new Error(`Failed to initialize compiler: ${error}`),
+      catch: (error) => new CompilerError({ message: 'Failed to initialize compiler.', cause: error }),
     });
     if (!NO_TYPES) {
       for (const mod of runtimeModules) {

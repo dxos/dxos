@@ -6,17 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Format, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants';
+import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants.ts';
 
-const IdeogramTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
-    title: 'API key',
-    description: 'The Ideogram API key from https://ideogram.ai/manage-api.',
-  }),
+const IdeogramTokenForm = ConnectorSpec.TokenForm({
+  title: 'API key',
+  description: 'The Ideogram API key from https://ideogram.ai/manage-api.',
 });
 type IdeogramTokenFormValues = Schema.Schema.Type<typeof IdeogramTokenForm>;
 

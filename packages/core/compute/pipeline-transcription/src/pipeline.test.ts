@@ -11,10 +11,10 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 
-import { TranscriptionPipeline } from './pipeline';
-import { type CommitFn } from './runtime';
-import { makeDatabaseLookup } from './types/lookup';
-import { TranscriptEvent } from './types/transcript-event';
+import { TranscriptionPipeline } from './pipeline.ts';
+import { type CommitFn } from './runtime/index.ts';
+import { makeDatabaseLookup } from './types/lookup.ts';
+import { TranscriptEvent } from './types/transcript-event.ts';
 
 // Reproduces the Pipeline testbench path: correction + extraction through the runtime, asserting that
 // recognized entities are linked in the final corrected text (regardless of stage commit ordering).
@@ -31,7 +31,8 @@ describe('pipeline integration (correction + extraction)', () => {
     const { db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] });
     db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
     db.add(Obj.make(Person.Person, { fullName: 'Sarah Johnson' }));
-    await db.flush({ indexes: true });
+    // The lookup searches the full-text index, which lags the indexing pass until a flush drains it.
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const blocks: ContentBlock.Transcript[] = [
       { _tag: 'transcript', started: 's0', text: 'So I caught up with Sarah Johnson this morning' },

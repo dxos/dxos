@@ -10,7 +10,7 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { FreeqConnectionError } from '../errors';
+import { FreeqConnectionError } from '../errors.ts';
 
 const FreeqRestMessage = Schema.Struct({
   id: Schema.String,

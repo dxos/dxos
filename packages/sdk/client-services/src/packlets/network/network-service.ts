@@ -3,22 +3,27 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
-import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { BaseError } from '@dxos/errors';
+import { type SignalManager, SignalManagerService, type UnsubscribeCallback } from '@dxos/messaging';
+import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
+import { toServiceError } from '@dxos/protocols';
+import { buf } from '@dxos/protocols/buf';
+import { type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
-} from '@dxos/protocols/proto/dxos/edge/signal';
-import { type NetworkService } from '@dxos/protocols/rpc';
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { NetworkService } from '@dxos/protocols/rpc';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
   'constructor'(
@@ -31,11 +36,13 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<NetworkStatus, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
-        void emit.single({
-          swarm: this.networkManager.connectionState,
-          connectionInfo: this.networkManager.connectionLog?.swarms,
-          signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
-        });
+        void emit.single(
+          buf.create(NetworkStatusSchema, {
+            swarm: this.networkManager.connectionState,
+            connectionInfo: this.networkManager.connectionLog?.swarms ?? [],
+            signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
+          }),
+        );
       };
 
       this.networkManager.connectionStateChanged.on(ctx, () => update());
@@ -46,39 +53,39 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.updateConfig'](request: NetworkService.UpdateConfigRequest): Effect.Effect<void, Error> {
+  ['NetworkService.updateConfig'](request: NetworkService.UpdateConfigRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.networkManager.setConnectionState(request.swarm);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['NetworkService.joinSwarm'](request: JoinRequest): Effect.Effect<void, Error> {
+  ['NetworkService.joinSwarm'](request: JoinRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.signalManager.join(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['NetworkService.leaveSwarm'](request: LeaveRequest): Effect.Effect<void, Error> {
+  ['NetworkService.leaveSwarm'](request: LeaveRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.signalManager.leave(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
-  ['NetworkService.querySwarm'](request: QueryRequest): Effect.Effect<SwarmResponse, Error> {
+  ['NetworkService.querySwarm'](request: QueryRequest): Effect.Effect<SwarmResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         return this.signalManager.query(Context.default(), request);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -88,7 +95,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<SwarmResponse, Error>((emit) => {
       const ctx = Context.default();
       this.signalManager.swarmState?.on(ctx, (state) => {
-        if (request.topic.equals(state.swarmKey)) {
+        if (request.topic.toHex() === state.swarmKey) {
           void emit.single(state);
         }
       });
@@ -97,12 +104,12 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.sendMessage'](message: Message): Effect.Effect<void, Error> {
+  ['NetworkService.sendMessage'](message: Message): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         await this.signalManager.sendMessage(Context.default(), message);
       },
-      catch: (error) => error as Error,
+      catch: toServiceError,
     });
   }
 
@@ -113,15 +120,6 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<Message, Error>((emit) => {
       const ctx = Context.default();
 
-      // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main
-      // thread). Its `Message.payload` is a `google.protobuf.Any` without `preserve_any`, and the
-      // codec refuses to encode an Any lacking '@type' — stamping the opaque form
-      // ('@type': 'google.protobuf.Any' + type_url/value) makes it pass through verbatim.
-      const encodableAny = (payload: Message['payload']): Message['payload'] => ({
-        ...payload,
-        '@type': 'google.protobuf.Any',
-      });
-
       // The subscription encapsulates routing (DX-1125): point-to-point messages addressed to `peer`,
       // plus — when `tags` are set — swarm broadcasts whose tags intersect. The returned callback owns
       // teardown, refcounted so it releases only this stream's tag registration.
@@ -131,7 +129,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
           peer,
           tags,
           onMessage: (message) => {
-            void emit.single({ ...message, payload: encodableAny(message.payload) });
+            void emit.single(message);
           },
         })
         .then((unsub) => {
@@ -150,3 +148,17 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 }
+
+export const NetworkServiceLayer: Layer.Layer<
+  NetworkService.Tag,
+  never,
+  SwarmNetworkManagerService | SignalManagerService
+> = Layer.effect(
+  NetworkService.Tag,
+  Effect.gen(function* () {
+    const networkManager = yield* SwarmNetworkManagerService;
+    const signalManager = yield* SignalManagerService;
+    const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
+    return new NetworkServiceImpl(networkManager, signalManager, edgeConnection);
+  }),
+);

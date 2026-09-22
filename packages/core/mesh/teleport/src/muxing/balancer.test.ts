@@ -2,45 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Duplex, pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
 import varint from 'varint';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import { Balancer, decodeChunk, encodeChunk } from './balancer';
+import { Balancer, decodeChunk, encodeChunk } from './balancer.ts';
 
-class StuckableStream extends Duplex {
-  public unstuck: Function | undefined;
+/**
+ * A sink whose first write can be held open indefinitely, so the test can observe the balancer
+ * buffering behind real backpressure rather than a timing coincidence.
+ */
+class StuckableSink {
+  public unstuck: (() => void) | undefined;
   public writeCalls = 0;
+  public readonly writable: WritableStream<Uint8Array>;
 
   constructor(private _stuck: boolean) {
-    super();
+    this.writable = new WritableStream<Uint8Array>({
+      write: async () => {
+        this.writeCalls++;
+        if (this._stuck) {
+          await new Promise<void>((resolve) => {
+            this.unstuck = () => {
+              this._stuck = false;
+              resolve();
+            };
+          });
+        }
+      },
+    });
   }
-
-  override _write(chunk: Buffer, encoding: string, callback: Function): void {
-    this.writeCalls++;
-    if (this._stuck) {
-      this.unstuck = () => {
-        this._stuck = false;
-        this.push(chunk);
-        callback();
-      };
-    } else {
-      this.push(chunk);
-      callback();
-    }
-  }
-
-  override _read(size: number): void {}
 }
 
-const setupBalancer = (channels: number, stuck: boolean): { balancer: Balancer; stream: StuckableStream } => {
+const setupBalancer = (channels: number, stuck: boolean): { balancer: Balancer; stream: StuckableSink } => {
   const balancer = new Balancer(0);
-  const stream = new StuckableStream(stuck);
+  const stream = new StuckableSink(stuck);
 
-  pipeline(balancer.stream, stream, () => {});
+  void balancer.stream.readable.pipeTo(stream.writable).catch(() => {});
 
   let i = 1;
   for (i; i <= channels; i++) {
@@ -59,7 +59,7 @@ describe('Balancer', () => {
   test('varints', () => {
     const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
     for (const value of values) {
-      const encoded = varint.encode(value, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
+      const encoded = varint.encode(value, new Uint8Array(4)).slice(0, varint.encode.bytes);
       const length = varint.encode.bytes;
       expect(encoded.length).to.eq(length);
 
@@ -114,5 +114,26 @@ describe('Balancer', () => {
     await sleep(20);
 
     expect(balancer.buffersCount).to.equal(0);
+  });
+
+  test('settles queued sends when the peer hangs up mid-backpressure', async () => {
+    const balancer = new Balancer(0);
+    const writer = balancer.stream.writable.getWriter();
+
+    // Nobody reads the readable, so these queue behind the framer's high-water mark.
+    const triggers = Array.from({ length: 40 }, () => new Trigger());
+    for (const trigger of triggers) {
+      balancer.pushData(new Uint8Array(8192), trigger, 0);
+    }
+
+    // The inbound pipe ending is how a peer hanging up reaches the framer. Every queued send has to
+    // settle: a sender parked on `drain` would otherwise wait for a readable that can never pull.
+    await writer.close();
+
+    const settled = await Promise.race([
+      Promise.allSettled(triggers.map((trigger) => trigger.wait())).then(() => true),
+      sleep(2_000).then(() => false),
+    ]);
+    expect(settled).to.equal(true);
   });
 });

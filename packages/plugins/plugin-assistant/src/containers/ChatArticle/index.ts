@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { ChatArticle as default } from './ChatArticle';
+export { ChatArticle as default } from './ChatArticle.tsx';

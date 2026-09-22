@@ -11,7 +11,7 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Input from './input';
+import * as Input from './input.ts';
 
 const TaskSet = Type.makeObject<{ name: string }>(DXN.make('com.example.type.taskSet', '0.1.0'))(
   Schema.Struct({ name: Schema.String }),
@@ -28,11 +28,9 @@ const CreateTask = Operation.make({
   services: [Database.Service],
 });
 
-const record = () => Operation.serialize(CreateTask);
-
 /** `CreateTask`'s input is a struct, so `Input.codec` always returns one; assert that once here. */
 const getCodec = (): Input.Codec => {
-  const codec = Input.codec(record());
+  const codec = Input.codec(Operation.serialize(CreateTask));
   if (codec == null) {
     throw new Error('Expected Input.codec to return a codec for a struct input schema.');
   }
@@ -83,7 +81,7 @@ describe('Input', () => {
   });
 
   test('declaresSpaceId reads the input schema, not the annotations', ({ expect }) => {
-    expect(Input.declaresSpaceId(record())).to.be.false;
+    expect(Input.declaresSpaceId(Operation.serialize(CreateTask))).to.be.false;
     const withSpaceId = Operation.serialize(
       Operation.make({
         meta: { key: DXN.make('com.example.operation.fn.withSpace'), name: 'With space' },

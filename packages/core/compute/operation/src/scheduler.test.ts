@@ -13,8 +13,9 @@ import { describe, expect } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import * as OperationInvoker from './OperationInvoker';
-import * as Scheduler from './scheduler';
+import { OperationInvocationError } from './errors.ts';
+import * as OperationInvoker from './OperationInvoker.ts';
+import * as Scheduler from './scheduler.ts';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
@@ -125,7 +126,7 @@ describe('Scheduler', () => {
           Effect.gen(function* () {
             executed.push(input.id);
             if (input.id === 'b') {
-              return yield* Effect.fail(new Error('Intentional error'));
+              return yield* Effect.fail(new OperationInvocationError({ message: 'Intentional error' }));
             }
           })) as Scheduler.InvokeFn;
 

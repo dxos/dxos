@@ -7,7 +7,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Progress } from '@dxos/progress';
 
-import * as AppCapabilities from './AppCapabilities';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Builds the {@link AppCapabilities.ProgressRegistry} capability value over an atom {@link Registry.AtomRegistry}. A
@@ -17,7 +17,7 @@ import * as AppCapabilities from './AppCapabilities';
  */
 export const createProgressRegistry = (registry: Registry.AtomRegistry): AppCapabilities.ProgressRegistry => {
   const core = Progress.make();
-  const snapshotAtom = Atom.make<Progress.ProgressSnapshot>(core.snapshot()).pipe(Atom.keepAlive);
+  const snapshotAtom = Atom.make<Progress.Snapshot>(core.snapshot()).pipe(Atom.keepAlive);
   core.subscribe((snapshot) => registry.set(snapshotAtom, snapshot));
 
   const monitorAtoms = new Map<string, Atom.Atom<Progress.TaskProgress | undefined>>();

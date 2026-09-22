@@ -14,8 +14,8 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { Jmap } from '#apis';
 import { JmapCredentials } from '#services';
 
-import { JMAP_DEFAULT_HOST } from '../constants';
-import { JmapApiError } from '../errors';
+import { JMAP_DEFAULT_HOST } from '../constants.ts';
+import { JmapApiError, JmapCredentialInvalidError } from '../errors.ts';
 
 /**
  * Manual-credential form for the JMAP connector. JMAP auth is a server-issued Bearer API token
@@ -49,10 +49,10 @@ export const jmapCredentialForm: ConnectorSpec.CredentialForm<JmapCredentialForm
       const host = values.host.trim();
       const token = values.token.trim();
       if (host.length === 0) {
-        return yield* Effect.fail(new Error('Server host is required.'));
+        return yield* Effect.fail(new JmapCredentialInvalidError({ message: 'Server host is required.' }));
       }
       if (token.length === 0) {
-        return yield* Effect.fail(new Error('API token is required.'));
+        return yield* Effect.fail(new JmapCredentialInvalidError({ message: 'API token is required.' }));
       }
       yield* fetchSession(host, token);
     }),
@@ -105,9 +105,11 @@ const fetchSession = (host: string, token: string) =>
     Effect.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromValues({ host, token }))),
     Effect.mapError((error) =>
       error instanceof JmapApiError && error.status === 401
-        ? new Error('The JMAP server rejected the token (401). Check the host and API token and try again.')
+        ? new JmapCredentialInvalidError({
+            message: 'The JMAP server rejected the token (401). Check the host and API token and try again.',
+          })
         : error instanceof Error
           ? error
-          : new Error(String(error)),
+          : new JmapCredentialInvalidError({ message: String(error) }),
     ),
   );

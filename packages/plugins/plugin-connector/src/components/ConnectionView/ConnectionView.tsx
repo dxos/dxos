@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -17,7 +17,7 @@ import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
 
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
-// (action-mode `Form.Row`s); there are no fields to bind, so the schema is empty.
+// (action-mode `Form.Field`s); there are no fields to bind, so the schema is empty.
 const ACTIONS_SCHEMA = Schema.Struct({});
 const ACTIONS_VALUES = {};
 
@@ -118,37 +118,35 @@ export const ConnectionView = ({
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
               <Form.Viewport>
                 <Form.Content>
-                  <Form.Section title={title} description={source}>
+                  <Form.FieldSet label={title} description={source}>
                     {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
 
                     {onRename && (
-                      <Form.Row label={t('connection-name.label')}>
-                        <Input.Root>
-                          <Input.TextInput
-                            // Remounted when the stored name changes. The input is uncontrolled, so
-                            // React would otherwise keep the old text after a replicated rename
-                            // arrives — and the next blur would write that stale value back over it.
-                            key={name ?? ''}
-                            // The stored name, not `title`: an unnamed connection shows the account
-                            // or connector label there, and seeding it here would persist that
-                            // fallback the first time the field is focused and blurred.
-                            defaultValue={name ?? ''}
-                            placeholder={title || t('connection-name.placeholder')}
-                            data-testid='connection.name-input'
-                            // Committed on blur and Enter rather than per keystroke: this writes
-                            // straight to a replicated object, and the label is echoed in the
-                            // sidebar as you type. Unchanged input writes nothing, so merely
-                            // tabbing through the field cannot pin the derived label.
-                            onBlur={(event) => {
-                              const next = event.target.value.trim();
-                              if (next !== (name ?? '')) {
-                                onRename(next);
-                              }
-                            }}
-                            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-                          />
-                        </Input.Root>
-                      </Form.Row>
+                      <Form.Field label={t('connection-name.label')}>
+                        <Field.Input
+                          // Remounted when the stored name changes. The input is uncontrolled, so
+                          // React would otherwise keep the old text after a replicated rename
+                          // arrives — and the next blur would write that stale value back over it.
+                          key={name ?? ''}
+                          // The stored name, not `title`: an unnamed connection shows the account
+                          // or connector label there, and seeding it here would persist that
+                          // fallback the first time the field is focused and blurred.
+                          defaultValue={name ?? ''}
+                          placeholder={title || t('connection-name.placeholder')}
+                          data-testid='connection.name-input'
+                          // Committed on blur and Enter rather than per keystroke: this writes
+                          // straight to a replicated object, and the label is echoed in the
+                          // sidebar as you type. Unchanged input writes nothing, so merely
+                          // tabbing through the field cannot pin the derived label.
+                          onBlur={(event) => {
+                            const next = event.target.value.trim();
+                            if (next !== (name ?? '')) {
+                              onRename(next);
+                            }
+                          }}
+                          onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+                        />
+                      </Form.Field>
                     )}
 
                     {/*
@@ -157,27 +155,28 @@ export const ConnectionView = ({
                       actionable. Sits above the status so a failure reads against it.
                     */}
                     {details.length > 0 && (
-                      <Form.Row label={t('connection-details.label')}>
+                      <Form.Field standalone label={t('connection-details.label')}>
                         <JsonHighlighter
                           data={Object.fromEntries(details.map(({ label, value }) => [label, value]))}
                           classNames='text-xs overflow-auto'
                           testId='connection.details'
                         />
-                      </Form.Row>
+                      </Form.Field>
                     )}
 
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (
-                      <Form.Row label={t('sync-now.label')} description={t('sync-now.description')}>
+                      <Form.Field standalone label={t('sync-now.label')} description={t('sync-now.description')}>
                         <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
                           {syncing ? t('syncing.label') : t('sync-now.label')}
                         </Button>
-                      </Form.Row>
+                      </Form.Field>
                     )}
 
                     {/* Credential status is hidden for connectors that can't be tested (`unsupported`). */}
                     {testStatus !== 'unsupported' && (
-                      <Form.Row
+                      <Form.Field
+                        standalone
                         label={t('connection-status.label')}
                         description={
                           testStatus === 'valid'
@@ -186,46 +185,54 @@ export const ConnectionView = ({
                               ? t('connection-invalid.message')
                               : t('connection-checking.message')
                         }
-                        validation={
-                          testStatus === 'invalid' && testError ? (
-                            <span className='text-sm text-error-text'>{testError}</span>
-                          ) : undefined
-                        }
+                        error={testStatus === 'invalid' && testError ? testError : undefined}
                       >
                         <Button onClick={onTestConnection} disabled={testing}>
                           {testing ? t('testing-connection.label') : t('test-connection.label')}
                         </Button>
-                      </Form.Row>
+                      </Form.Field>
                     )}
 
                     {/* Reauthenticate is available for OAuth connectors; the credential is replaced in place. */}
                     {canReauthenticate && (
-                      <Form.Row label={t('reauthenticate.label')} description={t('reauthenticate.description')}>
+                      <Form.Field
+                        standalone
+                        label={t('reauthenticate.label')}
+                        description={t('reauthenticate.description')}
+                      >
                         <Button onClick={onReauthenticate} disabled={reauthenticating}>
                           {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
                         </Button>
-                      </Form.Row>
+                      </Form.Field>
                     )}
 
                     {/* Only show change-targets for connectors that support user-pickable targets. */}
                     {canChangeTargets && (
-                      <Form.Row label={t('change-targets.label')} description={t('change-targets.description')}>
+                      <Form.Field
+                        standalone
+                        label={t('change-targets.label')}
+                        description={t('change-targets.description')}
+                      >
                         <Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
                           {loadingTargets ? t('loading.label') : t('change-targets.label')}
                         </Button>
-                      </Form.Row>
+                      </Form.Field>
                     )}
 
-                    <Form.Row label={t('delete-connection.label')} description={t('delete-connection.description')}>
+                    <Form.Field
+                      standalone
+                      label={t('delete-connection.label')}
+                      description={t('delete-connection.description')}
+                    >
                       <Button variant='destructive' onClick={onDelete}>
                         {t('delete-connection.label')}
                       </Button>
-                    </Form.Row>
-                  </Form.Section>
+                    </Form.Field>
+                  </Form.FieldSet>
 
                   {/* Hide the sync-targets section for connectors that don't sync. */}
                   {canSync && (
-                    <Form.Section title={t('targets.label')}>
+                    <Form.FieldSet label={t('targets.label')}>
                       {bindings.length === 0 ? (
                         <Empty label={canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')} />
                       ) : (
@@ -238,7 +245,7 @@ export const ConnectionView = ({
                           />
                         ))
                       )}
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
                 </Form.Content>
               </Form.Viewport>
@@ -251,7 +258,7 @@ export const ConnectionView = ({
 };
 
 /**
- * One sync binding, rendered as a settings item ({@link Form.Row} in action mode): the binding's
+ * One sync binding, rendered as a settings item ({@link Form.Field} in action mode): the binding's
  * name is the item label, its sync status the description, any sync error the validation slot, and
  * — when the target is missing — a remove button in the control slot. When the connector declares
  * an options schema and the target is live, a schema-driven options form follows the item; it keeps
@@ -306,12 +313,11 @@ const BindingRow = ({
   );
 
   return (
-    <Form.Row
+    <Form.Field
+      standalone
       label={label}
       description={status}
-      validation={
-        !missing && binding.lastError ? <span className='text-sm text-error-text'>{binding.lastError}</span> : undefined
-      }
+      error={!missing && binding.lastError ? binding.lastError : undefined}
     >
       {missing ? <Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button> : undefined}
 
@@ -319,10 +325,10 @@ const BindingRow = ({
       {optionsSchema && !missing && (
         <Form.Root schema={optionsSchema} defaultValues={defaultValues} onValuesChanged={handleOptionsChanged}>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Root>
       )}
-    </Form.Row>
+    </Form.Field>
   );
 };

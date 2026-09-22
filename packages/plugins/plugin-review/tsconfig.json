@@ -25,6 +25,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -79,6 +82,9 @@
       "path": "../../core/halo/halo-react"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -112,19 +118,16 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/react-ui-thread"
     },
     {
-      "path": "../../ui/react-ui-thread"
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-editor"

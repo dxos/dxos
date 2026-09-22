@@ -25,6 +25,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -109,6 +112,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-primitives/react-list"
     },
     {
@@ -142,16 +148,19 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/react-ui-task"
     },
     {
-      "path": "../../ui/react-ui-task"
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/react-ui-transcription"

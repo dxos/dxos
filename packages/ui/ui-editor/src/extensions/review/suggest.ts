@@ -15,7 +15,7 @@ import {
 
 import { Domino } from '@dxos/ui';
 
-import { ChangeBarMarker, changeBars } from './change-bar';
+import { ChangeBarMarker, changeBars } from './change-bar.ts';
 import {
   type DiffHunk,
   type GroupPolicy,
@@ -25,7 +25,7 @@ import {
   groupHunks,
   pairMarkupHunks,
   rebaseHunksWith,
-} from './diff';
+} from './diff.ts';
 
 /** One author's proposed revision of the editor's document (the base). */
 export type SuggestionSource = {

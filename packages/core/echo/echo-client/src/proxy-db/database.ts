@@ -54,9 +54,9 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import type { SaveStateChangedEvent } from '../automerge';
-import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db';
+import type { SaveStateChangedEvent } from '../automerge/index.ts';
+import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -65,9 +65,9 @@ import {
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
-} from '../echo-handler';
-import { FeedHandle } from '../feed/feed-handle';
-import { type HypergraphImpl } from '../hypergraph';
+} from '../echo-handler/index.ts';
+import { FeedHandle } from '../feed/feed-handle.ts';
+import { type HypergraphImpl } from '../hypergraph.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -304,6 +304,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * EDGE queue addressed by the feed object's URI; this map caches the per-feed client handle.
    */
   readonly #feeds = new Map<EID.EID, FeedHandle>();
+  /**
+   * Disposals of handles retired by a service swap. A disposal that lost writes is kept until {@link flush} raises it.
+   */
+  readonly #retiredFeeds = new Set<Promise<void>>();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -377,6 +381,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.rootChanged;
   }
 
+  get linksAdded() {
+    return this._entityManager.linksAdded;
+  }
+
   // ── Resource lifecycle ──────────────────────────────────────────────────
 
   @synchronized
@@ -399,8 +407,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _close(): Promise<void> {
-    await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
+    const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
+    for (const disposal of disposals) {
+      if (disposal.status === 'rejected') {
+        log.warn('feed writes lost on close', { err: disposal.reason });
+      }
+    }
     this.#feeds.clear();
+    await Promise.allSettled([...this.#retiredFeeds]);
+    this.#retiredFeeds.clear();
     await this._entityManager.close();
   }
 
@@ -718,6 +733,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   // Blobs.
   //
 
+  async createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob> {
+    return this.graph.blobManager.createBlobFromUpload(this.spaceId, uploadId, options);
+  }
+
   async createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob> {
     return this.graph.blobManager.createBlob(this.spaceId, bytes, options);
   }
@@ -736,7 +755,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
-    await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
+    await Promise.all([
+      ...[...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()),
+      ...[...this.#retiredFeeds].map((disposal) => disposal.finally(() => this.#retiredFeeds.delete(disposal))),
+    ]);
   }
 
   async runMigrations(migrations: Migration.Migration[]): Promise<void> {
@@ -1040,6 +1062,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.areStrongDepsSatisfied(core);
   }
 
+  areStrongDepsResolved(core: Parameters<EntityManager['areStrongDepsResolved']>[0]) {
+    return this._entityManager.areStrongDepsResolved(core);
+  }
+
   getDocumentHeads() {
     return this._entityManager.getDocumentHeads();
   }
@@ -1100,7 +1126,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     feedService?: FeedService.Client;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
-    if (feedService !== undefined) {
+    if (feedService !== undefined && feedService !== this.#feedService) {
+      const stale = [...this.#feeds.values()];
+      this.#feeds.clear();
+      for (const handle of stale) {
+        // Tracked because `dispose` drains pending writes: dropping the handle from `#feeds` alone would let `flush()`
+        // resolve while that drain is still running, or after it lost the writes.
+        const disposal = handle.dispose().then(() => {
+          this.#retiredFeeds.delete(disposal);
+        });
+        disposal.catch((err) => log.warn('retired feed handle lost writes', { err }));
+        this.#retiredFeeds.add(disposal);
+      }
       this.#feedService = feedService;
     }
   }

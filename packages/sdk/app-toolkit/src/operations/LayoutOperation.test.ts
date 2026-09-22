@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 
-import * as LayoutOperation from './LayoutOperation';
+import * as LayoutOperation from './LayoutOperation.ts';
 
 describe('notify override', () => {
   test('round-trips through a thrown error', ({ expect }) => {
@@ -53,5 +54,16 @@ describe('notify override', () => {
     }
 
     expect(LayoutOperation.getNotifyOverride(new BogusError())).toBeNull();
+  });
+});
+
+describe('UpdateDrawer', () => {
+  test('decodes a valid input', ({ expect }) => {
+    const input = Schema.decodeUnknownSync(LayoutOperation.UpdateDrawer.input)({ state: 'toggle', height: 30 });
+    expect(input).toEqual({ state: 'toggle', height: 30 });
+  });
+
+  test('rejects an invalid state literal', ({ expect }) => {
+    expect(() => Schema.decodeUnknownSync(LayoutOperation.UpdateDrawer.input)({ state: 'bogus' })).toThrow();
   });
 });

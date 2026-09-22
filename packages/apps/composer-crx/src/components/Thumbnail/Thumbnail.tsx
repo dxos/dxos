@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Field, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Generalize to card.
@@ -14,9 +14,9 @@ export const Thumbnail = ({ url, classNames }: ThemedClassName<{ url: string }>)
   return (
     <div className={mx('flex flex-col w-full', classNames)}>
       <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput disabled value={url} />
-        </Input.Root>
+        <Field.Root>
+          <Field.Input disabled value={url} />
+        </Field.Root>
         <Toolbar.IconButton
           icon='ph--clipboard--regular'
           iconOnly

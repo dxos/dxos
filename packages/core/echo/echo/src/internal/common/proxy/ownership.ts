@@ -4,11 +4,11 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { KindId } from '../types';
-import { queueOwnerNotification } from './change-context';
-import { defineHiddenProperty } from './define-hidden-property';
-import { getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils';
-import { EventId } from './symbols';
+import { KindId } from '../types/index.ts';
+import { queueOwnerNotification } from './change-context.ts';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils.ts';
+import { EventId } from './symbols.ts';
 
 /**
  * Symbol to store the owning ECHO object reference on nested JS objects (records).
@@ -234,6 +234,19 @@ export const getEchoRoot = (target: object, depth = 0): object => {
 
   // No owner means this is an unowned object (e.g., during initialization).
   return target;
+};
+
+/**
+ * The in-memory variant's read-only gate key (see `assertMutable`): the root target that a change
+ * context is opened against, or `undefined` while the root does not yet own an `[EventId]` — an object
+ * under construction is not gated, which is what lets `init` fill it before any context exists.
+ *
+ * Every target of one object answers the same key, so a nested record and an array are gated by the
+ * context their root opens.
+ */
+export const changeKeyOf = (target: object): object | undefined => {
+  const root = getEchoRoot(getRawTarget(target));
+  return EventId in root ? root : undefined;
 };
 
 /**

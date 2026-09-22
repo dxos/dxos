@@ -11,21 +11,21 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { Mic } from '#components';
 import { meta } from '#meta';
+import { Dictatable } from '#types';
 
-const whenMarkdownDocument = GraphNodeMatcher.whenAll(
+const whenDictatable = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObjectMatches,
-  AppNodeMatcher.whenEchoTypeMatches(Markdown.Document),
+  GraphNodeMatcher.whenAny(...Dictatable.types.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
 );
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'transcriptionToolbar',
-      match: (node, get) => whenMarkdownDocument(node, get),
+      match: (node, get) => whenDictatable(node, get),
       // The control owns recording state, mode, device selection, and entity-extraction —
       // interactions the action model cannot express (press-and-hold, an embedded dropdown, a
       // live device list) — so it renders via the custom toolbar variant rather than a plain
@@ -39,7 +39,9 @@ export default Capability.makeModule(
             properties: {
               label: ['start-recording.label', { ns: meta.profile.key }],
               icon: 'ph--microphone--regular',
-              disposition: 'toolbar',
+              // Both surfaces: dictation acts on whatever text is being composed, which an object
+              // toolbar and a prompt row each have.
+              disposition: ['toolbar', 'prompt'],
               variant: 'custom',
               render: () => <Mic docId={matched.id} />,
             },

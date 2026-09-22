@@ -67,7 +67,12 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'plugin', kind: 'item', path: [] },
+        url: {
+          key: 'plugin',
+          kind: 'item',
+          path: [],
+          workspace: (workspace) => workspace === SettingsPath.SETTINGS_ID,
+        },
         match: GraphNodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
@@ -98,6 +103,7 @@ export default Capability.makeModule(
                     label: meta.profile.name ?? meta.profile.key,
                     // The plugin's own hue is dropped so the settings list reads as one uniform group.
                     icon: meta.profile.icon?.key ?? 'ph--circle--regular',
+                    testId: `settings.${meta.profile.key}`,
                   },
                 }),
               ),

@@ -13,7 +13,11 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -53,14 +57,14 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-react": "workspace:*",

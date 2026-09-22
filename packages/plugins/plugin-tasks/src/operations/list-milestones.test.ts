@@ -4,18 +4,18 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import listMilestones from './list-milestones';
-import updateTask from './update-task';
-
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import listMilestones from './list-milestones.ts';
+import updateTask from './update-task.ts';
 
 describe('list-milestones', () => {
   it.effect('sequences the set and reports progress derived from its tasks', () =>
@@ -42,7 +42,14 @@ describe('list-milestones', () => {
       expect(milestones).toEqual([
         { id: milestone.id, name: 'Alpha', description: 'Ships to staging', targetDate: undefined, total: 2, done: 1 },
       ]);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
   );
 
   it.effect(
@@ -50,8 +57,6 @@ describe('list-milestones', () => {
     Effect.fnUntraced(function* () {
       const spaceKey = PublicKey.random();
       const storagePath = testStoragePath({ name: `list-milestones-fresh-session-${Date.now()}` });
-      const sessionLayer = () =>
-        TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath });
 
       yield* Effect.gen(function* () {
         const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
@@ -59,7 +64,11 @@ describe('list-milestones', () => {
         const { milestone } = yield* createMilestone.handler({ taskSet: Ref.make(taskSet), name: 'Alpha' });
         yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Filed', milestone: Ref.make(milestone) });
         yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Unfiled' });
-      }).pipe(Effect.provide(sessionLayer()));
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath }),
+        ),
+      );
 
       yield* Effect.gen(function* () {
         const sets = yield* Database.query(Query.select(Filter.type(TaskSet.TaskSet))).run;
@@ -69,7 +78,11 @@ describe('list-milestones', () => {
         expect(milestones.map(({ name, total, done }) => ({ name, total, done }))).toEqual([
           { name: 'Alpha', total: 1, done: 0 },
         ]);
-      }).pipe(Effect.provide(sessionLayer()));
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath }),
+        ),
+      );
     }),
   );
 });

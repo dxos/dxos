@@ -24,23 +24,37 @@ import {
   ClientRpcServer,
   type ClientServicesHandlers,
   type ClientServicesRpc,
+  RegisterService,
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
   QueryInvitationsResponse,
-  SpaceState,
-  SystemStatus,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
-import { remainingLifetimeSeconds } from '../spaces/data-space-manager';
+import { remainingLifetimeSeconds } from '../spaces/data-space-manager.ts';
 
 //
 // Helpers & Schema for test suite 2
@@ -132,20 +146,21 @@ describe('client services effect-rpc', () => {
     const proxy = await setup(() => ({
       SpacesService: mockService<SpacesService.Handlers>({
         ['SpacesService.createSpace']: () =>
-          Effect.succeed({
-            id: 'test-space',
-            spaceKey,
-            state: SpaceState.SPACE_READY,
-            membershipPolicy: MembershipPolicy.INVITE,
-            metrics: {},
-          }),
+          Effect.succeed(
+            buf.create(SpaceSchema, {
+              id: 'test-space',
+              spaceKey: fromPublicKey(spaceKey),
+              state: SpaceState.SPACE_READY,
+              membershipPolicy: MembershipPolicy.INVITE,
+            }),
+          ),
       }),
     }));
 
     const space = await proxy.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
     expect(space.id).toEqual('test-space');
-    expect(space.spaceKey).toBeInstanceOf(PublicKey);
-    expect(space.spaceKey.equals(spaceKey)).toBe(true);
+    expect(toPublicKey(space.spaceKey)).toBeInstanceOf(PublicKey);
+    expect(toPublicKey(space.spaceKey)?.equals(spaceKey)).toBe(true);
   });
 
   test('streaming call round trip', async ({ expect }) => {
@@ -190,26 +205,26 @@ describe('client services effect-rpc', () => {
   // could not encode. The response failed to serialize, so the stream died before delivering the
   // initial snapshot that `InvitationsProxy.open()` (and therefore the whole app boot) waited on.
   test('an existing-invitations snapshot with a delegated invitation reaches the client', async ({ expect }) => {
-    const delegated: Invitation = {
+    const delegated: Invitation = buf.create(InvitationSchema, {
       invitationId: 'delegated-invitation',
-      type: Invitation.Type.DELEGATED,
-      kind: Invitation.Kind.SPACE,
-      authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      spaceKey: PublicKey.random(),
-      delegationCredentialId: PublicKey.random(),
+      type: Invitation_Type.DELEGATED,
+      kind: Invitation_Kind.SPACE,
+      authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+      state: Invitation_State.INIT,
+      swarmKey: fromPublicKey(PublicKey.random()),
+      spaceKey: fromPublicKey(PublicKey.random()),
+      delegationCredentialId: fromPublicKey(PublicKey.random()),
       lifetime: remainingLifetimeSeconds(new Date(Date.now() + 604_799_123)),
       multiUse: true,
       persistent: false,
-    };
+    });
 
-    const snapshot: QueryInvitationsResponse = {
-      action: QueryInvitationsResponse.Action.ADDED,
-      type: QueryInvitationsResponse.Type.CREATED,
+    const snapshot: QueryInvitationsResponse = buf.create(QueryInvitationsResponseSchema, {
+      action: QueryInvitationsResponse_Action.ADDED,
+      type: QueryInvitationsResponse_Type.CREATED,
       invitations: [delegated],
       existing: true,
-    };
+    });
 
     const proxy = await setup(() => ({
       InvitationsService: mockService<InvitationsService.Handlers>({
@@ -408,4 +423,106 @@ describe('effect-rpc tests', () => {
         }),
       ),
     ));
+});
+
+describe('session server (RpcRouter)', () => {
+  // A session as the worker builds one: the services register themselves with the router, and the
+  // session only attaches its transport.
+  const sessionLayer = (port: MessagePort, handlers: SystemService.Handlers) =>
+    Layer.mergeAll(
+      RpcRouter.layerTransport,
+      RegisterService(SystemService.Rpcs, SystemService.Tag).pipe(
+        Layer.provide(Layer.succeed(SystemService.Tag, handlers)),
+      ),
+    ).pipe(
+      Layer.provide(RpcRouter.layer),
+      Layer.provide(
+        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
+      ),
+      Layer.orDie,
+    );
+
+  const serveOnPort = (port: MessagePort, handlers: SystemService.Handlers): Effect.Effect<void, never, Scope.Scope> =>
+    Effect.asVoid(Layer.build(sessionLayer(port, handlers)));
+
+  const serveOverChannel = (handlers: SystemService.Handlers): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+    Effect.gen(function* () {
+      const { port1, port2 } = yield* makeMessageChannel();
+      yield* serveOnPort(port2, handlers);
+      return yield* makeClientServicesRpc(port1);
+    });
+
+  test('serves a unary rpc from a service tag', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            mockService<SystemService.Handlers>({
+              ['SystemService.getConfig']: () => Effect.succeed(create(ConfigSchema, {})),
+            }),
+          );
+          const config = yield* rpc['SystemService.getConfig'](undefined);
+          expect(config).toBeDefined();
+        }),
+      ),
+    );
+  });
+
+  test('serves a streaming rpc whose stream emits from a callback registration', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            mockService<SystemService.Handlers>({
+              ['SystemService.queryStatus']: () =>
+                EffectEx.streamFromEmitter<SystemService.QueryStatusResponse, Error>((emit) => {
+                  emit.single({ status: SystemStatus.ACTIVE });
+                }),
+            }),
+          );
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.take(1), Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
+
+  // Mirrors the worker session: the tab opens its client before the worker has built the server.
+  test('serves a streaming rpc to a client that connected before the server was built', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const { port1, port2 } = yield* makeMessageChannel();
+          const scope = yield* Effect.scope;
+          const rpcPromise = EffectEx.runPromise(makeClientServicesRpc(port1).pipe(Scope.provide(scope)));
+          yield* Effect.sleep('50 millis');
+          yield* serveOnPort(
+            port2,
+            mockService<SystemService.Handlers>({
+              ['SystemService.queryStatus']: () => Stream.make({ status: SystemStatus.ACTIVE }),
+            }),
+          );
+          const rpc = yield* Effect.promise(() => rpcPromise);
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.take(1), Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
+
+  test('serves a streaming rpc from a service tag', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const rpc = yield* serveOverChannel(
+            mockService<SystemService.Handlers>({
+              ['SystemService.queryStatus']: () => Stream.make({ status: SystemStatus.ACTIVE }),
+            }),
+          );
+          const statuses = yield* rpc['SystemService.queryStatus']({}).pipe(Stream.runCollect);
+          expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+        }),
+      ),
+    );
+  });
 });

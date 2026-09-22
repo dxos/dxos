@@ -18,10 +18,10 @@ import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { LOAD_PLUGIN_DIALOG } from '#types';
+import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
-import { getCategoryPredicate, getRemotePluginIds } from '../categories';
-import { REGISTRY_ID } from '../paths';
+import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { PLUGINS_SEGMENT, REGISTRY_ID } from '../paths.ts';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
@@ -47,7 +47,7 @@ const toDisplayPlugin = (entry: Plugin.Meta): Plugin.Plugin =>
   }) as Plugin.Plugin;
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ externalPlugins = true }: RegistryPluginOptions = {}) {
     // Hoisted so connector bodies read reactively via `get(...)` instead of a sync
     // `Capability.get`, establishing a dependency that heals once the capability lands.
     const pluginManagerAtom = yield* Capability.atom(Capabilities.PluginManager);
@@ -72,6 +72,8 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'registry',
         match: GraphNodeMatcher.whenRoot,
+        // Breaks the `Position.first` tie with the settings node so the registry pins above it.
+        position: Position.first,
         // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
         // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
         connector: () =>
@@ -91,7 +93,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'categories',
-        url: { key: 'category', kind: 'item', path: [] },
+        url: { key: 'category', kind: 'item', path: [], workspace: (workspace) => workspace === REGISTRY_ID },
         match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
@@ -104,97 +106,58 @@ export default Capability.makeModule(
             enabled: get(manager.enabled),
             remoteIds: getRemotePluginIds(),
           };
-          const categoryCount = (category: string) =>
-            plugins.filter(getCategoryPredicate(category, filterContext)).length;
-          const registryCount = get(manager.pluginRegistry.plugins).entries.length;
+          const categoryCount = (category: string) => {
+            if (category !== 'registry') {
+              return plugins.filter(getCategoryPredicate(category, filterContext)).length;
+            }
+            return externalPlugins ? get(manager.pluginRegistry.plugins).entries.length : 0;
+          };
 
-          return Effect.succeed([
-            AppGraphNode.make({
-              id: 'bundled',
-              type: 'category',
-              data: 'bundled',
-              properties: {
-                label: ['bundled-plugins.label', { ns: meta.profile.key }],
-                icon: 'ph--squares-four--regular',
-                testId: 'pluginRegistry.bundled',
-                count: categoryCount('bundled'),
-              },
-            }),
-            AppGraphNode.make({
-              id: 'installed',
-              type: 'category',
-              data: 'installed',
-              properties: {
-                label: ['installed-plugins.label', { ns: meta.profile.key }],
-                icon: 'ph--check--regular',
-                testId: 'pluginRegistry.installed',
-                count: categoryCount('installed'),
-              },
-            }),
-            AppGraphNode.make({
-              id: 'recommended',
-              type: 'category',
-              data: 'recommended',
-              properties: {
-                label: ['recommended-plugins.label', { ns: meta.profile.key }],
-                icon: 'ph--star--regular',
-                testId: 'pluginRegistry.recommended',
-                count: categoryCount('recommended'),
-              },
-            }),
-            AppGraphNode.make({
-              id: 'labs',
-              type: 'category',
-              data: 'labs',
-              properties: {
-                label: ['labs-plugins.label', { ns: meta.profile.key }],
-                icon: 'ph--flask--regular',
-                testId: 'pluginRegistry.labs',
-                count: categoryCount('labs'),
-              },
-            }),
-            ...(registryCount > 0
-              ? [
-                  AppGraphNode.make({
-                    id: 'registry',
-                    type: 'category',
-                    data: 'registry',
-                    properties: {
-                      label: ['registry-plugins.label', { ns: meta.profile.key }],
-                      icon: 'ph--users-three--regular',
-                      testId: 'pluginRegistry.registry',
-                      count: registryCount,
-                    },
-                  }),
-                ]
-              : []),
-          ]);
+          return Effect.succeed(
+            getPopulatedCategories(categoryCount).map(({ id, labelKey, icon, testId, count }) =>
+              AppGraphNode.make({
+                id,
+                type: 'category',
+                data: id,
+                properties: {
+                  label: [labelKey, { ns: meta.profile.key }],
+                  icon,
+                  testId,
+                  count,
+                },
+              }),
+            ),
+          );
         },
       }),
-      AppGraphBuilder.createExtension({
-        id: 'actions',
-        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
-        actions: () =>
-          Effect.succeed([
-            {
-              id: 'loadByUrl',
-              data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(LayoutOperation.UpdateDialog, {
-                  subject: LOAD_PLUGIN_DIALOG,
-                  state: true,
-                });
-              }),
-              properties: {
-                label: ['load-by-url.label', { ns: meta.profile.key }],
-                icon: 'ph--cloud-arrow-down--regular',
-                disposition: 'list-item-primary',
-              },
-            },
-          ]),
-      }),
+      ...(externalPlugins
+        ? [
+            AppGraphBuilder.createExtension({
+              id: 'actions',
+              match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
+              actions: () =>
+                Effect.succeed([
+                  {
+                    id: 'loadByUrl',
+                    data: Effect.fnUntraced(function* () {
+                      yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+                        subject: LOAD_PLUGIN_DIALOG,
+                        state: true,
+                      });
+                    }),
+                    properties: {
+                      label: ['load-by-url.label', { ns: meta.profile.key }],
+                      icon: 'ph--cloud-arrow-down--regular',
+                      disposition: 'list-item-primary',
+                    },
+                  },
+                ]),
+            }),
+          ]
+        : []),
       AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'registry', kind: 'item', path: [] },
+        url: { key: 'registry', kind: 'item', path: [PLUGINS_SEGMENT] },
         match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
@@ -216,7 +179,7 @@ export default Capability.makeModule(
             }),
           );
 
-          const registryEntries = get(manager.pluginRegistry.plugins).entries;
+          const registryEntries = externalPlugins ? get(manager.pluginRegistry.plugins).entries : [];
           const registryNodes = registryEntries
             // `profile.key` is the bare NSID on both sides; comparing against a `dxn:`-prefixed
             // URI here would never match and would duplicate every installed plugin's node.
@@ -235,7 +198,15 @@ export default Capability.makeModule(
               });
             });
 
-          return Effect.succeed([...installedNodes, ...registryNodes]);
+          // Under their own hidden node, so a plugin's id can never be mistaken for a category's.
+          return Effect.succeed([
+            AppGraphNode.make({
+              id: PLUGINS_SEGMENT,
+              type: `${meta.profile.key}.plugins`,
+              properties: { disposition: 'hidden' },
+              nodes: [...installedNodes, ...registryNodes],
+            }),
+          ]);
         },
       }),
     ]);

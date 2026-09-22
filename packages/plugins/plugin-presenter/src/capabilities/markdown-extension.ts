@@ -13,7 +13,7 @@ import { keymap } from '@dxos/ui-editor';
 
 import { PresenterOperation } from '#types';
 
-import { isPresenting } from '../paths';
+import { isPresenting } from '../paths.ts';
 
 /**
  * Contributes the present shortcut (Shift+Cmd+P) to the markdown editor so presentation

@@ -6,8 +6,9 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { concatUint8Arrays } from '@dxos/util';
 
-import { protocol } from './defs';
+import { protocol } from './defs.ts';
 
 /**
  * 0000 0001 - message contains a part of segmented message chunk sequence.
@@ -34,7 +35,7 @@ const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_MAX_BYTES;
 const BUFFER_FULL_BACKOFF_TIMEOUT = 100;
 
 export class WebSocketMuxer {
-  private readonly _inMessageAccumulator = new Map<number, Buffer[]>();
+  private readonly _inMessageAccumulator = new Map<number, Uint8Array[]>();
   private readonly _outMessageChunks = new Map<number, MessageChunk[]>();
   private readonly _outMessageChannelByService = new Map<string, number>();
 
@@ -69,8 +70,7 @@ export class WebSocketMuxer {
     }
 
     if (channelId == null || binary.length < this._maxChunkLength) {
-      const flags = Buffer.from([0]);
-      this._ws.send(Buffer.concat([flags, binary]));
+      this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
       return;
     }
 
@@ -89,11 +89,11 @@ export class WebSocketMuxer {
       const chunk = binary.slice(i, i + this._maxChunkLength);
       const isLastChunk = i + this._maxChunkLength >= binary.length;
       if (isLastChunk) {
-        const flags = Buffer.from([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
-        messageChunks.push({ payload: Buffer.concat([flags, chunk]), trigger: terminatorSentTrigger });
+        const flags = new Uint8Array([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
+        messageChunks.push({ payload: concatUint8Arrays(flags, chunk), trigger: terminatorSentTrigger });
       } else {
-        const flags = Buffer.from([FLAG_SEGMENT_SEQ, channelId]);
-        messageChunks.push({ payload: Buffer.concat([flags, chunk]) });
+        const flags = new Uint8Array([FLAG_SEGMENT_SEQ, channelId]);
+        messageChunks.push({ payload: concatUint8Arrays(flags, chunk) });
       }
     }
 
@@ -121,7 +121,7 @@ export class WebSocketMuxer {
     }
 
     const [flags, channelId, ...payload] = data;
-    const chunkPayload = Buffer.from(payload);
+    const chunkPayload = new Uint8Array(payload);
     let chunkAccumulator = this._inMessageAccumulator.get(channelId);
     if (chunkAccumulator) {
       chunkAccumulator.push(chunkPayload);
@@ -138,7 +138,7 @@ export class WebSocketMuxer {
       return undefined;
     }
 
-    const reassembled = Buffer.concat(chunkAccumulator);
+    const reassembled = concatUint8Arrays(chunkAccumulator);
     const chunkCount = chunkAccumulator.length;
     this._inMessageAccumulator.delete(channelId);
     try {
@@ -181,6 +181,11 @@ export class WebSocketMuxer {
     }
 
     const send = () => {
+      if (this._ws.readyState === WebSocket.CONNECTING) {
+        // `send()` throws `InvalidStateError` before the handshake completes, so wait it out.
+        this._sendTimeout = setTimeout(send, BUFFER_FULL_BACKOFF_TIMEOUT);
+        return;
+      }
       if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
         log.warn('send called for closed websocket');
         this._sendTimeout = undefined;
@@ -245,7 +250,7 @@ type WebSocketCompat = {
 };
 
 type MessageChunk = {
-  payload: Buffer;
+  payload: Uint8Array;
   /**
    * Wakes when the payload is enqueued by WebSocket.
    */
@@ -256,6 +261,7 @@ type MessageChunk = {
  * To avoid using isomorphic-ws on edge.
  */
 enum WebSocket {
+  CONNECTING = 0,
   CLOSING = 2,
   CLOSED = 3,
 }

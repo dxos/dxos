@@ -53,6 +53,9 @@
       "path": "../../core/halo/halo-react"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

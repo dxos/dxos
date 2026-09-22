@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor';
+import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor.ts';
 
 describe('SummarizeMessageExtractor', () => {
   let builder: EchoTestBuilder;

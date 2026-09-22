@@ -20,7 +20,7 @@ import { CodePlugin } from '#plugin';
 import { translations } from '#translations';
 import { CodeProject, SourceFile, Spec } from '#types';
 
-import { CodeArticle } from './CodeArticle';
+import { CodeArticle } from './CodeArticle.tsx';
 
 const HELLO_WORLD = {
   path: 'src/hello.ts',

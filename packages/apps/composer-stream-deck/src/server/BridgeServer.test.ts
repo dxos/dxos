@@ -7,7 +7,7 @@ import { WebSocket } from 'ws';
 
 import * as Protocol from '@dxos/plugin-stream-deck/Protocol';
 
-import { BridgeServer } from './BridgeServer';
+import { BridgeServer } from './BridgeServer.ts';
 
 // A high fixed port would collide with a developer's running plugin; 0 is not usable because the
 // client has to know where to dial, so the suite picks its own port per file.

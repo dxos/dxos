@@ -14,7 +14,7 @@ import { type EntityId } from '@dxos/keys';
 import { StateMap } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import * as Subscription from './Subscription';
+import * as Subscription from './Subscription.ts';
 
 export const SKILL_KEY = 'org.dxos.skill.magazine';
 

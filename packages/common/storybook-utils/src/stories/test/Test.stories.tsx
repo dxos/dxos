@@ -9,7 +9,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Test, TEST_ID } from './Test';
+import { Test, TEST_ID } from './Test.tsx';
 
 /**
  * Storybook sanity test.

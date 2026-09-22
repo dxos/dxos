@@ -16,9 +16,10 @@ export const JsonCard = ({ data }: { data: unknown }) => {
   } catch {}
   return (
     <Card.Row>
-      <Card.Block>
+      <Card.Block classNames='self-start'>
         <ToggleIconButton
           variant='ghost'
+          density='sm'
           icon='ph--caret-right--regular'
           iconOnly
           active={open}
@@ -26,7 +27,7 @@ export const JsonCard = ({ data }: { data: unknown }) => {
           label='Toggle JSON'
         />
       </Card.Block>
-      {(open && <JsonHighlighter data={data} classNames='py-1.5 col-span-full text-xs overflow-auto' />) || (
+      {(open && <JsonHighlighter data={data} classNames='col-span-full max-h-[20lh] py-1.5 text-xs' />) || (
         <Card.Text variant='description'>{collapsedLength}</Card.Text>
       )}
     </Card.Row>

@@ -9,14 +9,14 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { SpaceSchema } from '@dxos/client/echo';
-import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
+import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Tag, Type, View } from '@dxos/echo';
 import { SpacesService } from '@dxos/protocols/rpc';
 
 // `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
 // bare name in this file.
-import * as SpaceSchemaModule from './SpaceSchema';
+import * as SpaceSchemaModule from './SpaceSchema.ts';
 
 /**
  * Operations for the Space plugin.
@@ -102,8 +102,8 @@ export const Share = Operation.make({
   },
   input: Schema.Struct({
     space: SpaceSchema,
-    type: Schema.Enum(Invitation.Type),
-    authMethod: Schema.Enum(Invitation.AuthMethod),
+    type: Schema.Enum(Invitation_Type),
+    authMethod: Schema.Enum(Invitation_AuthMethod),
     multiUse: Schema.Boolean,
     target: Schema.optional(Schema.String),
   }),
@@ -119,20 +119,6 @@ export const OpenSettings = Operation.make({
   },
   input: Schema.Struct({
     space: SpaceSchema,
-  }),
-  output: Schema.Void,
-});
-
-export const WaitForObject = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.space.waitForObject'),
-    name: 'Wait For Object',
-    description: 'Wait for an object to be available.',
-    icon: 'ph--clock-countdown--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    id: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
@@ -212,8 +198,7 @@ export const RemoveObjects = Operation.make({
       'when the entities themselves are not held.',
     icon: 'ph--trash--regular',
   },
-  // The space comes from the input itself — live entities, or refs that are always space-qualified.
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
     // References are what a caller outside this process can supply; resolved to the same entities
@@ -653,7 +638,7 @@ export const MergeDuplicates = Operation.make({
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     typename: Schema.String,
-    objectIds: Schema.Array(Schema.String).annotate({ description: 'Members of the group to merge.' }),
+    objectIds: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'Members of the group to merge.' }),
     overrides: Schema.optional(Obj.Unknown).annotate({
       description: 'User-edited preview; folded in last so confirmed edits win.',
     }),
@@ -716,8 +701,9 @@ export const QueryObjects = Operation.make({
     key: DXN.make('org.dxos.operation.space.queryObjects'),
     name: 'Query Objects',
     description:
-      'Query the space for objects by typename and/or full-text search. Omit both to list everything. ' +
-      'The typename filter matches every version of the type.',
+      'Query the space for objects by typename and/or full-text search. Omit both to match everything. ' +
+      'The typename filter matches every version of the type. A result capped by `limit` says so ' +
+      'with `truncated`; raise `limit` to see the rest.',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service],
@@ -732,7 +718,9 @@ export const QueryObjects = Operation.make({
     includeContent: Schema.optional(Schema.Boolean).annotate({
       description: 'Return full object data (default false); false returns id/type/label only.',
     }),
-    limit: Schema.optional(Schema.Number).annotate({ description: 'Maximum number of results (default 10).' }),
+    limit: Schema.optional(Schema.Number).annotate({
+      description: 'Maximum number of results (default 10). A capped result sets `truncated`.',
+    }),
     includeQueues: Schema.optional(Schema.Boolean).annotate({
       description:
         'Also search the space queues (default false). Queue-backed content — mailbox emails, ' +
@@ -741,6 +729,9 @@ export const QueryObjects = Operation.make({
   }),
   output: Schema.Struct({
     results: Schema.Array(Schema.Unknown),
+    truncated: Schema.Boolean.annotate({
+      description: 'True when `limit` cut the result short, so a caller never reads a capped page as the whole set.',
+    }),
   }),
 }).pipe(Operation.mutation('none'));
 

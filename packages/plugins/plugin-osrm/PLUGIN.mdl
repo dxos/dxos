@@ -55,8 +55,8 @@ Each extension is defined in the Appendix of the core template or resolved via i
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
 | `op`        | `org.dxos.mdl.op@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0` |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`      |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
 | `step`      | `org.dxos.mdl.step@1.0`      |
 
 ## Cross-package additions
@@ -349,14 +349,14 @@ packages/plugins/plugin-osrm/
 ## Acceptance
 
 ```mdl
-test OsrmRoutingService geocoding
+scenario OsrmRoutingService geocoding
   desc: Nominatim geocoding with mocked fetch.
   cases:
     - name-only waypoint → Place with geo populated from first result.
     - Place already carrying geo → not re-geocoded.
     - no result for a name → throws GeocodeError naming the waypoint.
 
-test OsrmRoutingService routing
+scenario OsrmRoutingService routing
   desc: OSRM route parsing with mocked fetch.
   cases:
     - 3 waypoints → { waypoints (3), routes:[Route] }; route has 2 legs,
@@ -364,7 +364,7 @@ test OsrmRoutingService routing
     - geometry coords are [lon, lat] (GeoPoint) order.
     - OSRM code !== 'Ok' → throws RouteError.
 
-test PlanRoute operation (plugin-trip)
+scenario PlanRoute operation (plugin-trip)
   desc: Operation enriches existing road segments in place. Uses a fake
         in-memory RoutingService registered in plugin-trip/src/testing.
   cases:
@@ -374,13 +374,13 @@ test PlanRoute operation (plugin-trip)
     - road segment missing an endpoint is skipped.
     - no RoutingService registered → fails with "No routing service".
 
-test tripMarkerProvider polyline (plugin-trip)
+scenario tripMarkerProvider polyline (plugin-trip)
   desc: Marker provider emits real geometry.
   cases:
     - road segment with RoadDetails.routes → polyline line geometry emitted.
     - road segment without routes → straight-arc fallback.
 
-test buildTileUrl (plugin-map)
+scenario buildTileUrl (plugin-map)
   desc: Tile URL construction across providers.
   cases:
     - tileProvider 'osm' (keyless) → OSM template.
@@ -410,11 +410,11 @@ test buildTileUrl (plugin-map)
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Plan a driving route across two road segments
+test QA-1: Plan a driving route across two road segments
   desc: |
     plugin-osrm contributes no operation of its own — it registers a `RoutingService` capability
     that `plugin-trip`'s `PlanRoute` operation resolves and calls. The core round-trip therefore
@@ -433,8 +433,8 @@ flow QA-1: Plan a driving route across two road segments
     - network access to `nominatim.openstreetmap.org` and `router.project-osrm.org` — both public
       demo services, rate-limited (Nominatim ≤ 1 req/s) and explicitly "not for production use";
       a flaky or slow result here may be the upstream demo instance, not a defect
-    - no Trip named "QA Road Trip" exists — ABORT rather than deleting one this flow did not create
-    - trip: the Trip "QA Road Trip" this flow creates — no create op exists (human-only step), so
+    - no Trip named "QA Road Trip" exists — ABORT rather than deleting one this test did not create
+    - trip: the Trip "QA Road Trip" this test creates — no create op exists (human-only step), so
       the runner binds this once that step completes
   before:
     - name: Create the trip
@@ -445,7 +445,7 @@ flow QA-1: Plan a driving route across two road segments
         (`plugin-trip/src/capabilities/create-object.ts`), the same factory-through-navtree path
         as plugin-chess's `startGame`; there is no operation key to call, and the navtree action
         both creates and places the row in one gesture, so no separate placement step is needed.
-  test:
+  steps:
     - name: Add the first road segment
       do: In TripArticle, choose "Add segment → Road" and set origin "London" and destination "Paris".
       invoke: org.dxos.operation.trip.addSegment { trip: $given.trip, kind: "road", origin: "London", destination: "Paris" }

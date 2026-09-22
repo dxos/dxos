@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as References from 'effect/References';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -17,12 +19,15 @@ import { DXOS_VERSION } from '@dxos/client';
 import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
-import { makeLocalServer } from './local-server';
-import { SpaceToolkit, spaceHandlers } from './space-tools';
-import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
+import { analyticsStdio } from './analytics.ts';
+import { handshakeAttribution } from './legacy-initialize-analytics.ts';
+import { makeLocalServer } from './local-server.ts';
+import { SpaceToolkit, spaceHandlers } from './space-tools.ts';
+import { WATCH_CHILD_ENV, formatReady } from './watch-protocol.ts';
 
 /**
  * Names of the statically-defined tools; the projection refuses to build if one of them collides
@@ -49,7 +54,7 @@ declare global {
  * What `--watch` reloads on differs by build, so the description does too: from source the whole
  * imported graph is live, while the binary can only change through its dev-installed plugins.
  */
-const watchOption = Options.boolean('watch').pipe(
+const watchOption = Options.Boolean('watch').pipe(
   Options.withDescription(
     globalThis.DX_CLI_BUNDLED
       ? 'Restart the server when a dev-installed plugin changes.'
@@ -78,7 +83,7 @@ export const serve = Command.make(
     if (watch) {
       // Imported here rather than at the top so the supervisor is absent from the module graph of
       // the child it supervises, which would otherwise reload itself on every one of its own edits.
-      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch'));
+      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch.ts'));
       return yield* runWatchSupervisor();
     }
 
@@ -92,6 +97,21 @@ export const serve = Command.make(
     const server = yield* makeLocalServer();
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
+
+    // Optional: the observability plugin is disableable, and a profile that turned it off still
+    // serves — it just reports nothing.
+    const observability = Option.getOrUndefined(yield* Capability.getOption(ObservabilityCapabilities.Observability));
+    const capture = observability && (yield* observability.isAvailable('mcp')) ? observability.mcp : undefined;
+    const stdio = capture
+      ? McpServer.stdio.pipe(
+          Layer.provide(
+            analyticsStdio(capture, [
+              // TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support.
+              handshakeAttribution,
+            ]),
+          ),
+        )
+      : McpServer.stdio;
 
     const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
       Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),
@@ -119,13 +139,20 @@ export const serve = Command.make(
           McpServer.layerStdio({
             name: McpServer.identity.name,
             version: DXOS_VERSION,
-            protocols: [McpProtocol.v2025_06_18],
+            protocols: [
+              // TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support.
+              // First, because a request carrying no version before `initialize` falls back to the first adapter.
+              McpProtocol.v2025_06_18,
+              McpProtocol.v2026_07_28,
+            ],
           }),
         ),
-        Layer.provide(McpServer.stdio),
+        Layer.provide(stdio),
       ),
     );
   }),
 ).pipe(
   Command.withDescription("Run the DXOS MCP server locally over stdio, against this profile's identity and spaces."),
+  // stdout carries the protocol, so Effect's logger, which reports tool defects, writes to stderr.
+  Command.provideSync(References.LogToStderr, true),
 );

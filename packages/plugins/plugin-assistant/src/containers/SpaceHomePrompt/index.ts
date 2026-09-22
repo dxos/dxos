@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { SpaceHomePrompt as default } from './SpaceHomePrompt';
+export { SpaceHomePrompt as default } from './SpaceHomePrompt.tsx';

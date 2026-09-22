@@ -18,10 +18,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -217,7 +217,7 @@ feat F-5: Error Handling and Retries
 ## Acceptance
 
 ```mdl
-test T-1: OAuth populates account field
+scenario T-1: OAuth populates account field
   given: a fresh Integration with no accessToken.account
   when: OAuth flow completes and onTokenCreated fires
   then:
@@ -226,7 +226,7 @@ test T-1: OAuth populates account field
 ```
 
 ```mdl
-test T-2: Discovery returns targets without ECHO writes
+scenario T-2: Discovery returns targets without ECHO writes
   given: a valid Integration with OAuth token
   when: op:GetSlackChannels is invoked
   then:
@@ -235,7 +235,7 @@ test T-2: Discovery returns targets without ECHO writes
 ```
 
 ```mdl
-test T-3: First sync materializes Channel
+scenario T-3: First sync materializes Channel
   given: an Integration with one selected target (no prior sync)
   when: op:SyncSlackChannel is invoked
   then:
@@ -246,7 +246,7 @@ test T-3: First sync materializes Channel
 ```
 
 ```mdl
-test T-4: Second sync is incremental
+scenario T-4: Second sync is incremental
   given: a target with cursor = '1700000100.000000'
   when: op:SyncSlackChannel is invoked
   then:
@@ -256,7 +256,7 @@ test T-4: Second sync is incremental
 ```
 
 ```mdl
-test T-5: Per-target failure does not abort other targets
+scenario T-5: Per-target failure does not abort other targets
   given: an Integration with two targets; the second target's history call fails
   when: op:SyncSlackChannel is invoked
   then:
@@ -266,7 +266,7 @@ test T-5: Per-target failure does not abort other targets
 ```
 
 ```mdl
-test T-6: System messages filtered
+scenario T-6: System messages filtered
   given: a conversation history containing channel_join and channel_leave subtypes
   when: op:SyncSlackChannel processes the history
   then:
@@ -275,7 +275,7 @@ test T-6: System messages filtered
 ```
 
 ```mdl
-test T-7: Thread replies grouped
+scenario T-7: Thread replies grouped
   given: a Slack message with thread_ts set to its parent's ts
   when: the message is mapped to a @dxos/types Message
   then:
@@ -284,7 +284,7 @@ test T-7: Thread replies grouped
 ```
 
 ```mdl
-test T-8: Idempotent re-sync
+scenario T-8: Idempotent re-sync
   given: a channel already containing a Message with key { source: 'slack.com', id: ts }
   when: op:SyncSlackChannel fetches a history that includes the same ts
   then:
@@ -296,11 +296,11 @@ test T-8: Idempotent re-sync
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect a Slack workspace and sync a channel
+test QA-1: Connect a Slack workspace and sync a channel
   desc: The core round-trip — OAuth-connect a workspace, discover conversations, sync one.
   actors: human
   covers: [F-1.1, F-1.2, F-2.1, F-3.1]
@@ -313,18 +313,18 @@ flow QA-1: Connect a Slack workspace and sync a channel
       registry before an IntegrationProvider for 'slack.com' exists
     - a Slack workspace and user account able to complete OAuth exist, held outside this repo
     - no Integration for 'slack.com' exists in the space — ABORT rather than reusing or deleting
-      one this flow did not create
-  test:
+      one this test did not create
+  steps:
     - name: Connect the workspace
       do: Open Settings -> Connections, choose Slack, and complete the OAuth consent screen for
         a real Slack workspace.
       expect: an Integration for source 'slack.com' appears with accessToken.account set to
         "<user>@<team>"
       blocked: |
-        Requires a live Slack OAuth consent flow and a real bearer token (F-1.2, F-1.3) — no
+        Requires a live Slack OAuth consent test and a real bearer token (F-1.2, F-1.3) — no
         deterministic operation performs this, and the debug port cannot drive a third-party
         OAuth redirect. This step is human-only and cannot be scripted; per Execution Rule 9 the
-        flow's status is `blocked`, not `failing`.
+        test's status is `blocked`, not `failing`.
       capture: connection
     - name: Discover channels
       do: In the Slack integration's target picker, open the conversation list.
@@ -356,7 +356,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -367,7 +367,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -376,8 +376,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

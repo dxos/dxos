@@ -4,6 +4,7 @@
 
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
@@ -11,10 +12,10 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { OtelHarness } from '../../../testing/otel-harness';
-import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
+import { OtelHarness } from '../../../testing/otel-harness.ts';
+import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
 const seedGmailBinding = (
@@ -80,8 +81,7 @@ describe.runIf(process.env.DX_BENCH)('runGoogleSync benchmark', () => {
       const startedAt = performance.now();
       const { newMessages } = await EffectEx.runPromise(
         runGoogleSync({ binding: Ref.make(binding) }).pipe(
-          Effect.provide(googleSyncTestServices(db, dataset)),
-          Effect.provide(harness.layer),
+          Effect.provide(Layer.provideMerge(googleSyncTestServices(db, dataset), harness.layer)),
         ),
       );
       const wallMs = performance.now() - startedAt;

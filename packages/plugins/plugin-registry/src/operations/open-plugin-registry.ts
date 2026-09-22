@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { REGISTRY_ID } from '../paths';
+import { REGISTRY_ID } from '../paths.ts';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> =
   SettingsOperation.OpenPluginRegistry.pipe(

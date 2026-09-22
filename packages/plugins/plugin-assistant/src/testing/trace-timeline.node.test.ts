@@ -27,10 +27,8 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
-import { renderTimelineAscii } from '@dxos/react-ui-components';
+import { buildExecutionGraph, renderTimelineAscii } from '@dxos/react-ui-trace';
 import { Organization, Person } from '@dxos/types';
-
-import { buildExecutionGraph } from '#execution-graph';
 
 EntityId.dangerouslyDisableRandomness();
 

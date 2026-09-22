@@ -12,7 +12,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSession } from './util.ts';
 
 /**
  * `dx registry verify` — publishes a `org.dxos.experimental.publisher.verification`
@@ -26,19 +26,19 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSessio
 export const verify = Command.make(
   'verify',
   {
-    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.string('app-password').pipe(
+    handle: Options.String('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.String('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    subject: Options.string('subject').pipe(Options.withDescription('Handle or DID of the publisher being verified.')),
-    subjectHandle: Options.string('subject-handle').pipe(
+    subject: Options.String('subject').pipe(Options.withDescription('Handle or DID of the publisher being verified.')),
+    subjectHandle: Options.String('subject-handle').pipe(
       Options.withDescription(
         'Optional human-readable handle to record for the verified subject (defaults to --subject if it is a handle).',
       ),
       Options.optional,
     ),
-    displayName: Options.string('display-name').pipe(
+    displayName: Options.String('display-name').pipe(
       Options.withDescription('Display name to record for the verified subject.'),
     ),
   },

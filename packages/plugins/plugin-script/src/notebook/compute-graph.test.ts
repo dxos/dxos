@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 
 import { createNotebook } from '#testing';
 
-import { ComputeGraph } from './compute-graph';
+import { ComputeGraph } from './compute-graph.ts';
 
 describe('notebook', () => {
   test('parse dependency graph', async () => {

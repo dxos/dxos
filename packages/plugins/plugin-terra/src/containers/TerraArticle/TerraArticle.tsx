@@ -10,17 +10,17 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Select, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
 import { Terra, TerraCapabilities, TerraObject } from '#types';
 
-import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine';
-import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
-import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
+import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine/index.ts';
+import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene/index.ts';
+import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim/index.ts';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };
@@ -74,6 +74,8 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
   });
 
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
+  // The selected view tab reads as primary while this article has attention.
+  const { hasAttention } = useAttention(attendableId);
   const { t } = useTranslation(meta.profile.key);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
@@ -344,57 +346,54 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-            <div className='grow' />
-            {view === 'camera' && (
-              <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
-            )}
-            <Tabs.Root
-              orientation='horizontal'
-              value={view}
-              onValueChange={handleViewChange}
-              attendableId={attendableId}
-            >
-              <Tabs.Tablist classNames='w-auto p-0'>
-                <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
-                  {t('scene-view.label')}
-                </Tabs.Button>
-                <Tabs.Button value='map' data-testid='terra.toolbar.view-map'>
-                  {t('map-view.label')}
-                </Tabs.Button>
-                <Tabs.Button value='camera' data-testid='terra.toolbar.view-camera'>
-                  {t('camera-view.label')}
-                </Tabs.Button>
-              </Tabs.Tablist>
-            </Tabs.Root>
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <div className='relative grow'>
-            {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
+          <div className='grow' />
+          {view === 'camera' && (
+            <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
+          )}
+          <Tabs.Root
+            orientation='horizontal'
+            value={view}
+            onValueChange={handleViewChange}
+            selectedVariant={hasAttention ? 'primary' : 'default'}
+          >
+            <Tabs.Tablist>
+              <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
+                {t('scene-view.label')}
+              </Tabs.Button>
+              <Tabs.Button value='map' data-testid='terra.toolbar.view-map'>
+                {t('map-view.label')}
+              </Tabs.Button>
+              <Tabs.Button value='camera' data-testid='terra.toolbar.view-camera'>
+                {t('camera-view.label')}
+              </Tabs.Button>
+            </Tabs.Tablist>
+          </Tabs.Root>
+        </ActionToolbar>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <div className='relative grow'>
+          {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
-            <canvas
-              ref={canvasRef}
-              className={`dx-container absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
-              style={{ touchAction: 'none' }}
-            />
-            {view === 'map' && (
-              <TerraMap objects={objects} config={values} selectedId={selectedId} onSelect={setSelectedId} />
-            )}
-            <div className='absolute top-2 right-2 z-10'>
-              <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
-            </div>
-            <div className='absolute bottom-2 right-2 z-10'>
-              <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
-            </div>
+          <canvas
+            ref={canvasRef}
+            className={`dx-expand absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
+            style={{ touchAction: 'none' }}
+          />
+          {view === 'map' && (
+            <TerraMap objects={objects} config={values} selectedId={selectedId} onSelect={setSelectedId} />
+          )}
+          <div className='absolute top-2 right-2 z-10'>
+            <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
           </div>
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+          <div className='absolute bottom-2 right-2 z-10'>
+            <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

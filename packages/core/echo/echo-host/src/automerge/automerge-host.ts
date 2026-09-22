@@ -33,7 +33,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
+import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -41,27 +41,23 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { ComplexSet, bufferToArray, defaultMap } from '@dxos/util';
 
 import {
   type CollectionState,
   CollectionSynchronizer,
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
-} from './collection-synchronizer';
-import { type DocumentLease, DocumentLeaseRegistry } from './document-lease';
-import { type EchoDataMonitor } from './echo-data-monitor';
-import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
-import { type HandleQueryState, getHandleState } from './handle-state';
-import { tryGetSpaceIdFromCollectionId } from './space-collection';
-import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter';
+} from './collection-synchronizer.ts';
+import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
+import { type EchoDataMonitor } from './echo-data-monitor.ts';
+import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
+import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
+import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
+import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
+import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -70,7 +66,7 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 const SUBDUCTION_SERVICE_NAME = 'dxos-subduction';
 
 export type AutomergeHostProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   dataMonitor?: EchoDataMonitor;
 
   /**
@@ -133,21 +129,6 @@ export type CreateDocOptions = {
 };
 
 /**
- * Maximum amount of documents to sync in a single bundle.
- */
-const BUNDLE_SIZE = 100;
-
-/**
- * Maximum amount of concurrent tasks to run when pushing or pulling bundles.
- */
-const BUNDLE_SYNC_CONCURRENCY = 2;
-
-/**
- * If the number of documents to sync is greater than this threshold, we will use bundles.
- */
-const BUNDLE_SYNC_THRESHOLD = 50;
-
-/**
  * Only announce documents that are known to require sync.
  */
 const OPTIMIZED_SHARE_POLICY = true;
@@ -163,6 +144,36 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
  * short log-buffer window without emitting the diagnostic on every poll.
  */
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
+
+/**
+ * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
+ *
+ * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
+ * against every connection — so its cost scales with the corpus, and there is no cheaper scoped
+ * variant to reach for ({@link resyncDocument} is the per-document lever). Measured in a browser
+ * trace of a ~800-document profile: one kick fanned out to ~7.6k probes over ~12s of worker time,
+ * i.e. ~15ms per resident document once the per-connection fan-out is amortised in.
+ *
+ * Used as the *minimum interval between kicks*, so a new fan-out does not start before the previous
+ * one has plausibly drained. The kick walks only resident entries, so its cost shrinks with the
+ * interval when residency is capped below the corpus. Deliberately not a larger
+ * multiple: the kick is also the recovery path for a denied-then-allowed share policy, and delaying
+ * it past the fan-out itself would trade a real stall for a bound nobody is hitting.
+ */
+const SHARE_POLICY_KICK_MS_PER_DOCUMENT = 15;
+
+/**
+ * Floor for the share-policy throttle. Below this the kick is cheap enough that throttling only
+ * adds recovery latency — a small repo should stay as responsive as it was before the throttle.
+ */
+const SHARE_POLICY_KICK_MIN_INTERVAL_MS = 1_000;
+
+/**
+ * Ceiling for the share-policy throttle. A corpus large enough to exceed this is past the point
+ * where the repo-wide kick is a sensible recovery mechanism at all; capping keeps a pathological
+ * profile from stalling recovery outright.
+ */
+const SHARE_POLICY_KICK_MAX_INTERVAL_MS = 30_000;
 
 /**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
@@ -206,11 +217,10 @@ const MIN_RESIDENT_DOCUMENTS = 256;
  * Runs Subduction as the document byte transport ({@link Repo.subductionAdapters}), while
  * the DXOS-specific {@link CollectionSynchronizer} rides on the same {@link EchoNetworkAdapter}
  * via `sync-request` / `sync-state` control messages that are intercepted at the adapter
- * level and never reach the Subduction sedimentree layer. Bundle sync remains available
- * for replicators that opt in.
+ * level and never reach the Subduction sedimentree layer.
  */
 export class AutomergeHost extends Resource {
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
@@ -243,6 +253,9 @@ export class AutomergeHost extends Resource {
    */
   public readonly documentsSaved = new Event();
 
+  /** Fired per document whose heads a save advanced — what a reader of that document must catch up on. */
+  public readonly documentHeadsChanged = new Event<{ documentId: DocumentId; heads: Heads }>();
+
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
   private _onHeadsChangedTask?: DeferredTask;
 
@@ -266,6 +279,29 @@ export class AutomergeHost extends Resource {
    * making no progress is otherwise indistinguishable from idle polling in the logs.
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
+
+  /**
+   * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
+   *
+   * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
+   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
+   * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
+   * rather than a plain "already tried" flag so that a genuine change on either side (the peer
+   * advanced, or we committed again) re-opens the retry.
+   *
+   * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
+   * unambiguous, and cleanup compares the ids stored on each entry instead.
+   */
+  private _divergedResyncHeads = new Map<
+    string,
+    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
+  >();
+
+  /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
+  private _sharePolicyKickNextAllowedAt = 0;
+
+  /** Whether a trailing share-policy kick is parked at {@link _sharePolicyKickNextAllowedAt}. */
+  private _sharePolicyKickParked = false;
 
   /**
    * Documents requested by remote peers.
@@ -329,6 +365,8 @@ export class AutomergeHost extends Resource {
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
+      // Re-announcing under Subduction binds a second connection to the peer, stranding the rounds pending on the first.
+      onConnectionAuthScopeChanged: useSubduction ? () => this._sharePolicyChangedTask?.schedule() : 'reannounce-peer',
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
@@ -427,14 +465,18 @@ export class AutomergeHost extends Resource {
       });
     }
 
+    // An auth-scope change and a transport reset both re-announce a peer that never left, and
+    // dropping its collection state costs a diff over every document in the collection (DX-1275).
     let updatingAuthScope = false;
+    const peerLifecycleSuppressed = (peerId: PeerId): boolean =>
+      updatingAuthScope || this._echoNetworkAdapter.isTransportResetting(peerId);
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
       this._ctx,
-      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
+      ((e: PeerCandidatePayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerConnected(e.peerId)) as any,
     );
     Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
       this._ctx,
-      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
+      ((e: PeerDisconnectedPayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerDisconnected(e.peerId)) as any,
     );
 
     this._collectionSynchronizer.peerCollectionStateUpdated.on(
@@ -471,6 +513,34 @@ export class AutomergeHost extends Resource {
     });
 
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+      // Throttled by parking one trailing run at the deadline rather than waiting in here:
+      // `DeferredTask` clears its scheduled flag before running this callback, so a `schedule()`
+      // landing during a wait here queues a second run, which would fan out again for requests the
+      // first run already covered. While the trailing run is parked every schedule returns through
+      // this branch, so a burst costs one fan-out. Leading edge is immediate — a kick after a quiet
+      // period pays nothing, which keeps the deny→allow recovery path prompt.
+      const waitMs = this._sharePolicyKickNextAllowedAt - Date.now();
+      if (waitMs > 0) {
+        if (!this._sharePolicyKickParked) {
+          this._sharePolicyKickParked = true;
+          log('share policy kick throttled', { waitMs, loadedDocs: this.loadedDocsCount });
+          scheduleTask(
+            this._ctx,
+            () => {
+              this._sharePolicyKickParked = false;
+              this._sharePolicyChangedTask?.schedule();
+            },
+            waitMs,
+          );
+        }
+        return;
+      }
+      this._sharePolicyKickNextAllowedAt =
+        Date.now() +
+        Math.min(
+          SHARE_POLICY_KICK_MAX_INTERVAL_MS,
+          Math.max(SHARE_POLICY_KICK_MIN_INTERVAL_MS, this.loadedDocsCount * SHARE_POLICY_KICK_MS_PER_DOCUMENT),
+        );
       log('share policy changed');
       this._repo.shareConfigChanged();
     });
@@ -529,7 +599,7 @@ export class AutomergeHost extends Resource {
    * Creates automerge_chunks and automerge_heads tables if they do not exist.
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
-  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     return this._storage.migrate.pipe(Effect.andThen(this._headsStore.migrate));
   }
 
@@ -586,6 +656,25 @@ export class AutomergeHost extends Resource {
   async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.removeReplicator(replicator);
+  }
+
+  /**
+   * automerge-repo's `findWithProgress` does not re-issue a parked DocumentQuery; repo-wide,
+   * `shareConfigChanged` clears `all-failed` entries and the heal backoff, then re-syncs.
+   */
+  kickStalledSync(): void {
+    this._repo.shareConfigChanged();
+  }
+
+  /**
+   * Re-drives one document's Subduction sync round, re-arming its heal loop.
+   *
+   * {@link kickStalledSync} only revives `all-failed`/`no-peers` entries, so it cannot move a
+   * sedimentree Subduction already considers settled — which is the state a document sits in when
+   * its heads stay behind the sync server with no round in flight.
+   */
+  resyncDocument(documentId: DocumentId): void {
+    this._repo.resyncSubduction(documentId);
   }
 
   /**
@@ -679,7 +768,7 @@ export class AutomergeHost extends Resource {
     lease: DocumentLease<T>,
     opts?: LoadDocOptions,
   ): Promise<DocumentLease<T> | null> {
-    if (lease.state === 'ready') {
+    if (lease.loaded) {
       return lease;
     }
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
@@ -750,7 +839,7 @@ export class AutomergeHost extends Resource {
    */
   private _waitForReady<T>(progress: DocumentProgress<T>, signal?: AbortSignal): Promise<DocHandle<T>> {
     const peeked = progress.peek();
-    if (peeked.state === 'ready') {
+    if (peeked.state === 'ready' && isLoaded(peeked)) {
       return Promise.resolve(peeked.handle);
     }
     if (peeked.state === 'failed') {
@@ -758,7 +847,7 @@ export class AutomergeHost extends Resource {
     }
     return new Promise<DocHandle<T>>((resolve, reject) => {
       const unsubscribe = progress.subscribe((state) => {
-        if (state.state === 'ready') {
+        if (state.state === 'ready' && isLoaded(state)) {
           unsubscribe();
           resolve(state.handle);
         } else if (state.state === 'failed') {
@@ -822,8 +911,8 @@ export class AutomergeHost extends Resource {
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen({ self: this }, function* () {
-        const transaction = yield* SqlTransaction.SqlTransaction;
-        yield* transaction.withTransaction(
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql.withTransaction(
           Effect.gen({ self: this }, function* () {
             yield* this._headsStore.remove(documentId);
             yield* this._storage.removeRangeEffect([documentId]);
@@ -842,6 +931,13 @@ export class AutomergeHost extends Resource {
     this._headsUpdates.delete(documentId);
     for (const requested of this._documentsRequested.values()) {
       requested.delete(documentId);
+    }
+    // A removed document never converges, so neither of the other cleanups (convergence of its
+    // collection, or its peer disconnecting) is guaranteed to reach its entry.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.documentId === documentId) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
     }
   }
 
@@ -1339,6 +1435,14 @@ export class AutomergeHost extends Resource {
 
   async clearLocalCollectionState(collectionId: string): Promise<void> {
     this._collectionSynchronizer.clearLocalCollectionState(collectionId);
+    // With no local state `_handleCollectionSync` returns before its convergence cleanup, so a
+    // cleared collection's entries would otherwise outlive it and suppress the first resync if it
+    // is registered again.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.collectionId === collectionId) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1368,6 +1472,13 @@ export class AutomergeHost extends Resource {
         this._nonConvergingSyncPasses.delete(syncKey);
       }
     }
+    // A reconnect is a fresh chance for the push that did not land, so the resync budget resets
+    // with the connection.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.peerId === peerId) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
@@ -1391,6 +1502,11 @@ export class AutomergeHost extends Resource {
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
+      for (const [resyncKey, entry] of this._divergedResyncHeads) {
+        if (entry.collectionId === collectionId && entry.peerId === peerId) {
+          this._divergedResyncHeads.delete(resyncKey);
+        }
+      }
       return;
     }
 
@@ -1419,38 +1535,10 @@ export class AutomergeHost extends Resource {
       });
     }
 
-    const toReplicateWithoutBatching = [...different];
-    const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
-    if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
-      log('pushing bundle', { amount: missingOnRemote.length });
-      const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
-      toReplicateWithoutBatching.push(...syncInteractively);
-    } else {
-      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
-      log.verbose('pushing without bundle', {
-        collectionId,
-        peerId,
-        amount: missingOnRemote.length,
-        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
-      });
-      toReplicateWithoutBatching.push(...missingOnRemote);
-    }
-    if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
-      log('pulling bundle', { amount: missingOnLocal.length });
-      const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
-      toReplicateWithoutBatching.push(...syncInteractively);
-    } else {
-      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
-      log.verbose('pulling without bundle', {
-        collectionId,
-        peerId,
-        amount: missingOnLocal.length,
-        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
-      });
-      toReplicateWithoutBatching.push(...missingOnLocal);
-    }
+    const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
+    const differentSet = new Set(different);
 
-    if (toReplicateWithoutBatching.length === 0) {
+    if (toReplicate.length === 0) {
       return;
     }
 
@@ -1460,9 +1548,9 @@ export class AutomergeHost extends Resource {
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
-      count: toReplicateWithoutBatching.length,
+      count: toReplicate.length,
       handleStates: Object.fromEntries(
-        toReplicateWithoutBatching.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        toReplicate.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
       ),
     });
 
@@ -1471,24 +1559,74 @@ export class AutomergeHost extends Resource {
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
-    for (const documentId of toReplicateWithoutBatching) {
+
+    // Whether this pass has anything left for the classical share policy to act on. Only a pass
+    // consisting entirely of diverged documents whose resync is already spent has nothing: for
+    // those the policy is provably a no-op (`shareConfigChanged` revives only `all-failed` /
+    // `no-peers` entries, and a diverged-but-settled entry is neither), while re-arming it
+    // re-probes every document against every connection. The answering peer reports heads for
+    // each, and Subduction persists a `remote-heads` record the first time it hears a document's
+    // heads from a peer; with edge coming back under a new Subduction identity after every restart,
+    // each restart turned the next probe into one fresh row per document. That is the storage
+    // growth this branch used to drive.
+    //
+    // A pass that *issues* a resync still schedules it, so first-pass behaviour is unchanged and
+    // only the repeating tail is dropped.
+    let sharePolicyCanHelp = false;
+
+    for (const documentId of toReplicate) {
       // `findWithProgress` resolves from the existing query for an already-`ready` document and
-      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
-      // document reaching here gets no retry from either — the diff simply repeats next pass.
-      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
-        // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-        // so at warn level it floods the console without indicating a real fault.
-        log.verbose('diverged document has no subduction retry path', {
-          collectionId,
-          peerId,
-          documentId,
-          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-        });
+      // `_documentsToSync` feeds a share policy Subduction does not consult, so neither moves a
+      // diverged document, resident or not. `resyncDocument` is the lever for a resident one: it
+      // clears the heal state and marks the entry never-synced, so Subduction opens a fresh
+      // bidirectional round (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) —
+      // which is what delivers a local commit the peer never received. An evicted one needs no
+      // lever: `_leaseUntilSettled` below faults it in and `SubductionSource.attach` gives it a
+      // fresh never-synced entry.
+      if (this._useSubduction && differentSet.has(documentId)) {
+        if (isDocumentLoaded(this._repo, documentId as DocumentId)) {
+          const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
+          // Both sides' heads: a round already spent against this exact pair cannot do better, but
+          // either side advancing means the situation changed and is worth another.
+          const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
+          if (this._divergedResyncHeads.get(resyncKey)?.heads !== heads) {
+            this._divergedResyncHeads.set(resyncKey, {
+              collectionId,
+              peerId,
+              documentId: documentId as DocumentId,
+              heads,
+            });
+            log('resyncing diverged document', {
+              collectionId,
+              peerId,
+              documentId,
+              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+              localHeads: localState.documents[documentId],
+              remoteHeads: remoteState.documents[documentId],
+            });
+            this.resyncDocument(documentId as DocumentId);
+            sharePolicyCanHelp = true;
+          } else {
+            // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+            // so at warn level it floods the console without indicating a real fault.
+            log.verbose('diverged document already resynced at these heads', {
+              collectionId,
+              peerId,
+              documentId,
+              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+            });
+          }
+        }
+      } else {
+        sharePolicyCanHelp = true;
       }
       this._documentsToSync.add(documentId);
       this._leaseUntilSettled(documentId as DocumentId);
     }
-    this._sharePolicyChangedTask!.schedule();
+
+    if (sharePolicyCanHelp) {
+      this._sharePolicyChangedTask!.schedule();
+    }
   }
 
   /**
@@ -1530,111 +1668,11 @@ export class AutomergeHost extends Resource {
     }, REPLICATION_LEASE_TIMEOUT);
   }
 
-  // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
-  private async _pushInBundles(
-    ctx: Context,
-    peerId: PeerId,
-    documentIds: DocumentId[],
-  ): Promise<{ syncInteractively: DocumentId[] }> {
-    const documentsToPush = [...documentIds];
-    const syncInteractively: DocumentId[] = [];
-
-    // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
-    while (documentsToPush.length > 0) {
-      await Promise.all(
-        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
-          const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
-          if (bundle.length === 0) {
-            return;
-          }
-          await this._pushBundle(ctx, peerId, bundle).catch((err) => {
-            log.warn('failed to push bundle, replicating interactively', { peerId, bundle, err });
-            syncInteractively.push(...bundle);
-          });
-        }),
-      );
-    }
-
-    return { syncInteractively };
-  }
-
-  private async _pushBundle(ctx: Context, peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
-    if (this._ctx.disposed) {
-      return;
-    }
-
-    const docs = documentIds.map((documentId) => {
-      if (getHandleState(this._repo, documentId) !== 'ready') {
-        log.warn('document not ready, skipping', { documentId });
-        return;
-      }
-      const handle = this._repo.getHandle(documentId);
-      const doc = handle?.doc();
-      if (!doc) {
-        log.warn('document not available, skipping', { documentId });
-        return;
-      }
-      return {
-        documentId,
-        data: save(doc),
-        heads: getHeads(doc),
-      };
-    });
-
-    await this._echoNetworkAdapter.pushBundle(ctx, peerId, docs.filter(isNonNullable));
-  }
-
-  private async _pullInBundles(
-    ctx: Context,
-    peerId: PeerId,
-    documentIds: DocumentId[],
-  ): Promise<{ syncInteractively: DocumentId[] }> {
-    const documentsToPull = [...documentIds];
-    const syncInteractively: DocumentId[] = [];
-    const docsToImport: Record<DocumentId, Uint8Array> = {};
-
-    // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
-    while (documentsToPull.length > 0) {
-      await Promise.all(
-        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
-          const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
-          if (bundle.length === 0) {
-            return;
-          }
-          const result = await this._pullBundle(ctx, peerId, bundle).catch((err) => {
-            log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
-            syncInteractively.push(...bundle);
-          });
-          if (result) {
-            Object.assign(docsToImport, result.docsToImport);
-          }
-        }),
-      );
-    }
-
-    for (const [documentId, data] of Object.entries(docsToImport)) {
-      this._repo.import(data, { docId: documentId as DocumentId });
-    }
-    await this._repo.flush(Object.keys(docsToImport) as DocumentId[]);
-
-    return { syncInteractively };
-  }
-
-  private async _pullBundle(
-    ctx: Context,
-    peerId: PeerId,
-    documentIds: DocumentId[],
-  ): Promise<{ docsToImport: Record<DocumentId, Uint8Array> } | undefined> {
-    if (this._ctx.disposed) {
-      return;
-    }
-    // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
-    const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
-    const bundle = await this._echoNetworkAdapter.pullBundle(ctx, peerId, docHeads);
-    return { docsToImport: bundle };
-  }
-
   private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {
+    for (const [documentId, heads] of docHeads) {
+      this.documentHeadsChanged.emit({ documentId, heads });
+    }
+
     const collectionsChanged = new Set<CollectionId>();
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {

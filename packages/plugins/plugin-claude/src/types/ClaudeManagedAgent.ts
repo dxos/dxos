@@ -7,9 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { ANTHROPIC_SOURCE } from '../constants';
+import { ANTHROPIC_SOURCE } from '../constants.ts';
 
 /** Default model for a newly created agent. */
 export const DEFAULT_MODEL = 'claude-opus-5';
@@ -68,7 +67,10 @@ export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
     /** Server-assigned version of the last deploy, used for optimistic concurrency on update. */
     agentVersion: Schema.optional(Schema.Number.annotate({ title: 'Agent version' })),
     status: Status.annotate({ title: 'Status' }),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' }),
+  ),
 ) {}
 
 /**

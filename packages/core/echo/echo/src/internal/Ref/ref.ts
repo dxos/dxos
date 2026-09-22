@@ -20,18 +20,23 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
-import * as Database from '../../Database';
-import type * as Type from '../../Type';
+import * as Database from '../../Database.ts';
+import type * as Type from '../../Type.ts';
 import {
   ReferenceAnnotationId,
   getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
-import { ObjectDeletedId } from '../common/types/model-symbols';
-import { type JsonSchemaType } from '../JsonSchema';
-import * as RefAtoms from './atoms';
+} from '../Annotation/annotations.ts';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
+} from '../common/types/index.ts';
+import { ObjectDeletedId } from '../common/types/model-symbols.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
+import * as RefAtoms from './atoms.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -202,8 +207,19 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
+   * @deprecated A read with side effects (triggers loading, registers a resolution callback) that
+   * can also throw. Use {@link peek} for a side-effect-free synchronous read, {@link load} to
+   * resolve asynchronously, or the ref's atom for reactive access.
    */
   get target(): T | undefined;
+
+  /**
+   * @returns The target when it is already materialized: the pinned target, or a side-effect-free
+   * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
+   * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
+   * document; callers that need a settled document must load instead.
+   */
+  peek(): T | undefined;
 
   /**
    * @returns Promise that will resolves with the target object.
@@ -334,6 +350,18 @@ export type JsonSchemaReferenceInfo = {
 const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String }) as unknown as Schema.Codec<EncodedReference> &
   Schema.Struct<{ readonly '/': Schema.String }>;
 
+/** The `identifier` annotation every ref declaration carries, naming the type it points at. */
+const refIdentifier = (target: string): string => `Ref<${target}>`;
+
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`, which would replace a ref property with a `$ref` and strip the annotations readers key
+ * off; generators use this to keep refs inline while still naming genuinely recursive schemas.
+ */
+export const isRefIdentifier = (identifier: string | undefined): boolean => identifier?.startsWith('Ref<') ?? false;
+
 /**
  * @internal
  */
@@ -357,8 +385,17 @@ export const createEchoReferenceSchema = (
 
   // Effect 4 splits what v3's three-parameter `declare` did into two steps: `declare` states the
   // decoded type, `encodeTo` attaches the wire form and the transformation between them.
-  // TODO(dmaretskyi): Add name and description.
   const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
+    .annotate({
+      // Without an `identifier` Effect renders every rejection of a ref field as the placeholder
+      // `Expected <Declaration>`, which names neither the target type nor that a reference was
+      // wanted; `InvalidOperationInput` interpolates that message verbatim to remote callers.
+      // `identifier` only, since `title` and `description` travel into the generated JSON schema
+      // and would overwrite whatever the field's own annotations say. Built from the same value as
+      // `$ref` so it survives a JSON-schema round trip, which reconstructs the schema from `echoUri`
+      // where the original had only a typename.
+      identifier: refIdentifier(referenceInfo.schema.$ref),
+    })
     .pipe(
       Schema.encodeTo(
         // The JSON-schema keys live on the encoded node: `toJsonSchemaDocument` serializes the
@@ -369,7 +406,7 @@ export const createEchoReferenceSchema = (
           $ref: JSON_SCHEMA_ECHO_REF_ID,
           reference: referenceInfo,
         }),
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (encoded) =>
             Effect.gen(function* () {
               const dbService = yield* Effect.serviceOption(Database.Service);
@@ -558,6 +595,23 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  peek(): T | undefined {
+    if (this.#target) {
+      return this.#target;
+    }
+    if (!this.#resolver) {
+      return undefined;
+    }
+    try {
+      return this.#resolver.resolveSync(this.#uri, false, undefined) as T | undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * @inheritdoc
+   */
   get isAvailable(): boolean {
     return this.#target !== undefined || this.#resolver !== undefined;
   }
@@ -640,8 +694,8 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
    * to deduplicate Ref instances that point to the same object.
-   * ECHO proxies return new RefImpl instances on every property access,
-   * so without this, each access would create a separate cache entry.
+   * ECHO proxies mint a new RefImpl whenever the object changes,
+   * so without this, each one would create a separate cache entry.
    */
   [Hash.symbol](): number {
     return Hash.hash(this.#uri.toString());

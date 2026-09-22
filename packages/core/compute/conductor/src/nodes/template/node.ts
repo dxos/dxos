@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { DEFAULT_OUTPUT, defineComputeNode, synchronizedComputeFunction } from '../../types';
-import { computeTemplate } from './generic';
+import { DEFAULT_OUTPUT, defineComputeNode, synchronizedComputeFunction } from '../../types/index.ts';
+import { computeTemplate } from './generic.ts';
 
 export const TemplateInput = Schema.Record(Schema.String, Schema.Any);
 export type TemplateInput = Schema.Schema.Type<typeof TemplateInput>;

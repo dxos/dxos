@@ -4,8 +4,8 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type TypeMeta } from '../Annotation';
-import { type AnyEntity } from '../common/types';
+import { type TypeMeta } from '../Annotation/index.ts';
+import { type AnyEntity } from '../common/types/index.ts';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.

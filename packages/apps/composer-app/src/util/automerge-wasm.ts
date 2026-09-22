@@ -6,7 +6,9 @@ import subductionWasmUrl from '@automerge/automerge-subduction/wasm?url';
 import automergeWasmUrl from '@automerge/automerge/automerge.wasm?url';
 import { initializeWasm } from '@automerge/automerge/slim';
 
-import initSubductionWasm from './subduction-wasm';
+import { installWasmMemoryProbe } from '@dxos/util';
+
+import initSubductionWasm from './subduction-wasm.js';
 
 let initialized: Promise<void> | undefined;
 
@@ -20,6 +22,11 @@ let initialized: Promise<void> | undefined;
  * keep wasm-bindgen on `instantiateStreaming`.
  */
 export const initAutomergeWasm = (): Promise<void> => {
+  // Before the first instantiation, and this is the realm's earliest wasm: the dedicated worker
+  // awaits this in `onBeforeStart`, ahead of the runtime that opens SQLite, so one call here
+  // counts automerge, subduction and SQLite's wasm alike. Reordering that would leave SQLite's
+  // linear memory uncounted, which shows up as a drop in the probe's `instances`.
+  installWasmMemoryProbe();
   // Both inits settle before a failure clears the memo — clearing on the first rejection would
   // let a retry overlap the still-pending sibling — and the retry then re-runs both (wasm-bindgen
   // caches an already-initialized module, so the succeeded half is a no-op).

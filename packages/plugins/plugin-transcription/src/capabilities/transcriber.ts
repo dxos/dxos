@@ -12,7 +12,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
 
-import { TranscriptionManagerImpl } from '../transcription-manager';
+import { TranscriptionManagerImpl } from '../transcription-manager.ts';
 
 /**
  * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it

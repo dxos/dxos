@@ -194,6 +194,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -217,12 +218,12 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/keyboard": "workspace:*",
     "@dxos/markdown": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

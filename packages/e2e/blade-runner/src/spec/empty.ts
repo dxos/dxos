@@ -4,9 +4,9 @@
 
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { DumbReplicant } from '../replicants/dumb-replicant';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { DumbReplicant } from '../replicants/dumb-replicant.ts';
 
 export type EmptyTestSpec = {
   platform: Platform;

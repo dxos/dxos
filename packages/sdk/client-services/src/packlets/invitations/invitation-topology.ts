@@ -6,17 +6,21 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SwarmController, Topology } from '@dxos/network-manager';
-import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ComplexSet } from '@dxos/util';
+import { InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { ComplexMap, ComplexSet } from '@dxos/util';
+
+/** Connections a host starts to one peer before it stops retrying that peer. */
+const MAX_DIALS_PER_PEER = 3;
 
 /**
  * Hosts are listening on an invitation topic.
- * They initiate a connection with any new peer if they are not currently in the invitation flow
- * with another peer (connected.length > 0).
+ * They dial one peer at a time, and only while they have no connection (no invitation flow in progress)
+ * and no dial still waiting for the swarm to create its connection.
+ * A peer whose connection closed is dialed again once the swarm offers it as a candidate after its backoff,
+ * up to {@link MAX_DIALS_PER_PEER} times, so a session that fails before the invitation opens does not strand it.
+ * A retired peer, an admitted guest or another host, is not dialed and its offers are refused.
  * When the invitation flow ends guest leaves the swarm and topology is updated once again,
- * so we can connect to the next peer we haven't tried yet.
- * If the peer turns out to be a host or a malicious guest their ID is remembered so that we don't try
- * to establish a connection with them again.
+ * so we can connect to the next peer.
  *
  * Guests don't initiate connections. They accept all connections because if we reject,
  * the host won't retry their offer.
@@ -27,16 +31,15 @@ export class InvitationTopology implements Topology {
   private _controller?: SwarmController;
 
   /**
-   * Peers we tried to establish a connection with.
-   * In invitation flow peers are assigned random ids when they join the swarm, so we'll retry
-   * a peer if they reload an invitation.
-   *
-   * Consider keeping a separate set for peers we know are hosts and have some retry timeout
-   * for guests we failed an invitation flow with (potentially due to a network error).
+   * Dials per peer, keyed by the client's stable network peer key; an inbound session counts once,
+   * and a count is pruned once its peer leaves the swarm, so a guest that rejoins is dialed afresh.
    */
-  private _seenPeers = new ComplexSet<PublicKey>(PublicKey.hash);
+  private _dials = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
-  constructor(private readonly _role: InvitationOptions.Role) {}
+  /** Dialed peers without a connection yet; a dial stays pending only while its peer is a candidate. */
+  private _pending = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  constructor(private readonly _role: InvitationOptions_Role) {}
 
   init(controller: SwarmController): void {
     invariant(!this._controller, 'Already initialized.');
@@ -48,40 +51,72 @@ export class InvitationTopology implements Topology {
     const { ownPeerId, candidates, connected, allPeers } = this._controller.getState();
 
     // guests don't initiate connections
-    if (this._role === InvitationOptions.Role.GUEST) {
+    if (this._role === InvitationOptions_Role.GUEST) {
       return;
     }
+
+    // A candidate has no connection and is still in the swarm, so a peer that stopped being one ends its pending dial.
+    this._pending = new ComplexSet<PublicKey>(
+      PublicKey.hash,
+      candidates.filter((peerId) => this._pending.has(peerId)),
+    );
 
     // don't start a connection while we have an active invitation flow
     if (connected.length > 0) {
-      // update seenPeers here as well in case another host initiated a connection with us
-      connected.forEach((c) => this._seenPeers.add(c));
+      // Record a connection another host initiated with us, without counting one we already dialed again.
+      connected.forEach((peerId) => {
+        if (!this._dials.has(peerId)) {
+          this._dials.set(peerId, 1);
+        }
+      });
       return;
     }
 
-    const firstUnknownPeer = candidates.find((peerId) => !this._seenPeers.has(peerId));
-    // cleanup
-    this._seenPeers = new ComplexSet<PublicKey>(
+    // Cleanup.
+    this._dials = new ComplexMap<PublicKey, number>(
       PublicKey.hash,
-      allPeers.filter((peerId) => this._seenPeers.has(peerId)),
+      allPeers.flatMap((peerId): [PublicKey, number][] => {
+        const count = this._dials.get(peerId);
+        return count === undefined ? [] : [[peerId, count]];
+      }),
     );
-    if (firstUnknownPeer != null) {
-      log('invitation connect', { ownPeerId, remotePeerId: firstUnknownPeer });
-      this._controller.connect(firstUnknownPeer);
-      this._seenPeers.add(firstUnknownPeer);
+
+    // A pending dial already holds the one invitation flow.
+    if (this._pending.size > 0) {
+      return;
+    }
+
+    const nextPeer = candidates.find((peerId) => (this._dials.get(peerId) ?? 0) < MAX_DIALS_PER_PEER);
+    if (nextPeer != null) {
+      const dials = (this._dials.get(nextPeer) ?? 0) + 1;
+      log('invitation connect', { ownPeerId, remotePeerId: nextPeer, dials });
+      this._dials.set(nextPeer, dials);
+      this._pending.add(nextPeer);
+      this._controller.connect(nextPeer);
     }
   }
 
   async onOffer(peer: PublicKey): Promise<boolean> {
     invariant(this._controller, 'Not initialized.');
-    return !this._seenPeers.has(peer);
+    const accept = (this._dials.get(peer) ?? 0) < MAX_DIALS_PER_PEER;
+    if (!accept) {
+      // the peer's offer displaced any dial of ours to it, which now never opens
+      this._pending.delete(peer);
+    }
+    return accept;
+  }
+
+  /** Stops dialing a peer and refuses its offers while it stays in the swarm. */
+  retire(peer: PublicKey): void {
+    this._dials.set(peer, MAX_DIALS_PER_PEER);
   }
 
   async destroy(): Promise<void> {
-    this._seenPeers.clear();
+    this._dials.clear();
+    this._pending.clear();
   }
 
   toString(): string {
-    return `InvitationTopology(${this._role === InvitationOptions.Role.GUEST ? 'guest' : 'host'})`;
+    return `InvitationTopology(${this._role === InvitationOptions_Role.GUEST ? 'guest' : 'host'})`;
   }
 }

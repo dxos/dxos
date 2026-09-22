@@ -2,18 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Duplex } from 'node:stream';
-
 import { type Event, runInContextAsync, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { RpcClosedError, TimeoutError } from '@dxos/protocols';
+import { CancelledError, RpcClosedError, TimeoutError } from '@dxos/protocols';
 
-import { ControlExtension } from './control-extension';
-import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
+import { ControlExtension } from './control-extension.ts';
+import { type CreateChannelOpts, type DuplexStream, Muxer, type MuxerStats, type RpcPort } from './muxing/index.ts';
 
 export type TeleportProps = {
   initiator: boolean;
@@ -98,17 +96,17 @@ export class Teleport {
     });
 
     {
-      // Destroy Teleport when the stream is closed.
-      this._muxer.stream.on('close', async () => {
+      // Destroy Teleport when the byte pipe ends.
+      this._muxer.closed.on(async (err) => {
+        if (err) {
+          await this.destroy(err);
+          return;
+        }
         if (this._destroying || this._aborting) {
           log('destroy teleport due to muxer stream close, skipping due to already destroying/aborting');
           return;
         }
         await this.destroy();
-      });
-
-      this._muxer.stream.on('error', async (err) => {
-        await this.destroy(err);
       });
     }
 
@@ -133,8 +131,15 @@ export class Teleport {
     return this._sessionId ? this._sessionId.truncate() : 'none';
   }
 
-  get stream(): Duplex {
+  get stream(): DuplexStream {
     return this._muxer.stream;
+  }
+
+  /**
+   * Emitted when the underlying byte pipe ends, carrying the error that ended it if there was one.
+   */
+  get closed(): Event<Error | undefined> {
+    return this._muxer.closed;
   }
 
   get stats(): Event<MuxerStats> {
@@ -151,6 +156,9 @@ export class Teleport {
     log('open');
     this._setExtension('dxos.mesh.teleport.control', this._control);
     await this._openExtension('dxos.mesh.teleport.control');
+    if (this._aborting || this._destroying) {
+      throw new CancelledError({ message: 'Teleport closed while opening.' });
+    }
     this._open = true;
     this._muxer.setSessionId(sessionId);
   }
@@ -284,7 +292,7 @@ export type ExtensionContext = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
-  createStream(tag: string, opts?: CreateChannelOpts): Promise<Duplex>;
+  createStream(tag: string, opts?: CreateChannelOpts): Promise<DuplexStream>;
   createPort(tag: string, opts?: CreateChannelOpts): Promise<RpcPort>;
   close(err?: Error): void;
 };

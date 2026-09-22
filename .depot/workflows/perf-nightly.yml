@@ -1,0 +1,177 @@
+name: Performance nightly
+
+# The measured flows from `packages/apps/composer-app/spec/PERF.mdl`, trended in PostHog.
+#
+# Never a PR gate: a measurement is not a pass/fail, and a shared runner's variance would make one
+# a coin toss. The `e2e-perf` moon task is correspondingly outside the `e2e` pool, the same
+# arrangement `e2e-startup` has.
+
+on:
+  schedule:
+    # 04:00 UTC — after `assistant-evals` (03:00) so the two do not contend for runners, and a
+    # perf run's numbers are worthless if something else is using the cell.
+    - cron: '0 4 * * *'
+
+  workflow_dispatch:
+    inputs:
+      modes:
+        type: string
+        description: 'DX_PERF_MODES to run (measure, diagnose)'
+        default: 'measure'
+      iterations:
+        type: string
+        description: 'Repeats of the whole flow per mode (DX_PERF_ITERATIONS)'
+        default: '10'
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # Bound once here rather than at the setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancelled mid-flight: a half-run flow writes rows for some stages and not others, which
+  # reads as a regression on whichever stages are missing.
+  cancel-in-progress: false
+
+jobs:
+  perf:
+    # A fixed, unshared runner size, because the numbers are only comparable night to night if the
+    # machine is. Changing this resets every series in the dashboard.
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # `depot ci run` patches the caller's uncommitted changes in after checkout; nothing from the
+      # tree runs before this, so a patched Setup cannot pass it.
+      - name: Refuse a patched checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
+            git status --short
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
+            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      # The `e2e` job in `check.yml` installs browsers the same way. Chromium alone, because the
+      # config pins the single chromium project and the harness launches Chromium over CDP —
+      # `playwright install` with no argument also fetches firefox and webkit, which nothing here
+      # ever starts.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Run the flows
+        id: flows
+        continue-on-error: true
+        env:
+          MODES: ${{ inputs.modes || 'measure' }}
+          # Ten, because one sample per night cannot separate a regression from the ~20% run-to-run
+          # spread on a stage. Each repeat is a fresh browser and a fresh fixture, ~1.5 min, so ten
+          # is ~18 min against this job's 180-minute bound. Every row carries its `iteration`, so
+          # the repeats are distinct rows to take a median over, not overwrites of each other.
+          ITERATIONS: ${{ inputs.iterations || '10' }}
+          DX_PWA: 'false'
+          # The key lives on THIS step because publishing now happens inside the flow, once per
+          # iteration, rather than in a step afterwards. A step afterwards cannot run when the job
+          # dies partway, so a ten-iteration run that lost its runner on iteration eight published
+          # nothing — including the seven that had completed and were already on disk.
+          #
+          # Empty on a pull_request event, where no secret is exposed; the harness then measures,
+          # writes its artifacts and skips publishing, which is what a PR run should do.
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          set -o pipefail
+          # Cleared first so a re-run cannot inherit the previous attempt's rows and trend them
+          # twice under a different wall time.
+          rm -rf test-results/perf
+          # The modes run serially inside one invocation — two flows measured at once contend for
+          # the same cores and measure each other.
+          DX_PERF_MODES="$MODES" DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf
+
+      - name: Summarize
+        if: always()
+        run: |
+          if [ ! -d test-results/perf ]; then
+            echo "::warning::No rows were written; the run did not reach a stage."
+            exit 0
+          fi
+          {
+            echo '### Performance flows'
+            echo
+            echo '| flow | mode | scale | stage | wall ms | cpu ms | app MB | chrome MB | dom nodes | lag max ms |'
+            echo '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
+            # Read from the rows rather than recomputed: the harness already decided what each
+            # column means, and a second implementation here would drift from it.
+            cat test-results/perf/*.rows.ndjson 2>/dev/null | node -e '
+              let input = "";
+              process.stdin.on("data", (chunk) => (input += chunk));
+              process.stdin.on("end", () => {
+                for (const line of input.split("\n").filter(Boolean)) {
+                  const row = JSON.parse(line);
+                  const mb = (bytes) => Math.round(bytes / 1024 / 1024);
+                  // Chrome process totals, beside the app rather than inside it. No
+                  // apostrophes in this program: it is single-quoted for bash, so one ends the quote.
+                  const chrome = (r) =>
+                    (r.footprint ?? []).reduce((t, p) => t + (p.process === "Renderer" ? 0 : p.bytes), 0);
+                  console.log(
+                    `| ${row.flow} | ${row.mode} | ${row.scale} | ${row.stage} | ${row.wallMs} | ` +
+                      `${row.cpuMsTotal} | ${mb(row.appFootprintBytes)} | ${mb(chrome(row))} | ` +
+                      `${row.domNodes} | ${row.responsiveness.lagMaxMs} |`,
+                  );
+                }
+              });
+            '
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # NO end-of-run publish step. Rows are published per iteration by the flow above, and the
+      # obvious backstop here would be a second publish path whose safety rests on PostHog's dedup
+      # collapsing re-sent rows — a dedup miss would put duplicates into the distributions, which
+      # tightens a box with nothing on the dashboard to show it. `publishPosthogBatch` records the
+      # reasoning and retries once instead.
+      #
+      # What still holds from the old step: only `measure` rows and only completed stages are ever
+      # sent, enforced per row by `writePosthogBatch` rather than by a job-level gate. Branch is
+      # not filtered — every row carries `ciBranch`, so a branch run is stored and filtered at read
+      # time, and refusing to record it made the numbers from a dispatch unreachable.
+
+      # The artifacts — a `.cpuprofile` per stage per realm, one screenshot per stage, and the
+      # screencast's first/last frames in `diagnose` — are what a regression is read with. Not
+      # committed anywhere; a run comes to ~19MB.
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: perf-nightly
+          path: test-results/perf
+          retention-days: 14
+
+      - name: Fail on an incomplete run
+        if: always() && steps.flows.outcome != 'success'
+        run: |
+          echo "::error::A flow did not complete; see the summary and the perf-nightly artifact."
+          exit 1

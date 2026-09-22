@@ -7,9 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as AccessToken from './AccessToken';
+import * as AccessToken from './AccessToken.ts';
 
 /**
  * A reusable authenticated connection to an external service: a stored
@@ -33,7 +32,7 @@ export class Connection extends Type.makeObject<Connection>(DXN.make('org.dxos.t
     /** Stored OAuth/API credential (internal primitive). */
     accessToken: Ref.Ref(AccessToken.AccessToken),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'emerald' }),
   ),
 ) {}

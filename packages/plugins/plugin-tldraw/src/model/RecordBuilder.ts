@@ -81,6 +81,23 @@ export type ConnectorProps = Omit<StyleProps, 'align'> & {
   start?: Point;
   /** Explicit end point (used when `to` is omitted). */
   end?: Point;
+  /** Marker at the target end (default arrow). */
+  head?: ArrowHead;
+  /** Marker at the source end (default none). */
+  tail?: 'none' | 'circle';
+};
+
+export type ArrowHead = 'arrow' | 'triangle' | 'crowsfoot' | 'none';
+
+/**
+ * Scene heads → tldraw arrowheads. tldraw has no crow's foot; `inverted` (a triangle fanning out
+ * toward the node) is the closest of its primitives and keeps has-many distinct from a reference.
+ */
+export const ARROWHEAD_END: Record<ArrowHead, 'arrow' | 'triangle' | 'inverted' | 'none'> = {
+  arrow: 'arrow',
+  triangle: 'triangle',
+  crowsfoot: 'inverted',
+  none: 'none',
 };
 
 /** Open or closed path through explicit points. */
@@ -353,8 +370,8 @@ export class RecordBuilder {
           labelColor: DEFAULTS.color,
           fill: props.fill ?? DEFAULTS.fill,
           font: props.font ?? DEFAULTS.font,
-          arrowheadStart: 'none',
-          arrowheadEnd: 'arrow',
+          arrowheadStart: props.tail === 'circle' ? 'dot' : 'none',
+          arrowheadEnd: ARROWHEAD_END[props.head ?? 'arrow'],
           start: { x: 0, y: 0 },
           end: relativeEnd,
           bend: 0,

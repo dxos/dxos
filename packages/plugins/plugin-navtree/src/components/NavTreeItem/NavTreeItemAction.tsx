@@ -8,7 +8,7 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -45,22 +45,22 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
     );
 
     return (
-      <Menu.Root caller={caller} onAction={handleAction}>
-        <Menu.Trigger asChild>
-          <IconButton
-            {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
-            {...composableProps(props)}
-            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-            variant='ghost'
-            icon={icon ?? fallbackIcon}
-            iconOnly
-            label={toLocalizedString(label, t)}
-            data-testid={testId}
-            ref={forwardedRef}
-          />
-        </Menu.Trigger>
-        <Menu.Content group={parent} items={menuActions as MenuItem[]} />
-      </Menu.Root>
+      <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
+        <IconButton
+          {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
+          {...composableProps(props)}
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon={icon ?? fallbackIcon}
+          iconOnly
+          label={toLocalizedString(label, t)}
+          data-testid={testId}
+          // The tree selects a row on any click inside it, and selecting navigates away from the
+          // menu just opened. The trigger has handled the click by the time this runs.
+          onClick={(event) => event.stopPropagation()}
+          ref={forwardedRef}
+        />
+      </ActionMenu>
     );
   },
 );

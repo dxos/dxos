@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -14,7 +15,7 @@ import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipel
 import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
-import { type ModelVariant } from '../models';
+import { type ModelVariant } from '../models.ts';
 
 export type MessageFactsResult = {
   readonly facts: number;
@@ -107,8 +108,11 @@ export const extractFactsForVariant = (
       const facts = yield* store.query({});
       return { processed, facts } satisfies FactsRunResult;
     }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
-      Effect.provide(AiServiceTestingPreset(variant.preset)),
+      Effect.provide(
+        Database.layer(db).pipe(
+          Layer.provideMerge(FactStoreLive.layerMemory),
+          Layer.provideMerge(AiServiceTestingPreset(variant.preset)),
+        ),
+      ),
     ),
   );

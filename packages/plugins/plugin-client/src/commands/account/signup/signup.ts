@@ -25,6 +25,7 @@ import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { ClientOperation } from '#operations';
 
+import { CommandError } from '../../errors.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
   ATMOSPHERE_METHOD,
@@ -32,7 +33,7 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
 type SignupMethod = 'email' | typeof ATMOSPHERE_METHOD;
 
@@ -51,10 +52,10 @@ const INPUT_PROMPT: Record<SignupMethod, string> = {
 export const signup = Command.make(
   'signup',
   {
-    code: Args.string('code').pipe(
+    code: Args.String('code').pipe(
       Args.withDescription('Access code (8-character invitation code) to redeem. Validated before signing up.'),
     ),
-    input: Args.string('input').pipe(
+    input: Args.String('input').pipe(
       Args.withDescription('Method input: email address / Atmosphere handle. Prompted if omitted.'),
       Args.optional,
     ),
@@ -71,27 +72,30 @@ export const signup = Command.make(
 
     if (!Account.isValidAccessCodeFormat(code)) {
       return yield* Effect.fail(
-        new Error(`Access code ${code} is malformed — codes are 8 characters (Crockford base32, hyphen optional).`),
+        new CommandError({
+          message: `Access code ${code} is malformed — codes are 8 characters (Crockford base32, hyphen optional).`,
+        }),
       );
     }
 
     const hub = yield* hubClient;
     if (!(yield* Account.checkAccessCode({ hub, code }))) {
       return yield* Effect.fail(
-        new Error(
-          `Access code ${code} is not valid — it may be unknown, revoked, already redeemed, ` +
+        new CommandError({
+          message:
+            `Access code ${code} is not valid — it may be unknown, revoked, already redeemed, ` +
             'or the hub was unreachable.',
-        ),
+        }),
       );
     }
 
     const resolvedMethod: SignupMethod = Option.isSome(method)
       ? method.value
-      : yield* Prompt.select({ message: 'Choose a sign-up method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
+      : yield* Prompt.Select({ message: 'Choose a sign-up method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
     const resolvedInput = Option.isSome(input)
       ? input.value
-      : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
+      : yield* Prompt.String({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const result = yield* Match.value(resolvedMethod).pipe(
       Match.when('email', () => signUpWithEmail({ client, hub, invoke, code, email: resolvedInput })),
@@ -183,15 +187,23 @@ const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email 
     ensureIdentity: ensureIdentity(client, invoke, email.split('@')[0]),
   }).pipe(
     Effect.catchTag('EmailAlreadyRegisteredError', () =>
-      Effect.fail(new Error(`${email} already has an account. Run \`dx account login\` to sign in to it instead.`)),
+      Effect.fail(
+        new CommandError({
+          message: `${email} already has an account. Run \`dx account login\` to sign in to it instead.`,
+        }),
+      ),
     ),
     Effect.catchTag('EmailProbeUnavailableError', () =>
       Effect.fail(
-        new Error(`Could not check whether ${email} already has an account. Nothing was created — try again.`),
+        new CommandError({
+          message: `Could not check whether ${email} already has an account. Nothing was created — try again.`,
+        }),
       ),
     ),
     Effect.catchTag('AccountRedemptionError', (error) =>
-      Effect.fail(new Error(`Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}`)),
+      Effect.fail(
+        new CommandError({ message: `Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}` }),
+      ),
     ),
   );
 });
@@ -222,13 +234,15 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   // so a failed or abandoned auth leaves nothing behind.
   const identity = yield* ensureIdentity(client, invoke);
   const { email } = yield* Account.completeOAuthRegistration({ client, registrationToken }).pipe(
-    Effect.mapError((error) => new Error(`${error.message} ${RECOVERY}`)),
+    Effect.mapError((error) => new CommandError({ message: `${error.message} ${RECOVERY}` })),
   );
 
   // The credential written to the default space rides out with the command's `syncAllToEdge`.
   return yield* Account.redeemAccessCode({ hub, identity, email, code }).pipe(
     Effect.catchTag('AccountRedemptionError', (error) =>
-      Effect.fail(new Error(`Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}`)),
+      Effect.fail(
+        new CommandError({ message: `Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}` }),
+      ),
     ),
   );
 });

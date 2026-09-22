@@ -71,6 +71,30 @@ export const QueryDisabledPlugins = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
+export const DisablePlugins = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.registry.disablePlugins'),
+    name: 'Disable Plugins',
+    description:
+      'Disable enabled plugins by id. Enabled dependents are disabled with them, dependents first. ' +
+      'Core plugins cannot be disabled and are reported as rejected.',
+    icon: 'ph--plugs--regular',
+  },
+  services: [Plugin.Service],
+  input: Schema.Struct({
+    ids: Schema.Array(Schema.String).annotate({
+      description: 'Ids of the plugins to disable, as reported by the plugin query.',
+      examples: [['dxos.org/plugin/markdown', 'dxos.org/plugin/table']],
+    }),
+  }),
+  output: Schema.Struct({
+    disabled: Schema.Array(Schema.String).annotate({
+      description: 'Ids now disabled, including dependents that went off and plugins already disabled.',
+    }),
+    rejected: Schema.Array(PluginRejection),
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const EnablePlugins = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.registry.enablePlugins'),

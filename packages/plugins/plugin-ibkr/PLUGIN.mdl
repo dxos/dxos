@@ -21,11 +21,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Architecture
 
@@ -771,7 +771,7 @@ feat F-6: Instrument Research
 ## Acceptance
 
 ```mdl
-test T-1: Connect stores token and query id
+scenario T-1: Connect stores token and query id
   given: the user opens the Interactive Brokers connector form
   when: the user submits a Flex token and a Flex query id
   then:
@@ -782,7 +782,7 @@ test T-1: Connect stores token and query id
 ```
 
 ```mdl
-test T-2: Daily sync appends a report
+scenario T-2: Daily sync appends a report
   given: a connected Portfolio and a stubbed Flex response
   when: op:SyncPortfolioReport runs
   then:
@@ -793,7 +793,7 @@ test T-2: Daily sync appends a report
 ```
 
 ```mdl
-test T-3: Reads come from the latest snapshot only
+scenario T-3: Reads come from the latest snapshot only
   given: two stored reports with different fetchedAt timestamps
   when: op:GetPortfolio is invoked
   then:
@@ -803,7 +803,7 @@ test T-3: Reads come from the latest snapshot only
 ```
 
 ```mdl
-test T-4: GetTrades is limited to the last 7 days
+scenario T-4: GetTrades is limited to the last 7 days
   given: a stored report containing trades older and newer than 7 days ago
   when: op:GetTrades is invoked
   then:
@@ -812,7 +812,7 @@ test T-4: GetTrades is limited to the last 7 days
 ```
 
 ```mdl
-test T-5: Reads return empty before any sync
+scenario T-5: Reads return empty before any sync
   given: a Portfolio whose feed has no reports
   when: op:GetPortfolio is invoked
   then:
@@ -822,7 +822,7 @@ test T-5: Reads return empty before any sync
 ```
 
 ```mdl
-test T-6: Rate-limit code stops the flow
+scenario T-6: Rate-limit code stops the flow
   given: Flex SendRequest returns error code 1018
   when: service:FlexWebService.fetchReportXml runs
   then:
@@ -832,7 +832,7 @@ test T-6: Rate-limit code stops the flow
 ```
 
 ```mdl
-test T-7: Retryable code is polled then resolved
+scenario T-7: Retryable code is polled then resolved
   given: the first GetStatement returns code 1019, the second returns the report
   when: service:FlexWebService.fetchReport runs
   then:
@@ -842,7 +842,7 @@ test T-7: Retryable code is polled then resolved
 ```
 
 ```mdl
-test T-8: Sync without a connection fails clearly
+scenario T-8: Sync without a connection fails clearly
   given: a space with no IBKR connection
   when: op:SyncPortfolioReport runs
   then:
@@ -852,7 +852,7 @@ test T-8: Sync without a connection fails clearly
 ```
 
 ```mdl
-test T-9: First daily-sync toggle creates the trigger
+scenario T-9: First daily-sync toggle creates the trigger
   given: component:PortfolioProperties for a Portfolio with no sync trigger
   when: the user toggles "Daily sync" on
   then:
@@ -862,7 +862,7 @@ test T-9: First daily-sync toggle creates the trigger
 ```
 
 ```mdl
-test T-10: Assistant answers from the snapshot
+scenario T-10: Assistant answers from the snapshot
   given: a stored report and the IBKR skill bound to the conversation
   when: the user asks "what's my portfolio?"
   then:
@@ -872,7 +872,7 @@ test T-10: Assistant answers from the snapshot
 ```
 
 ```mdl
-test T-11: MaterializeInstrument is idempotent
+scenario T-11: MaterializeInstrument is idempotent
   given: an Instrument with Meta.keys containing { source: "ticker/NASDAQ", id: "AAPL" }
   when: op:MaterializeInstrument runs with the same key and symbol AAPL
   then:
@@ -884,7 +884,7 @@ test T-11: MaterializeInstrument is idempotent
 ```
 
 ```mdl
-test T-12: InstrumentArticle loads chart and fundamentals
+scenario T-12: InstrumentArticle loads chart and fundamentals
   given: an Instrument for AAPL with a tradingview.com foreign key NASDAQ:AAPL
   when: component:InstrumentArticle is rendered with a stubbed op:GetInstrumentFundamentals
   then:
@@ -900,7 +900,7 @@ test T-12: InstrumentArticle loads chart and fundamentals
 ```
 
 ```mdl
-test T-13: InstrumentCard shows static identity only
+scenario T-13: InstrumentCard shows static identity only
   given: an Instrument with symbol, name, exchange, and assetClass
   when: component:InstrumentCard is rendered
   then:
@@ -917,11 +917,11 @@ test T-13: InstrumentCard shows static identity only
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect, sync, and read the portfolio
+test QA-1: Connect, sync, and read the portfolio
   desc: The core round-trip — connect a Flex credential, pull a report from IBKR, read positions and trades back from the stored snapshot.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2, T-3]
@@ -930,10 +930,10 @@ flow QA-1: Connect, sync, and read the portfolio
     - an identity exists
     - space: a space is open
     - a valid IBKR Flex Web Service token and query id, with at least one open position and one trade in the last 7 days
-    - no Connection exists yet for source "interactivebrokers.com" in this space — ABORT rather than reusing one this flow did not create
-    - no Portfolio exists in this space — ABORT rather than syncing into one this flow did not
+    - no Connection exists yet for source "interactivebrokers.com" in this space — ABORT rather than reusing one this test did not create
+    - no Portfolio exists in this space — ABORT rather than syncing into one this test did not
       create, since the sync writes into whichever Portfolio it finds
-  test:
+  steps:
     - name: Connect IBKR
       do: Open the IBKR connector's credential form and enter the Flex token and query id.
       expect: an AccessToken is created with the token in `token` and the query id in `account`, and a Connection referencing it exists
@@ -961,7 +961,7 @@ flow QA-1: Connect, sync, and read the portfolio
       do: Right-click the Portfolio and choose "Clear synced data", or delete the Portfolio object entirely.
       note: |
         NO `invoke` — no operation returns the Portfolio, so an agent run cannot identify the one
-        this flow produced. Resolving it by type would delete whichever Portfolio the space
+        this test produced. Resolving it by type would delete whichever Portfolio the space
         happens to hold first, which may be the user's own; teardown is human-only until an
         operation yields the Portfolio to capture.
       expect: the PortfolioReport feed and its reports no longer exist; the IBKR account itself is untouched (read-only connection, F-1.3)
@@ -971,7 +971,7 @@ flow QA-1: Connect, sync, and read the portfolio
 ```
 
 ```mdl
-flow QA-2: Materialize an instrument and fetch fundamentals
+test QA-2: Materialize an instrument and fetch fundamentals
   desc: The research path — resolve a ticker to an Instrument, then fetch SEC EDGAR fundamentals for it, idempotently.
   actors: agent
   covers: [F-6.1, T-11, T-12]
@@ -979,8 +979,8 @@ flow QA-2: Materialize an instrument and fetch fundamentals
   given:
     - an identity exists
     - space: a space is open
-    - no Instrument with key { source: "ticker/NASDAQ", id: "AAPL" } exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Instrument with key { source: "ticker/NASDAQ", id: "AAPL" } exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Materialize AAPL
       do: (agent-only step — ask the assistant to "open AAPL", or invoke directly)
       invoke: [op:MaterializeInstrument] { key: { source: "ticker/NASDAQ", id: "AAPL" }, symbol: "AAPL", name: "Apple Inc.", exchange: "NASDAQ" }
@@ -1013,7 +1013,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -1024,7 +1024,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -1033,8 +1033,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

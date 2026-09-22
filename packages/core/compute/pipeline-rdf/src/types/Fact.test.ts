@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Fact } from './Fact';
+import { Fact } from './Fact.ts';
 
 const ALICE_FACT: Fact = {
   id: 'fact-1',

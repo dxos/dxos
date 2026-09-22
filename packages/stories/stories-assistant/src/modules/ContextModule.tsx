@@ -6,14 +6,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export const ContextModule = () => {
   const space = useActiveSpace();
@@ -128,13 +128,7 @@ const DebugTile = ({ data }: { data: ContextItem }) => {
     <Card.Root>
       <Card.Body>
         <Card.Row fullWidth classNames='max-h-50'>
-          <Syntax.Root data={data}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
+          <JsonHighlighter data={data} classNames='text-xs' />
         </Card.Row>
       </Card.Body>
     </Card.Root>

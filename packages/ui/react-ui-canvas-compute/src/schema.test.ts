@@ -18,7 +18,7 @@ import {
   isPolygon,
 } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createFunction, createSwitch } from './shapes';
+import { ComputeShape, createFunction, createSwitch } from './shapes/index.ts';
 
 describe('compute', () => {
   test('model', ({ expect }) => {

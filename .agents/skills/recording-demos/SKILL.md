@@ -1,11 +1,11 @@
 ---
 name: recording-demos
 description: >-
-  Record a demo of the running app that the agent drives itself — a `.mdl` QA flow or an ad-hoc
+  Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
   screenshots of the UI, or execute a flow whose steps have no operation behind them. For a
-  pass/fail report rather than something to watch, use `running-qa-flows`; for a repeatable
+  pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
@@ -43,12 +43,64 @@ the stills if the video adds nothing.
 ## 1. Get the app running
 
 ```bash
-DX_PWA=false moon run composer-app:serve -- --port 4173
+DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173
 ```
+
+**`VITE_DX_DISABLE_ANIMATIONS=true` is not optional here.** It turns off animation that runs without
+a user gesture — the tour's carousel auto-advancing every 10s is the one that bites — and unattended
+motion defeats §4 entirely: every frame differs from the last, so the trimmer finds no still runs to
+cull and a 13-minute session stays 13 minutes. Check it took effect the same way §4 does, from
+`--report`: a session that sat idle should be almost all `stillSeconds`.
 
 Wait for `ready in`. In the cloud sandbox, first read the `cloud-sandbox` skill — the dev server
 needs a full dependency build (`moon run composer-app:build`), and Chromium needs the proxy flags
 that `driver.mjs` already applies.
+
+### Storybook, when the demo is a component
+
+```bash
+DX_STORIES=plugins/plugin-assistant,stories/stories-assistant VITE_DX_DISABLE_ANIMATIONS=true \
+  moon run storybook-react:serve
+```
+
+`DX_STORIES` narrows which packages are crawled (see `.storybook/main.ts`); unset it and the whole
+monorepo is served from source, which is slower to boot and re-optimizes mid-session. The `serve`
+task builds the full package closure first, so budget the same 10+ minutes as an app.
+
+**Always record storybook demos in isolation mode.** Drive
+`/iframe.html?id=<story-id>&viewMode=story` — the story fills the 1280×800 frame, and the recording
+carries the component instead of a sidebar, a Controls table and a toolbar that mean nothing to the
+person watching. The manager is worth one establishing shot at most; it is never where the feature
+gets demonstrated.
+
+```bash
+C '{"op":"goto","url":"http://localhost:9009/iframe.html?id=plugins-plugin-assistant-components-chatactivity--sequence&viewMode=story"}'
+```
+
+The id is the CSF path: `title` lowercased with every `/` and space turned into `-`, then `--`, then
+the export name in kebab-case (`ConnectingMcp` → `connecting-mcp`). Read it off the manager's URL if
+in doubt.
+
+Four things about storybook that cost a cycle each:
+
+- **Warm the preview bundle before the first isolation load.** A cold `iframe.html` pays the whole
+  Vite dep-scan and holds a light-theme spinner for 15s+ — which lands in the recording. Load the
+  manager once, wait for the story to render, and only then drive `iframe.html`.
+- **`eval` runs in the manager, not the story.** `page.evaluate` sees the top document, so a story
+  selector resolves to nothing. Reach in explicitly:
+  `document.querySelector('#storybook-preview-iframe').contentDocument.querySelector(...)`. Same for
+  `click`/`text` — a Playwright locator does not cross into the iframe.
+- **HMR is your edit loop.** A source edit re-renders the live story in about 4s, so verify a fix by
+  re-reading the DOM rather than restarting anything.
+- **Remount by re-selecting, not reloading.** A story with a timer or an animation restarts when it
+  mounts; clicking another story and back is instant, whereas a reload re-bundles.
+- **Scope a selector that the thread also matches.** A chat's composer and every message already in
+  the thread are all `.cm-content`, so the bare selector's `.first()` types into the transcript —
+  silently, since the op still answers `ok`. Anchor on the container's testid
+  (`[data-testid="assistant.prompt"] .cm-content`) and read the value back before submitting.
+- **`clearCaption` before touching anything at the bottom of the page.** The banner is pinned there,
+  so it sits over a composer or a footer toolbar and swallows the click. Clear it, interact, caption
+  again.
 
 ## 2. Start the driver
 
@@ -87,13 +139,14 @@ un-stopped leaves nothing behind.
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'
 ```
 
-When running a `.mdl` flow, the caption is the step's `do:` text verbatim and the subtitle is where it
+When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
 
 ## 4. Trim the dead air
 
 An agent-driven recording is almost entirely still frames: the browser holds one frame while you decide
-the next gesture. Measure before tuning — `--report` costs one decode and no encode:
+the next gesture — provided nothing on the page animates on its own, which is why §1 sets
+`VITE_DX_DISABLE_ANIMATIONS=true`. Measure before tuning — `--report` costs one decode and no encode:
 
 ```bash
 node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
@@ -249,13 +302,13 @@ Play it back, or step the frames, before attaching. Two different classes of pro
   something you built earlier in this session, fix it now** — do not ship a video that documents your
   own bug and say nothing. Re-record after the fix; the recording is cheap and the credibility is not.
 
-## Running a `.mdl` flow this way
+## Running a `.mdl` test this way
 
-Read the flow first (`running-qa-flows` §1 applies unchanged: `given`, `before`/`test`/`after`, and
+Read the test first (`composer-qa` §1 applies unchanged: `given`, `before`/`steps`/`after`, and
 every `note` is a constraint, not commentary). Then, per step, perform the `do:` rather than the
 `invoke:`, and judge `expect:` from the screen.
 
-Consent is the same as `running-qa-flows`: a flow mutates by definition, so name the flow and what it
+Consent is the same as `composer-qa`: a test mutates by definition, so name the test and what it
 will change before starting, and run it against a dev server you started, never the user's profile.
 
 Verify state by reading the DOM, not by trusting the gesture:

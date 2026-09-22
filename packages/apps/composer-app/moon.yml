@@ -1,16 +1,19 @@
 layer: application
 language: typescript
 tags:
-  - e2e
   - tauri
   - typecheck
   - vite
   - ts-test
   - storybook
 # Inherited from the tags above and not redeclared here: `build`, `lint`, `typecheck`,
-# `check-module-structure`, `test-storybook`, and `e2e` (`.moon/tasks/tag-*.yml`). `e2e` is the
-# gated suite — production `vite preview` against `src/playwright/playwright.config.ts`; every
-# spec that config cannot host has its own `e2e-*` task below.
+# `check-module-structure` and `test-storybook` (`.moon/tasks/tag-*.yml`).
+#
+# There is deliberately no `e2e` task and no `e2e` tag: the gated behavioural suite lives in
+# `@dxos/composer-e2e` (`packages/e2e/composer-e2e`), which serves this app's `bundle-e2e` output.
+# What stays here are the harnesses that are coupled to the BUILD rather than to the behaviour —
+# `e2e-startup` and `e2e-perf` record measurements that `check-startup-budget` and the perf nightly
+# gate on, `e2e-dev` needs `vite serve`, and `e2e-welcome-focus` drives Storybook.
 tasks:
   # The production web bundle (`out/composer`), consumed by `vite preview`, the Tauri builds, and
   # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
@@ -31,6 +34,9 @@ tasks:
       DX_EDGE_BASE_URL: 'https://dxos.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'
+    options:
+      # Local only: the ~320 MB bundle takes minutes to download from the remote cache and ~25s to rebuild.
+      cache: local
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
   # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
@@ -89,14 +95,14 @@ tasks:
         env:
           DX_PWA: 'false'
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
-  # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
+  # frontend + macOS ollama runtime are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
-  # prebuilt artifact, sidecar fetched directly — to keep moon out of the native job.
+  # prebuilt artifact, runtime fetched directly — to keep moon out of the native job.
   tauri-build:
     deps:
       - bundle
       - fetch-ollama
-  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only). Embeds the
+  # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
   # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
   # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
   # would otherwise select. `tauri-ios` (the dev loop) extends `serve-prod` for the same reason.
@@ -107,9 +113,9 @@ tasks:
       - target: bundle
         env:
           DX_PLUGIN_SET: production
-  # Both native dev loops run this app's `vite dev` through `beforeDevCommand` (`tauri.ios.conf.json`
-  # overrides only `bundle`), so they need exactly `serve`'s narrowed dependency set rather than the
-  # `tauri` tag's whole-graph `^:build` — extended so the three inner loops cannot drift.
+  # Both native dev loops run this app's `vite dev` through `beforeDevCommand`, so they need exactly
+  # `serve`'s narrowed dependency set rather than the `tauri` tag's whole-graph `^:build` — extended
+  # so the three inner loops cannot drift.
   tauri-dev:
     extends: serve
     command: pnpm exec tauri dev
@@ -122,9 +128,9 @@ tasks:
     command: pnpm exec tauri ios dev
     options:
       mergeArgs: replace
-  # Downloads the pinned macOS ollama runtime + triple-named sidecars embedded in the desktop app. Cacheable:
-  # keyed on the fetch script (which pins the version + SHA-256), with the downloaded sidecar dir as the
-  # output — so a cache hit restores it instead of re-downloading the (large) runtime.
+  # Downloads the pinned macOS ollama runtime embedded in the desktop app. Cacheable: keyed on the
+  # fetch script (which pins the version + SHA-256), with the downloaded runtime dir as the output —
+  # so a cache hit restores it instead of re-downloading the (large) runtime.
   fetch-ollama:
     command: node scripts/fetch-ollama.mjs
     inputs:
@@ -142,7 +148,6 @@ tasks:
       - ~:#prebuild
       - '#dist-runtime:build'
       - '#vite-plugin:build'
-      - echo-query:prebuild-query-lite
   # Diagnose a hung `serve`: samples the busiest `vite dev` (writing the call graph to
   # temp/) and, with `-- --kill`, force-kills it. Not cacheable — it inspects live process state.
   diagnose-serve:
@@ -184,6 +189,13 @@ tasks:
       mergeArgs: replace
     deps:
       - ~:#prebuild
+      # Generated sources behind an INDIRECT dependency, named explicitly for the same reason
+      # `echo-query:prebuild-query-lite` is below: `~:#prebuild`'s own `^:#prebuild` stops at the
+      # first hop, and an all-projects task-tag scope (`:#prebuild`) is not a legal task dep. Both
+      # are reached through plugins, so transform-on-request only fails once the plugin that needs
+      # them is opened, while bundled dev fails the whole build up front.
+      - react-ui-gameboard:prebuild
+      - react-ui-experimental:prebuild
       # dist consumed at runtime.
       - '#dist-runtime:build'
       # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
@@ -194,12 +206,6 @@ tasks:
       # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
       # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
       - '#vite-plugin:build'
-      # A build artifact, not runtime dist: plugin-script imports `@dxos/echo-query/api.d.ts?raw`
-      # for in-editor type hints, and vite's dependency scan aborts wholesale — pre-bundling
-      # nothing at all — if a single import in the crawl fails to resolve. Named explicitly because
-      # `prebuild`'s `^:#prebuild` stops at the first hop: echo-query is reached through
-      # plugin-script, which has no `prebuild`-tagged task of its own to continue the chain.
-      - echo-query:prebuild-query-lite
       # Dist consumed by the dev server itself: the `dx-agent-claude` plugin imports the middleware
       # in `configureServer`. Named explicitly rather than tagged — it exports no vite plugin, and
       # nothing in the browser graph reaches it.
@@ -219,6 +225,14 @@ tasks:
     extends: serve
     env:
       DX_PLUGIN_SET: production
+  # The same inner loop under Vite 8's full-bundle dev mode: Rolldown builds the whole client graph
+  # up front (lazily per entry) and serves it from memory, instead of transforming each module on
+  # request. Still experimental upstream, so it is its own task rather than the default `serve` —
+  # `vite.config.ts` branches on the flag (see `isBundledDev` there) because bundled dev reuses
+  # `build.rolldownOptions` and runs no dep optimizer.
+  serve-bundle:
+    extends: serve
+    command: pnpm exec vite dev --configLoader native --experimentalBundle
   # Dev server with the agent debug port already open, for QA flows an agent drives end to end
   # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
   # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it
@@ -240,6 +254,24 @@ tasks:
       - ~:#prebuild
       # `vite preview` serves `out/composer`, and PWA is a build-time decision — so the flag rides
       # the dep too, or the harness measures a service worker precaching ~30 MB mid-run.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
+  # Performance flows — `perf-*.spec.ts` against `vite preview`, driven by `@dxos/perf-harness`.
+  # Outside the `e2e` pool for the same reason as `e2e-startup`: it records measurements rather than
+  # asserting behaviour, so a number must never gate a merge. Scale tier and modes come from the
+  # environment (`DX_PERF_SCALE`, `DX_PERF_MODES`) so the nightly can sweep them without a task per
+  # combination. Not cacheable — the point is to measure this commit on this machine.
+  e2e-perf:
+    command: pnpm exec playwright test --config=src/playwright/playwright-perf.config.ts
+    env:
+      DX_PWA: 'false'
+    options:
+      cache: false
+    deps:
+      - ~:#prebuild
+      # PWA is a build-time decision, so the flag rides the dep too — otherwise a service worker
+      # precaches ~30 MB mid-run and lands in the network split as app code.
       - target: bundle
         env:
           DX_PWA: 'false'

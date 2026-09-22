@@ -26,7 +26,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { RecordArticle } from './RecordArticle';
+import { RecordArticle } from './RecordArticle.tsx';
 
 random.seed(0);
 

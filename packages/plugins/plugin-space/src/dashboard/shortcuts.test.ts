@@ -8,13 +8,12 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Annotation, DXN, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { FAVORITE_TAG, findFavoriteTag, toShortcuts } from './shortcuts';
+import { FAVORITE_TAG, findFavoriteTag, toShortcuts } from './shortcuts.ts';
 
 class TestItem extends Type.makeObject<TestItem>(DXN.make('org.dxos.type.test.streamDeckItem', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'cyan' }),
   ),
 ) {}

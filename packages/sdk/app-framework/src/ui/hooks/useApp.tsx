@@ -9,18 +9,20 @@ import * as PubSub from 'effect/PubSub';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EffectEx } from '@dxos/effect';
+import { BaseError, withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { PluginManagerContext } from '../../context';
-import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { setupDevtools } from '../../devtools';
-import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
-import { bootLoader } from '../components/App/loader';
+import { ActivationEvents, Capabilities } from '../../common/index.ts';
+import { PluginManagerContext } from '../../context.ts';
+import { type ActivationEvent, type Plugin, PluginManager } from '../../core/index.ts';
+import { setupDevtools } from '../../devtools.ts';
+import { bootLoader } from '../components/App/loader.ts';
+import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components/index.ts';
+import { createStartupWatchdog } from './startup-watchdog.ts';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
@@ -58,7 +60,63 @@ export type StartupProgress = {
    * sub-modules entirely) to the host's `Placeholder`.
    */
   humanizedName?: string;
+  /**
+   * Humanized label of the plugin owning {@link module} (e.g. "Markdown"), absent on
+   * event-level transitions. Lets a host collapse a plugin's many module activations
+   * into a single status line without re-parsing module ids.
+   */
+  pluginName?: string;
+  /** Slug of the plugin owning {@link module} (e.g. `markdown`) — the id the boot loader's row keys on. */
+  pluginSlug?: string;
 };
+
+/**
+ * Event dispatched on `window` once the `Startup` activation event has fully completed.
+ */
+export const STARTUP_ACTIVATED_EVENT = 'app-framework:startup-activated';
+
+/**
+ * Event dispatched on `window` when startup misses its deadline, carrying
+ * {@link StartupDiagnostics} as `detail`.
+ */
+export const STARTUP_FAILED_EVENT = 'app-framework:startup-failed';
+
+/**
+ * Event dispatched on `window` the first time the app shell renders and the boot loader is
+ * dismissed, carrying the milliseconds since navigation start as `detail`.
+ */
+export const FIRST_INTERACTIVE_EVENT = 'app-framework:first-interactive';
+
+/** Startup did not complete before its deadline. Carries {@link StartupDiagnostics} as context. */
+export class StartupTimeoutError extends BaseError.extend('StartupTimeoutError', 'Startup timed out') {}
+
+/** Where startup had got to when the deadline expired. */
+export type StartupDiagnostics = {
+  /** Which failure produced these: the deadline expiring, or a module refusing to activate. */
+  startupFailureKind: 'timeout' | 'module-error';
+  /** The deadline, in ms; reported for both kinds so the two are comparable. */
+  startupTimeoutMs: number;
+  /** Comma-separated activation events that completed before the failure. */
+  startupEventsFired: string;
+  /** Modules that had finished activating. */
+  startupActivatedModules: number;
+  /** Modules registered in total. */
+  startupTotalModules: number;
+  /** Comma-separated modules still activating, which is the set the stall is in. */
+  startupInFlightModules: string;
+  /** Activation event in flight when the failure hit. */
+  startupLastEvent?: string;
+  /** Comma-separated events queued for replay by a pending reset. */
+  startupPendingReset: string;
+};
+
+declare global {
+  interface WindowEventMap {
+    [STARTUP_ACTIVATED_EVENT]: CustomEvent<void>;
+    [STARTUP_FAILED_EVENT]: CustomEvent<StartupDiagnostics>;
+    [FIRST_INTERACTIVE_EVENT]: CustomEvent<number>;
+  }
+}
 
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
@@ -74,7 +132,17 @@ export type UseAppOptions = {
   cacheEnabled?: boolean;
   safeMode?: boolean;
   debounce?: number;
+  /**
+   * Executed milliseconds without an activation event before startup is declared stalled; suspended
+   * time does not count, and a boot that keeps activating is never aborted.
+   */
   timeout?: number;
+  /**
+   * Relay per-plugin `Activating …` lines into the boot loader's status log. Off by default —
+   * activation names framework internals, which is diagnostic detail rather than something a
+   * user booting the app is asking for.
+   */
+  verboseStatus?: boolean;
   fallback?: FC<FallbackProps>;
 };
 
@@ -113,6 +181,7 @@ export const useApp = ({
   safeMode = false,
   debounce = 0,
   timeout = 30_000,
+  verboseStatus = false,
 }: UseAppOptions) => {
   const plugins = useDefaultValue(pluginsProp, () => []);
   const defaults = useDefaultValue(defaultsProp, () => []);
@@ -132,7 +201,6 @@ export const useApp = ({
 
   const readyRef = useRef(false);
   const [ready, setReady] = useState(false);
-  const errorRef = useRef<unknown>(null);
   const [error, setError] = useState<unknown>(null);
   const [startupProgress, setStartupProgress] = useState<StartupProgress>({
     activated: 0,
@@ -173,6 +241,24 @@ export const useApp = ({
     setupDevtools(manager);
   }, [manager]);
 
+  // Hand the boot loader the enabled plugins' icons from their own meta. This registers, it does
+  // not draw: barely half the enabled set activates during startup (the rest activate lazily on
+  // first use), so a row seeded from it sat half-dim for the whole boot. Meta is the icon's only
+  // source — the loader is a standalone bundle with no access to the plugin registry.
+  useEffect(() => {
+    // Optional call, not just an optional facade: an already-loaded page can be running an
+    // `index.html` whose inlined loader bundle predates this method (service-worker cache, stale
+    // dev compile), and a TypeError here would strand that page on the loader forever.
+    bootLoader?.plugins?.(
+      plugins
+        .filter(({ meta }) => enabled.includes(meta.profile.key))
+        .map(({ meta }) => ({
+          id: pluginSlugOfKey(meta.profile.key),
+          icon: meta.profile.icon?.key,
+        })),
+    );
+  }, [plugins, enabled]);
+
   useAsyncEffect(async () => {
     log('useApp: effect mount');
 
@@ -188,12 +274,75 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
+    const inFlightModules = new Set<string>();
+
+    const collectDiagnostics = (startupFailureKind: StartupDiagnostics['startupFailureKind']): StartupDiagnostics => ({
+      startupFailureKind,
+      startupTimeoutMs: timeout,
+      startupEventsFired: manager.getEventsFired().join(','),
+      startupActivatedModules: manager.getActive().length,
+      startupTotalModules: manager.getModules().length,
+      startupInFlightModules: [...inFlightModules].join(','),
+      startupLastEvent: progressRef.current.event,
+      startupPendingReset: manager.getPendingReset().join(','),
+    });
+
+    const reportFailure = (diagnostics: StartupDiagnostics) => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(STARTUP_FAILED_EVENT, { detail: diagnostics }));
+      }
+    };
+
+    const watchdog = createStartupWatchdog({
+      stallMs: timeout,
+      onStall: ({ executedMs }) => {
+        const diagnostics = collectDiagnostics('timeout');
+
+        log.warn('startup timeout diagnostic', { ...diagnostics, executedMs, activeModules: manager.getActive() });
+
+        const abort = () => {
+          void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
+          setError(
+            withContext(new StartupTimeoutError({ message: `Startup timed out after ${timeout}ms` }), diagnostics),
+          );
+          reportFailure(diagnostics);
+        };
+
+        // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
+        // debugger all overrun it while the run is perfectly healthy, and killing it discards the
+        // state worth looking at. Startup continues either way and the user decides — the offer raises
+        // exactly the failure this branch used to raise unprompted.
+        //
+        // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
+        // `index.html` at build time, so a page served before this shipped has the old bundle, and
+        // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
+        if (import.meta.env?.DEV) {
+          if (bootLoader?.stalled) {
+            bootLoader.stalled(abort);
+          } else {
+            log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
+          }
+          return;
+        }
+
+        abort();
+      },
+    });
+
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDetach(
         PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
+              watchdog.progress();
+              if (module) {
+                if (state === 'activating') {
+                  inFlightModules.add(module);
+                } else {
+                  inFlightModules.delete(module);
+                }
+              }
               // Event-level Startup activated (no `module` field) fires once,
               // after every module triggered by Startup has finished. Module
               // activations now also carry their parent event id (so the trace
@@ -205,7 +354,7 @@ export const useApp = ({
               // completion — leaving downstream capabilities (operation-invoker,
               // app-graph, …) un-registered when the boot loader dismisses.
               if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
-                clearTimeout(timeoutId);
+                watchdog.dispose();
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
@@ -215,7 +364,7 @@ export const useApp = ({
                 // import a provider, and consumers can capture the startup
                 // summary without us picking one.
                 if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('app-framework:startup-activated'));
+                  window.dispatchEvent(new CustomEvent(STARTUP_ACTIVATED_EVENT));
                 }
                 return;
               }
@@ -231,6 +380,7 @@ export const useApp = ({
               // completion keeps it accurate ("now activating X") until
               // the next module starts.
               if (module && state === 'activating' && !readyRef.current) {
+                const pluginSlug = pluginSlugOf(module);
                 setStartupProgress((current) => ({
                   ...current,
                   // `event` here is the activation event that first
@@ -241,6 +391,8 @@ export const useApp = ({
                   event: event || undefined,
                   module,
                   humanizedName: humanizeModuleId(module),
+                  pluginName: pluginSlug ? titleCase(pluginSlug) : undefined,
+                  pluginSlug,
                 }));
               }
               // Update the activation count when a module commits. The
@@ -270,11 +422,15 @@ export const useApp = ({
                   event,
                   module: undefined,
                   humanizedName: humanizeEventKey(event),
+                  pluginName: undefined,
+                  pluginSlug: undefined,
                 }));
               }
               if (error$ && !readyRef.current) {
-                setError(error$);
-                errorRef.current = error$;
+                watchdog.dispose();
+                const diagnostics = collectDiagnostics('module-error');
+                setError(withContext(error$, diagnostics));
+                reportFailure(diagnostics);
               }
             }),
           ),
@@ -290,46 +446,9 @@ export const useApp = ({
       return yield* Fiber.join(listener);
     }).pipe(Effect.scoped, Effect.runFork);
 
-    // Set up a timeout for startup.
-    const timeoutId = setTimeout(() => {
-      if (readyRef.current || errorRef.current) {
-        return;
-      }
-
-      log.warn('startup timeout diagnostic', {
-        eventsFired: manager.getEventsFired(),
-        activeModules: manager.getActive(),
-        pendingReset: manager.getPendingReset(),
-      });
-
-      const abort = () => {
-        void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        setError(new Error(`Startup timed out after ${timeout}ms`));
-      };
-
-      // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
-      // debugger all overrun it while the run is perfectly healthy, and killing it discards the
-      // state worth looking at. Startup continues either way and the user decides — the offer raises
-      // exactly the failure this branch used to raise unprompted.
-      //
-      // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
-      // `index.html` at build time, so a page served before this shipped has the old bundle, and
-      // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
-      if (import.meta.env?.DEV) {
-        if (bootLoader?.stalled) {
-          bootLoader.stalled(abort);
-        } else {
-          log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
-        }
-        return;
-      }
-
-      abort();
-    }, timeout);
-
     return () => {
       log('useApp: effect cleanup');
-      clearTimeout(timeoutId);
+      watchdog.dispose();
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         EffectEx.runDetached(manager.shutdown());
@@ -349,7 +468,13 @@ export const useApp = ({
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
               <SurfaceManagerProvider value={surfaces}>
-                <App ready={ready} error={error} debounce={debounce} progress={progressRef.current} />
+                <App
+                  ready={ready}
+                  error={error}
+                  debounce={debounce}
+                  progress={progressRef.current}
+                  verboseStatus={verboseStatus}
+                />
               </SurfaceManagerProvider>
             </RegistryContext.Provider>
           </ContextProtocolProvider>
@@ -387,10 +512,7 @@ const humanizeModuleId = (moduleId: string): string => {
     return parts[parts.length - 1];
   }
   const [, pluginSlug, moduleName] = match;
-  const pluginLabel = pluginSlug
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  const pluginLabel = titleCase(pluginSlug);
   // Normalise the module name to kebab-case so PascalCase capability tags
   // ("ReactSurface") read consistently with explicit kebab IDs
   // ("operation-handler"). The two-step substitution handles consecutive
@@ -410,6 +532,24 @@ const humanizeModuleId = (moduleId: string): string => {
 };
 
 /**
+ * Extracts the owning plugin's slug from a module ID, or `undefined` when the id is not
+ * plugin-scoped (framework-internal modules). E.g.
+ * "org.dxos.plugin.markdown.module.ReactSurface" → "markdown".
+ */
+/** Plugin slug from a plugin key — "org.dxos.plugin.markdown" → "markdown". */
+export const pluginSlugOfKey = (key: string): string => key.split('.').at(-1) ?? key;
+
+export const pluginSlugOf = (moduleId: string): string | undefined =>
+  moduleId.match(/\.plugin\.([^.]+)\.module\./)?.[1];
+
+/** Kebab slug → Title Case. */
+const titleCase = (slug: string): string =>
+  slug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+/**
  * Extracts a human-readable label from an activation event key.
  * E.g., "org.dxos.app-framework.event.setup-react-surface" → "Setup React Surface".
  */
@@ -419,8 +559,5 @@ const humanizeEventKey = (eventKey: string): string => {
   // Match the trailing segment after `.event.`.
   const match = id.match(/\.event\.(.+)$/);
   const slug = match ? match[1] : (id.split('.').pop() ?? id);
-  return slug
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return titleCase(slug);
 };

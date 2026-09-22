@@ -10,7 +10,7 @@ import { Event } from '@dxos/types';
 
 import { Segment, Trip } from '#types';
 
-import { buildTripFromEvents, defaultTripName, eventsSpan, eventsToSegments } from './events-to-segments';
+import { buildTripFromEvents, defaultTripName, eventsSpan, eventsToSegments } from './events-to-segments.ts';
 
 describe('eventsToSegments', () => {
   test('maps only events that have a location to activity segments', ({ expect }) => {

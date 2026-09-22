@@ -161,6 +161,35 @@ The following command generates storybooks across the individual packages:
 moon run storybook-react:serve
 ```
 
+### When the server wedges
+
+The dev server periodically stops answering, or keeps answering while pegging a
+core, and only a restart clears it. The cause is not yet known — a restart
+destroys the evidence, which is why it has stayed that way. Two things are
+established: it is not memory (the server inherits an 8.4GB ceiling and idles
+around 1.2GB), and it is **activity-driven, not uptime-driven** — recorded
+intervals between wedges range from 1 minute to 32 hours, clustering during
+working hours and near-vanishing overnight.
+
+`serve` therefore arms a watcher beside the server (`tools/storybook-react/serve.sh`
+→ `diagnose.sh --ensure`). It polls, and the first time the server stops answering
+or holds ≥90% CPU for three polls it writes a report to `temp/` naming what the
+CPU is in, whether a Vite dep re-optimization was in flight, and how many
+storybook processes are alive; then it re-arms. Nothing to remember and nothing
+to run.
+
+To capture on demand, or when the server was started some other way:
+
+```bash
+bash tools/storybook-react/diagnose.sh            # capture now
+bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wedges
+```
+
+**Do not restart before capturing** — that is the whole difficulty. And check for
+a second server first: an orphaned keeper daemon from a previous session was found
+restarting storybook on another port for five days, doubling the watcher and
+memory load against the same repo.
+
 ### Fast dev mode (`serve-fast`)
 
 Long React sessions can slow down and eventually wedge the browser tab. By
@@ -301,7 +330,7 @@ check without touching local refs at all: `git ls-remote --tags origin 'composer
 
 | Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
 | -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| **dev**        | `composer-dev…`          | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
 | **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
 | **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
 | **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
@@ -389,7 +418,9 @@ Examples:
 
 ## CI
 
-See [CI docs](./.github/workflows/README.md).
+The build/test pipeline runs on Depot CI. See [`.depot/README.md`](./.depot/README.md), including how to
+run a workflow off uncommitted changes without pushing. What is still on GitHub Actions, and why, is in
+[`.github/workflows/README.md`](./.github/workflows/README.md).
 
 ## Trunk (flaky test quarantining / CI Autopilot)
 

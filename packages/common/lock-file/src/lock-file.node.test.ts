@@ -11,7 +11,7 @@ import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vit
 
 import { Trigger } from '@dxos/async';
 
-import { LockFile } from './lock-file';
+import { LockFile } from './lock-file.ts';
 
 const TEST_DIR = '/tmp/dxos/testing/lock-file';
 const TEMP_TEST_DIR = join(tmpdir(), 'lock-file-test-' + Date.now());

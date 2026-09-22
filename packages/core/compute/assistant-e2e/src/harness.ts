@@ -15,7 +15,8 @@ import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { Chat, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -37,6 +38,8 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { AssistantE2eError } from './errors.ts';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
 // Memoized replays still initialize the test harness and process conversations — allow enough
@@ -230,7 +233,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     options.model ??
     (options.inferenceProvider === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({
@@ -290,7 +293,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         if (options.expect === 'failure') {
           console.log('exit', exit);
           if (Exit.isSuccess(exit)) {
-            return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
+            return yield* Effect.fail(
+              new AssistantE2eError({ message: 'Expected the agent to fail, but it succeeded' }),
+            );
           }
         } else if (Exit.isFailure(exit)) {
           return yield* Effect.fail(exit.cause);

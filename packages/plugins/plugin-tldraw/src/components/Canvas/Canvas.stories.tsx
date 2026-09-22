@@ -14,8 +14,8 @@ import { RecordBuilder } from '#model';
 import { data } from '#testing';
 import { Tldraw } from '#types';
 
-import { migrateCanvas } from '../../migrations';
-import { CanvasComponent } from './Canvas';
+import { migrateCanvas } from '../../migrations/index.ts';
+import { CanvasComponent } from './Canvas.tsx';
 
 const DefaultStory = () => {
   const [canvas, setCanvas] = useState(

@@ -34,11 +34,6 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
-    "#execution-graph": {
-      "source": "./src/execution-graph/index.ts",
-      "types": "./dist/types/src/execution-graph/index.d.ts",
-      "default": "./dist/lib/execution-graph.mjs"
-    },
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
@@ -64,7 +59,11 @@
       "types": "./dist/types/src/skills/index.d.ts",
       "default": "./dist/lib/skills.mjs"
     },
-    "#testing": "./src/testing/index.ts",
+    "#testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/testing.mjs"
+    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -100,8 +99,8 @@
     },
     "./package.json": "./package.json",
     "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
@@ -213,6 +212,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
@@ -235,6 +235,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -254,6 +255,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-assistant": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -264,9 +266,8 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
+    "@dxos/react-ui-trace": "workspace:*",
     "@dxos/react-ui-transcription": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -277,7 +278,6 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
@@ -294,6 +294,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",

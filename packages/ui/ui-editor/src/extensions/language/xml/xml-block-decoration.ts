@@ -5,7 +5,7 @@
 import { type Extension, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { escapeRegExpSource } from '../../../util';
+import { escapeRegExpSource } from '../../../util/index.ts';
 
 export type XmlBlockDecorationOptions = {
   /**

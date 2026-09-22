@@ -19,7 +19,7 @@ import { Event, Message, type Person } from '@dxos/types';
 import { RelatedEvents, RelatedMessages, messageDigest } from '#components';
 import { Calendar, Mailbox } from '#types';
 
-import { getCalendarEventPath, getMailboxMessagePath } from '../../paths';
+import { getCalendarEventPath, getMailboxMessagePath } from '../../paths.ts';
 
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 

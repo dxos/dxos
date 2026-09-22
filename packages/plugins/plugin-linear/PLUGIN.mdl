@@ -34,10 +34,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -288,7 +288,7 @@ feat F-8: Resilience
 ## Acceptance
 
 ```mdl
-test T-1: Discover teams — no local side effects
+scenario T-1: Discover teams — no local side effects
   given: a valid Integration with a Linear token
   when: op:GetLinearTeams is invoked
   then:
@@ -297,7 +297,7 @@ test T-1: Discover teams — no local side effects
 ```
 
 ```mdl
-test T-2: Pull creates new project
+scenario T-2: Pull creates new project
   given: a remote project with no matching local Project
   when: SyncLinearTeams pull phase runs
   then:
@@ -307,7 +307,7 @@ test T-2: Pull creates new project
 ```
 
 ```mdl
-test T-3: Pull creates new task
+scenario T-3: Pull creates new task
   given: a remote issue with no matching local Task
   when: SyncLinearTeams pull phase runs
   then:
@@ -317,7 +317,7 @@ test T-3: Pull creates new task
 ```
 
 ```mdl
-test T-4: Pull applies three-way merge
+scenario T-4: Pull applies three-way merge
   given: local Task title edited by user, remote description changed since last pull
   when: SyncLinearTeams pull phase runs
   then:
@@ -327,7 +327,7 @@ test T-4: Pull applies three-way merge
 ```
 
 ```mdl
-test T-5: Push updates diverged project name
+scenario T-5: Push updates diverged project name
   given: local Project with name diverged from snapshot
   when: SyncLinearTeams push phase runs
   then:
@@ -336,7 +336,7 @@ test T-5: Push updates diverged project name
 ```
 
 ```mdl
-test T-6: Push updates diverged task status
+scenario T-6: Push updates diverged task status
   given: local Task with status 'done', snapshot status 'todo'
   when: SyncLinearTeams push phase runs
   then:
@@ -346,14 +346,14 @@ test T-6: Push updates diverged task status
 ```
 
 ```mdl
-test T-7: maxDaysBack limits issue fetch
+scenario T-7: maxDaysBack limits issue fetch
   given: SyncOptions.maxDaysBack === 7
   when: SyncLinearTeams runs
   then: GraphQL filter includes updatedAt >= (now − 7 days); older issues not fetched
 ```
 
 ```mdl
-test T-8: Push skips soft-deleted objects
+scenario T-8: Push skips soft-deleted objects
   given: local Task is soft-deleted; foreign key present in snapshot
   when: SyncLinearTeams push phase runs
   then: Linear.issueUpdate is NOT called for that Task
@@ -361,16 +361,16 @@ test T-8: Push skips soft-deleted objects
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-linear is registered only in the `experimental` array in `plugin-defs.tsx` — it is not in
 `getDefaults` under any environment, so it is OFF by default even in dev builds, and enabling it
-is a Settings action. The whole flow additionally requires a real Linear OAuth `Integration` with
+is a Settings action. The whole test additionally requires a real Linear OAuth `Integration` with
 a Bearer token — there is no local fixture for the Linear GraphQL API in this repo's QA harness.
 
 ```mdl
-flow QA-1: Connect an Integration and pull a team's teams, projects and issues
+test QA-1: Connect an Integration and pull a team's teams, projects and issues
   desc: The core linear round-trip — discover reachable teams, select one as a sync target, and
     pull its projects/issues into ECHO. Push (F-4, F-5) is a live PATCH against Linear and is not
     exercised here; it needs a second, disposable Linear-side edit to verify safely.
@@ -382,7 +382,7 @@ flow QA-1: Connect an Integration and pull a team's teams, projects and issues
     - space: a space is open
     - plugin-linear is enabled — it is OFF by default (experimental, not in any default set)
     - connection: a Linear OAuth Connection with a valid Bearer token exists in the space
-  test:
+  steps:
     - name: Discover teams
       do: Open the Linear integration's target picker.
       invoke: [op:GetLinearTeams] { connection: $given.connection }
@@ -448,8 +448,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

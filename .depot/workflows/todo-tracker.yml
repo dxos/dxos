@@ -43,10 +43,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.depot/actions/branch
-
       - name: Setup
         uses: ./.depot/actions/setup
 

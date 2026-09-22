@@ -5,7 +5,7 @@
 import { type Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
@@ -16,12 +16,12 @@ import {
   type WireProtocolProps,
   type WireProtocolProvider,
 } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type MuxerStats, Teleport } from '@dxos/teleport';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
-import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
+import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth.ts';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
@@ -39,7 +39,7 @@ export type SpaceProtocolOptions = {
   swarmIdentity: SwarmIdentity;
   networkManager: SwarmNetworkManager;
 
-  onFeed?: (feed: FeedWrapper<FeedMessage>) => Promise<void>;
+  onFeed?: (feed: HypercoreWrapper<FeedMessage>) => Promise<void>;
 
   /**
    * Called when new session is authenticated.
@@ -67,7 +67,7 @@ export class SpaceProtocol {
 
   private readonly _spaceKey: PublicKey;
 
-  private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
+  private readonly _feeds = new Set<HypercoreWrapper<FeedMessage>>();
   private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
   // TODO(burdon): Move to config (with sensible defaults).
   private readonly _topology = new MMSTTopology({
@@ -78,13 +78,13 @@ export class SpaceProtocol {
 
   private _connection?: SwarmConnection;
 
-  public readonly feedAdded = new CallbackCollection<AsyncCallback<FeedWrapper<FeedMessage>>>();
+  public readonly feedAdded = new CallbackCollection<AsyncCallback<HypercoreWrapper<FeedMessage>>>();
 
   get sessions(): ReadonlyMap<PublicKey, SpaceProtocolSession> {
     return this._sessions;
   }
 
-  get feeds(): ReadonlySet<FeedWrapper<FeedMessage>> {
+  get feeds(): ReadonlySet<HypercoreWrapper<FeedMessage>> {
     return this._feeds;
   }
 
@@ -117,12 +117,12 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
-  async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
-    log('addFeed', { key: feed.key });
+  async addHypercore(feed: HypercoreWrapper<FeedMessage>): Promise<void> {
+    log('addHypercore', { key: feed.key });
 
     this._feeds.add(feed);
     for (const session of this._sessions.values()) {
-      session.replicator.addFeed(feed);
+      session.replicator.addHypercore(feed);
     }
 
     await this.feedAdded.callSerial(feed);
@@ -173,7 +173,7 @@ export class SpaceProtocol {
       this._sessions.set(wireProps.remotePeerId, session);
 
       for (const feed of this._feeds) {
-        session.replicator.addFeed(feed);
+        session.replicator.addHypercore(feed);
       }
 
       return session;
@@ -252,6 +252,10 @@ export class SpaceProtocolSession implements WireProtocol {
 
   get stream() {
     return this._teleport.stream;
+  }
+
+  get closed() {
+    return this._teleport.closed;
   }
 
   async open(sessionId?: PublicKey): Promise<void> {

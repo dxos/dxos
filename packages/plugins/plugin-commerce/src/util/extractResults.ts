@@ -4,7 +4,7 @@
 
 import { type HTMLElement, parse } from 'node-html-parser';
 
-import { type FieldExtractor, type ResultMapping } from '../types/Provider';
+import { type FieldExtractor, type ResultMapping } from '../types/Provider.ts';
 
 export type ResultData = {
   title: string;

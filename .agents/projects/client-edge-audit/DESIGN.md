@@ -38,7 +38,7 @@ Boot path (SDK):
 - `ServiceContextLayer` — [service-context.ts:155](packages/sdk/client-services/src/packlets/services/service-context.ts): `if (!edgeConnection || !edgeHttpClient) return core;`
   — the clean non-edge stack; downstream `Effect.serviceOption` resolves to none.
   In the edge branch `FeedSyncerLayer` is unconditional (no feature flag);
-  replicator layer chosen by `edgeFeatures.subductionReplicator`/`echoReplicator`.
+  replicator layer gated by `edgeFeatures.subductionReplicator`.
 - `Client._open` — [client.ts:476](packages/sdk/client/src/client/client.ts): `if (edgeUrl)` dynamic-imports
   `@dxos/edge-client`, builds the tab-side `EdgeHttpClient` + `ClientEdgeAPI` +
   registers the default edge blob backend. `client.edge` getter **throws**
@@ -146,7 +146,7 @@ Config schema is protobuf-only ([config.proto](packages/core/protocols/src/proto
 endpoint fields under `runtime.services.*` = `edge.url`, `ai.server`, `hub.url`,
 `sandbox.url`, `edgeServices[]` (name/endpoint/props), `signaling[].server`,
 `ice[]`/`iceProviders[]`, `ipfs.*`, `agentHosting.server`; feature gates under
-`runtime.client.edgeFeatures.{feedReplicator,echoReplicator,subductionReplicator,signaling,agents}`.
+`runtime.client.edgeFeatures.{feedReplicator,subductionReplicator,signaling,agents}`.
 Hub reaches apps two unrelated ways: `runtime.services.hub.url` (CLI) and
 `runtime.app.env.DX_HUB_URL` (Composer).
 

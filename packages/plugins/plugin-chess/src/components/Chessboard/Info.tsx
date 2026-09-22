@@ -5,13 +5,13 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Grid, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ExtendedChessModel } from './types';
+import { type ExtendedChessModel } from './types.ts';
 
 const INFO_NAME = 'Chessboard.Info';
 
@@ -140,7 +140,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 ps-4'>
+        <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
           <div className='content-center text-xs text-subdued'>{index + 1}</div>
           {a && (
             <div
@@ -160,7 +160,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
               {b.move}
             </div>
           )}
-        </div>
+        </Grid>
       ))}
       {label && <div className='text-center'>{label}</div>}
     </div>
@@ -180,16 +180,22 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)] gap-2 h-(--dx-rail-size) px-1 flex items-center overflow-hidden'>
+    <Grid
+      cols={['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)']}
+      grow={false}
+      gap='sm'
+      align='center'
+      classNames='h-(--dx-rail-size) px-1 overflow-hidden'
+    >
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
           size={6}
-          classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-500' : 'text-success-text'))}
+          classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}
         />
       </div>
       <div className='truncate overflow-hidden items-center'>{children}</div>
       {icon}
-    </div>
+    </Grid>
   );
 };

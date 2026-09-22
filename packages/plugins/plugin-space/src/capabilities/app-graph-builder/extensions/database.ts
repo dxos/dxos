@@ -31,14 +31,15 @@ import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { makeCreateObjectEntryForDatabaseType } from '../../../util';
+import { SpaceOperationError } from '../../../operations/errors.ts';
+import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   DATABASE_SECTION_TYPE,
   SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   buildViewIndex,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory
@@ -157,7 +158,13 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     AppGraphBuilder.createExtension({
       id: 'schemaChildren',
-      url: { key: 'view', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
+      // Shares `db` with `databaseObjects`: whether an object is a view is data, not shape.
+      url: {
+        key: 'db',
+        kind: 'item',
+        path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
+        minDepth: 2,
+      },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -202,7 +209,12 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // subgraph.
     AppGraphBuilder.createExtension({
       id: 'databaseObjects',
-      url: { key: 'db', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
+      url: {
+        key: 'db',
+        kind: 'item',
+        path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
+        minDepth: 2,
+      },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
@@ -437,7 +449,7 @@ const createSchemaActions = ({
               object: type,
               caller: `${params?.caller}:${params?.parent?.id}`,
             })
-          : Effect.fail(new Error('Cannot rename immutable schema')),
+          : Effect.fail(new SpaceOperationError({ message: 'Cannot rename immutable schema' })),
       properties: {
         label: AppNode.getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
@@ -450,9 +462,11 @@ const createSchemaActions = ({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
         Type.getDatabase(type) != null
-          ? Operation.invoke(SpaceOperation.RemoveObjects, {
-              objects: [type],
-            })
+          ? Operation.invoke(
+              SpaceOperation.RemoveObjects,
+              { objects: [type] },
+              { spaceId: Type.getDatabase(type)?.spaceId },
+            )
           : Effect.succeed(undefined),
       properties: {
         label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),

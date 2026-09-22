@@ -9,11 +9,11 @@ import { type Density } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing';
-import { Tooltip } from '../Tooltip';
-import { Button } from './Button';
-import { IconButton, type IconButtonProps } from './IconButton';
-import { SystemIconButton } from './SystemIconButton';
+import { withTheme } from '../../testing/index.ts';
+import { Tooltip } from '../Tooltip/index.ts';
+import { Button } from './Button.tsx';
+import { IconButton, type IconButtonProps } from './IconButton.tsx';
+import { SystemIconButton } from './SystemIconButton.tsx';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (
@@ -113,11 +113,11 @@ const SystemStory = () => {
           )}
         />
         <SystemPresetRow
-          name='Expander'
+          name='Disclosure'
           button={(props) => (
-            <SystemIconButton.Expander
-              active={state.expander}
-              onClick={() => setState((prev) => ({ ...prev, expander: !prev.expander }))}
+            <SystemIconButton.Disclosure
+              active={state.disclosure}
+              onClick={() => setState((prev) => ({ ...prev, disclosure: !prev.disclosure }))}
               {...props}
             />
           )}
@@ -168,5 +168,26 @@ export const System: Story = {
   render: SystemStory,
   args: {
     label: 'System',
+  },
+};
+
+const hues = ['neutral', 'red', 'amber', 'green', 'blue', 'purple', 'info', 'success', 'warning', 'error'] as const;
+
+const TagStory = () => (
+  <Tooltip.Provider>
+    <div className='flex flex-wrap gap-2 items-center'>
+      {hues.map((hue) => (
+        <IconButton key={hue} variant='tag' hue={hue} density='sm' icon='ph--copy--regular' iconEnd label={hue} />
+      ))}
+      <IconButton variant='tag' density='sm' iconOnly icon='ph--x--regular' label='Remove' />
+    </div>
+  </Tooltip.Provider>
+);
+
+/** The `tag` variant: a clickable `dx-tag`, coloured by `hue`. */
+export const Tag: Story = {
+  render: TagStory,
+  args: {
+    label: 'Tag',
   },
 };

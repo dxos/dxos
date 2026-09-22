@@ -16,9 +16,10 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
-import * as GraphEdge from './GraphEdge';
-import * as GraphModel from './GraphModel';
-import * as GraphNode from './GraphNode';
+import * as GraphEdge from './GraphEdge.ts';
+import * as GraphModel from './GraphModel.ts';
+import * as GraphNode from './GraphNode.ts';
+import * as Retention from './Retention.ts';
 
 // Separates the components of the compound keys this module builds (a node id from a relation key, a
 // node id from a subscription kind). Control characters, so they cannot occur in an id or a relation.
@@ -96,7 +97,7 @@ export type Edge = { source: string; target: string; relation: string };
 
 /**
  * The graph operations the expansion engine needs. Implemented by whatever store the builder drives —
- * the engine owns expansion, ordering and provenance, the store owns representation and reactivity.
+ * the engine owns expansion and ordering, the store owns representation and reactivity.
  *
  * {@link Store.node} must cut off at the node's own value: connectors read it, so a view that notifies
  * on writes to unrelated nodes puts the builder in a flush-invalidate-flush loop.
@@ -105,7 +106,6 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   /** The graph being built; surfaced unchanged as {@link GraphBuilder.graph}. */
   readonly graph: G;
   node(id: string): Atom.Atom<Option.Option<Node>>;
-  nodeOrThrow(id: string): Atom.Atom<Node>;
   addNodes(nodes: readonly Arg[]): void;
   removeNodes(ids: readonly string[], edges?: boolean): void;
   addEdges(edges: readonly Edge[]): void;
@@ -126,11 +126,13 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    */
   batch?(fn: () => void): void;
   /**
-   * Drops the nodes outright, reclaiming whatever the store holds for them, if it can. Unlike
+   * Drops the nodes outright, reclaiming whatever the store holds for them. Unlike
    * {@link Store.removeNodes} this is not a deletion the graph should remember — the caller is
    * unloading a subgraph it expects to rebuild from source.
    */
-  release?(ids: readonly string[]): void;
+  release(ids: readonly string[]): void;
+  /** The edges leaving `id`, read without subscribing. */
+  outgoing(id: string): readonly Edge[];
 }
 
 /**
@@ -152,11 +154,6 @@ export type Inline<Arg extends NodeArgLike> = {
   children: (node: Arg) => readonly Arg[];
   /** Rewrite every inline descendant array through `fn`, one level deep (`fn` recurses). */
   map: (node: Arg, fn: (child: Arg) => Arg) => Arg;
-  /**
-   * The inline descendants that inherit the producing extension's provenance; defaults to
-   * {@link Inline.children}. Narrower when some inline kinds are not addressable in their own right.
-   */
-  owned?: (node: Arg) => readonly Arg[];
 };
 
 const defaultInline: Inline<any> = {
@@ -218,9 +215,6 @@ export type TypeId = typeof TypeId;
  * Subclass to layer a vocabulary on top (see `@dxos/app-graph`'s `AppGraphBuilder`); the generic engine
  * is unaware of what the nodes mean.
  */
-// TODO(wittjosiah): Add api for setting subscription set and/or radius.
-//   Should unsubscribe from nodes that are not in the set/radius.
-//   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder<
   Node extends NodeLike = NodeLike,
   Arg extends NodeArgLike = NodeArgLike,
@@ -253,6 +247,11 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
+  _retentions: readonly Retention.Retention[] = [];
+  _unsubscribeRetention?: CleanupFn;
+  _collectedAskKey?: string;
+  _collectScheduled = false;
+  _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
   /** Registered extensions keyed by extension ID. */
@@ -260,12 +259,6 @@ export class GraphBuilder<
     Atom.keepAlive,
     withLabel('graph-builder:extensions'),
   );
-  /**
-   * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly as
-   * connectors materialize/remove nodes, so a reverse mapping from a node back to its producer does not
-   * need a reactive read.
-   */
-  readonly _nodeExtensions = new Map<string, string>();
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -301,14 +294,6 @@ export class GraphBuilder<
     return this._registry.get(this._extensions);
   }
 
-  /**
-   * The id of the extension whose connector produced the given node, if known. Populated as connectors
-   * materialize nodes and cleared on removal.
-   */
-  getNodeExtensionId(nodeId: string): string | undefined {
-    return this._nodeExtensions.get(nodeId);
-  }
-
   /** Every inline descendant of `node`, at every depth. */
   _allInline(node: Arg): Arg[] {
     return this._inline.children(node).flatMap((child) => [child, ...this._allInline(child)]);
@@ -319,15 +304,6 @@ export class GraphBuilder<
     GraphNode.validateSegmentId(node.id);
     const id = GraphNode.qualifyId(parentId, node.id);
     return this._inline.map({ ...node, id }, (child) => this._qualify(id, child));
-  }
-
-  /** Record `extensionId` as the producer of a node and of the inline descendants that inherit it. */
-  _recordProvenance(node: Arg, extensionId: string): void {
-    this._nodeExtensions.set(node.id, extensionId);
-    const owned = this._inline.owned ?? this._inline.children;
-    for (const child of owned(node)) {
-      this._recordProvenance(child, extensionId);
-    }
   }
 
   /** Apply a set of node changes for a single connector key. */
@@ -383,6 +359,51 @@ export class GraphBuilder<
     }
   }
 
+  _collectOnOwnTask(): void {
+    if (!this._collectScheduled) {
+      this._collectScheduled = true;
+      this._collectPromise = this._schedule(() => {
+        this._collectScheduled = false;
+        this._collect();
+      });
+    }
+  }
+
+  _collect(): void {
+    if (this._retentions.length === 0) {
+      return;
+    }
+
+    const asked = Retention.combine(this._retentions.map((retention) => this._registry.get(retention.retained)));
+    const attached = new Set(this._retentions.flatMap((retention) => retention.attached ?? []));
+    const regions = Retention.key(asked, attached);
+    if (regions === this._collectedAskKey) {
+      return;
+    }
+    this._collectedAskKey = regions;
+
+    const released = Retention.unretained({
+      asked,
+      outgoing: (id) => this._store.outgoing(id),
+      structural: (relation) => !attached.has(relation),
+      connectors: this._connectorStates(),
+    });
+    if (released.size > 0) {
+      release(this, [...released]);
+    }
+  }
+
+  *_connectorStates(): Iterable<Retention.ConnectorState> {
+    for (const [key, outputs] of this._connectorPrevious) {
+      yield {
+        key,
+        source: relationFromConnectorKey(key).id,
+        outputs,
+        inline: this._connectorPreviousInlineIds.get(key) ?? [],
+      };
+    }
+  }
+
   /**
    * When a flush runs. Defaults to the next microtask; override to hand the work to a scheduler that can
    * yield to the main thread.
@@ -396,7 +417,7 @@ export class GraphBuilder<
     return Promise.resolve();
   }
 
-  /** A connector-produced node, tagged with the id of the extension that produced it (provenance). */
+  /** A connector-produced node, tagged with the id of the extension that produced it. */
   readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Arg }[]>>((key) => {
     return Atom.make((get) => {
       const { id, relation } = relationFromConnectorKey(key);
@@ -437,7 +458,7 @@ export class GraphBuilder<
   }
 
   _expandRelation(id: string, relation: string): void {
-    const key = connectorKey(id, relation);
+    const key = primaryKey(id, relation);
     const cancel = this._registry.subscribe(
       this._connectors(key),
       (entries) => {
@@ -447,9 +468,6 @@ export class GraphBuilder<
         const nodes = entries.map((entry) =>
           this._decorateNode(this._qualify(id, entry.node), extensions[entry.extensionId]),
         );
-        // Inline descendants are produced by the same extension, so they carry the same provenance;
-        // without this they would have no reverse mapping back to their producer.
-        entries.forEach((entry, index) => this._recordProvenance(nodes[index], entry.extensionId));
 
         const previous = this._connectorPrevious.get(key) ?? [];
         const ids = nodes.map((node) => node.id);
@@ -478,10 +496,10 @@ export class GraphBuilder<
    */
   _onReleaseRelation({ id, relation }: { id: string; relation: string }): void {
     const forNode = this._subscriptions.get(id);
-    const cancel = forNode?.get(connectorKey(id, relation));
+    const cancel = forNode?.get(primaryKey(id, relation));
     if (cancel) {
       cancel();
-      forNode!.delete(connectorKey(id, relation));
+      forNode!.delete(primaryKey(id, relation));
       if (forNode!.size === 0) {
         this._subscriptions.delete(id);
       }
@@ -489,11 +507,16 @@ export class GraphBuilder<
   }
 
   _onRemoveNode(id: string): void {
-    this._nodeExtensions.delete(id);
-    const forNode = this._subscriptions.get(id);
-    if (forNode) {
-      this._subscriptions.delete(id);
-      forNode.forEach((cleanup) => cleanup());
+    this._onRemoveNodes([id]);
+  }
+
+  _onRemoveNodes(ids: readonly string[]): void {
+    for (const id of ids) {
+      const forNode = this._subscriptions.get(id);
+      if (forNode) {
+        this._subscriptions.delete(id);
+        forNode.forEach((cleanup) => cleanup());
+      }
     }
   }
 }
@@ -594,11 +617,12 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
     this.#expanded.delete(primaryKey(target.id, target.relation));
   }
 
-  override _onRemoveNode(id: string): void {
-    super._onRemoveNode(id);
+  override _onRemoveNodes(ids: readonly string[]): void {
+    super._onRemoveNodes(ids);
     // A node that returns must expand again, so drop its expansion marks along with its subscriptions.
+    const removed = new Set(ids);
     for (const key of this.#expanded) {
-      if (primaryParts(key)[0] === id) {
+      if (removed.has(primaryParts(key)[0])) {
         this.#expanded.delete(key);
       }
     }
@@ -614,10 +638,8 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     }),
   );
 
-  const edgeId = ({ source, target, relation }: Edge) => GraphEdge.createId({ source, target, relation });
-
   const addEdge = (edge: Edge): void => {
-    const id = edgeId(edge);
+    const id = GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation });
     if (!model.findEdge(id)) {
       model.addEdge({ id, type: edge.relation, source: edge.source, target: edge.target, data: { order: 0 } });
     }
@@ -636,7 +658,6 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
   return {
     graph: model,
     node: (id) => nodes(id),
-    nodeOrThrow: (id) => Atom.make((get) => Option.getOrThrowWith(get(nodes(id)), () => new Error(`No node: ${id}`))),
     addNodes: (args) => model.batch(() => args.forEach(addNode)),
     removeNodes: (ids, edges) =>
       model.batch(() => {
@@ -646,8 +667,17 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     addEdges: (edges) => model.batch(() => edges.forEach(addEdge)),
     removeEdges: (edges, removeOrphans) =>
       model.batch(() => {
-        const present = edges.filter((edge) => model.findEdge(edgeId(edge)) !== undefined);
-        model.removeEdges(present.map(edgeId));
+        const present = edges.filter(
+          (edge) =>
+            model.findEdge(
+              GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation }),
+            ) !== undefined,
+        );
+        model.removeEdges(
+          present.map((edge) =>
+            GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation }),
+          ),
+        );
         if (removeOrphans) {
           // Mirrors the app store: a node a connector stopped producing leaves with its last edge.
           const orphans = [...new Set(present.flatMap(({ source, target }) => [source, target]))].filter(
@@ -675,6 +705,8 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     constructNode: ({ nodes: _, ...node }) => Option.some(node),
     batch: (fn) => model.batch(fn),
     release: (ids) => model.release(ids),
+    outgoing: (id) =>
+      model.outgoing(id).map((edge) => ({ source: edge.source, target: edge.target, relation: edge.type ?? 'child' })),
   };
 };
 
@@ -715,15 +747,15 @@ export const removeExtension: {
   return builder;
 });
 
-/**
- * Wait for all pending connector updates to be flushed.
- */
-export const flush = (builder: Any): Promise<void> => builder._flushPromise;
+/** Waits for the pending flush, then for the collection pending once it lands, which covers any it triggered. */
+export const flush = async (builder: Any): Promise<void> => {
+  await builder._flushPromise;
+  await builder._collectPromise;
+};
 
 /**
- * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
- * per-connector diff state, and provenance. The nodes leave the store outright rather than being
- * tombstoned, so reading a released relation again re-expands it from its connectors.
+ * Unloads the nodes and everything the builder remembers about them: expansion subscriptions and the
+ * per-connector diff state. The nodes leave the store outright rather than being tombstoned, so reading a released relation again re-expands it from its connectors.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
@@ -731,30 +763,50 @@ export const flush = (builder: Any): Promise<void> => builder._flushPromise;
  */
 export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
-  for (const [key, previous] of [...builder._connectorPrevious]) {
-    // A connector rooted at a released node, or one that produced one. The second case matters:
-    // its diff state still claims the node was emitted, so leaving it in place would mean the
-    // connector never re-emits and the node never comes back. Both tear down to "never expanded".
-    if (released.has(relationFromConnectorKey(key).id) || previous.some((id) => released.has(id))) {
-      builder._connectorPrevious.delete(key);
-      builder._connectorPreviousArgs.delete(key);
-      builder._connectorPreviousInlineIds.delete(key);
-      builder._dirtyConnectors.delete(key);
-      builder._onReleaseRelation(relationFromConnectorKey(key));
+  for (const state of [...builder._connectorStates()]) {
+    if (Retention.tornDown(released, state)) {
+      builder._connectorPrevious.delete(state.key);
+      builder._connectorPreviousArgs.delete(state.key);
+      builder._connectorPreviousInlineIds.delete(state.key);
+      builder._dirtyConnectors.delete(state.key);
+      builder._onReleaseRelation(relationFromConnectorKey(state.key));
     }
   }
 
   // A connector expanded but never flushed has no diff state yet — its first emission is still
   // sitting in the dirty queue, and left there the flush would re-materialize the released nodes.
   for (const [key, { nodes }] of [...builder._dirtyConnectors]) {
-    if (released.has(relationFromConnectorKey(key).id) || nodes.some((node: NodeArgLike) => released.has(node.id))) {
+    if (
+      released.has(relationFromConnectorKey(key).id) ||
+      nodes.some((node: NodeArgLike) => [node, ...builder._allInline(node)].some(({ id }) => released.has(id)))
+    ) {
       builder._dirtyConnectors.delete(key);
       builder._onReleaseRelation(relationFromConnectorKey(key));
     }
   }
 
-  ids.forEach((id) => builder._onRemoveNode(id));
-  builder._store.release?.(ids);
+  builder._onRemoveNodes(ids);
+  builder._store.release(ids);
+};
+
+/**
+ * Replaces the installed retentions. With none installed nothing is collected, since a host that keeps no
+ * record of what is on screen cannot say what must stay.
+ */
+export const setRetention = <B extends Any>(
+  builder: B,
+  retentions: readonly Retention.Retention<RelationOf<B>>[],
+): void => {
+  builder._unsubscribeRetention?.();
+  builder._retentions = retentions.map(({ retained, attached }) => ({
+    retained,
+    attached: attached?.map((relation) => builder._relationKey(relation)),
+  }));
+  builder._collectedAskKey = undefined;
+  const unsubscribes = retentions.map((retention) =>
+    builder._registry.subscribe(retention.retained, () => builder._collectOnOwnTask(), { immediate: true }),
+  );
+  builder._unsubscribeRetention = () => unsubscribes.forEach((unsubscribe) => unsubscribe());
 };
 
 /**
@@ -783,7 +835,10 @@ export const explore = async <B extends Any>(
 
   await builder._yield();
 
-  const node = registry.get(builder._store.nodeOrThrow(source));
+  const node = Option.getOrThrowWith(
+    registry.get(builder._store.node(source)),
+    () => new GraphNode.NotFoundError(source),
+  );
   const shouldContinue = await visitor(node, [...path, node.id]);
   if (shouldContinue === false) {
     return;
@@ -850,8 +905,6 @@ type ArgOf<B> = B extends GraphBuilder<any, infer Arg, any, any, any> ? Arg : ne
 type RelationOf<B> = B extends GraphBuilder<any, any, infer Rel, any, any> ? Rel : never;
 type MetaOf<B> = B extends GraphBuilder<any, any, any, infer Meta, any> ? Meta : never;
 type ExtensionOf<B> = Extension<NodeOf<B>, ArgOf<B>, RelationOf<B>, MetaOf<B>>;
-
-const connectorKey = (id: string, relation: string): string => primaryKey(id, relation);
 
 const relationFromConnectorKey = (key: string): { id: string; relation: string } => {
   const [id, relation] = primaryParts(key);

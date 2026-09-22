@@ -3,13 +3,13 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { applyMerge, findDuplicates, planMerge } from '@dxos/extractor';
 import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from '#types';
 
-import { resolveIdentitySpec } from './helpers';
+import { resolveIdentitySpec } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = SpaceOperation.MergeDuplicates.pipe(
   Operation.withHandler(
@@ -18,12 +18,17 @@ const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = Sp
       invariant(spec, `No identity spec registered for ${typename}.`);
 
       const { db } = yield* Database.Service;
-      // Re-resolve live proxies by id: the caller's objects crossed the operation boundary as
-      // snapshots, and a merge must mutate the reactive object the space actually holds.
-      const objects = yield* Database.query(Query.select(Filter.id(...objectIds))).run;
+      // Re-resolve live proxies by ref: the caller's refs crossed the operation boundary as
+      // snapshots, and a merge must mutate the reactive object the space actually holds. A member
+      // that has since vanished resolves to `undefined` rather than failing the whole batch, so the
+      // count check below can still catch a stale/mistyped set.
+      const resolved = yield* Effect.forEach(objectIds, (ref) =>
+        Database.load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined))),
+      );
+      const objects = resolved.filter((object): object is Obj.Unknown => object !== undefined);
       // The input arrives from a client that may be acting on a stale scan. Refuse a partial or
       // mistyped set rather than merging whatever happened to resolve.
-      const requested = new Set(objectIds);
+      const requested = new Set(objectIds.map((ref) => ref.uri));
       invariant(requested.size > 1, 'A merge needs at least two distinct members.');
       invariant(objects.length === requested.size, 'Every member of a merge must still exist.');
       invariant(

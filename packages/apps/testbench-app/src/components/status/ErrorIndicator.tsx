@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { styles } from './styles';
+import { styles } from './styles.ts';
 
 // TODO(burdon): Reconcile with DebugPlugin.
 export const ErrorIndicator = () => {

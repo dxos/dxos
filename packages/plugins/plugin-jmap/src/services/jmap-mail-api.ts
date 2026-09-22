@@ -10,8 +10,8 @@ import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Jmap, JmapMail } from '#apis';
 
-import { JmapApiError } from '../errors';
-import { type JmapCredentials } from './jmap-credentials';
+import { JmapApiError } from '../errors.ts';
+import { type JmapCredentials } from './jmap-credentials.ts';
 
 /**
  * The requirements the underlying {@link Jmap}/{@link JmapMail} request functions carry (HTTP client

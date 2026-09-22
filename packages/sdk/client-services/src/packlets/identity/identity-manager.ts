@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 import { isValidAutomergeUrl } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -10,36 +11,57 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
+import {
+  CredentialGenerator,
+  createCredentialSignerWithKey,
+  createDidFromIdentityKey,
+  credentialPayload,
+} from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { EffectEx, Hook } from '@dxos/effect';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { fromPublicKey, fromTimeframe, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import {
-  AdmittedFeed,
+  type Device,
+  Device_PresenceState,
+  DeviceKind,
+  DeviceSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import {
+  type IdentityRecord,
+  IdentityRecordSchema,
+  type SpaceMetadata,
+  SpaceMetadataSchema,
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import {
+  AdmittedFeed_Designation,
   type Credential,
   type DeviceProfileDocument,
+  DeviceProfileDocumentSchema,
+  DeviceProfileSchema,
   DeviceType,
+  IdentityProfileSchema,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
-import { openCredentialsDocument } from '../spaces/credentials-document-store';
-import { createAuthProvider } from './authenticator';
-import { Identity } from './identity';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { IdentityLoaded, StorageReady } from '../services/events.ts';
+import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
+import { openCredentialsDocument } from '../spaces/credentials-document-store.ts';
+import { createAuthProvider } from './authenticator.ts';
+import { Identity } from './identity.ts';
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -83,7 +105,7 @@ export type CreateIdentityOptions = {
 export type IdentityManagerProps = {
   metadataStore: IMetadataStore;
   keyring: KeyringApi;
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   spaceManager: SpaceManager;
   edgeConnection?: EdgeConnection;
   edgeFeatures?: Runtime_Client_EdgeFeatures;
@@ -126,7 +148,7 @@ export class IdentityManager {
 
   private readonly _metadataStore: IMetadataStore;
   private readonly _keyring: KeyringApi;
-  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _spaceManager: SpaceManager;
   /**
    * Set late by the service stack: `EchoHostLayer` already depends on this manager for its peer id,
@@ -143,14 +165,18 @@ export class IdentityManager {
   private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined;
 
   private _identity?: Identity;
-  /** Owns the HALO anchoring subscriptions, which outlive any single open() call. */
-  private readonly _ctx = new Context();
+  /**
+   * Owns the HALO anchoring subscriptions, which outlive any single open() call. Replaced on
+   * {@link deleteIdentity}, since a disposed context runs new `onDispose` callbacks immediately and
+   * would tear down the next identity's subscriptions as they are registered.
+   */
+  private _ctx = new Context();
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(params: IdentityManagerProps) {
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
-    this._feedStore = params.feedStore;
+    this._hypercoreStore = params.hypercoreStore;
     this._spaceManager = params.spaceManager;
     this._edgeConnection = params.edgeConnection;
     this._edgeFeatures = params.edgeFeatures;
@@ -200,38 +226,68 @@ export class IdentityManager {
     await this._identity?.close(ctx);
   }
 
+  /**
+   * Closes the identity and drops its persisted record, so the next open starts without one.
+   * The identity's storage (feeds, automerge documents, keys) is wiped separately by the reset
+   * chain — this only tears down the live identity and the metadata that would resurrect it.
+   */
+  async deleteIdentity(ctx: Context): Promise<void> {
+    const identity = this._identity;
+    if (identity) {
+      log('deleting identity', { identityKey: identity.identityKey });
+      // Dropped before teardown so anything observing `stateUpdate` cannot read a half-closed identity.
+      this._identity = undefined;
+      await this._ctx.dispose();
+      this._ctx = new Context();
+      await identity.close(ctx).catch((err) => log.warn('identity teardown failed; deleting anyway', { err }));
+    } else {
+      log('no live identity to delete');
+    }
+
+    // Unconditional, so a call that failed here is retried rather than leaving the persisted record
+    // to resurrect an identity the caller already deleted.
+    await this._metadataStore.clear();
+    this.stateUpdate.emit();
+    log('deleted identity');
+  }
+
   async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
     const controlFeedKey = await this._keyring.createKey();
-    const identityRecord: IdentityRecord = {
-      identityKey: await this._keyring.createKey(),
-      deviceKey: await this._keyring.createKey(),
-      haloSpace: {
-        key: await this._keyring.createKey(),
-        genesisFeedKey: controlFeedKey,
-        controlFeedKey,
-        dataFeedKey: await this._keyring.createKey(),
-      },
-    };
+    const identityRecord: IdentityRecord = create(IdentityRecordSchema, {
+      identityKey: fromPublicKey(await this._keyring.createKey()),
+      deviceKey: fromPublicKey(await this._keyring.createKey()),
+      haloSpace: create(SpaceMetadataSchema, {
+        key: fromPublicKey(await this._keyring.createKey()),
+        genesisFeedKey: fromPublicKey(controlFeedKey),
+        controlFeedKey: fromPublicKey(controlFeedKey),
+        dataFeedKey: fromPublicKey(await this._keyring.createKey()),
+      }),
+    });
 
     const identity = await this._constructIdentity(identityRecord);
     await identity.open(ctx ?? Context.default());
 
     {
-      const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
-      invariant(identityRecord.haloSpace.genesisFeedKey, 'Genesis feed key is required.');
-      invariant(identityRecord.haloSpace.dataFeedKey, 'Data feed key is required.');
+      const identityKey = requirePublicKey(identityRecord.identityKey);
+      const deviceKey = requirePublicKey(identityRecord.deviceKey);
+      const haloSpace = identityRecord.haloSpace;
+      invariant(haloSpace, 'Halo space metadata is required.');
+      const generator = new CredentialGenerator(this._keyring, identityKey, deviceKey);
       const credentials = [
         // Space genesis.
-        ...(await generator.createSpaceGenesis(identityRecord.haloSpace.key, identityRecord.haloSpace.genesisFeedKey)),
+        ...(await generator.createSpaceGenesis(
+          requirePublicKey(haloSpace.key),
+          requirePublicKey(haloSpace.genesisFeedKey),
+        )),
 
         // Feed admission.
         await generator.createFeedAdmission(
-          identityRecord.haloSpace.key,
-          identityRecord.haloSpace.dataFeedKey,
-          AdmittedFeed.Designation.DATA,
+          requirePublicKey(haloSpace.key),
+          requirePublicKey(haloSpace.dataFeedKey),
+          AdmittedFeed_Designation.DATA,
         ),
       ];
 
@@ -241,7 +297,7 @@ export class IdentityManager {
 
       // Device authorization (writes device chain).
       // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
-      credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
+      credentials.push(await generator.createDeviceAuthorization(deviceKey));
 
       // Write device metadata to profile.
       credentials.push(
@@ -251,9 +307,7 @@ export class IdentityManager {
         }),
       );
       for (const credential of credentials) {
-        await identity.controlPipeline.writer.write({
-          credential: { credential },
-        });
+        await identity.controlPipeline.writer.write(credentialPayload(credential));
       }
     }
 
@@ -296,14 +350,14 @@ export class IdentityManager {
     const os = platform.os?.family === 'OS X' ? 'macOS' : platform.os?.family;
     const name = type === DeviceType.NATIVE || type === DeviceType.MOBILE ? 'App' : platform.name;
 
-    return {
+    return create(DeviceProfileDocumentSchema, {
       type,
       platform: name,
       platformVersion: platform.version,
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
       os,
       osVersion: platform.os?.version,
-    };
+    });
   }
 
   /**
@@ -314,17 +368,17 @@ export class IdentityManager {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
-    const identityRecord: IdentityRecord = {
-      identityKey: params.identityKey,
-      deviceKey: params.deviceKey,
-      haloSpace: {
-        key: params.haloSpaceKey,
-        genesisFeedKey: params.haloGenesisFeedKey,
-        controlFeedKey: params.controlFeedKey,
-        dataFeedKey: params.dataFeedKey,
-        controlTimeframe: params.controlTimeframe,
-      },
-    };
+    const identityRecord: IdentityRecord = create(IdentityRecordSchema, {
+      identityKey: fromPublicKey(params.identityKey),
+      deviceKey: fromPublicKey(params.deviceKey),
+      haloSpace: create(SpaceMetadataSchema, {
+        key: fromPublicKey(params.haloSpaceKey),
+        genesisFeedKey: fromPublicKey(params.haloGenesisFeedKey),
+        controlFeedKey: fromPublicKey(params.controlFeedKey),
+        dataFeedKey: fromPublicKey(params.dataFeedKey),
+        controlTimeframe: params.controlTimeframe && fromTimeframe(params.controlTimeframe),
+      }),
+    });
     const identity = await this._constructIdentity(identityRecord);
     await identity.open(ctx ?? Context.default());
     return { identity, identityRecord };
@@ -367,13 +421,10 @@ export class IdentityManager {
     // TODO(wittjosiah): Use CredentialGenerator.
     const credential = await this._identity.getIdentityCredentialSigner().createCredential({
       subject: this._identity.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile,
-      },
+      assertion: create(IdentityProfileSchema, { profile }),
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write(credentialPayload(credential));
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
@@ -388,78 +439,78 @@ export class IdentityManager {
 
     const credential = await this._identity.getDeviceCredentialSigner().createCredential({
       subject: this._identity.deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.DeviceProfile',
-        profile,
-      },
+      assertion: create(DeviceProfileSchema, { profile }),
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write(credentialPayload(credential));
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
-    return {
-      deviceKey: this._identity.deviceKey,
+    return create(DeviceSchema, {
+      deviceKey: fromPublicKey(this._identity.deviceKey),
       kind: DeviceKind.CURRENT,
-      presence: Device.PresenceState.ONLINE,
+      presence: Device_PresenceState.ONLINE,
       profile,
-    };
+    });
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord): Promise<Identity> {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
 
+    const identityKey = requirePublicKey(identityRecord.identityKey);
+    const deviceKey = requirePublicKey(identityRecord.deviceKey);
+    const haloSpace = identityRecord.haloSpace;
+    invariant(haloSpace, 'Halo space metadata is required.');
+
     const gossip = new Gossip({
-      localPeerId: identityRecord.deviceKey,
+      localPeerId: deviceKey,
     });
     const presence = new Presence({
       announceInterval: this._devicePresenceAnnounceInterval,
       offlineTimeout: this._devicePresenceOfflineTimeout,
-      identityKey: identityRecord.deviceKey,
+      identityKey: deviceKey,
       gossip,
     });
 
     // Must be created before the space so the feeds are writable.
-    invariant(identityRecord.haloSpace.controlFeedKey);
-    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.controlFeedKey, {
+    const controlFeed = await this._hypercoreStore.openHypercore(requirePublicKey(haloSpace.controlFeedKey), {
       writable: true,
     });
-    invariant(identityRecord.haloSpace.dataFeedKey);
-    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.dataFeedKey, {
+    const dataFeed = await this._hypercoreStore.openHypercore(requirePublicKey(haloSpace.dataFeedKey), {
       writable: true,
       sparse: true,
     });
 
     const space = await this._constructSpace({
-      spaceRecord: identityRecord.haloSpace,
+      spaceRecord: haloSpace,
       swarmIdentity: {
-        identityKey: identityRecord.identityKey,
-        peerKey: identityRecord.deviceKey,
-        credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
+        identityKey,
+        peerKey: deviceKey,
+        credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
       },
       gossip,
-      identityKey: identityRecord.identityKey,
+      identityKey,
     });
     await space.setControlFeed(controlFeed);
     await space.setDataFeed(dataFeed);
 
-    const did = await createDidFromIdentityKey(identityRecord.identityKey);
+    const did = await createDidFromIdentityKey(identityKey);
     const identity: Identity = new Identity({
       space,
       presence,
       signer: this._keyring,
       did,
-      identityKey: identityRecord.identityKey,
-      deviceKey: identityRecord.deviceKey,
+      identityKey,
+      deviceKey,
       edgeConnection: this._edgeConnection,
       edgeFeatures: this._edgeFeatures,
     });
-    log('done', { identityKey: identityRecord.identityKey });
+    log('done', { identityKey });
 
     // TODO(mykola): Set new timeframe on a write to a feed.
-    if (identityRecord.haloSpace.controlTimeframe) {
-      identity.controlPipeline.state.setTargetTimeframe(identityRecord.haloSpace.controlTimeframe);
+    if (haloSpace.controlTimeframe) {
+      identity.controlPipeline.state.setTargetTimeframe(toTimeframe(haloSpace.controlTimeframe));
     }
 
     identity.stateUpdate.on(() => this.stateUpdate.emit());
@@ -532,10 +583,10 @@ export class IdentityManager {
 
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
     return this._spaceManager.constructSpace({
-      metadata: {
+      metadata: create(SpaceMetadataSchema, {
         key: spaceRecord.key,
         genesisFeedKey: spaceRecord.genesisFeedKey,
-      },
+      }),
       swarmIdentity,
       onAuthorizedConnection: (session) => {
         session.addExtension(
@@ -566,23 +617,34 @@ export const IdentityManagerLayer = (
 ): Layer.Layer<
   IdentityManagerService,
   never,
-  IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
+  Hook.Controller | IMetadataStoreService | KeyringApiService | HypercoreStoreService | SpaceManagerService
 > =>
   Layer.effect(
     IdentityManagerService,
     Effect.gen(function* () {
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;
-      const feedStore = yield* FeedStoreService;
+      const hypercoreStore = yield* HypercoreStoreService;
       const spaceManager = yield* SpaceManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
-      return new IdentityManager({
+      const identityManager = new IdentityManager({
         metadataStore,
         keyring,
-        feedStore,
+        hypercoreStore,
         spaceManager,
         edgeConnection: Option.getOrUndefined(edgeConnection),
         ...options,
       });
+
+      const ctx = yield* EffectEx.contextFromScope();
+      yield* Effect.addFinalizer(() => Effect.promise(() => identityManager.close(Context.default())));
+      yield* Hook.on(
+        StorageReady,
+        Effect.fn('IdentityManager.onStorageReady')(function* () {
+          yield* Effect.promise(() => identityManager.open(ctx));
+          yield* Hook.emit(IdentityLoaded, { identity: identityManager.identity });
+        }),
+      );
+      return identityManager;
     }),
   );

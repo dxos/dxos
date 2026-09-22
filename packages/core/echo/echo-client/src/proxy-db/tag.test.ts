@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 describe('Tag.findOrCreate', () => {
   let builder: EchoTestBuilder;

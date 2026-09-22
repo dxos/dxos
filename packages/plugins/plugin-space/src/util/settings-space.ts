@@ -12,10 +12,10 @@ import { type Client } from '@dxos/client';
 import { type Space, SpaceProperties, SpaceState } from '@dxos/client/echo';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space';
+import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space.ts';
 
 /**
  * Resolve the settings space, creating one only for legacy profiles that predate it.

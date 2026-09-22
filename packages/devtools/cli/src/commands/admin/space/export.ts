@@ -12,19 +12,19 @@ import { writeFileSync } from 'node:fs';
 import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
-import { adminDownload, adminRequest, formatAdminError } from '../util';
+import { AdminApiError, adminDownload, adminRequest, formatAdminError } from '../util.ts';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 
 export const exportSpace = Command.make(
   'export',
   {
-    spaceId: Args.string('spaceId'),
-    download: Options.boolean('download').pipe(
+    spaceId: Args.String('spaceId'),
+    download: Options.Boolean('download').pipe(
       Options.withDescription('Download the export after triggering it.'),
       Options.withDefault(false),
     ),
-    output: Options.string('output').pipe(
+    output: Options.String('output').pipe(
       Options.withDescription('Output file path for download.'),
       Options.withAlias('o'),
       Options.optional,
@@ -32,14 +32,14 @@ export const exportSpace = Command.make(
   },
   Effect.fn(function* ({ spaceId, download, output }) {
     const result = yield* adminRequest<ExportTriggerResponse>('POST', `/admin/spaces/${spaceId}/export`).pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (download) {
       const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;
 
       const response = yield* adminDownload(result.downloadPath).pipe(
-        Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
+        Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
       );
 
       const body = yield* response.text;

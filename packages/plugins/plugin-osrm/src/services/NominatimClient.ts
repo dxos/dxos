@@ -5,7 +5,7 @@
 import type * as Place from '@dxos/plugin-trip/Place';
 import * as Routing from '@dxos/plugin-trip/Routing';
 
-import { type NominatimResult, parsePlace } from './osrm-mapping';
+import { type NominatimResult, parsePlace } from './osrm-mapping.ts';
 
 const DEFAULT_BASE_URL = 'https://nominatim.openstreetmap.org';
 

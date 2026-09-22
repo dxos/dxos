@@ -13,21 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
 
 /**
- * Prefix for pinned (non-space) workspace IDs in the graph.
- */
-const PINNED_WORKSPACE_PREFIX = '!';
-
-/**
- * Build a pinned workspace segment ID.
- */
-export const pinnedWorkspaceId = (name: string): string => `${PINNED_WORKSPACE_PREFIX}${name}`;
-
-/**
- * Build a qualified path to a pinned workspace.
- */
-export const getPinnedWorkspacePath = (name: string): string => `${GraphNode.RootId}/${pinnedWorkspaceId(name)}`;
-
-/**
  * Well-known local segment names for the canonical graph tree structure.
  */
 export const Segments = {
@@ -47,6 +32,7 @@ export const GroupSegments = {
   communications: 'communications',
   crm: 'crm',
   system: 'system',
+  debug: 'debug',
 } as const;
 
 /**
@@ -60,6 +46,7 @@ export const GroupTypes = {
   communications: 'org.dxos.navtree.group.communications',
   crm: 'org.dxos.navtree.group.crm',
   system: 'org.dxos.navtree.group.system',
+  debug: 'org.dxos.navtree.group.debug',
 } as const;
 
 /**
@@ -80,6 +67,13 @@ export const SPACE_HOME_SEGMENT = 'home';
  * Canonical qualified path to the virtual Home node of a space.
  */
 export const getSpaceHomePath = (spaceId: string): string => getSpacePath(spaceId, SPACE_HOME_SEGMENT);
+
+/**
+ * The workspace token a qualified graph path sits under: the second segment of `root/<workspace>/…`.
+ * Unlike {@link getSpaceIdFromPath} this does not require the workspace to be a space.
+ */
+export const getWorkspaceToken = (qualifiedPath: string): string | undefined =>
+  qualifiedPath.split('/')[1] || undefined;
 
 /**
  * Extract the space ID segment from a qualified graph path.
@@ -162,7 +156,7 @@ export const getCollectionObjectPath = (collectionQualifiedId: string, objectId:
  * Structurally parse a qualified graph path into an ECHO EID: the SpaceId segment plus the trailing
  * EntityId-valid segment, regardless of what lies between them (a canonical database path, a
  * collection path, a custom type-section path, …). Lives in app-toolkit so this parsing has no plugin
- * dependency — used by `NotFound.validateNavigationTarget` and `plugin-deck`'s DXN dedup. `graph` gates
+ * dependency — used by `useNavigationPresence` and `plugin-deck`'s DXN dedup. `graph` gates
  * the result on the
  * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
  * unrelated string can't be mistaken for a valid target.
@@ -233,12 +227,17 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  * ```
  *
  * Always use alongside {@link TypeSection.createTypeSectionExtension}, passing the same `groupId`
- * to both.
+ * and `sectionUrlKey` to both.
  */
-export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId?: string }) => {
+export const createTypeSectionPaths = (
+  type: Type.AnyEntity,
+  options?: { groupId?: string; sectionUrlKey?: string },
+) => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create type section paths.');
-  const baseSegments: string[] = options?.groupId ? [options.groupId, typename] : [typename];
+  // A section with a URL key of its own is named by it, as `createTypeSectionExtension` names it.
+  const section = options?.sectionUrlKey ?? typename;
+  const baseSegments: string[] = options?.groupId ? [options.groupId, section] : [section];
   return {
     /** Canonical qualified path to the type's section node within a space. */
     getSectionPath: (spaceId: string): string => getSpacePath(spaceId, ...baseSegments),
@@ -246,13 +245,6 @@ export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId
     getObjectPath: (spaceId: string, objectId: string): string => getSpacePath(spaceId, ...baseSegments, objectId),
   };
 };
-
-/**
- * Check whether a qualified workspace path represents a pinned (non-space) workspace.
- * Pinned workspaces have a `!`-prefixed segment immediately after `root/`.
- */
-export const isPinnedWorkspace = (qualifiedPath: string): boolean =>
-  qualifiedPath.startsWith(`${GraphNode.RootId}/${PINNED_WORKSPACE_PREFIX}`);
 
 /**
  * Derive the workspace qualified path from any qualified graph ID.

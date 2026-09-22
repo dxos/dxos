@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const MobileDeckLayout: ComponentType<any> = lazy(() => import('./MobileLayout'));
+export const MobileDeckLayout: ComponentType<any> = lazy(() => import('./MobileLayout/index.ts'));

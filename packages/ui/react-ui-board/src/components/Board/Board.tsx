@@ -3,7 +3,6 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -24,6 +23,7 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
+  composeRefs,
   usePx,
   useTranslation,
 } from '@dxos/react-ui';
@@ -38,8 +38,8 @@ import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { BoardCell, type BoardCellProps } from './BoardCell';
-import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext';
+import { BoardCell, type BoardCellProps } from './BoardCell.tsx';
+import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext.ts';
 import {
   type Bounds,
   type DropResolver,
@@ -48,7 +48,7 @@ import {
   type GridPosition,
   type Layout,
   pushToFit,
-} from './engine';
+} from './engine.ts';
 import {
   type GridCellSize,
   type Rect,
@@ -59,7 +59,7 @@ import {
   getRowCount,
   gridBounds,
   viewportCenterAnchor,
-} from './geometry';
+} from './geometry.ts';
 
 /** Duration (ms) of the zoom-anchor and recenter scroll animations. */
 const ANIMATION_DURATION = 200;
@@ -147,7 +147,11 @@ type BoardRootProps = PropsWithChildren<{
 
 // Default to a compact cell (~half a default card) so a board fits more tiles on screen; consumers
 // can pass a larger `cellSize` for a card-sized board.
-const defaultCellSize: GridCellSize = { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 };
+const defaultCellSize: GridCellSize = {
+  width: cardDefaultInlineSize,
+  height: cardDefaultInlineSize,
+};
+
 const defaultGap = 1;
 
 const BoardRoot = forwardRef<BoardController, BoardRootProps>(
@@ -350,7 +354,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100));
     }, [captureAnchor, onZoomChange, zoom, zoomStep, minZoom]);
 
-    // Selection (hand-rolled controlled/uncontrolled; Radix useControllableState mishandles clearing).
+    // Selection (hand-rolled controlled/uncontrolled; `useControllableState` keys on presence and mishandles clearing).
     const emptySelection = useMemo<ReadonlySet<string>>(() => new Set(), []);
     const [uncontrolledSelected, setUncontrolledSelected] = useState<ReadonlySet<string>>(
       defaultSelected ?? emptySelection,
@@ -852,7 +856,7 @@ const BoardBackdrop = (_props: BoardBackdropProps) => {
   }, [columns, rows, cellSize, gap]);
 
   return (
-    <div className='absolute inset-0'>
+    <div className='dx-fullscreen'>
       {cells.map(({ position, rect }) => (
         <BoardDropTarget
           key={`${position.x}-${position.y}`}

@@ -26,10 +26,10 @@ import { Message, Person } from '@dxos/types';
 import { type JmapDataset, JmapMailApi } from '#services';
 import { JmapOperation } from '#types';
 
-import { JMAP_DOMAIN, JMAP_MAIL_CONNECTOR_ID } from '../../../constants';
-import { generateJmapDataset } from '../../../testing/jmap-fixtures';
-import { jmapSyncTestServices, runJmapSync } from '../../../testing/sync-fixture';
-import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
+import { JMAP_DOMAIN, JMAP_MAIL_CONNECTOR_ID } from '../../../constants.ts';
+import { generateJmapDataset } from '../../../testing/jmap-fixtures.ts';
+import { jmapSyncTestServices, runJmapSync } from '../../../testing/sync-fixture.ts';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags.ts';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -337,8 +337,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     // the initial backward (newest-first) walk.
     const exit = await EffectEx.runPromise(
       Effect.exit(runJmapSync({ connection: Ref.make(connection) })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterEmails(10, dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterEmails(10, dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -649,8 +648,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     };
     const exit = await EffectEx.runPromise(
       Effect.exit(runJmapSync({ connection: Ref.make(connection), now })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterEmails(10, run2Dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterEmails(10, run2Dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);

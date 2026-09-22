@@ -21,34 +21,35 @@ import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
-import { bundle } from './bundle';
-import { DATA_TYPES, upsertComposerScript } from './echo';
-import { parseOptions } from './options';
+import { CliError } from '../../../util/errors.ts';
+import { bundle } from './bundle.ts';
+import { DATA_TYPES, upsertComposerScript } from './echo.ts';
+import { parseOptions } from './options.ts';
 
 export const deploy = Command.make(
   'deploy',
   {
-    entryPoint: Args.file('entryPoint').pipe(Args.withDescription('The file to deploy.')),
+    entryPoint: Args.File('entryPoint').pipe(Args.withDescription('The file to deploy.')),
     // TODO(burdon): Human readable name?
-    name: Options.string('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
-    version: Options.string('version').pipe(
+    name: Options.String('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
+    version: Options.String('version').pipe(
       Options.withDescription('The version of the function to deploy.'),
       Options.optional,
     ),
-    script: Options.boolean('script').pipe(
+    script: Options.Boolean('script').pipe(
       Options.withDescription('Loads the script into composer.'),
       Options.withDefault(false),
     ),
-    functionId: Options.string('function-id').pipe(
+    functionId: Options.String('function-id').pipe(
       Options.withDescription('Existing UserFunction ID to update.'),
       Options.optional,
     ),
     spaceId: Common.spaceId.pipe(Options.optional),
-    dryRun: Options.boolean('dry-run').pipe(
+    dryRun: Options.Boolean('dry-run').pipe(
       Options.withDescription('Do not upload, just build the function.'),
       Options.withDefault(false),
     ),
-    runtime: Options.choice('runtime', ['worker-loader', 'workers-for-platforms']).pipe(
+    runtime: Options.Literals('runtime', ['worker-loader', 'workers-for-platforms']).pipe(
       Options.withDescription('The runtime to use.'),
       Options.optional,
     ),
@@ -60,11 +61,11 @@ export const deploy = Command.make(
 
     const identity = client.halo.identity.get();
     if (!identity) {
-      return yield* Effect.fail(new Error('Identity not available'));
+      return yield* Effect.fail(new CliError({ message: 'Identity not available' }));
     }
 
     if (!existsSync(options.entryPoint)) {
-      return yield* Effect.fail(new Error(`File not found: ${options.entryPoint}`));
+      return yield* Effect.fail(new CliError({ message: `File not found: ${options.entryPoint}` }));
     }
 
     const artifact = yield* bundle({ entryPoint: resolve(options.entryPoint) });

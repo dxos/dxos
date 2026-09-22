@@ -16,24 +16,22 @@ import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type DocumentLease } from '../automerge/document-lease';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state';
-import { DatabaseRoot } from './database-root';
-
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { type DocumentLease } from '../automerge/document-lease.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
+import { DatabaseRoot } from './database-root.ts';
 
 export type SpaceStateManagerProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 export class SpaceStateManager extends Resource {
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();
   private readonly _rootBySpace = new Map<SpaceId, DocumentId>();
-  private readonly _perRootContext = new Map<DocumentId, Context>();
+  /** Keyed by space, not by root document: two spaces can share one root and must tear down apart. */
+  private readonly _perSpaceContext = new Map<SpaceId, Context>();
   private readonly _lastSpaceDocumentList = new Map<SpaceId, DocumentId[]>();
   private readonly _spaceRootRefs = new Map<SpaceId, SpaceRootRefs>();
   /** Re-runs a space's document-list check; the anchor documents enter the list only once refs exist. */
@@ -47,14 +45,12 @@ export class SpaceStateManager extends Resource {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -69,15 +65,15 @@ export class SpaceStateManager extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    for (const [_, rootCtx] of this._perRootContext) {
-      await rootCtx.dispose();
+    for (const [_, spaceCtx] of this._perSpaceContext) {
+      await spaceCtx.dispose();
     }
     for (const root of this._roots.values()) {
       root[Symbol.dispose]();
     }
     this._roots.clear();
     this._rootBySpace.clear();
-    this._perRootContext.clear();
+    this._perSpaceContext.clear();
     this._lastSpaceDocumentList.clear();
     this._spaceRootRefs.clear();
   }
@@ -156,10 +152,10 @@ export class SpaceStateManager extends Resource {
     this._lastSpaceDocumentList.delete(spaceId);
     this._spaceRootRefs.delete(spaceId);
 
-    const rootCtx = this._perRootContext.get(documentId);
-    if (rootCtx) {
-      await rootCtx.dispose();
-      this._perRootContext.delete(documentId);
+    const spaceCtx = this._perSpaceContext.get(spaceId);
+    if (spaceCtx) {
+      await spaceCtx.dispose();
+      this._perSpaceContext.delete(spaceId);
     }
     // Kept while another space still reads through the same root, whose lease it shares.
     if (!this._isRootReferenced(documentId)) {
@@ -191,7 +187,7 @@ export class SpaceStateManager extends Resource {
       this._roots.set(lease.documentId, root);
     }
 
-    if (this._rootBySpace.get(spaceId) === root.documentId && this._perRootContext.has(root.documentId)) {
+    if (this._rootBySpace.get(spaceId) === root.documentId && this._perSpaceContext.has(spaceId)) {
       return root;
     }
 
@@ -199,8 +195,8 @@ export class SpaceStateManager extends Resource {
     if (prevRootId) {
       // Awaited: the context detaches the root's `change` listener, which needs the lease disposed
       // below to still be live.
-      await this._perRootContext.get(prevRootId)?.dispose();
-      this._perRootContext.delete(prevRootId);
+      await this._perSpaceContext.get(spaceId)?.dispose();
+      this._perSpaceContext.delete(spaceId);
     }
 
     this._rootBySpace.set(spaceId, root.documentId);
@@ -217,7 +213,7 @@ export class SpaceStateManager extends Resource {
 
     const ctx = new Context();
 
-    this._perRootContext.set(root.documentId, ctx);
+    this._perSpaceContext.set(spaceId, ctx);
 
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,

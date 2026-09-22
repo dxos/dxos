@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { Sequence } from './Sequence';
-import { Track } from './Track';
+import { Sequence } from './Sequence.ts';
+import { Track } from './Track.ts';
 
 export const SKILL_KEY = 'org.dxos.skill.sequencer';
 
@@ -33,7 +32,7 @@ export class Score extends Type.makeObject<Score>(DXN.make('org.dxos.type.score'
     loopStart: Schema.optional(Schema.Number),
     loopEnd: Schema.optional(Schema.Number),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--music-notes--regular', hue: 'fuchsia' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),

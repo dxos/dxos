@@ -20,7 +20,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { Book } from '#types';
 
-import { getBooksPath } from '../paths';
+import { LIBRARY_KEY, getBooksPath } from '../paths.ts';
 
 /** The companion segment/variant for the notes editor — shared with its surface binding. */
 export const NOTES_COMPANION_VARIANT = 'notes';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
       // Book type section in the content group.
       TypeSection.createTypeSectionExtension(Book.Book, {
         urlKey: 'book',
-        sectionUrlKey: 'library',
+        sectionUrlKey: LIBRARY_KEY,
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
         groupSegment: GraphPath.GroupSegments.content,
         createObject: (space) =>
@@ -49,6 +49,7 @@ export default Capability.makeModule(
       // Private notes companion (a markdown editor over the book's notes document).
       AppGraphBuilder.createExtension({
         id: 'bookNotesCompanion',
+        relation: AppNode.companion,
         match: whenBook,
         connector: (book) =>
           Effect.succeed([

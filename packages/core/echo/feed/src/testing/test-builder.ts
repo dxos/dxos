@@ -6,20 +6,19 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import * as Statement from 'effect/unstable/sql/Statement';
 
 import { Context, Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { FeedStore } from '../feed-store';
-import { SyncClient } from '../sync-client';
-import { SyncServer } from '../sync-server';
+import { FeedStore } from '../feed-store.ts';
+import { SyncClient } from '../sync-client.ts';
+import { SyncServer } from '../sync-server.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
@@ -30,21 +29,31 @@ export class TestBuilder extends Resource {
   #peers: TestPeer[] = [];
   readonly #spaceId: SpaceId;
   readonly #feedNamespace: string;
+  readonly #logSql: boolean;
+  readonly #mapServerReply: (message: ProtocolMessage) => ProtocolMessage;
 
   constructor({
     numPeers,
     spaceId,
     feedNamespace = WellKnownNamespaces.data,
     logSql = false,
+    mapServerReply = (message) => message,
   }: {
     numPeers: number;
     spaceId: SpaceId;
     feedNamespace?: string;
     logSql?: boolean;
+    /**
+     * Rewrites every reply the server sends before a client sees it, e.g. to strip a field a
+     * deployed server does not report yet.
+     */
+    mapServerReply?: (message: ProtocolMessage) => ProtocolMessage;
   }) {
     super();
     this.#spaceId = spaceId;
     this.#feedNamespace = feedNamespace;
+    this.#logSql = logSql;
+    this.#mapServerReply = mapServerReply;
     this.#peers = Array.makeBy(
       numPeers,
       (i) =>
@@ -74,6 +83,24 @@ export class TestBuilder extends Resource {
     await Promise.all(this.#peers.map((peer) => peer.close()));
   }
 
+  /**
+   * Swaps the server for one with empty storage, keeping its peer id, so clients keep addressing
+   * the same peer while everything it had assigned is gone. Models a redeployed or wiped server.
+   */
+  async replaceServer(): Promise<TestPeer> {
+    const previous = this.#peers[0];
+    await previous.close();
+    const replacement = new TestPeer({
+      isServer: true,
+      actorId: previous.peerId,
+      sendMessage: (ctx, msg) => this.#routeMessage(ctx, msg),
+      logSql: this.#logSql,
+    });
+    this.#peers[0] = replacement;
+    await replacement.open();
+    return replacement;
+  }
+
   async pull(client: TestPeer, { limit = 10 }: { limit?: number } = {}): Promise<{ done: boolean }> {
     return client.pull({ spaceId: this.#spaceId, feedNamespace: this.#feedNamespace, limit });
   }
@@ -92,7 +119,7 @@ export class TestBuilder extends Resource {
       peer.syncServer != null
         ? peer.syncServer.handleMessage(ctx, msg)
         : peer.syncClient != null
-          ? peer.syncClient.handleMessage(msg)
+          ? peer.syncClient.handleMessage(this.#mapServerReply(msg))
           : null;
     if (handleEffect == null) {
       return Effect.die(new Error(`TestPeer has no handler: ${msg.recipientPeerId}`));
@@ -112,10 +139,7 @@ const loggingTransformer: Statement.Transformer = (stmt, _make, _, _span) =>
 export class TestPeer extends Resource {
   readonly #peerId: string;
   #feedStore: FeedStore;
-  #runtime: ManagedRuntime.ManagedRuntime<
-    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
-    never
-  >;
+  #runtime: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   #client?: SyncClient;
   #server?: SyncServer;
 
@@ -138,7 +162,7 @@ export class TestPeer extends Resource {
     const baseLayer = layerMemory.pipe(
       Layer.provide(logSql ? Layer.succeed(Statement.CurrentTransformer, loggingTransformer) : Layer.empty),
     );
-    const transactionLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+    const transactionLayer = baseLayer;
     this.#runtime = ManagedRuntime.make(Layer.merge(baseLayer, transactionLayer).pipe(Layer.orDie));
     if (isServer) {
       this.#server = new SyncServer({
@@ -191,10 +215,57 @@ export class TestPeer extends Resource {
     }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
+  getServerToken(spaceId: SpaceId) {
+    return this.#feedStore.getServerToken(spaceId).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
   getSyncState({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
     return this.#feedStore
       .getSyncState({ spaceId, feedNamespace })
       .pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  setSyncState(opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number; serverToken?: string }) {
+    return this.#feedStore.setSyncState(opts).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  /**
+   * Deletes every block of a space/namespace at or above `position`, so the store hands those
+   * positions out again to whatever is appended next. Reproduces a server whose storage was rolled
+   * back after it had acknowledged appends; no production path writes this shape.
+   */
+  dropBlocksFromPosition({
+    spaceId,
+    feedNamespace,
+    position,
+  }: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    position: number;
+  }) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        DELETE FROM blocks
+        WHERE position >= ${position} AND feedPrivateId IN (
+          SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+        )
+      `;
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  /**
+   * Strips the recorded server token while leaving pull progress intact, reproducing sync state
+   * written before servers reported one. No production path writes this shape.
+   */
+  clearServerToken({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        UPDATE sync_state SET serverToken = NULL
+        WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+      `;
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   query(req: QueryRequest) {

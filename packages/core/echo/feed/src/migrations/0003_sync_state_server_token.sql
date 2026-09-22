@@ -1,0 +1,14 @@
+--
+-- Records which server assigned the positions a client has pulled. `serverToken` is the serving
+-- store's own token, echoed back on every query response; a mismatch means the server was swapped
+-- or its storage wiped, so every remembered `lastPulledPosition` is meaningless and the namespace
+-- must be re-synced from scratch.
+--
+-- NULL on rows written before this migration: those clients have no observation to compare against,
+-- so the first token they see is adopted without a re-sync.
+--
+-- Not idempotent, by design: `feed_migrations` guarantees it runs exactly once. Immutable once
+-- shipped — change the schema by adding the next numbered migration.
+--
+-- AlterTable
+ALTER TABLE "sync_state" ADD COLUMN "serverToken" TEXT;

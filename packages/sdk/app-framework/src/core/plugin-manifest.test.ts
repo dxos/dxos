@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as PluginManifest from './plugin-manifest';
+import * as PluginManifest from './plugin-manifest.ts';
 
 describe('PluginManifest', () => {
   describe('parse', () => {

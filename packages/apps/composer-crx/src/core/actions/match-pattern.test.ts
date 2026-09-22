@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { matchesUrlPatterns } from './match-pattern';
+import { matchesUrlPatterns } from './match-pattern.ts';
 
 describe('matchesUrlPatterns', () => {
   test('all-urls patterns', ({ expect }) => {

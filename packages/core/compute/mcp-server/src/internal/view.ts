@@ -23,7 +23,7 @@ export type McpSkill = {
   skill: Skill.Skill;
   key: string;
   promptName: string;
-  description?: string;
+  description: string;
   instructions: string;
 };
 
@@ -193,16 +193,27 @@ export const operationView = (
   const key = nsid(Operation.getKey(record) ?? '');
   const toolName = toolNameOf(record);
   const idempotent = Option.getOrUndefined(Annotation.get(record, Operation.IdempotentAnnotation));
+  const mutation = mutationOf(record);
+  // Every optional field is spread in only when it resolved: an explicit `undefined` survives
+  // encoding, and MCP's structured content must be JSON, which has no such value -- so one
+  // unresolved field would fail the whole call rather than be omitted from the row.
   return {
     key,
-    name: record.name.length > 0 ? record.name : undefined,
-    description: record.description,
+    ...(record.name.length > 0 ? { name: record.name } : {}),
+    ...(record.description === undefined ? {} : { description: record.description }),
     skills: (toolName == null ? undefined : owners.get(toolName)) ?? [],
     requiresSpace: requiresSpace(record),
     hints: {
-      mutation: mutationOf(record),
-      idempotent: idempotent === true ? true : undefined,
+      ...(mutation === undefined ? {} : { mutation }),
+      ...(idempotent === true ? { idempotent: true } : {}),
     },
-    ...(withSchema ? { schema: { input: record.inputSchema, output: record.outputSchema } } : {}),
+    ...(withSchema
+      ? {
+          schema: {
+            ...(record.inputSchema === undefined ? {} : { input: record.inputSchema }),
+            ...(record.outputSchema === undefined ? {} : { output: record.outputSchema }),
+          },
+        }
+      : {}),
   };
 };

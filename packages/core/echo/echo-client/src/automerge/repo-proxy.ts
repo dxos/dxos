@@ -3,11 +3,10 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
-import { Event, Trigger, UpdateScheduler, sleep } from '@dxos/async';
-import { type Struct } from '@dxos/codec-protobuf';
+import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -15,10 +14,18 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { DocHandleProxy } from './doc-handle-proxy';
+import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
+import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
+
+/**
+ * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
+ * (query re-evaluation, index hydration) is coalesced rather than run per slice. Smaller batches are
+ * the steady state — a peer's edit, the echo of a local write — and stay immediate.
+ */
+const BULK_BATCH_DOCUMENTS = 32;
 
 /**
  * Passes {@link RepoProxy.flush} makes before reporting a batch as unsendable. A failed
@@ -28,6 +35,12 @@ const FLUSH_ATTEMPTS = 3;
 
 /** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
 const FLUSH_RETRY_DELAY_MS = 50;
+
+/** Delay before replacing a subscription the host dropped; doubled on each consecutive attempt. */
+const RESUBSCRIBE_DELAY_MS = 250;
+
+/** Cap on the {@link RESUBSCRIBE_DELAY_MS} backoff, so a host that stays down is still retried. */
+const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 
 /**
  * A proxy (thin client) to the Automerge Repo.
@@ -51,6 +64,12 @@ export class RepoProxy extends Resource {
   private _subscriptionReady = new Trigger();
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
+
+  /** Creations the host did not take; the handle stays unready until {@link flushCreations} lands one. */
+  private readonly _failedCreations = new Map<
+    string,
+    { handle: DocHandleProxy<any>; error: Error; retry: () => void }
+  >();
 
   /**
    * Document ids that have pending updates.
@@ -96,7 +115,21 @@ export class RepoProxy extends Resource {
    */
   private _generation = 0;
 
+  /**
+   * Consecutive attempts to replace a dropped subscription, backing off so a host that is gone for
+   * good is not retried in a tight loop. Reset by the first batch the replacement delivers.
+   */
+  private _resubscribeAttempts = 0;
+
+  /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
+  private _resubscribeDelay = 0;
+
+  #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
+  #inboxHead = 0;
+  #draining = false;
+
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+  private _lastSaveStateKey = '';
 
   constructor(
     private _dataService: DataService.Client,
@@ -155,7 +188,7 @@ export class RepoProxy extends Resource {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
-    const documentId = interpretAsDocumentId(id);
+    const documentId = toDocumentId(id);
     return this._getOrLoadHandle<T>({ documentId });
   }
 
@@ -177,8 +210,7 @@ export class RepoProxy extends Resource {
    * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
    */
   async flush(): Promise<void> {
-    // Wait for all creations to be completed.
-    await Promise.all([...this._pendingCreations.values()]);
+    await this.flushCreations();
     // Wait for all updates to be sent, retrying a failed batch before giving up on it.
     for (let attempt = 1; ; attempt++) {
       const failuresBefore = this._sendFailureCount;
@@ -193,24 +225,45 @@ export class RepoProxy extends Resource {
       if (attempt >= FLUSH_ATTEMPTS) {
         throw this._lastSendError ?? new Error('Failed to send document updates.');
       }
+      // A dropped subscription is replaced only after the scheduled backoff, so a shorter sleep
+      // burns every attempt against a subscription known to be gone.
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt + (this._isReconnecting ? this._resubscribeDelay : 0));
+    }
+  }
+
+  /**
+   * Waits until every pending document creation has reached the host, requesting again the ones it did not take.
+   * Throws if one still cannot be created.
+   */
+  async flushCreations(): Promise<void> {
+    for (let attempt = 1; ; attempt++) {
+      for (const [id, { retry }] of this._failedCreations) {
+        this._failedCreations.delete(id);
+        retry();
+      }
+      await Promise.all([...this._pendingCreations.values()]);
+      const failed = this._failedCreations.values().next().value;
+      if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
+        return;
+      }
+      if (attempt >= FLUSH_ATTEMPTS) {
+        throw failed.error;
+      }
       await sleep(FLUSH_RETRY_DELAY_MS * attempt);
     }
   }
 
   protected override async _open(): Promise<void> {
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
-      maxFrequency: MAX_UPDATE_FREQ,
-    });
+    // A close during the resubscribe delay cancels the task that clears this flag.
+    this._isReconnecting = false;
+    this._sendUpdatesJob = this._createSendUpdatesJob();
     // TODO(dmaretskyi): Set proper space id.
-    this._subscriptionReady.reset();
-    this._subscriptionCleanup = subscribeStream(
-      this._runtime,
-      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
-      { onData: (updates) => this._receiveUpdate(updates) },
-    );
+    this._subscribe();
+    this._pageEvents('addEventListener');
   }
 
   protected override async _close(): Promise<void> {
+    this._pageEvents('removeEventListener');
     await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
     for (const handle of Object.values(this._handles)) {
@@ -218,8 +271,29 @@ export class RepoProxy extends Resource {
     }
 
     this._handles = {};
+    for (const { handle, error } of this._failedCreations.values()) {
+      handle.off('change');
+      handle._failReady(error);
+    }
+    this._failedCreations.clear();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
+  }
+
+  /**
+   * A batch throttled to {@link MAX_UPDATE_FREQ} would not survive the page going away; sending it
+   * as the page hides reaches the worker, which outlives the tab, within the handler's microtasks.
+   */
+  private readonly _onPageHide = () => {
+    this._sendUpdatesJob?.forceTrigger();
+  };
+
+  /** Registers or unregisters {@link _onPageHide} where a page exists; a worker or Node has no such event. */
+  private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
+    const fn = Reflect.get(globalThis, method);
+    if (typeof fn === 'function') {
+      fn.call(globalThis, 'pagehide', this._onPageHide);
+    }
   }
 
   /**
@@ -246,38 +320,94 @@ export class RepoProxy extends Resource {
     // Abandon the old scheduler - don't wait for it since it may be blocked on dead RPC.
     // Create a fresh scheduler that will use the new data service.
     // The old scheduler's task will eventually fail/timeout but we don't care.
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
-      maxFrequency: MAX_UPDATE_FREQ,
-    });
+    this._sendUpdatesJob = this._createSendUpdatesJob();
 
-    // Close old subscription (this should cause old RPC calls to fail faster).
+    this._replaceSubscription();
+
+    // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
+    // be registered — the caller resumes replication on the strength of this call returning.
+    await this.flush();
+  }
+
+  private _createSendUpdatesJob(): UpdateScheduler {
+    return new UpdateScheduler(this._ctx, async () => this._sendUpdates(), { maxFrequency: MAX_UPDATE_FREQ });
+  }
+
+  /** Left set by a throwing `_subscribe`, `_sendUpdates` would early-out for the life of the space. */
+  private _replaceSubscription(): void {
+    try {
+      this._subscribe();
+    } finally {
+      this._isReconnecting = false;
+    }
+  }
+
+  /**
+   * Opens the document-updates subscription and queues every held document for registration with it.
+   * The host forgets a subscription as soon as its stream ends, so a replacement starts from an
+   * empty document set.
+   */
+  private _subscribe(): void {
+    // Closing the previous stream first makes its outstanding RPC calls fail fast.
     this._subscriptionCleanup?.();
-
-    // Create new subscription.
+    // Wake before re-arming: `reset` abandons parked waiters, and a `_sendUpdates` stranded on the
+    // old trigger holds the scheduler until its RPC timeout.
+    this._subscriptionReady.wake();
     this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
       this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
-      { onData: (updates) => this._receiveUpdate(updates) },
+      {
+        onData: (updates) => this._receiveUpdate(updates),
+        onError: (error) => this._onSubscriptionDropped(error),
+        onClose: () => this._onSubscriptionDropped(),
+      },
     );
 
-    // Re-sync all existing documents.
-    const documentIds = Object.keys(this._handles);
-    if (documentIds.length > 0) {
-      await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
-      await runServiceCall(
-        this._runtime,
-        this._dataService['DataService.updateSubscription']({
-          subscriptionId: this._subscriptionId,
-          addIds: documentIds,
-          removeIds: [],
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
+    // Queued rather than sent directly so a failed pass is retried by the scheduler with the rest of
+    // the batch.
+    for (const handle of Object.values(this._handles)) {
+      const documentId = handle.documentId;
+      if (documentId) {
+        this._pendingRemoveIds.delete(documentId);
+        this._pendingAddIds.add(documentId);
+      }
+    }
+  }
+
+  /**
+   * Replaces a subscription whose stream ended without this proxy closing it (a host restart, a
+   * dropped transport): the host forgets the subscription with the stream, so every later call on
+   * the id would fail with "Subscription not found". Not reached for a stream this proxy tore down
+   * itself — {@link subscribeStream}'s cleanup marks the subscription done before interrupting it.
+   */
+  private _onSubscriptionDropped(error?: Error): void {
+    if (this._ctx.disposed || this._isReconnecting) {
+      return;
     }
 
-    // Reconnection complete, clear the flag.
-    this._isReconnecting = false;
+    log.warn('document subscription dropped, re-subscribing', { spaceId: this._spaceId, error });
+    // Keeps the scheduler idle until the replacement is in place.
+    this._isReconnecting = true;
+    // Abandons the batch racing the dead subscription, so it re-queues quietly instead of raising.
+    this._generation++;
+    const generation = this._generation;
+    this._resubscribeDelay = Math.min(
+      RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++,
+      RESUBSCRIBE_MAX_DELAY_MS,
+    );
+    scheduleTask(
+      this._ctx,
+      () => {
+        // A reconnect that ran during the delay already replaced the subscription.
+        if (this._generation !== generation) {
+          return;
+        }
+        this._replaceSubscription();
+        this._sendUpdatesJob?.trigger();
+      },
+      this._resubscribeDelay,
+    );
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
@@ -305,8 +435,10 @@ export class RepoProxy extends Resource {
   private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    // TODO(burdon): Called even if not mutations.
-    const onChange = () => {
+    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
+      if (patchInfo.source !== 'change') {
+        return;
+      }
       log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
@@ -348,10 +480,8 @@ export class RepoProxy extends Resource {
       this._emitSaveStateEvent();
     };
 
-    // TODO(burdon): Called even if not mutations.
-    const onChange = () => {
-      // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
-      if (handle.documentId == null) {
+    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
+      if (handle.documentId == null || patchInfo.source !== 'change') {
         return;
       }
 
@@ -359,11 +489,14 @@ export class RepoProxy extends Resource {
       update();
     };
 
+    let deleted = false;
     const cleanup = () => {
       log('onDelete', { documentId: handle.documentId, internalId: handle._internalId });
+      deleted = true;
       handle.off('change', onChange);
 
       if (!handle.documentId) {
+        this._failedCreations.delete(handle._internalId);
         return;
       }
 
@@ -376,32 +509,56 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
-    this._pendingCreations.set(
-      handle._internalId,
-      runServiceCall(
+    const request = () => {
+      const creation: Promise<void> = runServiceCall(
         this._runtime,
         this._dataService['DataService.createDocument']({
           spaceId: this._spaceId,
-          initialValue: initialValue as Struct,
+          // A doc's declared type is an interface without an index signature, which the Struct
+          // field's `Record` type does not accept; the value is a plain JSON object at runtime.
+          initialValue: initialValue as Record<string, unknown>,
         }),
         { timeout: RPC_TIMEOUT },
       )
-        .then((response) => {
-          const documentId = response.documentId as DocumentId;
-          handle._setDocumentId(documentId);
-          this._pendingAddIds.add(documentId);
-          this._handles[documentId] = handle;
-          update();
-          handle._wakeReady();
-        })
-        .catch((err) => {
-          log.catch(err);
-          cleanup();
-        })
+        .then(
+          (response) => {
+            const documentId = response.documentId as DocumentId;
+            if (deleted) {
+              this._pendingRemoveIds.add(documentId);
+              this._sendUpdatesJob?.trigger();
+              return;
+            }
+            handle._setDocumentId(documentId);
+            this._pendingAddIds.add(documentId);
+            this._handles[documentId] = handle;
+            update();
+            handle._wakeReady();
+          },
+          // A failed call leaves the handle unbound; an error after the host returned a document must not discard it.
+          (err) => {
+            if (this._lifecycleState === LifecycleState.CLOSED) {
+              handle._failReady(err);
+              cleanup();
+              return;
+            }
+            if (!(err instanceof RpcClosedError)) {
+              log.catch(err);
+            }
+            if (deleted) {
+              return;
+            }
+            this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
+          },
+        )
+        .catch((err) => log.catch(err))
         .finally(() => {
-          this._pendingCreations.delete(handle._internalId);
-        }),
-    );
+          if (this._pendingCreations.get(handle._internalId) === creation) {
+            this._pendingCreations.delete(handle._internalId);
+          }
+        });
+      this._pendingCreations.set(handle._internalId, creation);
+    };
+    request();
 
     return handle;
   }
@@ -414,32 +571,69 @@ export class RepoProxy extends Resource {
     }
   }
 
-  private _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
+  /** @internal */
+  _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
+    // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
+    this._resubscribeAttempts = 0;
     if (!updates) {
       return;
     }
 
+    const bulk = updates.length >= BULK_BATCH_DOCUMENTS;
     for (const update of updates) {
-      const { documentId, mutation, requesting } = update;
-      const handle = this._handles[documentId];
-      if (!handle) {
-        log.warn('Received update for unknown document', { documentId });
-        continue;
-      }
+      this.#inbox.push({ update, bulk });
+    }
+    void this.#drainInbox();
+  }
 
-      // Disk-probe-negative signal from the worker. Mutually exclusive with
-      // `mutation` in practice — the worker sends a transition-only update
-      // first (`requesting: true`, no bytes) and then a regular mutation
-      // update once the network delivers.
-      if (requesting) {
-        handle._markRequesting();
+  /**
+   * Integrates queued updates in arrival order, yielding between slices so the batch's size sets how
+   * long the work takes, not how long the thread is blocked. The first slice runs synchronously.
+   */
+  async #drainInbox(): Promise<void> {
+    if (this.#draining) {
+      return;
+    }
+    this.#draining = true;
+    try {
+      while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
+        const { update, bulk } = this.#inbox[this.#inboxHead++];
+        this.#integrate(update, bulk);
+        if (this.#inboxHead < this.#inbox.length) {
+          await yieldOrContinue('smooth');
+        }
       }
+    } finally {
+      this.#inbox = [];
+      this.#inboxHead = 0;
+      this.#draining = false;
+    }
+  }
 
-      if (mutation) {
-        handle._integrateHostUpdate(mutation);
+  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
+    const handle = this._handles[documentId];
+    if (!handle) {
+      log.warn('Received update for unknown document', { documentId });
+      return;
+    }
+
+    // Disk-probe-negative signal from the worker. Mutually exclusive with
+    // `mutation` in practice — the worker sends a transition-only update
+    // first (`requesting: true`, no bytes) and then a regular mutation
+    // update once the network delivers.
+    if (requesting) {
+      handle._markRequesting();
+    }
+
+    if (mutation) {
+      try {
+        handle._integrateHostUpdate(mutation, { bulk });
+      } catch (err) {
+        // One bad document must not strand every update queued behind it.
+        log.catch(err, { documentId });
       }
     }
   }
@@ -451,6 +645,12 @@ export class RepoProxy extends Resource {
   private async _sendUpdates(): Promise<void> {
     // Abort early if reconnection is in progress to avoid blocking on dead RPC.
     if (this._isReconnecting) {
+      // Counted as a failed pass: `flush` must keep retrying rather than resolve over work the
+      // replacement subscription has not taken yet.
+      if (this._pendingUpdateIds.size || this._pendingAddIds.size || this._pendingRemoveIds.size) {
+        this._lastSendError = new Error('Subscription is being re-established.');
+        this._sendFailureCount++;
+      }
       return;
     }
 
@@ -468,15 +668,18 @@ export class RepoProxy extends Resource {
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
-      await runServiceCall(
-        this._runtime,
-        this._dataService['DataService.updateSubscription']({
-          subscriptionId: this._subscriptionId,
-          addIds,
-          removeIds,
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
+      // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
+      if (addIds.length > 0 || removeIds.length > 0) {
+        await runServiceCall(
+          this._runtime,
+          this._dataService['DataService.updateSubscription']({
+            subscriptionId: this._subscriptionId,
+            addIds,
+            removeIds,
+          }),
+          { timeout: RPC_TIMEOUT },
+        );
+      }
 
       const updates: DataService.DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
@@ -506,6 +709,14 @@ export class RepoProxy extends Resource {
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }
+        // A pass a reconnect abandoned must not `_confirmSync`: a newer pass may have advanced the
+        // handles' in-flight heads, and confirming those would suppress that pass's retry. Its ids
+        // are re-queued instead — the host applies the duplicate delivery idempotently.
+        if (generation !== this._generation) {
+          updateIds.forEach((id) => this._pendingUpdateIds.add(id));
+          this._sendUpdatesJob?.trigger();
+          return;
+        }
         for (const { documentId } of updates) {
           // Handle may have been removed between RPC start and ack — skip silently.
           this._handles[documentId]?._confirmSync();
@@ -515,19 +726,17 @@ export class RepoProxy extends Resource {
       this._releaseDeferred();
       this._emitSaveStateEvent();
     } catch (err) {
-      // Don't restore pending updates if generation changed - this task is abandoned.
+      // A reconnect replaced the subscription under this task, so its failure is not raised below.
       const isAbandoned = generation !== this._generation;
-      // Recorded even when the error is not raised below: `flush` still needs to know.
-      if (!isAbandoned) {
-        this._lastSendError = err as Error;
-        this._sendFailureCount++;
-      }
-      if (!isAbandoned) {
-        // Restore the state of pending updates if the RPC call failed.
-        addIds.forEach((id) => this._pendingAddIds.add(id));
-        removeIds.forEach((id) => this._pendingRemoveIds.add(id));
-        updateIds.forEach((id) => this._pendingUpdateIds.add(id));
-      }
+      // Recorded even for an abandoned task: `flush` must see the counter move for the re-queued ids.
+      this._lastSendError = err as Error;
+      this._sendFailureCount++;
+      // Re-queued even for an abandoned task: nothing else re-sends a pending mutation. Adds are
+      // restored only for handles still held — a released document's add would re-subscribe the
+      // host to a document nothing owns.
+      addIds.filter((id) => this._handles[id]).forEach((id) => this._pendingAddIds.add(id));
+      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+      updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
       // Don't raise errors if we're closing, reconnecting, abandoned, or if the RPC connection was closed.
       // RpcClosedError and timeouts can happen during reconnection or shutdown before _close() is called.
@@ -544,6 +753,11 @@ export class RepoProxy extends Resource {
 
   private _emitSaveStateEvent(): void {
     const unsavedDocuments = Array.from(this._pendingUpdateIds);
+    const key = unsavedDocuments.join(',');
+    if (key === this._lastSaveStateKey) {
+      return;
+    }
+    this._lastSaveStateKey = key;
     this.saveStateChanged.emit({ unsavedDocuments });
   }
 }

@@ -19,13 +19,11 @@ import {
   AiContext,
   AiSession,
   Harness,
-  McpServerError,
-  PartialBlock,
   ToolExecutionServices,
   createSystemPrompt,
   formatSystemPrompt,
 } from '@dxos/assistant';
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type ServiceNotAvailableError } from '@dxos/compute';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
@@ -37,12 +35,13 @@ import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
 
-import { findInCause } from '../util/error-cause';
-import { type ProcessorRequestContext, createPromptContent } from './prompt';
+import { findInCause } from '../util/error-cause.ts';
+import { providerForModel } from './presets.ts';
+import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -58,9 +57,14 @@ export type SpaceServices =
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
+  /**
+   * The model the chat's picker shows selected. The agent process reads the model off the chat, so
+   * this is stamped onto a chat that has not selected one before its first request — otherwise the
+   * picker and the process would disagree about what the conversation runs on.
+   */
   model?: DXN.DXN;
-  // The selected provider, carried with the model so the agent process resolves the (provider, id)
-  // pair — the catalog's shared model ids are ambiguous without it.
+  // The provider is a global setting rather than the chat's, carried so the agent process resolves
+  // the (provider, id) pair — the catalog's shared model ids are ambiguous without it.
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
   registry?: Registry.Registry;
@@ -80,6 +84,8 @@ export type ProcessorRequestOptions = {};
 
 export type ProcessorRequest = {
   message: string;
+  /** `synthetic` marks system-generated turn content (e.g. a completed inline flow reporting itself). */
+  disposition?: ContentBlock.Text['disposition'];
   /** Ephemeral context (e.g. companion-document selection) captured at submit time. */
   context?: ProcessorRequestContext;
   options?: ProcessorRequestOptions;
@@ -229,7 +235,16 @@ export class AiChatProcessor {
    * Misconfigured/unreachable servers are dropped from the toolkit so the chat
    * keeps working; the entries here let the UI display which servers failed.
    */
-  public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
+  public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]);
+
+  /**
+   * Stage the in-flight request has reached, or `undefined` when there is nothing to report.
+   *
+   * Tracks the whole turn rather than only the wait before the first token: an agentic turn streams
+   * a little, then calls tools for a long time, so a line cleared at the first block reads as a
+   * request that has finished. Cleared when the turn settles or is cancelled.
+   */
+  public readonly activity = Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined);
 
   constructor(
     private readonly _conversation: AiSession.Session,
@@ -295,8 +310,8 @@ export class AiChatProcessor {
   }
 
   /**
-   * Resolves the chat's steering instructions, if any. The session is feed-centric and cannot reach
-   * its chat, so the ref is resolved here and handed down.
+   * Resolves the chat's steering instructions, if any — the local `AiSession` used for system-prompt
+   * formatting is feed-centric, so the ref is resolved here and handed down.
    */
   #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
     return Effect.gen({ self: this }, function* () {
@@ -322,6 +337,9 @@ export class AiChatProcessor {
       this.#lastRequest = requestProp;
       this.#registry.set(this.error, Option.none());
       this.#registry.set(this.mcpErrors, []);
+      // Set locally: spawning or attaching the agent process happens before it can emit anything, and
+      // that resolve is itself part of the wait the reader is watching.
+      this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen({ self: this }, function* () {
@@ -339,8 +357,9 @@ export class AiChatProcessor {
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
-        // runs concurrently with the AI response rather than waiting for completion.
-        if (!this._options.chat?.target?.name) {
+        // runs concurrently with the AI response rather than waiting for completion. A synthetic
+        // turn is system-generated, so it would name the chat after a report nobody wrote.
+        if (!this._options.chat?.target?.name && requestProp.disposition !== 'synthetic') {
           yield* this.#updateChatName(requestProp.message);
         }
 
@@ -375,7 +394,31 @@ export class AiChatProcessor {
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
+      this.#registry.set(this.activity, undefined);
       this.#requestFiber = undefined;
+    }
+  }
+
+  /**
+   * Queues a prompt behind the turn already running, instead of starting one.
+   *
+   * The agent's input queue is feed state, so submitting is durable and ordered: the running turn is
+   * left alone and the process takes this prompt up when it settles. {@link request} cannot serve
+   * this case — it cancels the in-flight turn to start its own — and the running request's
+   * `waitForCompletion` already covers the queued turn, since the agent does not report completion
+   * while its queue is non-empty.
+   */
+  async enqueue(requestProp: ProcessorRequest): Promise<void> {
+    try {
+      await this._runtime.runPromise(
+        Effect.gen({ self: this }, function* () {
+          const session = yield* this.#getSession();
+          yield* session.submitPrompt(createPromptContent(requestProp));
+        }).pipe(Effect.provide(this._spaceLayer)),
+      );
+    } catch (err) {
+      log.error('enqueue failed', { error: err });
+      this.#registry.set(this.error, Option.some(parseError(err)));
     }
   }
 
@@ -452,19 +495,36 @@ export class AiChatProcessor {
       log.warn('failed to observe agent turn', { error: err });
     } finally {
       this.#registry.set(this.active, false);
+      this.#registry.set(this.activity, undefined);
       this.#observeFiber = undefined;
     }
   }
 
   /**
-   * Resolves the agent session for this chat's feed, reusing the process a previous mount left
-   * running and spawning one only when there is none.
+   * Resolves the agent session for this chat, reusing the process a previous mount left running and
+   * spawning one only when there is none.
    */
-  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService> {
-    return AgentService.getSession(this._feed, {
-      model: this._options.model,
-      provider: this._options.provider,
-      instructions: this._options.chat?.target?.instructions,
+  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService | Database.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const chat = this._options.chat?.target;
+      if (!chat) {
+        // The agent process is bound to a chat; a processor constructed without one has no
+        // conversation to run.
+        return yield* Effect.die(new Error('Chat processor requires a chat.'));
+      }
+      const selected = this._options.model;
+      if (!chat.model && selected) {
+        Obj.update(chat, (chat) => {
+          chat.model = Ref.fromURI(selected);
+        });
+      }
+      // The model is the chat's, so the provider has to be the one that serves THAT model: the
+      // configured provider can have moved on since the chat made its selection.
+      const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? selected;
+      return yield* AgentService.getSession(chat, {
+        provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
+        location: chat.remote ? 'edge' : 'local',
+      });
     });
   }
 
@@ -477,9 +537,11 @@ export class AiChatProcessor {
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
-            if (Trace.isOfType(PartialBlock, event)) {
+            if (Trace.isOfType(Trace.PartialBlock, event)) {
               this.#handleEphemeralMessage(event.data);
-            } else if (Trace.isOfType(McpServerError, event)) {
+            } else if (Trace.isOfType(Trace.RequestPhase, event)) {
+              this.#registry.set(this.activity, event.data);
+            } else if (Trace.isOfType(Trace.McpServerError, event)) {
               this.#handleMcpError(event.data);
             }
           }
@@ -500,7 +562,10 @@ export class AiChatProcessor {
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-        const session = yield* AgentService.getSession(this._feed);
+        // Same options as `request`: looked up bare, a differing model/provider/instructions reads as
+        // a reconfiguration, which tears down the running process and spawns a replacement purely to
+        // terminate it again.
+        const session = yield* this.#getSession();
         yield* session.terminate();
       }).pipe(Effect.provide(this._spaceLayer)),
     );
@@ -549,7 +614,12 @@ export class AiChatProcessor {
    * against messages already written to the feed queue to handle the race between
    * ephemeral delivery and feed replication.
    */
-  #handleEphemeralMessage(event: Trace.PayloadType<typeof PartialBlock>) {
+  #handleEphemeralMessage(event: Trace.PayloadType<typeof Trace.PartialBlock>) {
+    // Content arriving is what "generating" means, and deriving it here keeps it out of the agent's
+    // streaming pipeline, where the extra yield a trace write costs is observable to the turn's
+    // tools. A tool call the agent reports supersedes it for as long as the tool runs.
+    this.#registry.set(this.activity, { phase: 'generating' });
+
     const isPending = event.block.pending;
     const message = Obj.make(Message.Message, {
       id: event.messageId,
@@ -587,7 +657,7 @@ export class AiChatProcessor {
    * Records a per-server MCP failure, deduped by url+protocol so repeat misconfigurations
    * across turns do not spam the UI.
    */
-  #handleMcpError(event: Trace.PayloadType<typeof McpServerError>) {
+  #handleMcpError(event: Trace.PayloadType<typeof Trace.McpServerError>) {
     log.warn('MCP server error', event);
     this.#registry.update(this.mcpErrors, (errors) => {
       if (errors.some((existing) => existing.url === event.url && existing.protocol === event.protocol)) {
@@ -602,6 +672,7 @@ export class AiChatProcessor {
    */
   #discardStreaming() {
     this.#registry.set(this.#streaming, []);
+    this.#registry.set(this.activity, undefined);
     this.#finalizedIds.clear();
   }
 
@@ -609,6 +680,7 @@ export class AiChatProcessor {
    * Move remaining streaming messages to pending (called when agent completes).
    */
   #flushStreaming() {
+    this.#registry.set(this.activity, undefined);
     const remaining = this.#registry.get(this.#streaming);
     if (remaining.length > 0) {
       this.#registry.update(this.#pending, (pending) => [...pending, ...remaining]);

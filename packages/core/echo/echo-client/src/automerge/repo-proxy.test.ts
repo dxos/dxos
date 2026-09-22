@@ -8,11 +8,12 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
+import * as EffectStream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-host';
+import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -22,9 +23,25 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createTmpPath } from '../testing';
-import { type DocHandleProxy } from './doc-handle-proxy';
-import { RepoProxy } from './repo-proxy';
+import { EchoClientError } from '../errors.ts';
+import { createTmpPath } from '../testing/index.ts';
+import { type DocHandleProxy } from './doc-handle-proxy.ts';
+import { RepoProxy } from './repo-proxy.ts';
+
+/** True once the handle's current heads have been written to the host's on-disk heads store. */
+const documentHeadsPersisted = async <T>(host: AutomergeHost, handle: DocHandleProxy<T>): Promise<boolean> => {
+  const doc = handle.doc();
+  if (!doc || !handle.documentId) {
+    return false;
+  }
+  const currentHeads = A.getHeads(doc);
+  for await (const { documentId, heads } of host.listDocumentHeads()) {
+    if (documentId === handle.documentId && A.equals(heads, currentHeads)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {
@@ -114,6 +131,44 @@ describe('RepoProxy', () => {
       await receivedChange.wait();
       expect(handle1.doc().text).to.equal(text);
     }
+  });
+
+  test('a change the host delivers is not an unsaved change', async () => {
+    const peer1 = await setup();
+    const [repo1] = createProxyRepos(peer1.dataService);
+    await openAndClose(repo1);
+
+    const peer2 = await setup();
+    const [repo2] = createProxyRepos(peer2.dataService);
+    await openAndClose(repo2);
+    const network = await new TestReplicationNetwork().open();
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+
+    const handle1 = repo1.create<{ text: string }>({ text: 'one' });
+    await handle1.whenReady();
+    await repo1.flush();
+    const handle2 = repo2.find<{ text: string }>(handle1.url!);
+    await handle2.whenReady();
+    await peer1.host.flush(Context.default());
+
+    const saveStates: string[][] = [];
+    repo1.saveStateChanged.on(({ unsavedDocuments }) => {
+      saveStates.push(unsavedDocuments);
+    });
+    const receivedChange = new Trigger();
+    handle1.once('change', () => receivedChange.wake());
+    handle2.change((doc: any) => {
+      doc.text = 'two';
+    });
+    await receivedChange.wait();
+    expect(handle1.doc().text).to.equal('two');
+    expect(saveStates).to.deep.equal([]);
+
+    handle1.change((doc: any) => {
+      doc.text = 'three';
+    });
+    expect(saveStates).to.deep.equal([[handle1.documentId]]);
   });
 
   test('load document from disk', async () => {
@@ -229,7 +284,8 @@ describe('RepoProxy', () => {
 
       const text = 'Hello World!';
       const clientHandle = clientRepo.create<{ text: string }>({ text: text });
-      await sleep(200); // Wait for the object to be saved without flush.
+      // Wait for the background auto-save to persist the object's heads without an explicit flush.
+      await waitForCondition({ condition: () => documentHeadsPersisted(host, clientHandle), timeout: 2_000 });
       url = clientHandle.url!;
       await host.close();
       await clientRepo.close();
@@ -250,6 +306,54 @@ describe('RepoProxy', () => {
     }
   });
 
+  test('flush throws while the host refuses to create a document', { timeout: 5_000 }, async () => {
+    const { dataService } = await setup(undefined, (props) => new RefusingDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    // Closing settles the handle rather than leaving `whenReady` pending forever.
+    await clientRepo.close();
+    await expect(handle.whenReady()).rejects.toThrow('document creation refused');
+  });
+
+  test('a document the host failed to create is created by the next flush', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService, host } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'retried' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+
+    refusing.refuse = false;
+    await clientRepo.flush();
+    await handle.whenReady();
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+    invariant(hostHandle);
+    expect(hostHandle.doc()?.text).toEqual('retried');
+  });
+
+  test('a document deleted before the host created it is not requested again', { timeout: 5_000 }, async () => {
+    let refusing: RefusingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
+    invariant(refusing);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'deleted' });
+    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+    const requests = refusing.requests;
+
+    handle.delete();
+    refusing.refuse = false;
+    await clientRepo.flush();
+    expect(refusing.requests).toEqual(requests);
+  });
+
   test('document mutation persists with `flush`', async () => {
     const dbPath = createTmpPath();
     let url: AutomergeUrl;
@@ -266,7 +370,8 @@ describe('RepoProxy', () => {
       await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url!;
-      await sleep(200); // Wait for the object to be saved without flush.
+      // Wait for the background auto-save to persist the mutation's heads without an explicit flush.
+      await waitForCondition({ condition: () => documentHeadsPersisted(host, clientHandle), timeout: 2_000 });
       await host.close();
       await clientRepo.close();
       await dispose();
@@ -438,9 +543,144 @@ describe('RepoProxy', () => {
       await expect.poll(async () => handle.doc()?.text2, { timeout: 1000 }).toEqual(text2);
     }
   });
+
+  test('integrates a large host batch in order, yielding between slices', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    // Enough Automerge loading that one batch cannot fit in a single slice.
+    const count = 300;
+    const handles = Array.from({ length: count }, () => clientRepo.create<{ text: string }>());
+    await Promise.all(handles.map((handle) => handle.whenReady()));
+    // A host batch arrives only once the host holds the subscription, and an injected one wakes the client as if it did.
+    await clientRepo.flush();
+    const payload = 'x'.repeat(4_000);
+    const updates = handles.map((handle) => {
+      const documentId = handle.documentId;
+      invariant(documentId);
+      return { documentId, mutation: A.save(A.from({ text: payload })) };
+    });
+
+    const integrated: number[] = [];
+    const allIntegrated = new Trigger();
+    handles.forEach((handle, index) =>
+      handle.on('change', () => {
+        integrated.push(index);
+        if (integrated.length === count) {
+          allIntegrated.wake();
+        }
+      }),
+    );
+
+    // A turn of the event loop taken while the batch is still being integrated is the yield.
+    let integratedWhenLoopTurned = -1;
+    void yieldToEventLoop().then(() => {
+      integratedWhenLoopTurned = integrated.length;
+    });
+    clientRepo._receiveUpdate({ updates });
+    expect(integrated.length).toBeGreaterThan(0);
+    expect(integrated.length).toBeLessThan(count);
+
+    await allIntegrated.wait({ timeout: 5_000 });
+    expect(integrated).toEqual(handles.map((_, index) => index));
+    expect(integratedWhenLoopTurned).toBeGreaterThan(0);
+    expect(integratedWhenLoopTurned).toBeLessThan(count);
+  });
+
+  test('re-subscribes after the host drops the subscription', async () => {
+    const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
+
+    droppable.dropSubscription.wake();
+    await expect.poll(() => droppable.subscribeCount, { timeout: 5000 }).toEqual(2);
+
+    const text = 'Hello World!';
+    clientHandle.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+    await clientRepo.flush();
+
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
+  });
+
+  test('flush during a dropped subscription delivers the write', async () => {
+    const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
+
+    // Race the write against subscription recovery: `flush` must not resolve until the replacement
+    // subscription has taken the mutation, since a short-lived writer closes right after it.
+    droppable.dropSubscription.wake();
+    const text = 'written mid-drop';
+    clientHandle.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+    await clientRepo.flush();
+
+    // No polling: `flush` resolving is the delivery guarantee under test.
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    expect(hostHandle.doc()?.text).toEqual(text);
+  });
 });
 
-const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime']) => {
+/**
+ * A repo whose document handle is registered with a first subscription that
+ * {@link DroppableDataService.dropSubscription} ends on demand.
+ */
+const setupWithDroppableSubscription = async () => {
+  let droppable: DroppableDataService | undefined;
+  const { dataService, host } = await setup(undefined, (props) => (droppable = new DroppableDataService(props)));
+  invariant(droppable);
+
+  const [clientRepo] = createProxyRepos(dataService);
+  await openAndClose(clientRepo);
+
+  const clientHandle = clientRepo.create<{ text: string }>();
+  await clientHandle.whenReady();
+  await clientRepo.flush();
+
+  return { droppable, host, clientRepo, clientHandle };
+};
+
+/** Fails every document creation, as a host that is gone or refuses the call does. */
+class RefusingDataService extends DataServiceImpl {
+  'refuse' = true;
+  'requests' = 0;
+
+  override ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+    this.requests++;
+    return this.refuse
+      ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
+      : super['DataService.createDocument'](request);
+  }
+}
+
+/**
+ * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the
+ * subscription while the client stays connected — the shape that made every later call on that
+ * subscription id fail with "Subscription not found".
+ */
+class DroppableDataService extends DataServiceImpl {
+  readonly 'dropSubscription' = new Trigger();
+  'subscribeCount' = 0;
+
+  override ['DataService.subscribe'](request: DataService.SubscribeRequest) {
+    const stream = super['DataService.subscribe'](request);
+    return this.subscribeCount++ === 0
+      ? stream.pipe(EffectStream.interruptWhen(Effect.promise(() => this.dropSubscription.wait())))
+      : stream;
+  }
+}
+
+const setup = async (
+  runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime'],
+  createDataService: (props: DataServiceProps) => DataService.Handlers = (props) => new DataServiceImpl(props),
+) => {
   if (!runtime) {
     const handle = createTestSqliteRuntime();
     onTestFinished(() => handle.dispose());
@@ -449,7 +689,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   const host = new AutomergeHost({ runtime });
   await openAndClose(host);
 
-  const dataServiceImpl = new DataServiceImpl({
+  const dataServiceImpl = createDataService({
     automergeHost: host,
     spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
@@ -458,7 +698,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
       documents: 0,
       feeds: 0,
       feedBlocks: 0,
-      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0 },
+      loaded: { documents: 0, documentsTotal: 0, queriesTotal: 0, leases: 0 },
     }),
     runGarbageCollection: async () => ({
       unlinkedObjects: 0,

@@ -18,7 +18,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -148,6 +149,7 @@ export default Capability.makeModule(
       // Don't show assistant companion when a chat is already the primary object.
       AppGraphBuilder.createExtension({
         id: 'companionChat',
+        relation: AppNode.companion,
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
@@ -185,6 +187,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'invocations',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenAny(
           AppNodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
           AppNodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
@@ -202,6 +205,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'trace',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -211,6 +215,7 @@ export default Capability.makeModule(
               icon: 'ph--line-segments--regular',
               data: 'trace',
               position: Position.last,
+              mount: 'always',
             }),
           ]),
       }),

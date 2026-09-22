@@ -3,12 +3,15 @@
 //
 
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { TestStreamService as TestStreamServiceDesc } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-import { Channels } from './channels';
-import { TestClient } from './test-client';
+import { Channels } from './channels.ts';
+import { TestClient } from './test-client.ts';
+
+type TestStreamService = BufService<typeof TestStreamServiceDesc>;
 
 const clientOne = new TestClient();
 const clientTwo = new TestClient({ value: 10050 });
@@ -25,7 +28,7 @@ const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
 
   const server = createProtoRpcPeer({
     exposed: {
-      TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+      TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
     },
     handlers: client.handlers,
     port,

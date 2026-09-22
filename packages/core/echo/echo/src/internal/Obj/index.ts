@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './common';
-export * from './create-object';
-export * from './deleted';
-export * from './json-serializer';
-export * from './parent-annotation';
-export * from './set-value';
-export * from './snapshot';
-export * from './typed-object';
-export * from './atoms';
-export * from './clone';
+export * from './common.ts';
+export * from './create-object.ts';
+export * from './deleted.ts';
+export * from './json-serializer.ts';
+export * from './parent-annotation.ts';
+export * from './set-value.ts';
+export * from './snapshot.ts';
+export * from './typed-object.ts';
+export * from './atoms.ts';
+export * from './clone.ts';

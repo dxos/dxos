@@ -8,7 +8,7 @@ import { Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { makeDatabaseLookup } from './lookup';
+import { makeDatabaseLookup } from './lookup.ts';
 
 describe('makeDatabaseLookup', () => {
   let builder: EchoTestBuilder;
@@ -24,7 +24,8 @@ describe('makeDatabaseLookup', () => {
     // Both an organization and a person share the surface noun.
     db.add(Obj.make(Organization.Organization, { name: 'Mercury' }));
     db.add(Obj.make(Person.Person, { fullName: 'Mercury' }));
-    await db.flush({ indexes: true });
+    // The lookup searches the full-text index, which lags the indexing pass until a flush drains it.
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const lookup = makeDatabaseLookup(db);
 

@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -9,17 +11,23 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer, AnswerSchema, CloseSchema, OfferSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
-import { type TransportFactory } from '../transport';
-import { type WireProtocolProvider } from '../wire-protocol';
-import { Connection, ConnectionState } from './connection';
-import { type ConnectionLimiter } from './connection-limiter';
+import { type CloseMessage, type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal/index.ts';
+import { type TransportFactory } from '../transport/index.ts';
+import { type WireProtocolProvider } from '../wire-protocol.ts';
+import { type ConnectionLimiter } from './connection-limiter.ts';
+import { Connection, ConnectionState } from './connection.ts';
 
 export class ConnectionDisplacedError extends SystemError {
   constructor() {
     super({ message: 'Connection displaced by remote initiator.' });
+  }
+}
+
+export class SessionClosedByRemoteError extends SystemError {
+  constructor(reason: string) {
+    super({ message: `Session closed by the remote peer: ${reason}` });
   }
 }
 
@@ -113,7 +121,7 @@ export class Peer {
       ![ConnectionState.CREATED, ConnectionState.INITIAL, ConnectionState.CONNECTING].includes(this.connection.state)
     ) {
       log.info(`received offer when connection already in ${this.connection.state} state`);
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
     // Check if we are already trying to connect to that peer.
     if (this.connection || this.initiating) {
@@ -134,7 +142,7 @@ export class Peer {
         }
       } else {
         // Continue with our origination attempt, the remote peer will close its connection and accept ours.
-        return { accept: false };
+        return create(AnswerSchema, { accept: false });
       }
     }
 
@@ -158,11 +166,11 @@ export class Peer {
           await this.closeConnection(err);
         }
 
-        return { accept: true };
+        return create(AnswerSchema, { accept: true });
       }
     }
 
-    return { accept: false };
+    return create(AnswerSchema, { accept: false });
   }
 
   /**
@@ -187,7 +195,7 @@ export class Peer {
         recipient: this.remoteInfo,
         sessionId,
         topic: this.topic,
-        data: { offer: {} },
+        data: { offer: create(OfferSchema, {}) },
       });
       log('received', { answer, topic: this.topic, local: this.localInfo, remote: this.remoteInfo });
       if (connection.state !== ConnectionState.INITIAL) {
@@ -255,6 +263,7 @@ export class Peer {
     });
     invariant(!this.connection, 'Already connected.');
 
+    let connected = false;
     const connection = new Connection(
       this.topic,
       this.localInfo,
@@ -272,6 +281,7 @@ export class Peer {
       this._transportFactory,
       {
         onConnected: () => {
+          connected = true;
           this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
@@ -301,6 +311,15 @@ export class Peer {
             sessionId,
             initiator,
           });
+
+          // The remote otherwise waits out its transport timeout on a session only this side knows is over.
+          if (
+            !connected &&
+            !(err instanceof ConnectionDisplacedError) &&
+            !(err instanceof SessionClosedByRemoteError)
+          ) {
+            this._announceClose(sessionId, err);
+          }
 
           if (err instanceof ConnectionDisplacedError) {
             this.connectionDisplaced.emit(this.connection);
@@ -336,6 +355,11 @@ export class Peer {
     this._connectionCtx = this._ctx.derive();
 
     connection.errors.handle((err) => {
+      if (this.connection !== connection) {
+        log('error from a connection this peer no longer holds', { sessionId, err });
+        return;
+      }
+
       log.info('connection error, closing', {
         topic: this.topic,
         peerId: this.localInfo,
@@ -377,6 +401,25 @@ export class Peer {
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
 
+  async onClose(_ctx: Context, message: CloseMessage): Promise<void> {
+    if (!this.connection?.sessionId.equals(message.sessionId)) {
+      log('dropping close for a session not in progress', { sessionId: message.sessionId });
+      return;
+    }
+
+    // The remote only announces a session that died before connecting; once connected, its own close ends it.
+    if (
+      ![ConnectionState.CREATED, ConnectionState.INITIAL, ConnectionState.CONNECTING].includes(this.connection.state)
+    ) {
+      log('dropping close for a session that already connected', { sessionId: message.sessionId });
+      return;
+    }
+
+    const reason = message.data.close.reason;
+    log.info('remote peer closed the session before it connected', { sessionId: message.sessionId, reason });
+    await this.closeConnection(new SessionClosedByRemoteError(reason));
+  }
+
   async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
     if (!this.connection) {
       log('dropping signal message for non-existent connection', { message });
@@ -393,6 +436,22 @@ export class Peer {
 
     // Won't throw.
     await this?.connection?.close({ reason });
+  }
+
+  /**
+   * Sent on this peer's context, so a peer being destroyed announces nothing: leaving the swarm already
+   * tells the remote the session is over.
+   */
+  private _announceClose(sessionId: PublicKey, err?: Error): void {
+    this._signalMessaging
+      .close(this._ctx, {
+        author: this.localInfo,
+        recipient: this.remoteInfo,
+        topic: this.topic,
+        sessionId,
+        data: { close: create(CloseSchema, { reason: err?.message ?? 'transport closed' }) },
+      })
+      .catch((err) => log('session close not delivered', { sessionId, err }));
   }
 }
 

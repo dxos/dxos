@@ -2,30 +2,47 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Transform } from 'node:stream';
+import { create } from '@bufbuild/protobuf';
 
 import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions } from './transport';
+import {
+  type Transport,
+  TRANSPORT_CONNECTION_TIMEOUT,
+  type TransportFactory,
+  type TransportOptions,
+} from './transport.ts';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
 
+/** Leaves the wait for a remote signal to report its own cause before `Connection` aborts. */
+const ABORT_MARGIN = 1_000;
+
+const REMOTE_SIGNAL_TIMEOUT = TRANSPORT_CONNECTION_TIMEOUT - ABORT_MARGIN;
+
+/**
+ * Grace period for in-flight chunks to reach the peer before the pipes are detached.
+ * Aborting outright discards whatever the delay transform is holding, which loses the peer's RPC
+ * `bye` and leaves its graceful close waiting out the full timeout.
+ */
+const PIPE_DRAIN_TIMEOUT = 100;
+
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
-  return new Transform({
-    objectMode: true,
-    transform: (chunk, _, cb) => {
-      setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
+const createStreamDelay = (delay: number): TransformStream<Uint8Array, Uint8Array> => {
+  return new TransformStream({
+    transform: async (chunk, controller) => {
+      await new Promise((resolve) => setTimeout(resolve, delay)); // TODO(burdon): Randomize.
+      controller.enqueue(chunk);
     },
   });
 };
@@ -48,6 +65,11 @@ export class MemoryTransport implements Transport {
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
+  private _pipes: Promise<void>[] = [];
+  // Detaches both pipe directions without ending either peer's wire-protocol stream: the streams
+  // outlive the transport and the peer's must survive our close. Re-made on every connect, since an
+  // AbortController is single-use.
+  private _abort = new AbortController();
 
   private _closed = false;
 
@@ -77,7 +99,7 @@ export class MemoryTransport implements Transport {
     if (this._options.initiator) {
       log('sending signal');
       try {
-        await this._options.sendSignal({ payload: { transportId: this._instanceId.toHex() } });
+        await this._options.sendSignal(create(SignalSchema, { payload: { transportId: this._instanceId.toHex() } }));
       } catch (err) {
         if (!this._closed) {
           this.errors.raise(toError(err));
@@ -86,7 +108,7 @@ export class MemoryTransport implements Transport {
     } else {
       // Don't block the open method.
       this._remote
-        .wait({ timeout: this._options.timeout ?? 1_000 })
+        .wait({ timeout: this._options.timeout ?? REMOTE_SIGNAL_TIMEOUT })
         .then((remoteId) => {
           if (this._closed) {
             return;
@@ -106,11 +128,19 @@ export class MemoryTransport implements Transport {
           this._remoteConnection._remoteInstanceId = this._instanceId;
 
           log('connected');
-          this._options.stream
-            .pipe(this._outgoingDelay)
-            .pipe(this._remoteConnection._options.stream)
-            .pipe(this._incomingDelay)
-            .pipe(this._options.stream);
+          const remote = this._remoteConnection;
+          this._abort = new AbortController();
+          const detach = { signal: this._abort.signal, preventCancel: true, preventClose: true, preventAbort: true };
+          this._pipes = [
+            this._options.stream.readable
+              .pipeThrough(this._outgoingDelay, detach)
+              .pipeTo(remote._options.stream.writable, detach),
+            remote._options.stream.readable
+              .pipeThrough(this._incomingDelay, detach)
+              .pipeTo(this._options.stream.writable, detach),
+          ];
+          // A closed peer aborts these pipes; that is the normal end of the connection, not a fault.
+          this._pipes.forEach((pipe) => void pipe.catch((err) => log('memory transport pipe ended', { err })));
 
           this.connected.emit();
           this._remoteConnection.connected.emit();
@@ -129,28 +159,39 @@ export class MemoryTransport implements Transport {
   async close(): Promise<this> {
     log('closing...');
     this._closed = true;
+    this._remote.throw(new Error('Transport closed before the remote signal arrived.'));
 
     MemoryTransport._connections.delete(this._instanceId);
     if (this._remoteConnection) {
       this._remoteConnection._closed = true;
       MemoryTransport._connections.delete(this._remoteInstanceId);
 
-      // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
-      //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
-      // code this._stream
-      // code   .unpipe(this._outgoingDelay)
-      // code   .unpipe(this._remoteConnection._stream)
-      // code   .unpipe(this._incomingDelay)
-      // code   .unpipe(this._stream);
+      // Detach both directions. Cancelling the readables instead would destroy the wire-protocol
+      // streams — including the peer's — where the `unpipe` this replaced only detached them.
+      // Only the peer that won the connect race holds the pipes, and either peer may close first,
+      // so both sides are torn down here rather than whichever one `close()` was called on.
+      const remote = this._remoteConnection;
+      const pipes = [...this._pipes, ...remote._pipes];
+      this._pipes = [];
+      remote._pipes = [];
 
-      this._options.stream.unpipe(this._incomingDelay);
-      this._incomingDelay.unpipe(this._remoteConnection._options.stream);
-      this._remoteConnection._options.stream.unpipe(this._outgoingDelay);
-      this._outgoingDelay.unpipe(this._options.stream);
-      this._options.stream.unpipe(this._outgoingDelay);
+      // Empty means the peer closed first and is draining these same pipes; aborting here would cut
+      // that drain short, which is the loss the grace period exists to prevent.
+      if (pipes.length > 0) {
+        let drainTimer: NodeJS.Timeout | undefined;
+        await Promise.race([
+          Promise.allSettled(pipes),
+          new Promise((resolve) => {
+            drainTimer = setTimeout(resolve, PIPE_DRAIN_TIMEOUT);
+          }),
+        ]);
+        clearTimeout(drainTimer);
+        this._abort.abort();
+        remote._abort.abort();
+      }
 
-      this._remoteConnection.closed.emit();
-      this._remoteConnection._remoteConnection = undefined;
+      remote.closed.emit();
+      remote._remoteConnection = undefined;
       this._remoteConnection = undefined;
     }
 

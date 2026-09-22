@@ -8,11 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Type from './Type.ts';
 
 /**
  * A an ordered set of objects.

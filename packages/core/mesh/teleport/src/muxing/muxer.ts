@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 
 import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -11,15 +11,15 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { TimeoutError } from '@dxos/protocols';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
-import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
+import {
+  type ConnectionInfo_StreamStats,
+  ConnectionInfo_StreamStatsSchema,
+} from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Command, CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 
-import { Balancer } from './balancer';
-import { type RpcPort } from './rpc-port';
-
-const Command = compatCodec<Command>(CommandSchema);
+import { Balancer } from './balancer.ts';
+import { type DuplexStream } from './duplex-stream.ts';
+import { type RpcPort } from './rpc-port.ts';
 
 const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
 const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;
@@ -39,7 +39,7 @@ export type CreateChannelOpts = {
 
 export type MuxerStats = {
   timestamp: number;
-  channels: ConnectionInfo.StreamStats[];
+  channels: ConnectionInfo_StreamStats[];
   bytesSent: number;
   bytesReceived: number;
   bytesSentRate?: number;
@@ -67,6 +67,11 @@ type Channel = {
    */
   remoteId: null | number;
 
+  /**
+   * Set by the first OpenChannel from the remote, which flushes the send buffer; later ones are ignored.
+   */
+  remoteOpened: boolean;
+
   contentType?: string;
 
   /**
@@ -75,7 +80,12 @@ type Channel = {
   buffer: Uint8Array[];
 
   /**
-   * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
+   * Settles once the buffer handed over when the remote opened the channel has gone out.
+   */
+  flushing?: Promise<void>;
+
+  /**
+   * Set when we initialize a duplex stream or an RPC port consuming the channel.
    */
   push: null | ((data: Uint8Array) => void);
 
@@ -121,12 +131,17 @@ export class Muxer {
   public afterClosed = new Event<Error | undefined>();
   public statsUpdated = new Event<MuxerStats>();
 
-  public readonly stream = this._balancer.stream;
+  public readonly stream: DuplexStream = this._balancer.stream;
+
+  /**
+   * Emitted when the underlying byte pipe ends, carrying the error that ended it if there was one.
+   */
+  public readonly closed = this._balancer.closed;
 
   constructor() {
     // Add a channel for control messages.
     this._balancer.incomingData.on(async (msg) => {
-      await this._handleCommand(Command.decode(msg));
+      await this._handleCommand(fromBinary(CommandSchema, msg));
     });
   }
 
@@ -140,55 +155,76 @@ export class Muxer {
   }
 
   /**
-   * Creates a duplex Node.js-style stream.
+   * Creates a duplex byte stream over a channel.
    * The remote peer is expected to call `createStream` with the same tag.
    * The stream is immediately readable and writable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
-  async createStream(tag: string, opts: CreateChannelOpts = {}): Promise<Duplex> {
+  async createStream(tag: string, opts: CreateChannelOpts = {}): Promise<DuplexStream> {
     const channel = this._getOrCreateStream({
       tag,
       contentType: opts.contentType,
     });
     invariant(!channel.push, `Channel already open: ${tag}`);
 
-    const stream = new Duplex({
-      write: (data, encoding, callback) => {
-        this._sendData(channel, data)
-          .then(() => callback())
-          .catch(callback);
-        // TODO(dmaretskyi): Should we error if sending data has errored?
+    let controller: ReadableStreamDefaultController<Uint8Array>;
+    let readableClosed = false;
+    let err: Error | undefined;
+    const readable = new ReadableStream<Uint8Array>({
+      start: (ctrl) => {
+        controller = ctrl;
       },
-      read: () => {}, // No-op. We will push data when we receive it.
+      cancel: () => {
+        readableClosed = true;
+      },
+    });
+
+    let destroyed = false;
+    const writable = new WritableStream<Uint8Array>({
+      write: async (data) => {
+        if (destroyed) {
+          // Only a faulted channel fails the write. A graceful destroy is an end-of-stream, and
+          // throwing there would report an ordinary close as a replication error.
+          if (err) {
+            throw err;
+          }
+
+          return;
+        }
+        await this._sendData(channel, data);
+      },
     });
 
     channel.push = (data) => {
       channel.stats.bytesReceived += data.length;
-      stream.push(data);
+      if (!readableClosed) {
+        controller.enqueue(data);
+      }
     };
-    channel.destroy = (err) => {
-      // TODO(dmaretskyi): Call stream.end() instead?
-      if (err) {
-        if (stream.listeners('error').length > 0) {
-          stream.destroy(err);
-        } else {
-          stream.destroy();
-        }
+    channel.destroy = (error) => {
+      // Both halves end: a producer piping into a destroyed channel otherwise never finds out.
+      destroyed = true;
+      err = error;
+      if (readableClosed) {
+        return;
+      }
+      readableClosed = true;
+      if (error) {
+        controller.error(error);
       } else {
-        stream.destroy();
+        controller.close();
       }
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
     try {
       await this._sendCommand(
-        {
-          openChannel: {
-            id: channel.id,
-            tag: channel.tag,
-            contentType: channel.contentType,
+        create(CommandSchema, {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
           },
-        },
+        }),
         SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
@@ -196,7 +232,7 @@ export class Muxer {
       throw err;
     }
 
-    return stream;
+    return { readable, writable };
   }
 
   /**
@@ -242,13 +278,12 @@ export class Muxer {
     // NOTE: Make sure channel.push is set before sending the command.
     try {
       await this._sendCommand(
-        {
-          openChannel: {
-            id: channel.id,
-            tag: channel.tag,
-            contentType: channel.contentType,
+        create(CommandSchema, {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
           },
-        },
+        }),
         SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
@@ -274,11 +309,7 @@ export class Muxer {
     this._closing = true;
 
     await this._sendCommand(
-      {
-        close: {
-          error: err?.message,
-        },
-      },
+      create(CommandSchema, { payload: { case: 'close', value: { error: err?.message } } }),
       SYSTEM_CHANNEL_ID,
       DESTROY_COMMAND_SEND_TIMEOUT,
     ).catch(async (err: any) => {
@@ -311,12 +342,9 @@ export class Muxer {
       // as a courtesy to the peer, send destroy command but ignore errors sending
 
       await this._sendCommand(
-        {
-          close: {
-            error: err?.message,
-          },
-        },
+        create(CommandSchema, { payload: { case: 'close', value: { error: err?.message } } }),
         SYSTEM_CHANNEL_ID,
+        DESTROY_COMMAND_SEND_TIMEOUT,
       ).catch(async (err: any) => {
         log('error sending courtesy close command', { err });
       });
@@ -358,7 +386,7 @@ export class Muxer {
       return;
     }
 
-    if (cmd.close) {
+    if (cmd.payload.case === 'close') {
       if (!this._closing) {
         log('received peer close, initiating my own graceful close');
         await this.close(new Error('received peer close'));
@@ -369,45 +397,73 @@ export class Muxer {
       return;
     }
 
-    if (cmd.openChannel) {
+    if (cmd.payload.case === 'openChannel') {
       const channel = this._getOrCreateStream({
-        tag: cmd.openChannel.tag,
-        contentType: cmd.openChannel.contentType,
+        tag: cmd.payload.value.tag,
+        contentType: cmd.payload.value.contentType,
       });
-      channel.remoteId = cmd.openChannel.id;
-
-      // Flush any buffered data.
-      for (const data of channel.buffer) {
-        await this._sendCommand(
-          {
-            data: {
-              channelId: channel.remoteId!,
-              data,
-            },
-          },
-          channel.id,
-        );
+      const remoteId = cmd.payload.value.id;
+      // Only the first OpenChannel hands the buffer over; sending it again would duplicate every buffered frame.
+      if (channel.remoteOpened) {
+        return;
       }
+      channel.remoteOpened = true;
+
+      // The buffer goes to the balancer in one synchronous pass and `remoteId` is set before anything awaits, so later
+      // writes queue behind it. Each frame's deadline starts once the frame ahead has gone.
+      const sends = channel.buffer.map((data) =>
+        this._enqueueCommand(
+          create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
+          channel.id,
+        ),
+      );
       channel.buffer = [];
-    } else if (cmd.data) {
-      const stream = this._channelsByLocalId.get(cmd.data.channelId) ?? failUndefined();
+      channel.remoteId = remoteId;
+      const flushing = (async () => {
+        for (const send of sends) {
+          await this._awaitCommand(send);
+        }
+      })();
+      channel.flushing = flushing;
+      await flushing;
+      if (channel.flushing === flushing) {
+        channel.flushing = undefined;
+      }
+    } else if (cmd.payload.case === 'data') {
+      const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
       if (!stream.push) {
         log.warn('Received data for channel before it was opened', { tag: stream.tag });
         return;
       }
-      stream.push(cmd.data.data);
+      stream.push(cmd.payload.value.data);
     }
   }
 
   private async _sendCommand(cmd: Command, channelId = -1, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
+    await this._awaitCommand(this._enqueueCommand(cmd, channelId), timeout);
+  }
+
+  /** Hands a command to the balancer without waiting for it to go out; `undefined` once the muxer is disposed. */
+  private _enqueueCommand(cmd: Command, channelId: number): Trigger<void> | undefined {
     if (this._disposed) {
-      // log.info('ignoring sendCommand after disposed', { cmd });
+      return undefined;
+    }
+    const trigger = new Trigger<void>();
+    try {
+      this._balancer.pushData(toBinary(CommandSchema, cmd), trigger, channelId);
+    } catch (err: any) {
+      trigger.throw(err);
+    }
+    return trigger;
+  }
+
+  /** Waits for an enqueued command to go out, destroying the muxer if sending fails or times out. */
+  private async _awaitCommand(send: Trigger<void> | undefined, timeout = DEFAULT_SEND_COMMAND_TIMEOUT): Promise<void> {
+    if (!send) {
       return;
     }
     try {
-      const trigger = new Trigger<void>();
-      this._balancer.pushData(Command.encode(cmd), trigger, channelId);
-      await trigger.wait({ timeout });
+      await send.wait({ timeout });
     } catch (err: any) {
       await this.destroy(err);
     }
@@ -422,6 +478,7 @@ export class Muxer {
       channel = {
         id: this._nextId++,
         remoteId: null,
+        remoteOpened: false,
         tag: params.tag,
         contentType: params.contentType,
         buffer: [],
@@ -451,16 +508,13 @@ export class Muxer {
       channel.buffer.push(data);
       return;
     }
-    await this._sendCommand(
-      {
-        data: {
-          channelId: channel.remoteId,
-          data,
-        },
-      },
+    const send = this._enqueueCommand(
+      create(CommandSchema, { payload: { case: 'data', value: { channelId: channel.remoteId, data } } }),
       channel.id,
-      timeout,
     );
+    // The deadline covers this write's own send, not the backlog queued ahead of it at open.
+    await channel.flushing;
+    await this._awaitCommand(send, timeout);
   }
 
   private _destroyChannel(channel: Channel, err?: Error): void {
@@ -516,7 +570,7 @@ export class Muxer {
     this._lastStats = {
       timestamp: now,
       channels: Array.from(this._channelsByTag.values()).map((channel) => {
-        const stats: ConnectionInfo.StreamStats = {
+        const stats: ConnectionInfo_StreamStats = create(ConnectionInfo_StreamStatsSchema, {
           id: channel.id,
           tag: channel.tag,
           contentType: channel.contentType,
@@ -524,7 +578,7 @@ export class Muxer {
           bytesSent: channel.stats.bytesSent,
           bytesReceived: channel.stats.bytesReceived,
           ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
-        };
+        });
 
         this._lastChannelStats.set(channel.id, stats);
         return stats;
@@ -532,8 +586,8 @@ export class Muxer {
       bytesSent,
       bytesReceived,
       ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
-      readBufferSize: this._balancer.stream.readableLength,
-      writeBufferSize: this._balancer.stream.writableLength,
+      readBufferSize: this._balancer.readableLength,
+      writeBufferSize: this._balancer.writableLength,
     };
 
     this.statsUpdated.emit(this._lastStats);

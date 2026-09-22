@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './material';
+export * from './material.ts';

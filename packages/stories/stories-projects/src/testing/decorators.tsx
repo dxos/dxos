@@ -13,6 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { mockAiService } from '@dxos/extractor/testing';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Builder, InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -21,13 +22,15 @@ import { translations as projectsTranslations } from '@dxos/plugin-projects/tran
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TagIndex, Text } from '@dxos/schema';
 import { StoryAiPlugin, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { moduleSurfaces } from '../modules';
+import { moduleSurfaces } from '../modules/index.ts';
 
 /** Shared CSF parameters for this package's stories (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -37,6 +40,7 @@ export const storyParameters = {
     ...projectsTranslations,
     ...inboxTranslations,
     ...routineTranslations,
+    ...tasksTranslations,
     ...formTranslations,
     ...reactUiTranslations,
   ],
@@ -116,6 +120,9 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
       SpacePlugin({}),
       InboxPlugin(),
       ProjectsPlugin.make(),
+      // Both declared in Projects' `dependsOn`, so the manager refuses to resolve it without them.
+      AssistantPlugin.make(),
+      TasksPlugin.make(),
       RoutinePlugin.make(),
       makeModuleSurfacesPlugin('org.dxos.plugin.projects.story.modules', moduleSurfaces),
       ...(ai

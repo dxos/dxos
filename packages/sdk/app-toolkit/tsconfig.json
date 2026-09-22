@@ -27,9 +27,6 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keyboard"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -66,6 +63,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -82,6 +82,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../app-framework"

@@ -12,7 +12,7 @@ import { AccessToken, Connection } from '@dxos/link';
 
 import { ConnectorSpec } from '#types';
 
-import { CUSTOM_PROVIDER_ID } from '../constants';
+import { CUSTOM_PROVIDER_ID } from '../constants.ts';
 
 /** Default form for manually entered access tokens (custom connector). */
 const CustomTokenForm = Schema.Struct({

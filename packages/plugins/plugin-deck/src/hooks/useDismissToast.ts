@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useDeckState } from './useDeckState';
+import { useDeckState } from './useDeckState.ts';
 
 /**
  * Dismisses a toast by id. Shared by every root layout that renders the deck's toaster, since the
@@ -18,7 +18,7 @@ export const useDismissToast = (): ((id: string) => void) => {
       if (!state.toasts.some((toast) => toast.id === id)) {
         return;
       }
-      // Allow time for the toast exit animation (animate-toast-hide, 100ms) before unmounting.
+      // Allow time for the toast exit transition (`toast.css`, 150ms) before unmounting.
       // TODO(burdon): Factor out and unregister timeout.
       setTimeout(() => {
         // Re-resolve the toast by id inside the update: the toast list may have changed during

@@ -8,7 +8,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import * as Progress from './Progress';
+import * as Progress from './Progress.ts';
 
 /**
  * Overflow policy applied when a consumer cannot keep pace, mapped onto `Stream.buffer` strategies.

@@ -5,14 +5,14 @@
 import React, { useCallback, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { pingExtension } from '../../util';
+import { pingExtension } from '../../util/index.ts';
 
 type TestState =
   | { kind: 'idle' }
@@ -55,11 +55,15 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            description={t('settings.description')}
+            actions={readonly ? undefined : <SettingsScope prefix={subject.prefix} />}
+          >
+            <Form.Fields />
+          </Form.FieldSet>
 
-          <Form.Section title={t('test.title')}>
+          <Form.FieldSet label={t('test.title')}>
             <Flex gap='sm'>
               <IconButton
                 disabled={test.kind === 'pending'}
@@ -75,9 +79,9 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                   aria-live='polite'
                   className={
                     test.kind === 'ok'
-                      ? 'text-sm text-success'
+                      ? 'text-sm text-success-text'
                       : test.kind === 'error'
-                        ? 'text-sm text-error'
+                        ? 'text-sm text-error-text'
                         : 'text-sm text-description'
                   }
                 >
@@ -86,7 +90,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                 </span>
               </Flex>
             </Flex>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

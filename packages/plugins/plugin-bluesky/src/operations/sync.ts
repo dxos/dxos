@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -17,9 +18,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
-import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
-import { BlueskyApi } from '../services';
-import { SyncBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { SyncBlueskyTargets } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTargets.pipe(
   Operation.withHandler(
@@ -33,8 +34,9 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
           // and resolves the user's PDS once. Public XRPC reads (e.g.
           // `getAuthorFeed`) only need HttpClient and ignore the layer.
           syncBinding({ client, binding }).pipe(
-            Effect.provide(BlueskyApi.Credentials.fromAccessToken(binding.spec.source, client)),
-            Effect.provide(FetchHttpClient.layer),
+            Effect.provide(
+              Layer.provideMerge(BlueskyApi.fromAccessToken(binding.spec.source, client), FetchHttpClient.layer),
+            ),
           ),
       });
       return { appended: outputs.reduce((total, output) => total + output.appended, 0) };

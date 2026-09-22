@@ -17,7 +17,7 @@ import {
   showObservabilityBanner,
   storeObservabilityDisabled,
   storeObservabilityGroup,
-} from './node';
+} from './node.ts';
 
 let configDir: string;
 
@@ -113,6 +113,12 @@ describe('node storage', () => {
     expect(validateUuid(state.installationId)).toBe(true);
     // Reinitialized state uses env var defaults, not the persisted bad state.
     expect(state.disabled).toBe(false);
+  });
+
+  test('isObservabilityDisabled reports disabled when the state cannot be read', async () => {
+    await writeFile(configDir, '', 'utf-8');
+    const disabled = await isObservabilityDisabled(configDir);
+    expect(disabled).toBe(true);
   });
 
   test('showObservabilityBanner prints once then is silent', async () => {

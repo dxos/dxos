@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { buildEnrichPrompt, parseEnrichResponse } from '../testing/harness';
+import { buildEnrichPrompt, parseEnrichResponse } from '../testing/harness/index.ts';
 
 // Deterministic coverage for the single-pass enrichment prompt + parser — no fixture / model required
 // (the model-graded quality/latency comparison lives in the bench).

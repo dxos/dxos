@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './GridContext';
+export * from './GridContext.ts';
 
-export * from './Grid';
+export * from './Grid.tsx';

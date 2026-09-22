@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
-import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress';
+import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress/index.ts';
 
 /**
  * Reconciliation interval. The sync-state streams are the primary signal; a periodic re-read
@@ -49,11 +49,15 @@ export default Capability.makeModule(
     const registry = registryOption.value;
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
+    // The absolute synced count when each monitor opened: the run's baseline, so the meter and its
+    // ETA count what this run has done rather than everything the space had synced before it.
+    const baselines = new Map<string, number>();
 
     const applyMonitor = (key: string, update: MonitorUpdate | undefined): void => {
       if (update === undefined) {
         monitors.get(key)?.remove();
         monitors.delete(key);
+        baselines.delete(key);
         return;
       }
 
@@ -61,15 +65,15 @@ export default Capability.makeModule(
       if (!monitor) {
         monitor = registry.register(key, { label: update.label, total: update.total });
         monitors.set(key, monitor);
+        baselines.set(key, update.synced);
       }
       monitor.set(update.current);
       monitor.total(update.total);
-      monitor.note(update.note ?? '');
     };
 
     // A space that has not finished initializing throws from its `properties` getter, and the
-    // spaces subscription fires before initialization completes (startup, space creation) — so
-    // the name is read lazily per sync-state update, and only once the space is SPACE_READY.
+    // spaces subscription fires before initialization completes (startup, space creation) —
+    // so the name is read lazily per sync-state update, and only once the space is SPACE_READY.
     const getSpaceName = (space: Space): string | undefined =>
       space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
 
@@ -82,7 +86,8 @@ export default Capability.makeModule(
       }
 
       const key = createSpaceReplicationProgressKey(space.id);
-      const apply = (state: Database.SyncState) => applyMonitor(key, toSpaceUpdate(getSpaceName(space), state));
+      const apply = (state: Database.SyncState) =>
+        applyMonitor(key, toSpaceUpdate(getSpaceName(space), state, baselines.get(key)));
       const provide = ServiceResolver.provide({ space: space.id }, Database.Service);
 
       subscriptions.set(space.id, [
@@ -117,7 +122,7 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        for (const spaceId of [...subscriptions.keys()]) {
+        for (const spaceId of subscriptions.keys()) {
           unsubscribeSpace(spaceId);
         }
       }),
@@ -126,7 +131,7 @@ export default Capability.makeModule(
     // A departed space stops emitting sync state, so its monitor and fibers must be torn down here.
     const pruneSpaces = (spaces: readonly Space[]): void => {
       const live = new Set(spaces.map((space) => space.id));
-      for (const spaceId of [...subscriptions.keys()]) {
+      for (const spaceId of subscriptions.keys()) {
         if (!live.has(spaceId)) {
           unsubscribeSpace(spaceId);
         }

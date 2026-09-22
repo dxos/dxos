@@ -16,11 +16,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -79,10 +79,10 @@ service TranscriptionService
   ops:
     transcribe(url: string, lang: string) → Text
   note: |
-    HTTP GET https://transcription.dxos.network/video?url=<url>&lang=<lang>
+    HTTP GET <edge>/transcription/video?url=<url>&lang=<lang>
     Response: { success: boolean, result: { videoId, title, languageCode, generated, text } }.
-    lang defaults to "en". The worker sends no CORS headers, so the browser request is routed
-    through the EDGE CORS proxy via `proxyFetchLegacy` from @dxos/edge-client.
+    lang defaults to "en". Fetched directly: behind the EDGE entrypoint the response carries EDGE's
+    CORS headers, which the worker's own hostname did not send.
   errors:
     TranscriptionFailed: worker returned a non-2xx response, success=false, or empty text
 ```
@@ -228,7 +228,7 @@ feat F-6: Comments
 ## Acceptance
 
 ```mdl
-test T-1: Create video
+scenario T-1: Create video
   given: a new Video is created with name and url
   then:
     - Video.name and Video.url are set
@@ -236,13 +236,13 @@ test T-1: Create video
 ```
 
 ```mdl
-test T-2: Render embed player
+scenario T-2: Render embed player
   given: a Video with an embeddable url is opened in the article surface
   then: an iframe with the derived embed src is rendered
 ```
 
 ```mdl
-test T-3: Transcribe success
+scenario T-3: Transcribe success
   given: a Video with a url, EDGE worker returns { text }
   when: op:transcribeVideo is invoked
   then:
@@ -253,7 +253,7 @@ test T-3: Transcribe success
 ```
 
 ```mdl
-test T-4: Transcribe failure leaves video unchanged
+scenario T-4: Transcribe failure leaves video unchanged
   given: a Video with a url, EDGE worker returns a non-2xx response
   when: op:transcribeVideo is invoked
   then:
@@ -263,7 +263,7 @@ test T-4: Transcribe failure leaves video unchanged
 ```
 
 ```mdl
-test T-5: Open transcript
+scenario T-5: Open transcript
   given: a Video whose transcript is set, opened in the article surface
   then: an affordance to open the transcript target is shown
 ```
@@ -272,11 +272,11 @@ test T-5: Open transcript
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Add a video, transcribe it, and summarize it
+test QA-1: Add a video, transcribe it, and summarize it
   desc: The core video round-trip — create a Video, transcribe it via EDGE, then summarize the transcript.
   actors: human
   covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-3.3, F-4.1, F-4.2]
@@ -288,9 +288,9 @@ flow QA-1: Add a video, transcribe it, and summarize it
     - plugin-video is enabled — it ships only in the experimental set (also default-on under
       `isDev` labs); it is OFF by default in a preview/production build
     - AI/BYOK is configured in the host, or the summarize step is expected to fail per F-4
-    - no Video named "QA Video" exists — ABORT rather than deleting one this flow did not create
+    - no Video named "QA Video" exists — ABORT rather than deleting one this test did not create
     - url: a short, publicly reachable video URL with real speech (for the transcript to be non-empty)
-  test:
+  steps:
     - name: Create the video
       do: In the navtree, click + on a collection and choose Video. Name it "QA Video" and set its URL to `$given.url`.
       capture: created
@@ -298,7 +298,7 @@ flow QA-1: Add a video, transcribe it, and summarize it
       note: |
         NO `invoke` — there is no create operation, only the navtree factory
         (`capabilities/create-object.ts`'s `Video.make`); same finding as plugin-chess's
-        `startGame`. This is why the flow is `actors: human`.
+        `startGame`. This is why the test is `actors: human`.
     - name: Transcribe it
       do: Open "QA Video" and click Transcribe.
       invoke: [op:transcribeVideo] { video: $created.object }
@@ -337,7 +337,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -348,7 +348,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -357,8 +357,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

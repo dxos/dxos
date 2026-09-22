@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as XtermConsole from './console';
-import { TestBridge } from './testing';
+import * as XtermConsole from './console.ts';
+import { TestBridge } from './testing.ts';
 
 describe('console', () => {
   test('writes a line per log', async ({ expect }) => {

@@ -8,18 +8,18 @@ import { Event, Mutex, scheduleMicroTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from '@dxos/edge-client';
-import { type FeedWrapper } from '@dxos/feed-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
 export type EdgeFeedReplicatorProps = {
@@ -33,7 +33,7 @@ export class EdgeFeedReplicator extends Resource {
   @logInfo
   private readonly _spaceId: SpaceId;
 
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
+  private readonly _feeds = new ComplexMap<PublicKey, HypercoreWrapper<any>>(PublicKey.hash);
 
   private _connectionCtx?: Context = undefined;
   private _connected = false;
@@ -90,7 +90,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _handleReconnect(): Promise<void> {
     await this._resetConnection();
-    if (this._messenger.status.state === EdgeStatus.ConnectionState.CONNECTED) {
+    if (this._messenger.status.state === EdgeStatus_ConnectionState.CONNECTED) {
       this._startReplication();
     }
   }
@@ -120,8 +120,8 @@ export class EdgeFeedReplicator extends Resource {
     this._remoteLength.clear();
   }
 
-  async addFeed(feed: FeedWrapper<any>): Promise<void> {
-    log('addFeed', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
+  async addHypercore(feed: HypercoreWrapper<any>): Promise<void> {
+    log('addHypercore', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
     this._feeds.set(feed.key, feed);
 
     if (this._connected && this._connectionCtx) {
@@ -133,7 +133,7 @@ export class EdgeFeedReplicator extends Resource {
     return defaultMap(this._pushMutex, key, () => new Mutex());
   }
 
-  private async _replicateFeed(ctx: Context, feed: FeedWrapper<any>): Promise<void> {
+  private async _replicateFeed(ctx: Context, feed: HypercoreWrapper<any>): Promise<void> {
     log('replicateFeed', { key: feed.key });
     await this._sendMessage(ctx, {
       type: 'get-metadata',
@@ -233,7 +233,7 @@ export class EdgeFeedReplicator extends Resource {
     });
   }
 
-  private async _pushBlocks(ctx: Context, feed: FeedWrapper<any>, from: number, to: number): Promise<void> {
+  private async _pushBlocks(ctx: Context, feed: HypercoreWrapper<any>, from: number, to: number): Promise<void> {
     log('pushing blocks', { feed: feed.key.toHex(), from, to });
 
     const blocks: FeedBlock[] = await Promise.all(
@@ -259,7 +259,7 @@ export class EdgeFeedReplicator extends Resource {
     this._remoteLength.set(feed.key, to);
   }
 
-  private async _integrateBlocks(feed: FeedWrapper<any>, blocks: FeedBlock[]): Promise<void> {
+  private async _integrateBlocks(feed: HypercoreWrapper<any>, blocks: FeedBlock[]): Promise<void> {
     log('integrating blocks', { feed: feed.key.toHex(), blocks: blocks.length });
 
     for (const block of blocks) {
@@ -277,7 +277,7 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
-  private async _pushBlocksIfNeeded(feed: FeedWrapper<any>): Promise<void> {
+  private async _pushBlocksIfNeeded(feed: HypercoreWrapper<any>): Promise<void> {
     using _ = await this._getPushMutex(feed.key).acquire();
 
     if (!this._remoteLength.has(feed.key)) {

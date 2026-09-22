@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { ListModel } from './list-model';
+import { ListModel } from './list-model.ts';
 
 /**
  * A model over an array the host re-creates per render — the React-prop case.

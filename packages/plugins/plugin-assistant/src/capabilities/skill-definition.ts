@@ -9,7 +9,6 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import {
   AgentSkill,
-  AgentWizardSkill,
   AlarmSkill,
   AutomationSkill,
   BrowserSkill,
@@ -49,7 +48,6 @@ const skillDefinition = Effect.fnUntraced(function* () {
       MemorySkill,
       AutomationSkill,
       SkillManagerSkill,
-      AgentWizardSkill,
       DelegationSkill,
       AlarmSkill,
     ]),

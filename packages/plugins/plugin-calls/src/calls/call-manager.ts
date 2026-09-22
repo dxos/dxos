@@ -13,12 +13,11 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
-import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
-import { MediaManager, type MediaState } from './media-manager';
-import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
+import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
+import { MediaManager, type MediaState } from './media-manager.ts';
+import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
 
 export type GlobalState = {
   call: CallState;
@@ -110,7 +109,7 @@ export class CallManager extends Resource {
   }
 
   /** Derived atom for tracks. */
-  get tracksAtom(): Atom.Atom<Tracks> {
+  get tracksAtom(): Atom.Atom<NonNullable<UserState['tracks']>> {
     return this._tracksAtom;
   }
 
@@ -251,12 +250,12 @@ export class CallManager extends Resource {
   @synchronized
   async join(): Promise<void> {
     const callsServiceUrl = getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls);
-    invariant(callsServiceUrl, 'The calls service is not configured (runtime.services.edgeServices: calls).');
+    invariant(callsServiceUrl, 'The calls service is not configured (runtime.services.edge.url).');
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
       iceServers: this._client.config.get('runtime.services.ice'),
-      apiBase: `${callsServiceUrl}/api/calls`,
+      apiBase: `${callsServiceUrl}/rtc`,
     });
   }
 

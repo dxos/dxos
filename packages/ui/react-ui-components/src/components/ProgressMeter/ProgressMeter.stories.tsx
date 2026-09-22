@@ -10,24 +10,20 @@ import { random } from '@dxos/random';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
+import { translations } from '#translations';
+
+import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted phase; the bar (or the line leaving a stage) fills as they are worked through. */
 const ITEMS = 40;
 /** How long an uncounted phase runs before the run moves on. */
 const HOLD_MS = 2_500;
-/**
- * Items completed per tick. Uneven, because real work is: a fixed step glides so smoothly that the
- * transition has nothing to smooth.
- */
-const step = () => random.number.int({ min: 1, max: 4 });
-
 /** Phase names, so the crawl has somewhere to go. */
 const NOTES = ['Syncing feeds', 'Selecting articles', 'Adding to magazine'];
 
 /**
- * At rest the meter already shows the shape of the run it is about to make: a stepper that only
+ * At rest the meter already shows the shape of the run it is about to make: a plan that only
  * appears once the run starts makes the row change under the reader for no reason they can act on,
  * and a counted run that sweeps until started reports the one thing it knows is untrue.
  */
@@ -86,7 +82,7 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
         return;
       }
 
-      count += indeterminate ? TICK_MS : step();
+      count += indeterminate ? TICK_MS : random.number.int({ min: 1, max: 4 });
       patch({
         status: 'running',
         phase: stages ? phase : undefined,
@@ -151,9 +147,7 @@ const meta = {
   title: 'ui/react-ui-components/ProgressMeter',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -180,7 +174,7 @@ export const Indeterminate: Story = {
  * A declared plan of three stages, each counted. The stages carry the fraction on the line leaving
  * the one in flight, so the plan and the progress within it are one drawing rather than two.
  */
-export const Stepper: Story = {
+export const Steps: Story = {
   args: {
     stages: 3,
   },
@@ -190,7 +184,7 @@ export const Stepper: Story = {
  * The same plan with nothing to count. No line can be filled honestly, so the stage in flight spins
  * and the clock runs in place of a count.
  */
-export const StepperIndeterminate: Story = {
+export const StepsIndeterminate: Story = {
   args: {
     stages: 3,
     indeterminate: true,

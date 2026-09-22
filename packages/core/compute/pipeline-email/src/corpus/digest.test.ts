@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { buildThreads } from '../internal/threads';
-import { buildDigest, narrateDigest, renderDigest } from './digest';
-import { type Commitment } from './ledger';
-import { buildRollups } from './rollups';
-import { clusterThreads } from './topics';
+import { buildThreads } from '../internal/threads.ts';
+import { buildDigest, narrateDigest, renderDigest } from './digest.ts';
+import { type Commitment } from './ledger.ts';
+import { buildRollups } from './rollups.ts';
+import { clusterThreads } from './topics.ts';
 
 const OWNER = 'me@enron.com';
 const NOW = '2001-06-01T00:00:00.000Z';

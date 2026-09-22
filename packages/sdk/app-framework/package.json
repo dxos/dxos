@@ -167,10 +167,10 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-addon-logger": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",

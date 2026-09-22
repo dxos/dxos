@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 
 import { Markdown } from '#types';
 
-import { getMarkdownAnchorText } from '../model/selection';
+import { getMarkdownAnchorText } from '../model/selection.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -6,9 +6,9 @@ import del from 'del';
 import path from 'path';
 import { afterAll, beforeAll, describe } from 'vitest';
 
-import { StorageType } from '../common';
-import { storageBenchmark } from '../testing/benchmark.blueprint-test';
-import { createStorage } from './storage';
+import { StorageType } from '../common/index.ts';
+import { storageBenchmark } from '../testing/benchmark.blueprint-test.ts';
+import { createStorage } from './storage.ts';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 

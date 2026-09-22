@@ -4,8 +4,8 @@
 
 // Deep import (not the `./core` barrel) so this module — reachable from lean contexts — does not
 // pull background-only weight (e.g. the edge-client-backed `image` action).
-import { DeveloperMode } from './core/state';
-import { debugLog } from './debug-log';
+import { DeveloperMode } from './core/state/index.ts';
+import { debugLog } from './debug-log.ts';
 
 export const HOME_URL = 'https://labs.composer.space';
 
@@ -13,7 +13,7 @@ const DEV_CHAT_AGENT_URL = 'ws://localhost:8791';
 const MAIN_CHAT_AGENT_URL = 'wss://chat-agent.dxos.workers.dev';
 
 const DEV_IMAGE_SERVICE_URL = 'http://localhost:8790';
-const MAIN_IMAGE_SERVICE_URL = 'https://image.dxos.network';
+const MAIN_IMAGE_SERVICE_URL = 'https://dxos.network/image';
 
 export type Config = {
   devmode: boolean;

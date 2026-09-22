@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Initialize';
-export * from './InitializeEmpty';
-export * from './useTargetConnection';
+export * from './Initialize.tsx';
+export * from './InitializeEmpty.tsx';
+export * from './useTargetConnection.ts';

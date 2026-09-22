@@ -7,7 +7,7 @@ import React from 'react';
 import { Avatar, type AvatarStatus, type Size } from '@dxos/react-ui';
 import { hexToFallback } from '@dxos/util';
 
-import { L0ItemActiveTabIndicator } from '../Sidebar';
+import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
 
 export type UserAccountAvatarProps = {
   size?: Size;
@@ -18,7 +18,8 @@ export type UserAccountAvatarProps = {
 };
 
 export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAccountAvatarProps) => {
-  const fallbackValue = hexToFallback(userId ?? '0');
+  const fallbackValue = userId ? hexToFallback(userId) : undefined;
+  const resolved = fallbackValue !== undefined;
 
   return (
     <>
@@ -31,10 +32,10 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAcco
           <Avatar.Content
             variant='circle'
             size={size ?? 12}
-            status={status ?? 'active'}
-            hue={hue || fallbackValue.hue}
-            fallback={emoji || fallbackValue.emoji}
-            data-testid='treeView.userAccount'
+            {...(resolved && { status: status ?? 'active' })}
+            hue={hue || fallbackValue?.hue}
+            fallback={emoji || fallbackValue?.emoji || ''}
+            data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
           />
         </Avatar.Root>
       </div>

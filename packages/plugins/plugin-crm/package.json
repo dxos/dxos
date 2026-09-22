@@ -129,6 +129,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",

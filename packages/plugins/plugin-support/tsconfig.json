@@ -25,10 +25,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/graph"
+      "path": "../../common/errors"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -46,6 +46,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -53,9 +59,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
@@ -68,6 +71,9 @@
     },
     {
       "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/react-primitives/react-focus"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -86,6 +92,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"

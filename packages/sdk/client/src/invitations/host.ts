@@ -7,7 +7,10 @@ import * as Queue from 'effect/Queue';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { BaseError } from '@dxos/errors';
+import { Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+
+import { ClientError } from '../errors.ts';
 
 type HostInvitationProps = {
   observable: CancellableInvitation;
@@ -45,13 +48,13 @@ export const hostInvitation = ({
     const subscription = observable.subscribe(
       (invitation: Invitation) => {
         switch (invitation.state) {
-          case Invitation.State.CONNECTING: {
+          case Invitation_State.CONNECTING: {
             runCallback(callbacks?.onConnecting?.(invitation));
             EffectEx.runAndForwardErrors(Queue.offer(connectingQueue, invitation)).catch(() => {});
             break;
           }
 
-          case Invitation.State.SUCCESS: {
+          case Invitation_State.SUCCESS: {
             runCallback(callbacks?.onSuccess?.(invitation));
             EffectEx.runAndForwardErrors(Queue.offer(invitationQueue, invitation)).catch(() => {});
             break;
@@ -60,7 +63,7 @@ export const hostInvitation = ({
       },
       (err: unknown) => {
         // Forward error to Effect chain via error queue
-        const error = err instanceof Error ? err : new Error(String(err));
+        const error = err instanceof BaseError ? err : ClientError.wrap()(err);
         EffectEx.runAndForwardErrors(Queue.offer(errorQueue, error)).catch(() => {
           // Error queue full or other issue - log but continue
         });

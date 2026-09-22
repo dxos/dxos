@@ -4,7 +4,9 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import * as Node from './AppGraphNode';
+import { shallowEqual } from '@dxos/util';
+
+import * as Node from './AppGraphNode.ts';
 
 /**
  * `Atom.withLabel` captures and formats a stack trace on every call, and the graph labels an atom per node,
@@ -40,25 +42,7 @@ export const secondaryParts = (key: string): string[] => key.split(SECONDARY);
  * Normalize a relation input to a full Relation object.
  */
 export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation =>
-  relation == null ? Node.childRelation() : typeof relation === 'string' ? Node.relation(relation) : relation;
-
-/**
- * Shallow-compare two values: same reference, or same own-keys with === values.
- */
-export const shallowEqual = (a: unknown, b: unknown): boolean => {
-  if (a === b) {
-    return true;
-  }
-  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') {
-    return false;
-  }
-  const keysA = Object.keys(a as Record<string, unknown>);
-  const keysB = Object.keys(b as Record<string, unknown>);
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-  return keysA.every((k) => (a as Record<string, unknown>)[k] === (b as Record<string, unknown>)[k]);
-};
+  relation == null ? Node.child : typeof relation === 'string' ? Node.relation(relation) : relation;
 
 /**
  * Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index).

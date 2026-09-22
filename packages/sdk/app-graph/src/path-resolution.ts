@@ -7,6 +7,7 @@ import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 
 import { EffectEx } from '@dxos/effect';
@@ -15,8 +16,8 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
 
 /**
  * A single `(prefix, id?)` pair as parsed by `@dxos/app-toolkit`'s `UrlPath.parse`. Kept as a
@@ -67,8 +68,8 @@ const isReservedUrlKey = (key: string): boolean =>
 
 /**
  * Ordered `urlKey`-declaring extensions: sorted by Position then insertion order (matching
- * connector-ordering semantics elsewhere in this package), with reserved-word keys dropped (each with
- * a `log.warn`). A single key may legitimately be shared by more than one extension (e.g. plugin-space
+ * connector-ordering semantics elsewhere in this package), with reserved-word and grammar keys dropped
+ * (each with a `log.warn`). A single key may legitimately be shared by more than one extension (e.g. plugin-space
  * declares `collection` on both the root-collection children connector and the nested-collection
  * children connector, which together address any object reachable through a space's collection tree),
  * so keys are NOT deduped here — {@link buildKeyTable} groups the sharers under one key and forward
@@ -82,6 +83,7 @@ const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlK
 
 const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
+  const { anchorKey, linked } = builder.urlGrammar;
 
   const keyed: UrlKeyedExtension[] = [];
   for (const extension of extensions) {
@@ -90,6 +92,11 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
     }
     if (isReservedUrlKey(extension.meta.key)) {
       log.warn('reserved URL prefix key', { key: extension.meta.key, extension: extension.id });
+      continue;
+    }
+    if (extension.meta.key === linked.key || extension.meta.key === anchorKey) {
+      // The grammar's keys are read before any item lookup, so an extension bound to one could never resolve.
+      log.warn('URL prefix key is reserved by the grammar', { key: extension.meta.key, extension: extension.id });
       continue;
     }
     keyed.push(extension);
@@ -133,15 +140,11 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
  */
 export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, UrlKeyTableEntry> => {
   const table = new Map<string, UrlKeyTableEntry>();
-  // The grammar's fixed tiers are configured on the builder, not declared by any extension: the anchor
-  // rebases the chain, and the linked key addresses a `~<variant>` child of the preceding item.
-  const { anchorKey, linkedKey } = builder.urlGrammar;
+  const { anchorKey, linked } = builder.urlGrammar;
   if (anchorKey) {
     table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
   }
-  if (linkedKey) {
-    table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
-  }
+  table.set(linked.key, { key: linked.key, hasId: true, anchor: false });
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.meta.key;
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
@@ -160,22 +163,6 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
 };
 
 /**
- * Expand every ancestor prefix of a qualified node id (including the id itself), then flush once.
- * Mirrors `@dxos/app-toolkit`'s `NotFound.expandPath` technique, reimplemented locally so app-graph
- * doesn't depend on app-toolkit.
- */
-const expandAncestors = async (builder: GraphBuilder.GraphBuilder, qualifiedId: string): Promise<void> => {
-  const segments = qualifiedId.split('/');
-  for (let index = 1; index <= segments.length; index++) {
-    Graph.expandSync(builder.graph, segments.slice(0, index).join('/'), 'child');
-  }
-  await GraphBuilder.flush(builder);
-};
-
-/** An extension registered for a URL key: its path (static segments or a dynamic resolver). */
-type KeyedExtension = { id: string; path: string[] | GraphBuilder.PathResolver };
-
-/**
  * Materialize a candidate qualified node id and confirm it exists: expand its ancestors, then check
  * the node is known. Returns the id on success, `null` otherwise.
  *
@@ -188,41 +175,38 @@ const materializeCandidate = async (
   builder: GraphBuilder.GraphBuilder,
   candidateId: string,
 ): Promise<string | null> => {
-  await expandAncestors(builder, candidateId);
+  Graph.expandPath(builder.graph, candidateId);
+  await GraphBuilder.flush(builder);
   return Option.isSome(Graph.getNode(builder.graph, candidateId)) ? candidateId : null;
 };
 
 /**
  * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base. Resolution
- * is fully explicit — no search. Each keyed extension's `path` is one of:
- *   1. Static segments (`string[]`, the preferred deterministic case): the id is the `+`-joined node
- *      segments *after* the path, so a fixed-depth nested shape (e.g. `db/<slug>+<id>`) resolves with
- *      no resolver — split the id back into segments and expand the exact path.
- *   2. A dynamic {@link GraphBuilder.PathResolver} (recursive/mutable shapes, i.e. nested collections),
- *      whose candidate is materialized and verified the same way.
- * Static paths are tried before resolvers; an unmatched pair yields `null`.
+ * is fully explicit — no search. Each binding for the key yields at most one candidate:
+ *   1. Without a resolver (the preferred deterministic case), the node its shape addresses by the id
+ *      ({@link GraphBuilder.urlCandidate}); a singleton addresses its fixed node.
+ *   2. With a {@link GraphBuilder.PathResolver} (recursive/mutable shapes, i.e. nested collections), the
+ *      node the resolver locates.
+ * Static candidates are tried before resolved ones; an unmatched pair yields `null`.
  */
 const resolveKeyId = async (
   builder: GraphBuilder.GraphBuilder,
-  workspaceBaseId: string,
   workspace: string,
-  extensions: ReadonlyArray<KeyedExtension>,
-  id: string,
+  bindings: ReadonlyArray<GraphBuilder.UrlBinding>,
+  id: string | undefined,
   wait?: Duration.Input,
 ): Promise<{ nodeId?: string; candidateId?: string }> => {
-  // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
-  const idSegments = id.split(builder.urlGrammar.tailSeparator);
-  const candidateIds: string[] = extensions
-    .filter((extension) => Array.isArray(extension.path))
-    .map((extension) => [workspaceBaseId, ...(extension.path as string[]), ...idSegments].join('/'));
+  const { tailSeparator } = builder.urlGrammar;
+  const candidateIds = bindings.flatMap((binding) =>
+    Option.toArray(GraphBuilder.urlCandidate(binding, workspace, id, tailSeparator)),
+  );
 
-  // 2. Dynamic resolver: the extension computes the candidate id from runtime data (self-contained
-  // Effect; a defect degrades to no candidate rather than crashing resolution). Ordered after the
-  // static ones, which is the declared precedence.
-  for (const extension of extensions) {
-    if (typeof extension.path === 'function') {
+  // A defect in a resolver degrades to no candidate rather than crashing resolution.
+  const workspaceBaseId = `${GraphNode.RootId}/${workspace}`;
+  for (const binding of bindings) {
+    if (binding.resolve && id !== undefined && (binding.workspace?.(workspace) ?? true)) {
       const candidateId = await EffectEx.runPromise(
-        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchDefect(() => Effect.succeed(null))),
+        binding.resolve({ id, workspace, workspaceBaseId }).pipe(Effect.catchDefect(() => Effect.succeed(null))),
       );
       if (candidateId) {
         candidateIds.push(candidateId);
@@ -257,25 +241,26 @@ const resolveKeyId = async (
   return waited ? { nodeId: waited } : { candidateId };
 };
 
-/**
- * Resolve a linked pair (`<key>/<variant>`) against the item it attaches to: the linked-segment child
- * (`<precedingNodeId>/~<variant>`) of `precedingNodeId`. A single expand, no BFS — a linked node is
- * always a direct child of the item it attaches to. Matched by the variant (the `~`-stripped last
- * segment), so it works regardless of which extension produced the node.
- */
 const resolveLinked = async (
   builder: GraphBuilder.GraphBuilder,
   precedingNodeId: string,
   variant: string,
 ): Promise<string | null> => {
-  Graph.expandSync(builder.graph, precedingNodeId, 'child');
+  const { relation, prefix } = builder.urlGrammar.linked;
+  Graph.expandSync(builder.graph, precedingNodeId, relation);
   await GraphBuilder.flush(builder);
 
-  const linkedSegment = `${builder.urlGrammar.linkedPrefix}${variant}`;
-  const match = Graph.getConnections(builder.graph, precedingNodeId, 'child').find(
-    (child) => child.id.slice(child.id.lastIndexOf('/') + 1) === linkedSegment,
+  const match = Graph.getConnections(builder.graph, precedingNodeId, relation).find(
+    (node) => linkedVariant(prefix, node.id) === variant,
   );
   return match?.id ?? null;
+};
+
+const isLinkedId = (prefix: string, id: string): boolean => GraphNode.segmentId(id).startsWith(prefix);
+
+const linkedVariant = (prefix: string, id: string): string => {
+  const segment = GraphNode.segmentId(id);
+  return segment.startsWith(prefix) ? segment.slice(prefix.length) : segment;
 };
 
 const resolveUrlAsync = async (
@@ -294,7 +279,7 @@ const resolveUrlAsync = async (
   // module activation timeout, which disables the plugin rather than degrading to not-found.
   const groups: Array<number[]> = [];
   parsed.pairs.forEach((pair, pairIndex) => {
-    if (pair.key === builder.urlGrammar.linkedKey && groups.length > 0) {
+    if (pair.key === builder.urlGrammar.linked.key && groups.length > 0) {
       groups[groups.length - 1].push(pairIndex);
     } else {
       groups.push([pairIndex]);
@@ -309,25 +294,8 @@ const resolveUrlAsync = async (
       return null;
     }
 
-    const workspaceBaseId = `${GraphNode.RootId}/${pair.workspace}`;
-    const extensions: KeyedExtension[] = [];
-    for (const extensionId of extensionIdList) {
-      const url = allExtensions[extensionId]?.meta;
-      if (url) {
-        extensions.push({ id: extensionId, path: url.path });
-      }
-    }
-    // A normal key addresses a node by id; an id-less singleton key (e.g. `home`) addresses a fixed node
-    // whose terminal segment IS the key — resolve it the same way with the key standing in for the id
-    // (`root/<ws>/<...path>/<key>`).
-    return resolveKeyId(
-      builder,
-      workspaceBaseId,
-      pair.workspace,
-      extensions,
-      pair.id ?? pair.key,
-      options?.wait?.(pairIndex),
-    );
+    const bindings = extensionIdList.flatMap((extensionId) => allExtensions[extensionId]?.meta ?? []);
+    return resolveKeyId(builder, pair.workspace, bindings, pair.id, options?.wait?.(pairIndex));
   };
 
   await Promise.all(
@@ -335,7 +303,7 @@ const resolveUrlAsync = async (
       const headPair = parsed.pairs[headIndex];
       // A leading linked pair has no item to attach to (groups only start with one when the chain
       // opens with it), so it resolves to nothing rather than against a stale base.
-      const head = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
+      const head = headPair.key === builder.urlGrammar.linked.key ? null : await resolveItem(headIndex);
       const headNodeId = head?.nodeId;
       results[headIndex] = head?.nodeId
         ? { pairIndex: headIndex, nodeId: head.nodeId }
@@ -358,9 +326,8 @@ const resolveUrlAsync = async (
 
 /**
  * Resolve a parsed URL's pair chain to graph node ids, walking left to right. Resolution is fully
- * explicit — each keyed extension declares either a static `urlPath` template (preferred) or a dynamic
- * `resolve` Effect (data-dependent shapes); there is no generic search. Reverse mapping still uses the
- * provenance the builder tracks (see `GraphBuilder.getNodeExtensionId`).
+ * explicit — each binding's shape names its candidate (a resolver locates data-dependent ones); there is
+ * no generic search. {@link representNode} is the reverse.
  *
  * An unknown key, or a key whose extension produces no matching node, yields `null` at that index;
  * how a `null` is surfaced is the caller's concern. A linked pair resolves against the *preceding
@@ -383,41 +350,54 @@ export const resolveUrl = (
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
- * `resolveUrl`. A linked node (a `~<variant>` segment) maps to the declared `linked` key
- * with the variant as its id — independent of the producing extension, so every linked node is
- * addressable. Any other node maps via its producing extension's `urlKey` (`getNodeExtensionId`);
- * a node with no key-declaring producer returns `Option.none()` (unmapped — serialization skips it
- * with a dev-time warning one layer up, per the design's "unmapped nodes" rule).
+ * `resolveUrl`. A linked node (a `<prefix><variant>` segment) maps to the grammar's `linked` key with the
+ * variant as its id. Any other node maps through the most specific binding whose shape addresses its id,
+ * so the answer is the same whether or not the node is loaded; an id no binding addresses returns
+ * `Option.none()`.
  */
 export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<RepresentedNode> => {
-  const segments = nodeId.split('/');
   // Canonical node ids are `root/<workspace>/...`; the workspace is always the second segment.
-  const workspace = segments[1];
+  const workspace = nodeId.split(GraphNode.PathSeparator)[1];
   if (!workspace) {
     return Option.none();
   }
 
-  const lastSegment = segments[segments.length - 1];
-  if (lastSegment.startsWith(builder.urlGrammar.linkedPrefix)) {
-    // Linked node: keyed by the grammar's `linked` key, with the variant (the `~`-stripped segment) as
-    // its id — matched by the convention, independent of the producing extension.
-    const linkedKey = builder.urlGrammar.linkedKey;
-    if (linkedKey) {
-      return Option.some({ key: linkedKey, id: lastSegment.slice(builder.urlGrammar.linkedPrefix.length), workspace });
-    }
+  const { linked, tailSeparator } = builder.urlGrammar;
+  if (isLinkedId(linked.prefix, nodeId)) {
+    return Option.some({ key: linked.key, id: linkedVariant(linked.prefix, nodeId), workspace });
   }
 
-  const extensionId = builder.getNodeExtensionId(nodeId);
-  if (!extensionId) {
+  const matches = getKeyedExtensions(builder).flatMap((extension) =>
+    Option.toArray(GraphBuilder.urlRepresentation(nodeId, extension.meta, tailSeparator)).map((represented) => ({
+      represented,
+      specificity: specificity(extension.meta),
+      extension: extension.id,
+    })),
+  );
+  const [best, ...rest] = Array.sortWith(matches, (match) => -match.specificity, Order.Number);
+  if (!best) {
     return Option.none();
   }
-  const url = builder.getExtensions()[extensionId]?.meta;
-  if (!url) {
-    return Option.none();
+  const rival = rest.find(
+    (match) =>
+      match.specificity === best.specificity &&
+      (match.represented.key !== best.represented.key || match.represented.id !== best.represented.id),
+  );
+  if (rival) {
+    log.warn('equally specific URL bindings address one node', {
+      nodeId,
+      extensions: [best.extension, rival.extension],
+    });
   }
-
-  // The (key, id?) representation is derived from the node id + binding (a singleton has no id; a
-  // resolver-backed key keeps just the object id; a static path `+`-joins the segments after the path) —
-  // the same derivation the builder uses to stamp `urlSegment`.
-  return Option.some({ ...GraphBuilder.urlRepresentation(nodeId, url, builder.urlGrammar.tailSeparator), workspace });
+  return Option.some({ ...best.represented, workspace });
 };
+
+/**
+ * How narrowly a binding's shape pins its nodes: literal segments count most (a singleton's own segment
+ * included), then its `minDepth`, so the deeper of two bindings sharing a path claims its ids.
+ */
+const specificity = (binding: GraphBuilder.UrlBinding): number =>
+  (binding.path.length + (binding.kind === 'singleton' ? 1 : 0)) * MAX_DEPTH_RANK + (binding.minDepth ?? 1);
+
+/** Above any `minDepth` a binding declares, so a literal segment always outranks depth. */
+const MAX_DEPTH_RANK = 1_000;

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import './suppress-storybook-deprecation-warnings';
+import './suppress-storybook-deprecation-warnings.ts';
 
-import { installSelfHeal } from './self-heal';
+import { installSelfHeal } from './self-heal.ts';
 
 installSelfHeal();
 
@@ -19,7 +19,12 @@ import './cubes.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react-vite';
 
-import { docsTheme } from './theme';
+import { StorybookErrorFallback } from '@dxos/storybook-addon-logger/StorybookErrorFallback';
+
+import { docsTheme } from './theme.tsx';
+
+// Restores the "Download logs" action on a crashed story.
+globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
 
 /**
  * Configure Storybook rendering.

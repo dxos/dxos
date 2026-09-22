@@ -10,7 +10,7 @@ import { Message } from '@dxos/types';
 
 import { Mailbox } from '#types';
 
-import { Builder } from './builder';
+import { Builder } from './builder.ts';
 
 /** Fixture tag dictionary — keys are stable across runs so builder can reference them. */
 export const LABELS: Record<string, { label: string }> = Object.fromEntries(

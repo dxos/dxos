@@ -9,11 +9,12 @@ import { SchemaAST } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
-import { defineHiddenProperty } from '../common/proxy/define-hidden-property';
-import { makeObject } from '../common/proxy/make-object';
-import { getProxyTarget } from '../common/proxy/proxy-utils';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
+import { defineHiddenProperty } from '../common/proxy/define-hidden-property.ts';
+import { makeObject } from '../common/proxy/make-object.ts';
+import { getProxyTarget } from '../common/proxy/proxy-utils.ts';
+import { type AnyProperties } from '../common/types/base.ts';
 import {
   type AnyEntity,
   EntityKind,
@@ -21,10 +22,9 @@ import {
   KindId,
   SchemaKindId,
   StaticTypeSchemaSlot,
-} from '../common/types';
-import { type AnyProperties } from '../common/types/base';
-import { type EntityMeta } from '../common/types/meta';
-import { JsonSchemaType } from '../JsonSchema/json-schema-type';
+} from '../common/types/index.ts';
+import { type EntityMeta } from '../common/types/meta.ts';
+import { JsonSchemaType } from '../JsonSchema/json-schema-type.ts';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -77,7 +77,7 @@ export interface EchoTypeSchema<
   /**
    * Entity id. Always present — stamped at construction — but NOT the type's
    * identity while in-memory: an unattached type resolves its URI to the typename
-   * DXN, switching to `echo:/<id>` only once attached to a database (see
+   * DXN, switching to `echo:///<id>` only once attached to a database (see
    * `getTypeURIFromSpecifier`, which discriminates by database attachment).
    */
   readonly id: EntityId;
@@ -118,37 +118,6 @@ export interface EchoTypeSchema<
         }
       : {});
 }
-
-// type MakeProps =
-//   | boolean
-//   | {
-//       readonly disableValidation?: boolean;
-//     };
-
-// NOTE: Utils copied from Effect `Schema.ts`.
-// const _ownKeys = (o: object): Array<PropertyKey> =>
-//   (Object.keys(o) as Array<PropertyKey>).concat(Object.getOwnPropertySymbols(o));
-
-// const _lazilyMergeDefaults = (
-//   fields: Schema.Struct.Fields,
-//   out: Record<PropertyKey, unknown>,
-// ): { [x: string | symbol]: unknown } => {
-//   const ownKeys = _ownKeys(fields);
-//   for (const key of ownKeys) {
-//     const field = fields[key];
-//     if (out[key] === undefined && Schema.isPropertySignature(field)) {
-//       const ast = field.ast;
-//       const defaultValue = ast._tag === 'PropertySignatureDeclaration' ? ast.defaultValue : ast.to.defaultValue;
-//       if (defaultValue !== undefined) {
-//         out[key] = defaultValue();
-//       }
-//     }
-//   }
-//   return out;
-// };
-
-// const _getDisableValidationMakeOption = (options: MakeProps | undefined): boolean =>
-//   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 /**
  * Identity (typename + version) of the type meta-schema — the `Type.Type` that
@@ -281,4 +250,4 @@ export const makeEchoTypeSchema = <
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };
 
-export { isEntity } from './guard';
+export { isEntity } from './guard.ts';

@@ -30,8 +30,8 @@ import {
   GOOGLE_CALENDAR_CONNECTOR_ID,
   GOOGLE_CONTACTS_CONNECTOR_ID,
   GOOGLE_INTEGRATION_SOURCE,
-} from '../constants';
-import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from '../scopes';
+} from '../constants.ts';
+import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from '../scopes.ts';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),

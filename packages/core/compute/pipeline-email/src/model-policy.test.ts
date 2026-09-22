@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_MODEL_POLICY, MODEL_HAIKU, MODEL_SONNET, type StageId, resolveModel } from './model-policy';
+import { DEFAULT_MODEL_POLICY, MODEL_HAIKU, MODEL_SONNET, type StageId, resolveModel } from './model-policy.ts';
 
 describe('model-policy', () => {
   test('every stage has a default model', ({ expect }) => {

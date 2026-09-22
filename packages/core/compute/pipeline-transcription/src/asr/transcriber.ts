@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
-import { mergeFloat64Arrays } from '../internal/asr-util';
-import { type AudioChunk, type AudioRecorder } from './audio-recorder';
+import { mergeFloat64Arrays } from '../internal/asr-util.ts';
+import { type AudioChunk, type AudioRecorder } from './audio-recorder.ts';
 
 export type WhisperWord = {
   word: string;
@@ -63,7 +63,7 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 
   /**
-   * Transcription endpoint base URL (`runtime.services.edgeServices: transcription`).
+   * Transcription endpoint base URL, normally `<edge>/calls` (the worker that serves `/transcribe`).
    * Required for the built-in HTTP transport; only optional when a `transcribe` fn is provided.
    */
   endpoint?: string;
@@ -75,7 +75,7 @@ export type TranscribeConfig = {
  */
 export class TranscriptionEndpointNotConfiguredError extends BaseError.extend(
   'TranscriptionEndpointNotConfiguredError',
-  'Transcription endpoint is not configured (runtime.services.edgeServices: transcription).',
+  'Transcription endpoint is not configured (runtime.services.edge.url).',
 ) {}
 
 /**

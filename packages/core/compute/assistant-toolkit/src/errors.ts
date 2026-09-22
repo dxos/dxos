@@ -25,13 +25,14 @@ export class PromptError extends BaseError.extend('PromptError') {
 }
 
 /**
- * Exactly-one invariant violated for an object bound to the harness conversation context.
+ * A batch of task changes was rejected as a whole; the message lists every bad change and the
+ * current checklist so the model can resend.
  */
-export class HarnessContextError extends BaseError.extend('HarnessContextError', 'Harness context invariant violated') {
-  constructor(context: { type: string; count: number }) {
-    super({
-      message: `There should be exactly one ${context.type} in context. Got: ${context.count}.`,
-      context,
-    });
+export class UpdateTasksError extends BaseError.extend('UpdateTasksError') {
+  constructor(message: string) {
+    super({ message });
   }
 }
+
+/** Toolkit operation failed. The underlying failure, where there is one, is the `cause`. */
+export class ToolkitError extends BaseError.extend('ToolkitError', 'Toolkit operation failed.') {}

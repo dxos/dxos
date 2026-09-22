@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './InvitationListItem';
-export * from './InvitationListContainer';
-export * from './InvitationList';
+export * from './InvitationListItem.tsx';
+export * from './InvitationListContainer.tsx';
+export * from './InvitationList.tsx';

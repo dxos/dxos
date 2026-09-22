@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 
-import { type SwarmController, type Topology } from './topology';
+import { type SwarmController, type Topology } from './topology.ts';
 
 export class FullyConnectedTopology implements Topology {
   private _controller?: SwarmController;

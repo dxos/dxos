@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { computeHiddenRanges } from './hide-images-extension';
+import { computeHiddenRanges } from './hide-images-extension.ts';
 
 // Reconstructs the visible text by dropping the computed hidden ranges, mirroring what the replace
 // decorations omit from the rendered output.

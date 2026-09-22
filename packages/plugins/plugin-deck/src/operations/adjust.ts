@@ -10,6 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
@@ -18,9 +19,9 @@ import { Position } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
-import { incrementPlank } from '../layout';
-import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util';
-import { updateActiveDeck } from './helpers';
+import { computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
+import { incrementPlank } from '../util/index.ts';
+import { isCompanionOpen, openCompanionPlank } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
@@ -33,7 +34,18 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const next = incrementPlank(deck.active, input);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+        const { workspace } = yield* currentNavigation();
+        // The moved plank takes its focus intent in the same write, so it never paints unattended. A
+        // plank already at the edge moves nowhere, leaving the URL unchanged and the intent undelivered.
+        const moved = yield* navigateDeck({
+          workspace,
+          active: deckUpdates.active,
+          companionPlanks: deckUpdates.companionPlanks,
+          intent: { scrollIntoView: input.id },
+        });
+        if (!moved) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
+        }
       }
 
       if (input.type === 'expand') {
@@ -47,7 +59,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         if (expanding) {
           // An expanded plank is sized to the space *between* the two spine piles, which is only where
           // it sits once it is at the front. Left where it was, its trailing edge — and with it the
-          // whole toolbar button group — ends up underneath the following planks' spines.
+          // whole toolbar button group — ends up underneath the following planks' spines. Only `expanded`
+          // changes here, so there is no deck write to carry the intent.
           yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
         }
       }
@@ -70,8 +83,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           const companions = Function.pipe(
             AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              AppGraph.getConnections(graph, node.id, 'child')
-                .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
+              AppGraph.getConnections(graph, node.id, AppNode.companion)
+                .filter(DeckSchema.isPlankCompanion)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
                 ),
@@ -93,15 +106,12 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
                 variant: Attention.getLinkedVariant(companion.id),
               }));
             }
-            yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, {
-                companionPlanks: openCompanionPlank(
-                  state.decks[state.activeDeck]?.companionPlanks ?? [],
-                  flatten,
-                  input.id,
-                ),
-              }),
-            );
+            const { workspace } = yield* currentNavigation();
+            yield* navigateDeck({
+              workspace,
+              active: deck.active,
+              companionPlanks: openCompanionPlank(deck.companionPlanks, flatten, input.id),
+            });
           }
         }
       }

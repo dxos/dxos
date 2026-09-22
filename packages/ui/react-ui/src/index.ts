@@ -8,8 +8,10 @@ export { Trans } from 'react-i18next';
 export * from '@dxos/react-hooks';
 export * from '@dxos/ui-types';
 
-export * from './components';
-export * from './hooks';
-export * from './primitives';
-export * from './theme';
-export * from './util';
+export * from './components/index.ts';
+export * from './hooks/index.ts';
+export * from './flow/index.ts';
+export * from './layout/index.ts';
+export * from './providers/index.ts';
+export * from './theme/index.ts';
+export * from './util/index.ts';

@@ -3,6 +3,7 @@
 //
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { toBinary } from '@bufbuild/protobuf';
 
 import { scheduleMicroTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
@@ -16,10 +17,8 @@ import { AddOnlySet } from '@dxos/echo-doc';
 import { type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-
-const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 const CREDENTIALS_PATH = ['credentials'];
 
@@ -76,7 +75,7 @@ export class CredentialsDocumentStore implements Disposable {
    * a second device both do — converges instead of duplicating it.
    */
   append(credential: Credential): void {
-    const id = credential.id?.toHex();
+    const id = toPublicKey(credential.id)?.toHex();
     invariant(id, 'Credential has no id.');
     if (this.#lease.doc()?.credentials?.[id]) {
       return;
@@ -84,7 +83,7 @@ export class CredentialsDocumentStore implements Disposable {
 
     this.#lease.change((doc: CredentialsDocument) => {
       doc.credentials ??= {};
-      AddOnlySet.add(doc.credentials, id, credentialCodec.encode(credential));
+      AddOnlySet.add(doc.credentials, id, toBinary(CredentialSchema, credential));
     });
   }
 }

@@ -55,6 +55,9 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -115,9 +118,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-debug"
     },
     {
@@ -133,7 +133,7 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-tabs"
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-theme"

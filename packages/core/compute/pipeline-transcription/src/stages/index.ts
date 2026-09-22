@@ -4,19 +4,19 @@
 
 import { log } from '@dxos/log';
 
-import { type Stage } from '../types/stage';
-import { makeCorrectionStage } from './correction';
-import { makeDiarizationStage } from './diarization';
-import { makeExtractionStage } from './extraction';
-import { makeSummarizationStage } from './summarization';
-import { makeTranslationStage } from './translation';
+import { type Stage } from '../types/stage.ts';
+import { makeCorrectionStage } from './correction.ts';
+import { makeDiarizationStage } from './diarization.ts';
+import { makeExtractionStage } from './extraction.ts';
+import { makeSummarizationStage } from './summarization.ts';
+import { makeTranslationStage } from './translation.ts';
 
-export * from './correction';
-export * from './correction-llm';
-export * from './extraction';
-export * from './summarization';
-export * from './translation';
-export * from './diarization';
+export * from './correction.ts';
+export * from './correction-llm.ts';
+export * from './extraction.ts';
+export * from './summarization.ts';
+export * from './translation.ts';
+export * from './diarization.ts';
 
 /**
  * The default registry of stage factories keyed by stage id. Consumers build a stage list for a

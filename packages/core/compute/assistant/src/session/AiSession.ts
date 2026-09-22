@@ -14,7 +14,7 @@ import * as Record from 'effect/Record';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
@@ -24,19 +24,19 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
-import { ToolExecutionServices } from '../tool-runtime';
-import { McpServerError } from '../util';
-import * as AiContext from './AiContext';
-import * as Harness from './Harness';
-import { SessionLoader } from './SessionLoader';
-import * as SkillHooks from './SkillHooks';
-import { createToolkit } from './toolkit';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
+import { ToolExecutionServices } from '../tool-runtime/index.ts';
+import * as AiContext from './AiContext.ts';
+import * as Harness from './Harness.ts';
+import { SessionStore } from './SessionStore.ts';
+import * as SkillHooks from './SkillHooks.ts';
+import { createToolkit } from './toolkit.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
@@ -89,7 +89,7 @@ export class Session extends Resource {
    */
   private readonly _binder: AiContext.Binder;
 
-  private readonly _sessionLoader = new SessionLoader();
+  private readonly _sessionStore = new SessionStore();
 
   public constructor(options: Options) {
     super();
@@ -124,7 +124,7 @@ export class Session extends Resource {
   public async getHistory(): Promise<Message.Message[]> {
     const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
     return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      this._sessionLoader.reifyHistory(this._feed, reachable),
+      this._sessionStore.reifyHistory(this._feed, reachable),
     );
   }
 
@@ -200,6 +200,12 @@ export class Session extends Resource {
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen({ self: this }, function* () {
+      yield* AiTelemetry.annotateKind(AiTelemetry.KIND.turn);
+      const inputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.input, () =>
+        serializePrompt(params.prompt),
+      );
+
+      yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -239,6 +245,7 @@ export class Session extends Resource {
         yield* Effect.promise(() => this.context.sync());
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
+        yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           skills: currentSkills,
@@ -272,7 +279,14 @@ export class Session extends Resource {
         toolCalls: request.toolCalls,
       });
 
-      return [...request.pending];
+      const output = [...request.pending];
+      const outputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.output, () =>
+        output.map(serializeMessage),
+      );
+      if (inputTruncated || outputTruncated) {
+        yield* Effect.annotateCurrentSpan(AiTelemetry.ATTRIBUTES.truncated, true);
+      }
+      return output;
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
@@ -287,6 +301,7 @@ export class Session extends Resource {
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
+      Effect.annotateSpans(sessionAnnotations(this._feed)),
     );
   }
 }
@@ -295,19 +310,23 @@ const connectMcpServers = (
   skills: readonly Skill.Skill[],
   spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+  const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
-  const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
+  const spaceServers: McpToolkit.Options[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
     url,
     protocol,
     apiKey,
   }));
   const allServers = [...skillServers, ...spaceServers];
+  if (allServers.length === 0) {
+    // Naming a phase that has nothing to do would misreport where the wait actually is.
+    return Effect.succeed([]);
+  }
 
-  return pipe(
+  const connect = pipe(
     allServers,
     Effect.forEach((options) =>
       McpToolkit.make(options).pipe(
@@ -325,7 +344,7 @@ const connectMcpServers = (
               protocol: error.protocol,
               message: error.message,
             });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: error.url,
               protocol: error.protocol,
               message: error.message,
@@ -338,7 +357,7 @@ const connectMcpServers = (
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);
             log.warn('Unexpected MCP defect', { url: options.url, message });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: options.url,
               protocol: options.protocol,
               message: `Unexpected MCP failure: ${message}`,
@@ -357,6 +376,12 @@ const connectMcpServers = (
     ),
     Effect.map((results) => Array.filterMap(results, (result) => result)),
   );
+
+  return Effect.gen(function* () {
+    // Reported before the connections are opened, since opening them is the wait being reported.
+    yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
+    return yield* connect;
+  });
 };
 
 /**
@@ -373,4 +398,41 @@ const feedPosition = (message: Message.Message): number => {
   const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
   const position = key !== undefined ? Number(key) : Number.NaN;
   return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
+};
+
+/** The prompt as the turn span carries it: text as is, blocks reduced to what identifies them. */
+export const serializePrompt = (prompt: string | readonly ContentBlock.Any[]): unknown =>
+  typeof prompt === 'string' ? prompt : prompt.map(serializeBlock);
+
+/** A turn's message as its span carries it. */
+export const serializeMessage = (message: Message.Message): unknown => ({
+  role: message.sender.role,
+  blocks: message.blocks.map(serializeBlock),
+});
+
+const serializeBlock = (block: ContentBlock.Any): unknown => {
+  switch (block._tag) {
+    case 'text':
+      return { type: 'text', text: block.text };
+    case 'toolCall':
+      return { type: 'toolCall', name: block.name, input: block.input };
+    case 'toolResult':
+      return { type: 'toolResult', name: block.name, result: block.result, error: block.error };
+    default:
+      return { type: block._tag };
+  }
+};
+
+/**
+ * Span annotations identifying the conversation a model call belongs to. The space is read off the
+ * feed's URI (`echo://<spaceId>/<objectId>`) rather than passed in, so it cannot go missing.
+ */
+export const sessionAnnotations = (feed: Feed.Feed): Record<string, string> => {
+  const uri = Obj.getURI(feed, { prefer: 'absolute' });
+  const eid = EID.tryParse(uri);
+  const spaceId = eid && EID.getSpaceId(eid);
+  return {
+    [AiTelemetry.ATTRIBUTES.sessionId]: uri,
+    ...(spaceId ? { [AiTelemetry.ATTRIBUTES.spaceId]: spaceId } : {}),
+  };
 };

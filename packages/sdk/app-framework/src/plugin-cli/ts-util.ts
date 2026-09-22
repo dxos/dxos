@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// Aliased: dx-compile's node banner injects its own `createRequire` binding into the bundle, so
-// the bare name would collide.
 import fs from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
@@ -173,6 +171,11 @@ export const resolveRelativeModule = (fromDir: string, spec: string): string | n
     return null;
   }
   const base = path.resolve(fromDir, spec);
+  // The specifier may already carry its extension (`./foo/index.ts`) — resolve it directly rather
+  // than appending another one on top, which would never exist on disk.
+  if (/\.tsx?$/.test(base)) {
+    return fs.existsSync(base) ? base : null;
+  }
   const candidates = [`${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts'), path.join(base, 'index.tsx')];
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 };

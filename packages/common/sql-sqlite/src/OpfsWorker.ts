@@ -27,7 +27,8 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './internal/opfs-pragmas';
+} from './internal/opfs-pragmas.ts';
+import { recordSqliteQueryMetrics } from './internal/query-log.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -153,35 +154,21 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
               lastParams = params;
               const results: Array<any> = [];
               const begin = performance.now();
-              let columns: Array<string> | undefined;
+              // Column names ride per row rather than once per reply: a multi-statement query returns
+              // rows from statements with different columns, and the client pairs them by index.
+              const columns: Array<Array<string>> = [];
               for (const stmt of sqlite3.statements(db, sql)) {
+                let statementColumns: Array<string> | undefined;
                 sqlite3.bind_collection(stmt, params as any);
                 while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                  columns = columns ?? sqlite3.column_names(stmt);
+                  statementColumns = statementColumns ?? sqlite3.column_names(stmt);
                   const row = sqlite3.row(stmt);
                   results.push(row);
+                  columns.push(statementColumns);
                 }
               }
               options.port.postMessage([id, undefined, [columns, results]]);
-              const end = performance.now();
-              log('sqlite query', { sql, params, results: results.length, time: end - begin });
-              performance.measure(sql.slice(0, 128), {
-                start: begin,
-                end: end,
-                detail: {
-                  devtools: {
-                    dataType: 'track-entry',
-                    track: 'Query',
-                    trackGroup: 'SQlite',
-                    color: 'tertiary-dark',
-                    properties: [
-                      ['sql', sql],
-                      ['params', params],
-                      ['resultCount', results.length],
-                    ],
-                  },
-                },
-              });
+              recordSqliteQueryMetrics(sql, params, results.length, begin);
               return;
             }
           }
@@ -190,7 +177,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
           // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
           log('sqlite error', { error: e, sql: lastSql, params: lastParams });
           const message = 'message' in e ? e.message : String(e);
-          options.port.postMessage([messageId!, message, undefined]);
+          // The client classifies SqlError reasons from `code`, which a bare string would drop.
+          const error = typeof e.code === 'number' ? { message, code: e.code } : message;
+          options.port.postMessage([messageId!, error, undefined]);
         }
       };
       options.port.addEventListener('message', onMessage);

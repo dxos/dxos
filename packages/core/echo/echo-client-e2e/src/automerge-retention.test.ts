@@ -9,7 +9,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type Checkpoint, aliveCount, capture, makePayload, report } from './testing/retention';
+import { type Checkpoint, aliveCount, capture, makePayload, report } from './testing/retention.ts';
 
 /**
  * The automerge-backed counterpart to `feed-retention.test.ts`: does a space release its objects
@@ -75,7 +75,9 @@ const addObjects = async (db: EchoDatabase): Promise<void> => {
       const index = start + offset;
       db.add(Obj.make(TestSchema.Task, { title: `task-${index}`, description: makePayload(index, PAYLOAD_BYTES) }));
     }
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
   }
 };
 
@@ -132,11 +134,15 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     // Removed from inside a helper so its frame — and the loop variable holding the last object —
     // is gone before the reading: a live stack slot keeps one object alive and reads as retention.
     removeAll(db, queried);
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
     // Removal alone is a soft delete — the object stays in the space directory, so nothing evicts.
     // Collection is what unlinks it, which is what `_evictRemovedObjects` watches for.
     await db.runGarbageCollection();
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
     queried = undefined;
     const removed = await capture('E: objects removed and collected', checkpoints, db, refs);
 

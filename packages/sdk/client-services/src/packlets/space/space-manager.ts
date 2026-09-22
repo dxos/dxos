@@ -3,6 +3,7 @@
 //
 
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -10,25 +11,28 @@ import * as Layer from 'effect/Layer';
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
+import { Hook } from '@dxos/effect';
+import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { GetAdmissionCredentialRequestSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { CredentialRetrieverExtension } from './admission-discovery-extension';
-import { Space } from './space';
-import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { NetworkReady } from '../services/events.ts';
+import { CredentialRetrieverExtension } from './admission-discovery-extension.ts';
+import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
+import { Space } from './space.ts';
 
 export type SpaceManagerProps = {
-  feedStore: FeedStore<FeedMessage>;
+  hypercoreStore: HypercoreStore<FeedMessage>;
   networkManager: SwarmNetworkManager;
   metadataStore: IMetadataStore;
 
@@ -68,14 +72,14 @@ export class SpaceManagerService extends EffectContext.Service<SpaceManagerServi
 @trackLeaks('open', 'close')
 export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
-  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: IMetadataStore;
   private readonly _disableP2pReplication: boolean;
 
-  constructor({ feedStore, networkManager, metadataStore, disableP2pReplication }: SpaceManagerProps) {
+  constructor({ hypercoreStore, networkManager, metadataStore, disableP2pReplication }: SpaceManagerProps) {
     // TODO(burdon): Assert.
-    this._feedStore = feedStore;
+    this._hypercoreStore = hypercoreStore;
     this._networkManager = networkManager;
     this._metadataStore = metadataStore;
     this._disableP2pReplication = disableP2pReplication ?? false;
@@ -106,9 +110,9 @@ export class SpaceManager {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
+    const genesisFeed = await this._hypercoreStore.openHypercore(requirePublicKey(metadata.genesisFeedKey));
 
-    const spaceKey = metadata.key;
+    const spaceKey = requirePublicKey(metadata.key);
     // The carried id is primary; derive only for a space recorded before the field existed.
     const spaceId = metadata.spaceId ? SpaceId.make(metadata.spaceId) : await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
@@ -125,7 +129,7 @@ export class SpaceManager {
       spaceKey,
       protocol,
       genesisFeed,
-      feedProvider: (feedKey, opts) => this._feedStore.openFeed(feedKey, opts),
+      feedProvider: (feedKey, opts) => this._hypercoreStore.openHypercore(feedKey, opts),
       metadataStore: this._metadataStore,
       memberKey,
       onDelegatedInvitationStatusChange,
@@ -151,7 +155,10 @@ export class SpaceManager {
         session.addExtension(
           'dxos.mesh.teleport.admission-discovery',
           new CredentialRetrieverExtension(
-            { spaceKey: params.spaceKey, memberKey: params.identityKey },
+            create(GetAdmissionCredentialRequestSchema, {
+              spaceKey: fromPublicKey(params.spaceKey),
+              memberKey: fromPublicKey(params.identityKey),
+            }),
             onCredentialResolved,
           ),
         );
@@ -175,10 +182,7 @@ export class SpaceManager {
     return [...this._spaces.values()].find((space) => {
       return space.spaceState.credentials.some((credential) => {
         const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
-          return false;
-        }
-        if (!assertion?.automergeRoot) {
+        if (assertion.$typeName !== 'dxos.halo.credentials.Epoch' || !assertion.automergeRoot) {
           return false;
         }
         return parseAutomergeUrl(assertion.automergeRoot as AutomergeUrl).documentId === documentId;
@@ -194,18 +198,29 @@ export type SpaceManagerLayerOptions = Pick<SpaceManagerProps, 'disableP2pReplic
  */
 export const SpaceManagerLayer = (
   options: SpaceManagerLayerOptions = {},
-): Layer.Layer<SpaceManagerService, never, FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService> =>
+): Layer.Layer<
+  SpaceManagerService,
+  never,
+  Hook.Controller | HypercoreStoreService | SwarmNetworkManagerService | IMetadataStoreService
+> =>
   Layer.effect(
     SpaceManagerService,
     Effect.gen(function* () {
-      const feedStore = yield* FeedStoreService;
+      const hypercoreStore = yield* HypercoreStoreService;
       const networkManager = yield* SwarmNetworkManagerService;
       const metadataStore = yield* IMetadataStoreService;
-      return new SpaceManager({
-        feedStore,
+      const spaceManager = new SpaceManager({
+        hypercoreStore,
         networkManager,
         metadataStore,
         disableP2pReplication: options.disableP2pReplication,
       });
+
+      yield* Effect.addFinalizer(() => Effect.promise(() => spaceManager.close()));
+      yield* NetworkReady.pipe(
+        Hook.handler(() => Effect.promise(() => spaceManager.open())),
+        Hook.subscribe,
+      );
+      return spaceManager;
     }),
   );

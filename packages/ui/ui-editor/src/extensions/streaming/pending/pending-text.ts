@@ -3,12 +3,20 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { type Command, Decoration, EditorView, WidgetType, keymap } from '@codemirror/view';
+import {
+  type Command,
+  Decoration,
+  EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+  WidgetType,
+  keymap,
+} from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
-import { type MarkerHue, markerButtons, markerText, markerTheme } from '../../decoration/marker';
-import { busy, setBusy } from '../../state/busy';
+import { type MarkerHue, markerButtons, markerText, markerTheme } from '../../decoration/marker.ts';
+import { busy, setBusy } from '../../state/busy.ts';
 
 //
 // State.
@@ -208,19 +216,61 @@ const pendingDecorations = EditorView.decorations.compute([pendingTextState], (s
   return Decoration.set([Decoration.widget({ widget: new PendingTextWidget(value), side: 1 }).range(value.anchor)]);
 });
 
-// Flag the editor busy while a pending session is active so other extensions (e.g. the command-hint
-// placeholder) suppress themselves. Deferred to a microtask to avoid dispatching mid-update.
-const busyListener = EditorView.updateListener.of((update) => {
-  const active = update.state.field(pendingTextState) != null;
-  if (active === (update.startState.field(pendingTextState) != null)) {
-    return;
+/**
+ * Marks the content element while the preview is on screen.
+ *
+ * `@codemirror/view`'s own placeholder keys off an empty document, and pending text is a decoration
+ * rather than document content — so dictating into an empty editor draws the placeholder underneath
+ * the words being spoken. That placeholder takes no condition, so it is suppressed from the DOM side
+ * instead (see {@link styles}).
+ *
+ * Conditioned exactly as the decoration is: the placeholder goes when the preview arrives to cover
+ * it, not when the mic is tapped — opening a session paints nothing, and blanking the hint before
+ * there is anything to read in its place would only empty the field.
+ */
+const pendingAttributes = EditorView.contentAttributes.compute([pendingTextState], (state) => {
+  const value = state.field(pendingTextState);
+  const attributes: Record<string, string> = {};
+  if (value && hasContent(value)) {
+    attributes['data-pending-text'] = '';
   }
-  queueMicrotask(() => {
-    if ((update.view.state.field(pendingTextState) != null) === active) {
-      update.view.dispatch({ effects: setBusy.of(active) });
-    }
-  });
+  return attributes;
 });
+
+// Flag the editor busy while a pending session is active so other extensions (e.g. the command-hint
+// placeholder) suppress themselves. Deferred to a microtask to avoid dispatching mid-update, and
+// carried by a ViewPlugin so the deferred work is bound to the extension's lifetime: a bare
+// updateListener's microtask outlives a reconfigure that drops the extension and would then read a
+// StateField the configuration no longer has.
+const busyReporter = ViewPlugin.fromClass(
+  class {
+    /** Set once the plugin leaves the configuration, so queued microtasks abandon their dispatch. */
+    #destroyed = false;
+
+    update(update: ViewUpdate): void {
+      // The previous configuration need not have included the field (this may be the update that
+      // introduced the extension), so the prior value is read defensively.
+      const wasActive = update.startState.field(pendingTextState, false) != null;
+      const active = update.state.field(pendingTextState) != null;
+      if (active === wasActive) {
+        return;
+      }
+
+      queueMicrotask(() => {
+        if (this.#destroyed) {
+          return;
+        }
+        if ((update.view.state.field(pendingTextState) != null) === active) {
+          update.view.dispatch({ effects: setBusy.of(active) });
+        }
+      });
+    }
+
+    destroy(): void {
+      this.#destroyed = true;
+    }
+  },
+);
 
 //
 // Extension.
@@ -238,7 +288,8 @@ export const pendingText = (): Extension => [
   pendingTextState,
   busy(),
   pendingDecorations,
-  busyListener,
+  pendingAttributes,
+  busyReporter,
   markerTheme(),
   styles,
   keymap.of([
@@ -248,6 +299,10 @@ export const pendingText = (): Extension => [
 ];
 
 const styles = EditorView.theme({
+  // See {@link pendingAttributes}: the built-in placeholder would otherwise sit behind the preview.
+  '.cm-content[data-pending-text] .cm-placeholder': {
+    display: 'none',
+  },
   // Keep the marker and affordances on a single line (it already sits on its own line at the anchor).
   '.cm-pending-text': {
     display: 'inline-flex',

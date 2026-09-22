@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Selection } from '@dxos/react-ui-attention/types';
 
-import { Translations } from '../app';
+import { Translations } from '../app/index.ts';
 
 const LAYOUT_PLUGIN = 'org.dxos.plugin.layout';
 
@@ -38,6 +38,24 @@ export const UpdateSidebar = Operation.make({
         description: 'Whether the sidebar is closed, collapsed, or expanded.',
       }),
     ),
+  }),
+  output: Schema.Void,
+});
+
+export const UpdateDrawer = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.appToolkit.updateDrawer'),
+    name: 'Update Drawer',
+    description: 'Open, close or resize the bottom drawer.',
+    icon: 'ph--rows--regular',
+  },
+  executionMode: 'sync',
+  services: [Capability.Service],
+  input: Schema.Struct({
+    state: Schema.optional(
+      Schema.Literals(['open', 'closed', 'toggle']).annotate({ description: 'Open, close, or toggle the drawer.' }),
+    ),
+    height: Schema.optional(Schema.Number.annotate({ description: 'Drawer height in rem.' })),
   }),
   output: Schema.Void,
 });
@@ -329,6 +347,12 @@ export const Open = Operation.make({
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
     scrollIntoView: Schema.optional(Schema.Boolean.annotate({ description: 'Scroll the items into view.' })),
+    focus: Schema.optional(
+      Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
+        description:
+          'Where focus goes once the item is in view: the plank (default), its first focusable content, or nowhere (false).',
+      }),
+    ),
     navigation: Schema.optional(
       NavigationMode.annotate({
         description:
@@ -406,6 +430,12 @@ export const ScrollIntoView = Operation.make({
     subject: Schema.optional(Schema.String.annotate({ description: 'The id of the item to scroll into view.' })),
     cursor: Schema.optional(Schema.String.annotate({ description: 'A cursor to scroll to within the item.' })),
     ref: Schema.optional(Schema.String.annotate({ description: 'A reference id for the scroll target.' })),
+    focus: Schema.optional(
+      Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
+        description:
+          'Where focus goes once the item is in view: the plank (default), its first focusable content, or nowhere (false).',
+      }),
+    ),
   }),
   output: Schema.Void,
 });

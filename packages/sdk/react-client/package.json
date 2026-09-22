@@ -54,6 +54,7 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -70,9 +71,11 @@
   },
   "devDependencies": {
     "@dxos/invariant": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

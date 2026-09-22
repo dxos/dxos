@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './magazine-posts';
-export * from './post-content';
-export * from './post-curation';
-export * from './post-display';
-export * from './post-read';
-export * from './post-tags';
+export * from './magazine-posts.ts';
+export * from './post-content.ts';
+export * from './post-curation.ts';
+export * from './post-display.ts';
+export * from './post-read.ts';
+export * from './post-tags.ts';

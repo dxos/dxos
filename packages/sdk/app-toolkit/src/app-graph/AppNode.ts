@@ -18,10 +18,10 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
-import { NotFound } from '../app';
-import { Translations } from '../app';
-import { AppAnnotation } from '../echo';
-import * as DeckSpec from './DeckSpec';
+import { NotFound } from '../app/index.ts';
+import { Translations } from '../app/index.ts';
+import { AppAnnotation } from '../echo/index.ts';
+import * as DeckSpec from './DeckSpec.ts';
 
 //
 //
@@ -69,6 +69,13 @@ export const getDynamicLabel = createFactory(
 //
 // Constants and stable callbacks.
 //
+
+/**
+ * Whether a workspace sits in the rail's pinned region rather than among the space tabs. Declared by
+ * the workspace itself through its disposition, so any workspace opts in by placing itself there.
+ */
+export const isPinnedWorkspace = (node: Pick<AppGraphNode.Node, 'properties'>): boolean =>
+  AppGraphNode.hasDisposition(node, ['pin-end', 'pin-start', 'user-account']);
 
 export const CACHEABLE_PROPS: string[] = ['label', 'icon', 'role'];
 export const ACCEPT_ECHO_CLASS: Set<string> = new Set(['echo']);
@@ -297,11 +304,14 @@ export const makeObject = ({
 // Companion helpers.
 //
 
+/** The relation companions hang off their plank or the root through. */
+export const companion: AppGraphNode.Relation = AppGraphNode.relation('companion');
+
 /**
  * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
  * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
- * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
- * nodes (the declared `linked` tier).
+ * addressable as `companion/<variant>` in the URL. Return it from an extension declared with
+ * {@link companion}.
  */
 export const makeCompanion = <TData = string>({
   variant,
@@ -327,7 +337,13 @@ export const makeCompanion = <TData = string>({
   },
 });
 
-/** Build a deck-level (workspace-wide) companion panel node. */
+/**
+ * When the deck mounts a companion's surface: `always`, only while it is the `selected` companion
+ * (the default), or only while selected in an expanded sidebar (`open`).
+ */
+export type DeckCompanionMount = 'always' | 'selected' | 'open';
+
+/** Build a deck-level (workspace-wide) companion panel node, returned from a root extension with {@link companion}. */
 export const makeDeckCompanion = <TData = any>({
   id,
   label,
@@ -335,6 +351,7 @@ export const makeDeckCompanion = <TData = any>({
   data,
   position,
   joyride,
+  mount,
 }: {
   id: string;
   label: Translations.Label;
@@ -342,6 +359,7 @@ export const makeDeckCompanion = <TData = any>({
   data: TData;
   position?: Position.Position;
   joyride?: string;
+  mount?: DeckCompanionMount;
 }): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
@@ -352,6 +370,7 @@ export const makeDeckCompanion = <TData = any>({
     disposition: 'hidden',
     ...(position !== undefined && { position }),
     ...(joyride !== undefined && { joyride }),
+    ...(mount !== undefined && { mount }),
   },
 });
 
@@ -528,7 +547,7 @@ export const makeToolbarAction = <R = never>({
  * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
  * extension callback — not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
  * returned node and would clobber the group's type — with the extension's `relation` set to
- * `AppGraphNode.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
+ * `AppGraphNode.action` so `graph.actions(nodeId)` picks the group up as one of the node's
  * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
  * recurses into any `NodeArg.actions` field), so the children need no separate extension.
  */

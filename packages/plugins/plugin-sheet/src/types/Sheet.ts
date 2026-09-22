@@ -9,10 +9,9 @@ import * as Schema from 'effect/Schema';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula/types';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
-import { addressToIndex, initialize, mapFormulaRefsToIndices } from './SheetUtil';
+import { addressToIndex, initialize, mapFormulaRefsToIndices } from './SheetUtil.ts';
 
 export const SKILL_KEY = 'org.dxos.skill.sheet';
 
@@ -51,22 +50,22 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
     name: Schema.optional(Schema.String),
 
     // Sparse map of cells referenced by index.
-    cells: Schema.Record(Schema.String, CellValue).pipe(FormInputAnnotation.set(false)),
+    cells: Schema.Record(Schema.String, CellValue).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // Ordered row indices.
-    rows: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
+    rows: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // Ordered column indices.
-    columns: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
+    columns: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // Row metadata referenced by index.
-    rowMeta: Schema.Record(Schema.String, RowColumnMeta).pipe(FormInputAnnotation.set(false)),
+    rowMeta: Schema.Record(Schema.String, RowColumnMeta).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // Column metadata referenced by index.
-    columnMeta: Schema.Record(Schema.String, RowColumnMeta).pipe(FormInputAnnotation.set(false)),
+    columnMeta: Schema.Record(Schema.String, RowColumnMeta).pipe(Annotation.FormInputAnnotation.set(false)),
 
     // Cell formatting referenced by indexed range.
-    ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
+    ranges: Schema.Array(Range).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseTimestamp, parseUrlTimestamp } from './decorate-transcript';
+import { parseTimestamp, parseUrlTimestamp } from './decorate-transcript.ts';
 
 describe('parseTimestamp', () => {
   test('parses m:ss', ({ expect }) => {

@@ -23,7 +23,7 @@ import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog } from '#types';
 
-import { getPublicationsSectionId } from '../paths';
+import { getPublicationsSectionId } from '../paths.ts';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
@@ -80,7 +80,11 @@ export default Capability.makeModule(
       // "+ Publication" action on the section.
       AppGraphBuilder.createExtension({
         id: 'publicationNodes',
-        url: { key: 'publication', kind: 'item', path: [GraphPath.GroupSegments.content, getPublicationsSectionId()] },
+        url: {
+          key: 'publication',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.content, getPublicationsSectionId()],
+        },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === PUBLICATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -158,7 +162,8 @@ export default Capability.makeModule(
             }),
             AppGraphNode.makeAction({
               id: SpaceOperation.RemoveObjects.meta.key,
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }),
+              data: () =>
+                Operation.invoke(SpaceOperation.RemoveObjects, { objects: [publication] }, { spaceId: db?.spaceId }),
               properties: {
                 label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Blog.Publication)),
                 icon: 'ph--trash--regular',
@@ -170,11 +175,9 @@ export default Capability.makeModule(
         },
       }),
 
-      // Comments companion for the Post plank: anchors the comments panel to the post's single body
-      // `Markdown.Document` (where post comments are anchored), and contributes a hidden, addressable
-      // node for that doc so the in-editor comment toolbar action resolves.
       AppGraphBuilder.createExtension({
         id: 'postComments',
+        relation: AppNode.companion,
         match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
         connector: ({ post }, get) => {
           const snapshot = get(Obj.atom(post));
@@ -193,6 +196,22 @@ export default Capability.makeModule(
               data: contentDoc,
               position: Position.first,
             }),
+          ]);
+        },
+      }),
+
+      AppGraphBuilder.createExtension({
+        id: 'postContentDoc',
+        match: (node) => (Obj.instanceOf(Blog.Post, node.data) ? Option.some({ post: node.data }) : Option.none()),
+        connector: ({ post }, get) => {
+          const snapshot = get(Obj.atom(post));
+          get(Obj.atom(snapshot.content));
+          const contentDoc = snapshot.content.target;
+          if (!contentDoc) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             // Hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
             // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` — the id
             // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-review's

@@ -33,9 +33,11 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './opfs-pragmas';
+} from './opfs-pragmas.ts';
+import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
+import { instrumentVfs } from './vfs-metrics.ts';
 
-export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas';
+export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
 
 /** Config for in-process OPFS SQLite (worker-only, no MessagePort). */
 export interface OpfsConfig extends WasmSqliteClient.SqliteClientMemoryConfig {
@@ -97,60 +99,6 @@ const importDatabase = (
   });
 };
 
-/** Log context is truncated at a fixed length; oversized params (blobs, long strings) must not push `time` out of it. */
-const MAX_LOGGED_PARAM_STRING_LENGTH = 64;
-
-const summarizeLoggedParam = (value: unknown): unknown => {
-  if (typeof value === 'string' && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
-    return `${value.slice(0, MAX_LOGGED_PARAM_STRING_LENGTH)}…(${value.length} chars)`;
-  }
-  if (value instanceof Uint8Array) {
-    return `<Uint8Array ${value.length} bytes>`;
-  }
-  if (value instanceof ArrayBuffer) {
-    return `<ArrayBuffer ${value.byteLength} bytes>`;
-  }
-  if (Array.isArray(value) && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
-    return `<Array ${value.length} items>`;
-  }
-  return value;
-};
-
-const summarizeLoggedParams = (params: ReadonlyArray<unknown>): ReadonlyArray<unknown> =>
-  params.map(summarizeLoggedParam);
-
-const recordSqliteQueryMetrics = (
-  sql: string,
-  params: ReadonlyArray<unknown>,
-  resultCount: number,
-  begin: number,
-): void => {
-  const end = performance.now();
-  log('sqlite query', {
-    sql: sql.replace(/\s+/g, ' ').trim(),
-    params: summarizeLoggedParams(params),
-    results: resultCount,
-    time: end - begin,
-  });
-  performance.measure(sql.slice(0, 128), {
-    start: begin,
-    end: end,
-    detail: {
-      devtools: {
-        dataType: 'track-entry',
-        track: 'Query',
-        trackGroup: 'SQlite',
-        color: 'tertiary-dark',
-        properties: [
-          ['sql', sql],
-          ['params', params],
-          ['resultCount', resultCount],
-        ],
-      },
-    },
-  });
-};
-
 /** In-process OPFS SQLite client for dedicated worker contexts (no MessagePort). */
 export const makeOpfs = (
   options: OpfsConfig,
@@ -171,6 +119,11 @@ export const makeOpfs = (
         registeredVfs.add(vfsDirectory);
         const factory = yield* initModule;
         const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create(vfsDirectory, factory));
+        // Instrumented BEFORE registration: `vfs_register` hands the object to wasm, so wrapping
+        // afterwards would leave the registered methods unwrapped. This is the only place in the
+        // codebase where SQLite's disk I/O carries a byte count — nothing in CDP reports read/write
+        // bytes, and `Storage.getUsageAndQuota` gives a stored level rather than operations.
+        instrumentVfs(vfs);
         // AccessHandlePoolVFS is an untyped wa-sqlite example; vfs_register expects its VFS shape.
         sqlite3.vfs_register(vfs as any, false);
       }

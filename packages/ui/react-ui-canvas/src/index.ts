@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './components';
-export * from './hooks';
-export * from './types';
-export * from './util';
+// The pre-engine canvas, kept for canvas-editor, canvas-compute and the sequencer until the scene
+// engine replaces them (DESIGN.md phase 4).
+export * from './archive/index.ts';

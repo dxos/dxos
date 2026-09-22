@@ -3,6 +3,7 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -15,7 +16,7 @@ import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
@@ -24,26 +25,33 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
 import {
   accessTokenResolverFromService,
   configuredCredentialsLayer,
   createS3Host,
   credentialsLayerFromDatabase,
-} from './services';
+} from './services/index.ts';
+
+/** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
+const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
  * Handlers reach other operations via `Operation.Service` (backed by the EDGE
  * `FunctionsService`); remote dispatch is keyed by the operation's `deployedId`.
  */
-type EdgeFunctionServices =
+export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
   | Trace.TraceService
   | Operation.Service
-  | Registry.Service;
+  | Registry.Service
+  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
+  // is satisfied by the same layer rather than having to merge its own provider.
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export interface FunctionWrappingOptions {
   /**
@@ -93,6 +101,9 @@ export const wrapFunctionHandler = (
       try {
         await using funcContext = await new FunctionContext(context, opts).open();
 
+        // `opts.types` are already registered by `_open`; this adds the FUNCTION's own, which the
+        // context never sees. Re-adding the former is harmless (the registry de-duplicates) and
+        // keeps the two sources in one call.
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
         if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
@@ -108,7 +119,14 @@ export const wrapFunctionHandler = (
         // instance, and callers send the encoded `{'/': dxn}` form.
         if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(dataWithDecodedRefs);
+            // `reportInput` puts the rejected value in the message, and `errors: 'all'` reports
+            // every bad field at once: a remote caller cannot see its own payload in our logs, so
+            // a message naming only the expected shape leaves it guessing which field it got wrong.
+            Schema.decodeUnknownSync(Schema.toType(func.input), {
+              onExcessProperty: 'error',
+              reportInput: true,
+              errors: 'all',
+            })(dataWithDecodedRefs);
           } catch (error: any) {
             throw new InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
@@ -162,8 +180,12 @@ export const wrapFunctionHandler = (
 
 /**
  * Container for services and context for a function.
+ *
+ * Exported because a hosted `Process` needs the same set: the EDGE process host assembles this
+ * against its own bindings rather than rebuilding the layer stack, which is how the two runtimes stay
+ * in step when a service is added.
  */
-class FunctionContext extends Resource {
+export class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
@@ -185,7 +207,9 @@ class FunctionContext extends Resource {
   }
 
   override async _open() {
+    const startedAt = Date.now();
     await this.client?.open();
+    const clientOpenedAt = Date.now();
     this.db =
       this.client && this.context.spaceId
         ? this.client.constructDatabase({
@@ -197,7 +221,40 @@ class FunctionContext extends Resource {
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
-    await this.db?.open();
+    const rootSetAt = Date.now();
+    if (this.db) {
+      const db = this.db;
+      // Bounded: opening waits for the space's root document from the data service, and a root
+      // that never arrives otherwise holds the invocation until the Workers runtime kills it as
+      // hung — ~30s with no error naming the space, inherited by every caller up the chain.
+      await EffectEx.runPromise(
+        Effect.tryPromise(() => db.open()).pipe(
+          Effect.timeoutOrElse({
+            duration: SPACE_OPEN_TIMEOUT,
+            orElse: () =>
+              Effect.fail(
+                new FunctionError({
+                  message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
+                }),
+              ),
+          }),
+        ),
+      );
+    }
+    log.info('function context open timing', {
+      spaceId: this.context.spaceId,
+      clientOpenMs: clientOpenedAt - startedAt,
+      setRootMs: rootSetAt - clientOpenedAt,
+      dbOpenMs: Date.now() - rootSetAt,
+    });
+
+    // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
+    // directly and never passes through that path, so its declared schemas went unregistered and
+    // every TYPED query it made matched nothing — an agent appended a prompt to its conversation and
+    // read the queue back empty, which reads as a lost write rather than a missing schema.
+    if (this.opts.types?.length && this.db) {
+      this.db.graph.registry.add(this.opts.types);
+    }
 
     // Register the S3 backend so a handler running here can write to a bucket the space is
     // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
@@ -259,9 +316,18 @@ class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
-    const registryLayer = this.db
-      ? Layer.succeed(Registry.Service, this.db.graph.registry)
+    // The client's graph rather than the database's (they are the same graph), so the registry
+    // reached through `Hypergraph.Service` and `Registry.Service` is one object even with no space.
+    const registryLayer = this.client
+      ? Layer.succeed(Registry.Service, this.client.graph.registry)
       : Layer.succeed(Registry.Service, makeRegistry());
+
+    // The cross-space handle, alongside the space-scoped `Database.Service`: an operation invoked
+    // by a harness hook is handed a fixed payload with no space id, so it has to find its own space
+    // (`RemoteSessionOperation`). Omitting it failed every such operation at the first service
+    // access with `Service not found: @dxos/echo/Hypergraph/Service` — half of all deployed
+    // `operation.invoke` calls, after ~1.8s of work.
+    const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
 
     return Layer.mergeAll(
       dbLayer,
@@ -271,6 +337,7 @@ class FunctionContext extends Resource {
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
       registryLayer,
+      hypergraphLayer,
     );
   }
 }
@@ -431,10 +498,17 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Union': {
-      // Optional values are represented as union with undefined.
-      const nonUndefined = encoded.types.filter((t) => !SchemaAST.isUndefinedKeyword(t));
-      if (nonUndefined.length === 1) {
-        return decodeRefsFromSchema(nonUndefined[0], value, db);
+      // Optional and nullable values are represented as a union with `undefined` and/or `null`.
+      // A null or undefined `value` already returned above, so neither branch can be the one that
+      // matches here and both are safe to discard: without dropping `null`, a
+      // `Schema.optional(Schema.NullOr(Ref))` field keeps two branches, is left undecoded, and the
+      // handler rejects the caller's wire envelope — which is why updating a ref field failed
+      // while creating one with the same envelope succeeded.
+      const candidates = encoded.types.filter(
+        (type) => !SchemaAST.isUndefinedKeyword(type) && !SchemaAST.isNullKeyword(type),
+      );
+      if (candidates.length === 1) {
+        return decodeRefsFromSchema(candidates[0], value, db);
       }
 
       // For other unions we can't safely pick a branch without validating.

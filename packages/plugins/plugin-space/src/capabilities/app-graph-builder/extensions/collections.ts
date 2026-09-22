@@ -30,13 +30,13 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { resolveCollectionObjectPath } from '../../../util';
+import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory
@@ -203,12 +203,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       id: 'objects',
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
-      // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
-      // dynamically — see `resolveCollectionObjectPath`.
+      // data-dependent (the object's collection ancestry), so the id is the object's own segment and
+      // `resolve` finds the rest — see `resolveCollectionObjectPath`.
       url: {
         key: 'object',
         kind: 'item',
-        path: ({ id, workspace }) =>
+        path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections],
+        resolve: ({ id, workspace }) =>
           Effect.gen(function* () {
             if (!SpaceId.isValid(workspace)) {
               return null;
@@ -394,10 +395,11 @@ const constructObjectActions = ({
     AppGraphNode.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
-        Operation.invoke(SpaceOperation.RemoveObjects, {
-          objects: [object],
-          target: parentCollection,
-        }),
+        Operation.invoke(
+          SpaceOperation.RemoveObjects,
+          { objects: [object], target: parentCollection },
+          { spaceId: Obj.getDatabase(object)?.spaceId },
+        ),
       properties: {
         label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -18,9 +19,9 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 import { SlackOperation } from '#types';
 
-import { SLACK_SOURCE } from '../constants';
-import { formatSlackSyncFailure } from '../errors';
-import { SlackApi } from '../services';
+import { SLACK_SOURCE } from '../constants.ts';
+import { formatSlackSyncFailure } from '../errors.ts';
+import { SlackApi } from '../services/index.ts';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;
@@ -348,7 +349,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               }
 
               return { pulled: syncResult.success };
-            }).pipe(Effect.provide(Database.layer(db)), Effect.provide(SlackApi.fromAccessToken(accessTokenRef))),
+            }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), SlackApi.fromAccessToken(accessTokenRef)))),
           );
 
           if (outcome._tag === 'Success') {

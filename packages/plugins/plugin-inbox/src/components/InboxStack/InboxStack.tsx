@@ -18,10 +18,10 @@ import { type Actor, type Message, Person } from '@dxos/types';
 
 import { useVisibleTags } from '#hooks';
 
-import { getMessageBodyText, getMessageProps } from '../../util';
-import { buildContactIndex } from './contact-index';
-import { isMessageGroup } from './is-message-group';
-import { buildTileMenuItems } from './tile-menu';
+import { getMessageBodyText, getMessageProps } from '../../util/index.ts';
+import { buildContactIndex } from './contact-index.ts';
+import { isMessageGroup } from './is-message-group.ts';
+import { buildTileMenuItems } from './tile-menu.ts';
 
 export type InboxStackAction =
   // `newPlank` when the gesture asked for its own plank (meta/ctrl click) rather than reusing the

@@ -5,7 +5,7 @@
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * Hook to subscribe to atom changes with a callback

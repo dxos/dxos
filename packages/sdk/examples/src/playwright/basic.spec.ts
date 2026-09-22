@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test';
 
 import { sleep } from '@dxos/async';
 
-import { AppManager } from './app-manager';
+import { AppManager } from './app-manager.ts';
 
 test.describe('Demo', () => {
   let app: AppManager;
@@ -15,6 +15,10 @@ test.describe('Demo', () => {
     app = new AppManager(browser);
 
     await app.init();
+  });
+
+  test.afterAll(async () => {
+    await app.close();
   });
 
   test('peers can see cursors', async () => {

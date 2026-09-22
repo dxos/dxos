@@ -5,32 +5,32 @@
 import React, { useCallback } from 'react';
 import { useNavigate, useRoutes as useRouterRoutes } from 'react-router-dom';
 
-import { RootContainer } from '../containers';
+import { RootContainer } from '../containers/index.ts';
 import {
-  AutomergePanel,
-  ConfigPanel,
-  CredentialsPanel,
-  DeviceListPanel,
-  DiagnosticsPanel,
-  EdgeDashboardPanel,
-  FeedsPanel,
-  IdentityPanel,
-  InvocationTracePanel,
-  KeyringPanel,
-  LoggingPanel,
-  MembersPanel,
-  MetadataPanel,
-  NetworkPanel,
-  ObjectsPanel,
-  SignalPanel,
-  SpaceInfoPanel,
-  SpaceListPanel,
-  SqlitePanel,
-  StoragePanel,
-  SwarmPanel,
-  TestingPanel,
-  WorkflowPanel,
-} from '../panels';
+  AutomergeArticle,
+  ConfigArticle,
+  CredentialsArticle,
+  DeviceListArticle,
+  DiagnosticsArticle,
+  EdgeDashboardArticle,
+  FeedsArticle,
+  IdentityArticle,
+  InvocationTraceArticle,
+  KeyringArticle,
+  LoggingArticle,
+  MembersArticle,
+  MetadataArticle,
+  NetworkArticle,
+  ObjectsArticle,
+  SignalArticle,
+  SpaceInfoArticle,
+  SpaceListArticle,
+  SqliteArticle,
+  StorageArticle,
+  SwarmArticle,
+  TestingArticle,
+  WorkflowArticle,
+} from '../containers/index.ts';
 
 export const namespace = 'devtools';
 
@@ -53,23 +53,23 @@ export const useRoutes = () => {
           children: [
             {
               path: '/client/config',
-              element: <ConfigPanel />,
+              element: <ConfigArticle />,
             },
             {
               path: '/client/storage',
-              element: <StoragePanel />,
+              element: <StorageArticle />,
             },
             {
               path: '/client/sqlite',
-              element: <SqlitePanel />,
+              element: <SqliteArticle />,
             },
             {
               path: '/client/logs',
-              element: <LoggingPanel />,
+              element: <LoggingArticle />,
             },
             {
               path: '/client/diagnostics',
-              element: <DiagnosticsPanel />,
+              element: <DiagnosticsArticle />,
             },
           ],
         },
@@ -78,19 +78,19 @@ export const useRoutes = () => {
           children: [
             {
               path: '/halo/identity',
-              element: <IdentityPanel />,
+              element: <IdentityArticle />,
             },
             {
               path: '/halo/devices',
-              element: <DeviceListPanel />,
+              element: <DeviceListArticle />,
             },
             {
               path: '/halo/keyring',
-              element: <KeyringPanel />,
+              element: <KeyringArticle />,
             },
             {
               path: '/halo/credentials',
-              element: <CredentialsPanel />,
+              element: <CredentialsArticle />,
             },
           ],
         },
@@ -99,31 +99,31 @@ export const useRoutes = () => {
           children: [
             {
               path: '/echo/spaces',
-              element: <SpaceListPanel onSelect={handleSelectSpace} />,
+              element: <SpaceListArticle onSelect={handleSelectSpace} />,
             },
             {
               path: '/echo/space',
-              element: <SpaceInfoPanel onSelectFeed={handleSelectFeed} onSelectPipeline={handleSelectFeed} />,
+              element: <SpaceInfoArticle onSelectFeed={handleSelectFeed} onSelectPipeline={handleSelectFeed} />,
             },
             {
               path: '/echo/feeds',
-              element: <FeedsPanel />,
+              element: <FeedsArticle />,
             },
             {
               path: '/echo/objects',
-              element: <ObjectsPanel />,
+              element: <ObjectsArticle />,
             },
             {
               path: '/echo/automerge',
-              element: <AutomergePanel />,
+              element: <AutomergeArticle />,
             },
             {
               path: '/echo/members',
-              element: <MembersPanel />,
+              element: <MembersArticle />,
             },
             {
               path: '/echo/metadata',
-              element: <MetadataPanel />,
+              element: <MetadataArticle />,
             },
           ],
         },
@@ -132,15 +132,15 @@ export const useRoutes = () => {
           children: [
             {
               path: '/mesh/signal',
-              element: <SignalPanel />,
+              element: <SignalArticle />,
             },
             {
               path: '/mesh/swarm',
-              element: <SwarmPanel />,
+              element: <SwarmArticle />,
             },
             {
               path: '/mesh/network',
-              element: <NetworkPanel />,
+              element: <NetworkArticle />,
             },
           ],
         },
@@ -149,19 +149,19 @@ export const useRoutes = () => {
           children: [
             {
               path: '/edge/workflows',
-              element: <WorkflowPanel />,
+              element: <WorkflowArticle />,
             },
             {
               path: '/edge/dashboard',
-              element: <EdgeDashboardPanel />,
+              element: <EdgeDashboardArticle />,
             },
             {
               path: '/edge/traces',
-              element: <InvocationTracePanel />,
+              element: <InvocationTraceArticle />,
             },
             {
               path: '/edge/testing',
-              element: <TestingPanel />,
+              element: <TestingArticle />,
             },
           ],
         },

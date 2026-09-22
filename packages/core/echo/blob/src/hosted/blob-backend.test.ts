@@ -6,9 +6,9 @@ import { describe, test, vi } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
 
-import { type BlobTransport } from '../backend';
-import { fromDigestHex } from '../ni-uri';
-import { createEdgeBlobBackend } from './blob-backend';
+import { type BlobTransport } from '../backend.ts';
+import { fromDigestHex } from '../ni-uri.ts';
+import { createEdgeBlobBackend } from './blob-backend.ts';
 
 /**
  * A transport whose unused operations reject. Before the backend took a `BlobTransport` these tests
@@ -77,6 +77,27 @@ describe('createEdgeBlobBackend', () => {
 
     expect(result).toBe(true);
     expect(has).toHaveBeenCalledWith('deadbeef');
+  });
+
+  test('adoptUpload turns a finalized upload into an ni: URI', async ({ expect }) => {
+    const finalizeUpload = vi.fn(async () => ({ key: 'deadbeef', size: 1234, contentType: 'video/webm' }));
+    const backend = createEdgeBlobBackend({ transport: transportWith({ finalizeUpload }) });
+
+    const spaceId = SpaceId.random();
+    const result = await backend.adoptUpload?.({ spaceId, uploadId: 'upload-1' });
+
+    // The service's key becomes the blob's identity; its size and type are reported verbatim,
+    // because nothing on this side of the wire ever saw the bytes.
+    expect(result).toEqual({ uri: niUri, size: 1234, contentType: 'video/webm' });
+    expect(finalizeUpload).toHaveBeenCalledWith('upload-1');
+  });
+
+  test('adoptUpload is absent when the transport cannot finalize uploads', async ({ expect }) => {
+    const backend = createEdgeBlobBackend({ transport: transportWith({}) });
+
+    // Absent rather than throwing: the manager distinguishes "this backend cannot adopt uploads"
+    // from "the adoption failed", and only the missing method expresses the first.
+    expect(backend.adoptUpload).toBeUndefined();
   });
 
   test('getUrl builds a direct URL from the digest encoded in the URI', async ({ expect }) => {

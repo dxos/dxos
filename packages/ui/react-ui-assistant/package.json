@@ -51,7 +51,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

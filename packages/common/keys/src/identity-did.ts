@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { randomBytes } from './random-bytes';
+import { randomBytes } from './random-bytes.ts';
 
 /**
  * Denotes RFC4648 base-32 format.

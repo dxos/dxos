@@ -9,7 +9,7 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
-import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Field, Grid, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
@@ -19,6 +19,7 @@ export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
 
 export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObjectsPanelProps) => {
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
+  // TODO(burdon): Guard.
   const [selectedObject] = useQuery(
     space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),
@@ -29,9 +30,9 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.TextInput disabled placeholder='Search...' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input disabled placeholder='Search...' />
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>

@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 
 import { SpaceOperation } from '#types';
+
+import { SpaceOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = SpaceOperation.QueryObjects.pipe(
   Operation.withHandler(
@@ -26,28 +28,39 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       const selected = yield* Match.value({ text, typename }).pipe(
         Match.withReturnType<Effect.Effect<Query.Any, Error, Database.Service>>(),
         Match.when({ text: present, typename: present }, ({ text, typename }) =>
-          resolveType(typename).pipe(Effect.map((type) => fullText(text).select(Filter.type(type)))),
+          typeFilter(typename).pipe(
+            Effect.map((filter) => Query.select(Filter.text(text, { type: 'full-text' })).select(filter)),
+          ),
         ),
-        Match.when({ text: present }, ({ text }) => Effect.succeed(fullText(text))),
+        // The phrase goes to the index whole: the full-text engine ANDs its terms, so splitting it
+        // here and combining the parts widened the result instead of narrowing it.
+        Match.when({ text: present }, ({ text }) =>
+          Effect.succeed(Query.select(Filter.text(text, { type: 'full-text' }))),
+        ),
         Match.when({ typename: present }, ({ typename }) =>
-          resolveType(typename).pipe(Effect.map((type) => Query.select(Filter.type(type)))),
+          typeFilter(typename).pipe(Effect.map((filter) => Query.select(filter))),
         ),
         Match.orElse(() => Effect.succeed(Query.select(Filter.everything()))),
       );
 
       const scoped = parents && parents.length > 0 ? selected.select(Filter.childOf(parents)) : selected;
+      // One past the limit, so a full page can be told from a page that happens to end on it.
+      const probe = scoped.limit(limit + 1);
       // Queues must be scoped to the current space: `from({ allFeedsFromSpaces: true })` alone has no
       // spaceIds, so the SQL index returns nothing (see EntityMetaIndex.buildSourceCondition).
-      const query = includeQueues ? scoped.limit(limit).from(db, { includeFeeds: true }) : scoped.limit(limit);
+      const query = includeQueues ? probe.from(db, { includeFeeds: true }) : probe;
 
       yield* Database.flush();
-      const results = yield* Database.query(query).run;
+      const matched = yield* Database.query(query).run;
+      const truncated = matched.length > limit;
+      const results = truncated ? matched.slice(0, limit) : matched;
       return {
         results: results.map((object) =>
           includeContent
             ? object
             : { dxn: Obj.getURI(object), typename: Obj.getTypename(object), label: Obj.getLabel(object) },
         ),
+        truncated,
       };
     }),
   ),
@@ -55,19 +68,24 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
 
 export default handler;
 
-/** Every term must match, so the words of a phrase narrow the result rather than widening it. */
-const fullText = (text: string): Query.Any =>
-  Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
-
 /**
- * Resolves a typename against the types registered for the space, so the filter uses the same type
- * identity the registry reports rather than a bare string.
+ * The filter for a caller-supplied typename: a bare-typename DXN, which is what `Filter.type`
+ * documents for this case.
+ *
+ * Resolving the typename to a registered `Type` entity first and filtering on THAT pinned the
+ * filter to one registration — a versioned `dxn:` for a static declaration, an `echo:` id for a
+ * copy persisted in the space — so objects of the same typename written under any other
+ * registration did not match, and which registration was picked depended on the order the registry
+ * query happened to return. That is the under-return: a space holding both forms answered the same
+ * call with all of its objects, some of them, or none, run to run.
+ *
+ * The registry is still consulted, but only to reject a typename nothing declares; it no longer
+ * decides what the filter matches.
  */
-const resolveType = Effect.fnUntraced(function* (typename: string) {
+const typeFilter = Effect.fnUntraced(function* (typename: string) {
   const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
-  const schema = types.find((type) => Type.getTypename(type) === typename);
-  if (!schema) {
-    return yield* Effect.fail(new Error(`Schema not found: ${typename}`));
+  if (!types.some((type) => Type.getTypename(type) === typename)) {
+    return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
   }
-  return schema;
+  return Filter.type(DXN.make(typename));
 });

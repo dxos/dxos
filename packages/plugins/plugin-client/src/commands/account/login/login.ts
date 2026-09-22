@@ -18,14 +18,16 @@ import { CommandConfig, openBrowser, print } from '@dxos/cli-util';
 import { type LocalCallbackServer, startLocalCallbackServer } from '@dxos/cli-util/callback';
 import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
 
-import { printIdentity, waitForState } from '../../halo/util';
+import { CommandError } from '../../errors.ts';
+import { printIdentity, waitForState } from '../../halo/util.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
   ATMOSPHERE_METHOD,
@@ -33,7 +35,7 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
 type LoginMethod = 'email' | 'passkey' | typeof ATMOSPHERE_METHOD | 'device-invitation' | 'recovery-code';
 
@@ -64,7 +66,7 @@ export const login = Command.make(
       ),
       Options.optional,
     ),
-    input: Args.string('input').pipe(
+    input: Args.String('input').pipe(
       Args.withDescription(
         'Method input: email address / Atmosphere handle / invitation code / recovery code. Unused by passkey.',
       ),
@@ -81,13 +83,13 @@ export const login = Command.make(
 
     const resolvedMethod: LoginMethod = Option.isSome(method)
       ? method.value
-      : yield* Prompt.select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
+      : yield* Prompt.Select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
     const inputPrompt = INPUT_PROMPT[resolvedMethod];
     const resolvedInput = Option.isSome(input)
       ? input.value
       : inputPrompt
-        ? yield* Prompt.text({ message: `${inputPrompt}:` }).pipe(Prompt.run)
+        ? yield* Prompt.String({ message: `${inputPrompt}:` }).pipe(Prompt.run)
         : '';
 
     const identity = yield* Match.value(resolvedMethod).pipe(
@@ -169,17 +171,18 @@ const loginWithPasskey = (client: Client) =>
 
       const { token } = yield* server.waitForResult();
       if (!token) {
-        return yield* Effect.fail(new Error('The sign-in completed without returning a token.'));
+        return yield* Effect.fail(new CommandError({ message: 'The sign-in completed without returning a token.' }));
       }
 
       return yield* Effect.tryPromise({
         try: () => client.halo.recoverIdentity({ token }),
         catch: (cause) =>
-          new Error(
-            `Passkey login failed (${cause instanceof Error ? cause.message : String(cause)}). ` +
-              'EDGE admits a passkey only when it is registered as a recovery credential; add one from Composer ' +
-              'before logging in here.',
-          ),
+          new CommandError({
+            message:
+              'Passkey login failed. EDGE admits a passkey only when it is registered as a recovery credential; ' +
+              'add one from Composer before logging in here.',
+            cause,
+          }),
       });
     }).pipe(Effect.ensuring(server.stop()));
   });
@@ -203,7 +206,7 @@ const awaitLoginToken = (server: LocalCallbackServer) =>
     .waitForResult(LOGIN_TIMEOUT_MS)
     .pipe(
       Effect.flatMap(({ token }) =>
-        token ? Effect.succeed(token) : Effect.fail(new Error('The login link carried no token.')),
+        token ? Effect.succeed(token) : Effect.fail(new CommandError({ message: 'The login link carried no token.' })),
       ),
     );
 
@@ -249,20 +252,19 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
             hub.login(DxContext.default(), {
               email,
               identityDid: identity.did,
-              identityKey: identity.identityKey.toHex(),
+              identityKey: requirePublicKey(identity.identityKey).toHex(),
             }),
           catch: (cause) =>
-            new Error(
-              `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
-            ),
+            new CommandError({ message: `Login request failed. ${recovery}`, context: { email }, cause }),
         });
         if (!retry.admitted) {
           return yield* Effect.fail(
-            new Error(
-              `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+            new CommandError({
+              message:
+                `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
                 'run `dx account signup <ACCESS-CODE>` to create one. ' +
                 recovery,
-            ),
+            }),
           );
         }
         yield* invoke(ClientOperation.CreateAgent);
@@ -274,10 +276,11 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
       // redirect, so the link lands on the web app and this command has nothing to wait for.
       if (!server) {
         return yield* Effect.fail(
-          new Error(
-            'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
+          new CommandError({
+            message:
+              'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
               'Free a loopback port and run the command again.',
-          ),
+          }),
         );
       }
       yield* Console.log('Open it on this machine to finish signing in.');
@@ -298,10 +301,10 @@ const loginWithDeviceInvitation = (client: Client, encoded: string) =>
       code = new URL(code).searchParams.get('deviceInvitationCode') ?? code;
     }
     const invitation = client.halo.join(InvitationEncoder.decode(code));
-    yield* waitForState(invitation, Invitation.State.READY_FOR_AUTHENTICATION);
-    const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
+    yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
+    const authCode = yield* Prompt.String({ message: 'Enter the authentication code' }).pipe(Prompt.run);
     yield* Effect.tryPromise(() => invitation.authenticate(authCode));
-    yield* waitForState(invitation, Invitation.State.SUCCESS);
+    yield* waitForState(invitation, Invitation_State.SUCCESS);
     const identity = client.halo.identity.get();
     invariant(identity, 'Device invitation completed but no identity is present.');
     return identity;

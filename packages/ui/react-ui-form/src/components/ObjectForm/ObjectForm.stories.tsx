@@ -16,8 +16,8 @@ import { Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../testing';
-import { ObjectForm } from './ObjectForm';
+import { TestLayout } from '../../testing/index.ts';
+import { ObjectForm } from './ObjectForm.tsx';
 
 // Seed so the first background mutation deterministically targets `fullName` (moving it off 'Alice Carroll'), which
 // the play asserts. Seeded inside the component (below) rather than at module level: `@dxos/random` is a shared

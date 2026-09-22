@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { CounterConnection, type CounterSessionInfo } from '../../stories/counter-connection';
+import { CounterConnection, type CounterSessionInfo } from '../../stories/counter-connection.ts';
 
 /**
  * Snapshot of one tab's view of the shared worker. Every field is structured-clonable so the

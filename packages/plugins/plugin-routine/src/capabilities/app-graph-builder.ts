@@ -21,7 +21,27 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { getRoutinesPath } from '../paths';
+import { ROUTINES_SETTINGS_ID, getRoutinesPath } from '../paths.ts';
+
+/** The routines panel in each space's settings section. */
+export const createRoutinesSettingsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'spaceSettingsAutomation',
+    url: { key: 'routines', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+    match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+    connector: () => {
+      return Effect.succeed([
+        AppNode.makeSettingsPanel({
+          id: ROUTINES_SETTINGS_ID,
+          type: `${meta.profile.key}.space-settings-automation`,
+          label: ['automation-panel.label', { ns: meta.profile.key }],
+          icon: 'ph--lightning--regular',
+          iconHue: 'emerald',
+          position: Position.last,
+        }),
+      ]);
+    },
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -37,25 +57,10 @@ export default Capability.makeModule(
             targetNodeId: getRoutinesPath(space.db.spaceId),
           }),
       }),
-      AppGraphBuilder.createExtension({
-        id: 'spaceSettingsAutomation',
-        url: { key: 'routines', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
-        match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
-        connector: () => {
-          return Effect.succeed([
-            AppNode.makeSettingsPanel({
-              id: 'routines',
-              type: `${meta.profile.key}.space-settings-automation`,
-              label: ['automation-panel.label', { ns: meta.profile.key }],
-              icon: 'ph--lightning--regular',
-              iconHue: 'emerald',
-              position: Position.last,
-            }),
-          ]);
-        },
-      }),
+      createRoutinesSettingsExtension(),
       AppGraphBuilder.createTypeExtension({
         id: 'routineRuns',
+        relation: AppNode.companion,
         type: Routine.Routine,
         connector: () =>
           Effect.succeed([

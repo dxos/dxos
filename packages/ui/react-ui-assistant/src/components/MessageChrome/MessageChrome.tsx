@@ -2,17 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { formatTime } from './format-time';
+import { translationKey } from '../../translations.ts';
+import { formatTime } from './format-time.ts';
 
 //
 // Context
@@ -29,6 +28,8 @@ type MessageChromeContextValue = {
   showContext?: boolean;
   /** Show the message id in the toolbars — one turn is several messages, and ids say which. */
   debug?: boolean;
+  /** The reader's identity hue; a prompt's edge wears it, so whose turn it is reads by colour too. */
+  userHue?: string;
 };
 
 // Every field is optional configuration, so a missing provider defaults instead of throwing.
@@ -207,7 +208,7 @@ const reveal = 'pt-1 opacity-0 transition-opacity';
 const revealOnHover = 'group-hover/message:opacity-100';
 
 const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => (
-  <div className={mx('group/message relative px-2 py-2', classNames)} data-testid='feed.message'>
+  <div className={mx('group/message relative py-2', classNames)} data-testid='feed.message'>
     {children}
   </div>
 );
@@ -222,7 +223,7 @@ const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
-  const { streaming } = useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const { streaming, userHue } = useMessageChromeContext(MESSAGE_CHROME_NAME);
   const prompt = isPrompt(message);
 
   return (
@@ -231,7 +232,14 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
-            <div className='px-3 py-2 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
+            <div
+              className={mx(
+                'px-3 py-2 border-s-2 rounded-sm bg-input-surface',
+                userHue ? getStyles(userHue).border : 'border-accent-bg',
+              )}
+            >
+              {children}
+            </div>
             <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
           </div>
         </div>

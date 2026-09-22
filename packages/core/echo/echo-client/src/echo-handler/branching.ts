@@ -7,11 +7,11 @@ import { type Heads } from '@automerge/automerge';
 import { type Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 
-import { type DecodedAutomergePrimaryValue } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-import { getObjectCore } from './echo-object-utils';
-import { isEchoObject } from './echo-object-utils';
-import { getEchoDatabase } from './echo-proxy-target';
+import { type DecodedAutomergePrimaryValue } from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { getObjectCore } from './echo-object-utils.ts';
+import { isEchoObject } from './echo-object-utils.ts';
+import { getEchoDatabase } from './echo-proxy-target.ts';
 
 const resolve = (obj: Obj.Unknown): { db: EchoDatabase; id: string } => {
   assertArgument(isEchoObject(obj), 'obj', 'expected ECHO object stored in the database');

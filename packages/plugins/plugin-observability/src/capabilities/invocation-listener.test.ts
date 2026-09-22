@@ -16,7 +16,8 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { OperationInvoker } from '@dxos/operation';
 
-import { type MappedEvent, listen } from './invocation-listener';
+import { ObservabilityPluginError } from '../errors.ts';
+import { type MappedEvent, listen } from './invocation-listener.ts';
 
 const Rename = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.rename') },
@@ -156,7 +157,7 @@ describe('invocation listener', () => {
           Effect.gen(function* () {
             attempts++;
             yield* waiter.checkWaiter(attempts);
-            return yield* Effect.fail(new Error('sink down'));
+            return yield* Effect.fail(new ObservabilityPluginError({ message: 'sink down' }));
           }),
       ),
     );

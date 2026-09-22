@@ -18,8 +18,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 
-import { type Column, Table } from '../../../../components';
-import { theme } from '../../../../theme';
+import { type Column, Table } from '../../../../components/index.ts';
+import { theme } from '../../../../theme.ts';
 
 export type TraceProps = {
   db: Database.Database;

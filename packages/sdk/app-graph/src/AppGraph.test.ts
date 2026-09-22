@@ -12,17 +12,17 @@ import { assert, describe, expect, onTestFinished, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
-import * as Node from './AppGraphNode';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
+import * as Node from './AppGraphNode.ts';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'org.dxos.type.example';
 const CHILD_RELATION_KEY = Graph.relationKey('child');
-const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Node.childRelation('inbound'));
+const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Graph.inverseRelation(Node.child));
 const ACTIONS_RELATION_KEY = Graph.relationKey('action');
-const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Node.actionRelation('inbound'));
+const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Graph.inverseRelation(Node.action));
 
 describe('Graph', () => {
   test('getGraph', () => {
@@ -86,6 +86,11 @@ describe('Graph', () => {
 
     Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     expect(count).toEqual(2);
+  });
+
+  test('getNodeOrThrow throws NotFoundError for a missing node', () => {
+    const graph = Graph.make({ registry: Registry.make() });
+    expect(() => Graph.getNodeOrThrow(graph, EXAMPLE_ID)).toThrow(GraphNode.NotFoundError);
   });
 
   test('remove node', () => {
@@ -312,7 +317,7 @@ describe('Graph', () => {
     const targetEdges = registry.get(graph.edges(exampleId(2)));
     expect(targetEdges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
     expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([exampleId(1)]);
-    const reverseConnections = registry.get(graph.connections(exampleId(2), Node.actionRelation('inbound')));
+    const reverseConnections = registry.get(graph.connections(exampleId(2), Graph.inverseRelation(Node.action)));
     expect(reverseConnections.map(({ id }) => id)).toEqual([exampleId(1)]);
   });
 
@@ -479,6 +484,17 @@ describe('Graph', () => {
     });
   });
 
+  test('json skips a node removed without its edges', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: GraphNode.RootId, type: Node.RootType, nodes: [{ id: 'test1', type: 'test' }] });
+    const cancel = registry.subscribe(graph.json(), () => {});
+    onTestFinished(() => cancel());
+
+    Graph.removeNode(graph, 'test1');
+    expect(registry.get(graph.json())).to.deep.equal({ id: GraphNode.RootId, type: Node.RootType });
+  });
+
   test('get path', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
@@ -604,7 +620,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'test2',
-        relation: Node.childRelation('inbound'),
+        relation: Graph.inverseRelation(Node.child),
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -621,7 +637,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'action',
-        relation: Node.actionRelation('inbound'),
+        relation: Graph.inverseRelation(Node.action),
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -844,7 +860,7 @@ describe('Graph', () => {
     expect(expandCalls).to.deep.equal([]);
 
     Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });
-    expect(expandCalls).to.deep.equal([[childId, Node.childRelation()]]);
+    expect(expandCalls).to.deep.equal([[childId, Node.child]]);
   });
   test('waitForPath curried', async () => {
     const graph = Graph.make();

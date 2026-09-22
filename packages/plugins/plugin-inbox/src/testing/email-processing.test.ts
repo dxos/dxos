@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/types/testing';
 
-import { processEmail } from './email-processor';
+import { processEmail } from './email-processor.ts';
 
 describe.skip('Email Processing', () => {
   test('content extraction and labeling', { timeout: 180_000 }, async () => {

@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import * as Entity from './Entity';
-import { SnapshotKindId } from './internal';
-import * as Obj from './Obj';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
+import * as Entity from './Entity.ts';
+import { SnapshotKindId } from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
 
 describe('Relation', () => {
   describe('Snapshot', () => {

@@ -8,7 +8,7 @@ import { getEdgeUrlWithProtocol } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { EntityId, SpaceId } from '@dxos/keys';
 
-import { CALLBACK_TIMEOUT_MS, startLocalCallbackServer } from '../callback/server';
+import { CALLBACK_TIMEOUT_MS, startLocalCallbackServer } from '../callback/server.ts';
 
 /** A gate OAuth flow (recovery or registration) failed to initiate or complete. */
 export class OAuthFlowError extends BaseError.extend('OAuthFlowError', 'OAuth flow failed.') {}

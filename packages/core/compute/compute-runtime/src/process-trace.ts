@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { detachData } from './trace-buffer';
+import { detachData } from './trace-buffer.ts';
 
 export interface ProcessTraceServiceOptions {
   /** Id of the process whose events we're tagging. */

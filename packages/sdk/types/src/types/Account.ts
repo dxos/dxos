@@ -7,10 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { AccessToken } from '@dxos/link';
 
-import * as Provider from './Provider';
+import * as Provider from './Provider.ts';
 
 /**
  * A user's account / membership with an external service.
@@ -29,7 +28,7 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ac
     notes: Schema.optional(Schema.String),
     accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['displayName']),
+    Annotation.LabelAnnotation.set(['displayName']),
     Annotation.IconAnnotation.set({ icon: 'ph--identification-card--regular', hue: 'teal' }),
   ),
 ) {}

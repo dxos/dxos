@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 
-import { getRemotePluginIds } from '../categories';
+import { getRemotePluginIds } from '../categories.ts';
 
 /**
  * Auto-tags that are derived at display time rather than persisted to `Plugin.Meta`.

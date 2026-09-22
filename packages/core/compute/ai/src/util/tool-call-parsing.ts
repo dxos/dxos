@@ -20,12 +20,17 @@ import { log } from '@dxos/log';
  * `InvalidOutputError` failure or, depending on the provider, a raw `SyntaxError` defect — since
  * the raw delta parts consumers read have all been emitted by then.
  */
-export const withoutToolCallParsing = <Tools extends Record<string, Tool.Any>, E extends AiError.AiError, R>(
-  stream: Stream.Stream<Response.StreamPart<Tools>, E, R>,
-): Stream.Stream<Response.StreamPart<Tools>, E, R> => {
+export const withoutToolCallParsing = <
+  Tools extends Record<string, Tool.Any>,
+  ParametersMode extends Response.ToolParametersMode,
+  E extends AiError.AiError,
+  R,
+>(
+  stream: Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R>,
+): Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R> => {
   return stream.pipe(
     Stream.filter((part) => part.type !== 'tool-call'),
-    Stream.catchCause((cause: Cause.Cause<E>): Stream.Stream<Response.StreamPart<Tools>, E, R> => {
+    Stream.catchCause((cause: Cause.Cause<E>): Stream.Stream<Response.StreamPart<Tools, ParametersMode>, E, R> => {
       if (isToolCallParseFailure(cause)) {
         log.warn('tool call parameters did not parse', { error: Cause.pretty(cause) });
         return Stream.empty;
@@ -40,9 +45,12 @@ const isToolCallParseFailure = (cause: Cause.Cause<unknown>): boolean =>
   cause.reasons.length > 0 &&
   cause.reasons.every((reason) =>
     reason._tag === 'Fail'
-      ? isInvalidOutputError(reason.error)
+      ? isToolParamsError(reason.error)
       : reason._tag === 'Die' && reason.defect instanceof SyntaxError,
   );
 
-const isInvalidOutputError = (error: unknown): boolean =>
-  Predicate.hasProperty(error, 'reason') && Predicate.isTagged(error.reason, 'InvalidOutputError');
+// Providers report unparseable tool params as `InvalidOutputError` or `ToolParameterValidationError`.
+const isToolParamsError = (error: unknown): boolean =>
+  Predicate.hasProperty(error, 'reason') &&
+  (Predicate.isTagged(error.reason, 'InvalidOutputError') ||
+    Predicate.isTagged(error.reason, 'ToolParameterValidationError'));

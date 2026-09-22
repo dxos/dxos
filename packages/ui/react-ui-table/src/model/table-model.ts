@@ -7,8 +7,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
-import { type Mutable, getSnapshot } from '@dxos/echo/Obj';
+import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -25,12 +24,12 @@ import {
 import { formatForEditing } from '@dxos/schema';
 import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
 
-import { type Table } from '../types';
-import { extractOrder } from '../util';
-import { compareValues } from '../util/sort';
-import { extractTagIds } from '../util/tag';
-import { type SelectionMode, SelectionModel } from './selection-model';
-import { type FieldSortType, tableSortAspect } from './table-view-state';
+import { type Table } from '../types/index.ts';
+import { extractOrder } from '../util/index.ts';
+import { compareValues } from '../util/sort.ts';
+import { extractTagIds } from '../util/tag.ts';
+import { type SelectionMode, SelectionModel } from './selection-model.ts';
+import { type FieldSortType, tableSortAspect } from './table-view-state.ts';
 
 /**
  * Callback type for wrapping mutations in Obj.update().
@@ -38,7 +37,7 @@ import { type FieldSortType, tableSortAspect } from './table-view-state';
  */
 export type TableChangeCallback<T extends TableRow> = {
   /** Callback to wrap table object mutations. */
-  table: (mutate: (mutableTable: Mutable<Table.Table>) => void) => void;
+  table: (mutate: (mutableTable: Obj.Mutable<Table.Table>) => void) => void;
   /** Callback to wrap row mutations. */
   row: (row: T, mutate: (mutableRow: T) => void) => void;
 };
@@ -127,7 +126,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   initialSelection?: string[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
-  onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
+  onResolveSchema?: (typename: string) => Promise<JsonSchema.JsonSchema>;
   onInsertRow?: (data?: any) => InsertRowResult;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onColumnDelete?: (fieldId: string) => void;
@@ -675,7 +674,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   private validateDraftRowData(data: T): ValidationError[] {
-    const schema = toEffectSchema(this._projection.baseSchema);
+    const schema = JsonSchema.toEffectSchema(this._projection.baseSchema);
     return validateSchema(schema, data) || [];
   }
 
@@ -814,7 +813,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       invariant(currentRow, 'Invalid row index');
 
       // TableRow is a generic type; cast to Obj.Unknown for Echo introspection APIs.
-      const snapshot = { ...getSnapshot(currentRow as unknown as Obj.Unknown) };
+      const snapshot = { ...Obj.getSnapshot(currentRow as unknown as Obj.Unknown) };
       SchemaEx.setValue(snapshot, field.path, transformedValue);
 
       const type = Obj.getType(currentRow as unknown as Obj.Unknown);
@@ -1036,13 +1035,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         // Persist sort to view.query.ast
         const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
         Obj.update(view, (view) => {
-          view.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
+          view.query.ast = newQuery.ast as Obj.Mutable<typeof newQuery.ast>;
         });
       }
     } else {
       // Clear sort from view.query.ast
       Obj.update(view, (view) => {
-        view.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
+        view.query.ast = baseQuery.ast as Obj.Mutable<typeof baseQuery.ast>;
       });
     }
 

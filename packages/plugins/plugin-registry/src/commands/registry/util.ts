@@ -16,6 +16,8 @@ import { Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { ALL_NSIDS, ATMOSPHERE_SOURCE, NSID } from '@dxos/protocols';
 
+import { RegistryCommandError } from './errors.ts';
+
 export { ALL_NSIDS, NSID };
 
 /**
@@ -135,14 +137,16 @@ export const resolvePds = (did: string) =>
       const path = segments.length > 0 ? `/${segments.join('/')}/did.json` : '/.well-known/did.json';
       doc = yield* xrpcGet(`https://${host}${path}`, {}, DidDocumentSchema);
     } else {
-      return yield* Effect.fail(new Error(`Unsupported DID method: ${did}`));
+      return yield* Effect.fail(new RegistryCommandError({ message: `Unsupported DID method: ${did}` }));
     }
     const service = doc.service?.find(
       (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
     );
     const endpoint = service?.serviceEndpoint;
     if (typeof endpoint !== 'string' || endpoint.length === 0) {
-      return yield* Effect.fail(new Error(`PDS endpoint missing in DID document for ${did}`));
+      return yield* Effect.fail(
+        new RegistryCommandError({ message: `PDS endpoint missing in DID document for ${did}` }),
+      );
     }
     return endpoint;
   });
@@ -225,9 +229,9 @@ export type ResolveSessionOptions = {
  */
 export const resolveSession = (options: ResolveSessionOptions) =>
   Effect.gen(function* () {
-    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_HANDLE')));
+    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.String('ATPROTO_HANDLE')));
     const appPassword =
-      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_APP_PASSWORD')));
+      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.String('ATPROTO_APP_PASSWORD')));
     if (handle && appPassword) {
       return yield* createSession(handle, appPassword);
     }
@@ -239,14 +243,17 @@ export const resolveSession = (options: ResolveSessionOptions) =>
 
     if (options.client.halo.identity.get()) {
       return yield* Effect.fail(
-        new Error(
-          'No atproto integration connected. Connect one with `dx integration add`, or pass --handle/--app-password. ' +
+        new RegistryCommandError({
+          message:
+            'No atproto integration connected. Connect one with `dx integration add`, or pass --handle/--app-password. ' +
             '(`dx account login` cannot add an integration to an existing identity.)',
-        ),
+        }),
       );
     }
     return yield* Effect.fail(
-      new Error('No DXOS identity. Run `dx account login` first, or pass --handle/--app-password.'),
+      new RegistryCommandError({
+        message: 'No DXOS identity. Run `dx account login` first, or pass --handle/--app-password.',
+      }),
     );
   });
 

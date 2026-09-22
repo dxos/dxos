@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { FieldPath } from '../Annotation';
-import { EchoObjectSchema } from '../Entity';
-import { FormatAnnotation, TypeFormat } from '../Format';
-import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../JsonSchema';
-import { composeSchema } from './compose';
+import { FieldPath } from '../Annotation/index.ts';
+import { EchoObjectSchema } from '../Entity/index.ts';
+import { FormatAnnotation, TypeFormat } from '../Format/index.ts';
+import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../JsonSchema/index.ts';
+import { composeSchema } from './compose.ts';
 
 describe('schema composition', () => {
   test('schema composition', ({ expect }) => {

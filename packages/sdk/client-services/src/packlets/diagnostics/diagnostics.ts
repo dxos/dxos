@@ -2,30 +2,47 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+
 import { asyncTimeout } from '@dxos/async';
 import { getFirstStreamValue } from '@dxos/async';
-import { type ClientServices } from '@dxos/client-protocol';
+import { type ClientServices, makeClientServicesRpcFromRouter, makeServicesFromRpc } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
-import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
+import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { buf, fromPublicKey, fromTimeframe, toDate, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device,
   type Identity,
+  IdentitySchema,
   type NetworkStatus,
   type Platform,
-  SpaceMember,
-  type Space as SpaceProto,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type Space_Metrics,
+  type Space_PipelineState,
+  Space_PipelineStateSchema,
+  IdentitySchema as SpaceIdentitySchema,
+  type SpaceMember,
+  SpaceMember_PresenceState,
+  SpaceMemberSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 
-import { DXOS_VERSION } from '../../version';
-import { type ServiceContext } from '../services';
-import { getPlatform } from '../services/platform';
-import { type DataSpace } from '../spaces';
+import { DXOS_VERSION } from '../../version.ts';
+import { IdentityManagerService } from '../identity/index.ts';
+import { getPlatform } from '../services/platform.ts';
+import { DataSpaceManagerService } from '../spaces/index.ts';
+import { type DataSpace } from '../spaces/index.ts';
 
 const DEFAULT_TIMEOUT = 1_000;
 
@@ -63,20 +80,40 @@ export type SpaceStats = {
   db?: {
     objects: number;
   };
-  metrics?: SpaceProto.Metrics & {
+  metrics?: Space_Metrics & {
     startupTime?: number;
   };
-  epochs?: (Epoch & { id?: PublicKey })[];
+  epochs?: { epoch: Epoch; id?: PublicKey }[];
   members?: SpaceMember[];
-  pipeline?: SpaceProto.PipelineState;
+  pipeline?: Space_PipelineState;
 };
+
+/**
+ * {@link createDiagnostics} over the services registered with a stack's {@link RpcRouter.RpcRouter},
+ * bridged in-process for the duration of the collection.
+ */
+export const createDiagnosticsFromRouter = (
+  router: RpcRouter.Service,
+  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
+  config: Config,
+): Promise<Diagnostics['services']> =>
+  EffectEx.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const rpc = yield* makeClientServicesRpcFromRouter.pipe(Effect.provideService(RpcRouter.RpcRouter, router));
+        return yield* Effect.promise(() =>
+          createDiagnostics(makeServicesFromRpc(rpc, EffectContext.empty()), stack, config),
+        );
+      }),
+    ),
+  );
 
 /**
  * Create diagnostics to provide snapshot of current system state.
  */
 export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
-  serviceContext: ServiceContext,
+  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
   config: Config,
 ): Promise<Diagnostics['services']> => {
   const diagnostics: Diagnostics['services'] = {
@@ -102,16 +139,16 @@ export const createDiagnostics = async (
     (async () => {
       diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
     })(),
-    async () => {
-      const identity = serviceContext.identityManager.identity;
+    (async () => {
+      const identity = EffectContext.get(stack, IdentityManagerService).identity;
       if (identity) {
         // Identity.
-        diagnostics.identity = {
+        diagnostics.identity = buf.create(IdentitySchema, {
           did: identity.did,
-          identityKey: identity.identityKey,
-          spaceKey: identity.space.key,
+          identityKey: fromPublicKey(identity.identityKey),
+          spaceKey: fromPublicKey(identity.space.key),
           profile: identity.profileDocument,
-        };
+        });
 
         // Devices.
         const { devices } =
@@ -123,11 +160,10 @@ export const createDiagnostics = async (
         // TODO(dmaretskyi): Add metrics for halo space.
 
         // Spaces.
-        if (serviceContext.dataSpaceManager) {
-          diagnostics.spaces = await Promise.all(
-            Array.from(serviceContext.dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)) ?? [],
-          );
-        }
+        const dataSpaceManager = EffectContext.get(stack, DataSpaceManagerService);
+        diagnostics.spaces = await Promise.all(
+          Array.from(dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)),
+        );
 
         // Feeds.
         const { feeds = [] } =
@@ -145,9 +181,11 @@ export const createDiagnostics = async (
 
         // Networking.
 
-        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
+        diagnostics.swarms = EffectContext.get(stack, SwarmNetworkManagerService).connectionLog?.swarms;
       }
-    },
+      // Diagnostics are best-effort: a half-open space or a tag the stack has not built yet must
+      // leave the other sections intact rather than failing the whole report.
+    })().catch((err) => log.warn('failed to collect identity diagnostics', { err })),
   ]);
 
   diagnostics.config = config.values;
@@ -160,45 +198,43 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     key: space.key,
     metrics: space.metrics,
 
-    epochs: space.inner.spaceState.credentials
-      .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
-      .map((credential) => ({
-        ...credential.subject.assertion,
-        id: credential.id,
-      })),
-
-    members: await Promise.all(
-      Array.from(space.inner.spaceState.members.values()).map(async (member) => ({
-        role: member.role,
-        identity: {
-          did: await createDidFromIdentityKey(member.key),
-          identityKey: member.key,
-          profile: {
-            displayName: member.assertion.profile?.displayName,
-          },
-        },
-        presence:
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
-            ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE,
-      })),
+    epochs: credentialsOfType<Epoch>('dxos.halo.credentials.Epoch')(space.inner.spaceState.credentials).map(
+      ({ credential, assertion }) => ({ epoch: assertion, id: toPublicKey(credential.id) }),
     ),
 
-    pipeline: {
-      // TODO(burdon): Pick properties from credentials if needed.
-      currentEpoch: space.automergeSpaceState.lastEpoch,
-      appliedEpoch: space.automergeSpaceState.lastEpoch,
+    members: await Promise.all(
+      Array.from(space.inner.spaceState.members.values()).map(async (member) =>
+        buf.create(SpaceMemberSchema, {
+          role: member.role,
+          identity: buf.create(SpaceIdentitySchema, {
+            did: await createDidFromIdentityKey(member.key),
+            identityKey: fromPublicKey(member.key),
+            profile: member.assertion.profile,
+          }),
+          presence:
+            space.presence.getPeersByIdentityKey(member.key).length > 0
+              ? SpaceMember_PresenceState.ONLINE
+              : SpaceMember_PresenceState.OFFLINE,
+        }),
+      ),
+    ),
 
-      controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
-      currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
-      targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
-      totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
-    },
+    pipeline: buf.create(Space_PipelineStateSchema, {
+      // TODO(burdon): Pick properties from credentials if needed.
+      currentEpoch: space.automergeSpaceState.lastEpoch?.credential,
+      appliedEpoch: space.automergeSpaceState.lastEpoch?.credential,
+
+      controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => fromPublicKey(feed.key)),
+      currentControlTimeframe: fromTimeframe(space.inner.controlPipeline.state.timeframe),
+      targetControlTimeframe: fromTimeframe(space.inner.controlPipeline.state.targetTimeframe),
+      totalControlTimeframe: fromTimeframe(space.inner.controlPipeline.state.endTimeframe),
+    }),
   };
 
   // TODO(burdon): Factor out.
   if (stats.metrics) {
-    const { open, ready } = stats.metrics;
+    const open = toDate(stats.metrics.open);
+    const ready = toDate(stats.metrics.ready);
     stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
   }
 

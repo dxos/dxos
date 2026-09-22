@@ -15,7 +15,7 @@ import { Message } from '@dxos/types';
 
 import { ProjectMailboxOperation } from '#types';
 
-import { messagesAscending, senderMatches, upsertTask } from './helpers';
+import { messagesAscending, senderMatches, upsertTask } from './helpers.ts';
 
 /** Task title/description for a tracked request message. */
 const taskFromMessage = (message: Message.Message): { title: string; description: string } => {

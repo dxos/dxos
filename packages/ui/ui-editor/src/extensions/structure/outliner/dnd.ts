@@ -6,7 +6,7 @@ import { getIndentUnit } from '@codemirror/language';
 import { type EditorState, type Extension } from '@codemirror/state';
 import { type Command, EditorView } from '@codemirror/view';
 
-import { bulletListIndentationWidth } from '../../language/markdown/styles';
+import { bulletListIndentationWidth } from '../../language/markdown/styles.ts';
 import {
   type Block,
   type BlockOps,
@@ -14,8 +14,8 @@ import {
   createBlockDrag,
   createBlockSelection,
   setBlockSelection,
-} from '../blocks';
-import { type Item, type Tree, getRange, treeFacet } from './tree';
+} from '../blocks/index.ts';
+import { type Item, type Tree, getRange, treeFacet } from './tree.ts';
 
 /**
  * Flattens the tree into draggable units in document order, one per item. Each unit spans only the
@@ -324,11 +324,17 @@ const outlinerBlockOps: BlockOps = {
  * operate on item lines. The grip is a floating overlay pinned to the content's left edge (see
  * `createBlockDrag`), so it needs no outliner-specific gutter styling.
  */
+/** An empty item has nothing to move; its grip would only crowd the add button and the placeholder. */
+export const canDragItem = (state: EditorState, block: Block): boolean => {
+  const item = state.facet(treeFacet).find(block.from);
+  return item != null && item.contentRange.from !== item.contentRange.to;
+};
+
 export const outlinerDnd = (): Extension => [
   // The selection highlight is drawn by `outliner.ts` as a line decoration (aligned to the actual rows);
   // the `blocks` RectangleMarker layer is skipped here because it drifts against the outliner's row CSS.
   createBlockSelection(outlinerBlockOps),
-  createBlockDrag({ getBlocks, moveBlocks, getExtent, keepTrailingBreak: true, getDropIndent }),
+  createBlockDrag({ getBlocks, canDrag: canDragItem, moveBlocks, getExtent, keepTrailingBreak: true, getDropIndent }),
 ];
 
 //

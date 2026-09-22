@@ -10,10 +10,10 @@ import { describe, test } from 'vitest';
 import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Type from './Type.ts';
 
 describe('Annotation', () => {
   describe('make', () => {
@@ -503,6 +503,14 @@ describe('Annotation', () => {
       // Changing a different key leaves typeA's value content unchanged.
       setOrder(obj, { typeA: ['x', 'y'], typeB: ['m', 'n'] });
       expect(registry.get(atomA)).toEqual(['x', 'y']);
+    });
+
+    test('atom is one atom per target and annotation', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      expect(Annotation.atom(obj, OrderAnnotation)).toBe(Annotation.atom(obj, OrderAnnotation));
+      expect(Annotation.atom(obj, OrderAnnotation)).not.toBe(
+        Annotation.atom(Obj.make(Container, { name: 'B' }), OrderAnnotation),
+      );
     });
 
     test('atom exposes the whole annotation value as an Option', ({ expect }) => {

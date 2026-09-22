@@ -7,10 +7,10 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { DeviceType, useHaloInvitations } from '@dxos/react-client/halo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components';
-import { type IdentityPanelStepProps } from '../IdentityPanelProps';
+import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components/index.ts';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps.ts';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
 
@@ -25,7 +25,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
     if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
       const subscription = invitation.subscribe((invitation: Invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
-        if (invitation.state === Invitation.State.CONNECTING) {
+        if (invitation.state === Invitation_State.CONNECTING) {
           log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           subscription.unsubscribe();
         }

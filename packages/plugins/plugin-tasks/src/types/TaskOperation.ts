@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Format, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
@@ -44,7 +45,7 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
+    priority: Schema.optional(Task.Priority),
     assignee: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task; the task still joins the set's flat `tasks` array. */
     parentTask: Schema.optional(Ref.Ref(Task.Task)),
@@ -67,18 +68,42 @@ export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
-    description: 'Patch task fields: title, description, status, priority, estimate, assignee.',
+    description:
+      'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
+      'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
+      'creating the session record in the space if it is not there yet.',
     icon: 'ph--pencil-simple--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
-    estimate: Schema.optional(Schema.Number),
-    assignee: Schema.optional(Actor.Actor),
+    // `null` clears an optional field, matching `Task.Edit` — without it the operation can set an
+    // assignee but never remove one.
+    description: Schema.optional(Schema.NullOr(Schema.String)),
+    status: Schema.optional(Task.Status),
+    priority: Schema.optional(Schema.NullOr(Task.Priority)),
+    estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
+    assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
+    /**
+     * Assign the task to a coding-agent session, by the harness session id — one call, rather than
+     * looking the session object up first and composing the actor by hand.
+     *
+     * An agent's actor is the object it IS, so the assignee it produces carries a `subject` ref to
+     * the session; a bare `{ role: 'assistant' }` would record that AN assistant owns the task but
+     * not which run, and a session's own check-in finds its open tasks by that ref. The session is
+     * created in the task's space when this id is not recorded there yet, so an agent can claim
+     * work on its first call.
+     */
+    remoteSession: Schema.optional(
+      Schema.Struct({
+        sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
+        title: Schema.optional(Schema.String),
+        repo: Schema.optional(Schema.String),
+        branch: Schema.optional(Schema.String),
+        worktree: Schema.optional(Schema.String),
+      }),
+    ),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
@@ -91,6 +116,24 @@ export const UpdateTask = Operation.make({
     task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
+
+export const TaskRestorePoint = Schema.Struct({
+  entries: Schema.Array(
+    Schema.Struct({
+      task: Type.getSchema(Task.Task),
+      index: Schema.optional(Schema.Number).annotate({
+        description: "Position the task held in the set's `tasks` array; absent when it belonged to no set.",
+      }),
+    }),
+  ).annotate({
+    description: 'The deleted task and every sub-task that went with it.',
+  }),
+  taskSet: Schema.optional(Type.getSchema(TaskSet.TaskSet)).annotate({
+    description: 'The set the tasks were filed in, when they were in one.',
+  }),
+});
+
+export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
 
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
@@ -111,8 +154,20 @@ export const DeleteTask = Operation.make({
   output: Schema.Struct({
     /** Ids of the deleted task and every sub-task that went with it. */
     deleted: Schema.Array(Schema.String),
+    restore: TaskRestorePoint,
   }),
 }).pipe(Operation.mutation('destructive'));
+
+export const RestoreTasks = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.restore'),
+    name: 'Restore Tasks',
+    description: 'Restore deleted tasks and their sub-tasks to their task set.',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
+  input: TaskRestorePoint,
+  output: Schema.Void,
+}).pipe(Operation.mutation('write'));
 
 /**
  * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array
@@ -121,6 +176,11 @@ export const DeleteTask = Operation.make({
  * Re-parenting is part of the same verb because a drop in the tree is both at once: doing it as
  * `UpdateTask` then `MoveTask` leaves a window where the task hangs at the end of its new parent
  * before the position lands, and costs two undo entries for one gesture.
+ *
+ * The input carries every object the write touches, so the handler needs no query and no
+ * services. With loaded refs it completes without an async boundary — a drop runs it under
+ * `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay — while
+ * unloaded refs (e.g. an agent caller) load asynchronously through the same path.
  */
 export const MoveTask = Operation.make({
   meta: {
@@ -129,9 +189,9 @@ export const MoveTask = Operation.make({
     description: 'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
-  services: [Database.Service],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
+    taskSet: Ref.Ref(TaskSet.TaskSet),
     /** Insert immediately before this task; omit to move to the end. */
     before: Schema.optional(Ref.Ref(Task.Task)),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */
@@ -165,7 +225,7 @@ export const ListTasks = Operation.make({
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task set is listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
+    status: Schema.optional(Task.Status),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */

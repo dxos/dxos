@@ -9,10 +9,10 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext';
-import { Piece, type PieceProps } from './Piece';
-import { Square, type SquareProps } from './Square';
-import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types';
+import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext.ts';
+import { Piece, type PieceProps } from './Piece.tsx';
+import { Square, type SquareProps } from './Square.tsx';
+import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types.ts';
 
 //
 // Root
@@ -93,7 +93,7 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   ({ children, classNames, grow, contain }, forwardedRef) => {
     return (
       <div
-        className={mx(grow && 'dx-container-type-size dx-expander grid place-content-center', classNames)}
+        className={mx(grow && 'dx-container-type-size dx-expand grid place-content-center', classNames)}
         ref={forwardedRef}
       >
         {contain ? <div className='w-[min(100cqw,100cqh)] h-[min(100cqw,100cqh)]'>{children}</div> : children}

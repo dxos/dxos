@@ -14,11 +14,12 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, isTreeData } from '@dxos/react-ui-list';
+import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -26,7 +27,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveMigrationOperation } from '../../util';
+import { filterItems, getParent, resolveMigrationOperation } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -57,6 +58,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
+    // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
+    // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
+    // the message and the sidebar is never blank.
+    const tabPresence = useNavigationPresence(graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
+    const tabUnavailable = tab !== DeckSchema.DEFAULT_DECK_ID && tabPresence !== 'exists';
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
@@ -141,24 +147,29 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         path,
         option,
         shift,
+        keyboard = false,
       }: {
         item: AppGraphNode.Node;
         path: string[];
         option: boolean;
         shift: boolean;
+        keyboard?: boolean;
       }) => {
         if (!node.data) {
           return;
         }
 
         if (AppGraphNode.isAction(node)) {
-          const [parent] = AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound'));
+          const [parent] = AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child));
           if (parent) {
             void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
           return;
         }
 
+        // A click leaves focus on the row, so the arrows keep walking the tree; Enter is the reader
+        // committing to the item, so focus goes on into its content and they can type at once.
+        const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
         if (!current) {
           // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
@@ -167,11 +178,12 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             subject: [node.id],
             disposition: 'solo',
             modifiers: { shift },
+            focus,
           });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
+          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
         }
 
         const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>
@@ -193,7 +205,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {
       return monitorForElements({
-        canMonitor: ({ source }) => isTreeData(source.data),
+        // Scoped to this tree: monitors are global and every tree's payload has the same shape, so
+        // without the id this claimed a task list's drag and then read its item as a graph node.
+        canMonitor: ({ source }) => isTreeDataFor(source.data, GraphNode.RootId),
         onDrop: ({ location, source }) => {
           // Didn't drop on anything.
           if (!location.current.dropTargets.length) {
@@ -317,6 +331,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           id={GraphNode.RootId}
           root={AppGraph.getRoot(graph)}
           tab={tab}
+          unavailable={tabUnavailable}
           open={layout.sidebarOpen}
           ref={forwardedRef}
         />

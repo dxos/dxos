@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Message, create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { type GenMessage } from '@bufbuild/protobuf/codegenv2';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -16,49 +18,44 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { EchoMetadataSchema, LargeSpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { fromDate, fromPublicKey, fromTimeframe, requirePublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
+  EchoMetadataSchema,
   type EdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
+  LargeSpaceMetadataSchema,
   type SpaceMetadata,
-} from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SqlTransaction } from '@dxos/sql-sqlite';
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata';
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata/index.ts';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store.ts';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
-const emptyEchoMetadata = (): EchoMetadata => ({
-  version: STORAGE_VERSION,
-  spaces: [],
-  created: new Date(),
-  updated: new Date(),
-});
+const emptyEchoMetadata = (): EchoMetadata =>
+  create(EchoMetadataSchema, {
+    version: STORAGE_VERSION,
+    spaces: [],
+    created: fromDate(new Date()),
+    updated: fromDate(new Date()),
+  });
 
-const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
-
-const EchoMetadataCodec = compatCodec<EchoMetadata>(EchoMetadataSchema);
-const LargeSpaceMetadataCodec = compatCodec<LargeSpaceMetadata>(LargeSpaceMetadataSchema);
+const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => create(LargeSpaceMetadataSchema, {});
 
 const MAIN_KEY = 'main';
 const largeKey = (spaceKey: PublicKey) => `large:${spaceKey.toHex()}`;
 
 // Legacy invitation type detection.
-const isLegacyInvitationFormat = (invitation: Invitation): boolean => invitation.type === Invitation.Type.MULTIUSE;
+const isLegacyInvitationFormat = (invitation: Invitation): boolean => invitation.type === Invitation_Type.MULTIUSE;
 
 export type SqliteMetadataStoreProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 /**
@@ -66,9 +63,10 @@ export type SqliteMetadataStoreProps = {
  * Stores EchoMetadata as a single protobuf blob and LargeSpaceMetadata as per-space blobs.
  */
 export class SqliteMetadataStore implements IMetadataStore {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   #metadata: EchoMetadata = emptyEchoMetadata();
+  #loaded = false;
   readonly #spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);
 
   readonly update = new Event<EchoMetadata>();
@@ -79,14 +77,12 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -107,7 +103,11 @@ export class SqliteMetadataStore implements IMetadataStore {
 
   async close(): Promise<void> {
     await this.#invitationCleanupCtx.dispose();
-    await this._save();
+    // A store that never loaded holds empty metadata; saving it would wipe the persisted record.
+    if (this.#loaded) {
+      await this._save();
+    }
+    this.#loaded = false;
     this.#metadata = emptyEchoMetadata();
     this.#spaceLargeMetadata.clear();
   }
@@ -126,9 +126,12 @@ export class SqliteMetadataStore implements IMetadataStore {
 
     if (rows.length > 0) {
       try {
-        this.#metadata = this.#decodeWithCrc(rows[0].value, EchoMetadataCodec) ?? emptyEchoMetadata();
+        this.#metadata = this.#decodeWithCrc(rows[0].value, EchoMetadataSchema) ?? emptyEchoMetadata();
+        // proto3 omits the zero enum, so a record written before `state` existed reads back as unset.
         this.#metadata.spaces?.forEach((space) => {
-          space.state ??= SpaceState.SPACE_ACTIVE;
+          if (!space.state) {
+            space.state = SpaceState.SPACE_ACTIVE;
+          }
         });
       } catch (err: any) {
         log.error('failed to load metadata from SQLite', { err });
@@ -137,10 +140,9 @@ export class SqliteMetadataStore implements IMetadataStore {
     }
 
     // Load large metadata for all known spaces.
-    const spaceKeys = [
-      this.#metadata.identity?.haloSpace.key,
-      ...(this.#metadata.spaces?.map((s) => s.key) ?? []),
-    ].filter(isNonNullable);
+    const spaceKeys = [this.#metadata.identity?.haloSpace?.key, ...(this.#metadata.spaces?.map((s) => s.key) ?? [])]
+      .filter(isNonNullable)
+      .map(requirePublicKey);
 
     await forEachAsync(spaceKeys, async (key) => {
       try {
@@ -161,6 +163,10 @@ export class SqliteMetadataStore implements IMetadataStore {
       },
       EXPIRED_INVITATION_CLEANUP_INTERVAL,
     );
+
+    // Set last: a throw above (SQL error, a row failing to decode) must leave the store unloaded, or
+    // `close()` would save the empty metadata it still holds over the persisted record.
+    this.#loaded = true;
   }
 
   async flush(): Promise<void> {
@@ -168,10 +174,11 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   hasSpace(spaceKey: PublicKey): boolean {
-    if (this.#metadata.identity?.haloSpace.key.equals(spaceKey)) {
+    const haloSpace = this.#metadata.identity?.haloSpace;
+    if (haloSpace?.key && requirePublicKey(haloSpace.key).equals(spaceKey)) {
       return true;
     }
-    return !!this.spaces.find((space) => space.key.equals(spaceKey));
+    return !!this.spaces.find((space) => space.key && requirePublicKey(space.key).equals(spaceKey));
   }
 
   getIdentityRecord(): IdentityRecord | undefined {
@@ -202,28 +209,26 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   async addSpace(record: SpaceMetadata): Promise<void> {
-    invariant(
-      !(this.#metadata.spaces ?? []).find((space) => space.key.equals(record.key)),
-      'Cannot overwrite existing space in metadata',
-    );
+    invariant(record.key, 'Space metadata has no key.');
+    invariant(!this.hasSpace(requirePublicKey(record.key)), 'Cannot overwrite existing space in metadata');
     (this.#metadata.spaces ??= []).push(record);
     await this._save();
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this.#getSpace(spaceKey).dataTimeframe = timeframe;
+    this.#getSpace(spaceKey).dataTimeframe = fromTimeframe(timeframe);
     await this._save();
   }
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this.#getSpace(spaceKey).controlTimeframe = timeframe;
+    this.#getSpace(spaceKey).controlTimeframe = fromTimeframe(timeframe);
     await this._save();
   }
 
   async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void> {
     const space = this.#getSpace(spaceKey);
-    space.controlFeedKey = controlFeedKey;
-    space.dataFeedKey = dataFeedKey;
+    space.controlFeedKey = fromPublicKey(controlFeedKey);
+    space.dataFeedKey = fromPublicKey(dataFeedKey);
     await this._save();
   }
 
@@ -251,14 +256,14 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   get deletedSpaces(): PublicKey[] {
-    return this.#metadata.deletedSpaces ?? [];
+    return (this.#metadata.deletedSpaces ?? []).map(requirePublicKey);
   }
 
   async addDeletedSpace(spaceKey: PublicKey): Promise<void> {
-    if ((this.#metadata.deletedSpaces ?? []).some((key) => key.equals(spaceKey))) {
+    if (this.deletedSpaces.some((key) => key.equals(spaceKey))) {
       return;
     }
-    (this.#metadata.deletedSpaces ??= []).push(spaceKey);
+    (this.#metadata.deletedSpaces ??= []).push(fromPublicKey(spaceKey));
     await this._save();
   }
 
@@ -276,10 +281,11 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   #getSpace(spaceKey: PublicKey): SpaceMetadata {
-    if (this.#metadata.identity?.haloSpace.key.equals(spaceKey)) {
-      return this.#metadata.identity.haloSpace;
+    const haloSpace = this.#metadata.identity?.haloSpace;
+    if (haloSpace?.key && requirePublicKey(haloSpace.key).equals(spaceKey)) {
+      return haloSpace;
     }
-    const space = this.spaces.find((space) => space.key.equals(spaceKey));
+    const space = this.spaces.find((space) => space.key && requirePublicKey(space.key).equals(spaceKey));
     invariant(space, 'Space not found');
     return space;
   }
@@ -295,14 +301,14 @@ export class SqliteMetadataStore implements IMetadataStore {
 
   @synchronized
   private async _save(): Promise<void> {
-    const data: EchoMetadata = {
+    const data: EchoMetadata = create(EchoMetadataSchema, {
       ...this.#metadata,
       version: STORAGE_VERSION,
-      created: this.#metadata.created ?? new Date(),
-      updated: new Date(),
-    };
+      created: this.#metadata.created ?? fromDate(new Date()),
+      updated: fromDate(new Date()),
+    });
     this.update.emit(data);
-    const encoded = this.#encodeWithCrc(EchoMetadataCodec, data);
+    const encoded = this.#encodeWithCrc(EchoMetadataSchema, data);
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -321,7 +327,7 @@ export class SqliteMetadataStore implements IMetadataStore {
     );
     if (rows.length > 0) {
       try {
-        const meta = this.#decodeWithCrc(rows[0].value, LargeSpaceMetadataCodec);
+        const meta = this.#decodeWithCrc(rows[0].value, LargeSpaceMetadataSchema);
         if (meta) {
           this.#spaceLargeMetadata.set(key, meta);
         }
@@ -335,7 +341,7 @@ export class SqliteMetadataStore implements IMetadataStore {
   private async _saveSpaceLargeMetadata(key: PublicKey): Promise<void> {
     const data = this.#getLargeSpaceMetadata(key);
     const keyStr = largeKey(key);
-    const encoded = this.#encodeWithCrc(LargeSpaceMetadataCodec, data);
+    const encoded = this.#encodeWithCrc(LargeSpaceMetadataSchema, data);
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -345,8 +351,8 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   /** Serialize with CRC32 checksum prefix for integrity checking (matches MetadataStore format). */
-  #encodeWithCrc<T>(codec: { encode: (v: T) => Uint8Array }, data: T): Buffer {
-    const encoded = arrayToBuffer(codec.encode(data));
+  #encodeWithCrc<T extends Message>(schema: GenMessage<T>, data: T): Buffer {
+    const encoded = arrayToBuffer(toBinary(schema, data));
     const checksum = CRC32.buf(encoded);
     const result = Buffer.alloc(8 + encoded.length);
     result.writeInt32LE(encoded.length, 0);
@@ -356,7 +362,7 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   /** Deserialize with CRC32 integrity check (matches MetadataStore format). */
-  #decodeWithCrc<T>(data: Uint8Array, codec: { decode: (v: Uint8Array) => T }): T | undefined {
+  #decodeWithCrc<T extends Message>(data: Uint8Array, schema: GenMessage<T>): T | undefined {
     const buf = Buffer.from(data);
     if (buf.length < 8) {
       return undefined;
@@ -380,22 +386,20 @@ export class SqliteMetadataStore implements IMetadataStore {
     if (calculated !== checksum) {
       throw new DataCorruptionError({ message: 'Metadata checksum is invalid.' });
     }
-    return codec.decode(payload);
+    return fromBinary(schema, payload);
   }
 }
 
 /**
  * Effect Layer constructing a {@link SqliteMetadataStore} from the ambient SQL runtime.
  */
-export const SqliteMetadataStoreLayer = (): Layer.Layer<
-  IMetadataStoreService,
-  never,
-  SqlClient.SqlClient | SqlTransactionTag
-> =>
+export const SqliteMetadataStoreLayer = (): Layer.Layer<IMetadataStoreService, never, SqlClient.SqlClient> =>
   Layer.effect(
     IMetadataStoreService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
-      return new SqliteMetadataStore({ runtime });
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+      const store = new SqliteMetadataStore({ runtime });
+      yield* Effect.addFinalizer(() => Effect.promise(() => store.close()));
+      return store;
     }),
   );

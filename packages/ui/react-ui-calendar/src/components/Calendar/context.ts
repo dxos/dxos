@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type Day } from 'date-fns';
 import { type Dispatch, type SetStateAction } from 'react';
 
 import { type Event } from '@dxos/async';
+import { createContext } from '@dxos/react-hooks';
 
 //
 // Range

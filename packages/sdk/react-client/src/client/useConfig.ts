@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { ClientContext } from './context';
+import { ClientContext } from './context.ts';
 
 /**
  * Hook returning config object used to initialize the DXOS client instance.

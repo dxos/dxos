@@ -13,12 +13,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Column, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Picker } from './Picker';
+import { Picker } from './Picker.tsx';
 
 random.seed(1234);
 
@@ -127,5 +128,30 @@ export const WithDisabled: Story = {
   args: {
     items: allItems.slice(0, 8),
     disabledIndices: [2, 5],
+  },
+};
+
+/**
+ * Escape clears the query and is then left alone — the dialog or popover the picker sits in
+ * dismisses on the press the picker has no use for.
+ */
+export const TestEscape: Story = {
+  args: {
+    controlled: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox');
+    const escapes: boolean[] = [];
+    canvasElement.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        escapes.push(event.defaultPrevented);
+      }
+    });
+    await userEvent.type(input, 'ap');
+    await userEvent.keyboard('{Escape}'); // Clears the query.
+    await expect(input).toHaveValue('');
+    await userEvent.keyboard('{Escape}'); // Nothing left: the press is the host's.
+    await expect(escapes).toEqual([true, false]);
   },
 };

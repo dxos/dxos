@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './MicSettings';
-export * from './PipelineStatus';
-export * from './Transcription';
+export * from './MicSettings/index.ts';
+export * from './PipelineStatus/index.ts';
+export * from './Transcription/index.ts';

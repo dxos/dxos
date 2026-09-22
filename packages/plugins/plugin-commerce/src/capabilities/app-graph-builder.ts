@@ -19,7 +19,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
-import { getProvidersSectionId } from '../paths';
+import { getProvidersSectionId } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -27,7 +27,8 @@ export default Capability.makeModule(
       // Show Provider.Provider objects as nodes under each space.
       AppGraphBuilder.createExtension({
         id: 'commerceProviders',
-        url: { key: 'commerce', kind: 'item', path: [] },
+        // The section is only a folder; its providers are the addressable items.
+        url: { key: 'commerce', kind: 'item', path: [getProvidersSectionId()] },
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const providers = get(space.db.query(Filter.type(Provider.Provider)).atom);
@@ -84,7 +85,12 @@ export default Capability.makeModule(
             },
             {
               id: 'delete',
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [search] }),
+              data: () =>
+                Operation.invoke(
+                  SpaceOperation.RemoveObjects,
+                  { objects: [search] },
+                  { spaceId: Obj.getDatabase(search)?.spaceId },
+                ),
               properties: {
                 label: ['delete-object.label', { ns: Type.getTypename(Search.Search) }],
                 icon: 'ph--trash--regular',
@@ -113,7 +119,12 @@ export default Capability.makeModule(
             }),
             {
               id: 'delete',
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [provider] }),
+              data: () =>
+                Operation.invoke(
+                  SpaceOperation.RemoveObjects,
+                  { objects: [provider] },
+                  { spaceId: Obj.getDatabase(provider)?.spaceId },
+                ),
               properties: {
                 label: ['delete-object.label', { ns: Type.getTypename(Provider.Provider) }],
                 icon: 'ph--trash--regular',

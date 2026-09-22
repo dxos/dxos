@@ -31,6 +31,7 @@ import {
   Icon,
   IconButton,
   ScrollArea,
+  Tabs,
   type ThemedClassName,
   Tooltip,
   toLocalizedString,
@@ -38,17 +39,17 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { DropIndicator } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 
-import { l0ItemType } from '../../util';
-import { useNavTreeContext } from '../NavTreeContext';
-import { UserAccountAvatar } from '../UserAccountAvatar';
+import { l0ItemType } from '../../util.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
+import { L0PendingAvatar } from './L0PendingAvatar.tsx';
 
 //
 // L0Item
@@ -97,7 +98,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return void runAction(item as AppGraphNode.Action, caller ? { parent, path, caller } : { parent, path });
         }
         case 'tab':
-          return onTabChange?.(item);
+          return item.properties.pending === true ? undefined : onTabChange?.(item);
         case 'link':
           return onSelect?.({
             item,
@@ -105,6 +106,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
             current: !getItem(path).current,
             option: event.altKey,
             shift: event.shiftKey,
+            meta: event.metaKey || event.ctrlKey,
           });
       }
     },
@@ -133,13 +135,14 @@ const L0ItemRoot = memo(
           <Tabs.TabPrimitive
             className={mx(
               'group/l0item flex w-full justify-center items-center relative',
-              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer',
+              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
               l0Breakpoints[item.properties.l0Breakpoint],
             )}
             tabIndex={type === 'tab' ? 0 : undefined}
             data-type={type}
             data-testid={testId}
             data-object-id={id}
+            {...(item.properties.pending === true && { 'aria-disabled': true })}
             value={item.id}
             onClick={handleClick}
             onMouseEnter={onMouseEnter}
@@ -169,9 +172,10 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
+  const pending = item.properties.pending === true;
 
   useLayoutEffect(() => {
-    if (!itemElement.current || !onRearrange) {
+    if (!itemElement.current || !onRearrange || pending) {
       return;
     }
 
@@ -223,7 +227,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
         },
       }),
     );
-  }, [item, onRearrange]);
+  }, [item, onRearrange, pending]);
 
   const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
 
@@ -231,6 +235,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
       <div
         data-frame={true}
+        {...(pending && { 'data-pending': true, 'aria-busy': true })}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
@@ -252,6 +257,10 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.profile.key);
+
+  if (item.properties.pending === true) {
+    return <L0PendingAvatar />;
+  }
 
   // Actions.
   if (item.properties.icon) {
@@ -317,7 +326,7 @@ export const L0Menu = ({
           : targetIndex +
             (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
       const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
-      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.data));
+      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.id));
     },
     [topLevelItems],
   );
@@ -337,22 +346,20 @@ export const L0Menu = ({
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <Menu.Root onAction={handleAction}>
-        <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
-          <div className='grid place-items-center'>
-            <IconButton
-              density='lg'
-              variant='ghost'
-              size={5}
-              icon='ph--list--regular'
-              iconOnly
-              square
-              label={t('app-menu.label')}
-            />
-          </div>
-        </Menu.Trigger>
-        <Menu.Content group={parent} items={menuActions} />
-      </Menu.Root>
+      <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
+        {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
+        <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
+          <IconButton
+            density='lg'
+            variant='ghost'
+            size={5}
+            icon='ph--list--regular'
+            iconOnly
+            square
+            label={t('app-menu.label')}
+          />
+        </div>
+      </ActionMenu>
 
       {/* Space list. */}
       <ScrollArea.Root centered thin orientation='vertical'>
@@ -377,8 +384,8 @@ export const L0Menu = ({
         ))}
       </div>
 
-      {userAccountItem && (
-        <div className='grid dx-app-no-drag'>
+      <div className='grid dx-app-no-drag'>
+        {userAccountItem ? (
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}
@@ -388,8 +395,12 @@ export const L0Menu = ({
               size={10}
             />
           </L0ItemRoot>
-        </div>
-      )}
+        ) : (
+          <div className='flex w-full justify-center items-center'>
+            <UserAccountAvatar size={10} />
+          </div>
+        )}
+      </div>
     </Tabs.Tablist>
   );
 };

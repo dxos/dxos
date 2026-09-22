@@ -1,11 +1,10 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
-# New library build pipeline: vite + rolldown for JS, tsc for .d.ts (run via DxDeclarationsPlugin at buildStart).
-# Packages migrate from `ts-build` to `ts-vite-build` once they have a `vite.config.ts` and updated exports.
+# Library build pipeline: vite + rolldown for JS, tsc for .d.ts (run via DxDeclarationsPlugin at buildStart).
+# A package opts in with a `vite.config.ts` that re-exports the root `defineConfig`.
 tasks:
   build:
     command: pnpm exec vite build --logLevel silent
     deps:
-      - dx-build:build
       # vite.base.config.ts now houses vitest project builders too — those import
       # `@dxos/esbuild-plugins` and `@dxos/vite-plugin-import-source` at config-load
       # time, so the workspace tools must be compiled before any vite build that

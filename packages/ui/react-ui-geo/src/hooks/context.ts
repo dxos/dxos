@@ -7,7 +7,7 @@ import { type Dispatch, type SetStateAction, createContext, useContext } from 'r
 
 import { raise } from '@dxos/debug';
 
-import { type LatLngLiteral } from '../types';
+import { type LatLngLiteral } from '../types.ts';
 
 // TODO(burdon): Factor out common geometry types.
 export type Size = { width: number; height: number };
@@ -72,7 +72,7 @@ export type GlobeController = {
 } & Pick<GlobeContextType, 'zoom' | 'translation' | 'rotation' | 'setZoom' | 'setTranslation' | 'setRotation'>;
 
 /** @internal */
-// TODO(burdon): Replace with radix.
+// TODO(burdon): Replace with `createContext` from `@dxos/react-hooks`.
 export const GlobeContext = createContext<GlobeContextType>(undefined);
 
 export const useGlobeContext = () => {

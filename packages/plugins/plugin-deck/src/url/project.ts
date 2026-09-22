@@ -1,0 +1,287 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as FiberHandle from 'effect/FiberHandle';
+import * as Option from 'effect/Option';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
+import { Key } from '@dxos/echo';
+import { log } from '@dxos/log';
+
+import { DeckCapabilities, DeckSchema } from '#types';
+
+import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
+import { type CompanionTarget, type NavigationIntent, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
+import * as Navigation from './navigation.ts';
+import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
+
+/**
+ * How long resolution waits for a pair's node before it stops trying. Exported because a plank waits
+ * exactly this long too: past it nothing is still coming, so the plank says not found.
+ */
+export const RESOLVE_TIMEOUT_MS = 10_000;
+
+// TODO(wittjosiah): Shorten, or apply the restore per-pair.
+const RESOLVE_TIMEOUT = `${RESOLVE_TIMEOUT_MS} millis`;
+
+const LOADER_TIMEOUT = '5 seconds';
+
+/** What the navigation target loaders say about an object; `absent` only when every answer is `absent`. */
+const targetVerdict = (
+  loaders: readonly AppCapabilities.NavigationTargetLoader[],
+  spaceId: string,
+  entityIds: readonly string[],
+): Effect.Effect<AppCapabilities.NavigationTargetVerdict> =>
+  Effect.forEach(entityIds, (entityId) =>
+    Effect.forEach(loaders, (loader) =>
+      loader.load({ spaceId, entityId }).pipe(
+        Effect.timeoutOrElse({
+          duration: LOADER_TIMEOUT,
+          orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
+        }),
+        Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
+      ),
+    ),
+  ).pipe(Effect.map((results) => NotFound.combineVerdicts(results.flat())));
+
+/** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
+export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
+  const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+  const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
+
+  const resolvedUrl = url ?? new URL(window.location.href);
+  const settings = registry.get(settingsAtom);
+  if (!(settings?.enableNativeRedirect && shouldDeferNavigationHandlers())) {
+    yield* Effect.all(
+      navigationHandlers.map((handler) =>
+        handler(resolvedUrl).pipe(
+          Effect.catchCause((cause) =>
+            Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+          ),
+        ),
+      ),
+      { concurrency: 'unbounded' },
+    );
+  }
+
+  return yield* projectUrl(resolvedUrl);
+});
+
+export type ProjectOptions = {
+  /** Attend the end of the chain rather than the displaced plank. */
+  attend?: boolean;
+  /** Node ids an in-app navigation already holds; see {@link Navigation.PlankIds}. */
+  navigatedIds?: Navigation.PlankIds;
+  /** How this navigation lands; see {@link NavigationIntent}. */
+  intent?: NavigationIntent;
+};
+
+/**
+ * Project a URL into deck state, returning the plank attention should move to, or `undefined` when
+ * it should stay where it is.
+ */
+const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions) {
+  const attendChainEnd = options?.attend ?? true;
+  const navigationTargetLoaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
+  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+  const stateAtom = yield* Capability.get(DeckCapabilities.State);
+  const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
+  const builder = yield* Capability.get(AppCapabilities.AppGraph);
+  const manager = yield* Effect.serviceOption(Plugin.Service);
+
+  const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
+    registry.set(stateAtom, fn(registry.get(stateAtom)));
+  };
+
+  /** The ids the first pass keys planks by. */
+  const idsBySegment = (): Navigation.PlankIds => {
+    const state = registry.get(stateAtom);
+    const workspace = registry.get(ephemeralAtom).open[state.activeDeck];
+    const ids = new Map<Navigation.PlankSegment, string>(options?.navigatedIds ?? []);
+    // Written over what the caller navigated with: a mounted plank has to keep the id it is mounted under.
+    for (const id of workspace?.active ?? []) {
+      ids.set(Navigation.segmentOf(workspace?.segments, id), id);
+    }
+    return ids;
+  };
+
+  /**
+   * Re-runs `parse` as builders register their keys, settling as soon as it succeeds. Keyed off the
+   * builder's own extensions, not the `AppGraphBuilder` capability: two subscribers to that
+   * capability have no relative ordering, so waking on it can re-parse against extensions the
+   * builder has not taken yet.
+   */
+  const parseWhenKeysArrive = <A>(parse: () => Option.Option<A>) =>
+    Effect.callback<Option.Option<A>>((resume) => {
+      const cancel = registry.subscribe(builder.extensions, () => {
+        const parsed = parse();
+        if (Option.isSome(parsed)) {
+          resume(Effect.succeed(parsed));
+        }
+      });
+      return Effect.sync(cancel);
+    }).pipe(
+      Effect.timeoutOrElse({
+        duration: RESOLVE_TIMEOUT,
+        orElse: () => Effect.succeed(Option.none<A>()),
+      }),
+    );
+
+  const switchWorkspace = (workspacePath: string) =>
+    workspacePath === registry.get(stateAtom).activeDeck ? Effect.void : applyWorkspace(workspacePath);
+
+  const pathname = (url ?? new URL(window.location.href)).pathname;
+  if (pathname === '/reset') {
+    updateState((s) => ({
+      ...s,
+      activeDeck: DeckSchema.DEFAULT_DECK_ID,
+      decks: {
+        [DeckSchema.DEFAULT_DECK_ID]: { ...DeckSchema.defaultDeck },
+      },
+    }));
+    window.location.pathname = '/';
+    return;
+  }
+
+  if (pathname === '/') {
+    return;
+  }
+
+  yield* UrlPath.readWorkspace(pathname).pipe(
+    Option.filter(Key.SpaceId.isValid),
+    Option.match({
+      onNone: () => Effect.void,
+      onSome: (workspace) => switchWorkspace(GraphPath.getSpacePath(workspace)),
+    }),
+  );
+
+  const pullIdle = Option.isSome(manager) ? Effect.asVoid(manager.value.activate(ActivationEvents.Idle)) : Effect.void;
+
+  const parseUrl = () => UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+  const parsed = yield* parseUrl().pipe(
+    Option.match({
+      onSome: Effect.succeedSome,
+      onNone: () =>
+        pullIdle.pipe(
+          Effect.catchCause((cause) =>
+            Effect.sync(() => log.warn('idle activation failed during url restore', { error: Cause.pretty(cause) })),
+          ),
+          Effect.map(parseUrl),
+          Effect.flatMap((afterIdle) =>
+            Option.isSome(afterIdle) ? Effect.succeed(afterIdle) : parseWhenKeysArrive(parseUrl),
+          ),
+        ),
+    }),
+  );
+  if (Option.isNone(parsed)) {
+    yield* applyActive([{ id: NotFound.NOT_FOUND_PATH }]);
+    return undefined;
+  }
+
+  const { workspace, pairs } = parsed.value;
+  const workspacePath =
+    workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
+  yield* switchWorkspace(workspacePath);
+
+  // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
+  // and carries the caller's intent.
+  yield* applyActive(initialPlanks(pairs, idsBySegment()), options?.intent);
+
+  const loaders = navigationTargetLoaders;
+  const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
+  if (loaders.length > 0) {
+    yield* Effect.forEach(
+      pairs,
+      (pair, index) => {
+        const candidates =
+          pair.id === undefined ? [] : getCandidateEntityIds(pair.id, builder.urlGrammar.tailSeparator);
+        if (candidates.length === 0) {
+          return Effect.void;
+        }
+        return targetVerdict(loaders, pair.workspace, candidates).pipe(
+          Effect.tap((verdict) => Effect.sync(() => (verdicts[index] = verdict))),
+        );
+      },
+      { concurrency: 'unbounded' },
+    );
+  }
+
+  const resolved = yield* PathResolution.resolveUrl(
+    builder,
+    { workspace, pairs },
+    { wait: (index) => (verdicts[index] === 'absent' ? undefined : RESOLVE_TIMEOUT) },
+  );
+
+  const planks: Navigation.Plank[] = [];
+  let companion: CompanionTarget | undefined;
+  let companionAnchorId: string | undefined;
+  pairs.forEach((pair, index) => {
+    const nodeId = resolved[index]?.nodeId;
+    if (pair.key === UrlPath.COMPANION_KEY) {
+      // Carried whether or not it resolved: a plank without this variant still shows its companion,
+      // on a variant it does have. Only a chain with no companion pair at all closes one.
+      const anchor = planks[planks.length - 1]?.id;
+      if (anchor && pair.id) {
+        companion = { anchor, variant: pair.id, subject: nodeId };
+      }
+      if (nodeId) {
+        companionAnchorId = anchor;
+      }
+      return;
+    }
+    planks.push({
+      id: nodeId ?? resolved[index]?.candidateId ?? getUnresolvedPlankId(pair),
+      segment: Navigation.toSegment(pair),
+    });
+  });
+
+  // An external URL's planks resolve only here, so the chain end lands with the write that mounts them.
+  const chainEnd = attendChainEnd ? (companionAnchorId ?? planks[planks.length - 1]?.id) : undefined;
+  const displaced = yield* applyActive(planks, { scrollIntoView: chainEnd });
+
+  yield* applyCompanion(companion);
+
+  const open = registry.get(ephemeralAtom).open[workspacePath];
+  if (open && open.url !== pathname) {
+    const ephemeral = registry.get(ephemeralAtom);
+    registry.set(ephemeralAtom, {
+      ...ephemeral,
+      open: { ...ephemeral.open, [workspacePath]: { ...open, url: pathname } },
+    });
+  }
+
+  if (!attendChainEnd) {
+    return displaced;
+  }
+
+  return chainEnd;
+});
+
+/**
+ * Project a URL, as the only projection in flight.
+ *
+ * Starting one interrupts whatever was running, because a projection can wait out its deadlines and
+ * would otherwise resume to apply a URL the address bar has long since moved off. The interrupted
+ * one is the caller that has been overtaken, and it returns no plank to attend rather than failing:
+ * its navigation is moot, not broken.
+ */
+export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions) {
+  const handle = yield* Capability.get(DeckCapabilities.Projection);
+  const fiber = yield* FiberHandle.run(handle, project(url, options));
+  const outcome = yield* Effect.exit(Fiber.join(fiber));
+  return Exit.hasInterrupts(outcome) ? undefined : yield* outcome;
+});

@@ -9,8 +9,8 @@ export namespace SpaceSyncState {
   export type PeerState = DataService.SpaceSyncState.PeerState;
 }
 
-export * from './automerge';
-export * from './client';
+export * from './automerge/index.ts';
+export * from './client/index.ts';
 export {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -25,24 +25,25 @@ export {
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
   objectIsUpdated,
-} from './core-db';
+} from './core-db/index.ts';
+// One definition, in `echo`, now that the write gate is shared; re-exported so the public name is
+// unchanged for consumers.
 export {
-  type CloneOptions,
-  EchoReactiveHandler,
   MutationOutsideChangeContextError,
-  ObjectVersion,
+  createArrayMethodError,
+  createPropertyDeleteError,
+  createPropertySetError,
+} from '@dxos/echo/internal';
+export {
+  EchoReactiveHandler,
   type ProxyTarget,
   type Selection,
   type SubscriptionHandle,
   type UpdateInfo,
   type VersionDiff,
   checkoutVersion,
-  clone,
-  createArrayMethodError,
   createBranch,
   createObject,
-  createPropertyDeleteError,
-  createPropertySetError,
   createSubscription,
   deleteBranch,
   findObjectWithForeignKey,
@@ -53,19 +54,18 @@ export {
   getEditHistoryWithDiffs,
   getObjectCore,
   getObjectOnBranch,
-  getVersion,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
   matchKeys,
   mergeBranch,
   switchBranch,
   syncBranch,
-} from './echo-handler';
-export * from './hypergraph';
-export * from './proxy-db';
-export * from './query';
-export * from './registry';
-export * from './serialized-space';
-export * from './serializer';
-export * from './text';
-export * from './util';
+} from './echo-handler/index.ts';
+export * from './hypergraph.ts';
+export * from './proxy-db/index.ts';
+export * from './query/index.ts';
+export * from './registry/index.ts';
+export * from './serialized-space.ts';
+export * from './serializer.ts';
+export * from './text.ts';
+export * from './util/index.ts';

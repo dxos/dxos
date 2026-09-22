@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { deriveThreadId, normalizeSubject } from './threading';
+import { deriveThreadId, normalizeSubject } from './threading.ts';
 
 describe('threading', () => {
   test('normalizeSubject strips reply/forward prefixes and normalizes', ({ expect }) => {

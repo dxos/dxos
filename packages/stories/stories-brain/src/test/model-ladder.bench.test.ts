@@ -28,8 +28,8 @@ import {
   trackProgress,
   writeResponses,
   writeResults,
-} from '../testing/harness';
-import { JUDGE, LADDER_N, LADDER_REFERENCE, LADDER_TASKS, LADDER_TOLERANCE } from './defs';
+} from '../testing/harness/index.ts';
+import { JUDGE, LADDER_N, LADDER_REFERENCE, LADDER_TASKS, LADDER_TOLERANCE } from './defs.ts';
 
 // The model-ladder experiment: for each task, run the whole ladder (open-weight tiers + haiku, the
 // bar) over the same messages, measure latency, and grade accuracy — labeling deterministically vs

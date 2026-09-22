@@ -11,10 +11,10 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { DXN } from '@dxos/keys';
 
-import type * as ActivationEvent from './activation-event';
-import type * as CapabilityManager from './capability-manager';
-import { CapabilityNotFoundError } from './errors';
-import type * as Plugin from './plugin';
+import type * as ActivationEvent from './activation-event.ts';
+import type * as CapabilityManager from './capability-manager.ts';
+import { CapabilityNotFoundError } from './errors.ts';
+import type * as Plugin from './plugin.ts';
 
 //
 // Capability Service Layer
@@ -235,7 +235,14 @@ export interface MultiTag<T, S extends string = any>
   readonly arity: 'multi';
 }
 
-export type AnyTag = Tag<any, any> | MultiTag<any, any>;
+/**
+ * Either arity of capability tag. One interface rather than a union of the two tag types: in a
+ * constraint position `missingEffectContext` reads the union as an Effect and reports one
+ * constituent's identifier as a missing service.
+ */
+export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, any>, InterfaceDef<any> {
+  readonly arity: Arity;
+}
 
 /**
  * Compile-time error surfaced when the service type is omitted from the curried factory form.

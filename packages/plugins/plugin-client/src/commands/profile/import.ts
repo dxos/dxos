@@ -17,6 +17,8 @@ import { ConfigService } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type Runtime_Client_Storage, Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
+import { CommandError } from '../errors.ts';
+
 export const handler = Effect.fn(function* ({
   file,
   dataDir,
@@ -40,7 +42,7 @@ export const handler = Effect.fn(function* ({
   if (!dataDirValue) {
     if (!force) {
       yield* Console.log(`Will overwrite profile: ${profile}`);
-      const confirmed = yield* Prompt.confirm({
+      const confirmed = yield* Prompt.Confirm({
         message: `Delete all data? (Profile: ${profile})`,
         initial: false,
       }).pipe(Prompt.run);
@@ -78,7 +80,7 @@ export const handler = Effect.fn(function* ({
   yield* Console.log('Beginning profile import...');
   yield* Effect.tryPromise({
     try: () => importProfileData({ storage }, archive),
-    catch: (error) => new Error(`Failed to import profile data: ${error}`),
+    catch: (error) => new CommandError({ message: 'Failed to import profile data.', cause: error }),
   });
   yield* Console.log('Profile import complete');
 
@@ -90,9 +92,12 @@ export const handler = Effect.fn(function* ({
 export const importCommand = Command.make(
   'import',
   {
-    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    dataDir: Options.string('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
-    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
+    file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    dataDir: Options.String('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
+    force: Options.Boolean('force').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Skip confirmation prompt.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Import profile.'));

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { resolveSidebarState } from './resolve-sidebar-state';
+import { resolveSidebarState } from './resolve-sidebar-state.ts';
 
 describe('resolveSidebarState', () => {
   test('closed presents as collapsed at lg so L0 stays reachable', () => {

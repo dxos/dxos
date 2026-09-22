@@ -12,21 +12,12 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
-  "imports": {
-    "#query-lite": "./dist/query-lite/index.js"
-  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./sandbox": {
-      "source": "./src/sandbox/index.ts",
-      "types": "./dist/types/src/sandbox/index.d.ts",
-      "import": "./dist/lib/sandbox.mjs"
-    },
-    "./api.d.ts": "./dist/query-lite/index.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -34,19 +25,14 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "catalog:",
     "@lezer/lr": "catalog:"
   },
   "devDependencies": {
     "@lezer/generator": "catalog:",
-    "tsdown": "catalog:",
     "typescript": "catalog:"
   },
   "publishConfig": {

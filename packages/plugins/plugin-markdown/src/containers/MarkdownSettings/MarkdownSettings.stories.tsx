@@ -6,13 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
-import { MarkdownSettings } from './MarkdownSettings';
+import { MarkdownSettings } from './MarkdownSettings.tsx';
 
 type StoryArgs = {
   settings: Markdown.Settings;
@@ -36,7 +37,7 @@ const meta = {
   title: 'plugins/plugin-markdown/containers/MarkdownSettings',
   tags: ['settings'],
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
     layout: 'fullscreen',
     translations,

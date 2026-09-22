@@ -30,6 +30,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -46,6 +49,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/echo/echo"

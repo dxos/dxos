@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './geo';
-export * from './nav-grid';
-export * from './path';
-export * from './route';
-export * from './reachable';
-export * from './behaviors';
-export * from './motion';
-export * from './engine';
-export * from './trail';
+export * from './geo.ts';
+export * from './nav-grid.ts';
+export * from './path.ts';
+export * from './route.ts';
+export * from './reachable.ts';
+export * from './behaviors.ts';
+export * from './motion.ts';
+export * from './engine.ts';
+export * from './trail.ts';

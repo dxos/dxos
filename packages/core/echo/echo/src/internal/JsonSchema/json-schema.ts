@@ -15,25 +15,30 @@ import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import type * as Type from '../../Type';
-import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
+import type * as Type from '../../Type.ts';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
 import {
   ANY_OBJECT_TYPENAME,
   ANY_OBJECT_VERSION,
   EntityKind,
   EntityKindSchema,
   getStaticTypeSchema,
-} from '../common/types';
-import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+} from '../common/types/index.ts';
+import {
+  JSON_SCHEMA_ECHO_REF_ID,
+  type JsonSchemaReferenceInfo,
+  createEchoReferenceSchema,
+  isRefIdentifier,
+} from '../Ref/index.ts';
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations.ts';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
   getNormalizedEchoAnnotations,
-} from './json-schema-type';
+} from './json-schema-type.ts';
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -153,6 +158,15 @@ const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType>
   // is inlined), and they are carried over as `$defs` rather than dropped.
   const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements), {
     includeAnnotationKey: isEchoJsonSchemaKey,
+    // Effect 4 serializes a struct as open (`additionalProperties: true`) by default; ECHO's wire
+    // contract states a struct as closed, and an open tool schema would let a model pass keys the
+    // handler never declared.
+    onExcessProperty: 'error',
+    // The default policy hoists anything carrying an `identifier` into `$defs` and leaves a `$ref`
+    // in its place, which would strip a ref property of the inline `reference` annotation readers
+    // key off. `Ref` carries an identifier so its rejection messages name the target type, so only
+    // refs are declined here; every other named schema keeps the name it had.
+    referencePolicy: ({ identifier }) => (isRefIdentifier(identifier) ? undefined : identifier),
   });
   const jsonSchema = {
     ...schema,
@@ -179,16 +193,20 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
   }
   // Recursive: `Schema.optional` is not idempotent in v4, so an already-optional field made optional
   // again nests as `(T | undefined) | undefined` and one pass would leave the inner union behind.
-  return defined.length === 1
-    ? SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {})
-    : new SchemaAST.Union(
-        defined.map(stripUndefinedMember),
-        ast.mode,
-        ast.annotations,
-        ast.checks,
-        ast.encoding,
-        ast.context,
-      );
+  if (defined.length === 1) {
+    const member = SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {});
+    // A check written for `T | undefined` still holds for `T`.
+    return ast.checks ? Schema.make<Schema.Top>(member).check(...ast.checks).ast : member;
+  }
+  return new SchemaAST.Union(
+    defined.map(stripUndefinedMember),
+    ast.options,
+    ast.annotations,
+    ast.checks,
+    ast.encoding,
+    ast.context,
+    ast.encodingChecks,
+  );
 };
 
 /**
@@ -199,6 +217,12 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
  * a thunk that rebuilt its body on each call would recurse until the stack blew.
  */
 const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, SchemaAST.AST>): SchemaAST.AST => {
+  // v4 encodes `Schema.Number` as `number | "NaN" | ±"Infinity"` so non-finite values survive JSON,
+  // and that projection drops the node's checks -- `multipleOf`, `minimum` and the rest would vanish
+  // from the emitted schema. ECHO never stores a non-finite number, so they still describe the wire
+  // form and are re-applied below.
+  const numericChecks = SchemaAST.isNumberKeyword(ast) ? ast.checks : undefined;
+
   // Generation describes the wire form, and Effect 4 serializes only the encoded side of a
   // transformed schema -- annotations left on the type side are silently dropped. Flattening to the
   // encoded node here, carrying the type-side annotations over, keeps them in the output. Safe
@@ -209,6 +233,9 @@ const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, 
       Object.keys(typeAnnotations).length > 0
         ? SchemaAST.annotate(SchemaAST.toEncoded(ast), typeAnnotations)
         : SchemaAST.toEncoded(ast);
+    if (numericChecks !== undefined && numericChecks.length > 0) {
+      ast = Schema.make<Schema.Top>(ast).check(...numericChecks).ast;
+    }
   }
 
   let recursiveResult: SchemaAST.AST;
@@ -641,15 +668,15 @@ const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): Schema
   SchemaAST.annotate(ast, schema as SchemaAST.Annotations);
 
 /**
- * Restores the `additionalProperties` of an open record or a struct's open rest signature.
+ * Restores the `additionalProperties` of an open record.
  *
- * v4 omits it when an index signature's value type is unconstrained (`Any`/`Unknown` serialize to the
- * empty schema) — for a bare record and for `StructWithRest` alike. Absent `additionalProperties`
- * means "anything allowed" in JSON Schema, but ECHO's decoder keys record-ness off the field's
- * presence, so the round-trip rebuilt a closed struct and the open keys were silently dropped. The
- * omission is unambiguous: a closed struct always carries `additionalProperties: false` explicitly,
- * a constrained index signature carries its value schema, and an empty struct arrives as the `anyOf`
- * pair `restoreEmptyObject` handles — only a dropped unconstrained signature lacks the key.
+ * v4 omits it when a record's value type is unconstrained (`Any`/`Unknown` serialize to the empty
+ * schema). Absent `additionalProperties` means "anything allowed" in JSON Schema, but ECHO's decoder
+ * keys record-ness off the field's presence, so the round-trip rebuilt a closed struct and the open
+ * keys were silently dropped. The omission is unambiguous: a closed struct carries
+ * `additionalProperties: false` under `onExcessProperty: 'error'`, a constrained index signature
+ * carries its value schema, and the empty-struct and rest-signature forms are restored before this
+ * runs — only a dropped unconstrained signature lacks the key.
  */
 const restoreOpenRecord = (node: Record<string, any>): Record<string, any> => {
   if (node.type !== 'object' || 'additionalProperties' in node) {
@@ -657,6 +684,47 @@ const restoreOpenRecord = (node: Record<string, any>): Record<string, any> => {
   }
   return { ...node, additionalProperties: true };
 };
+
+/**
+ * Restores a struct's rest signature to the node's own `additionalProperties`.
+ *
+ * v4 nests a `StructWithRest` signature under `allOf` as `{type: 'object', additionalProperties}`,
+ * which the decoder does not read; an unconstrained value (`{}`) is stated as `true`.
+ */
+const foldRestSignature = (node: Record<string, any>): Record<string, any> => {
+  if (node.type !== 'object' || 'additionalProperties' in node || !Array.isArray(node.allOf)) {
+    return node;
+  }
+  const signatures = node.allOf.filter(isRestSignature);
+  if (signatures.length !== 1) {
+    return node;
+  }
+  const { allOf, ...rest } = node;
+  const value = signatures[0].additionalProperties;
+  const additionalProperties =
+    typeof value === 'object' && value !== null && Object.keys(value).length === 0 ? true : value;
+  const others = allOf.filter((branch: unknown) => !isRestSignature(branch));
+  return others.length > 0 ? { ...rest, additionalProperties, allOf: others } : { ...rest, additionalProperties };
+};
+
+const isRestSignature = (branch: unknown): branch is { type: 'object'; additionalProperties: unknown } =>
+  typeof branch === 'object' &&
+  branch !== null &&
+  'type' in branch &&
+  branch.type === 'object' &&
+  'additionalProperties' in branch &&
+  Object.keys(branch).length === 2;
+
+/** Applies {@link foldRestSignature} to a node and every nested schema position. */
+export const foldRestSignatures = (node: Record<string, any>): Record<string, any> =>
+  Object.fromEntries(Object.entries(foldRestSignature(node)).map(([key, value]) => [key, foldNested(value)]));
+
+const foldNested = (value: unknown): unknown =>
+  Array.isArray(value)
+    ? value.map(foldNested)
+    : typeof value === 'object' && value !== null
+      ? foldRestSignatures(value)
+      : value;
 
 /**
  * Inlines the `allOf` wrapper Effect 4 emits for checks.
@@ -744,22 +812,15 @@ const collapseNumberUnion = (node: Record<string, any>): Record<string, any> => 
 /**
  * Restores the object form Effect 4 drops for a struct with no properties.
  *
- * v4 serializes an empty `Objects` node as `anyOf: [object, array]` -- the shape of the bare
- * `object` keyword -- which reads back as a union rather than a struct. Keyed on `propertyOrder`,
- * which ECHO writes for every struct and never for the keyword, so no other node is affected.
+ * v4 serializes an empty `Objects` node as `not: {type: 'null'}`, which reads back as unknown rather
+ * than a struct. Keyed on `propertyOrder`, which ECHO writes for every struct and nowhere else.
  */
 const restoreEmptyObject = (node: Record<string, any>): Record<string, any> => {
-  if (!Array.isArray(node.anyOf) || node.anyOf.length !== 2 || !Array.isArray(node.propertyOrder)) {
+  const not = node.not;
+  if (!Array.isArray(node.propertyOrder) || not?.type !== 'null' || Object.keys(not).length !== 1) {
     return node;
   }
-  const [first, second] = node.anyOf as [Record<string, any>, Record<string, any>];
-  if (first?.type !== 'object' || Object.keys(first).length !== 1) {
-    return node;
-  }
-  if (second?.type !== 'array' || Object.keys(second).length !== 1) {
-    return node;
-  }
-  const { anyOf, ...rest } = node;
+  const { not: _, ...rest } = node;
   return { type: 'object', properties: {}, additionalProperties: false, ...rest };
 };
 
@@ -773,13 +834,19 @@ const inlineAllOfDeep = (node: any): any => {
   }
   // `anyOf` collapses run first: they merge a branch up, and that branch carries the `allOf` wrapper
   // `inlineAllOf` has to flatten.
-  const inlined = collapseEchoRef(inlineAllOf(collapseNumberUnion(restoreOpenRecord(restoreEmptyObject(node)))));
+  const inlined = collapseEchoRef(
+    inlineAllOf(collapseNumberUnion(restoreOpenRecord(foldRestSignature(restoreEmptyObject(node))))),
+  );
+  // Recursed into a copy, never `inlined` itself: the collapse helpers pass a node through unchanged
+  // when there is nothing to collapse, so `inlined` can still BE the caller's node — and that node can
+  // be live stored schema, which normalizing must not rewrite in place.
+  const result: any = { ...inlined };
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
-      inlined[key] = inlineAllOfDeep(value);
+      result[key] = inlineAllOfDeep(value);
     }
   }
-  return inlined;
+  return result;
 };
 
 const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Types.DeepMutable<JsonSchemaType> => {

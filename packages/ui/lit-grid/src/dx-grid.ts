@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import './dx-grid-axis-resize-handle';
+import './dx-grid-axis-resize-handle.ts';
 
 import { LitElement, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -10,7 +10,7 @@ import { type Ref, createRef, ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
-import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs';
+import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs.ts';
 import {
   DxAxisResize,
   type DxAxisResizeInternal,
@@ -41,7 +41,7 @@ import {
   type DxGridRange,
   type DxGridSelectionProps,
   separator,
-} from './types';
+} from './types.ts';
 import {
   cellSelected,
   closestAction,
@@ -61,7 +61,7 @@ import {
   sizeRowMin,
   targetIsPlane,
   toCellIndex,
-} from './util';
+} from './util.ts';
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
@@ -1699,6 +1699,6 @@ export {
   parseCellIndex,
   rowToA1Notation,
   toPlaneCellIndex,
-} from './util';
+} from './util.ts';
 
 export const commentedClassName = 'dx-grid__cell--commented';

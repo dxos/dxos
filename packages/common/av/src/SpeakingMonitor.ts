@@ -5,7 +5,7 @@
 import { DeferredTask, Event, sleep } from '@dxos/async';
 import { Resource } from '@dxos/context';
 
-import { monitorAudioLevel } from './monitor-audio-level';
+import { monitorAudioLevel } from './monitor-audio-level.ts';
 
 const NOT_SPEAKING_AFTER = 500; // [ms]
 const START_SPEAKING_THRESHOLD = 0.05;

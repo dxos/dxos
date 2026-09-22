@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -11,8 +12,8 @@ import { log } from '@dxos/log';
 import { GoogleCalendar } from '#apis';
 import { GoogleOperation } from '#types';
 
-import { GoogleCredentials } from '../../../services/google-credentials';
-import { toGoogleEvent } from '../mapper';
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
+import { toGoogleEvent } from '../mapper.ts';
 
 const handler = GoogleOperation.CreateGoogleCalendarEvent.pipe(
   Operation.withHandler(({ event, googleCalendarId, connection: connectionRef }) =>
@@ -21,7 +22,7 @@ const handler = GoogleOperation.CreateGoogleCalendarEvent.pipe(
       const response = yield* GoogleCalendar.createEvent(googleCalendarId, toGoogleEvent(event));
       log('calendar event created', { id: response.id });
       return { id: response.id };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, GoogleCredentials.fromConnection(connectionRef)))),
   ),
   Operation.opaqueHandler,
 );

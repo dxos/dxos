@@ -6,7 +6,7 @@ import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
-import { createEdge, createNode } from './data';
+import { createEdge, createNode } from './data.ts';
 
 export type TestNode = GraphNode.Any & {
   label?: string;

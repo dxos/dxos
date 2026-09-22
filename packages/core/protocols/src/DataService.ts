@@ -136,6 +136,15 @@ export const ReIndexHeadsRequest = Schema.Struct({
 });
 export interface ReIndexHeadsRequest extends Schema.Schema.Type<typeof ReIndexHeadsRequest> {}
 
+export const UpdateIndexesRequest = Schema.Struct({
+  /**
+   * Also index the secondary-index backlog (full text). Off by default: it lags the primary pass
+   * by design, and only a caller that reads it back needs to wait for it.
+   */
+  secondaryIndexes: Schema.optional(Schema.Boolean),
+});
+export interface UpdateIndexesRequest extends Schema.Schema.Type<typeof UpdateIndexesRequest> {}
+
 export const GetSpaceSyncStateRequest = Schema.Struct({
   spaceId: Schema.String,
 });
@@ -206,6 +215,8 @@ export const HostLoadedStats = Schema.Struct({
   documentsTotal: Schema.Number,
   /** Active reactive queries registered with the host, across every space. */
   queriesTotal: Schema.Number,
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  leases: Schema.Number,
 });
 export interface HostLoadedStats extends Schema.Schema.Type<typeof HostLoadedStats> {}
 
@@ -321,6 +332,7 @@ export class Rpcs extends RpcGroup.make(
    * Wait for any pending index updates.
    */
   Rpc.make('updateIndexes', {
+    payload: UpdateIndexesRequest,
     error: serviceError,
   }),
   // TODO(dmaretskyi): Stream subscription.

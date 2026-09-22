@@ -9,7 +9,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CrxOperation } from '#types';
 
-import { toOrganization } from '../mapping';
+import { toOrganization } from '../mapping.ts';
 
 const handler: Operation.WithHandler<typeof CrxOperation.AddOrganizationFromSnapshot> =
   CrxOperation.AddOrganizationFromSnapshot.pipe(

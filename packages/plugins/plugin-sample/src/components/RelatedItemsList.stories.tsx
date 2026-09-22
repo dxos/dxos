@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { RelatedItemsList } from './RelatedItemsList';
+import { RelatedItemsList } from './RelatedItemsList.tsx';
 
 const meta = {
   title: 'plugins/plugin-sample/RelatedItemsList',

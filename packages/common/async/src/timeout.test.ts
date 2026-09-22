@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { asyncTimeout, sleep } from './timeout';
+import { asyncTimeout, sleep } from './timeout.ts';
 
 describe('timeout', () => {
   test('succeeds', async () => {

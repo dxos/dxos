@@ -4,7 +4,7 @@
 
 import { type TraceContextData } from '@dxos/context';
 
-import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types';
+import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types.ts';
 
 export const BUFFERED_PREFIX = 'buffered-';
 
@@ -22,6 +22,7 @@ class BufferedSpan implements RemoteSpan {
   #endTime?: number;
   #error?: unknown;
   #hasError = false;
+  #attributes?: Record<string, any>;
 
   constructor(
     readonly options: StartSpanOptions,
@@ -49,7 +50,18 @@ class BufferedSpan implements RemoteSpan {
     this.#hasError = true;
   }
 
+  setAttributes(attributes: Record<string, any>): void {
+    if (this.delegate) {
+      this.delegate.setAttributes?.(attributes);
+      return;
+    }
+    this.#attributes = { ...this.#attributes, ...attributes };
+  }
+
   replay(real: RemoteSpan): void {
+    if (this.#attributes) {
+      real.setAttributes?.(this.#attributes);
+    }
     if (this.#hasError) {
       real.setError?.(this.#error);
     }

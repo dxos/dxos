@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './color-scheme';
-export * from './Html';
-export * from './transform-email';
-export * from './transform-colors';
+export * from './color-scheme.ts';
+export * from './Html.tsx';
+export * from './transform-email.ts';
+export * from './transform-colors.ts';
