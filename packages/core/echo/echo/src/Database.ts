@@ -25,7 +25,7 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types/
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
 import * as queryInternal from './internal/Query/index.ts';
-import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
+import type { Ref } from './internal/Ref/ref.ts';
 import type * as Obj from './Obj.ts';
 import type * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
