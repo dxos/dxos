@@ -76,7 +76,7 @@ test.describe.skip('Inbox', () => {
     expect(await Inbox.rows(host.page).count()).toBeGreaterThan(0);
   };
 
-  test('JMAP: connecting an account syncs it with no sync press', async () => {
+  test('JMAP: connecting an account syncs it with no sync press', { tag: ['@inbox:QA-1'] }, async () => {
     test.skip(!AUTO_SYNC, 'auto sync is off; the mailbox waits for a sync press');
     await connectMailbox();
 
@@ -84,7 +84,7 @@ test.describe.skip('Inbox', () => {
     await expectPopulated();
   });
 
-  test('JMAP: a connected account populates when sync is pressed', async () => {
+  test('JMAP: a connected account populates when sync is pressed', { tag: ['@inbox:QA-1'] }, async () => {
     test.skip(AUTO_SYNC, 'auto sync populates the mailbox on connect');
     await connectMailbox();
 
@@ -95,13 +95,13 @@ test.describe.skip('Inbox', () => {
     await expectPopulated();
   });
 
-  test('selecting a thread opens the message companion', async () => {
+  test('selecting a thread opens the message companion', { tag: ['@inbox:QA-1'] }, async () => {
     await openSyncedMailbox();
     await Inbox.selectFirstThread(host.page);
     await expect(host.page.getByTestId('message-header').first()).toBeVisible();
   });
 
-  test('JMAP: reply sends', async () => {
+  test('JMAP: reply sends', { tag: ['@inbox:QA-1'] }, async () => {
     const mock = await openSyncedMailbox();
     await Inbox.selectFirstThread(host.page);
     await Inbox.reply(host.page, 'Thanks, sounds good.');

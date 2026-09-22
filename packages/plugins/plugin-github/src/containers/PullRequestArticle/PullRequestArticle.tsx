@@ -30,6 +30,7 @@ import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
 import { newestWalkthrough } from '../../walkthrough/index.ts';
+import { pullRequestFailureKey } from './failure.ts';
 
 /** A definite content width, which the diff chunks cap themselves against. */
 const slots: ThemeExtensionsOptions['slots'] = {
@@ -164,7 +165,15 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     setGenerating(false);
     if (error) {
       log.warn('walkthrough generation failed', { error });
-      await toast('walkthrough', 'walkthrough-failed.title', false, error.message);
+      // A rejected credential is the one failure the user can act on, and `error.message` states it
+      // only as a bare `401` inside an HTTP error string.
+      const failureKey = pullRequestFailureKey(error, 'walkthrough-failed.title');
+      await toast(
+        'walkthrough',
+        failureKey,
+        false,
+        failureKey === 'walkthrough-failed.title' ? error.message : undefined,
+      );
       return;
     }
     await toast('walkthrough', 'walkthrough-ready.title', true);

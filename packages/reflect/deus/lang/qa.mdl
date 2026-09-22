@@ -71,6 +71,7 @@ ext test
     actors?:   human | agent | both     # default both; see the invoke rule below
     covers?:   RefList                  # feat / req / scenario ids this test exercises
     status?:   passing | failing | blocked | unverified   # last known result, with a date in a comment
+    automated?: RefList                 # playwright specs that execute this test unattended (see below)
     given?:    GivenList                # preconditions; `name: prose` binds `$given.name` (see below)
     before?:   StepList                 # fixture the test needs, but is not itself testing
     steps:     StepList                 # the test — the steps whose failure is a defect
@@ -140,6 +141,38 @@ it forces every later step to be renumbered by hand when one is inserted.
    of `steps`. A step that needs a handle stable across insertions declares `id:`, and is then
    referenced by it (`QA-1.open`) instead. Most steps do not need one; give an `id` to a step
    whose failure is cited somewhere outside the document.
+
+### `automated` — the unattended arm of a test
+
+A `test QA-n` is the specification of a journey; a Playwright spec is one *execution* of it, run
+unattended on every CI cell. `automated:` names those specs, each entry
+`<package>:<file>#<full test title>`:
+
+```mdl
+  automated:
+    - composer-e2e:basic.spec.ts#Basic tests › create document
+```
+
+The binding is declared on **both** sides and checked, rather than left as prose:
+`packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs` reads every `automated:` here and every
+`@QA` tag in the specs, and fails when either side names something the other does not have. A
+one-sided link rots silently — a renamed test keeps a green check while the flow it claimed to
+cover stops being exercised.
+
+1. **`automated` never replaces the steps.** The `do`/`expect` prose stays the contract, because a
+   spec asserts what it was written to assert and the flow is what a human re-runs when it breaks.
+   A test whose steps were deleted "because Playwright covers it" is no longer a QA flow.
+2. **The spec is free to cover a subset**, and usually does: `after` is teardown the runner does
+   not need when every worker gets a fresh profile, and a step with no operation behind it (a drag,
+   a reload) may be the whole reason a flow is `actors: human`. Coverage is a claim about the
+   `steps`, not about every stage.
+3. **A spec may name several flows** and a flow several specs; both sides are lists.
+4. **The check is referential, not semantic.** It proves the two sides name each other and that the
+   named test runs; it cannot read a Playwright spec and decide whether it exercises these `steps`.
+   A test tagged `@QA-n` that asserts nothing still passes the check, so the claim that a spec
+   covers a flow is a reviewer's judgement, not a verified fact. What the flow's own `assert`s
+   verify is the `composer-qa` run, which executes these steps against the live app; nothing
+   cross-checks the two arms against each other.
 
 ### Input literals
 

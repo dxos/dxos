@@ -60,31 +60,36 @@ export const installProbes = async (page: Page): Promise<void> => {
  * Installs the drift probe in a non-page realm, idempotently.
  *
  * `addInitScript` reaches the page and its frames only, so the shared worker — the realm that
- * actually blocks when a space gets large — needs the probe pushed in over CDP. Guarded on the
- * array's existence because the target set is reconciled at every stage boundary, and a second
- * interval would double-count every sample.
+ * actually blocks when a space gets large — needs the probe pushed in over CDP. The idempotence
+ * guard is `__perfLagArmed` rather than the sample array, because the drain DEFINES that array: a
+ * realm born mid-stage is drained at that stage's closing boundary before it is ever probed, and a
+ * guard on the array then reported `present` for the rest of the run while no interval existed —
+ * every worker lag column read zero.
  */
+export const WORKER_PROBE_EXPRESSION = `(() => {
+  if (globalThis.__perfLagArmed) {
+    return 'present';
+  }
+  globalThis.__perfLagArmed = true;
+  globalThis.__perfLag ??= [];
+  let last = performance.now();
+  setInterval(() => {
+    const now = performance.now();
+    const drift = now - last - ${LAG_INTERVAL_MS};
+    last = now;
+    if (drift > ${LAG_FLOOR_MS}) {
+      globalThis.__perfLag.push(drift);
+    }
+  }, ${LAG_INTERVAL_MS});
+  return 'installed';
+})()`;
+
 export const installWorkerProbe = async (target: Attached): Promise<void> => {
   if (target.kind === 'page') {
     return;
   }
   await target.cdp.trySend('Runtime.evaluate', {
-    expression: `(() => {
-      if (globalThis.__perfLag) {
-        return 'present';
-      }
-      globalThis.__perfLag = [];
-      let last = performance.now();
-      setInterval(() => {
-        const now = performance.now();
-        const drift = now - last - ${LAG_INTERVAL_MS};
-        last = now;
-        if (drift > ${LAG_FLOOR_MS}) {
-          globalThis.__perfLag.push(drift);
-        }
-      }, ${LAG_INTERVAL_MS});
-      return 'installed';
-    })()`,
+    expression: WORKER_PROBE_EXPRESSION,
     returnByValue: true,
   });
 };
@@ -108,9 +113,12 @@ const drainPage = (page: Page): Promise<Samples> =>
  * shared worker — and a shared worker blocked for 800 ms on a ref-resolution storm is the failure
  * this whole metric exists to catch.
  */
+export const WORKER_DRAIN_EXPRESSION =
+  '(() => { const samples = globalThis.__perfLag ?? []; globalThis.__perfLag = []; return [...samples]; })()';
+
 const drainTarget = async (target: Attached): Promise<number[]> => {
   const result = await target.cdp.trySend<{ result: { value?: number[] } }>('Runtime.evaluate', {
-    expression: '(() => { const s = globalThis.__perfLag ?? []; globalThis.__perfLag = []; return [...s]; })()',
+    expression: WORKER_DRAIN_EXPRESSION,
     returnByValue: true,
   });
   return result?.result?.value ?? [];
