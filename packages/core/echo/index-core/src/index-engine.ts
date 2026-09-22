@@ -107,15 +107,28 @@ const INDEX_NAMES = {
 } as const;
 
 export class IndexEngine {
-  // Every store here is a stateless accessor over the ambient `SqlClient`, so the engine owns them
-  // outright and a caller that wants to read one constructs its own.
-  readonly #tracker = new IndexTracker();
-  readonly #objectMetaIndex = new EntityMetaIndex();
-  readonly #ftsIndex = new FtsIndex();
-  readonly #objectSnapshotIndex = new ObjectSnapshotIndex();
-  readonly #reverseRefIndex = new ReverseRefIndex();
-  readonly #convergenceKeyIntents = new ConvergenceKeyIntentStore();
-  readonly #indexedObjectSource = new IndexedObjectSource();
+  readonly #sql: SqlClient.SqlClient;
+
+  // The engine owns its stores outright; a caller that wants to read one constructs its own
+  // against the same client.
+  readonly #tracker: IndexTracker;
+  readonly #objectMetaIndex: EntityMetaIndex;
+  readonly #ftsIndex: FtsIndex;
+  readonly #objectSnapshotIndex: ObjectSnapshotIndex;
+  readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
+  readonly #indexedObjectSource: IndexedObjectSource;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+    this.#tracker = new IndexTracker(sql);
+    this.#objectMetaIndex = new EntityMetaIndex(sql);
+    this.#ftsIndex = new FtsIndex(sql);
+    this.#objectSnapshotIndex = new ObjectSnapshotIndex(sql);
+    this.#reverseRefIndex = new ReverseRefIndex(sql);
+    this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
+    this.#indexedObjectSource = new IndexedObjectSource(sql);
+  }
 
   migrate() {
     return Effect.gen({ self: this }, function* () {
@@ -135,7 +148,7 @@ export class IndexEngine {
    * written and needs its own write matched drains first, via `Database.flush({ secondaryIndexes:
    * true })`.
    */
-  queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError> {
     return this.#ftsIndex.query(query);
   }
 
@@ -148,10 +161,7 @@ export class IndexEngine {
    * Referrers of one target in one space, joined to the object metadata for the referrer's
    * document (see {@link ReverseRefIndex.queryReferrers}).
    */
-  queryReferrers(
-    spaceId: SpaceId,
-    targetDXN: URI.URI,
-  ): Effect.Effect<readonly Referrer[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryReferrers(spaceId: SpaceId, targetDXN: URI.URI): Effect.Effect<readonly Referrer[], SqlError.SqlError> {
     return this.#reverseRefIndex.queryReferrers({ spaceId, targetDXN });
   }
 
@@ -160,7 +170,7 @@ export class IndexEngine {
     includeAllQueues?: boolean;
     queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
-  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryAll(query);
   }
 
@@ -177,10 +187,7 @@ export class IndexEngine {
    * from automerge or a feed (see {@link IndexedObjectSource}). `done` reports an empty batch, so a
    * caller wanting the whole backlog loops until it is set, exactly as with {@link update}.
    */
-  updateSecondaryIndexes(
-    ctx: Context,
-    opts?: { limit?: number },
-  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlClient.SqlClient> {
+  updateSecondaryIndexes(ctx: Context, opts?: { limit?: number }): Effect.Effect<IndexingResult, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
       const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
@@ -206,18 +213,14 @@ export class IndexEngine {
   queryByConvergenceKeys(
     spaceId: SpaceId,
     convergenceKeys: readonly string[],
-  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryByConvergenceKeys(spaceId, convergenceKeys);
   }
 
   /**
    * Pending convergence-key merge intents (see {@link ConvergenceKeyIntentStore.record}).
    */
-  takeConvergenceKeyIntents(): Effect.Effect<
-    { maxId: number; intents: Map<SpaceId, Set<string>> },
-    SqlError.SqlError,
-    SqlClient.SqlClient
-  > {
+  takeConvergenceKeyIntents(): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError> {
     return this.#convergenceKeyIntents.take();
   }
 
@@ -228,13 +231,11 @@ export class IndexEngine {
     spaceId: SpaceId,
     convergenceKey: string,
     upToId: number,
-  ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<void, SqlError.SqlError> {
     return this.#convergenceKeyIntents.clear(spaceId, convergenceKey, upToId);
   }
 
-  queryType(
-    query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
-  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryType(query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.query(query);
   }
 
@@ -244,7 +245,7 @@ export class IndexEngine {
   queryChildren(query: {
     spaceId: SpaceId[];
     parentIds: EntityId[];
-  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryChildren(query);
   }
 
@@ -255,7 +256,7 @@ export class IndexEngine {
     includeAllQueues?: boolean;
     queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
-  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryTypes(query);
   }
   queryByTimeRange(query: {
@@ -266,17 +267,17 @@ export class IndexEngine {
     createdBefore?: number;
     includeAllQueues?: boolean;
     queues?: readonly QueueRef[] | null;
-  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryByTimeRange(query);
   }
 
   queryRelations(query: {
     endpoint: 'source' | 'target';
     anchorDxns: readonly string[];
-  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryRelations(query);
   }
-  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
 
@@ -284,14 +285,14 @@ export class IndexEngine {
     objectId: string;
     spaceId: string;
     queueId: string;
-  }): Effect.Effect<EntityMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<EntityMeta | null, SqlError.SqlError> {
     return this.#objectMetaIndex.lookupByObjectId(query);
   }
 
   queryObjectIds(query: {
     spaceIds: readonly SpaceId[];
     objectIds: readonly EntityMeta['objectId'][];
-  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryObjectIds(query);
   }
 
@@ -307,9 +308,9 @@ export class IndexEngine {
     spaceId: SpaceId;
     documentIds: readonly string[];
     objects: readonly { documentId: string; objectId: string }[];
-  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<number, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
-      const sql = yield* SqlClient.SqlClient;
+      const sql = this.#sql;
       return yield* sql.withTransaction(
         Effect.gen({ self: this }, function* () {
           const recordIds = yield* this.#objectMetaIndex.selectRecordIdsForRemoval({
@@ -336,7 +337,7 @@ export class IndexEngine {
     ctx: Context,
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<IndexingResult, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
 
@@ -403,13 +404,9 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
-  ): Effect.Effect<
-    { updated: number; done: boolean; objects: readonly IndexerObject[] },
-    SqlError.SqlError,
-    SqlClient.SqlClient
-  > {
+  ): Effect.Effect<{ updated: number; done: boolean; objects: readonly IndexerObject[] }, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
-      const sql = yield* SqlClient.SqlClient;
+      const sql = this.#sql;
 
       // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
