@@ -20,8 +20,9 @@ const fixture = path.resolve(dirname, 'parsimmon.fixture.mjs');
 describe('#parsimmon (subprocess)', () => {
   test('exposes combinators when loaded by plain Node', ({ expect }) => {
     const result = spawnSync(process.execPath, [fixture], { encoding: 'utf8', timeout: 15_000 });
-    expect(result.stderr ?? '').toBe('');
-    expect(result.status).toBe(0);
+    // Asserted together because Node's stderr carries the diagnosis when the interop regresses,
+    // and a bare exit code does not.
+    expect({ status: result.status, stderr: result.stderr ?? '' }).toEqual({ status: 0, stderr: '' });
     expect(result.stdout).toContain('parsimmon ok');
   });
 });
