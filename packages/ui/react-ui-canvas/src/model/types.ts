@@ -67,6 +67,12 @@ export const NodeStyle = Schema.Struct({
   border: Schema.optional(Schema.Boolean),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
+  /**
+   * Text size in the node's own scene units. A nested scene's units are finer than its parent's by the
+   * portal's factor, so a node created deeper carries a proportionally larger value and reads the same
+   * on screen at every level.
+   */
+  fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Extra classes on the frame, for a host's own look. */
   className: Schema.optional(Schema.String),
 });

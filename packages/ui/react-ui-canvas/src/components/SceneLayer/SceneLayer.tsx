@@ -259,7 +259,15 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
         interactive && !node.locked && 'cursor-grab',
         ghost && 'opacity-50 border-dashed pointer-events-none',
       )}
-      style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
+      // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
+      // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
+      style={{
+        left: bounds.x,
+        top: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        fontSize: node.style?.fontSize,
+      }}
       data-node-id={node.id}
       data-ghost={ghost || undefined}
       onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
@@ -279,6 +287,12 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
 
 NodeFrame.displayName = 'NodeFrame';
 
+/**
+ * A part's own size class, or nothing when the node overrides `fontSize`: a Tailwind size wins over the
+ * inherited value, so the override only reaches the text if the class is left off.
+ */
+const sizeClass = (node: Node, className: string) => (node.style?.fontSize === undefined ? className : undefined);
+
 const LabelNodeView = ({ node, editing }: NodeViewProps) => {
   const label = isRectNode(node) || isEllipseNode(node) ? (node.label ?? '') : '';
   return (
@@ -286,7 +300,7 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => {
       part='label'
       text={label}
       editing={editing}
-      classNames='dx-fullscreen flex items-center justify-center text-lg text-center'
+      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-lg'))}
     >
       {label}
     </TextPart>
@@ -302,7 +316,7 @@ export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
     return null;
   }
   return (
-    <div className='dx-fullscreen flex flex-col text-sm font-mono divide-y divide-separator'>
+    <div className={mx('dx-fullscreen flex flex-col font-mono divide-y divide-separator', sizeClass(node, 'text-sm'))}>
       <TextPart part='name' text={node.name} editing={editing} classNames='px-2 py-1 text-center font-bold'>
         {node.name}
       </TextPart>

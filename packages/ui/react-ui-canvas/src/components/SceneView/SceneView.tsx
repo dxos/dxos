@@ -47,6 +47,7 @@ import {
   type ElementId,
   type Endpoint,
   type Link,
+  MAJOR_GRID,
   MAJOR_GRID_RATIO,
   type Node,
   type NodeId,
@@ -55,6 +56,7 @@ import {
   type Port,
   type Scene,
   type SceneId,
+  type Size,
   type SplineLink,
   type Tool,
   endpointNode,
@@ -106,6 +108,13 @@ const ZOOM_STEP = 1.25;
 const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2, MAJOR_GRID_RATIO ** 3] as const;
 /** Cells under 6px are noise; past 2048px a level is a line or two across the view. */
 const GRID_RANGE = [6, 2048] as const;
+/** Matches the `text-lg` the node views use when a node sets no `fontSize` of its own. */
+const DEFAULT_FONT_SIZE = 18;
+/** A type's default size in the units of the scene being edited, snapped so it still lands on the grid. */
+const levelSize = ({ width, height }: Size, scale: number): Size => ({
+  width: Math.round(width / scale / MAJOR_GRID) * MAJOR_GRID,
+  height: Math.round(height / scale / MAJOR_GRID) * MAJOR_GRID,
+});
 const PORT_SNAP_PX = 16;
 /** Ids of the link and node drawn as previews during a drag; neither reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -226,6 +235,23 @@ export const SceneView = ({
     }
     return frameRef.current.frame;
   }, [frameOf, path, scene]);
+  /**
+   * Root units per unit of the scene being edited. A portal frame is the portal's box times a power of
+   * the grid ratio, so each level down divides a unit by at least that; a node created here is scaled by
+   * the reciprocal to come out the size it would have at the root, rather than shrinking by the factor
+   * per level and pushing the user to draw ever larger boxes.
+   */
+  const levelScale = useMemo(
+    () =>
+      path.slice(1).reduce((scale, sceneId, index) => {
+        const parent = scenes[path[index]];
+        const child = scenes[sceneId];
+        const portal = parent && child ? portalTo(parent.id, sceneId) : undefined;
+        return portal && child ? scale * portalScale(portal, portalFrame(portal, sceneBounds(child))) : scale;
+      }, 1),
+    [path, scenes, portalTo],
+  );
+
   // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
   const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
 
@@ -997,14 +1023,20 @@ export const SceneView = ({
       const clicked = drawn.width < major && drawn.height < major;
       const minSize = def.minSize ?? { width: major, height: major };
       const size = clicked
-        ? def.defaultSize
+        ? levelSize(def.defaultSize, levelScale)
         : { width: Math.max(drawn.width, minSize.width), height: Math.max(drawn.height, minSize.height) };
       const center = clicked
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
       const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
       const pending = pendingRef.current;
-      const node: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
+      const created: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
+      // Below the root the scene's units are finer, so the type's own text size would read small; the
+      // node carries the scaled value and the user can override it from the properties form.
+      const node: Node =
+        levelScale === 1
+          ? created
+          : { ...created, style: { ...created.style, fontSize: DEFAULT_FONT_SIZE / levelScale } };
       pendingRef.current = { type: drag.type, node };
       return node;
     },
@@ -1438,7 +1470,7 @@ export const SceneView = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = def.defaultSize;
+      const size = levelSize(def.defaultSize, levelScale);
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
       const node = createdNode({ kind: 'create', type, from, to: from }, createId(type));
       if (node) {
