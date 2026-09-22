@@ -234,9 +234,11 @@ Data flow for one gesture: pointer-down hit-tests the positioned scene in scene 
   `[1/32, 32]`.
 - **Portal frame**: the child-space region that maps exactly onto the portal, `portalFrame(portal, bounds)`: the
   portal's box scaled by the smallest power of `MAJOR_GRID_RATIO` (4, 16, 64, …; never 1) that contains the
-  child's derived bounds, placed on the major grid as near their centre as containing them allows. A power of
-  the ratio maps every child grid level onto a parent level: the parent's minor grid is the child's major grid
-  one level down, so the grids stay aligned through a drill-in and the frame's edges sit on the parent's lines.
+  child's derived bounds, placed on the major grid **scaled by that factor** as near their centre as containing
+  them allows. A power of the ratio maps every child grid level onto a parent level: the parent's minor grid is
+  the child's major grid one level down. Placing the frame on the scaled grid then puts the child's lines on the
+  parent's own lines rather than merely at their spacing (on the plain major grid the phase can be off by up to
+  `ratio - 1` minor cells), so the grids stay aligned through a drill-in and the frame's edges sit on the lines.
   The frame drawn once drilled in (dashed, orange) is the portal's own outline; the root shows its derived
   bounds. `s = 1 / factor`; child point `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
 - **While the camera moves on its own** (wheel zoom or pan, an animation) the canvas ignores the pointer: a shield
