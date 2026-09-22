@@ -171,6 +171,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     agent = ClaudeAgent.start({
       cwd: workdir,
       mcpServers: {
+        // TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support.
         [SERVER]: {
           command: dxBin,
           args: ['mcp', 'serve'],

@@ -173,22 +173,28 @@ export const Undo = Operation.make({
   }),
 });
 
-const SampleSpaceSummary = Schema.Struct({
+const SpaceTemplateSummary = Schema.Struct({
   id: Schema.String,
   label: Schema.String,
   description: Schema.optional(Schema.String),
 });
 
 /**
- * Fills a space with one of the themed sample data sets plugins contribute, so an agent driving the
- * debug port can seed a realistic space without clicking through the generator panel.
+ * Creates a space from one of the templates plugins contribute, so an agent driving the debug port
+ * can seed a realistic space without clicking through the generator panel.
+ *
+ * TODO(wittjosiah): Reconcile with `SpaceOperation.Create`, which also takes a `template`. This adds
+ * only the listing (call without `id`) and deleting the space when the apply fails; the rest it
+ * hand-rolls because `Create` applies the template before the caller holds the space. Rollback
+ * belongs in `Create` for every caller or nowhere, and the listing belongs in a read-only
+ * operation rather than in a create that means something else when an argument is absent.
  */
-export const CreateSampleSpace = Operation.make({
+export const CreateSpaceFromTemplate = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.debug.createSampleSpace'),
-    name: 'Create Sample Space',
+    key: DXN.make('org.dxos.operation.debug.createSpaceFromTemplate'),
+    name: 'Create Space From Template',
     description:
-      'Creates a new space and fills it with a themed sample data set. Call without `id` to list ' +
+      'Creates a new space and fills it from a themed space template. Call without `id` to list ' +
       'what is available without creating anything; the listing is the only way to learn the ids.',
     icon: 'ph--dice-five--regular',
   },
@@ -196,17 +202,17 @@ export const CreateSampleSpace = Operation.make({
   services: [Capability.Service, Plugin.Service],
   input: Schema.Struct({
     id: Schema.optional(Schema.String).annotate({
-      description: 'Sample space id. Omit to list the available sets without creating anything.',
+      description: 'Space template id. Omit to list the available templates without creating anything.',
     }),
   }),
   output: Schema.Struct({
-    applied: Schema.optional(SampleSpaceSummary).annotate({
-      description: 'The set that was written; absent when listing.',
+    applied: Schema.optional(SpaceTemplateSummary).annotate({
+      description: 'The template that was written; absent when listing.',
     }),
     spaceId: Schema.optional(Schema.String),
     subject: Schema.optional(Schema.Array(Schema.String)).annotate({
       description: 'Navigation path of the new space, for a follow-up open.',
     }),
-    available: Schema.Array(SampleSpaceSummary),
+    available: Schema.Array(SpaceTemplateSummary),
   }),
 }).pipe(Operation.mutation('write'));

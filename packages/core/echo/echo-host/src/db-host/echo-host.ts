@@ -151,12 +151,13 @@ export class EchoHost extends Resource {
   private readonly _echoDataMonitor: EchoDataMonitor;
 
   private readonly _automergeDataSource: AutomergeDataSource;
-  private readonly _indexEngine: IndexEngine;
+  /** Built in `_open`: resolving the SQL client is asynchronous on some platforms. */
+  private _indexEngine: IndexEngine | undefined;
   private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
-  private readonly _registryDataSource: RegistryDataSource;
+  private _registryDataSource: RegistryDataSource | undefined;
 
   /**
    * Whether the index has been reconciled against a registry snapshot in this session. The buffered
@@ -227,19 +228,11 @@ export class EchoHost extends Resource {
       syncFeed: (ctx, request) => this.#syncFeed?.(ctx, request) ?? Promise.resolve(),
     });
 
-    // SQLite-based index engine for all queries.
-    this._indexEngine = new IndexEngine();
-
-    this._registryDataSource = new RegistryDataSource({
-      runtime: this._runtime,
-      lookupHashes: (keys) => this._indexEngine.lookupRegistryHashes(keys),
-    });
-
     this._convergenceKeyMerger = new ConvergenceKeyMerger({
       queryByConvergenceKeys: (spaceId, keys) =>
-        this._indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+        this.indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
       queryReferrers: (spaceId, targetId) =>
-        this._indexEngine
+        this.indexEngine
           .queryReferrers(spaceId, EID.make({ entityId: targetId }))
           .pipe(RuntimeProvider.runPromise(this._runtime)),
       loadDoc: (ctx, documentId, opts) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
@@ -248,7 +241,7 @@ export class EchoHost extends Resource {
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
-      indexEngine: this._indexEngine,
+      indexEngine: () => this.indexEngine,
       runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
@@ -349,12 +342,30 @@ export class EchoHost extends Resource {
    * Index engine for queries.
    */
   get indexEngine(): IndexEngine {
+    invariant(this._indexEngine, 'EchoHost is not open.');
     return this._indexEngine;
   }
 
+  /** Built alongside the index engine in {@link _open}, for the same reason. */
+  get #registryDataSource(): RegistryDataSource {
+    invariant(this._registryDataSource, 'EchoHost is not open.');
+    return this._registryDataSource;
+  }
+
   protected override async _open(ctx: Context): Promise<void> {
+    // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
+    // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
+    this._indexEngine = new IndexEngine(await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient));
+
+    // Built here rather than in the constructor: its digest probe reads through the engine above,
+    // which cannot exist until the SQL client resolves.
+    this._registryDataSource = new RegistryDataSource({
+      runtime: this._runtime,
+      lookupHashes: (keys) => this.indexEngine.lookupRegistryHashes(keys),
+    });
+
     log('echo-host: running index engine migration...');
-    await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
+    await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
     log('echo-host: index engine migration done');
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
@@ -497,7 +508,7 @@ export class EchoHost extends Resource {
     entries: readonly RegistryEntry[],
     opts?: { releasing?: boolean },
   ): Promise<boolean> {
-    const { removed, changed } = this._registryDataSource.submit(clientId, entries);
+    const { removed, changed } = this.#registryDataSource.submit(clientId, entries);
     // A releasing client is withdrawing its claim, not unregistering its entities: the rows stay
     // for the next session to re-adopt by digest, and the reconciliation below reclaims whatever
     // no client comes back for.
@@ -507,8 +518,8 @@ export class EchoHost extends Resource {
     // deleting exactly the rows a release is meant to keep. The first real snapshot reconciles.
     const reconciling = !opts?.releasing && !this._registryReconciled;
     if (reconciling) {
-      const live = this._registryDataSource.keys;
-      const indexed = await this._indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
+      const live = this.#registryDataSource.keys;
+      const indexed = await this.indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
       for (const row of indexed) {
         const indexedKey = row.version === '' ? row.name : `${row.name}:${row.version}`;
         if (!live.has(indexedKey)) {
@@ -518,7 +529,7 @@ export class EchoHost extends Resource {
     }
 
     if (stale.size > 0) {
-      const deleted = await this._indexEngine
+      const deleted = await this.indexEngine
         .deleteRegistryEntries([...stale])
         .pipe(RuntimeProvider.runPromise(this._runtime));
       log('reclaimed registry entries', { keys: stale.size, rows: deleted });
@@ -544,7 +555,7 @@ export class EchoHost extends Resource {
   async queryIndexedRegistry(
     query: { keys?: readonly string[]; typeDxns?: readonly string[] } = {},
   ): Promise<readonly EntityMeta[]> {
-    return this._indexEngine.queryRegistry(query).pipe(RuntimeProvider.runPromise(this._runtime));
+    return this.indexEngine.queryRegistry(query).pipe(RuntimeProvider.runPromise(this._runtime));
   }
 
   /**
@@ -589,7 +600,7 @@ export class EchoHost extends Resource {
       if (this._ctx.disposed || !this.isOpen) {
         break;
       }
-      const result = await this._indexEngine
+      const result = await this.indexEngine
         .updateSecondaryIndexes(this._ctx)
         .pipe(RuntimeProvider.runPromise(this._runtime));
       records += result.updated;
@@ -920,7 +931,7 @@ export class EchoHost extends Resource {
     let removedIndexEntries = 0;
     if (options.index !== false && (wipedDocumentIds.length > 0 || removedInlineObjects.length > 0)) {
       removedIndexEntries = await RuntimeProvider.runPromise(this._runtime)(
-        this._indexEngine.deleteObjects({ spaceId, documentIds: wipedDocumentIds, objects: removedInlineObjects }),
+        this.indexEngine.deleteObjects({ spaceId, documentIds: wipedDocumentIds, objects: removedInlineObjects }),
       );
     }
 
@@ -1005,7 +1016,7 @@ export class EchoHost extends Resource {
         // and a pass landing between the wipe and this cleanup would re-load a document whose
         // bytes are gone — which re-creates it as an empty document and persists it again.
         await RuntimeProvider.runPromise(this._runtime)(
-          this._indexEngine.deleteObjects({ spaceId, documentIds: stale, objects: [] }),
+          this.indexEngine.deleteObjects({ spaceId, documentIds: stale, objects: [] }),
         );
         for (const documentId of stale) {
           await this._automergeHost.removeDocument(documentId);
@@ -1362,7 +1373,7 @@ export class EchoHost extends Resource {
 
       {
         performance.mark('indexEngine.update.automerge:start');
-        const result = await this._indexEngine
+        const result = await this.indexEngine
           .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
@@ -1374,7 +1385,7 @@ export class EchoHost extends Resource {
         // which also runs once at every startup — retries them, so no detected duplicate is ever
         // silently dropped. The merge's own writes land back here via `documentsSaved`, which
         // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
-        const { maxId, intents } = await this._indexEngine
+        const { maxId, intents } = await this.indexEngine
           .takeConvergenceKeyIntents()
           .pipe(RuntimeProvider.runPromise(this._runtime));
         if (intents.size > 0) {
@@ -1387,7 +1398,7 @@ export class EchoHost extends Resource {
           let cleared = 0;
           for (const [spaceId, keys] of serviced) {
             for (const key of keys) {
-              await this._indexEngine
+              await this.indexEngine
                 .clearConvergenceKeyIntents(spaceId, key, maxId)
                 .pipe(RuntimeProvider.runPromise(this._runtime));
               cleared++;
@@ -1415,7 +1426,7 @@ export class EchoHost extends Resource {
 
       {
         performance.mark('indexEngine.update.queue:start');
-        const result = await this._indexEngine
+        const result = await this.indexEngine
           .update(ctx, this._feedDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
@@ -1439,8 +1450,8 @@ export class EchoHost extends Resource {
       }
 
       {
-        const result = await this._indexEngine
-          .update(ctx, this._registryDataSource, { spaceId: null, limit: 50 })
+        const result = await this.indexEngine
+          .update(ctx, this.#registryDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
       }

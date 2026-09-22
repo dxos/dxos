@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
@@ -23,7 +24,7 @@ const TestLayer = SqliteClient.layer({
 }).pipe(Layer.provideMerge(Reactivity.layer));
 
 const migrated = Effect.fnUntraced(function* () {
-  const store = new ObjectSnapshotIndex();
+  const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
   yield* store.migrate();
   return { store };
 });
@@ -33,7 +34,7 @@ describe('ObjectSnapshotIndex', () => {
     'returns snapshots for all present recordIds',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();
-      const metaIndex = new EntityMetaIndex();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -80,7 +81,7 @@ describe('ObjectSnapshotIndex', () => {
     'omits stale recordIds not present in the store',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();
-      const metaIndex = new EntityMetaIndex();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -114,7 +115,7 @@ describe('ObjectSnapshotIndex', () => {
     'handles more than 999 recordIds without exceeding SQLite variable limit',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();
-      const metaIndex = new EntityMetaIndex();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();

@@ -31,8 +31,8 @@ describe('FtsIndex', () => {
   it.effect(
     'should create an FTS5 table on migrate',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
 
@@ -48,9 +48,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should insert snapshots and query them via MATCH',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -97,9 +97,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should upsert objects on update',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -167,9 +167,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should handle non-sequential recordIds',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -251,9 +251,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should query from one space only',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -333,9 +333,9 @@ describe('FtsIndex', () => {
   it.effect(
     'partial word matches',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -423,9 +423,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should query from specific queues',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -511,9 +511,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should query with includeAllQueues',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -582,9 +582,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should OR space and queue constraints',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();
@@ -665,9 +665,9 @@ describe('FtsIndex', () => {
   it.effect(
     'should scope matches by typeDxns',
     Effect.fnUntraced(function* () {
-      const index = new FtsIndex();
-      const store = new ObjectSnapshotIndex();
-      const metaIndex = new EntityMetaIndex();
+      const index = new FtsIndex(yield* SqlClient.SqlClient);
+      const store = new ObjectSnapshotIndex(yield* SqlClient.SqlClient);
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* store.migrate();
       yield* metaIndex.migrate();

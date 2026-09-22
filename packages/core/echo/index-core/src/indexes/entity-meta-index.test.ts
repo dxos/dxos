@@ -33,7 +33,7 @@ const TestLayer = SqliteClient.layer({
 describe('EntityMetaIndex', () => {
   it.effect('should match versioned types when queried by versionless type', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -70,7 +70,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('resolves a legacy single-slash type-identifier row when queried by the canonical form', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       const sql = yield* SqlClient.SqlClient;
 
@@ -111,7 +111,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should not treat LIKE wildcards in versionless type queries', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -167,7 +167,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should store and update object metadata', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -266,7 +266,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should support queryAll/queryTypes/queryRelations', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -396,7 +396,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should set createdAt and updatedAt from source timestamp on insert and updatedAt on update', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -438,7 +438,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should query by time range', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -503,7 +503,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should round-trip queueNamespace and persist it through updates', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -543,7 +543,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('indexes a string convergence key and treats any other shape as no key', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -590,7 +590,7 @@ describe('EntityMetaIndex', () => {
         cursor,
         PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
       )`;
-      const tracker = new IndexTracker();
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
       yield* tracker.updateCursors([
         { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
         { indexName: 'reverseRef', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
@@ -609,10 +609,10 @@ describe('EntityMetaIndex', () => {
 
   it.effect('a fresh database keeps its index cursors across migration', () =>
     Effect.gen(function* () {
-      const tracker = new IndexTracker();
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
       yield* tracker.migrate();
 
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       yield* tracker.updateCursors([
         { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
@@ -627,7 +627,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('convergence-key intents survive until cleared, bounded by the id captured at read time', () =>
     Effect.gen(function* () {
-      const store = new ConvergenceKeyIntentStore();
+      const store = new ConvergenceKeyIntentStore(yield* SqlClient.SqlClient);
       yield* store.migrate();
 
       const spaceId = SpaceId.random();
@@ -652,7 +652,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('windows a queue read by cursor position and limit', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -724,7 +724,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('the natural cap orders by code unit, which is what the executor sorts by', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -758,7 +758,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('a queue read is scoped to its space, so a colliding queue id cannot leak', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       // The same queue id in two spaces — the case a bare `queueId` match cannot tell apart.
@@ -798,7 +798,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('caps a queue read in natural order without a cursor', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();

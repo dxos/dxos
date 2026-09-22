@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
@@ -26,7 +27,7 @@ const TestLayer = SqliteClient.layer({
 describe('ReverseRefIndex', () => {
   it.effect('should store and query reverse references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -61,7 +62,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle nested references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -106,7 +107,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle array references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -146,7 +147,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should update references on object change', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -211,7 +212,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle objects without references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -244,7 +245,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should work with documentId instead of queueId', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -278,7 +279,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('indexes references to named entities, keyed without the version', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const sourceObject: IndexerObject = {
@@ -334,8 +335,8 @@ describe('ReverseRefIndex.queryReferrers', () => {
 
   it.effect('joins referrer rows to their document metadata, grouping paths per referrer', () =>
     Effect.gen(function* () {
-      const metaIndex = new EntityMetaIndex();
-      const reverseRefIndex = new ReverseRefIndex();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* metaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
@@ -363,8 +364,8 @@ describe('ReverseRefIndex.queryReferrers', () => {
 
   it.effect('excludes referrers from other spaces and queue entities without a document', () =>
     Effect.gen(function* () {
-      const metaIndex = new EntityMetaIndex();
-      const reverseRefIndex = new ReverseRefIndex();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* metaIndex.migrate();
       yield* reverseRefIndex.migrate();
 

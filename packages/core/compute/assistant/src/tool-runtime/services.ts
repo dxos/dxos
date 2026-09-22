@@ -19,6 +19,7 @@ import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
 import { Filter, Ref, Registry } from '@dxos/echo';
+import * as EchoJsonSchema from '@dxos/echo/JsonSchema';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -312,9 +313,16 @@ const REFERENCES_INLINE = {
 const toModelJsonSchema = (schema: Schema.Codec<unknown, unknown>): JsonSchema.JsonSchema => {
   // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
   // record; keeping only the root would advertise a dangling reference to the model.
-  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema, REFERENCES_INLINE);
+  // Closed structs, as the recorded corpus states them; Effect's default leaves them open.
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema, {
+    ...REFERENCES_INLINE,
+    onExcessProperty: 'error',
+  });
   const document = Object.keys(definitions).length > 0 ? { ...root, $defs: definitions } : root;
-  return statePropertyOpenness(dropNullBranches(document, new Set(asStringArray(schema))));
+  // Folded first: once openness sets `additionalProperties`, the fold skips the node.
+  return statePropertyOpenness(
+    EchoJsonSchema.foldRestSignatures(dropNullBranches(document, new Set(asStringArray(schema)))),
+  );
 };
 
 /**

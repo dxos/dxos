@@ -35,13 +35,19 @@ export class IndexedObjectSource implements IndexDataSource {
   readonly sourceName = 'index';
   readonly indexed = true;
 
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   getChangedObjects(
     _ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
       const position = cursors[0]?.cursor;
       const cursor = typeof position === 'number' ? position : 0;
       // One batch is one transaction downstream, so the chunk size bounds it regardless of the

@@ -23,7 +23,7 @@ describe('validate', () => {
     const TestSchema = Schema.Number.pipe(
       Schema.decodeTo(
         Schema.Number,
-        SchemaTransformation.make({
+        SchemaTransformation.makeTransformation({
           decode: SchemaGetter.transform(Number.clamp({ minimum: -180, maximum: 180 })),
           encode: SchemaGetter.passthrough(),
         }),
