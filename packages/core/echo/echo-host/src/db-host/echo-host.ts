@@ -167,6 +167,13 @@ export class EchoHost extends Resource {
    */
   private _registryReconciled = false;
 
+  /**
+   * Whether a registry pass is outstanding — set when a snapshot changes the buffer, cleared by
+   * the pass that indexes it. What lets an unchanged re-push tell "nothing to wait for" apart from
+   * "someone else's change is still in flight".
+   */
+  #registryIndexOwed = false;
+
   private _updateIndexes!: DeferredTask;
 
   /**
@@ -486,9 +493,16 @@ export class EchoHost extends Resource {
       return;
     }
 
-    // Awaited even when nothing changed: an identical snapshot can land between another client's
-    // buffer update and the pass that indexes it, and returning early here would let this caller
-    // query rows the indexer has not written yet.
+    // Waited out whenever a registry pass is outstanding, not only when this snapshot is the one
+    // that changed something: an identical snapshot can land right behind the call that did, and
+    // returning here would let its caller query rows the indexer has not written yet.
+    //
+    // Conversely, a snapshot that changed nothing with no pass owed has nothing to wait for, and
+    // `updateIndexes` is a pass over the whole index rather than the registry alone — running one
+    // per re-push would put the host's entire indexer on the critical path of every client's open.
+    if (!this.#registryIndexOwed) {
+      return;
+    }
     await this.updateIndexes();
   }
 
@@ -543,7 +557,14 @@ export class EchoHost extends Resource {
       this._registryReconciled = true;
     }
 
-    return changed > 0 || stale.size > 0;
+    const owed = changed > 0 || stale.size > 0;
+    if (owed) {
+      // Set here, under the lock, rather than beside the schedule below: the next snapshot is
+      // serialized against this one but races the scheduling that follows it, and it has to see
+      // that a pass is outstanding in order to wait for it.
+      this.#registryIndexOwed = true;
+    }
+    return owed;
   }
 
   /**
@@ -1454,6 +1475,11 @@ export class EchoHost extends Resource {
           .update(ctx, this.#registryDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
+        // Cleared only once the leg has drained: a batch that stopped at its limit still owes the
+        // rest, and a waiter told otherwise would read an index missing the tail.
+        if (result.done) {
+          this.#registryIndexOwed = false;
+        }
       }
 
       // After the registry leg, not before it: registry entities land in the FTS snapshot store
