@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { type Context } from '@dxos/context';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
-import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
+import { type DataSourceCursor, type IndexDataSource, type IndexerObject, ORIGIN_AUTOMERGE } from '@dxos/index-core';
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
@@ -160,6 +160,7 @@ export class AutomergeDataSource implements IndexDataSource {
               queueNamespace: null,
               queuePosition: null,
               recordId: null,
+              origin: ORIGIN_AUTOMERGE,
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,

@@ -5166,6 +5166,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
     devDependencies:
       effect:
         specifier: 4.0.0-rc.117
@@ -5629,6 +5632,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/index-core':
+        specifier: workspace:*
+        version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -6023,6 +6029,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117

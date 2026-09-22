@@ -12,6 +12,16 @@ export { FtsIndex, type FtsQuery } from './indexes/fts-index.ts';
 export { ObjectSnapshotIndex } from './indexes/object-snapshot-index.ts';
 export { type EntityMeta, EntityMetaIndex, type QueueRef, type QueueWindow } from './indexes/entity-meta-index.ts';
 export {
+  type IndexOrigin,
+  ORIGIN_AUTOMERGE,
+  ORIGIN_FEED,
+  ORIGIN_REGISTRY,
+  REGISTRY_SPACE_ID,
+  type RegistryIdentity,
+  contentHash,
+  splitRegistryKey,
+} from './registry-keys.ts';
+export {
   type Referrer,
   type ReverseRef,
   ReverseRefIndex,

@@ -106,6 +106,46 @@ export const QueryResponse = Schema.Struct({
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
 /**
+ * One entity as the client holds it in its in-process registry.
+ */
+export const RegistryEntry = Schema.Struct({
+  /**
+   * The entity in the ECHO JSON object format.
+   *
+   * The whole entry: the host reads the entity's own `@meta` to file it, so there is no key on the
+   * wire for a client to compose — and no second source of truth for what an entity is called.
+   * Two versions of one entity are two identities, and so two index entries; a re-registration of
+   * one identity replaces it.
+   */
+  objectJson: Schema.String,
+});
+export interface RegistryEntry extends Schema.Schema.Type<typeof RegistryEntry> {}
+
+/**
+ * The client's registry, whole. A snapshot rather than a delta: the registry is small and is
+ * rebuilt from code on every start, so sending all of it lets the host diff by content digest and
+ * removes the need to track removals on the client.
+ */
+export const RegistryUpdateRequest = Schema.Struct({
+  /**
+   * Identifies the client this snapshot describes. Several clients (browser tabs, workers) share
+   * one host, so the host holds the union of their registries and only drops an entry once no
+   * client still carries it — without this, each client's snapshot would delete the others'.
+   */
+  clientId: Schema.String,
+  entries: mutableArray(RegistryEntry),
+  /**
+   * The client is going away, so this empty snapshot withdraws its claim rather than unregistering
+   * the entities. The host drops the client's ownership but keeps the rows: they are a durable
+   * cache that the next session re-adopts by digest, and reclaiming them on every clean shutdown
+   * would re-index the whole registry at each boot. Rows no client re-adopts are reclaimed by the
+   * reconciliation on the first snapshot of the next host session.
+   */
+  releasing: Schema.optional(Schema.Boolean),
+});
+export interface RegistryUpdateRequest extends Schema.Schema.Type<typeof RegistryUpdateRequest> {}
+
+/**
  * Effect RPC definitions for `dxos.echo.query.QueryService`.
  * Payloads use hand-authored Effect schemas (not protobuf) so large string fields survive the wire intact.
  */
@@ -121,6 +161,10 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('reindex', {
+    error: serviceError,
+  }),
+  Rpc.make('updateRegistry', {
+    payload: RegistryUpdateRequest,
     error: serviceError,
   }),
 ).prefix('QueryService.') {}

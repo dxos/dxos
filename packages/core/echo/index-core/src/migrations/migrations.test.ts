@@ -51,17 +51,21 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'contentHash',
   'convergenceKey',
   'createdAt',
   'deleted',
   'documentId',
   'entityKind',
+  'name',
   'objectId',
+  'origin',
   'parent',
   'queueId',
   'queueNamespace',
   'queuePosition',
   'recordId',
+  'seq',
   'source',
   'spaceId',
   'target',
@@ -100,7 +104,7 @@ describe('index-core migrations', () => {
 
 describe('objectMeta vintages', () => {
   // The three database vintages in the field. All must converge on the shape the code consumes and
-  // produces — the INSERT writes all 15 non-key columns and `SELECT *` reads them back.
+  // produces — the INSERT writes all 17 non-key columns and `SELECT *` reads them back.
   it.effect('fresh database gets the desired shape, and the column back-fill no-ops', () =>
     Effect.gen(function* () {
       expect(yield* migrateEntityMeta).toEqual(ENTITY_META_IDS);

@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
+import { DeferredTask, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -28,7 +28,7 @@ import {
 } from '@dxos/echo-protocol';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { type EntityMeta, IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -57,6 +57,7 @@ import { FeedDataSource } from './feed-data-source.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { QueryServiceImpl } from './query-service.ts';
+import { RegistryDataSource, type RegistryEntry } from './registry-data-source.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
@@ -81,7 +82,13 @@ const FTS_FLUSH_MAX_DELAY_MS = 10_000;
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
  */
-export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+export type IndexRunReason =
+  | 'open'
+  | 'feed-blocks'
+  | 'documents-saved'
+  | 'batch-continuation'
+  | 'registry-update'
+  | 'rpc-update-indexes';
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -150,6 +157,22 @@ export class EchoHost extends Resource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
+  private _registryDataSource: RegistryDataSource | undefined;
+
+  /**
+   * Whether the index has been reconciled against a registry snapshot in this session. The buffered
+   * snapshot starts empty, so the first push cannot tell an entity that left the registry from one
+   * this process has simply not been told about yet; rows orphaned by a previous session are
+   * reclaimed once, against the first snapshot that arrives.
+   */
+  private _registryReconciled = false;
+
+  /**
+   * Whether a registry pass is outstanding — set when a snapshot changes the buffer, cleared by
+   * the pass that indexes it. What lets an unchanged re-push tell "nothing to wait for" apart from
+   * "someone else's change is still in flight".
+   */
+  #registryIndexOwed = false;
 
   private _updateIndexes!: DeferredTask;
 
@@ -230,6 +253,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
       updateIndexes: () => this.updateIndexes(),
+      updateRegistry: (clientId, entries, opts) => this.updateRegistry(clientId, entries, opts),
     });
 
     this._dataService = new DataServiceImpl({
@@ -329,10 +353,23 @@ export class EchoHost extends Resource {
     return this._indexEngine;
   }
 
+  /** Built alongside the index engine in {@link _open}, for the same reason. */
+  get #registryDataSource(): RegistryDataSource {
+    invariant(this._registryDataSource, 'EchoHost is not open.');
+    return this._registryDataSource;
+  }
+
   protected override async _open(ctx: Context): Promise<void> {
     // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
     // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
     this._indexEngine = new IndexEngine(await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient));
+
+    // Built here rather than in the constructor: its digest probe reads through the engine above,
+    // which cannot exist until the SQL client resolves.
+    this._registryDataSource = new RegistryDataSource({
+      runtime: this._runtime,
+      lookupHashes: (keys) => this.indexEngine.lookupRegistryHashes(keys),
+    });
 
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
@@ -418,6 +455,128 @@ export class EchoHost extends Resource {
    */
   async flush(ctx: Context): Promise<void> {
     await this._automergeHost.flush(ctx);
+  }
+
+  /**
+   * Take one client's registry snapshot and index it.
+   *
+   * Entities no connected client carries any more are reclaimed from the index, including — on the
+   * first push of a session — rows a previous session left behind. Resolves once the pushed
+   * entities are queryable, so a caller that pushes and then queries does not race the indexer.
+   * A releasing client is the exception: it carries no entities and is closing, so it gets the
+   * reclamation but not the wait.
+   */
+  async updateRegistry(
+    clientId: string,
+    entries: readonly RegistryEntry[],
+    opts?: { releasing?: boolean },
+  ): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
+
+    const changed = await this._acceptRegistrySnapshot(clientId, entries, opts);
+
+    // Outside the lock above: an index pass runs until the whole index is quiet, which under a
+    // concurrent writer is unbounded, and every client's close waits on a release through that
+    // same lock. Holding it here would serialize one client's teardown behind another client's
+    // indexing.
+    if (changed) {
+      this.#scheduleIndexRun('registry-update');
+    }
+
+    // A releasing client is closing and will never query, so it does not wait the pass out — the
+    // deferred task above runs it either way. Waiting here would hold the client's teardown open
+    // for as long as the host's indexer is busy, which is long enough to reorder the rest of its
+    // shutdown.
+    if (opts?.releasing) {
+      return;
+    }
+
+    // Waited out whenever a registry pass is outstanding, not only when this snapshot is the one
+    // that changed something: an identical snapshot can land right behind the call that did, and
+    // returning here would let its caller query rows the indexer has not written yet.
+    //
+    // Conversely, a snapshot that changed nothing with no pass owed has nothing to wait for, and
+    // `updateIndexes` is a pass over the whole index rather than the registry alone — running one
+    // per re-push would put the host's entire indexer on the critical path of every client's open.
+    if (!this.#registryIndexOwed) {
+      return;
+    }
+    await this.updateIndexes();
+  }
+
+  /**
+   * Fold one client's snapshot into the buffer and reclaim what it orphaned.
+   *
+   * Serialized across clients: the buffer update and the deletions it implies have to land as one
+   * step, or a second snapshot could reclaim a key between the two and leave the index disagreeing
+   * with the buffer. The pass that follows is protected separately — `RegistryDataSource` re-reads
+   * each entry at emit time, since passes also run outside this path.
+   *
+   * @returns whether anything changed, and so whether an index pass is owed.
+   */
+  @synchronized
+  private async _acceptRegistrySnapshot(
+    clientId: string,
+    entries: readonly RegistryEntry[],
+    opts?: { releasing?: boolean },
+  ): Promise<boolean> {
+    const { removed, changed } = this.#registryDataSource.submit(clientId, entries);
+    // A releasing client is withdrawing its claim, not unregistering its entities: the rows stay
+    // for the next session to re-adopt by digest, and the reconciliation below reclaims whatever
+    // no client comes back for.
+    const stale = new Set(opts?.releasing ? [] : removed);
+    // Never off a release: it carries no entries, so if it is the first snapshot of a session the
+    // live set is empty and reconciliation would read the whole persisted registry as orphaned —
+    // deleting exactly the rows a release is meant to keep. The first real snapshot reconciles.
+    const reconciling = !opts?.releasing && !this._registryReconciled;
+    if (reconciling) {
+      const live = this.#registryDataSource.keys;
+      const indexed = await this.indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
+      for (const row of indexed) {
+        const indexedKey = row.version === '' ? row.name : `${row.name}:${row.version}`;
+        if (!live.has(indexedKey)) {
+          stale.add(indexedKey);
+        }
+      }
+    }
+
+    if (stale.size > 0) {
+      const deleted = await this.indexEngine
+        .deleteRegistryEntries([...stale])
+        .pipe(RuntimeProvider.runPromise(this._runtime));
+      log('reclaimed registry entries', { keys: stale.size, rows: deleted });
+      this._queryService.invalidateQueries();
+    }
+
+    // Recorded only once the query and the deletions it produced have both landed: a throw in
+    // either leaves the previous session's rows in place, and a flag set up front would mean no
+    // later snapshot ever retries them.
+    if (reconciling) {
+      this._registryReconciled = true;
+    }
+
+    const owed = changed > 0 || stale.size > 0;
+    if (owed) {
+      // Set here, under the lock, rather than beside the schedule below: the next snapshot is
+      // serialized against this one but races the scheduling that follows it, and it has to see
+      // that a pass is outstanding in order to wait for it.
+      this.#registryIndexOwed = true;
+    }
+    return owed;
+  }
+
+  /**
+   * Rows the indexer holds for the client's registry — the read side of {@link updateRegistry}.
+   *
+   * Newest registration first, so the first row matching a key is the entity registered last. An
+   * unversioned key matches every version registered under it; a versioned key matches only itself.
+   */
+  async queryIndexedRegistry(
+    query: { keys?: readonly string[]; typeDxns?: readonly string[] } = {},
+  ): Promise<readonly EntityMeta[]> {
+    return this.indexEngine.queryRegistry(query).pipe(RuntimeProvider.runPromise(this._runtime));
   }
 
   /**
@@ -1306,6 +1465,25 @@ export class EchoHost extends Resource {
         });
       }
 
+      if (this._ctx.disposed || !this.isOpen) {
+        this._indexesUpToDate = true;
+        return;
+      }
+
+      {
+        const result = await this.indexEngine
+          .update(ctx, this.#registryDataSource, { spaceId: null, limit: 50 })
+          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
+        _mergeInto(combinedResult, result);
+        // Cleared only once the leg has drained: a batch that stopped at its limit still owes the
+        // rest, and a waiter told otherwise would read an index missing the tail.
+        if (result.done) {
+          this.#registryIndexOwed = false;
+        }
+      }
+
+      // After the registry leg, not before it: registry entities land in the FTS snapshot store
+      // like anything else, so a pass that only indexed the registry still owes a flush.
       if (combinedResult.updated > 0) {
         this.#scheduleFtsFlush();
       }

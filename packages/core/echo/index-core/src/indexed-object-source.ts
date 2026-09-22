@@ -17,13 +17,13 @@ import { type IndexerObject } from './indexes/interface.ts';
 import { SQL_CHUNK_SIZE } from './utils.ts';
 
 /**
- * Cursor identity of every index fed from this source. `objectMeta.version` is global, so one
+ * Cursor identity of every index fed from this source. `objectMeta.seq` is global, so one
  * unscoped cursor row per index covers every space.
  */
 const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: null };
 
 /**
- * The index read back as a data source, ordered by the `objectMeta.version` counter the primary
+ * The index read back as a data source, ordered by the `objectMeta.seq` counter the primary
  * pass stamps on everything it writes.
  *
  * Secondary indexes are built from what is already indexed rather than from automerge or a feed,
@@ -60,8 +60,8 @@ export class IndexedObjectSource implements IndexDataSource {
         SELECT m.*, s.snapshot
         FROM objectMeta AS m
         JOIN objectSnapshot AS s ON s.recordId = m.recordId
-        WHERE m.version > ${cursor}
-        ORDER BY m.version
+        WHERE m.seq > ${cursor}
+        ORDER BY m.seq
         LIMIT ${limit}
       `;
       if (rows.length === 0) {
@@ -75,12 +75,18 @@ export class IndexedObjectSource implements IndexDataSource {
         documentId: row.documentId === '' ? null : row.documentId,
         queuePosition: row.queuePosition,
         recordId: row.recordId,
+        // Carried through rather than re-derived: this source replays rows the primary pass
+        // already classified, and a dependent index scopes on the same mark the row was written
+        // with.
+        origin: row.origin,
+        name: row.name,
+        version: row.version,
         data: JSON.parse(row.snapshot) as Obj.JSON,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt ?? 0,
       }));
 
-      return { objects, cursors: [{ ...CURSOR, cursor: rows[rows.length - 1].version }] };
+      return { objects, cursors: [{ ...CURSOR, cursor: rows[rows.length - 1].seq }] };
     });
   }
 }

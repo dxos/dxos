@@ -8,7 +8,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
@@ -16,6 +16,7 @@ import { type BranchStore } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
+import { RegistryPublisher } from './registry-publisher.ts';
 
 /** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
 const ROOT_LINK_WAIT_TIMEOUT = 2_000;
@@ -76,6 +77,15 @@ export class EchoClient extends Resource {
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
+  private _registryPublisher: RegistryPublisher | undefined = undefined;
+
+  /**
+   * Identifies this client to the host's registry bookkeeping, for the client's whole lifetime.
+   * Held here rather than on the publisher so a reopened client resumes under the same id: its
+   * first snapshot then replaces the contribution the previous session filed, which is what keeps
+   * a release that failed on the way out from stranding a claim.
+   */
+  private readonly _registryClientId = PublicKey.random().toHex();
 
   /** Aggregated local object-update signal across all databases, consumed by index query sources. */
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
@@ -126,9 +136,36 @@ export class EchoClient extends Resource {
       graph: this._graph,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+
+    // The registry is client-side state the host's indexer cannot observe, so it is mirrored over
+    // the query service; the host keys those rows apart from every space's contents.
+    this._registryPublisher = new RegistryPublisher({
+      registry: this._graph.registry,
+      service: this._queryService,
+      runtime: this._runtime,
+      clientId: this._registryClientId,
+    });
+    this._registryPublisher.open(ctx);
+  }
+
+  /** Publishes the registry to the host and resolves once its entities are indexed. */
+  async flushRegistry(): Promise<void> {
+    await this._registryPublisher?.flush();
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Withdraw this client's registry before dropping the publisher: the host reclaims an entry
+    // only when no client still carries it, and it learns that this one is gone from a snapshot.
+    // Best-effort — the service is usually already torn down by this point, and a failure must not
+    // block the close. What a failure leaves behind is bounded: the client id outlives the
+    // publisher, so reopening replaces the stale claim, and the next host session's
+    // reconciliation reclaims rows nothing comes back for.
+    try {
+      await this._registryPublisher?.release();
+    } catch (err) {
+      log.warn('Failed to release registry on close', { err });
+    }
+    this._registryPublisher = undefined;
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
@@ -218,6 +255,9 @@ export class EchoClient extends Resource {
         graph: this._graph,
       });
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+      // The publisher keeps its client id so the host treats the re-published snapshot as this
+      // client's, replacing its previous contribution rather than adding a second one.
+      this._registryPublisher?.setService(this._queryService);
     }
 
     // Update all databases with new services.
