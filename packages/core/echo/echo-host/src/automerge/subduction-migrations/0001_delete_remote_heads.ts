@@ -9,10 +9,9 @@ import { deleteSubductionRemoteHeads } from '../delete-subduction-remote-heads.t
 import { type Migration } from './index.ts';
 
 /**
- * The repair behind the recovery page's Repair button, run once on every profile: deletes the
- * stored remote-heads records, which a long-lived profile collected one per document per edge
- * restart, and vacuums the file so the space comes back. See {@link deleteSubductionRemoteHeads}
- * for why nothing is lost.
+ * Run once on every profile: deletes the stored remote-heads records, which a long-lived profile
+ * collected one per document per edge restart, and vacuums the file so the space comes back. See
+ * {@link deleteSubductionRemoteHeads} for why nothing is lost.
  */
 export const deleteRemoteHeads: Migration = {
   name: '0001_delete_remote_heads',
