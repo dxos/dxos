@@ -24,14 +24,7 @@ export type CommentComposerProps = {
  * when the comment is about the pull request, and inside {@link LineCommentPopover} when it is
  * about one line of a diff.
  */
-export const CommentComposer = ({
-  value,
-  busy,
-  target,
-  onValueChange,
-  onSubmit,
-  onCancel,
-}: CommentComposerProps) => {
+export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, onCancel }: CommentComposerProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   // Cmd/Ctrl+Enter submits, matching GitHub's own comment form.
