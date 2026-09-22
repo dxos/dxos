@@ -31,6 +31,11 @@ not have, and when the tag does not name that flow. The duplication is the point
 rots silently — rename a test and the suite stays green while the flow it claimed to cover stops
 being exercised.
 
+**The check is referential, not semantic.** It proves the two sides agree on names and that the
+named test runs; it cannot decide whether your spec exercises the flow's `steps`. A test tagged
+`@QA-1` that asserts nothing passes it. Whether the coverage is real is a reviewer's call — so make
+the spec's assertions recognisably the flow's, and say in review which steps you did not cover.
+
 **A skipped test carries its tag but is not coverage.** `automated:` lists only tests that actually
 run, so a `test.skip` — or anything under a `test.describe.skip`, since skipping is inherited —
 must be left out of it, and the checker rejects an entry naming one. The tag stays so the flow is

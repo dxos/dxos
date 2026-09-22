@@ -167,6 +167,12 @@ cover stops being exercised.
    a reload) may be the whole reason a flow is `actors: human`. Coverage is a claim about the
    `steps`, not about every stage.
 3. **A spec may name several flows** and a flow several specs; both sides are lists.
+4. **The check is referential, not semantic.** It proves the two sides name each other and that the
+   named test runs; it cannot read a Playwright spec and decide whether it exercises these `steps`.
+   A test tagged `@QA-n` that asserts nothing still passes the check, so the claim that a spec
+   covers a flow is a reviewer's judgement, not a verified fact. What the flow's own `assert`s
+   verify is the `composer-qa` run, which executes these steps against the live app; nothing
+   cross-checks the two arms against each other.
 
 ### Input literals
 
