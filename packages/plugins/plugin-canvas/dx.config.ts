@@ -15,6 +15,7 @@ export default Config2.make({
       Renders a drawing as a scene graph: zoom into a portal to open its child scene.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-canvas',
+    dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--graph--regular', hue: 'teal' },
     tags: ['labs'],
   },

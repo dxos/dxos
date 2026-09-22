@@ -67,6 +67,21 @@
       "types": "./dist/types/src/types/Canvas.d.ts",
       "import": "./dist/lib/Canvas.mjs"
     },
+    "./CanvasCapabilities": {
+      "source": "./src/types/CanvasCapabilities.ts",
+      "types": "./dist/types/src/types/CanvasCapabilities.d.ts",
+      "import": "./dist/lib/CanvasCapabilities.mjs"
+    },
+    "./CanvasPlugin": {
+      "source": "./src/CanvasPlugin.ts",
+      "types": "./dist/types/src/CanvasPlugin.d.ts",
+      "import": "./dist/lib/CanvasPlugin.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./model": {
       "source": "./src/model/index.ts",
       "types": "./dist/types/src/model/index.d.ts",
@@ -76,11 +91,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./CanvasPlugin": {
-      "source": "./src/CanvasPlugin.ts",
-      "types": "./dist/types/src/CanvasPlugin.d.ts",
-      "import": "./dist/lib/CanvasPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -104,10 +114,12 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
