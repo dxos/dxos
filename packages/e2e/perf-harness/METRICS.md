@@ -235,9 +235,13 @@ by the same offset every run.
 
 From `Memory.getDOMCounters`, for the renderer.
 
-- **`domNodes`** — live DOM nodes. The direct signal for virtualization: a count that scales with
-  the _data set_ rather than the _viewport_ means every row is rendered. 200 tasks produce 152,201
-  nodes here, ~760 per task.
+- **`domNodes`** — every node the renderer holds, which is NOT the rendered element tree and is a
+  poor virtualization signal. Measured against the live document on the same stage: 6,598 elements
+  in `document.querySelectorAll('*')` against ~41,700 here, a factor of six. The counter includes
+  text and attribute nodes and, decisively, **detached nodes still referenced by JS** — so a list
+  that went from rendering 200 rows to mounting 18 moved this figure not at all. Read it as a
+  retention canary beside `domDocuments`, and establish virtualization from the live tree (the flow
+  logs `task list windowing`) rather than from here.
 - **`domListeners`** — registered event listeners. Rises with nodes when each row wires its own
   handlers; a listener count rising _faster_ than nodes is usually a leak.
 - **`domDocuments`** — live `Document` objects: the main document, every iframe, **and detached

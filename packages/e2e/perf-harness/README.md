@@ -38,7 +38,7 @@ than trusting a caller to remember.
 | `heap[]`                   | `Runtime.getHeapUsage` per target     | After a three-pass forced GC, per realm. |
 | `appFootprintBytes`        | `memory-infra` light dump, renderers  | Private footprint of the renderers, which in this harness is the app. Includes wasm linear memory. Read at the stage boundary; the read costs ~100 ms. |
 | `chromeFootprintBytes`     | the same dump, everything else        | Chrome's browser, GPU and service processes. Reported beside the app's figure so it is visible rather than folded in. |
-| `domNodes`, `domListeners` | `Memory.getDOMCounters`               | The cheap leak canary, and the direct signal for a list that renders every row rather than a viewport. |
+| `domNodes`, `domListeners` | `Memory.getDOMCounters`               | The cheap leak canary. NOT a virtualization signal: it counts text and attribute nodes and detached nodes still held by JS, and runs ~6x the live element tree — see `METRICS.md`. |
 | `network.*`                | Playwright `response` events          | Classified code-load vs API. Content-length where present, body otherwise — the resource-timing buffer caps out on a graph this size. |
 | `responsiveness.lag*`      | timer-drift probe, page AND workers   | The page-side Long Tasks API cannot see a blocked shared worker; the worker probe is pushed in over CDP. |
 | `responsiveness.tbtMs`     | Long Tasks API                        | Not gated to a paint event: inside a stage, every long task blocks an interaction already made. |
