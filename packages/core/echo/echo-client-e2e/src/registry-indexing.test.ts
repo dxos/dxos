@@ -309,15 +309,18 @@ describe('registry indexing', () => {
   });
 
   describe('validation', () => {
-    test('an entry with an empty key cannot reach the index', async () => {
+    test('an entity carrying no key of its own cannot address the ordinary index', async () => {
       db.add(Obj.make(TestSchema.Expando, { label: 'in space' }));
       await db.flush();
       const before = await db.query(Query.select(Filter.everything())).run();
       expect(before).toHaveLength(1);
 
-      // The empty string is what marks an ordinary row, so a push carrying it — and the removal
-      // that would follow — must not be able to address the whole non-registry index.
-      await pushRaw([{ key: '', objectJson: JSON.stringify({ id: '01M320W59PG8EVVGGQKVX90G6D' }) }]);
+      // The host names an entity with no `meta.key` after its EID, never the empty string — which
+      // is what every ordinary row holds, and so would address the whole non-registry index once
+      // the removal below reclaimed it.
+      const id = '01M320W59PG8EVVGGQKVX90G6D';
+      await pushRaw([{ objectJson: JSON.stringify({ id }) }]);
+      expect(await rowsFor([`echo:///${id}`])).toHaveLength(1);
       await pushRaw([]);
 
       expect(await db.query(Query.select(Filter.everything())).run()).toHaveLength(1);
@@ -327,22 +330,20 @@ describe('registry indexing', () => {
       const key = 'dxn:com.example.op.replaced:1.0.0';
       const good = (label: string) =>
         JSON.stringify(Obj.toJSON(makeKeyed('com.example.op.replaced', '1.0.0', { label })));
-      await pushRaw([{ key, objectJson: good('original') }]);
+      await pushRaw([{ objectJson: good('original') }]);
       expect(await rowsFor([key])).toHaveLength(1);
 
-      // The client no longer carries a usable entry for this key, so the reconciliation must treat
-      // it as gone rather than let the malformed push hold the previous contribution in place.
-      await pushRaw([{ key, objectJson: 'not json at all' }]);
+      // Unparseable JSON has no metadata to be named by, so it claims no identity at all — the
+      // reconciliation must treat the key as gone rather than let the push hold the previous
+      // contribution in place.
+      await pushRaw([{ objectJson: 'not json at all' }]);
       expect(await rowsFor([key])).toHaveLength(0);
     });
 
     test('a malformed entity is dropped without failing the snapshot', async () => {
       await pushRaw([
-        { key: 'dxn:com.example.op.bad:1.0.0', objectJson: '[1,2,3]' },
-        {
-          key: 'dxn:com.example.op.good:1.0.0',
-          objectJson: JSON.stringify(Obj.toJSON(makeKeyed('com.example.op.good', '1.0.0', { label: 'ok' }))),
-        },
+        { objectJson: '[1,2,3]' },
+        { objectJson: JSON.stringify(Obj.toJSON(makeKeyed('com.example.op.good', '1.0.0', { label: 'ok' }))) },
       ]);
 
       expect(await rowsFor(['dxn:com.example.op.bad:1.0.0'])).toHaveLength(0);
@@ -410,8 +411,7 @@ describe('registry indexing', () => {
   const rowsFor = (keys: readonly string[]) => peer.host.queryIndexedRegistry({ keys });
 
   /** Pushes entries straight at the host, bypassing the client's own keying and serialization. */
-  const pushRaw = (entries: readonly { key: string; objectJson: string }[]) =>
-    peer.host.updateRegistry('test-client', entries);
+  const pushRaw = (entries: readonly { objectJson: string }[]) => peer.host.updateRegistry('test-client', entries);
 
   const only = async (keys: readonly string[]): Promise<EntityMeta> => {
     const rows = await rowsFor(keys);

@@ -20,6 +20,7 @@ export * from './deep.ts';
 export * from './defer-function.ts';
 export * from './defer.ts';
 export * from './download.ts';
+export * from './hash.ts';
 export * from './open-external.ts';
 export * from './entry.ts';
 export * from './equals.ts';

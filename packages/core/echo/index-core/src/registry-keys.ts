@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceId } from '@dxos/keys';
+import { fnv1a64 } from '@dxos/util';
 
 /**
  * Which data source an indexed row came from, recorded in `objectMeta.origin`.
@@ -62,20 +63,11 @@ export const splitRegistryKey = (key: string): RegistryIdentity => {
 };
 
 /**
- * 64-bit FNV-1a digest of a registered snapshot, hex encoded.
+ * Digest of a registered snapshot.
  *
  * Only ever compared for equality against a digest this function produced, so collision resistance
- * against an adversary is not what is being bought — a cheap, allocation-light hash over a JSON
- * string is, since it runs over the whole registry on every push.
+ * against an adversary is not what is being bought — a cheap hash over a JSON string is, since it
+ * runs over the whole registry on every push. 64 bits because a collision here means a changed
+ * entity is silently never re-indexed.
  */
-export const contentHash = (json: string): string => {
-  // BigInt rather than the usual 32-bit trick: a 32-bit space collides at a few tens of thousands
-  // of entries, and a collision here means a changed entity is silently never re-indexed.
-  const prime = 0x100000001b3n;
-  const mask = 0xffffffffffffffffn;
-  let hash = 0xcbf29ce484222325n;
-  for (let index = 0; index < json.length; index++) {
-    hash = ((hash ^ BigInt(json.charCodeAt(index))) * prime) & mask;
-  }
-  return hash.toString(16).padStart(16, '0');
-};
+export const contentHash = (json: string): string => fnv1a64(json);

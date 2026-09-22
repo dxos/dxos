@@ -38,6 +38,7 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+import { fnv1a32 } from '@dxos/util';
 
 import { AssistantE2eError } from './errors.ts';
 
@@ -102,18 +103,9 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
 
 const STABLE_ENTITY_ID_EPOCH = new Date('2025-01-01').getTime();
 
-const fnv1a = (input: string): number => {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash >>> 0;
-};
-
 /** Stable per-test ULID seed derived from vitest's fully-qualified test name. */
 const stableTestSeed = (ctx: TestContext): [time: number, seed: number] => {
-  const hash = fnv1a(ctx.task.fullName);
+  const hash = fnv1a32(ctx.task.fullName);
   const time = STABLE_ENTITY_ID_EPOCH + (hash % 86_400_000);
   const seed = Math.imul(hash ^ (hash >>> 16), 0x9e3779b1) >>> 0;
   return [time, seed];

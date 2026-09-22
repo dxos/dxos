@@ -17,24 +17,23 @@ import {
   REGISTRY_SPACE_ID,
   type RegistryIdentity,
   contentHash,
-  splitRegistryKey,
 } from '@dxos/index-core';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 /**
  * The name and version a registry row is filed under, read from the entity's own metadata.
  *
- * The entity is the authority on what it is called: `meta.key` and `meta.version` are what the
- * in-process registry keyed it by, so taking them from the object rather than re-parsing the key
- * the client composed keeps one source of truth. The key is the fallback for an entity that
- * carries no metadata of its own — an unkeyed object filed under its EID.
+ * The entity is the authority on what it is called, so nothing but its JSON is needed to file it:
+ * `meta.key` and `meta.version` are what the in-process registry keyed it by — types included,
+ * which carry their typename and version there too. An entity with no key of its own is filed
+ * under its identifier EID, which is unique and never collides with a DXN.
  */
-const registryIdentity = (key: string, data: ObjectJSON): RegistryIdentity => {
+const registryIdentity = (data: ObjectJSON): RegistryIdentity => {
   const meta = data[ATTR_META];
   const metaKey = typeof meta?.key === 'string' && meta.key !== '' ? meta.key : undefined;
   if (metaKey === undefined) {
-    return splitRegistryKey(key);
+    return { name: EID.make({ entityId: EntityId.make(data.id) }), version: '' };
   }
   // Canonicalised to the DXN form a lookup key splits into, since a meta key may be written either
   // bare or prefixed and the two have to land on one name for an unversioned lookup to match.
@@ -42,13 +41,14 @@ const registryIdentity = (key: string, data: ObjectJSON): RegistryIdentity => {
   return { name, version: typeof meta?.version === 'string' ? meta.version : '' };
 };
 
+/** The buffer's handle for an identity — the same string the index engine reclaims a row by. */
+const identityKey = ({ name, version }: RegistryIdentity): string => (version === '' ? name : `${name}:${version}`);
+
 /**
  * One entity as the client registered it.
  */
 export type RegistryEntry = {
-  /** Canonical entry key — a versioned DXN where the entity carries a version. */
-  key: string;
-  /** ECHO JSON of the entity. */
+  /** ECHO JSON of the entity; the host derives its name and version from the metadata inside. */
   objectJson: string;
 };
 
@@ -152,6 +152,15 @@ export class RegistryDataSource implements IndexDataSource {
   readonly #entries = new Map<string, BufferedEntry>();
 
   /**
+   * Per client, the identity each snapshot digest it last sent resolved to.
+   *
+   * Lets an unchanged entry skip `JSON.parse`: the identity is a function of the content, so a
+   * digest that has been filed before names the same key again. Replaced wholesale on every
+   * submit, so it never outlives the contribution it describes.
+   */
+  readonly #filedByHash = new Map<string, Map<string, string>>();
+
+  /**
    * Persisted digest per entry key, as last read from the index; null where the key has no row.
    *
    * Cached rather than re-read because one update pass calls {@link getChangedObjects} once per
@@ -178,35 +187,45 @@ export class RegistryDataSource implements IndexDataSource {
   submit(clientId: string, entries: readonly RegistryEntry[]): { removed: string[]; changed: number } {
     const seen = new Set<string>();
     let changed = 0;
+    const filed = this.#filedByHash.get(clientId) ?? new Map<string, string>();
+    const refiled = new Map<string, string>();
     for (const entry of entries) {
-      // An empty key marks an ordinary row in `objectMeta`, so one here would address the whole
-      // non-registry index. The RPC schema rejects it too; this is the host's own guard.
-      if (entry.key === '') {
-        log.warn('Ignoring registry entry with an empty key', { clientId });
-        continue;
-      }
       const hash = contentHash(entry.objectJson);
-      const existing = this.#entries.get(entry.key);
-      if (existing?.contributions.get(clientId)?.hash === hash) {
-        seen.add(entry.key);
+
+      // The identity lives inside the JSON, but parsing the whole registry on every push is what a
+      // snapshot protocol does most of the time — the common push is byte-identical to the last
+      // one. A digest this client already filed names the identity it resolved to, so an unchanged
+      // entry is recognised without being parsed again.
+      const known = filed.get(hash);
+      if (known !== undefined && this.#entries.get(known)?.contributions.get(clientId)?.hash === hash) {
+        seen.add(known);
+        refiled.set(hash, known);
         continue;
       }
 
-      // A key counts as carried by this client only once its entry is one the indexer can file.
-      // Marking it before the checks below would let a malformed replacement preserve the
+      // An entry the indexer cannot file has no identity to be filed under, and so cannot count as
+      // carried by this client — marking it would let a malformed replacement preserve the
       // client's previous contribution, which the reconciliation would then never drop.
       let parsed: unknown;
       try {
         parsed = JSON.parse(entry.objectJson);
       } catch (err) {
-        log.warn('Failed to parse registry entry for indexing', { key: entry.key, err });
+        log.warn('Failed to parse registry entry for indexing', { clientId, err });
         continue;
       }
       if (!isIndexableObject(parsed)) {
-        log.warn('Ignoring registry entry that is not a well-formed object', { key: entry.key });
+        log.warn('Ignoring registry entry that is not a well-formed object', { clientId });
         continue;
       }
-      seen.add(entry.key);
+      const key = identityKey(registryIdentity(parsed));
+      refiled.set(hash, key);
+
+      const existing = this.#entries.get(key);
+      if (existing?.contributions.get(clientId)?.hash === hash) {
+        seen.add(key);
+        continue;
+      }
+      seen.add(key);
 
       const contribution: Contribution = {
         json: entry.objectJson,
@@ -216,8 +235,8 @@ export class RegistryDataSource implements IndexDataSource {
         updatedAt: Date.now(),
       };
       if (existing === undefined) {
-        this.#entries.set(entry.key, {
-          key: entry.key,
+        this.#entries.set(key, {
+          key,
           contributions: new Map([[clientId, contribution]]),
           active: contribution,
         });
@@ -228,8 +247,16 @@ export class RegistryDataSource implements IndexDataSource {
       // The persisted digest read for this key describes the row as it was before this write, and
       // a later push may return the key to exactly that content — a comparison against the stale
       // reading would then skip a change the row does not yet carry.
-      this.#persistedHashes.delete(entry.key);
+      this.#persistedHashes.delete(key);
       changed++;
+    }
+
+    // Wholesale, not merged: a digest this snapshot did not carry names a contribution the client
+    // no longer holds, and keeping it would let a later push resurrect the identity it resolved to.
+    if (refiled.size > 0) {
+      this.#filedByHash.set(clientId, refiled);
+    } else {
+      this.#filedByHash.delete(clientId);
     }
 
     const removed: string[] = [];
@@ -323,7 +350,7 @@ export class RegistryDataSource implements IndexDataSource {
           queueNamespace: null,
           documentId: null,
           origin: ORIGIN_REGISTRY,
-          ...registryIdentity(entry.key, entry.active.data),
+          ...registryIdentity(entry.active.data),
           contentHash: entry.active.hash,
           recordId: null,
           data: entry.active.data,

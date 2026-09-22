@@ -7,43 +7,10 @@ import * as Effect from 'effect/Effect';
 
 import { DeferredTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { Entity, type Registry, Type } from '@dxos/echo';
+import { Entity, type Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/rpc';
-
-/**
- * The key an entity is indexed under on the host.
- *
- * Mirrors how {@link Registry.Registry} addresses an entity, collapsed to the single canonical form
- * the index keys rows by: a type entity by its `dxn:<typename>:<version>`, a keyed entity by its
- * `dxn:<nsid>[:<version>]`, and anything else by its identifier EID. The version is part of the
- * key, so two versions of one entity are two index entries and a re-registration of one version
- * replaces just that entry.
- */
-export const registryEntryKey = (entity: Entity.Unknown): string | undefined => {
-  if (Type.isType(entity)) {
-    const typename = Type.getTypename(entity);
-    const version = Type.getVersion(entity);
-    if (typename == null || version == null) {
-      return undefined;
-    }
-    return DXN.tryMake(`dxn:${typename}:${version}`) ?? undefined;
-  }
-
-  const meta = Entity.getMeta(entity);
-  const key = meta?.key;
-  if (key != null) {
-    const nsid = DXN.isDXN(key) ? key.slice('dxn:'.length) : key;
-    return meta?.version != null
-      ? (DXN.tryMake(`dxn:${nsid}:${meta.version}`) ?? undefined)
-      : (DXN.tryMake(`dxn:${nsid}`) ?? undefined);
-  }
-
-  const id = (entity as { id?: unknown }).id;
-  return typeof id === 'string' ? EID.make({ entityId: EntityId.make(id) }) : undefined;
-};
 
 export type RegistryPublisherParams = {
   registry: Registry.Registry;
@@ -136,19 +103,15 @@ export class RegistryPublisher {
     await this.#send(this.#collect());
   }
 
-  /** The registry as indexable entries, skipping anything that cannot be keyed or serialized. */
+  /** The registry as indexable entries, skipping anything that cannot be serialized. */
   #collect(): QueryService.RegistryEntry[] {
     const entries: QueryService.RegistryEntry[] = [];
     for (const entity of this.#registry.list()) {
-      // Keying and serialization both read the entity's own metadata, which a malformed entry can
-      // fail on. Such an entity is not indexable, but it is still usable in-process — dropping it
-      // from the snapshot is strictly better than failing the whole push.
+      // Serialization reads the entity's own metadata, which a malformed entry can fail on. Such
+      // an entity is not indexable, but it is still usable in-process — dropping it from the
+      // snapshot is strictly better than failing the whole push.
       try {
-        const key = registryEntryKey(entity);
-        if (key === undefined) {
-          continue;
-        }
-        entries.push({ key, objectJson: JSON.stringify(Entity.toJSON(entity)) });
+        entries.push({ objectJson: JSON.stringify(Entity.toJSON(entity)) });
       } catch (err) {
         log.warn('Failed to prepare registry entity for indexing', { err });
       }

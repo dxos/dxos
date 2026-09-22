@@ -110,17 +110,12 @@ export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> 
  */
 export const RegistryEntry = Schema.Struct({
   /**
-   * Canonical entry key the entity is registered under — a versioned DXN (`dxn:<nsid>:<version>`)
-   * where the entity carries a version, its bare DXN or identifier EID otherwise. Two versions of
-   * one entity are two keys, and so two index entries; a re-registration of one key replaces it.
-   *
-   * Rejected when empty: the host files the key in `objectMeta.registryKey`, where the empty
-   * string is what marks a row as NOT coming from the registry, so an empty key would address
-   * every ordinary row in the index.
-   */
-  key: Schema.NonEmptyString,
-  /**
    * The entity in the ECHO JSON object format.
+   *
+   * The whole entry: the host reads the entity's own `@meta` to file it, so there is no key on the
+   * wire for a client to compose — and no second source of truth for what an entity is called.
+   * Two versions of one entity are two identities, and so two index entries; a re-registration of
+   * one identity replaces it.
    */
   objectJson: Schema.String,
 });

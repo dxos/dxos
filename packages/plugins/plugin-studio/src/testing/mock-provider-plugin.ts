@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN, Format, Ref } from '@dxos/echo';
+import { fnv1a32 } from '@dxos/util';
 
 import { GenerationService, MediaArtifact, StudioCapabilities } from '#types';
 
@@ -34,12 +35,7 @@ const MockRequestSchema = Schema.Struct({
 
 /** Non-reversible 32-bit FNV-1a fingerprint of the prompt: the same words give the same picture. */
 const hashPrompt = (value: string): string => {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(16);
+  return fnv1a32(value).toString(16);
 };
 
 /** A picsum.photos image seeded by the prompt (and the variant index, so a batch differs), 16:9 unless square. */
