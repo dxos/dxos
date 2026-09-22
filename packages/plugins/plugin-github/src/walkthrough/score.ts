@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isGeneratedPath } from './generated.ts';
+import { isGeneratedFile } from './generated.ts';
 import { type PatchFile, parsePatch } from './patch.ts';
 
 /**
@@ -83,7 +83,14 @@ const ratio = (good: number, total: number): number => (total === 0 ? 1 : clamp(
  */
 export const withoutAppendix = (body: string): string => body.split(/^## Also changed\s*$/m)[0];
 
-export const proseOf = (body: string): string => body.replace(/^( {0,3})(`{3,}|~{3,})[\s\S]*?^\1\2.*$/gm, '');
+/**
+ * A fenced block: opener, info line, body, and a closer of at least as many of the same marker with
+ * nothing but whitespace after it. Shared by {@link proseOf} and the fence reader so the two never
+ * disagree about where a block ends — ` ```text ` opens a block, it does not close one.
+ */
+const FENCE = /^( {0,3})(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)^[ \t]*\2\2*[ \t]*$/gm;
+
+export const proseOf = (body: string): string => body.replace(new RegExp(FENCE.source, 'gm'), '');
 
 const sentencesOf = (prose: string): string[] =>
   prose
@@ -99,11 +106,14 @@ const wordsOf = (text: string): string[] => text.split(/\s+/).filter((word) => /
  * here so scoring an already-filled body and scoring raw model output give the same answer.
  */
 const fencesOf = (body: string): { file?: string; lines?: string; empty: boolean; contents: string }[] => {
-  const pattern = /^( {0,3})(`{3,}|~{3,})[ \t]*diff\b([^\n]*)\n([\s\S]*?)^[ \t]*\2/gm;
+  const pattern = new RegExp(FENCE.source, 'gm');
   const fences: { file?: string; lines?: string; empty: boolean; contents: string }[] = [];
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(body))) {
     const [, , , info, contents] = match;
+    if (!/^[ \t]*diff\b/.test(info)) {
+      continue;
+    }
     const file = info.match(/\bfile=(?:"([^"]*)"|'([^']*)'|(\S+))/);
     fences.push({
       file: file?.[1] ?? file?.[2] ?? file?.[3],
@@ -185,12 +195,17 @@ const patchNumbers = (patch: string): Set<string> => {
   return numbers;
 };
 
+/** A hunk header's trailing section text, without the `@@ -a,b +c,d @@` coordinates. */
+const sectionOf = (header: string): string => header.replace(/^@@+[^@]*@@+/, '');
+
 /** Everything the diff says, for grounding citations. Paths included, since prose cites them. */
 const patchText = (patch: string): string =>
   parsePatch(patch)
     // The `@@` header's trailing section text is code context too, and a constant that sits there
-    // rather than on a context line would otherwise make its own value look invented.
-    .map((file) => [file.path, ...file.hunks.flatMap((hunk) => [hunk.header, ...hunk.lines])].join('\n'))
+    // rather than on a context line would otherwise make its own value look invented. The range
+    // coordinates are dropped with it: a hunk starting at line 250 must not ground "250
+    // milliseconds" in the prose.
+    .map((file) => [file.path, ...file.hunks.flatMap((hunk) => [sectionOf(hunk.header), ...hunk.lines])].join('\n'))
     .join('\n');
 
 /**
@@ -206,7 +221,7 @@ const coverage = (
   const claimed = new Set<string>();
   for (const fence of fences) {
     const file = fence.file ? files.get(fence.file) : undefined;
-    if (!file || isGeneratedPath(file.path)) {
+    if (!file || isGeneratedFile(file)) {
       continue;
     }
     const range = fence.lines?.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
@@ -221,7 +236,7 @@ const coverage = (
     });
   }
 
-  const signal = [...files.values()].filter((file) => !isGeneratedPath(file.path));
+  const signal = [...files.values()].filter((file) => !isGeneratedFile(file));
   const uncoveredFiles = signal
     .map((file) => ({
       path: file.path,
@@ -275,7 +290,12 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   );
   const generatedFences = fences
     .map((fence) => fence.file)
-    .filter((path): path is string => !!path && isGeneratedPath(path));
+    // Resolved through the patch so a binary the extension does not announce — caught only by
+    // git's own marker — is graded the same as a lockfile.
+    .filter((path): path is string => {
+      const file = path ? files.get(path) : undefined;
+      return !!file && isGeneratedFile(file);
+    });
   const invalidRanges = badRanges(fences, files);
   const citations = citationsOf(prose);
   const ungrounded = citations.filter((token) => !code.includes(token.replace(/\(\)$/, '')));

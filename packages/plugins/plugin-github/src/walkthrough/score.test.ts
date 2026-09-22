@@ -205,6 +205,37 @@ describe('scoreWalkthrough', () => {
     expect(dimension(scoreWalkthrough(GOOD, PATCH).correctness, 'generated-ignored').score).to.eq(1);
   });
 
+  test('a hunk\u2019s line numbers do not ground a number in the prose', () => {
+    const patch = PATCH.replace('@@ -10,3 +10,4 @@', '@@ -250,3 +250,4 @@');
+    const body = GOOD.replace('lines=10-13', 'lines=250-253').replace(
+      'The second attempt runs on a warmed socket.',
+      'The second attempt waits 250 milliseconds.',
+    );
+    const { correctness } = scoreWalkthrough(body, patch);
+
+    expect(dimension(correctness, 'numbers-grounded').evidence).to.deep.eq(['250']);
+  });
+
+  test('a binary the extension does not announce is still generated', () => {
+    const patch = [
+      PATCH,
+      'diff --git a/fixtures/corpus b/fixtures/corpus',
+      'Binary files a/fixtures/corpus and b/fixtures/corpus differ',
+      '',
+    ].join('\n');
+    const body = GOOD + '\n## The corpus\n\nIt was regenerated.\n\n```diff file=fixtures/corpus\n```\n';
+    const { correctness } = scoreWalkthrough(body, patch);
+
+    expect(dimension(correctness, 'generated-ignored').evidence).to.deep.eq(['fixtures/corpus']);
+  });
+
+  test('a fenced block ends only at a closer with nothing after it', () => {
+    // ```text opens a block; reading it as a closer would spill the diff into the prose metrics.
+    const body = GOOD.replace('## The header', '```text\nnot prose, not a closer\n```\n\n## The header');
+    expect(proseOf(body)).to.not.contain('not prose, not a closer');
+    expect(proseOf(body)).to.contain('The header line moved out of the handler');
+  });
+
   test('a heading naming a symbol is not title case', () => {
     const body = GOOD.replace('# Retry the first call', '# Retry added() before keep()');
     const { readability } = scoreWalkthrough(body, PATCH);

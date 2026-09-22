@@ -27,8 +27,9 @@ Percent, four fixtures averaged.
 | dimension              | v1     | v2     | v3     | v4     |
 | ---------------------- | ------ | ------ | ------ | ------ |
 | fences-resolve         | 100    | 100    | 100    | 100    |
-| fences-empty           | 100    | 100    | 100    | 100    |
+| fences-authentic       | 100    | 100    | 100    | 100    |
 | hunk-coverage          | 75     | 88     | 74     | 67     |
+| generated-ignored      | 100    | 100    | 100    | 100    |
 | ranges-valid           | 91     | 100    | 100    | 94     |
 | numbers-grounded       | 100    | 100    | 100    | 100    |
 | citations-grounded     | 100    | 100    | 98     | 100    |
@@ -41,10 +42,10 @@ Percent, four fixtures averaged.
 | **correctness**        | **96** | **98** | **96** | **95** |
 | **readability**        | **95** | **97** | **97** | **97** |
 
-Only three dimensions move: sentence length, coverage, and range validity. The other nine sit at 100
-for every variant, which means they are guardrails rather than a comparison — worth keeping, because
-a regression on any of them is a document that lies, but they say nothing about which prompt is
-better.
+Five dimensions move: sentence length, coverage, range validity, citations-grounded (98 on v3) and
+prose-density (92 on v2). The other eight sit at 100 for every variant, which makes them guardrails
+rather than a comparison — worth keeping, because a regression on any of them is a document that
+lies, but they say nothing about which prompt is better.
 
 The reader rules did the one thing they were written to do: long sentences fell from 23% of the
 corpus to 5%.

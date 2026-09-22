@@ -123,6 +123,10 @@ const buildFence = (fence: string, attributes: Record<string, string>, contents:
 export const fillWalkthrough = (body: string, patch: string): WalkthroughFill => {
   const files = parsePatch(patch);
   const byPath = new Map(files.map((file) => [file.path, file]));
+  // Established before the fences are filled: a fence naming a lockfile would otherwise render it,
+  // which is the one thing the appendix exists to avoid.
+  const generated = files.filter((file) => isGeneratedFile(file)).map((file) => file.path);
+  const generatedPaths = new Set(generated);
   const used = new Set<PatchHunk>();
   const unresolved: string[] = [];
 
@@ -155,6 +159,12 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
       continue;
     }
 
+    // The prose keeps its sentence, the fence goes: the appendix names the file, and rendering a
+    // lockfile's hunks costs more of the reader than the sentence pointing at it is worth.
+    if (generatedPaths.has(path)) {
+      continue;
+    }
+
     // A rename, a mode change or a binary file has no hunks; there is nothing to splice, and an
     // empty fence would render as a bare code block. NOT `unresolved`: the patch does contain this
     // file, and `textless` already reports it — counting it as missing would say both at once.
@@ -176,8 +186,6 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
   }
   filled += body.slice(cursor);
 
-  const generated = files.filter((file) => isGeneratedFile(file)).map((file) => file.path);
-  const generatedPaths = new Set(generated);
   const missed = files
     .map((file) => ({ path: file.path, hunks: file.hunks.filter((hunk) => !used.has(hunk)) }))
     // A generated file is named in the appendix, never rendered: a lockfile's hunks are longer than
@@ -188,7 +196,11 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
   const textless = files
     .filter((file) => file.hunks.length === 0 && !generatedPaths.has(file.path))
     .map((file) => file.path);
-  const total = files.reduce((count, file) => count + file.hunks.length, 0);
+  // Generated hunks leave the denominator as well as `missed`: counting them would report a
+  // walkthrough as covering half a change when it covered all of the part worth reading.
+  const total = files
+    .filter((file) => !generatedPaths.has(file.path))
+    .reduce((count, file) => count + file.hunks.length, 0);
   const appendix = renderMissed(missed, textless, generated);
 
   return {

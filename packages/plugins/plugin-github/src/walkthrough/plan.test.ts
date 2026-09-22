@@ -7,16 +7,6 @@ import { describe, expect, test } from 'vitest';
 import { parsePatch } from './patch.ts';
 import { assembleWalkthrough, buildChapterPrompt, buildPlannerPrompt, chapterDiff, parsePlan } from './plan.ts';
 
-const file = (path: string, lines: number): string =>
-  [
-    `diff --git a/${path} b/${path}`,
-    `--- a/${path}`,
-    `+++ b/${path}`,
-    `@@ -1,1 +1,${lines + 1} @@`,
-    ' keep();',
-    ...Array.from({ length: lines }, (_, index) => `+line ${index};`),
-  ].join('\n');
-
 const PATCH = [file('src/core.ts', 3), file('src/caller.ts', 2), file('pnpm-lock.yaml', 400)].join('\n');
 const FACTS = { owner: 'dxos', repo: 'dxos', number: 13288, title: 'A large change' };
 const PATHS = ['src/core.ts', 'src/caller.ts'];
@@ -82,6 +72,20 @@ describe('parsePlan', () => {
     expect(plan?.chapters[1].files).to.deep.eq(['src/caller.ts']);
   });
 
+  test('drops a summary that is not a string, rather than carrying it into the next prompt', () => {
+    const malformed = JSON.stringify({
+      title: 'A change',
+      overview: { not: 'a string' },
+      chapters: [{ title: 'One', summary: { also: 'not a string' }, files: ['src/core.ts', 42] }],
+    });
+    const plan = parsePlan(malformed, PATHS);
+
+    expect(plan?.overview).to.eq('');
+    expect(plan?.chapters[0].summary).to.be.undefined;
+    expect(plan?.chapters[0].files).to.deep.eq(['src/core.ts']);
+    expect(buildChapterPrompt(plan!, plan!.chapters[0], 'diff')).to.not.contain('[object Object]');
+  });
+
   test('refuses an unreadable answer rather than inventing a plan', () => {
     expect(parsePlan('I cannot help with that.', PATHS)).to.be.undefined;
     expect(parsePlan('{"title": "A change"}', PATHS)).to.be.undefined;
@@ -136,3 +140,15 @@ describe('assembleWalkthrough', () => {
     expect(body).to.not.contain('\n\n\n');
   });
 });
+
+// A declaration rather than an arrow: the fixture above calls it at module evaluation.
+function file(path: string, lines: number): string {
+  return [
+    `diff --git a/${path} b/${path}`,
+    `--- a/${path}`,
+    `+++ b/${path}`,
+    `@@ -1,1 +1,${lines + 1} @@`,
+    ' keep();',
+    ...Array.from({ length: lines }, (_, index) => `+line ${index};`),
+  ].join('\n');
+}

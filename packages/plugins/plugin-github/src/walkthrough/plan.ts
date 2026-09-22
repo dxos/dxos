@@ -97,28 +97,25 @@ export const parsePlan = (response: string, paths: readonly string[]): Plan | un
     return undefined;
   }
 
-  let parsed: any;
+  let parsed: unknown;
   try {
     parsed = JSON.parse(text.slice(start, end + 1));
   } catch {
     return undefined;
   }
-  if (!parsed || typeof parsed.title !== 'string' || !Array.isArray(parsed.chapters)) {
+
+  const decoded = decodePlan(parsed);
+  if (!decoded) {
     return undefined;
   }
 
   const known = new Set(paths);
   const claimed = new Set<string>();
   const chapters: Chapter[] = [];
-  for (const chapter of parsed.chapters) {
-    if (typeof chapter?.title !== 'string' || !Array.isArray(chapter.files)) {
-      continue;
-    }
+  for (const chapter of decoded.chapters) {
     // A path the patch does not contain, or one a previous chapter already took, would make a
     // chapter prompt carrying no diff — an invented file is the planner's likeliest mistake.
-    const files = chapter.files.filter(
-      (path: unknown) => typeof path === 'string' && known.has(path) && !claimed.has(path),
-    );
+    const files = chapter.files.filter((path) => known.has(path) && !claimed.has(path));
     for (const path of files) {
       claimed.add(path);
     }
@@ -137,11 +134,45 @@ export const parsePlan = (response: string, paths: readonly string[]): Plan | un
     chapters.push({ title: 'The rest of the change', files: [...unclaimed] });
   }
 
-  return {
-    title: parsed.title,
-    overview: typeof parsed.overview === 'string' ? parsed.overview : '',
-    chapters,
-  };
+  return { title: decoded.title, overview: decoded.overview, chapters };
+};
+
+/** Fields of the shape the planner was asked for; anything else is dropped rather than carried. */
+const isString = (value: unknown): value is string => typeof value === 'string';
+
+/**
+ * Reads the model's JSON into the typed shape, field by field.
+ *
+ * Every value is checked, `summary` included: a non-string there would reach `buildChapterPrompt`
+ * and be interpolated into the next prompt as `[object Object]`.
+ */
+const decodePlan = (value: unknown): (Omit<Plan, 'chapters'> & { chapters: Chapter[] }) | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  if (!isString(record.title) || !Array.isArray(record.chapters)) {
+    return undefined;
+  }
+
+  const chapters = record.chapters.flatMap((entry): Chapter[] => {
+    if (typeof entry !== 'object' || entry === null) {
+      return [];
+    }
+    const chapter = entry as Record<string, unknown>;
+    if (!isString(chapter.title) || !Array.isArray(chapter.files)) {
+      return [];
+    }
+    return [
+      {
+        title: chapter.title,
+        files: chapter.files.filter(isString),
+        ...(isString(chapter.summary) ? { summary: chapter.summary } : {}),
+      },
+    ];
+  });
+
+  return { title: record.title, overview: isString(record.overview) ? record.overview : '', chapters };
 };
 
 /** The diff of one chapter's files, in patch order. */
