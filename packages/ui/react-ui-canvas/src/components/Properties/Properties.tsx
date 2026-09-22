@@ -9,7 +9,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Field, type ThemedClassName } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
@@ -20,6 +20,7 @@ import { type Projection } from '../../model/projection.ts';
 import { type NodeRegistry, defaultNodeRegistry, nodeDef } from '../../model/registry.ts';
 import {
   CurveLink,
+  DEFAULT_GRID,
   type Element,
   LineLink,
   type Link,
@@ -29,6 +30,7 @@ import {
   getElement,
   isLink,
 } from '../../model/types.ts';
+import { createGeometryField } from './GeometryField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
@@ -68,6 +70,8 @@ export type PropertiesProps = ThemedClassName<{
   atoms: SceneViewAtoms;
   nodes?: NodeRegistry;
   fields?: FormFieldMap;
+  /** Minor grid spacing the geometry cells step and snap by; the view's own. */
+  grid?: number;
   /** Show the fields without letting them change; also implied by a projection that cannot `update`. */
   readonly?: boolean;
 }>;
@@ -78,13 +82,22 @@ export const Properties = ({
   atoms,
   nodes = defaultNodeRegistry,
   fields = DEFAULT_FIELDS,
+  grid = DEFAULT_GRID,
   readonly: readonlyProp = false,
 }: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
+  const snap = useAtomValue(atoms.snap);
   const ids = [...selection];
   const element = ids.length === 1 ? getElement(scene, ids[0]) : undefined;
   const readonly = readonlyProp || !projection.capabilities.update;
+
+  // The geometry cells answer to the view's own grid and snap toggle, so typing a number leaves the
+  // node exactly as snapped as dragging it would.
+  const fieldMap = useMemo<FormFieldMap>(() => {
+    const geometry = createGeometryField({ grid, snap });
+    return { center: geometry, size: geometry, ...fields };
+  }, [grid, snap, fields]);
 
   const onSave = useCallback(
     (values: Element) => {
@@ -104,7 +117,7 @@ export const Properties = ({
       ) : isLink(element) ? (
         <LinkForm key={element.id} link={element} readonly={readonly} onSave={onSave} />
       ) : (
-        <NodeForm key={element.id} node={element} nodes={nodes} fields={fields} readonly={readonly} onSave={onSave} />
+        <NodeForm key={element.id} node={element} nodes={nodes} fields={fieldMap} readonly={readonly} onSave={onSave} />
       )}
     </div>
   );

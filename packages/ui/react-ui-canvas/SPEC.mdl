@@ -313,8 +313,21 @@ component Properties
   desc: >
     The schema-driven `Form` over the selected node or link's OWN schema — the registry already carries
     it, so a host type gets a properties panel with no extra work. Edits leave as `update` intents;
-    `readonly` shows the fields without letting them change.
-  props: { projection, selection, registry, readonly? }
+    `readonly` shows the fields without letting them change. Two field renderers are the canvas's own:
+    a UML compartment edits as one entry per line, and `center` / `size` edit as `GeometryField`.
+  props: { projection, atoms, nodes?, fields?, grid?, readonly? }
+```
+
+```mdl
+component GeometryField
+  desc: >
+    A node's `center` or `size` as one row of two labelled number cells (X / Y, W / H) rather than a
+    collapsible fieldset. It belongs to the canvas rather than `react-ui-form` because it answers to the
+    grid: an arrow steps a minor cell and Shift a major one — the units an arrow nudge moves a selected
+    node by — and a committed value snaps while snapping is on, so typing a number leaves a node as
+    snapped as dragging it. A step is a complete gesture like a toggle and saves at once; typing digits
+    waits for blur, so a half-written number never reaches the model.
+  props: { grid?, snap? }
 ```
 
 ```mdl

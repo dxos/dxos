@@ -177,6 +177,24 @@ test.describe('SceneView', () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
     expect(labels).toEqual(expect.arrayContaining(['Name', 'Attributes', 'Methods', 'Hue']));
+    // Geometry is two labelled cells per row, not a collapsible fieldset.
+    expect(labels).toEqual(expect.arrayContaining(['Center', 'X', 'Y', 'Size', 'W', 'H']));
+  });
+
+  test('the geometry cells step by the grid and move the node', async () => {
+    await scene.clickNode('scene:root/c');
+    const node = await scene.box(scene.node('scene:root/c'));
+    const x = page.locator('[data-testid="properties"] input[type="number"]').first();
+    const read = async () => Number(await x.inputValue());
+    const start = await read();
+    await x.focus();
+    // One arrow press is a minor cell (16), Shift a major one (64) — the same units an arrow nudge uses.
+    await x.press('ArrowUp');
+    await expect.poll(read).toBe(start + 16);
+    await x.press('Shift+ArrowUp');
+    await expect.poll(read).toBe(start + 16 + 64);
+    // The node followed, so the edit reached the model as an intent rather than staying in the input.
+    await expect.poll(async () => (await scene.box(scene.node('scene:root/c'))).x).toBeGreaterThan(node.x);
   });
 
   test('a read-only view selects but draws no handles and applies no edit', async ({ browser }) => {
