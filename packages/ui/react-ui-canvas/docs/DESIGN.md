@@ -233,11 +233,12 @@ Data flow for one gesture: pointer-down hit-tests the positioned scene in scene 
 - A view has a **scene path** (breadcrumbs) and a **camera** for the current root scene, zoom bounded to
   `[1/32, 32]`.
 - **Portal frame**: the child-space region that maps exactly onto the portal, `portalFrame(portal, bounds)`: the
-  portal's box scaled by the smallest whole factor that contains the child's derived bounds, placed on the major
-  grid as near their centre as containing them allows. A whole factor keeps the frame's edges, and the child's
-  grid seen through the portal, on the parent's grid, so the frame drawn once drilled in (dashed, orange) is the
-  portal's own outline and sits on grid lines; the root shows its derived bounds. `s = 1 / factor`; child point
-  `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
+  portal's box scaled by the smallest power of `MAJOR_GRID_RATIO` (4, 16, 64, …; never 1) that contains the
+  child's derived bounds, placed on the major grid as near their centre as containing them allows. A power of
+  the ratio maps every child grid level onto a parent level: the parent's minor grid is the child's major grid
+  one level down, so the grids stay aligned through a drill-in and the frame's edges sit on the parent's lines.
+  The frame drawn once drilled in (dashed, orange) is the portal's own outline; the root shows its derived
+  bounds. `s = 1 / factor`; child point `q` maps to parent point `cellOrigin + (q - frame.origin) * s`.
 - **While the camera moves on its own** (wheel zoom or pan, an animation) the canvas ignores the pointer: a shield
   takes presses and hover is cleared, since nothing under the pointer is where it will be.
 - **Drill-in** = animate the camera to fit the portal (`interpolateZoom`, 250–800 ms), stopping where the child

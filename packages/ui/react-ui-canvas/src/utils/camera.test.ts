@@ -99,7 +99,9 @@ describe('camera', () => {
     expect(coverage(camera, { x: -100, y: -100, width: 10, height: 10 }, viewport)).toBe(0);
   });
 
-  test('portalFrame is a whole multiple of the portal on the grid, containing the child bounds', ({ expect }) => {
+  test('portalFrame is a power-of-four multiple of the portal on the grid, containing the child bounds', ({
+    expect,
+  }) => {
     const frame = portalFrame(portal, child);
     // 1600 × 1000 needs four 480 × 300 portals across; the frame is 1920 × 1200.
     expect([frame.width, frame.height]).toEqual([1920, 1200]);
@@ -114,10 +116,15 @@ describe('camera', () => {
     expect(Math.abs(frame.y + frame.height / 2 - (child.y + child.height / 2))).toBeLessThanOrEqual(64);
     // A frame is its own frame, so drilling in and out is stable.
     expect(portalFrame(portal, frame)).toEqual(frame);
-    // A child smaller than the portal gets the portal's own size.
+    // A child smaller than the portal still gets four portals across: the parent's minor grid is the
+    // child's major one, never the same level.
     const small = portalFrame(portal, { x: 64, y: 64, width: 128, height: 128 });
-    expect([small.width, small.height]).toEqual([480, 300]);
+    expect([small.width, small.height]).toEqual([1920, 1200]);
     expect(small.x).toBeLessThanOrEqual(64);
     expect(small.x + small.width).toBeGreaterThanOrEqual(192);
+    // A child past four portals across jumps to sixteen, never to an in-between factor whose grid
+    // would miss the parent's lines.
+    const large = portalFrame(portal, { x: 0, y: 0, width: 2400, height: 600 });
+    expect([large.width, large.height]).toEqual([7680, 4800]);
   });
 });
