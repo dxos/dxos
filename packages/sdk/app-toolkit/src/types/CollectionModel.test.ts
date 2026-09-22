@@ -112,18 +112,18 @@ describe('ownership', () => {
     await db.flush();
 
     expect(Obj.getParent(person)?.id).toBe(first.id);
-    expect(CollectionModel.isCanonicalHolder(person, first)).toBe(true);
-    expect(CollectionModel.isCanonicalHolder(person, second)).toBe(false);
+    expect(Obj.isOwnedBy(person, first)).toBe(true);
+    expect(Obj.isOwnedBy(person, second)).toBe(false);
   });
 
-  test('an object nothing has claimed reads as canonical anywhere', async ({ expect }) => {
+  test('an object nothing has claimed reads as owned by any holder', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
     const collection = db.add(Collection.make({ name: 'People', objects: [] }));
     await db.flush();
 
     expect(Obj.getParent(person)).toBeUndefined();
-    expect(CollectionModel.isCanonicalHolder(person, collection)).toBe(true);
+    expect(Obj.isOwnedBy(person, collection)).toBe(true);
   });
 
   test('moving from the owning collection hands ownership to the destination', async ({ expect }) => {

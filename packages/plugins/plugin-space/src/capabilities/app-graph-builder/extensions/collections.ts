@@ -370,11 +370,8 @@ const constructObjectActions = ({
   invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
-  // The collection this node sits under, when it only links the object rather than holding it.
-  // An object with no parent at all reads as held everywhere, which is every object filed before
-  // collections began claiming what they hold.
-  const linkedFrom =
-    parentCollection && !CollectionModel.isCanonicalHolder(object, parentCollection) ? parentCollection : undefined;
+  // The collection this node sits under, when it only links the object rather than owning it.
+  const linkedFrom = parentCollection && !Obj.isOwnedBy(object, parentCollection) ? parentCollection : undefined;
 
   const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)

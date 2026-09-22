@@ -56,17 +56,6 @@ export const isCollectionItem = (object: Obj.Unknown): boolean => {
   return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
 };
 
-/**
- * Whether `holder` is where the object really lives, as opposed to holding a link to it.
- *
- * An object with no parent reads as canonical everywhere: nothing has claimed it, which is the
- * state of every object filed before collections began claiming what they hold.
- */
-export const isCanonicalHolder = (object: Obj.Unknown, holder: Obj.Unknown | undefined): boolean => {
-  const parent = Obj.getParent(object);
-  return parent === undefined || parent.id === holder?.id;
-};
-
 /** Index of the object's ref in the collection, or -1. Matched by entity id, since the same object
  * may be addressed by a local or a space-qualified URI. */
 const indexOf = (collection: Collection.Collection, object: Obj.Unknown): number =>
@@ -87,15 +76,15 @@ type MoveProps = {
 /**
  * Moves an object between collections, carrying ownership with it.
  *
- * Ownership follows only when `from` was the object's canonical holder — moving a link moves the
- * link and leaves the object where it lives. Removing a ref never clears a parent on its own, so a
+ * Ownership follows only when `from` owned the object — moving a link moves the link and leaves
+ * the object where it lives. Removing a ref never clears a parent on its own, so a
  * move cannot be expressed as an unlink followed by an add.
  */
 export const move = ({ object, from, to, index }: MoveProps): void => {
   if (from?.id === to.id) {
     return;
   }
-  const canonical = isCanonicalHolder(object, from);
+  const owned = Obj.isOwnedBy(object, from);
   const objectRef = Ref.make(object);
   Obj.update(to, (to) => {
     if (indexOf(to, object) === -1) {
@@ -115,7 +104,7 @@ export const move = ({ object, from, to, index }: MoveProps): void => {
     });
   }
   // After the destination holds the ref, so the parent edge it declares is already there.
-  if (canonical) {
+  if (owned) {
     Obj.setParent(object, to);
   }
 };

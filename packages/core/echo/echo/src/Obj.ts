@@ -778,6 +778,22 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 };
 
 /**
+ * Whether `holder` may act as the entity's owner: it is the entity's parent, or nothing has
+ * claimed the entity at all.
+ *
+ * Several objects may hold a reference to the same entity while only one is its parent, so this is
+ * the question to ask before doing anything that belongs to an owner — deleting it, or handing
+ * ownership on. An unclaimed entity answers true for every holder, which is the state of
+ * everything written before its holder began claiming what it holds.
+ *
+ * @see getParent to read the parent itself; `Filter.childOf` to query for a parent's children.
+ */
+export const isOwnedBy = (entity: Unknown | Snapshot, holder: Unknown | undefined): boolean => {
+  const parent = getParent(entity);
+  return parent === undefined || parent.id === holder?.id;
+};
+
+/**
  * Whether the parent's own data or meta annotations hold a ref to the child. A parent edge without
  * one leaves the child reachable only by index query (no graph path reaches it), and the child
  * would not read as owned content of the parent.
