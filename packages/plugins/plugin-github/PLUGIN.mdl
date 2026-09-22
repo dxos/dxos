@@ -626,7 +626,7 @@ test QA-3: Open a pull request from the browser extension
     The plugin-crx page action, end to end through the operation it names.  Uses a public pull
     request so no GitHub connection is needed — the import falls back to an anonymous read.
   actors: both
-  covers: [F-9.5]
+  covers: [F-9.5, F-9.3]
   status: unverified
   given:
     - an identity exists
@@ -659,6 +659,15 @@ test QA-3: Open a pull request from the browser extension
         }
       expect: the same object is returned and the space still holds exactly one copy
       assert: return $result.id === $imported.id
+    - name: Generate its walkthrough
+      do: Open the imported pull request and click "Generate walkthrough" in the article toolbar.
+      invoke: |
+        org.dxos.operation.github.generateWalkthrough { pullRequest: { "/": "echo://$given.space.id/$imported.id" } }
+      expect: the article renders narrated prose with the change's diff chunks spliced in
+      assert: return !!$result.walkthrough
+      note: |
+        Needs an AI provider configured — the only step here that does. GitHub itself is still read
+        anonymously, so no GitHub connection is required.
   after:
     - name: Delete the imported pull request
       do: Right-click the pull request in the navtree and choose Delete.

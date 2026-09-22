@@ -139,7 +139,6 @@ export const ImportPullRequestFromSnapshot = Operation.make({
     description: "Import the pull request a browser page shows, named by that page's URL.",
     icon: 'ph--git-pull-request--regular',
   },
-  services: [Database.Service],
   input: Schema.Struct({
     snapshot: PageAction.Snapshot,
     target: Database.Database.annotate({ description: 'The database to add the pull request to.' }),

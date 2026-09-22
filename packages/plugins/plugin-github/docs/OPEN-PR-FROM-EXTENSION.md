@@ -48,7 +48,10 @@ Only this route proves the wire. Follow the `recording-demos` skill to capture i
    walkthrough** action.
 8. Click it again on the same page. Expected: the same object, not a second copy — the import is
    idempotent by owner/repo/number.
-9. Clean up: delete the pull request object from the space.
+9. Click **Generate walkthrough** in the article toolbar. Expected: the change narrated as one
+   markdown document with its diff chunks spliced in. This is the only step needing an AI provider
+   configured; GitHub is still read anonymously.
+10. Clean up: delete the pull request object from the space.
 
 ### When the action does not appear
 
