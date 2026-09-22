@@ -70,10 +70,11 @@ export const createNode = ({
   scene,
 }: CreateNodeProps): BuiltinNode => {
   switch (type) {
+    // A new box carries no label: a placeholder would have to be cleared before a real one is typed.
     case 'rect':
-      return { type, id, z, center, size, label: 'Untitled' };
+      return { type, id, z, center, size };
     case 'ellipse':
-      return { type, id, z, center, size, label: 'Untitled' };
+      return { type, id, z, center, size };
     case 'class':
       return { type, id, z, center, size, name: 'Class', attributes: ['id: string'], methods: ['save(): void'] };
     case 'text':
