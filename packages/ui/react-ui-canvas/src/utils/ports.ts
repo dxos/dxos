@@ -20,7 +20,7 @@ export const DEFAULT_PORTS_PER_SIDE = 3;
  * The id of the `index`th port along `side`, counting from 1 at the side's start: `e1` is the top of the
  * east side, `s2` the middle of the south side. Pin a link end to one by naming `<node>#<portId>`.
  */
-export const portId = (side: Side, index: number): string => `${side}${index}`;
+export const portId = (side: Side, index = 1): string => `${side}${index}`;
 
 /**
  * `count` ports spread evenly along each side, named by `portId`. Each side lists its centre port first
