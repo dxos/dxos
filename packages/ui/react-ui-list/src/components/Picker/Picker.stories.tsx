@@ -19,7 +19,7 @@ import { random } from '@dxos/random';
 import { Column, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Picker } from './Picker.tsx';
+import { type EscapeBehavior, Picker } from './Picker.tsx';
 
 random.seed(1234);
 
@@ -44,9 +44,16 @@ type StoryArgs = {
   controlled?: boolean;
   /** Indices into `items` that should render disabled. */
   disabledIndices?: number[];
+  /** What Escape does while the query is non-empty. */
+  escapeBehavior?: EscapeBehavior;
 };
 
-const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = [] }: StoryArgs = {}) => {
+const DefaultStory = ({
+  items = allItems,
+  controlled = false,
+  disabledIndices = [],
+  escapeBehavior,
+}: StoryArgs = {}) => {
   const [picked, setPicked] = useState<string | undefined>();
   const [query, setQuery] = useState('');
 
@@ -66,6 +73,7 @@ const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = 
         <Column.Center>
           <Picker.Input
             autoFocus
+            escapeBehavior={escapeBehavior}
             placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
             {...(controlled && { value: query, onValueChange: setQuery })}
           />
@@ -153,5 +161,30 @@ export const TestEscape: Story = {
     await expect(input).toHaveValue('');
     await userEvent.keyboard('{Escape}'); // Nothing left: the press is the host's.
     await expect(escapes).toEqual([true, false]);
+  },
+};
+
+/**
+ * `escapeBehavior='dismiss'` never claims the key, so a palette in a dialog closes on the first
+ * press rather than clearing the query the user was about to abandon anyway.
+ */
+export const TestEscapeDismiss: Story = {
+  args: {
+    controlled: true,
+    escapeBehavior: 'dismiss',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox');
+    const escapes: boolean[] = [];
+    canvasElement.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        escapes.push(event.defaultPrevented);
+      }
+    });
+    await userEvent.type(input, 'ap');
+    await userEvent.keyboard('{Escape}');
+    await expect(input).toHaveValue('ap');
+    await expect(escapes).toEqual([false]);
   },
 };
