@@ -52,10 +52,10 @@ mean 611.5, in agreement with the row above), the two arms interleaved on one po
 
 ## Fix 3: one chunk per plugin
 
-A returning tab fetched 988 scripts, 15.5 MB, within eight seconds of navigation; 558 of them
-under 2 KB. Almost every small one was a plugin capability body: each `() => import('./x.ts')`
-in a plugin's `capabilities/index.ts` was its own dynamic entry and so its own chunk, 555 of them
-across 106 plugins. They all load in the same wave, so the split bought nothing at rest and cost
+A returning tab fetched 888 scripts within eight seconds of navigation, most of them under 2 KB.
+Almost every small one was a plugin capability body: each `() => import('./x.ts')` in a plugin's
+`capabilities/index.ts` was its own dynamic entry and so its own chunk, 555 of them across 106
+plugins. They all load in the same wave, so the split bought nothing at rest and cost
 a module record and a request each.
 
 The fix is in the framework, not the bundler. `Capability.makeModule(name, spec, body)` is now the
@@ -75,22 +75,41 @@ activation row), `plugin-theme`, and the framework's own process manager. Making
 eager put the compute runtime and the AI client into the boot graph (4.41 to 6.79 MB), which is
 what `check-boot-budget` exists to catch.
 
-Measured on the #13250 tree, seeded three-space profile, returning tab, `vite preview` on
-localhost:
+Measured on a seeded three-space profile, returning tab, `vite preview` over localhost, three
+runs per arm with the service worker blocked so both arms fetch their own files:
 
-|                                             |              before |               after |
-| ------------------------------------------- | ------------------: | ------------------: |
-| scripts fetched at rest                     |                 988 |                 718 |
-| bytes at rest                               |            15.49 MB |            15.41 MB |
-| boot graph                                  | 22 entries, 4.41 MB | 22 entries, 4.44 MB |
-| ready (account item in the tree; mean of 3) |              6.19 s |              4.10 s |
-| last startup-pass activation (mean of 3)    |              6.59 s |              3.79 s |
-| scripts fetched by ready                    |                 833 |                 674 |
+|                            |              before |               after |
+| -------------------------- | ------------------: | ------------------: |
+| scripts fetched at rest    |                 888 |                 685 |
+| bytes at rest              |             13.2 MB |             13.4 MB |
+| boot graph                 | 22 entries, 4.41 MB | 22 entries, 4.48 MB |
+| scripts fetched by ready   |                 839 |                 674 |
+| modules activated by ready |                 257 |                 257 |
 
-The tab activates the same 257 modules by ready; it gets there 2 s sooner because 160 fewer
-requests stand between navigation and the last of them. Local preview serves over HTTP/1.1 on
-~6 connections, which is the worst case for per-request cost, so read the timing as an upper
-bound on what a deployed origin would show; the script and byte counts are deterministic.
+The tab activates the same modules by ready and reaches them through 165 fewer requests. What that
+buys depends on the protocol and on whether the cache is warm, so `startup-timing.mjs` grew a
+`--throttle` flag and the arms were run across four conditions, each arm immediately after the
+other on the same port:
+
+| condition                   | before |  after | delta |
+| --------------------------- | -----: | -----: | ----: |
+| HTTP/1.1                    | 6.07 s | 5.00 s |   18% |
+| HTTP/2                      | 6.49 s | 5.56 s |   14% |
+| HTTP/2, 4G, warm cache      | 9.21 s | 7.92 s |   14% |
+| HTTP/2, fast 3G, warm cache | 15.3 s | 14.5 s |    5% |
+| HTTP/2, 4G, cold cache      | 17.8 s | 17.9 s |  none |
+| HTTP/2, fast 3G, cold cache | 72.9 s | 73.8 s |  none |
+
+Two things separate out. The gain survives HTTP/2, so most of it is not the ~6-connection
+HTTP/1.1 queue. It is per-request cost on the main thread, 165 fewer times, which is why it shows
+again on a warm cache where nothing is on the wire. And when bandwidth is the bottleneck the
+change is invisible: a cold load moves the same ~13 MB either way, and this arm's 0.2 MB of extra
+bytes cancels the request savings. A slow-network user's first load after a deploy is untouched.
+
+Load average sat at 20–25 throughout (another worktree was measuring), which inflates every
+absolute figure here, and is why HTTP/2 reads slower than HTTP/1.1: that is Node's TLS server
+under contention, not something a CDN would show. The deltas are within-condition and interleaved, so
+they hold. The absolutes do not travel.
 
 ## The measurement
 
