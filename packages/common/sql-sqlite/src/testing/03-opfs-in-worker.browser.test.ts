@@ -99,12 +99,12 @@ describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequent
     const worker = spawnInWorkerTestRunner();
     try {
       await waitForInWorkerTestRunner(worker);
-      const result = (await runInWorkerTestCase(worker, 'page-size')) as {
+      const result = (await runInWorkerTestCase(worker, 'page-size', `page-size-${crypto.randomUUID()}`)) as {
         pageSize: number;
         journalMode: string;
       };
       expect(result.journalMode).toBe('wal');
-      expect(result.pageSize).toBe(4096);
+      expect(result.pageSize).toBe(8192);
     } finally {
       terminateInWorkerTestRunner(worker);
     }

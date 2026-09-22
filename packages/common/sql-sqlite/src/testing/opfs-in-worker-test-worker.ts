@@ -39,15 +39,6 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         const results = yield* client`SELECT name FROM in_worker_users ORDER BY id`;
         return { names: results.map((row) => row.name) };
       }
-      // An OPFS write costs per CALL — one page plus a WAL frame header — so the page size decides
-      // how many calls a given number of bytes takes, and it is fixed when the database is created.
-      case 'page-size': {
-        const client = yield* SqlClient.SqlClient;
-        yield* client`CREATE TABLE IF NOT EXISTS in_worker_page_size (value TEXT)`;
-        const rows = yield* client`PRAGMA page_size`;
-        const journal = yield* client`PRAGMA journal_mode`;
-        return { pageSize: rows[0]?.page_size, journalMode: journal[0]?.journal_mode };
-      }
       case 'export': {
         const sql = yield* SqliteClient.SqliteClient;
         yield* sql`CREATE TABLE IF NOT EXISTS in_worker_export (value TEXT)`;
@@ -132,6 +123,26 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
     (effect) => runWithClient(effect),
   );
 
+/**
+ * The page size and journal mode a database gets when THIS client is the one that creates it.
+ *
+ * On its own database, named by the caller: a page size is fixed by whoever creates the file, so a
+ * case sharing the suite's database would read whichever earlier test got there first rather than
+ * what this client asked for.
+ */
+const readPragmas = (dbName: string): Effect.Effect<unknown, Error> =>
+  Effect.gen(function* () {
+    const client = yield* SqlClient.SqlClient;
+    yield* client`CREATE TABLE IF NOT EXISTS page_size_probe (value TEXT)`;
+    const size = yield* client`PRAGMA page_size`;
+    const journal = yield* client`PRAGMA journal_mode`;
+    return { pageSize: size[0]?.page_size, journalMode: journal[0]?.journal_mode };
+  }).pipe(
+    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
+    Effect.provide(SqliteClient.layerOpfs({ dbName }).pipe(Layer.provideMerge(Reactivity.layer))),
+    Effect.scoped,
+  );
+
 self.addEventListener('message', (event: MessageEvent<InWorkerRequest>) => {
   const message = event.data;
   if (message[0] !== 'run') {
@@ -139,8 +150,10 @@ self.addEventListener('message', (event: MessageEvent<InWorkerRequest>) => {
   }
 
   const [, testCase, payload] = message;
+  const program =
+    testCase === 'page-size' && typeof payload === 'string' ? readPragmas(payload) : runTest(testCase, payload);
   void Effect.runFork(
-    runTest(testCase, payload).pipe(
+    program.pipe(
       Effect.match({
         onFailure: (error) => {
           self.postMessage(['error', error.message] satisfies InWorkerResponse);
