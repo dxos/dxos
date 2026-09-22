@@ -105,15 +105,17 @@ describe('camera', () => {
     const frame = portalFrame(portal, child);
     // 1600 × 1000 needs four 480 × 300 portals across; the frame is 1920 × 1200.
     expect([frame.width, frame.height]).toEqual([1920, 1200]);
-    expect(Math.abs(frame.x % 64)).toBe(0);
-    expect(Math.abs(frame.y % 64)).toBe(0);
+    // On the major grid scaled by the factor, so the child's major lines land on the parent's major lines
+    // (a frame on the plain major grid only matches their spacing, up to three minor cells out of phase).
+    expect(Math.abs(frame.x % 256)).toBe(0);
+    expect(Math.abs(frame.y % 256)).toBe(0);
     expect(frame.x).toBeLessThanOrEqual(child.x);
     expect(frame.y).toBeLessThanOrEqual(child.y);
     expect(frame.x + frame.width).toBeGreaterThanOrEqual(child.x + child.width);
     expect(frame.y + frame.height).toBeGreaterThanOrEqual(child.y + child.height);
     // As near the child's centre as containing it allows.
-    expect(Math.abs(frame.x + frame.width / 2 - (child.x + child.width / 2))).toBeLessThanOrEqual(64);
-    expect(Math.abs(frame.y + frame.height / 2 - (child.y + child.height / 2))).toBeLessThanOrEqual(64);
+    expect(Math.abs(frame.x + frame.width / 2 - (child.x + child.width / 2))).toBeLessThanOrEqual(256);
+    expect(Math.abs(frame.y + frame.height / 2 - (child.y + child.height / 2))).toBeLessThanOrEqual(256);
     // A frame is its own frame, so drilling in and out is stable.
     expect(portalFrame(portal, frame)).toEqual(frame);
     // A child smaller than the portal still gets four portals across: the parent's minor grid is the
