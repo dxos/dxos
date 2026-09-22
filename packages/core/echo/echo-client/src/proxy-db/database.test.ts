@@ -750,17 +750,15 @@ describe('Database', () => {
       expect(await EffectEx.runPromise(Database.load(ref, { deleted: 'include' }))).toMatchObject({ id: tasks[0].id });
     });
 
-    test('Ref.loadAll keeps order, skips deleted targets and de-duplicates', async ({ expect }) => {
-      const { db, refs, tasks } = await setup();
+    test('a property traversal drops a deleted target', async ({ expect }) => {
+      const { db, person, tasks } = await setup();
       db.remove(tasks[1]);
 
-      const loaded = await EffectEx.runPromise(Ref.loadAll(refs));
-      expect(loaded.map((task) => task.title)).toEqual(['one', 'three']);
-
-      const withDeleted = await EffectEx.runPromise(Ref.loadAll(refs, { deleted: 'include' }));
-      expect(withDeleted.map((task) => task.title)).toEqual(['one', 'two', 'three']);
-
-      expect(await EffectEx.runPromise(Ref.loadAll([...refs, refs[0]]))).toHaveLength(2);
+      const titles = await db
+        .query(Query.select(Filter.entity(person)).reference('tasks'))
+        .run()
+        .then((results) => results.map((task) => task.title));
+      expect(titles.toSorted()).toEqual(['one', 'three']);
     });
 
     test('the ref atom family is keyed structurally', async ({ expect }) => {

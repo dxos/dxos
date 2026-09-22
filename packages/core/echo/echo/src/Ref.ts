@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
 import { SchemaAST } from '@dxos/effect';
@@ -124,37 +123,6 @@ export const hasEntityId = refInternal.Ref.hasEntityId;
  * Disposition of a deleted target. Defaults to `'exclude'`, matching the query option.
  */
 export type LoadOptions = refInternal.LoadOptions;
-
-/**
- * Loads each ref through its resolver, in array order, dropping entries whose target is
- * unavailable or deleted.
- *
- * @example
- * ```ts
- * const watchers = yield* Ref.loadAll(task.watchers);
- * ```
- */
-export const loadAll = <T extends Obj.Unknown>(
-  refs: ReadonlyArray<Ref<T>>,
-  options?: LoadOptions,
-): Effect.Effect<T[]> =>
-  Effect.forEach(refs, (ref) => Effect.promise(() => ref.tryLoad(options)), { concurrency: 'unbounded' }).pipe(
-    Effect.map(dedupeById),
-  );
-
-/** Concurrent edits can merge the same ref into an array twice, so a reader must de-duplicate. */
-const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | undefined>): T[] => {
-  const seen = new Set<string>();
-  const result: T[] = [];
-  for (const object of objects) {
-    if (!object || seen.has(object.id)) {
-      continue;
-    }
-    seen.add(object.id);
-    result.push(object);
-  }
-  return result;
-};
 
 /**
  * The URI a reference property points at, or `undefined` when the node is not a reference.

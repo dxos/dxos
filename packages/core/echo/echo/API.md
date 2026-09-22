@@ -147,7 +147,6 @@ await task.assignee.load({ deleted: 'include' }); // resolves a tombstoned targe
 const program = Effect.gen(function* () {
   const assignee = yield* Database.load(task.assignee); // fails with EntityNotFoundError
   const ghost = yield* Database.load(task.assignee, { deleted: 'include' }); // resolves a tombstoned target
-  const watchers = yield* Ref.loadAll(task.watchers); // order kept, deduped by id, deleted skipped
 });
 ```
 
@@ -169,9 +168,9 @@ const watchers = await db.query(Query.select(Filter.entity(task)).reference('wat
 const members = await db.query(Filter.childOf(taskSet)).run();
 ```
 
-Reach for the array itself when writing membership or when its order matters. Mutate it in place
-(wholesale reassignment is a reactivity anti-pattern — splice instead), and use `Ref.loadAll` for
-targets in array order; it skips dangling entries.
+Reach for the array itself to write membership, and mutate it in place (wholesale reassignment is a
+reactivity anti-pattern — splice instead). The array is also the canonical order, which a query does
+not preserve: sort the results by it when order matters.
 
 ## Querying
 
