@@ -152,7 +152,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
 
   const handleApprove = useCallback(async () => {
     setBusy(true);
-    const { error } = await invokePromise(
+    const { data, error } = await invokePromise(
       GitHubOperation.SubmitPullRequestApproval,
       { pullRequest: pullRequestRef },
       { spaceId },
@@ -163,7 +163,11 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       await toast('approve', 'approve-pull-request-error.title', false, error.message);
       return;
     }
-    await toast('approve', 'approve-pull-request-success.title', true);
+    await toast(
+      'approve',
+      data?.commented ? 'approve-pull-request-commented.title' : 'approve-pull-request-success.title',
+      true,
+    );
     void refreshStatus();
   }, [invokePromise, pullRequestRef, spaceId, toast, refreshStatus]);
 
