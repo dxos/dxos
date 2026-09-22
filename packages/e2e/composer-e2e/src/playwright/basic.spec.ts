@@ -28,7 +28,7 @@ test.describe('Basic tests', () => {
     await host.close();
   });
 
-  test('create identity, space is created by default', async () => {
+  test('create identity, space is created by default', { tag: ['@QA-5'] }, async () => {
     await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
     // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
     const plank = host.deck.plank();
@@ -36,12 +36,12 @@ test.describe('Basic tests', () => {
     await expect(plank.locator.getByText('README')).toBeVisible();
   });
 
-  test('create space, which is displayed in tree', async () => {
+  test('create space, which is displayed in tree', { tag: ['@QA-5'] }, async () => {
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });
 
-  test('create document', async () => {
+  test('create document', { tag: ['@QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
     // Documents are collection items; the new object is revealed under the Collections section.
@@ -55,26 +55,30 @@ test.describe('Basic tests', () => {
   });
 
   // TODO(wittjosiah): Reset no longer wipes old data, upgrade path needs to be provided.
-  test.skip('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
-    // TODO(wittjosiah): This test seems to crash firefox and fail in webkit.
-    if (browserName !== 'chromium') {
-      test.skip();
-    }
+  test.skip(
+    'error boundary is rendered on invalid storage version, reset wipes old data',
+    { tag: ['@QA-5'] },
+    async ({ browserName }) => {
+      // TODO(wittjosiah): This test seems to crash firefox and fail in webkit.
+      if (browserName !== 'chromium') {
+        test.skip();
+      }
 
-    await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
-    await host.changeStorageVersionInMetadata(9999);
-    await expect(host.page.getByTestId('resetDialog').locator('p')).toContainText('9999');
-    await expect(host.page.getByTestId('resetDialog').locator('h2')).toHaveText('Invalid storage version');
+      await host.changeStorageVersionInMetadata(9999);
+      await expect(host.page.getByTestId('resetDialog').locator('p')).toContainText('9999');
+      await expect(host.page.getByTestId('resetDialog').locator('h2')).toHaveText('Invalid storage version');
 
-    await host.reset();
-    // Wait for identity to be re-created.
-    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 10_000 });
-  });
+      await host.reset();
+      // Wait for identity to be re-created.
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 10_000 });
+    },
+  );
 
   // TODO(wittjosiah): Remove? The reset button was hidden from the app.
-  test.skip('reset app', async ({ browserName }) => {
+  test.skip('reset app', { tag: ['@QA-5'] }, async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to be flaky in webkit.
     if (browserName === 'webkit') {
       test.skip();
@@ -97,7 +101,7 @@ test.describe('Basic tests', () => {
       'TODO(wittjosiah): This test seems to be flaky in firefox & webkit.',
     );
 
-    test('logout', async () => {
+    test('logout', { tag: ['@QA-5'] }, async () => {
       // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
       // plugin manager + identity creation) consistently runs ~8-11s, which
       // doesn't fit the default 60s test timeout comfortably alongside setup.

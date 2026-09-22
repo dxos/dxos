@@ -131,6 +131,12 @@ jobs:
           - name: Check public packages are published
             run: pnpm run check-packages-published
 
+          # Both sides of the spec <-> `.mdl` QA binding. In stage 1 because it needs no build and
+          # because the failure it catches — a renamed test leaving a flow claiming coverage it no
+          # longer has — is cheapest to report before anything compiles.
+          - name: Check e2e tests are bound to QA flows
+            run: node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
+
       # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
       # declares an implicit input to every task, and neither restores it on a hard cancellation.
       #
@@ -553,10 +559,10 @@ jobs:
             id: shard
             run: |
               if [ "${{ matrix.shard }}" = "composer" ]; then
-                targets=composer-app:e2e
+                targets=composer-e2e:e2e
               else
                 targets=$(moon query tasks "task=e2e" |
-                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-app').sort().map((project)=>project+':e2e').join(' ')))")
+                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().map((project)=>project+':e2e').join(' ')))")
               fi
               [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
@@ -565,9 +571,8 @@ jobs:
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit and
-          # reports green without executing a test. Unlike MOON_CACHE=off, this leaves the cached
-          # bundle/build dependencies alone.
+          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+          # and reports green without executing a test.
           DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
@@ -576,6 +581,18 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+
+      # Trends every test's outcome in PostHog; the event contract and the gate are documented in
+      # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
+      # having, and the `composer` shard alone because the `rest` cells write unrelated packages'
+      # reports to the same directory.
+      - name: Publish results
+        if: >-
+          ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') &&
+          matrix.shard == 'composer' }}
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: node packages/e2e/composer-e2e/scripts/publish-results.mjs
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7

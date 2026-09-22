@@ -26,7 +26,7 @@ import {
   writeRunReport,
 } from '@dxos/perf-harness';
 
-import { INITIAL_URL } from './app-manager.ts';
+import { INITIAL_URL } from './harness-helpers.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 import { describeReplication, waitForReplication } from './perf/replication.ts';
 
