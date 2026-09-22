@@ -41,7 +41,6 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     ),
 
     /** Artifacts (documents, outliners, tables, ...), in order. Owned only where no other holder claimed one first. */
-    // TODO(burdon): Change to Collection?
     artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
       Annotation.SetParent.set({ override: false }),
       Annotation.FormInputAnnotation.set(false),
