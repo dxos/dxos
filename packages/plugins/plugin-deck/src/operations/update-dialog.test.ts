@@ -22,7 +22,6 @@ describe('LayoutOperation.UpdateDialog', () => {
     );
     await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { state: false }));
 
-    // The overlay is on screen for the whole exit, so it still has its content and its alignment.
     expect(read().dialogOpen).toBe(false);
     expect(read().dialogContent).not.toBeNull();
     expect(read().dialogBlockAlign).toBe('start');

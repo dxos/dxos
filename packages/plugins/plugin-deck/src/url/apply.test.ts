@@ -19,7 +19,6 @@ describe('applyActive', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   test('a transition does not revert state written while it captures the old view', async ({ expect }) => {
-    // A transition runs its update step a frame or more after it starts; `captured` releases it here.
     let captured: () => Promise<void>;
     vi.stubGlobal('document', {
       visibilityState: 'visible',

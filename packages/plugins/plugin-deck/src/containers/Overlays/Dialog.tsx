@@ -42,8 +42,6 @@ export const Dialog = () => {
           placeholder={<div />}
         />
       ) : (
-        // `dx-main-dialog` names this overlay for view transitions. The shared component class cannot
-        // carry the name: a transition is abandoned when two rendered elements claim the same one.
         <Overlay
           blockAlign={dialogBlockAlign}
           classNames={['dx-main-dialog', dialogOverlayClasses]}
