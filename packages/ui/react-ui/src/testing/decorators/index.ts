@@ -4,4 +4,5 @@
 
 export * from './withLayout.tsx';
 export * from './withLayoutVariants.tsx';
+export * from './withRegistry.tsx';
 export * from './withTheme.tsx';

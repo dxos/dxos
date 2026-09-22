@@ -8,8 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button, IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 

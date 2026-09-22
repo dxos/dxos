@@ -13,8 +13,7 @@ import { combine } from '@dxos/async';
 import * as GraphEdge from '@dxos/graph/GraphEdge';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { SVG } from '../components/index.ts';
 import {

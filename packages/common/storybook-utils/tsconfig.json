@@ -18,9 +18,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../effect"
-    },
-    {
       "path": "../log"
     }
   ]

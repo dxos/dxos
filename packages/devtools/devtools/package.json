@@ -86,7 +86,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",

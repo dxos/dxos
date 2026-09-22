@@ -7,8 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { InvocationOutcome, type InvocationSpan } from '@dxos/compute-runtime';
 import { EntityId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { InvocationTraceContainer } from './InvocationTraceContainer.tsx';
 

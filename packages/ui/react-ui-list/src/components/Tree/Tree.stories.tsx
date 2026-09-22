@@ -12,8 +12,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { Path } from '../../util/index.ts';
 import { type TestItem, createTree, updateState } from './testing.ts';

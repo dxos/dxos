@@ -3,10 +3,8 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
@@ -24,7 +22,7 @@ import {
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from '../components/index.ts';
 import { type ComputeGraphController, createComputeGraphController } from '../graph/index.ts';
@@ -61,17 +59,6 @@ type StoryProps = {
   circuit: ReturnType<typeof createEmptyCircuit>;
   sidebar?: Sidebar;
 };
-
-const RegistryWrapper = ({ children }: { children: ReactNode }) => {
-  const [registry] = useState(() => Registry.make());
-  return <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>;
-};
-
-const withRegistry: Decorator = (Story) => (
-  <RegistryWrapper>
-    <Story />
-  </RegistryWrapper>
-);
 
 const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps) => {
   const registry = useRegistry();

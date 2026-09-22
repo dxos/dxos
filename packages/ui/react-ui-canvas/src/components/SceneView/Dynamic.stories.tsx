@@ -4,12 +4,11 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import React, { type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
@@ -52,17 +51,6 @@ const ALL: GraphModel = {
     { id: 'echo-storage', from: 'echo', to: 'storage' },
   ],
 };
-
-const RegistryWrapper = ({ children }: { children: ReactNode }) => {
-  const [registry] = useState(() => Registry.make());
-  return <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>;
-};
-
-const withRegistry: Decorator = (Story) => (
-  <RegistryWrapper>
-    <Story />
-  </RegistryWrapper>
-);
 
 const GraphPanel = ({ graph, overlay }: { graph: Atom.Writable<GraphModel>; overlay: Atom.Writable<Overlay> }) => {
   const registry = useContext(RegistryContext);

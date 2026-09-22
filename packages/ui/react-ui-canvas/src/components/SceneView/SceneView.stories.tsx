@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import React, { type ReactNode, useMemo, useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createSceneViewAtoms } from '../../model/atoms.ts';
@@ -30,17 +28,6 @@ import { SceneView } from './SceneView.tsx';
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The right panel edits the selected element.
  */
 type StoryArgs = { depth: number; liveDepth: number; readonly?: boolean };
-
-const RegistryWrapper = ({ children }: { children: ReactNode }) => {
-  const [registry] = useState(() => Registry.make());
-  return <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>;
-};
-
-const withRegistry: Decorator = (Story) => (
-  <RegistryWrapper>
-    <Story />
-  </RegistryWrapper>
-);
 
 type EditorProps = {
   store: ReturnType<typeof createMemoryStore>;
