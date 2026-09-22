@@ -27,7 +27,7 @@ import { log } from '@dxos/log';
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { Capabilities } from '../common/index.ts';
 import { Capability, Plugin } from '../core/index.ts';
 import { layerIdb } from './idb-key-value-store.ts';
 
@@ -215,11 +215,11 @@ export default Effect.fnUntraced(function* () {
 
   const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
-    // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
-    // down the stack's keep-alive slices.
-    yield* Effect.addFinalizer(() =>
-      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(layerStack.destroy())),
-    );
+  // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
+  // down the stack's keep-alive slices.
+  yield* Effect.addFinalizer(() =>
+    Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(layerStack.destroy())),
+  );
 
   const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
     runPromise: (effect, options) => managedRuntime.runPromise(effect as Effect.Effect<any, any, any>, options),
