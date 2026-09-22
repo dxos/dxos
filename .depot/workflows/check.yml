@@ -571,9 +571,8 @@ jobs:
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit and
-          # reports green without executing a test. Unlike MOON_CACHE=off, this leaves the cached
-          # bundle/build dependencies alone.
+          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+          # and reports green without executing a test.
           DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
@@ -583,22 +582,10 @@ jobs:
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
 
-      # Trends every test's outcome in PostHog (`ci.e2e-test`), which the "Composer e2e" dashboard
-      # charts. From main, or from an explicit `workflow_dispatch`: a PR run measures a branch and a
-      # fork PR has no project token at all, so neither publishes on its own, but a dispatch is a
-      # maintainer asking for this run's results — which is how the dashboard is seeded or backfilled
-      # off-schedule. Every row carries `ciBranch` and `ciTrigger`, so a dispatched run stays
-      # attributable. The NIGHTLY is the authoritative sample —
-      # `DX_E2E_RUN_ID` is set on `schedule`, so that run actually executes every suite instead of
-      # replaying a moon cache hit; a push to main that replays the cache restores no report and the
-      # script no-ops.
-      #
-      # `always()` because the report of a RED run is the entire point — gating on success would
-      # publish only the runs where nothing failed, and the failing-tests table would never fill.
-      #
-      # `composer` shard only. The `rest` cells write their own suites' reports to the same
-      # directory, and publishing those would mint permanent property definitions and rows for
-      # unrelated packages in Composer's PRODUCT analytics project, which nothing charts.
+      # Trends every test's outcome in PostHog; the event contract and the gate are documented in
+      # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
+      # having, and the `composer` shard alone because the `rest` cells write unrelated packages'
+      # reports to the same directory.
       - name: Publish results
         if: >-
           ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') &&
