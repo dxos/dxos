@@ -86,11 +86,11 @@ export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Se
 export const CAN_DROP_OBJECT = (source: TreeData) =>
   AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
-export const isCollectionItem = CollectionModel.isCollectionItem;
-
 /** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
 export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
-  AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data) && isCollectionItem(source.item.data);
+  AppGraphNode.isGraphNode(source.item) &&
+  Obj.isObject(source.item.data) &&
+  CollectionModel.isCollectionItem(source.item.data);
 
 //
 // Module-level caches.
@@ -120,7 +120,7 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
   onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
-    if (!isCollectionItem(child.data)) {
+    if (!CollectionModel.isCollectionItem(child.data)) {
       return;
     }
     Obj.update(collection, (collection) => {

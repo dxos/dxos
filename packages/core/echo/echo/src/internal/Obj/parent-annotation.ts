@@ -11,7 +11,7 @@ import { EntityKind } from '../common/types/entity.ts';
 import { KindId, ParentId, getSchema } from '../common/types/index.ts';
 import { Ref } from '../Ref/ref.ts';
 
-/** An owning field; `path` is relative to the holder and may nest inside plain structs, e.g. `backend.config`. */
+/** An owning field; `path` is relative to the parent and may nest inside plain structs, e.g. `backend.config`. */
 type OwningField = { readonly path: readonly string[]; readonly override: boolean };
 
 /**

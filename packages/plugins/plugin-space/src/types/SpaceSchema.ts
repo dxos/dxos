@@ -146,7 +146,7 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    /** The object that will hold the created one; absent files at the space root of `db`. */
+    /** The created object's parent; absent files at the space root of `db`. */
     target?: Obj.Unknown;
     targetNodeId?: string;
   },

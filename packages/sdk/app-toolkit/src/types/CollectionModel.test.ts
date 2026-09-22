@@ -101,7 +101,7 @@ describe('ownership', () => {
 
   const createDatabase = () => builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
 
-  test('the first collection to hold an object becomes its parent', async ({ expect }) => {
+  test('the first collection to reference an object becomes its parent', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
     const first = db.add(Collection.make({ objects: [Ref.make(person)] }));
@@ -159,15 +159,12 @@ describe('ownership', () => {
     expect(Obj.getParent(person)?.id).toBe(owner.id);
   });
 
-  test('a holder that is not a collection persists the object without filing it', async ({ expect }) => {
+  test('a target that is not a collection persists the object without filing it', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = Obj.make(TestSchema.Person, { name: 'alice' });
-    // Stands in for a project: a holder that is not a collection.
-    const holder = db.add(Obj.make(TestSchema.Person, { name: 'holder' }));
-    await CollectionModel.add({ object: person, target: holder }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.runPromise,
-    );
+    // Stands in for a project.
+    const target = db.add(Obj.make(TestSchema.Person, { name: 'target' }));
+    await CollectionModel.add({ object: person, target }).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
     await db.flush();
 
     expect(Obj.getDatabase(person)).toBeDefined();

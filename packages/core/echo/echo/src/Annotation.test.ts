@@ -769,26 +769,26 @@ describe('Annotation', () => {
 
       test('leaves a target that already has a parent', ({ expect }) => {
         const body = Obj.make(Body, { text: 'body' });
-        const holder = Obj.make(Holder, { sections: [Ref.make(body)] });
+        const parent = Obj.make(Holder, { sections: [Ref.make(body)] });
         const shelf = Obj.make(Shelf, { items: [] });
 
         Obj.update(shelf, (shelf) => {
           shelf.items.push(Ref.make(body));
         });
 
-        expect(Obj.getParent(body)?.id).toBe(holder.id);
+        expect(Obj.getParent(body)?.id).toBe(parent.id);
       });
 
       test('a later overriding field still takes the target', ({ expect }) => {
         const body = Obj.make(Body, { text: 'body' });
         const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
-        const holder = Obj.make(Holder, { sections: [] });
+        const parent = Obj.make(Holder, { sections: [] });
 
-        Obj.update(holder, (holder) => {
-          holder.sections.push(Ref.make(body));
+        Obj.update(parent, (parent) => {
+          parent.sections.push(Ref.make(body));
         });
 
-        expect(Obj.getParent(body)?.id).toBe(holder.id);
+        expect(Obj.getParent(body)?.id).toBe(parent.id);
       });
     });
   });

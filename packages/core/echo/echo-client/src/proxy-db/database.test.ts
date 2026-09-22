@@ -709,7 +709,7 @@ describe('Database', () => {
     });
   });
 
-  test('a property traversal returns targets in the order the holder keeps them', async ({ expect }) => {
+  test('a property traversal returns targets in array order', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
     const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
     // Reversed against creation, so the array order cannot coincide with id order.
@@ -720,7 +720,7 @@ describe('Database', () => {
     expect(results.map((task) => task.title)).toEqual(['three', 'two', 'one']);
   });
 
-  test('a property traversal follows the holder as its array is reordered and extended', async ({ expect }) => {
+  test('a property traversal follows the array as it is reordered and extended', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
     const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
     const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.map(Ref.make) }));

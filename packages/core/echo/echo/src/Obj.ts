@@ -777,10 +777,10 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
   return entity[internal.ParentId] as Unknown | undefined;
 };
 
-/** Whether `holder` may act as the entity's owner: it is the entity's parent, or the entity is unclaimed. */
-export const isOwnedBy = (entity: Unknown | Snapshot, holder: Unknown | undefined): boolean => {
+/** Whether `owner` may act as the entity's owner: it is the entity's parent, or the entity has none. */
+export const isOwnedBy = (entity: Unknown | Snapshot, owner: Unknown | undefined): boolean => {
   const parent = getParent(entity);
-  return parent === undefined || parent.id === holder?.id;
+  return parent === undefined || parent.id === owner?.id;
 };
 
 /**

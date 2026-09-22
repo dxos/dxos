@@ -586,8 +586,8 @@ export type SetParentAnnotationValue = {
  * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
  * field, or creating the holder with one, sets the target's parent to the holding object.
  *
- * `{ override: false }` claims only a target that has no parent, so the first field to hold an
- * object owns it and later holders reference it.
+ * `{ override: false }` claims only a target that has no parent, so the first field to reference an
+ * object becomes its parent and later fields only reference it.
  *
  * This is NOT an invariant: it does not guarantee that a target held here has this object as its
  * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`

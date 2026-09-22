@@ -17,7 +17,7 @@ import { AppAnnotation } from '../echo/index.ts';
 
 type AddProps = {
   object: Obj.Unknown;
-  /** The object that will hold this one; absent, the object files at the space root. */
+  /** The object's parent; absent, the object files at the space root. */
   target?: Obj.Unknown;
 };
 
@@ -105,7 +105,7 @@ export const unlink = ({ object, from }: { object: Obj.Unknown; from: Collection
   });
 };
 
-/** A holder that is not a collection keeps what it owns its own way, so filing is not ours to do. */
+/** A target that is not a collection files the object itself, so there is nothing to file here. */
 const filesItself = (target: Obj.Unknown | undefined): boolean =>
   target !== undefined && !Collection.isCollection(target);
 

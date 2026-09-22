@@ -261,7 +261,7 @@ export const ObjectFormDialog = ({
     };
   }, [mode, db, type]);
 
-  const holder = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
+  const parent = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
 
   const handleConfirm = useCallback(() => {
     if (!object || !target) {
@@ -276,15 +276,15 @@ export const ObjectFormDialog = ({
     // NOTE: Must close before navigating or attention won't follow object.
     closeRef.current?.click();
     void Effect.gen(function* () {
-      // The object is already persisted; this only hands it to its holder.
-      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: holder }, { spaceId: db?.spaceId });
+      // The object is already persisted; this only hands it to its parent.
+      yield* Operation.invoke(SpaceOperation.AddObject, { object, target: parent }, { spaceId: db?.spaceId });
       yield* navigateTo(object);
     }).pipe(
       Effect.provideService(Capability.Service, manager.capabilities),
       Effect.provideService(Operation.Service, operationInvoker),
       EffectEx.runAndForwardErrors,
     );
-  }, [object, target, holder, db, navigateTo, handle, manager.capabilities, operationInvoker]);
+  }, [object, target, parent, db, navigateTo, handle, manager.capabilities, operationInvoker]);
 
   //
   // Draft mode.
@@ -308,7 +308,7 @@ export const ObjectFormDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const result = yield* metadata.createObject(data, { db, target: holder, targetNodeId });
+        const result = yield* metadata.createObject(data, { db, target: parent, targetNodeId });
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
@@ -324,7 +324,7 @@ export const ObjectFormDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         EffectEx.runAndForwardErrors,
       ),
-    [target, holder, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
+    [target, parent, targetNodeId, navigateTo, handle, manager.capabilities, operationInvoker],
   );
 
   return (

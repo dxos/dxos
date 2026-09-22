@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // so there is no second database to reconcile against and no service to override.
       const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
-      // The space id names the database, so the holder has to live in it.
+      // The space id names the database, so the target has to live in it.
       if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
         return yield* Effect.fail(
           new SpaceOperationError({ message: `Target collection does not belong to space ${db.spaceId}.` }),

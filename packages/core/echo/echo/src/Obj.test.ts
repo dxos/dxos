@@ -846,7 +846,7 @@ describe('Obj', () => {
       expect(Obj.getParent(child)).toBe(parent);
     });
 
-    test('isOwnedBy is true for the parent and false for any other holder', () => {
+    test('isOwnedBy is true for the parent and false for any other object', () => {
       const owner = Obj.make(TestSchema.Organization, { name: 'owner' });
       const other = Obj.make(TestSchema.Organization, { name: 'other' });
       const child = Obj.make(TestSchema.Person, { [Obj.Parent]: owner, name: 'child' });
@@ -855,11 +855,11 @@ describe('Obj', () => {
       expect(Obj.isOwnedBy(child, other)).toBe(false);
     });
 
-    test('isOwnedBy is true for every holder when nothing has claimed the object', () => {
-      const holder = Obj.make(TestSchema.Organization, { name: 'holder' });
+    test('isOwnedBy is true for any object when nothing has claimed the entity', () => {
+      const other = Obj.make(TestSchema.Organization, { name: 'other' });
       const child = Obj.make(TestSchema.Person, { name: 'child' });
 
-      expect(Obj.isOwnedBy(child, holder)).toBe(true);
+      expect(Obj.isOwnedBy(child, other)).toBe(true);
     });
   });
 });

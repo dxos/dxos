@@ -164,9 +164,8 @@ export const AddObject = Operation.make({
     // a database is never an input, since it cannot cross a process boundary.
     target: Schema.optional(Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)])).annotate({
       description:
-        'The object that will hold this one, or a reference to it. A collection files it; any ' +
-        'other holder keeps what it owns its own way, so the object is only persisted. Omit to ' +
-        'file at the space root.',
+        'The parent of the object, or a reference to it. A collection files it; any other object ' +
+        'files it itself, so the object is only persisted. Omit to file at the space root.',
     }),
   }),
   output: Schema.Struct({
@@ -300,9 +299,9 @@ export const OpenObjectForm = Operation.make({
   input: Schema.Struct({
     target: Schema.Union([Database.Database, Obj.Unknown]).annotate({
       description:
-        'Where the object is created and who will hold it. A database means the space root; a ' +
-        'collection files it; any other holder — a project taking it into its artifacts — files ' +
-        'it nowhere and links it itself.',
+        'Where the object is created and what its parent is. A database means the space root; a ' +
+        'collection files it; any other object, such as a project taking it into its artifacts, ' +
+        'files it itself.',
     }),
     mode: Schema.optional(
       Schema.Literals(['draft', 'live']).annotate({
