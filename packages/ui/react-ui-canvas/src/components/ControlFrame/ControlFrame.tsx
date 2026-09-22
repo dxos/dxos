@@ -281,6 +281,7 @@ export const ControlFrame = memo(
         )}
         {createFrame && (
           <rect
+            data-testid='create-frame'
             x={createFrame.x}
             y={createFrame.y}
             width={createFrame.width}

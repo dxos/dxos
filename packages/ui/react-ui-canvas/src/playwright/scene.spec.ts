@@ -51,6 +51,8 @@ test.describe('SceneView', () => {
     await page.mouse.down();
     await page.mouse.move(from.x + 150, from.y + 80, { steps: 6 });
     await expect(page.locator('[data-ghost]')).toHaveCount(1);
+    // The ghost sits inside the frame the node will land in.
+    await expect(page.getByTestId('create-frame')).toHaveCount(1);
     await page.mouse.up();
     await expect(page.locator('[data-ghost]')).toHaveCount(0);
     expect(await scene.nodeCount()).toBe(5);
@@ -63,7 +65,9 @@ test.describe('SceneView', () => {
     await page.mouse.down();
     await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
     await page.mouse.move(view.x + view.width * 0.7, view.y + view.height * 0.8, { steps: 10 });
-    await expect(page.locator('[data-ghost]')).toHaveCount(1);
+    // A drop carries the palette's own preview, so the canvas shows the frame alone.
+    await expect(page.getByTestId('create-frame')).toHaveCount(1);
+    await expect(page.locator('[data-ghost]')).toHaveCount(0);
     await page.mouse.up();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
   });
