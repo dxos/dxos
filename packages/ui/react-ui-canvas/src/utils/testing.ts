@@ -8,7 +8,8 @@ import { SceneBuilder } from './builder.ts';
 export type SceneTree = { scenes: Scene[]; root: SceneId };
 
 /**
- * A tree of scenes `depth` levels deep, written with the chainable builder. The root holds a
+ * A tree of scenes `depth` levels deep, written with the chainable builder; depth 0 is one empty scene,
+ * the blank canvas a new diagram starts from. The root holds a
  * rectangle, an ellipse, a class, a text and one link of each type; above the leaves it also holds
  * two portals whose child scenes alternate between a few simple diagrams (a flow, a class model, a
  * cycle, a note). Ids are deterministic so tests can name elements (`scene:root/a`, `scene:root/left`);
@@ -33,9 +34,11 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
   const id = `scene:${name}`;
   const elementId = (suffix: string) => `${id}/${suffix}`;
   const builder =
-    variant === 0
-      ? rootScene(id, name, elementId)
-      : childScene(id, name, elementId, VARIANTS[variant % VARIANTS.length]);
+    depth < 1
+      ? SceneBuilder.create(id, name)
+      : variant === 0
+        ? rootScene(id, name, elementId)
+        : childScene(id, name, elementId, VARIANTS[variant % VARIANTS.length]);
 
   if (depth > 1) {
     const left = buildScene(depth - 1, `${name}/L`, scenes, variant * 2 + 1);
