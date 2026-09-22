@@ -29,18 +29,25 @@ import {
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
+/**
+ * The pointer machine's state. Its geometry follows the pointer exactly while the gesture lasts and
+ * snaps once, as it lands, so what is dragged sits under the cursor and the grid takes it on release.
+ */
 export type Drag =
   /** Screen-space pan; `last` is the previous pointer position. */
   | { kind: 'pan'; last: Point }
   /** Marquee in scene coordinates; shift adds the hits to the selection, alt subtracts them. */
   | { kind: 'marquee'; from: Point; to: Point; mode: 'replace' | 'add' | 'subtract' }
   /**
-   * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
-   * and `delta` the resulting scene-space offset applied transiently to every selected node.
+   * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid on
+   * release, and `delta` the scene-space offset applied transiently to every selected node.
    */
   | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
-  /** Resizing one node by a handle; `bounds` is the transient result. */
-  | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
+  /**
+   * Resizing one node by a handle; `bounds` is the transient result of `delta` from the handle, kept with
+   * `symmetric` (shift) so the release can recompute it snapped.
+   */
+  | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; delta: Point; symmetric: boolean; bounds: Bounds }
   /**
    * Rubber band from a port, or from a free point under a link tool; `target` is set while hovering a
    * valid drop, and the link is then previewed as created.
