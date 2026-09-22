@@ -65,6 +65,7 @@ import {
 } from '../../model/types.ts';
 import {
   animateCamera,
+  boundsCenter,
   cameraTransform,
   coverage,
   enterPortal,
@@ -609,6 +610,15 @@ export const SceneView = ({
         return;
       }
       event.stopPropagation();
+      // With a link tool the body is a source like a port is, so a link can be drawn between two shapes
+      // without aiming at their dots; the endpoint carries no port and routing picks the side.
+      if (currentTool.kind === 'link' && capabilities.link) {
+        const from = toScene(event);
+        // The band leaves the side of the node the press is nearest; routing picks the real side on drop.
+        const fromSide = sideToward(boundsCenter(nodeBounds(node)), from);
+        startDrag({ kind: 'link', type: currentTool.type, source: { node: node.id }, from, fromSide, to: from }, event);
+        return;
+      }
       const next = clickSelect(node.id, event);
       if (capabilities.move && !node.locked) {
         const { x, y } = nodeBounds(node);
@@ -616,7 +626,7 @@ export const SceneView = ({
         startDrag({ kind: 'move', ids, origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 } }, event);
       }
     },
-    [registry, atoms.tool, clickSelect, capabilities.move, scene.nodes, toScene, startDrag],
+    [registry, atoms.tool, clickSelect, capabilities.move, capabilities.link, scene.nodes, toScene, startDrag],
   );
 
   const onLinkPointerDown = useCallback(
@@ -864,7 +874,9 @@ export const SceneView = ({
           nearest = candidate;
         }
       }
-      return nearest ? { node: node.id, port: nearest.id } : undefined;
+      // A port claims the drop only while the pointer is within reach of it; anywhere else on the node
+      // the link binds to the body, which is also what a node with no port accepting this end takes.
+      return nearest && best <= reach ? { node: node.id, port: nearest.id } : { node: node.id };
     },
     [scene, registry, atoms.camera, nodeRegistry],
   );
@@ -1611,7 +1623,6 @@ export const SceneView = ({
           zoom={camera.zoom}
           drag={drag}
           capabilities={capabilities}
-          showPorts={tool.kind === 'link'}
           createFrame={createFrame}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}

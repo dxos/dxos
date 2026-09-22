@@ -143,6 +143,22 @@ test.describe('SceneView', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
+  test('the line tool links two node bodies, without aiming at a port', async () => {
+    const before = await scene.linkCount();
+    await scene.focus();
+    await page.keyboard.press('l');
+    // Centre to centre: neither end is within reach of a port, so both endpoints bind to the body.
+    const from = await scene.box(scene.node('scene:root/a'));
+    const to = await scene.box(scene.node('scene:root/c'));
+    await scene.drag(
+      { x: from.x + from.width / 2, y: from.y + from.height / 2 },
+      { x: to.x + to.width / 2, y: to.y + to.height / 2 },
+    );
+    expect(await scene.linkCount()).toBe(before + 1);
+    // No node was created: the drop landed on an existing one rather than on empty canvas.
+    expect(await scene.nodeCount()).toBe(4);
+  });
+
   test('the toolbar zooms, creates at the centre and deletes the selection', async () => {
     // The fit zoom follows the fixture's bounds, so the step is read against it rather than named.
     const fitted = await scene.zoom();

@@ -64,8 +64,6 @@ export type ControlFrameProps = {
   selectedPoint?: ControlPointRef;
   zoom: number;
   drag?: Drag;
-  /** Show every node's ports (a link tool); otherwise only the hovered node's. */
-  showPorts: boolean;
   /** The bounds a create gesture in flight would land, drawn as a provisional frame. */
   createFrame?: Bounds;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
@@ -96,7 +94,6 @@ export const ControlFrame = memo(
     selectedPoint,
     zoom,
     drag,
-    showPorts,
     createFrame,
     onHandlePointerDown,
     onPortPointerDown,
@@ -112,9 +109,10 @@ export const ControlFrame = memo(
     const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
-    // With a link tool every node offers its ports; otherwise only the node under the pointer does, so
-    // ports stay out of the way of everything but the node a link could start from.
-    const portNodes = new Set<Node>(showPorts && capabilities.link ? Object.values(scene.nodes) : []);
+    // Only the node under the pointer: every node's ports at once is a field of dots that hides the
+    // diagram the user is drawing, and a link can start from a body now, so they are a refinement
+    // rather than the only way in.
+    const portNodes = new Set<Node>();
     const hovered = hover ? scene.nodes[hover] : undefined;
     if (hovered && capabilities.link) {
       portNodes.add(hovered);
