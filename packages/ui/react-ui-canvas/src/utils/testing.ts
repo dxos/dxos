@@ -48,25 +48,60 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
   return id;
 };
 
+const snap = (i: number) => i * 32;
+
 const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => string) =>
   SceneBuilder.create(id, name)
-    .rect(elementId('a'), { x: 128, y: 128, width: 256, height: 128 }, `${name} · A`)
-    .ellipse(elementId('b'), { x: 576, y: 128, width: 256, height: 128 }, `${name} · B`)
+    .rect(
+      elementId('a'),
+      {
+        x: snap(4),
+        y: snap(4),
+        width: snap(8),
+        height: snap(4),
+      },
+      `${name} · A`,
+    )
+    .ellipse(
+      elementId('b'),
+      {
+        x: snap(18),
+        y: snap(4),
+        width: snap(4),
+        height: snap(4),
+      },
+      `${name} · B`,
+    )
     .text(
       elementId('t'),
-      { x: 1088, y: 128, width: 384, height: 128 },
+      {
+        x: snap(34),
+        y: snap(4),
+        width: snap(12),
+        height: snap(4),
+      },
       `Scene "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
     )
     .class(
       elementId('c'),
-      { x: 128, y: 704, width: 256, height: 192 },
+      {
+        x: snap(4),
+        y: snap(22),
+        width: snap(8),
+        height: snap(6),
+      },
       `${name} · C`,
       ['id: string', 'name: string'],
       ['save(): void'],
     )
     .curve(elementId('ab'), elementId('a'), elementId('b'))
     .line(elementId('ac'), elementId('a'), elementId('c'), { directed: true })
-    .spline(elementId('bc'), elementId('b'), elementId('c'), [{ x: 640, y: 512 }]);
+    .spline(elementId('bc'), elementId('b'), elementId('c'), [
+      {
+        x: snap(13),
+        y: snap(22),
+      },
+    ]);
 
 const childScene = (id: SceneId, name: string, elementId: (suffix: string) => string, variant: Variant) => {
   const builder = SceneBuilder.create(id, `${name} (${variant})`);
