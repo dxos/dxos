@@ -48,7 +48,7 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
     // smallest such size on the major grid.
     builder
       .portal(elementId('left'), { x: scale(30), y: scale(4), ...PORTAL }, left)
-      .portal(elementId('right'), { x: scale(30), y: scale(20), ...PORTAL }, right);
+      .portal(elementId('right'), { x: scale(30), y: scale(18), ...PORTAL }, right);
   }
 
   scenes.push(builder.build());
