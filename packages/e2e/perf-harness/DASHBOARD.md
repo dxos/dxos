@@ -108,21 +108,40 @@ elsewhere. See "The two stacked tiles" below.
 | `sum` over the phases | wall time, CPU (all three), TBT, code bytes | Additive: the run cost what its phases cost.                                                                                                                |
 | `max` over the phases | peak RSS, peak heap, lag p95                | A **level**, not a quantity. Summing eleven peaks reports memory never simultaneously resident, and summing eleven p95s is a number with no interpretation. |
 
-| #   | tile                                  | measure               | reducer |
-| --- | ------------------------------------- | --------------------- | ------- |
-| 1   | Total wall time per run               | `ciWallMs`            | sum     |
-| 2   | Total CPU per run — all processes     | `ciCpuMsTotal`        | sum     |
-| 3   | Total CPU per run — tab               | `ciCpuMsTab`          | sum     |
-| 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`       | sum     |
-| 5   | Peak app footprint per run            | `ciAppFootprintBytes` | max     |
-| 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`       | max     |
-| 7   | Peak heap per run — tab               | `ciHeapUsedBytesTab`  | max     |
-| 8   | Total app code transferred per run    | `ciCodeBytes`         | sum     |
-| 9   | Total blocking time per run           | `ciTbtMs`             | sum     |
-| 10  | Total edge traffic per run            | `ciEdgeBytes`         | sum     |
-| 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`   | sum     |
-| 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes`  | sum     |
-| 13  | Worst-phase lag p95 per run — worker  | `ciLagP95MsWorker`    | max     |
+| #   | tile                                  | measure                   | reducer |
+| --- | ------------------------------------- | ------------------------- | ------- |
+| 1   | Total wall time per run               | `ciWallMs`                | sum     |
+| 2   | Total CPU per run — all processes     | `ciCpuMsTotal`            | sum     |
+| 3   | Total CPU per run — tab               | `ciCpuMsTab`              | sum     |
+| 4   | Total CPU per run — dedicated workers | `ciCpuMsWorker`           | sum     |
+| 5   | Peak app footprint per run            | `ciAppFootprintBytes`     | max     |
+| 6   | Worst-phase lag p95 per run — tab     | `ciLagP95MsTab`           | max     |
+| 7   | Peak realm memory per run — tab       | tab heap+embedder+wasm    | max     |
+| 8   | Total app code transferred per run    | `ciCodeBytes`             | sum     |
+| 9   | Total blocking time per run           | `ciTbtMs`                 | sum     |
+| 10  | Total edge traffic per run            | `ciEdgeBytes`             | sum     |
+| 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`       | sum     |
+| 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes`      | sum     |
+| 13  | Worst-phase lag p95 per run — worker  | `ciLagP95MsWorker`        | max     |
+| 14  | Peak realm memory per run — worker    | worker heap+embedder+wasm | max     |
+
+### The realm memory tiles sum three allocators, and exclude a fourth
+
+Tiles 7 and 14 report `ciHeapUsedBytes{realm} + ciEmbedderBytes{realm} + ciWasmBytes{realm}`, not
+JS heap alone. `usedSize` counts live JS objects only, and almost nothing this app holds is a JS
+object: the worker read ~32 MB of heap against ~186 MB of realm memory, which is why a heap-only
+tile made the realm running ECHO look like the cheapest one in the browser.
+
+`ciHeapBackingBytes{realm}` is deliberately NOT a fourth term. It counts wasm memories and ordinary
+ArrayBuffers in one number, so adding it double-counts wasm — and it does not reproduce across
+machines: on one commit and one flow the tab read 14.0 MB in CI against 65.2 MB locally, and the
+worker 17.4 MB against 127.3 MB, while `used` and `wasm` agreed to within 3%. A term that changes by
+5-7x with the machine cannot be trended, and `max(0, backing - wasm)` inherits that by changing
+sign. The cost of the exclusion is that a non-wasm ArrayBuffer goes uncounted.
+
+Both tiles filter on `ciWasmRealms > 0`, the wasm probe's integrity column: rows before 2026-09-22
+carry no wasm term, and without the predicate the series steps ~120 MB on the day the probe landed
+and reads as a regression rather than as the metric widening.
 
 ### Tile 13 filters on `ciLagSamplesWorker > 0`, and must
 
