@@ -1,5 +1,7 @@
 ---
+'@dxos/app-toolkit': patch
 '@dxos/react-ui-list': patch
+'@dxos/react-ui-menu': patch
 '@dxos/react-ui-search': patch
 '@dxos/plugin-navtree': patch
 '@dxos/plugin-search': patch
