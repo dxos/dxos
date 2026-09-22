@@ -38,12 +38,6 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
   handle?: ObjectFormHandle;
   shouldNavigate?: (object: Obj.Unknown) => boolean;
   targetNodeId?: string;
-  /**
-   * The object that will hold the created one, when it is not the collection in `target` — a
-   * project pushing onto `Project.artifacts`. Such a holder keeps what it owns its own way, so the
-   * object joins no collection and does not appear in the tree twice.
-   */
-  holder?: Obj.Unknown;
 };
 
 /**
@@ -66,7 +60,6 @@ export const ObjectFormDialog = ({
   handle,
   shouldNavigate: _shouldNavigate,
   targetNodeId,
-  holder,
 }: ObjectFormDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
@@ -75,7 +68,7 @@ export const ObjectFormDialog = ({
   useActivationSignal(SpaceEvents.CreateObjectRequested);
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
-  const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
+  const [target, setTarget] = useState<Database.Database | Obj.Unknown | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   // Spaces the app manages on the user's behalf are never targets for new objects.
   const spaces = useSpaces().filter((space) => AppSpace.isVisibleSpace(space));
@@ -268,9 +261,9 @@ export const ObjectFormDialog = ({
     };
   }, [mode, db, type]);
 
-  // Who holds the created object: the caller's holder when it named one, otherwise the chosen
-  // collection, or the space root (an absent target) when the picker names a database.
-  const fileTarget = useMemo(() => holder ?? (Collection.isCollection(target) ? target : undefined), [holder, target]);
+  // The target IS the holder, except a database, which names the space rather than an object in it
+  // and so means the space root — which downstream is the absence of a holder.
+  const fileTarget = useMemo(() => (Database.isDatabase(target) ? undefined : target), [target]);
 
   const handleConfirm = useCallback(() => {
     if (!object || !target) {

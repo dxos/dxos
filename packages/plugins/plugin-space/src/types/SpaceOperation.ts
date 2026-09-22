@@ -298,8 +298,11 @@ export const OpenObjectForm = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
-      description: 'The database or collection to create in.',
+    target: Schema.Union([Database.Database, Obj.Unknown]).annotate({
+      description:
+        'Where the object is created and who will hold it. A database means the space root; a ' +
+        'collection files it; any other holder — a project taking it into its artifacts — files ' +
+        'it nowhere and links it itself.',
     }),
     mode: Schema.optional(
       Schema.Literals(['draft', 'live']).annotate({
@@ -321,13 +324,6 @@ export const OpenObjectForm = Operation.make({
     navigable: Schema.optional(Schema.Boolean),
     targetNodeId: Schema.optional(
       Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
-    ),
-    holder: Schema.optional(
-      Obj.Unknown.annotate({
-        description:
-          'The object that will hold the created one, when it is not the collection in `target` — ' +
-          'a project taking it into its artifacts. Such a holder files the object nowhere.',
-      }),
     ),
   }),
   output: Schema.UndefinedOr(Ref.Ref(Obj.Unknown)).annotate({

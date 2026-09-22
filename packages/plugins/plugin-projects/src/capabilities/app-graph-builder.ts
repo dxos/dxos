@@ -364,12 +364,12 @@ export const createProjectArtifactsActionExtension = () =>
                 return;
               }
 
-              // The project holds the artifact, so it files into no collection; without that the
-              // same object would appear in the tree twice.
+              // The project is the target, so it holds the artifact and the object files into no
+              // collection; targeting the database instead would file it at the space root as
+              // well, and the same object would appear in the tree twice.
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
-                target: db,
+                target: project,
                 targetNodeId: nodeId,
-                holder: project,
               });
               // Dismissed dialog: nothing was created, so there is nothing to link.
               if (!ref) {

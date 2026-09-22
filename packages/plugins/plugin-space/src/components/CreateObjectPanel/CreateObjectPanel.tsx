@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Collection, type Database, Obj, type Type } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ export type CreateObjectPanelProps = {
   options: CreateObjectOption[];
   spaces: Space[];
   typename?: string;
-  target?: Database.Database | Collection.Collection;
+  target?: Database.Database | Obj.Unknown;
   /** Whether the object is built from the form's values on submit (`draft`) or already exists (`live`). */
   mode?: 'draft' | 'live';
   initialFormValues?: Partial<AnyProperties>;
