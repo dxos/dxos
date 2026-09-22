@@ -110,10 +110,16 @@ const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO
 const GRID_RANGE = [6, 2048] as const;
 /** Matches the `text-lg` the node views use when a node sets no `fontSize` of its own. */
 const DEFAULT_FONT_SIZE = 18;
-/** A type's default size in the units of the scene being edited, snapped so it still lands on the grid. */
-const levelSize = ({ width, height }: Size, scale: number): Size => ({
-  width: Math.round(width / scale / MAJOR_GRID) * MAJOR_GRID,
-  height: Math.round(height / scale / MAJOR_GRID) * MAJOR_GRID,
+/**
+ * A type's default size in scene units such that it covers the same screen area whatever the camera is
+ * doing. A nested scene is entered at a fraction of the parent's zoom, so a size fixed in scene units
+ * arrives a quarter or less of its apparent size there; scaling by the zoom is what keeps a new node the
+ * same on screen at every level, and it is stable — unlike the portal's own factor, which grows with the
+ * child's bounds and so would feed back into the size of the next node drawn.
+ */
+const viewSize = ({ width, height }: Size, zoom: number): Size => ({
+  width: Math.max(MAJOR_GRID, Math.round(width / zoom / MAJOR_GRID) * MAJOR_GRID),
+  height: Math.max(MAJOR_GRID, Math.round(height / zoom / MAJOR_GRID) * MAJOR_GRID),
 });
 const PORT_SNAP_PX = 16;
 /** Ids of the link and node drawn as previews during a drag; neither reaches the model. */
@@ -236,21 +242,20 @@ export const SceneView = ({
     return frameRef.current.frame;
   }, [frameOf, path, scene]);
   /**
-   * Root units per unit of the scene being edited. A portal frame is the portal's box times a power of
-   * the grid ratio, so each level down divides a unit by at least that; a node created here is scaled by
-   * the reciprocal to come out the size it would have at the root, rather than shrinking by the factor
-   * per level and pushing the user to draw ever larger boxes.
+   * The camera's zoom against the level's own 1:1 rather than the root's. A portal frame is the portal's
+   * box times a power of the grid ratio, so entering one divides the camera by that factor; reported raw,
+   * the number would drop fourfold on a drill-in that changed nothing the user can see. Display only —
+   * nothing derives geometry from it, so the frame growing with its content cannot feed back.
    */
-  const levelScale = useMemo(
-    () =>
-      path.slice(1).reduce((scale, sceneId, index) => {
-        const parent = scenes[path[index]];
-        const child = scenes[sceneId];
-        const portal = parent && child ? portalTo(parent.id, sceneId) : undefined;
-        return portal && child ? scale * portalScale(portal, portalFrame(portal, sceneBounds(child))) : scale;
-      }, 1),
-    [path, scenes, portalTo],
-  );
+  const nominalZoom = useMemo(() => {
+    const scale = path.slice(1).reduce((accumulated, sceneId, index) => {
+      const parent = scenes[path[index]];
+      const child = scenes[sceneId];
+      const portal = parent && child ? portalTo(parent.id, sceneId) : undefined;
+      return portal && child ? accumulated * portalScale(portal, portalFrame(portal, sceneBounds(child))) : accumulated;
+    }, 1);
+    return camera.zoom / scale;
+  }, [path, scenes, portalTo, camera.zoom]);
 
   // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
   const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
@@ -1019,28 +1024,27 @@ export const SceneView = ({
         return undefined;
       }
       const drawn = boundsFromPoints(drag.from, drag.to);
-      // A press that moved less than a grid cell on both axes is a click; a drawn box never goes below the type's minimum.
-      const clicked = drawn.width < major && drawn.height < major;
-      const minSize = def.minSize ?? { width: major, height: major };
-      const size = clicked
-        ? levelSize(def.defaultSize, levelScale)
-        : { width: Math.max(drawn.width, minSize.width), height: Math.max(drawn.height, minSize.height) };
-      const center = clicked
+      // Dropped from the palette there is no drawn box, so the type's default stands in, scaled to cover
+      // the same screen area at any zoom. A box drawn on the canvas is exactly what the pointer swept:
+      // it follows the cursor as the frame shows it, and a gesture that snapped to nothing creates nothing
+      // rather than planting a default-sized node under the click.
+      if (!drag.dropped && (drawn.width === 0 || drawn.height === 0)) {
+        return undefined;
+      }
+      const size = drag.dropped ? viewSize(def.defaultSize, camera.zoom) : { ...drawn };
+      const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
       const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
       const pending = pendingRef.current;
       const created: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
-      // Below the root the scene's units are finer, so the type's own text size would read small; the
-      // node carries the scaled value and the user can override it from the properties form.
-      const node: Node =
-        levelScale === 1
-          ? created
-          : { ...created, style: { ...created.style, fontSize: DEFAULT_FONT_SIZE / levelScale } };
+      // Text is sized in scene units too, so it reads the same on screen only if it takes the same scaling
+      // as the box; the node carries the value and the user can override it from the properties form.
+      const node: Node = { ...created, style: { ...created.style, fontSize: DEFAULT_FONT_SIZE / camera.zoom } };
       pendingRef.current = { type: drag.type, node };
       return node;
     },
-    [nodeRegistry, major, scene.nodes],
+    [nodeRegistry, major, scene.nodes, camera.zoom],
   );
 
   /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
@@ -1470,9 +1474,10 @@ export const SceneView = ({
       if (!def || !capabilities.create) {
         return;
       }
-      const size = levelSize(def.defaultSize, levelScale);
+      const size = viewSize(def.defaultSize, camera.zoom);
       const from = { x: snap(pointer.x - size.width / 2), y: snap(pointer.y - size.height / 2) };
-      const node = createdNode({ kind: 'create', type, from, to: from }, createId(type));
+      // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
+      const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
       if (node) {
         commitCreated(node);
       }
@@ -1558,15 +1563,19 @@ export const SceneView = ({
       onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
     >
-      {/* Minor and major grid, always; the minor one goes when its cells get too small to read. */}
-      <GridComponent
-        size={grid}
-        scale={camera.zoom}
-        offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
-        showAxes={false}
-        ratios={GRID_LEVELS}
-        range={GRID_RANGE}
-      />
+      {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
+          states a constraint the canvas is not applying. The minor level goes when its cells get too
+          small to read. */}
+      {snapEnabled && (
+        <GridComponent
+          size={grid}
+          scale={camera.zoom}
+          offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
+          showAxes={false}
+          ratios={GRID_LEVELS}
+          range={GRID_RANGE}
+        />
+      )}
       <div
         className={mx('absolute pointer-events-none', !measured && 'invisible')}
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
@@ -1677,7 +1686,7 @@ export const SceneView = ({
           nodes={nodeRegistry}
           capabilities={capabilities}
         >
-          {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
+          {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
           {path.length - 1}
         </Toolbar>
       )}
