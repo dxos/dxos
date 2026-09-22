@@ -123,20 +123,22 @@ const badRanges = (
   fences: { file?: string; lines?: string }[],
   files: Map<string, { hunks: { afterStart: number; afterEnd: number }[] }>,
 ): string[] =>
-  fences
-    .filter((fence) => fence.file && fence.lines && files.has(fence.file))
-    .filter((fence) => {
-      const range = fence.lines!.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
-      if (!range) {
-        return true;
-      }
-      const start = Number(range[1]);
-      const end = range[2] === undefined ? start : Number(range[2]);
-      return (
-        end < start || !files.get(fence.file!)!.hunks.some((hunk) => hunk.afterStart <= end && hunk.afterEnd >= start)
-      );
-    })
-    .map((fence) => `${fence.file} lines=${fence.lines}`);
+  fences.flatMap((fence) => {
+    const { file: path, lines } = fence;
+    const file = path ? files.get(path) : undefined;
+    if (!file || !lines) {
+      return [];
+    }
+    const named = `${path} lines=${lines}`;
+    const range = lines.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+    if (!range) {
+      return [named];
+    }
+    const start = Number(range[1]);
+    const end = range[2] === undefined ? start : Number(range[2]);
+    const hit = end >= start && file.hunks.some((hunk) => hunk.afterStart <= end && hunk.afterEnd >= start);
+    return hit ? [] : [named];
+  });
 
 /**
  * Inline-code tokens in the prose that name something in the code: a path, an identifier, a

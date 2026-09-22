@@ -52,10 +52,9 @@ const render = (rows: Row[]): string => {
   ];
   for (const name of names) {
     const marks = variants.map((variant) => {
-      const scored = rows.filter((row) => row.variant === variant);
-      const dimensions = scored.map((row) =>
-        [...row.correctness, ...row.readability].find((dimension) => dimension.name === name)!,
-      );
+      const dimensions = rows
+        .filter((row) => row.variant === variant)
+        .flatMap((row) => [...row.correctness, ...row.readability].filter((dimension) => dimension.name === name));
       return percent(meanScore(dimensions)).padStart(6);
     });
     lines.push([name.padEnd(width), ...marks].join(' | '));
