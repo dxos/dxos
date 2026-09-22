@@ -25,9 +25,12 @@ describe('freehand projection', () => {
   test('move shifts the selected nodes and skips locked ones', ({ expect }) => {
     const scene = fixture();
     const locked = { ...scene, nodes: { ...scene.nodes, 'scene:r/b': { ...scene.nodes['scene:r/b'], locked: true } } };
-    const next = reduceIntent(locked, { kind: 'move', ids: ['scene:r/a', 'scene:r/b'], delta: { x: 10, y: -5 } });
-    expect(centerOf(next, 'scene:r/a')).toEqual({ x: 266, y: 187 });
-    expect(centerOf(next, 'scene:r/b')).toEqual({ x: 704, y: 192 });
+    const delta = { x: 10, y: -5 };
+    const next = reduceIntent(locked, { kind: 'move', ids: ['scene:r/a', 'scene:r/b'], delta });
+    // Read against the fixture rather than its coordinates, which are a layout and change with it.
+    const before = centerOf(scene, 'scene:r/a')!;
+    expect(centerOf(next, 'scene:r/a')).toEqual({ x: before.x + delta.x, y: before.y + delta.y });
+    expect(centerOf(next, 'scene:r/b')).toEqual(centerOf(scene, 'scene:r/b'));
     expect(reduceIntent(scene, { kind: 'move', ids: ['missing'], delta: { x: 1, y: 1 } })).toBe(scene);
   });
 

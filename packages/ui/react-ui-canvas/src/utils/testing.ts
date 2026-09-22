@@ -43,8 +43,8 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
     // Portals keep one aspect (16:10) so every child gets the same frame shape; 512×320 is the
     // smallest such size on the major grid.
     builder
-      .portal(elementId('left'), { x: scale(14), y: scale(14), ...PORTAL }, left)
-      .portal(elementId('right'), { x: scale(34), y: scale(14), ...PORTAL }, right);
+      .portal(elementId('left'), { x: scale(30), y: scale(4), ...PORTAL }, left)
+      .portal(elementId('right'), { x: scale(30), y: scale(20), ...PORTAL }, right);
   }
 
   scenes.push(builder.build());
@@ -53,44 +53,16 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
 
 const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => string) =>
   SceneBuilder.create(id, name)
-    .rect(
-      elementId('a'),
-      {
-        x: scale(4),
-        y: scale(4),
-        width: scale(8),
-        height: scale(4),
-      },
-      `${name} · A`,
-    )
-    .ellipse(
-      elementId('b'),
-      {
-        x: scale(18),
-        y: scale(4),
-        width: scale(8),
-        height: scale(4),
-      },
-      `${name} · B`,
-    )
+    .rect(elementId('a'), { x: scale(4), y: scale(4), width: scale(8), height: scale(4) }, `${name} · A`)
+    .ellipse(elementId('b'), { x: scale(16), y: scale(4), width: scale(8), height: scale(4) }, `${name} · B`)
     .text(
       elementId('t'),
-      {
-        x: scale(34),
-        y: scale(4),
-        width: scale(12),
-        height: scale(4),
-      },
+      { x: scale(34), y: scale(4), width: scale(12), height: scale(4) },
       `Scene "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
     )
     .class(
       elementId('c'),
-      {
-        x: scale(4),
-        y: scale(22),
-        width: scale(8),
-        height: scale(6),
-      },
+      { x: scale(4), y: scale(22), width: scale(8), height: scale(6) },
       `${name} · C`,
       ['id: string', 'name: string'],
       ['save(): void'],
@@ -98,10 +70,8 @@ const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => str
     .curve(elementId('ab'), elementId('a'), elementId('b'))
     .line(elementId('ac'), elementId('a'), elementId('c'), { directed: true })
     .spline(elementId('bc'), elementId('b'), elementId('c'), [
-      {
-        x: scale(10),
-        y: scale(12),
-      },
+      { x: scale(20), y: scale(12) },
+      { x: scale(10), y: scale(12) },
     ]);
 
 const childScene = (id: SceneId, name: string, elementId: (suffix: string) => string, variant: Variant) => {

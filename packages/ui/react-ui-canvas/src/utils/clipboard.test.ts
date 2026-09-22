@@ -45,9 +45,13 @@ describe('clipboard', () => {
     expect(ids).toEqual(['ellipse-1', 'class-2', 'spline-3']);
     const next = reduceIntent(scene, intent);
     expect(Object.keys(next.nodes).length).toBe(6);
-    expect(next.nodes['ellipse-1'].center).toEqual({ x: 768, y: 256 });
+    // Offsets are read against the fixture, whose coordinates are a layout and change with it.
+    const origin = scene.nodes['scene:r/b'].center;
+    expect(next.nodes['ellipse-1'].center).toEqual({ x: origin.x + 64, y: origin.y + 64 });
+    const source = scene.links['scene:r/bc'];
+    const controls = source.type === 'spline' ? source.points : [];
     const spline = next.links['spline-3'];
-    expect(spline.type === 'spline' && spline.points).toEqual([{ x: 384, y: 448 }]);
+    expect(spline.type === 'spline' && spline.points).toEqual(controls.map(({ x, y }) => ({ x: x + 64, y: y + 64 })));
     expect(endpointNode(spline.source)).toBe('ellipse-1');
     expect(endpointNode(spline.target)).toBe('class-2');
     // The originals are untouched.
