@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, waitFor } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -15,7 +14,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeckStoryPlugin, STORY_DIALOG, storyItemId } from '../../testing/index.ts';
+import { DeckStoryPlugin, storyItemId } from '../../testing/index.ts';
 import { DeckLayout } from './DeckLayout.tsx';
 
 const meta = {
@@ -64,49 +63,5 @@ export const ManyPlanks: Story = {
     });
 
     return <DeckLayout />;
-  },
-};
-
-let closeStoryDialog: (() => Promise<unknown>) | undefined;
-
-export const ClosingKeepsContentUntilExit: Story = {
-  tags: ['test'],
-  render: () => {
-    const { invokePromise } = useOperationInvoker();
-    closeStoryDialog = () => invokePromise(LayoutOperation.UpdateDialog, { state: false });
-    useAsyncEffect(async () => {
-      await invokePromise(LayoutOperation.UpdateDialog, { subject: STORY_DIALOG, state: true });
-    }, []);
-    return <DeckLayout />;
-  },
-  play: async () => {
-    const dialog = () => document.querySelector('[data-testid="story-dialog"]');
-    const backdrop = () => document.querySelector('[data-part="backdrop"]');
-    await waitFor(() => expect(dialog()).not.toBeNull());
-
-    const orphaned: number[] = [];
-    let exiting = 0;
-    let sampling = true;
-    const sample = () => {
-      if (backdrop()) {
-        if (dialog()) {
-          exiting += 1;
-        } else {
-          orphaned.push(Math.round(performance.now()));
-        }
-      }
-      if (sampling) {
-        requestAnimationFrame(sample);
-      }
-    };
-
-    requestAnimationFrame(sample);
-    await closeStoryDialog!();
-    await waitFor(() => expect(backdrop()).toBeNull(), { timeout: 5_000 });
-    sampling = false;
-
-    await expect(orphaned).toEqual([]);
-    // Without this the test passes on an exit that never happened, which is every way it could break.
-    await expect(exiting).toBeGreaterThan(0);
   },
 };

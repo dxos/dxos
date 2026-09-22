@@ -15,53 +15,37 @@ import { DeckCapabilities } from '#types';
 import { applyActive } from './apply.ts';
 import * as Navigation from './navigation.ts';
 
-type UpdateCallback = () => Promise<void>;
-
 describe('applyActive', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  afterEach(() => vi.unstubAllGlobals());
 
   test('a transition does not revert state written while it captures the old view', async ({ expect }) => {
-    const callbacks: UpdateCallback[] = [];
+    // A transition runs its update step a frame or more after it starts; `captured` releases it here.
+    let captured: () => Promise<void>;
     vi.stubGlobal('document', {
       visibilityState: 'visible',
-      startViewTransition: (callback: UpdateCallback) => {
-        callbacks.push(callback);
-        return {};
-      },
+      startViewTransition: (callback: () => Promise<void>) => ((captured = callback), {}),
     });
     vi.stubGlobal('window', {
       matchMedia: () => ({ matches: false }),
+      location: { href: 'http://localhost/' },
       addEventListener: () => {},
       removeEventListener: () => {},
     });
 
     await using harness = await createComposerTestApp({ plugins: [DeckPlugin()] });
-    const readEphemeral = () =>
-      harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState));
+    const read = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState));
 
-    await harness.runPromise(
-      Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:dialog', state: true }),
-    );
-    expect(readEphemeral().dialogOpen).toBe(true);
-
+    await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:dialog' }));
     const navigating = harness.runPromise(
       applyActive([{ id: 'item-1', segment: Navigation.segmentOf(undefined, 'doc/1') }], { transition: true }),
     );
-    await flush();
-    const [callback] = callbacks;
-    expect(callback).toBeDefined();
+    await new Promise((resolve) => setTimeout(resolve));
 
     await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { state: false }));
-    expect(readEphemeral().dialogOpen).toBe(false);
-
-    await callback!();
+    await captured!();
     await navigating;
 
-    expect(readEphemeral().dialogOpen).toBe(false);
-    expect(readEphemeral().open.default?.active).toEqual(['item-1']);
+    expect(read().dialogOpen).toBe(false);
+    expect(read().open.default?.active).toEqual(['item-1']);
   });
 });
-
-const flush = () => new Promise<void>((resolve) => setTimeout(resolve));

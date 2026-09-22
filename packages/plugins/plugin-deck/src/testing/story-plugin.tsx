@@ -22,7 +22,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { random } from '@dxos/random';
-import { Dialog as NaturalDialog, Panel } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
@@ -33,8 +33,6 @@ import { meta as pluginMeta } from '#meta';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
 random.seed(1234);
-
-export const STORY_DIALOG = 'dxos.org/plugin/deck/story-dialog';
 
 // TODO(burdon): Show/hide companions.
 // TODO(burdon): Companion width.
@@ -160,15 +158,6 @@ const toStoryItemNode = (item: StoryItem, index: number, depth: number): AppGrap
 const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'storyDialog',
-        filter: AppSurface.component(AppSurface.Dialog, STORY_DIALOG),
-        component: () => (
-          <NaturalDialog.Content data-testid='story-dialog'>
-            <NaturalDialog.Title>Story dialog</NaturalDialog.Title>
-          </NaturalDialog.Content>
-        ),
-      }),
       Surface.create({
         id: 'storyNavigation',
         filter: Surface.makeFilter(AppSurface.Navigation),
