@@ -16,7 +16,7 @@ export const translations = [
         'plugin.name': 'Debug',
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
-        'create-sample-space.label': 'Create sample space: {{label}}',
+        'create-space-from-template.label': 'Create space from template: {{label}}',
         'space-objects.label': 'Database',
         'open-debug-panel.label': 'Show debug panel',
         'console.tab.label': 'Console',

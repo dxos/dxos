@@ -196,6 +196,38 @@ describe('projectFunctionToTool', () => {
     });
     expect(decoded.properties).toEqual({ any: 1 });
   });
+
+  // v4 nests a rest signature under `allOf`; the recorded corpus states it on the node itself.
+  test('a struct with a rest signature is advertised as an open object', ({ expect }) => {
+    const Draft = Operation.make({
+      meta: { key: DXN.make('com.example.operation.test.draft') },
+      input: Schema.Struct({
+        drafts: Schema.Array(
+          Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+            Schema.Record(Schema.String, Schema.Unknown),
+          ]),
+        ),
+      }),
+      output: Schema.Void,
+    });
+
+    expect(Tool.getJsonSchema(projectFunctionToTool(Draft))).toEqual({
+      type: 'object',
+      properties: {
+        drafts: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { '@type': { type: 'string' } },
+            required: ['@type'],
+            additionalProperties: true,
+          },
+        },
+      },
+      required: ['drafts'],
+      additionalProperties: false,
+    });
+  });
 });
 
 describe('makeToolResolverFromOperations', () => {

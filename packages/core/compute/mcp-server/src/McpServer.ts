@@ -76,20 +76,6 @@ export class Host extends Context.Service<Host, HostShape>()('@dxos/mcp-server/H
  */
 export const snapshot = snapshotInternal.entities;
 
-/**
- * Parameter schema for a tool that takes no input.
- *
- * Spelled as a record with an uninhabited value type rather than `Schema.Struct({})` because v4
- * emits an empty struct as `{not: {type: 'null'}}` — the bare `object` keyword, which states no
- * `type` at all. Effect's own MCP server decodes every tool's input schema against a shape that
- * requires `type`, so a tool spelled the obvious way takes the whole server down at startup, and a
- * provider's strict tool mode likewise rejects an object that does not state
- * `additionalProperties`. A `Never` value type admits no keys, so this emits
- * `{type: 'object', additionalProperties: false}` — the same contract, and valid under both.
- * A JSON-schema annotation cannot express it: v4 honours such an annotation only on a check.
- */
-export const NoParameters = Schema.Record(Schema.String, Schema.Never);
-
 //
 // The fixed tool surface.
 //
@@ -362,7 +348,10 @@ const encodeInput = (
     return Effect.succeed(arguments_);
   }
 
-  return Schema.decodeUnknownEffect(codec.decode)(arguments_).pipe(
+  // The published schema says `additionalProperties: false`, and the default `ignore` policy drops
+  // an undeclared property instead: a misspelled `text` left `space-query-objects` with no search
+  // term at all and its handler answered with the whole space, as a success.
+  return Schema.decodeUnknownEffect(codec.decode, { onExcessProperty: 'error', errors: 'all' })(arguments_).pipe(
     Effect.flatMap(Schema.encodeUnknownEffect(codec.encode)),
     Effect.mapError((error) =>
       failure(
@@ -429,11 +418,20 @@ export const invoke = (
         .invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId })
         .pipe(Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)));
 
+      // `structuredContent` must be a JSON value, so the output travels as the JSON its text block carries.
+      const text: string | undefined = yield* Effect.try({
+        try: () => JSON.stringify(output),
+        catch: (error) =>
+          failure('operation_failed', `${operationKey} returned a result that is not JSON: ${String(error)}`),
+      });
+      if (text === undefined) {
+        return {};
+      }
+      const json: unknown = JSON.parse(text);
+
       // Nothing to qualify against when the call named no space: a space-less result carries no
       // same-space references.
-      const qualified = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
-      // Structured content must be JSON: a void output becomes `{}` and `undefined` values are dropped.
-      const result: unknown = qualified === undefined ? {} : JSON.parse(JSON.stringify(qualified));
+      const result = resolvedSpaceId === undefined ? json : spaceInternal.qualifyRefs(json, resolvedSpaceId);
       return result !== null && typeof result === 'object' && !Array.isArray(result)
         ? (result as Record<string, unknown>)
         : { output: result };
@@ -541,46 +539,125 @@ export const stdio: Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> = L
   ),
 );
 
-/**
- * The same passes over an HTTP response body, plus the batch unwrap the transport requires, for a
- * host that owns its own transport (effect's `McpServer.layerHttp` behind a worker's fetch handler).
- *
- * `serverInfo` is merged into the `initialize` result on top of the shared identity: the MCP
- * `Implementation` may carry `title`, `websiteUrl` and `icons`, and effect's `McpServer` offers no way to
- * supply them. Pass `icons` here — they need an origin, which only the host knows.
- */
-export const normalizeResponse = async (
-  response: Response,
-  options: { readonly serverInfo?: Record<string, unknown> } = {},
-): Promise<Response> => {
-  if (!response.headers.get('content-type')?.includes('application/json')) {
-    return response;
-  }
-  const text = await response.text();
-  const unwrapped = unwrapBatch(text);
-  const normalized = wireInternal.normalizeText(unwrapped, options);
-  const headers = new Headers(response.headers);
-  // The passes above change the body length, so an upstream `Content-Length` now describes a body
-  // that no longer exists; a client that trusts it truncates the response.
-  headers.delete('content-length');
-  return new Response(normalized ?? unwrapped, { status: response.status, headers });
+export type NormalizeResponseOptions = {
+  readonly serverInfo?: Record<string, unknown>;
+  /** An event stream is collapsed only when this is a POST other than `subscriptions/listen`, whose stream never ends. */
+  readonly request?: Pick<Request, 'method' | 'headers'>;
 };
 
 /**
- * Unwraps a single-element JSON-RPC batch.
+ * The same passes over an HTTP response body, for a host that owns its own transport (effect's
+ * `McpServer.layerHttp` behind a worker's fetch handler).
  *
- * Effect's RPC HTTP transport always answers with an array, while MCP's Streamable HTTP transport
- * requires a lone JSON-RPC object for a single request — and a client that gets the array does not
- * recognise the server's tools at all. Spec compliance rather than host policy, so every HTTP host
- * needs it and none should have to know that.
+ * `serverInfo` is merged into the server's `Implementation` wherever a result names it, on top of the
+ * shared identity: the MCP `Implementation` may carry `title`, `websiteUrl` and `icons`, and effect's
+ * `McpServer` offers no way to supply them. Pass `icons` here — they need an origin, which only the
+ * host knows.
+ *
+ * A finite event stream collapses to its lone response, since effect streams any reply carrying a
+ * stray `list_changed`.
  */
-const unwrapBatch = (text: string): string => {
-  try {
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) && parsed.length === 1 ? JSON.stringify(parsed[0]) : text;
-  } catch {
-    return text;
+export const normalizeResponse = async (
+  response: Response,
+  { request, ...options }: NormalizeResponseOptions = {},
+): Promise<Response> => {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('text/event-stream')) {
+    const finite = request?.method === 'POST' && request.headers.get('mcp-method') !== 'subscriptions/listen';
+    return finite ? collapseEventStream(response, options) : response;
   }
+  if (!contentType.includes('application/json')) {
+    return response;
+  }
+  const text = await response.text();
+  return withBody(response, wireInternal.normalizeText(text, options) ?? text);
+};
+
+/** Passes the stream through unchanged when it holds anything but notifications and one response. */
+const collapseEventStream = async (
+  response: Response,
+  options: Pick<NormalizeResponseOptions, 'serverInfo'>,
+): Promise<Response> => {
+  const bytes = await response.arrayBuffer();
+  const unchanged = new Response(bytes, response);
+  const events = eventData(new TextDecoder().decode(bytes));
+  if (events == null) {
+    return unchanged;
+  }
+
+  const responses: string[] = [];
+  for (const data of events) {
+    const kind = messageKind(data);
+    if (kind === 'response') {
+      responses.push(data);
+    } else if (kind !== 'notification') {
+      return unchanged;
+    }
+  }
+
+  if (responses.length > 1) {
+    return unchanged;
+  }
+  if (responses.length === 0) {
+    return withBody(response, null, 202);
+  }
+  const [data] = responses;
+  return withBody(response, wireInternal.normalizeText(data, options) ?? data, response.status, 'application/json');
+};
+
+/** The `data` of each server-sent event, or `undefined` when the stream ends mid-event. */
+const eventData = (text: string): string[] | undefined => {
+  const events: string[] = [];
+  let data: string[] = [];
+  for (const line of text.split(/\r\n|\r|\n/)) {
+    if (line === '') {
+      if (data.length > 0) {
+        events.push(data.join('\n'));
+        data = [];
+      }
+      continue;
+    }
+    const colon = line.indexOf(':');
+    const field = colon < 0 ? line : line.slice(0, colon);
+    if (field === 'data') {
+      data.push(colon < 0 ? '' : line.slice(colon + 1).replace(/^ /, ''));
+    }
+  }
+  return data.length > 0 ? undefined : events;
+};
+
+const messageKind = (data: string): 'response' | 'notification' | undefined => {
+  let message: unknown;
+  try {
+    message = JSON.parse(data);
+  } catch {
+    return undefined;
+  }
+  if (message === null || typeof message !== 'object' || Array.isArray(message)) {
+    return undefined;
+  }
+  if ('method' in message) {
+    return 'id' in message ? undefined : 'notification';
+  }
+  // Exactly one outcome: a message carrying both is malformed, and the stream is left alone.
+  return 'id' in message && 'result' in message !== 'error' in message ? 'response' : undefined;
+};
+
+/** Rebuilds a response around a new body, which no upstream `Content-Length` describes. */
+const withBody = (
+  response: Response,
+  body: string | null,
+  status = response.status,
+  contentType?: string,
+): Response => {
+  const headers = new Headers(response.headers);
+  headers.delete('content-length');
+  if (body == null) {
+    headers.delete('content-type');
+  } else if (contentType != null) {
+    headers.set('content-type', contentType);
+  }
+  return new Response(body, { status, headers });
 };
 
 //

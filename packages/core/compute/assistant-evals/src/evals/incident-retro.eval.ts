@@ -14,7 +14,7 @@ import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { IncidentSpace } from '@dxos/plugin-debug/sample';
+import * as IncidentSpace from '@dxos/plugin-debug/IncidentSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
@@ -269,7 +269,7 @@ const task = createEvalRunner({
       if (!space) {
         return yield* Effect.fail(new EvalRunError({ message: `Space not found: ${spaceId}` }));
       }
-      yield* SampleSpace.applyTo(IncidentSpace(), space);
+      yield* SampleSpace.applyTo(IncidentSpace.make(), space);
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       if (!project?.taskSet) {

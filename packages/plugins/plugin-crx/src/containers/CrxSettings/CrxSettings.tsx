@@ -79,9 +79,9 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                   aria-live='polite'
                   className={
                     test.kind === 'ok'
-                      ? 'text-sm text-success'
+                      ? 'text-sm text-success-text'
                       : test.kind === 'error'
-                        ? 'text-sm text-error'
+                        ? 'text-sm text-error-text'
                         : 'text-sm text-description'
                   }
                 >

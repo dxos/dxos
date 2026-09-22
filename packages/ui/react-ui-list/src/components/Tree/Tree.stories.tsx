@@ -27,6 +27,8 @@ const tree = createTree();
 const groupsTree = createTree(4, 4, { groups: true });
 // Three childless nodes the story still presents as branches (a folder with nothing in it).
 const emptyTree = createTree(3, 1);
+// Flat and long, which is the shape `virtualize` is for.
+const longTree = createTree(120, 1);
 
 const DefaultStory = ({
   draggable,
@@ -35,6 +37,7 @@ const DefaultStory = ({
   unselectableBranches,
   disabledRows,
   selectionMode = 'single',
+  virtualize,
 }: {
   draggable?: boolean;
   groups?: boolean;
@@ -44,8 +47,10 @@ const DefaultStory = ({
   /** Disable the first row, as a model does for one nothing can be done with yet. */
   disabledRows?: boolean;
   selectionMode?: 'single' | 'multiple';
+  /** Render a long list in a short scroller, windowed to what is in view. */
+  virtualize?: boolean;
 }) => {
-  const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
+  const rootTree = virtualize ? longTree : emptyBranches ? emptyTree : groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -235,7 +240,7 @@ const DefaultStory = ({
     });
   }, [rootTree, childIdsFamily, registry]);
 
-  return (
+  const subject = (
     <Tree
       model={model}
       id={rootTree.id}
@@ -243,6 +248,7 @@ const DefaultStory = ({
       draggable={draggable}
       selectionMode={selectionMode}
       canSelect={handleCanSelect}
+      virtualize={virtualize}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -251,6 +257,15 @@ const DefaultStory = ({
       onOpenChange={handleOpenChange}
       onSelect={handleSelect}
     />
+  );
+
+  // A scroller short enough that most of the list is off screen, which is what the observer reads.
+  return virtualize ? (
+    <div data-testid='tree.scroller' className='h-[240px] overflow-y-auto'>
+      {subject}
+    </div>
+  ) : (
+    subject
   );
 };
 
@@ -438,5 +453,40 @@ export const DisabledRows: Story = {
 
     await userEvent.keyboard('{Enter}');
     await expect(row).not.toHaveAttribute('data-selected');
+  },
+};
+
+/**
+ * A long list mounts only the rows in view, and the mounted range travels with the scroll.
+ *
+ * The scrollbar is the whole list's — the sizer carries the extent of the rows that are not
+ * mounted — so what this asserts is that the two stay consistent: a slice in the DOM, the full
+ * height under the thumb, and the slice moving rather than growing as the reader scrolls.
+ */
+export const TestWindowMountsAVisibleSlice: Story = {
+  args: { virtualize: true },
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const indices = () => rows().map((row) => Number(row.dataset.index));
+
+    // Only the rows in view exist: the rest are extent in the sizer, not elements.
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await waitFor(async () => expect(rows().length).toBeLessThan(120), { timeout: 5_000 });
+
+    // The scrollbar is scaled to the whole list, not to what is mounted.
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight * 4);
+
+    const before = indices();
+    await expect(before[0]).toEqual(0);
+
+    // Scrolling moves the mounted range rather than adding to it.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(indices()[0]).toBeGreaterThan(before[0]), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(120);
+    await expect(indices()[indices().length - 1]).toEqual(119);
+
+    scroller.scrollTo({ top: 0 });
+    await waitFor(async () => expect(indices()[0]).toEqual(0), { timeout: 5_000 });
   },
 };

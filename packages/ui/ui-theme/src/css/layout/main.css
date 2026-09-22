@@ -308,6 +308,15 @@
     view-transition-name: dx-main-content;
   }
 
+  /*
+   * The app's own dialog overlay. Only this one is named: the name has to be unique among rendered
+   * elements or the transition is abandoned, and `dx-dialog__overlay` is worn by every dialog in the
+   * app, including ones a plank puts on screen beside this one.
+   */
+  .dx-main-dialog {
+    view-transition-name: dx-main-dialog;
+  }
+
   /* The new-state snapshot is captured a frame into a running slide, so the layout would jump the rest of the way when the view transition ends. */
   :root:active-view-transition {
     .dx-main-sidebar,

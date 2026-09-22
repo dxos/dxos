@@ -914,7 +914,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               // `Obj.isDeleted` branch below: the database emits a real tombstone, and a feed
               // removal (`Feed.remove`) now also produces a queryable tombstone that retains the
               // object's type/body (the index merges the `{ id, '@deleted': true }` block onto the
-              // prior snapshot — see `FtsIndex.update` / `EntityMetaIndex.update`).
+              // prior snapshot — see `ObjectSnapshotIndex.update` / `EntityMetaIndex.update`).
               const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(

@@ -92,7 +92,7 @@ module Client
     Connection: class extends Resource  # ctor(Options); open()/close(); clientId; onReconnect(cb); closed + reconnected events.
     Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, maxLeaderFailures?, onPersistentFailure?, onConnect.
     Handle: { close(): Promise }        # per-connection handle returned by Options.onConnect.
-    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?.
+    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?, workerProbeTimeout?.
     ConnectionDiagnostics: {...}        # phases + failure counters merged into the error open() rejects with.
 ```
 
@@ -106,7 +106,8 @@ module Worker
     Entrypoint: @dxos/worker-framework/worker.
   api:
     run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`).
-    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, signal?, createRuntime.
+    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, displaceGraceTimeout?, signal?, createRuntime.
+    DEFAULT_DISPLACE_GRACE_TIMEOUT: number  # grace before a queued worker escalates to the incumbent's tab.
     RuntimeHandle: {...}                # createSession({ clientId, isOwner, onClose }) + optional idempotent stop().
 ```
 
@@ -137,12 +138,14 @@ module WorkerProtocol
   api:
     WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; onError?: Event<Error>; sendMessage(msg): void }.
     CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port | session-failed.
-    DedicatedWorkerMessage: union        # listening | init | ready | init-failed | start-session | session | session-failed.
+    DedicatedWorkerMessage: union        # listening | init | ready | ping | pong | init-failed | start-session | session | session-failed.
     SerializedError: {...}               # name, message, stack?, cause?, errors? — an error that survives postMessage.
     encodeError: (error: unknown) => SerializedError   # keeps name, cause chain, and AggregateError.errors.
     decodeError: (error: SerializedError) => Error     # rebuilds it as a plain Error / AggregateError.
     WorkerEndpoint: interface            # postMessage / add + removeEventListener('message') / close?.
     WorkerOrPort: Worker | MessagePort   # worker handle usable from a leader tab or a test port.
+    TerminableWorker: interface          # { terminate(): void } — a handle that can stand its worker down without cooperation.
+    isTerminable: (worker: WorkerOrPort) => worker is WorkerOrPort & TerminableWorker
 ```
 
 ## Features
@@ -240,7 +243,7 @@ feat F-3: Worker lifecycle and displacement
   req F-3.3:
     when: the leader sends `init` with config and an `ownerClientId`
     then: the worker builds its runtime, marks the owning client, and replies `ready`
-          with its `livenessLockKey`
+          with its `livenessLockKey`, `workerId`, and `displaceChannel`
 
   req F-3.4:
     when: building the runtime fails
@@ -248,10 +251,40 @@ feat F-3: Worker lifecycle and displacement
           then shuts down, releasing its liveness and storage locks
 
   req F-3.5:
+    when: a starting worker is still queued on the storage lock after its displacement
+          grace period, i.e. the incumbent never serviced the stop signal
+    then: it escalates once on the same channel with a `terminate` action naming itself,
+          the storage lock and the grace period it allowed
+
+  req F-3.6:
+    when: a tab receives an escalation over the displacement channel
+    then: it discards a malformed message, ignores one its own worker raised, and otherwise
+          judges the worker it owns — never the issuer — terminating that worker only when
+          it still holds its liveness lock and does not answer a `ping` within the probe
+          timeout, so however many tabs share the storage lock every healthy bystander
+          stands down and only the wedged incumbent is terminated
+
+  req F-3.7:
+    when: a worker is asked `ping`
+    then: it replies `pong` with the same nonce from its message loop, which is what tells
+          its tab that it is not the wedged worker an escalation is aimed at
+
+  req F-3.8:
+    when: a tab terminates a worker that ignored displacement
+    then: it reports a `WorkerTerminationError` at error level, so the forced kill reaches
+          error telemetry, and closes the session with that same error
+
+  req F-3.9:
+    when: the wedged worker's handle exposes no `terminate()` (a bare `MessagePort`, whose
+          `close()` leaves the worker holding both locks)
+    then: the tab reports a `WorkerNotTerminableError` at error level and leaves the session
+          open, since nothing was killed and the storage lock is still held
+
+  req F-3.10:
     when: the worker's storage or liveness lock is stolen, or `Options.signal` aborts
     then: the worker shuts down (a pending storage-lock request is simply dropped)
 
-  req F-3.6:
+  req F-3.11:
     when: a `start-session` arrives while the worker is shutting down
     then: it is ignored rather than forked from the closing runtime scope
 ```

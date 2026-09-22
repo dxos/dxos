@@ -34,6 +34,7 @@ import React, {
 } from 'react';
 
 import { Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type WindowController, useListModel, useWindow } from '@dxos/react-ui-virtual';
 import {
   getStyles,
   hoverableControls,
@@ -45,6 +46,7 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
+import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -70,6 +72,15 @@ const hoverableDescriptionIcons =
 const MODIFIER_WINDOW = 500;
 
 const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false };
+
+/**
+ * The row track and the grid that lays rows out on it.
+ *
+ * Named because the grid moves: unwindowed it is the tree element, windowed it is the mounted
+ * parent inside it, and a row's `col-[tree-row]` has to resolve against whichever one holds it.
+ */
+const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
+const TREE_GRID = 'grid gap-0.5';
 
 type TreeWalkState<T extends { id: string }> = {
   root: TreeNodeEntry<T>;
@@ -263,6 +274,24 @@ export type TreeProps<T extends { id: string } = any> = {
    * and without this it is both invisible and wrong.
    */
   dropAtEnd?: boolean;
+  /**
+   * Mount only the rows in view, windowed with `@dxos/react-ui-virtual`.
+   *
+   * The same mechanism the trace timeline and the message feed use: the placement owns the
+   * measured extents and the scrollbar, and the tree renders the mounted range into a translated
+   * parent. Off by default — a list short enough to render whole gains nothing.
+   *
+   * A tree with a disclosable branch renders whole regardless, because a branch's children are
+   * inside the machine's animated disclosure rather than a flat run of siblings.
+   */
+  virtualize?: boolean;
+  /**
+   * The element that scrolls the tree, when the consumer owns one.
+   *
+   * Optional because a tree is usually inside somebody else's scroller; without it the nearest
+   * scrolling ancestor is used, so windowing does not become a change to every consumer.
+   */
+  scrollerRef?: React.RefObject<HTMLElement | null>;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   /**
@@ -310,6 +339,8 @@ export const Tree = <T extends { id: string } = any>({
   debug = false,
   dropBelowExpanded = false,
   dropAtEnd = false,
+  virtualize = false,
+  scrollerRef,
   canSelect,
   onOpenChange,
   onSelect,
@@ -579,6 +610,12 @@ export const Tree = <T extends { id: string } = any>({
     ],
   );
 
+  // The rows the window would mount, or `undefined` when the tree has a branch and renders whole.
+  const units = useMemo(() => (virtualize ? flattenRowUnits(root.children) : undefined), [virtualize, root.children]);
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const scroller = useScroller(treeRef, scrollerRef, !!units);
+  const windowed = !!units && !!scroller;
+
   return (
     <TreeView.Root
       collection={collection}
@@ -598,6 +635,7 @@ export const Tree = <T extends { id: string } = any>({
       {ariaLabel && <TreeView.Label className='sr-only'>{ariaLabel}</TreeView.Label>}
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
         <TreeView.Tree
+          ref={treeRef}
           // Sets `--dx-control` for the whole subtree, which is what actually sizes a row (the row
           // is one control tall and its toggle track one control wide) — so `density` alone is
           // enough and a consumer needs no `dx-density-*` class of its own.
@@ -606,20 +644,32 @@ export const Tree = <T extends { id: string } = any>({
           // row holds it, which must not draw a focus ring around the whole tree.
           // Row spacing belongs to the container: as a margin on each row it also offset the first
           // row from the tree's top edge, which is space between the tree and its frame, not between rows.
-          className={mx('grid gap-0.5 outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
+          // Windowed, the grid moves to the mounted parent: the tree element becomes the positioning
+          // context the sizer and that parent live in, and holds no rows of its own.
+          className={mx(
+            'outline-none',
+            windowed ? 'relative' : TREE_GRID,
+            ...(Array.isArray(classNames) ? classNames : [classNames]),
+          )}
           // One track: rows, section headers and the end target span it. The consumer's column
           // template is applied per row, behind an indent track, rather than here — a subgrid would
           // share one set of tracks down the tree, and padding a subgrid only shrinks its first
           // track, so nested rows could not indent their leading cells.
-          style={{ gridTemplateColumns: '[tree-row-start] minmax(0, 1fr) [tree-row-end]' }}
+          style={windowed ? undefined : { gridTemplateColumns: TREE_TRACK }}
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
-          {root.children?.map((node) => (
-            <TreeNodeRow key={node.value} node={node} />
-          ))}
-          {dropAtEnd && draggable && (
-            <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
+          {windowed ? (
+            <TreeWindow units={units} scroller={scroller} focusedValue={focusedValue} />
+          ) : (
+            <>
+              {root.children?.map((node) => (
+                <TreeNodeRow key={node.value} node={node} />
+              ))}
+              {dropAtEnd && draggable && (
+                <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
+              )}
+            </>
           )}
         </TreeView.Tree>
       </TreeRenderProvider>
@@ -627,8 +677,98 @@ export const Tree = <T extends { id: string } = any>({
   );
 };
 
+/**
+ * The mounted rows, and a sizer that gives the scrollbar the whole tree's extent.
+ *
+ * The shape `@dxos/react-ui-virtual` asks for, as the trace timeline and the message feed render
+ * it: rows live in a parent that is moved by a transform, so a correction changes one number and
+ * never writes `scrollTop` out from under the reader.
+ */
+const TreeWindow = ({
+  units,
+  scroller,
+  focusedValue,
+}: {
+  units: RowUnit[];
+  scroller: HTMLElement;
+  focusedValue: string | null;
+}) => {
+  const scrollerRef = useRef<HTMLElement | null>(scroller);
+  scrollerRef.current = scroller;
+  const model = useListModel(units, rowUnitId);
+  const controllerRef = useRef<WindowController>(null);
+  const {
+    layout: { visible },
+    windowRef,
+    offset,
+    sizerExtent,
+    first,
+    last,
+  } = useWindow({ scrollerRef, model, extents: nominalExtents, controllerRef });
+
+  // The machine moves focus over the whole collection, including rows this window has not mounted,
+  // so a row it focuses has to be brought into the window before it can take the focus. Nearest
+  // edge, which is what the `scrollIntoView({ block: 'nearest' })` of an unwindowed tree did.
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
+  useEffect(() => {
+    if (!focusedValue) {
+      return;
+    }
+
+    const index = units.findIndex((unit) => unit.kind === 'row' && unit.key === focusedValue);
+    if (index < 0) {
+      return;
+    }
+
+    const { first, last } = visibleRef.current;
+    if (index < first) {
+      controllerRef.current?.scrollToIndex(index, 'start');
+    } else if (index > last) {
+      controllerRef.current?.scrollToIndex(index, 'end');
+    }
+  }, [focusedValue, units]);
+
+  const mounted = [];
+  for (let index = first; index <= last; index++) {
+    const unit = units[index];
+    if (!unit) {
+      continue;
+    }
+
+    mounted.push(
+      unit.kind === 'header' ? (
+        <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} objectId={unit.key} />
+      ) : (
+        <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} />
+      ),
+    );
+  }
+
+  return (
+    <>
+      <div style={{ blockSize: sizerExtent }} />
+      <div
+        ref={windowRef}
+        className={mx('absolute inline-start-0 inline-end-0 top-0', TREE_GRID)}
+        style={{ gridTemplateColumns: TREE_TRACK, transform: `translateY(${offset}px)` }}
+      >
+        {mounted}
+      </div>
+    </>
+  );
+};
+
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
-const TreeSectionHeader = ({ label }: { label: Label }) => {
+const TreeSectionHeader = ({
+  label,
+  windowIndex,
+  objectId,
+}: {
+  label: Label;
+  windowIndex?: number;
+  objectId?: string;
+}) => {
   const { t } = useTranslation();
   const { toggle } = useTreeRender();
   return (
@@ -636,6 +776,8 @@ const TreeSectionHeader = ({ label }: { label: Label }) => {
     // decorative — the group's items remain individually labeled.
     <div
       role='presentation'
+      data-index={windowIndex}
+      data-object-id={objectId}
       className={mx(
         'col-[tree-row] pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none',
         // Cleared past the toggle track so the label starts where the rows' first cell does.
@@ -647,9 +789,13 @@ const TreeSectionHeader = ({ label }: { label: Label }) => {
   );
 };
 
-type TreeNodeRowProps = { node: TreeNodeEntry };
+type TreeNodeRowProps = {
+  node: TreeNodeEntry;
+  /** Position in the mounted window, when the tree is windowed; the window measures rows by it. */
+  windowIndex?: number;
+};
 
-const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
+const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
   if (node.group) {
     return (
       <>
@@ -669,7 +815,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
           <TreeBranchContent node={node} />
         </TreeView.Branch>
       ) : (
-        <TreeNodeRowContent node={node} />
+        <TreeNodeRowContent node={node} windowIndex={windowIndex} />
       )}
     </TreeView.NodeProvider>
   );
@@ -758,7 +904,7 @@ TreeEndDropTarget.displayName = 'Tree.EndDropTarget';
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 /** The visible row: branch control or leaf item, with DnD wiring, columns, and the drop indicator. */
-const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
+const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
   const {
     treeId,
     draggable: treeDraggable,
@@ -978,6 +1124,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
       data-testid={props.testId}
+      // Read by the window to measure this row; it reads the id off `data-object-id` above, which
+      // is why a windowed tree is one whose item ids are unique.
+      data-index={windowIndex}
       className={mx(
         'col-[tree-row] outline-none select-none',
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
