@@ -27,7 +27,7 @@ const clientLayer = SqliteClient.layerOpfs({ dbName: DB_NAME }).pipe(Layer.provi
 const runWithClient = <A, E>(program: Effect.Effect<A, E, SqlClient.SqlClient | SqliteClient.SqliteClient>) =>
   program.pipe(Effect.provide(clientLayer), Effect.scoped);
 
-const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect<unknown, Error> =>
+const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect<unknown, BaseError> =>
   Effect.gen(function* () {
     switch (testCase) {
       case 'crud': {
@@ -119,8 +119,9 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         return yield* Effect.fail(new SqliteTestError({ message: `Unknown in-worker test case: ${testCase}` }));
     }
   }).pipe(
-    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
     (effect) => runWithClient(effect),
+    // Mapped last, so the client layer's own `SqlError` is inside the channel this wraps.
+    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
   );
 
 /**
@@ -130,7 +131,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
  * case sharing the suite's database would read whichever earlier test got there first rather than
  * what this client asked for.
  */
-const readPragmas = (dbName: string): Effect.Effect<unknown, Error> =>
+const readPragmas = (dbName: string): Effect.Effect<unknown, BaseError> =>
   Effect.gen(function* () {
     const client = yield* SqlClient.SqlClient;
     yield* client`CREATE TABLE IF NOT EXISTS page_size_probe (value TEXT)`;
@@ -138,9 +139,11 @@ const readPragmas = (dbName: string): Effect.Effect<unknown, Error> =>
     const journal = yield* client`PRAGMA journal_mode`;
     return { pageSize: size[0]?.page_size, journalMode: journal[0]?.journal_mode };
   }).pipe(
-    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
     Effect.provide(SqliteClient.layerOpfs({ dbName }).pipe(Layer.provideMerge(Reactivity.layer))),
     Effect.scoped,
+    // Mapped last, so the layer's own `SqlError` is inside the channel this wraps rather than
+    // leaking past it.
+    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
   );
 
 self.addEventListener('message', (event: MessageEvent<InWorkerRequest>) => {

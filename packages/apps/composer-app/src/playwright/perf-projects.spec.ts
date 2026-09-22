@@ -325,10 +325,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     // Read between the stages, not inside one: the task list is only worth measuring if it is
     // windowed, and a tree that fails to find its scroller renders whole while looking identical.
-    const windowing = await page.evaluate(() => ({
-      windowed: !!document.querySelector('[role="tree"][data-windowed]'),
-      rows: document.querySelectorAll('[data-testid="taskList.item"]').length,
-    }));
+    const windowing = await page.evaluate(() => {
+      const rows = document.querySelectorAll('[data-testid="taskList.item"]');
+      // Found through a row rather than by `[role="tree"]`: `Tree` is shared with the navigation,
+      // so a page-wide selector reports whichever tree happens to answer first.
+      return { windowed: !!rows[0]?.closest('[role="tree"][data-windowed]'), rows: rows.length };
+    });
     log.info('task list windowing', windowing);
 
     await runner.stage('toggle-task', async () => {
