@@ -85,6 +85,31 @@ describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequent
     }
   });
 
+  /**
+   * The page size the production OPFS path actually opens with, which decides what a write costs.
+   *
+   * An OPFS write costs per CALL rather than per byte (~1.2 ms measured), and a WAL frame is issued
+   * as TWO calls — its 24-byte header and then the page — so the perf flow sees writes averaging
+   * exactly (4096 + 24) / 2 = 2,060 bytes and one typed sentence costs ~760 calls. Asserted rather
+   * than described because halving that call count is a page-size change, and a `PRAGMA page_size`
+   * issued after the database exists is silently ignored: this is the number that says whether such
+   * a change reached the database or not.
+   */
+  test('reports the page size and journal mode the OPFS client opens with', async () => {
+    const worker = spawnInWorkerTestRunner();
+    try {
+      await waitForInWorkerTestRunner(worker);
+      const result = (await runInWorkerTestCase(worker, 'page-size')) as {
+        pageSize: number;
+        journalMode: string;
+      };
+      expect(result.journalMode).toBe('wal');
+      expect(result.pageSize).toBe(4096);
+    } finally {
+      terminateInWorkerTestRunner(worker);
+    }
+  });
+
   test('writes hypercore_files via layerOpfs after raw pool import', async () => {
     const result = (await seedExportPoolImportAndHypercoreWrite()) as {
       previousCount: number;

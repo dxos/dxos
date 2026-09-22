@@ -39,6 +39,15 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         const results = yield* client`SELECT name FROM in_worker_users ORDER BY id`;
         return { names: results.map((row) => row.name) };
       }
+      // An OPFS write costs per CALL — one page plus a WAL frame header — so the page size decides
+      // how many calls a given number of bytes takes, and it is fixed when the database is created.
+      case 'page-size': {
+        const client = yield* SqlClient.SqlClient;
+        yield* client`CREATE TABLE IF NOT EXISTS in_worker_page_size (value TEXT)`;
+        const rows = yield* client`PRAGMA page_size`;
+        const journal = yield* client`PRAGMA journal_mode`;
+        return { pageSize: rows[0]?.page_size, journalMode: journal[0]?.journal_mode };
+      }
       case 'export': {
         const sql = yield* SqliteClient.SqliteClient;
         yield* sql`CREATE TABLE IF NOT EXISTS in_worker_export (value TEXT)`;
