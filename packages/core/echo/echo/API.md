@@ -65,8 +65,8 @@ const Task = Schema.Struct({
 type Task = Type.InstanceType<typeof Task>;
 ```
 
-A ref to a deleted object resolves as if the object were absent, and ref arrays hide such entries
-automatically — see [Working with Refs](#working-with-refs).
+A ref to a deleted object resolves as if the object were absent — see
+[Working with Refs](#working-with-refs).
 
 ### Owned children
 
@@ -155,25 +155,22 @@ behaves as absent everywhere.
 
 ### Ref arrays
 
-An array-of-refs property presents a filtered view: entries whose target is known-deleted are
-hidden, automatically, for every ref-array field. Deleting an object makes it vanish from every
-array that references it; no holder is swept.
+The stored array is what you read: an entry whose target has been deleted stays in the array as a
+dangling ref (its target resolves as absent). Nobody sweeps holders on deletion. To enumerate the
+referenced objects, query for them instead of dereferencing the array — the query engine takes
+deletion into account, so no caller handles dangling entries by hand:
 
 ```ts
-task.watchers; // hides entries whose target is deleted
-Obj.update(task, (t) => {
-  t.watchers.splice(index, 1); // splice the view; hidden entries are unaffected
-});
+// Members of a container: query by the parent edge (or another membership filter).
+const members = await db.query(Filter.childOf(taskSet)).run();
+
+// Objects a specific property references, deletion respected on both sides.
+const watchers = await db.query(Query.select(Filter.id(task.id)).reference('watchers')).run();
 ```
 
-- The filter applies to every read path — live proxy, snapshots, atoms. Storage, sync, and `toJSON`
-  keep the raw array, and property reads on results of a `{ deleted: 'include' }` query present it
-  too.
-- Filtering is lazy against the working set and triggers no loads: an entry whose target was never
-  loaded locally stays visible until something loads it. Use `Ref.loadAll` when completeness
-  matters.
-- Wholesale reassignment (`t.watchers = [...]`) is literal: it stores exactly what was assigned,
-  hidden entries lost. It is also a reactivity anti-pattern — splice instead.
+Reach for the array itself when writing membership or when its order matters. Mutate it in place
+(wholesale reassignment is a reactivity anti-pattern — splice instead), and use `Ref.loadAll` for
+targets in array order; it skips dangling entries.
 
 ## Querying
 
@@ -210,9 +207,9 @@ result.subscribe((r) => console.log(r.results));
 
 ### Counting
 
-Cardinality is a query; order is the array. A ref array's `length` reflects only locally visible
-entries (it shrinks as deleted targets load), so displayed counts come from a query — answered from
-the index, moving only on real writes and replication:
+Cardinality is a query; order is the array. A ref array's `length` counts stored entries, dangling
+refs included, so displayed counts come from a query — answered from the index, with deletion
+respected:
 
 ```ts
 const members = await db.query(Filter.childOf(taskSet)).run();
@@ -242,13 +239,13 @@ Deletion cascades transitively — children (via the parent edge declared with `
 see [Owned children](#owned-children)) and relations (via either endpoint) of a deleted object read
 as deleted, by the same rule at every surface.
 
-Deleted objects are invisible by default across the entire API: queries exclude them (see
-[Querying](#querying)), ref targets read as absent, and ref arrays hide their entries (see
-[Working with Refs](#working-with-refs)). Every opt-in uses the same shape:
-`{ deleted: 'include' }`.
+Queries exclude deleted objects by default (see [Querying](#querying)) and ref targets read as
+absent, with `{ deleted: 'include' }` as the opt-in in both places. Ref arrays are not filtered: a
+dangling entry stays in the stored array, and readers enumerate the live members through a query
+rather than by dereferencing entries (see [Working with Refs](#working-with-refs)).
 
 ```ts
-// Permanent destruction; also prunes hidden array entries pointing at collected objects.
+// Permanent destruction; also prunes dangling array entries pointing at collected objects.
 await db.runGarbageCollection({ pruneDanglingRefs: true });
 ```
 

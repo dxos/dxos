@@ -34,8 +34,8 @@ const [name, setName] = useObject(obj, 'name');
 ### Subscribing to a Ref
 
 Automatically dereferences the Ref and handles async loading. A deleted target reads as `undefined`,
-the same as a target that has not loaded — deleted objects are invisible by default throughout the
-API.
+the same as a target that has not loaded — queries and ref resolution treat deleted objects as
+absent by default.
 
 ```ts
 const [assignee, setAssignee] = useObject(task.assignee);
@@ -99,14 +99,13 @@ const tasks = useQuery(space.db, Filter.type(Task, { completed: false }));
 ### Counting
 
 Cardinality is a query, order is the array: when the UI shows a count, take it from a `useQuery`
-result, never from the length of a ref array. The query count is answered from the index and only
-moves on real writes and replication; a ref array's length varies with which targets happen to be
-loaded locally.
+result, never from the length of a ref array. The query respects deletion; the array counts stored
+entries, dangling refs included.
 
 ```ts
 const members = useQuery(space.db, Filter.childOf(taskSet));
 members.length; // stable count, deletion respected
-taskSet.tasks.length; // locally visible entries -- not a number to display
+taskSet.tasks.length; // stored entries, dangling refs included -- not a number to display
 ```
 
 ---
