@@ -66,7 +66,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       {
         const deck = yield* DeckCapabilities.getDeck();
         const active = deck.active;
-        if (input.dedupe !== false && active.length > 0 && input.subject.length > 0) {
+        if (active.length > 0 && input.subject.length > 0) {
           // Build EID → deck item ID map for active items.
           const deckEidMap = new Map<string, string>();
           for (const deckId of active) {
