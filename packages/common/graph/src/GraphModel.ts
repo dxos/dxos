@@ -130,7 +130,11 @@ export abstract class AbstractGraphModel<
   constructor({ registry, graph, change, retainAtoms }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
     this.#pins = retainAtoms ? new Map() : undefined;
-    this.#version = Atom.make(0).pipe(Atom.keepAlive);
+    // Mounted in the model's registry rather than `keepAlive`: a keep-alive atom is never dropped
+    // from ANY registry that reads it, so a model read from a longer-lived registry than its own
+    // left its version there for good.
+    this.#version = Atom.make(0);
+    this.#registry.mount(this.#version);
     // Priming before any subscriber attaches; a first read of an observed-but-uninitialized atom
     // notifies in addition to the write that follows it.
     this.#registry.get(this.#version);

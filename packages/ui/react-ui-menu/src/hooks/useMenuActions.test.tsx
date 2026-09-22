@@ -2,14 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { cleanup, render, screen } from '@testing-library/react';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React from 'react';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import React, { StrictMode } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
+import { MenuBuilder } from '../builder.ts';
 import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../types.ts';
 import { createMenuAction } from '../util.ts';
-import { makeMenuActions, useMenuContribution, useMenuItems } from './useMenuActions.ts';
+import { makeMenuActions, useMenuBuilder, useMenuContribution, useMenuItems } from './useMenuActions.ts';
 
 const createMenu = (baseItems: MenuItem[] = []): MenuActions => {
   const baseItemsAtom = Atom.make<MenuItem[] | null>(baseItems);
@@ -158,5 +161,65 @@ describe('useMenuContribution', () => {
     rerender(<Consumer menu={menu} />);
     expect(screen.getByTestId('menu-items').children.length).toBe(1);
     expect(screen.queryByText('Contributed Action')).toBeNull();
+  });
+});
+
+describe('useMenuBuilder', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  const Toolbar = ({ label }: { label: string }) => {
+    const menu = useMenuBuilder(
+      () =>
+        MenuBuilder.make()
+          .action('act', { label }, () => {})
+          .build(),
+      [label],
+    );
+    return <Consumer menu={menu} />;
+  };
+
+  test('releases every graph it built from the registry once unmounted', async ({ expect }) => {
+    const registry = Registry.make();
+    const before = registry.getNodes().size;
+    const renderToolbar = (label: string) => (
+      <StrictMode>
+        <RegistryContext.Provider value={registry}>
+          <Toolbar label={label} />
+        </RegistryContext.Provider>
+      </StrictMode>
+    );
+
+    const { rerender, unmount } = render(renderToolbar('one'));
+    rerender(renderToolbar('two'));
+    rerender(renderToolbar('three'));
+    expect(screen.getByTestId('item-0').textContent).toBe('three');
+
+    unmount();
+    // The registry drops unmounted nodes on its scheduler, not synchronously.
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().size).toBe(before);
+  });
+
+  test('renders when its dependencies change on every render', ({ expect }) => {
+    // A fresh deps array each render, as a toolbar passing an inline object or callback produces.
+    const Unstable = () => {
+      const menu = useMenuBuilder(
+        () =>
+          MenuBuilder.make()
+            .action('act', { label: 'act' }, () => {})
+            .build(),
+        [{}],
+      );
+      return <Consumer menu={menu} />;
+    };
+
+    render(
+      <RegistryContext.Provider value={Registry.make()}>
+        <Unstable />
+      </RegistryContext.Provider>,
+    );
+    expect(screen.getByTestId('item-0').textContent).toBe('act');
   });
 });

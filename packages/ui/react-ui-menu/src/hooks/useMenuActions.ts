@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { type DependencyList, useCallback, useContext, useEffect, useMemo } from 'react';
+import { type DependencyList, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -58,10 +58,11 @@ export const useMenuActions = (
 
   // Create a new graph whenever props change to preserve correct order.
   // (AppGraph.addEdges appends rather than replaces, which breaks ordering on updates.)
-  // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
-  // which would trigger atom state updates in other components (setState-in-render React warning).
+  // In a registry of its own, not the app's: the graph pins every node it adds, and one built per
+  // props change in the app registry stayed there for good. It is never written after it is built,
+  // so readers in the app registry miss nothing, and its registry goes with it.
   const graph = useMemo(() => {
-    const newGraph = AppGraph.make({ registry });
+    const newGraph = AppGraph.make();
     AppGraph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
     AppGraph.addEdges(newGraph, menuGraphProps.edges);
     return newGraph;
@@ -75,7 +76,9 @@ export const useMenuActions = (
     [graph],
   );
 
-  const contributions = useMemo(() => Atom.make<MenuItemsMap>(new Map()).pipe(Atom.keepAlive), []);
+  // Mounted for the menu's lifetime rather than `keepAlive`, which a registry never drops.
+  const contributions = useMemo(() => Atom.make<MenuItemsMap>(new Map()), []);
+  useLayoutEffect(() => registry.mount(contributions), [registry, contributions]);
 
   const { onAction, caller, iconSize } = options;
   return useMemo(
