@@ -122,6 +122,16 @@ elsewhere. See "The two stacked tiles" below.
 | 10  | Total edge traffic per run            | `ciEdgeBytes`         | sum     |
 | 11  | Total SQLite read bytes per run       | `ciSqliteReadBytes`   | sum     |
 | 12  | Total SQLite write bytes per run      | `ciSqliteWriteBytes`  | sum     |
+| 13  | Worst-phase lag p95 per run — worker  | `ciLagP95MsWorker`    | max     |
+
+### Tile 13 filters on `ciLagSamplesWorker > 0`, and must
+
+Unlike its tab twin, the worker lag tile carries a predicate on the probe's integrity column. Every
+row written before 2026-09-22 reports `ciLagP95MsWorker` as zero because the probe never armed —
+the drain expression defined the global the installer's guard tested — so 671 historical stage rows
+say `0` meaning "not measured". Averaging those in would read as a worker that used to be perfectly
+responsive and has since regressed. The predicate also drops genuinely idle phases, which is the
+same judgement the tile already makes by taking a max.
 
 ### `open-space` is not yet trustworthy
 
