@@ -391,6 +391,23 @@ describe('RepoProxy', () => {
     }
   });
 
+  test('a disk flush takes only the documents written since the last one', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    type TestDoc = { text?: string };
+    const first = clientRepo.create<TestDoc>();
+    const second = clientRepo.create<TestDoc>();
+    await clientRepo.flush();
+    expect(new Set(clientRepo.takeUnflushed())).toEqual(new Set([first.documentId, second.documentId]));
+
+    first.change((doc: TestDoc) => (doc.text = 'changed'));
+    await clientRepo.flush();
+    expect(clientRepo.takeUnflushed()).toEqual([first.documentId]);
+    expect(clientRepo.takeUnflushed()).toEqual([]);
+  });
+
   test('client and host make changes simultaneously', async () => {
     const { host, dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);

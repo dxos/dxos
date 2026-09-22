@@ -77,6 +77,12 @@ export class RepoProxy extends Resource {
   private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   /**
+   * Documents the host has taken a write for since {@link takeUnflushed} last ran: the only ones a
+   * disk flush can find unsaved on this client's behalf.
+   */
+  private readonly _unflushedIds = new Set<DocumentId>();
+
+  /**
    * Document ids that should be subscribed to.
    */
   private readonly _pendingAddIds = new Set<DocumentId>();
@@ -229,6 +235,17 @@ export class RepoProxy extends Resource {
       // burns every attempt against a subscription known to be gone.
       await sleep(FLUSH_RETRY_DELAY_MS * attempt + (this._isReconnecting ? this._resubscribeDelay : 0));
     }
+  }
+
+  /** Documents written since the last call, for a disk flush; {@link restoreUnflushed} returns them if it fails. */
+  takeUnflushed(): DocumentId[] {
+    const documentIds = [...this._unflushedIds];
+    this._unflushedIds.clear();
+    return documentIds;
+  }
+
+  restoreUnflushed(documentIds: DocumentId[]): void {
+    documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
   }
 
   /**
@@ -529,6 +546,7 @@ export class RepoProxy extends Resource {
               return;
             }
             handle._setDocumentId(documentId);
+            this._unflushedIds.add(documentId);
             this._pendingAddIds.add(documentId);
             this._handles[documentId] = handle;
             update();
@@ -706,6 +724,7 @@ export class RepoProxy extends Resource {
           this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
           { timeout: RPC_TIMEOUT },
         );
+        updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }

@@ -32,7 +32,7 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index adfddd9b3926510604274217c42f97f104e119a3..840b9b859d0d9265a69d324ed9848ba443afab7a 100644
+index adfddd9b3926510604274217c42f97f104e119a3..97cb7fe9a148b1c8e5f51a5c4ff5b9fc80a9c4fd 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
 @@ -157,6 +157,18 @@ export class Repo extends EventEmitter {
@@ -69,6 +69,19 @@ index adfddd9b3926510604274217c42f97f104e119a3..840b9b859d0d9265a69d324ed9848ba4
      /** Returns a list of all connected peer ids */
      get peers() {
          return this.synchronizer.peers;
+@@ -492,6 +512,12 @@ export class Repo extends EventEmitter {
+     // ability to not create a doc handle if we abort while loading. Once the DocHandle
+     // was running the abort signal didn't have much effect
+     _options) {
++        // DXOS patch: a bare document id whose query exists resolves to it directly. Parsing
++        // checksum-validates the id (base58check, two SHA-256 passes), and callers look documents up
++        // by id far more often than they open new ones.
++        if (typeof id === "string" && this.#queries[id]) {
++            return this.#queries[id];
++        }
+         const parsed = isValidAutomergeUrl(id)
+             ? parseAutomergeUrl(id)
+             : {
 diff --git a/dist/StorageSource.js b/dist/StorageSource.js
 index 2701ebc492066feba0d05cf556a3d8473312bc39..b359189739a660d354633bb0b7239b4270b31742 100644
 --- a/dist/StorageSource.js
@@ -127,10 +140,18 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
 diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
-index 373de48918620aaf26b7d375d5269c8fc6ffada5..fb7d5ae3dafc4f1b9e63a3829f4bf7849e5981f5 100644
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0fd313f619 100644
 --- a/dist/storage/StorageSubsystem.js
 +++ b/dist/storage/StorageSubsystem.js
-@@ -158,6 +158,22 @@ export class StorageSubsystem extends EventEmitter {
+@@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
+ import { keyHash, headsHash } from "./keyHash.js";
+ import * as Uuid from "uuid";
+ import { EventEmitter } from "eventemitter3";
+-import { encodeHeads } from "../AutomergeUrl.js";
+ import { SavedHeads } from "./SavedHeads.js";
+ /**
+  * The storage subsystem is responsible for saving and loading Automerge documents to and from
+@@ -158,6 +157,22 @@ export class StorageSubsystem extends EventEmitter {
          // Don't bother saving if the document hasn't changed
          if (!this.#shouldSave(documentId, doc))
              return;
@@ -153,6 +174,17 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..fb7d5ae3dafc4f1b9e63a3829f4bf784
          const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
          if (this.#shouldCompact(sourceChunks)) {
              await this.#saveTotal(documentId, doc, sourceChunks);
+@@ -271,7 +286,9 @@ export class StorageSubsystem extends EventEmitter {
+             return true;
+         }
+         const newHeads = A.getHeads(doc);
+-        if (headsAreSame(encodeHeads(newHeads), encodeHeads(oldHeads))) {
++        // DXOS patch: compared as stored. Encoding maps each hash to a unique string, so the answer is
++        // the same, without two base58check encodes per head for every document a flush checks.
++        if (headsAreSame(newHeads, oldHeads)) {
+             // the document hasn't changed
+             return false;
+         }
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
 index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..826676a1b2ea406a000f874d429b11e3ff0caa98 100644
 --- a/dist/subduction/AdapterConnections.d.ts
