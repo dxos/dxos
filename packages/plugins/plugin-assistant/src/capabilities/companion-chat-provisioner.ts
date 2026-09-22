@@ -151,9 +151,12 @@ export default Capability.makeModule(
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
           AppGraph.expandSync(graph, plankId, AppNode.companion);
+          // Read first: a subscription alone does not build a derived atom, so it would never fire.
+          const companions = graph.connections(plankId, AppNode.companion);
+          registry.get(companions);
           plankSubs.set(
             plankId,
-            registry.subscribe(graph.connections(plankId, AppNode.companion), () => {
+            registry.subscribe(companions, () => {
               if (provisionForPlank(plankId, registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }

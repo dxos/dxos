@@ -11,7 +11,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
-import { useAtomMount } from '@dxos/react-hooks';
 
 import {
   type AddMenuItemsProps,
@@ -34,7 +33,22 @@ export type ActionGraphProps = {
 
 const DEFAULT_PRIORITY = 100;
 
-const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] }).pipe(Atom.keepAlive);
+const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
+
+/**
+ * A menu's contributions, held by the atom itself rather than by the registry, so the atom needs no
+ * `keepAlive` or mount: a recreated atom reads the same map back.
+ */
+const makeContributions = (): Atom.Writable<MenuItemsMap> => {
+  let value: MenuItemsMap = new Map();
+  return Atom.writable(
+    () => value,
+    (ctx, next: MenuItemsMap) => {
+      value = next;
+      ctx.setSelf(next);
+    },
+  );
+};
 
 /** A `MenuActions` over a given accessor, for sources that are not an action graph (tests, fixtures). */
 export const makeMenuActions = ({
@@ -42,7 +56,7 @@ export const makeMenuActions = ({
   ...options
 }: { items: MenuItemsAccessor } & MenuActionsOptions): MenuActions => ({
   items,
-  contributions: Atom.make<MenuItemsMap>(new Map()).pipe(Atom.keepAlive),
+  contributions: makeContributions(),
   ...options,
 });
 
@@ -61,9 +75,8 @@ export const useMenuActions = (
   // (AppGraph.addEdges appends rather than replaces, which breaks ordering on updates.)
   // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
   // which would trigger atom state updates in other components (setState-in-render React warning).
-  // Unpinned: derived from props and never written, so its atoms live only while read.
   const graph = useMemo(() => {
-    const newGraph = AppGraph.make({ registry, retainAtoms: false });
+    const newGraph = AppGraph.make({ registry });
     AppGraph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
     AppGraph.addEdges(newGraph, menuGraphProps.edges);
     return newGraph;
@@ -77,8 +90,7 @@ export const useMenuActions = (
     [graph],
   );
 
-  const contributions = useMemo(() => Atom.make<MenuItemsMap>(new Map()), []);
-  useAtomMount(contributions);
+  const contributions = useMemo(makeContributions, []);
 
   const { onAction, caller, iconSize } = options;
   return useMemo(

@@ -254,11 +254,16 @@ export class GraphBuilder<
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
-  /** Registered extensions keyed by extension ID. */
-  readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
-    Atom.keepAlive,
-    withLabel('graph-builder:extensions'),
-  );
+  /** Registered extensions keyed by extension ID; the source of truth {@link _extensions} reads. */
+  _extensionsValue: Record<string, Extension<Node, Arg, Rel, Meta>> = Record.empty();
+  // Not `keepAlive`, which a registry never drops: a recreated atom reads the builder's record.
+  readonly _extensions = Atom.writable(
+    () => this._extensionsValue,
+    (ctx, value: Record<string, Extension<Node, Arg, Rel, Meta>>) => {
+      this._extensionsValue = value;
+      ctx.setSelf(value);
+    },
+  ).pipe(withLabel('graph-builder:extensions'));
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -291,7 +296,7 @@ export class GraphBuilder<
 
   /** Read the currently registered extensions synchronously. */
   getExtensions(): Record<string, Extension<Node, Arg, Rel, Meta>> {
-    return this._registry.get(this._extensions);
+    return this._extensionsValue;
   }
 
   /** Every inline descendant of `node`, at every depth. */
@@ -588,9 +593,7 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
         children: (node) => node.nodes ?? [],
         map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn) }),
       },
-      // The default model retains its node atoms: builder graphs are consumed through atoms, and a
-      // view dropped between reads strands its subscribers. `release` is the reclamation path.
-      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry, retainAtoms: true }), hooks),
+      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry }), hooks),
     });
     if (!this.graph.findNode(rootId)) {
       this.graph.addNode({ id: rootId });

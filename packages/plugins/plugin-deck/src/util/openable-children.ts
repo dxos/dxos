@@ -33,7 +33,10 @@ export const firstOpenableChild = (
       return;
     }
 
-    const unsubscribe = registry.subscribe(graph.connections(id, 'child'), () => {
+    // Read first: a subscription alone does not build a derived atom, so it would never fire.
+    const children = graph.connections(id, 'child');
+    registry.get(children);
+    const unsubscribe = registry.subscribe(children, () => {
       const [first] = openableChildren(graph, id);
       if (first) {
         resume(Effect.succeed(first));

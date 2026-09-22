@@ -352,6 +352,8 @@ describe('Graph', () => {
     const nodeKey = graph.node(exampleId(1));
 
     let node: Option.Option<Node.Node> = Option.none();
+    // Read first: a bare subscription does not build a derived atom, so it would never fire.
+    registry.get(nodeKey);
     const cancel = registry.subscribe(nodeKey, (n) => {
       node = n;
     });
@@ -874,11 +876,11 @@ describe('Graph', () => {
   });
 });
 
-describe('retainAtoms', () => {
-  test('an unpinned graph leaves nothing in the registry once its readers unsubscribe', async () => {
+describe('registry lifetime', () => {
+  test('a graph leaves nothing in the registry once its readers unsubscribe', async () => {
     const registry = Registry.make();
     const before = registry.getNodes().size;
-    const graph = Graph.make({ registry, retainAtoms: false });
+    const graph = Graph.make({ registry });
     Graph.addNodes(graph, [
       { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} },
       { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} },

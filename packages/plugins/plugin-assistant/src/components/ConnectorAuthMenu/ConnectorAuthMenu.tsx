@@ -65,8 +65,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
     if (actions.length === 0) {
       return undefined;
     }
-    // Unpinned, as in `useMenuActions`: rebuilt when its inputs change and never written after.
-    const nextGraph = AppGraph.make({ registry, retainAtoms: false });
+    const nextGraph = AppGraph.make({ registry });
     AppGraph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
   }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);

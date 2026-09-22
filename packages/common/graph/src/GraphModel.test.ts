@@ -397,18 +397,17 @@ describe('Graph', () => {
 });
 
 describe('version', () => {
-  test('a version atom the registry dropped reads back the current revision', async ({ expect }) => {
+  test('the snapshot tracks writes made after the unobserved version atom was dropped', async ({ expect }) => {
     const registry = Registry.make();
     const graph = new GraphModel.GraphModel<TestNode>({ registry });
     graph.addNode({ id: 'a', value: 'a' });
     graph.addNode({ id: 'b', value: 'b' });
-    const before = registry.get(graph.version);
+    expect(graph.nodes.map((node) => node.id)).toEqual(['a', 'b']);
 
-    // Unobserved, the node is dropped on the registry's scheduler.
+    // Unobserved, the version atom is dropped on the registry's scheduler and restarts at 0.
     await new Promise((resolve) => setTimeout(resolve));
     expect(registry.getNodes().has(graph.version)).toBe(false);
 
-    expect(registry.get(graph.version)).toBe(before);
     graph.addNode({ id: 'c', value: 'c' });
     expect(graph.nodes.map((node) => node.id)).toEqual(['a', 'b', 'c']);
   });

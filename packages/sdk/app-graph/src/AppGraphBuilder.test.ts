@@ -159,6 +159,8 @@ describe('GraphBuilder', () => {
 
       let count = 0;
       let exists = false;
+      // Read first: a bare subscription does not build a derived atom, so it would never fire.
+      registry.get(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)));
       const cancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (node) => {
         count++;
         exists = Option.isSome(node);
@@ -524,28 +526,28 @@ describe('GraphBuilder', () => {
 
       const graph = builder.graph;
 
+      const parent = graph.node(GraphNode.qualifyId('root', EXAMPLE_ID));
+      const independent = graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(2)));
+      const dependent = graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(3)));
+      // Read first: a bare subscription does not build a derived atom, so it would never fire.
+      [parent, independent, dependent].forEach((atom) => registry.get(atom));
+
       let parentCount = 0;
-      const parentCancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (_) => {
+      const parentCancel = registry.subscribe(parent, (_) => {
         parentCount++;
       });
       onTestFinished(() => parentCancel());
 
       let independentCount = 0;
-      const independentCancel = registry.subscribe(
-        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(2))),
-        (_) => {
-          independentCount++;
-        },
-      );
+      const independentCancel = registry.subscribe(independent, (_) => {
+        independentCount++;
+      });
       onTestFinished(() => independentCancel());
 
       let dependentCount = 0;
-      const dependentCancel = registry.subscribe(
-        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(3))),
-        (_) => {
-          dependentCount++;
-        },
-      );
+      const dependentCancel = registry.subscribe(dependent, (_) => {
+        dependentCount++;
+      });
       onTestFinished(() => dependentCancel());
 
       // Counts should not increment until the node is expanded.

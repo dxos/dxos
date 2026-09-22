@@ -58,13 +58,6 @@ export type Options<Node extends GraphNode.Any, Edge extends GraphEdge.Any> = {
    * transaction (e.g. `Obj.update` for an ECHO-backed graph).
    */
   change?: GraphChangeFunction;
-  /**
-   * Keep each node's atom mounted for as long as the node is in the graph, so a view of a node is
-   * never dropped and re-created between reads. {@link AbstractGraphModel.release} cancels the
-   * mount, which is what lets the registry drop the atom and the family's weak memoization collect
-   * it. Off by default — a model consumed imperatively pays for the atoms without reading them.
-   */
-  retainAtoms?: boolean;
 };
 
 /**
@@ -101,8 +94,6 @@ export abstract class AbstractGraphModel<
 > {
   readonly #registry: Registry.AtomRegistry;
   readonly #version: Atom.Writable<number>;
-  /** Source of truth for {@link version}, so the atom can be dropped and re-read without restarting. */
-  #revision = 0;
   readonly #nodeIndex = new Map<string, EffectGraph.NodeIndex>();
   readonly #edgeIndex = new Map<string, EffectGraph.EdgeIndex>();
   // Adjacency by endpoint, maintained incrementally with the edge index rather than rebuilt per
@@ -117,7 +108,8 @@ export abstract class AbstractGraphModel<
   readonly #id?: string;
 
   #graph: EffectGraph.MutableDirectedGraph<Slot<Node>, Edge>;
-  #snapshot?: { version: number; graph: Data<Node, Edge> };
+  /** Cleared when a batch commits a change; see {@link AbstractGraphModel.graph}. */
+  #snapshot?: Data<Node, Edge>;
   #depth = 0;
   #dirty = false;
 
@@ -126,17 +118,11 @@ export abstract class AbstractGraphModel<
   readonly #edgeAtoms: (id: string) => Atom.Atom<Edge | undefined>;
   readonly #neighborAtoms: (key: string) => Atom.Atom<Node[]>;
 
-  /** One mount per node while it is in the graph; `undefined` when retention is off. See {@link Options.retainAtoms}. */
-  readonly #pins?: Map<string, () => void>;
-
-  constructor({ registry, graph, change, retainAtoms }: Options<Node, Edge> = {}) {
+  constructor({ registry, graph, change }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
-    this.#pins = retainAtoms ? new Map() : undefined;
-    // Not `keepAlive`, which a registry never drops: a recreated atom reads the current revision.
-    this.#version = Atom.writable(
-      () => this.#revision,
-      (ctx, value: number) => ctx.setSelf(value),
-    );
+    // A change signal rather than state, so not `keepAlive`: dropped while unobserved, it restarts at
+    // 0 and nothing that could compare against the old count is still alive.
+    this.#version = Atom.make(0);
     // Priming before any subscriber attaches; a first read of an observed-but-uninitialized atom
     // notifies in addition to the write that follows it.
     this.#registry.get(this.#version);
@@ -375,15 +361,11 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Immutable snapshot in the schema shape, recomputed only when the graph has changed.
+   * Immutable snapshot in the schema shape, recomputed on the first read after a change.
    */
   get graph(): Data<Node, Edge> {
-    const version = this.#revision;
-    if (this.#snapshot?.version !== version) {
-      this.#snapshot = { version, graph: this.#encode() };
-    }
-
-    return this.#snapshot.graph;
+    this.#snapshot ??= this.#encode();
+    return this.#snapshot;
   }
 
   get graphAtom(): Atom.Atom<Data<Node, Edge>> {
@@ -413,8 +395,8 @@ export abstract class AbstractGraphModel<
       this.#depth--;
       if (this.#depth === 0 && this.#dirty) {
         this.#dirty = false;
-        this.#revision += 1;
-        this.#registry.set(this.#version, this.#revision);
+        this.#snapshot = undefined;
+        this.#registry.update(this.#version, (version) => version + 1);
       }
     }
   }
@@ -586,7 +568,6 @@ export abstract class AbstractGraphModel<
         this.#nodeIndex.delete(id);
         this.#outgoing.delete(id);
         this.#incoming.delete(id);
-        this.#unpin(id);
         this.#mirrorMutate((mirror) => removeInPlace(mirror.nodes, (candidate) => candidate.id === id));
       }
 
@@ -1027,20 +1008,9 @@ export abstract class AbstractGraphModel<
     if (index === undefined) {
       index = EffectGraph.addNode(this.#graph, { id, value: Option.none<Node>() });
       this.#nodeIndex.set(id, index);
-      if (this.#pins && !this.#pins.has(id)) {
-        this.#pins.set(id, this.#registry.mount(this.#nodeAtoms(id)));
-      }
     }
 
     return index;
-  }
-
-  #unpin(id: string): void {
-    const cancel = this.#pins?.get(id);
-    if (cancel) {
-      this.#pins!.delete(id);
-      cancel();
-    }
   }
 
   #unlinkEdge(edge: Edge): void {
@@ -1060,8 +1030,6 @@ export abstract class AbstractGraphModel<
    * Discards the working graph wholesale, which also drops placeholders left by removals.
    */
   #resetWorking(): void {
-    this.#pins?.forEach((cancel) => cancel());
-    this.#pins?.clear();
     this.#graph = EffectGraph.beginMutation(EffectGraph.directed<Slot<Node>, Edge>());
     this.#nodeIndex.clear();
     this.#edgeIndex.clear();
@@ -1134,8 +1102,7 @@ export class GraphModel<
   Edge extends GraphEdge.Any = GraphEdge.Any,
 > extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>> {
   override copy(graph?: Partial<Data<Node, Edge>>): GraphModel<Node, Edge> {
-    // Deliberately not this.registry: a copy is a detached snapshot, and its keepAlive version atom
-    // would pin an entry in a shared registry forever — one leak per discarded removal result.
+    // A detached snapshot: nothing reads it through this model's registry.
     return new GraphModel<Node, Edge>({ graph });
   }
 }

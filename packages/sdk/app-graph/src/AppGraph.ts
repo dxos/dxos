@@ -9,7 +9,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type CleanupFn, Event, Trigger } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { AtomEx } from '@dxos/effect';
 import * as GraphModel from '@dxos/graph/GraphModel';
@@ -71,12 +71,6 @@ export type GraphProps = {
   edges?: Record<string, Edges>;
   onExpand?: (id: string, relation: Node.Relation) => void;
   onRemoveNode?: (id: string) => void;
-  /**
-   * Pin each node's atom in the registry while the node is in the graph (default). Off for a graph
-   * derived from something else and never written after it is built, such as a menu's: its atoms
-   * then live only while read, and nothing it holds outlives its readers.
-   */
-  retainAtoms?: boolean;
 };
 
 export type Edge = { source: string; target: string; relation: Node.RelationInput };
@@ -84,6 +78,12 @@ export type Edges = Record<string, string[]>;
 
 export type GraphKindType = 'readable' | 'expandable' | 'writable';
 
+/**
+ * The atom accessors below return derived views over the graph's model, held by the registry only
+ * while something reads them. Read one before a bare `registry.subscribe`, or pass
+ * `{ immediate: true }`: the registry does not build an atom a bare subscription observes, so it
+ * would never fire. `useAtomValue` does both.
+ */
 export interface BaseGraph extends Pipeable.Pipeable {
   readonly [GraphTypeId]: GraphTypeId;
   readonly [GraphKind]: GraphKindType;
@@ -274,36 +274,6 @@ export class GraphImpl implements WritableGraph {
     return Option.fromUndefinedOr(this._model.findNode(id)?.data);
   }
 
-  /**
-   * One mount per node in the graph, keeping its atoms alive for as long as the node is.
-   *
-   * The atoms are views over the model, so a dropped atom loses no data — but it does lose its
-   * registry wiring: a family re-creates the atom on the next call, subscribers of the old identity
-   * are stranded, and an atom that has only ever been subscribed to has no parents, so nothing can
-   * invalidate it. The original design pinned every graph atom with `Atom.keepAlive` for the same
-   * reason; a mount is the revocable form — {@link release} cancels it, the registry drops the
-   * atom's node, and the family's weak memoization lets the atom itself be collected.
-   * @internal
-   */
-  readonly _pins = new Map<string, CleanupFn>();
-  readonly _retainAtoms: boolean;
-
-  /** @internal */
-  _pin(id: string): void {
-    if (this._retainAtoms && !this._pins.has(id)) {
-      this._pins.set(id, this._registry.mount(this._node(id)));
-    }
-  }
-
-  /** @internal */
-  _unpin(id: string): void {
-    const cancel = this._pins.get(id);
-    if (cancel) {
-      this._pins.delete(id);
-      cancel();
-    }
-  }
-
   /** The outgoing and inbound edges as the model holds them right now; see {@link Graph._currentNode}. @internal */
   _currentEdges(id: string): Edges {
     return this._computeEdges(id);
@@ -388,9 +358,8 @@ export class GraphImpl implements WritableGraph {
     }).pipe(withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onExpand, onRemoveNode, retainAtoms = true }: GraphProps = {}) {
+  constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
     this._registry = registry ?? AtomEx.makeRegistry();
-    this._retainAtoms = retainAtoms;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
@@ -442,8 +411,6 @@ export class GraphImpl implements WritableGraph {
    */
   _setNode(id: string, node: Option.Option<Node.Node>): void {
     this._model.setNode({ id, data: Option.getOrUndefined(node) });
-    // After the write, so the atom materializes with the value rather than with `none`.
-    this._pin(id);
   }
 
   /** @internal */
@@ -782,7 +749,6 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
   const internal = getInternal(graph);
   internal._model.batch(() => {
     for (const id of ids) {
-      internal._unpin(id);
       internal._relations.delete(id);
     }
 

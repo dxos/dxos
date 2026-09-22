@@ -101,31 +101,25 @@ describe('retention', () => {
 
     // View atoms mounted above the graph (a rendered row's subscriptions) are reclaimed on unmount:
     // `Atom.family` memoizes weakly, and the registry drops a node once it has no listener and no
-    // dependents, cascading to its parents. The graph's own node atoms are deliberately NOT in that
-    // pool — every materialized node holds a mount (see `_pin`), so its atoms stay live until
-    // released, and a subscriber never finds a node's atom dropped and re-created between reads.
+    // dependents, cascading to its parents. The graph's own node atoms are in that pool too: they
+    // are views over the model, which still holds the nodes.
     expect(counts(harness).registryNodes).to.equal(idle);
   });
 
-  test('a node atom is pinned for as long as the node is in the graph', async () => {
+  test('a node atom nothing reads leaves the registry, and reads back the node', async () => {
     const harness = setup();
-    const { registry, builder, graph } = harness;
+    const { registry, graph } = harness;
     await visit(harness, GraphNode.RootId);
     const root = `${GraphNode.RootId}/w0`;
     await visit(harness, root);
     await settle();
 
-    // No subscriber anywhere, yet the node atoms stay in the registry: the graph mounts them.
+    // Nothing holds the atom, so the registry has dropped it.
     const child = `${root}/c0`;
-    const pinned = registry.getNodes().size;
-    expect(registry.getNodes().has(graph.node(child))).to.be.true;
-
-    // Releasing the subgraph cancels the mounts; the registry drops the atoms.
-    const internal = Graph.getInternal(graph);
-    GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
-    await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
-    expect(registry.getNodes().size).to.be.lessThan(pinned);
+
+    // The model still holds the node; a read rebuilds the atom from it.
+    expect(Option.getOrUndefined(registry.get(graph.node(child)))?.id).to.equal(child);
   });
 
   test('the graph itself does grow with every node ever materialized', async () => {
