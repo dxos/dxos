@@ -25,7 +25,7 @@ const makeEntry = ({
   level: 0,
   last: false,
   item: { id },
-  props: { label: id },
+  props: { id, label: id },
   group,
   branch,
   open,
