@@ -46,7 +46,14 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import {
+  END_DROP_UNIT_KEY,
+  type RowUnit,
+  flattenRowUnits,
+  nominalExtents,
+  rowUnitId,
+  useScroller,
+} from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -654,8 +661,23 @@ export const Tree = <T extends { id: string } = any>({
     ],
   );
 
-  // The rows the window would mount, or `undefined` when the tree has a branch and renders whole.
-  const units = useMemo(() => (virtualize ? flattenRowUnits(root.children) : undefined), [virtualize, root.children]);
+  // The units the window would mount, or `undefined` when the tree cannot be windowed. The
+  // end-drop strip is one of them: windowed, the tree element holds no rows of its own, so a strip
+  // rendered beside the window would sit outside the scrolled order the drop reads.
+  const units = useMemo(() => {
+    const rows = virtualize ? flattenRowUnits(root.children) : undefined;
+    if (!rows || !dropAtEnd || !draggable) {
+      return rows;
+    }
+    return [
+      ...rows,
+      {
+        kind: 'end' as const,
+        key: END_DROP_UNIT_KEY,
+        data: { treeId, id: root.id, path: root.path, item: root.item },
+      },
+    ];
+  }, [virtualize, root, dropAtEnd, draggable, treeId]);
   const treeRef = useRef<HTMLDivElement | null>(null);
   const scroller = useScroller(treeRef, scrollerRef, !!units);
   const windowed = !!units && !!scroller;
@@ -797,6 +819,8 @@ const TreeWindow = ({
     mounted.push(
       unit.kind === 'header' ? (
         <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} objectId={unit.key} />
+      ) : unit.kind === 'end' ? (
+        <TreeEndDropTarget key={unit.key} data={unit.data} windowIndex={index} objectId={unit.key} />
       ) : (
         <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} />
       ),
@@ -980,7 +1004,16 @@ TreeBranchContent.displayName = 'Tree.BranchContent';
  * It carries the tree's root as its payload with `atEnd`, so a consumer's monitor can tell this
  * drop from one onto the root itself. No hitbox: there is only one thing this can mean.
  */
-const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
+const TreeEndDropTarget = ({
+  data,
+  windowIndex,
+  objectId,
+}: {
+  data: TreeData;
+  /** Position in the mounted window, when the tree is windowed; the window measures the strip by it. */
+  windowIndex?: number;
+  objectId?: string;
+}) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [over, setOver] = useState(false);
 
@@ -1001,7 +1034,13 @@ const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
   }, [data]);
 
   return (
-    <div ref={ref} role='none' className='relative col-[tree-row] min-h-(--dx-control)'>
+    <div
+      ref={ref}
+      role='none'
+      className='relative col-[tree-row] min-h-(--dx-control)'
+      data-index={windowIndex}
+      data-object-id={objectId}
+    >
       {over && <div className='absolute inset-x-0 top-0 h-0.5 bg-accent-bg' />}
     </div>
   );

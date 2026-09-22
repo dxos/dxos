@@ -6,6 +6,7 @@ import { type RefObject, useEffect, useState } from 'react';
 
 import { type Label } from '@dxos/react-ui';
 
+import { type TreeData } from './tree-data.ts';
 import { type TreeNodeEntry } from './TreeContext.ts';
 
 /**
@@ -18,13 +19,22 @@ import { type TreeNodeEntry } from './TreeContext.ts';
 const NOMINAL_ROW_EXTENT = 40;
 
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
-export type RowUnit = { kind: 'header'; key: string; label: Label } | { kind: 'row'; key: string; node: TreeNodeEntry };
+export type RowUnit =
+  | { kind: 'header'; key: string; label: Label }
+  | { kind: 'row'; key: string; node: TreeNodeEntry }
+  // The strip that means "append at the end" is a unit like any other, because windowed it is only
+  // reachable if the window mounts it — and it sits after the last row, which is where the window
+  // stops.
+  | { kind: 'end'; key: string; data: TreeData };
 
 /**
  * The id the window measures a row against — the item's own, because that is what the row element
  * already carries as `data-object-id` and what the window reads back off the DOM.
  */
 export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.node.id : unit.key);
+
+/** The key the end-drop strip is measured and mounted under. */
+export const END_DROP_UNIT_KEY = 'end-drop';
 
 /**
  * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree

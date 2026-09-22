@@ -345,7 +345,7 @@ export const TestWindowMountsAVisibleSlice: Story = {
  * whole, so a task list of a few hundred rows paid its entire subtree on every mount.
  */
 export const TestWindowFollowsDisclosure: Story = {
-  args: { virtualize: true, deep: true },
+  args: { virtualize: true, deep: true, draggable: true },
   play: async ({ canvasElement }) => {
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
 
@@ -353,12 +353,21 @@ export const TestWindowFollowsDisclosure: Story = {
     // A slice of the 60 branches, not all of them and none of their children.
     await waitFor(async () => expect(rows().length).toBeLessThan(60), { timeout: 5_000 });
 
-    const mounted = rows().length;
+    // The list's extent, not the mounted count: disclosure adds rows to the windowed order, and a
+    // window whose slice happens to stay the same size would pass a count assertion unchanged.
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const extent = scroller.scrollHeight;
     const toggle = canvasElement.querySelectorAll<HTMLElement>('[data-testid="treeItem.toggle"]')[0];
     await userEvent.click(toggle);
 
-    // The children join the row order — the window mounts the same count and the last index grows.
-    await waitFor(async () => expect(rows().length).toBeGreaterThanOrEqual(mounted), { timeout: 5_000 });
+    await waitFor(async () => expect(scroller.scrollHeight).toBeGreaterThan(extent), { timeout: 5_000 });
     await expect(rows().length).toBeLessThan(60);
+
+    // "Append at the end" is reachable windowed: the strip is a unit of the row order, so it is
+    // mounted once the window reaches the last row rather than living outside the window entirely.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(canvasElement.querySelector('[data-object-id="end-drop"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
   },
 };
