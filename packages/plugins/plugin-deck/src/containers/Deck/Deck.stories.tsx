@@ -155,7 +155,7 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
       {LAUNCHER_MESSAGES.map((message) => (
         <button
           key={message.id}
-          className='rounded-sm border border-separator p-3 text-start hover:bg-hoverSurface'
+          className='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
           data-testid='story.launcher.row'
           data-selected={selected === message.id}
           onClick={() => handleOpen(message.id)}

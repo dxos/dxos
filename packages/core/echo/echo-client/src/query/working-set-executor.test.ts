@@ -537,6 +537,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   allCores: () => db.allObjectCores(),
   getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
+  areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
 });
 
 const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));

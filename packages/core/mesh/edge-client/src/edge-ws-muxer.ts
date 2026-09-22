@@ -181,6 +181,11 @@ export class WebSocketMuxer {
     }
 
     const send = () => {
+      if (this._ws.readyState === WebSocket.CONNECTING) {
+        // `send()` throws `InvalidStateError` before the handshake completes, so wait it out.
+        this._sendTimeout = setTimeout(send, BUFFER_FULL_BACKOFF_TIMEOUT);
+        return;
+      }
       if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
         log.warn('send called for closed websocket');
         this._sendTimeout = undefined;
@@ -256,6 +261,7 @@ type MessageChunk = {
  * To avoid using isomorphic-ws on edge.
  */
 enum WebSocket {
+  CONNECTING = 0,
   CLOSING = 2,
   CLOSED = 3,
 }

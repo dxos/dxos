@@ -10,6 +10,7 @@
   "fixed": [
     [
       "@dxos/agent-claude",
+      "@dxos/agent-code-mode",
       "@dxos/agent-runtime",
       "@dxos/ai",
       "@dxos/ai-typesafe",

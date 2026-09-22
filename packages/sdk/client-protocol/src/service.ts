@@ -207,7 +207,7 @@ export interface DataServicePromise {
     options?: RequestOptions,
   ) => Promise<void>;
   reIndexHeads: (request: RpcDataService.ReIndexHeadsRequest, options?: RequestOptions) => Promise<void>;
-  updateIndexes: (request: void, options?: RequestOptions) => Promise<void>;
+  updateIndexes: (request: RpcDataService.UpdateIndexesRequest, options?: RequestOptions) => Promise<void>;
   subscribeSpaceSyncState: (
     request: RpcDataService.GetSpaceSyncStateRequest,
     options?: RequestOptions,

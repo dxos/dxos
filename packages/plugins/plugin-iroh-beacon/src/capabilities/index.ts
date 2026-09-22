@@ -18,7 +18,7 @@ export const BeaconServiceModule = Capability.lazyModule(
     provides: [BeaconCapabilities.State],
     // Genuine runtime event: spaces become ready when the client observes them, not at a fixed
     // startup point.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./beacon-service.ts'),
 );

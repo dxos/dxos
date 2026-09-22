@@ -58,7 +58,7 @@ export type StoryDecoratorsProps = {
   setupEvents?: WithPluginManagerOptions['setupEvents'];
   /** Rendered inside the plugin-manager context, wrapping the story (e.g. a chat-context binder). */
   Wrapper?: FC<PropsWithChildren>;
-} & Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'>;
+} & Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesAvailable'>;
 
 /**
  * Props, or a function of the story context — the function form gives seeding code access to the
@@ -70,7 +70,7 @@ export type StoryDecoratorsInput<Args = any> =
 
 /**
  * Owns the runtime story layout: contributes the atom {@link ModuleContainer} reads, and publishes
- * the layout built by `onInit` (which runs during client init, before `SpacesReady`).
+ * the layout built by `onInit` (which runs during client init, before `SpacesAvailable`).
  */
 type LayoutPluginOptions = {
   layoutAtom: Atom.Writable<ModuleLayout | undefined>;
@@ -89,7 +89,7 @@ const StoryLayoutPlugin = Plugin.define<LayoutPluginOptions>(
     id: 'org.dxos.storybook.plugin.layout.module.publish',
     // Runtime event: the layout references space objects, so it is only publishable once the
     // client observes the space.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
     requires: [Capabilities.AtomRegistry],
     activate: Effect.fnUntraced(function* () {
       if (layoutHolder.current) {
@@ -124,7 +124,7 @@ const buildStoryPluginOptions = ({
     ? persistentClientServices(config)
     : { config };
 
-  // `onInit` fills the holder during client init; the layout plugin publishes it on SpacesReady.
+  // `onInit` fills the holder during client init; the layout plugin publishes it on SpacesAvailable.
   const layoutHolder: { current?: ModuleLayout } = {};
   const layoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
 

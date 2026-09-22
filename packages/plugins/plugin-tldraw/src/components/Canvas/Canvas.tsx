@@ -37,6 +37,7 @@ export type CanvasProps = {
   hideUi?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
+  onSettingsChange?: (fn: (current: Settings.Settings) => Settings.Settings) => void;
   onThreadCreate?: () => void;
   /** Selected scene object ids (host-owned); mirrored onto the shapes stamped with that `meta.object`. */
   selection?: readonly string[];
@@ -65,6 +66,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
       hideUi = false,
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
+      onSettingsChange,
       onThreadCreate,
       selection,
       onSelectionChange,
@@ -99,7 +101,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
               const fromInstance = from as TLInstance;
               const toInstance = to as TLInstance;
               if (fromInstance.isGridMode !== toInstance.isGridMode) {
-                settings.showGrid = toInstance.isGridMode;
+                onSettingsChange?.((current) => ({ ...current, showGrid: toInstance.isGridMode }));
               }
             }
           }
@@ -109,7 +111,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
 
       // TODO(burdon): Combine.
       return () => cleanup?.();
-    }, [settings, editor]);
+    }, [settings, onSettingsChange, editor]);
 
     // Editor events.
     useEffect(() => {

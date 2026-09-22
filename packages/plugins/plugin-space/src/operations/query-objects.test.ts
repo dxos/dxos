@@ -78,7 +78,8 @@ describe('SpaceOperation.QueryObjects', () => {
         yield* Feed.append(feed, [
           Obj.make(TestObject, { name: 'Lot Booking Co', description: 'search-token-7f3a2c91' }),
         ]);
-        yield* Database.flush();
+        // A text query reads the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
 
         // Feed-backed content lives behind a feed ref, so a plain space query cannot see it.
         const { results: spaceOnly } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
@@ -108,7 +109,8 @@ describe('SpaceOperation.QueryObjects', () => {
         yield* Feed.append(inbox, [Obj.make(TestObject, { name: 'Alpha', description: 'in-param-token' })]);
         const archive = yield* Database.add(Feed.make({ name: 'inbox-2' }));
         yield* Feed.append(archive, [Obj.make(TestObject, { name: 'Beta', description: 'in-param-token' })]);
-        yield* Database.flush();
+        // A text query reads the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
 
         const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
           in: [Ref.make(inbox)],
@@ -156,6 +158,57 @@ describe('SpaceOperation.QueryObjects', () => {
         });
         expect(whole).toHaveLength(count);
         expect(wholeTruncated).toBe(false);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a multi-word text search narrows rather than widens',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // `fullText` splits the phrase and combines the terms with `Query.all`, whose JSDoc here
+        // promises "Every term must match, so the words of a phrase narrow the result rather than
+        // widening it". `Query.all` builds a `{ type: 'union' }` node, so the terms are OR-ed: the
+        // more words a caller types, the more unrelated objects come back.
+        const both = yield* Database.add(Obj.make(TestObject, { name: 'alphaterm betaterm' }));
+        yield* Database.add(Obj.make(TestObject, { name: 'alphaterm only' }));
+        yield* Database.add(Obj.make(TestObject, { name: 'betaterm only' }));
+        // A text query reads the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
+
+        const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
+          text: 'alphaterm betaterm',
+          limit: 200,
+        });
+
+        expect(results.map(labelOf)).toEqual([Obj.getLabel(both)]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'an unknown input property is rejected rather than silently dropped',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        yield* Database.add(Obj.make(TestObject, { name: 'searchable-token' }));
+        yield* Database.add(Obj.make(TestObject, { name: 'unrelated' }));
+        yield* Database.flush();
+
+        // The published input schema sets `additionalProperties: false`, and a caller that
+        // misspells `text` — say as `query`, which is what the tool's own description calls it —
+        // must be told. Today the field is dropped, `text` and `typename` are both undefined, and
+        // the handler's `Match.orElse` falls through to `Query.select(Filter.everything())`: the
+        // search silently becomes "list everything" and is returned as a success, which a caller
+        // cannot distinguish from a real result set.
+        const outcome = yield* Effect.exit(
+          Operation.invoke(SpaceOperation.QueryObjects, { query: 'searchable-token', limit: 200 } as any),
+        );
+
+        expect(outcome._tag, 'an unknown input property must not be accepted').toEqual('Failure');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

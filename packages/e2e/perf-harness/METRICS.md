@@ -140,36 +140,96 @@ One entry per attached realm (page, each worker), each from `Runtime.getHeapUsag
 **three-pass forced GC** — one pass leaves `FinalizationRegistry` callbacks and `WeakRef` clears
 pending, so a single collection under-reports what is actually garbage.
 
-| Field           | Source                 | Meaning                                                                                                                             |
-| --------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                                                   |
-| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                                                     |
-| `backingBytes`  | `backingStorageSize`   | External backing stores — `ArrayBuffer`s and friends. **This is where wasm memory and automerge buffers become visible per realm.** |
-| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                                                            |
+| Field           | Source                 | Meaning                                                                                                    |
+| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                          |
+| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                            |
+| `backingBytes`  | `backingStorageSize`   | External backing stores — `ArrayBuffer`s and friends, which is where automerge's buffers sit.              |
+| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                                   |
+| `wasmBytes`     | `@dxos/util` probe     | Wasm linear memory this realm holds — automerge, subduction and SQLite. Counted by nothing else per realm. |
+| `wasmInstances` | `@dxos/util` probe     | Memories counted. The integrity column: absent fields mean an uninstrumented realm, `0` means no wasm.     |
 
 The gap between the two matters. At `open-tasks` the dedicated worker holds **29 MB `usedBytes`
 against 135 MB `backingBytes`** — the JS heap is small, the buffers are not.
 
+`wasmBytes` comes from `installWasmMemoryProbe()` (`@dxos/util`), which wraps
+`WebAssembly.instantiate`/`instantiateStreaming` and keeps a weak set of every memory an instance
+exports or imports. The app calls it at the top of `initAutomergeWasm()`, which every realm that
+runs wasm awaits before its first module — including the dedicated worker, where it precedes the
+runtime that opens SQLite. **A module compiled before the probe is installed is invisible to it**,
+which is what `wasmInstances` exists to make visible: a realm that reports fewer memories than it
+should has had its initialization reordered.
+
+`wasmBytesTotal` sums the EXCLUSIVE bytes only. A `SharedArrayBuffer`-backed memory is visible in
+every realm it was posted to and nothing in the readings identifies one allocation across realms,
+so a deduplicated cross-realm total cannot be computed from them — `wasmSharedBytesSum` is the
+shared subtotal summed over realms, an upper bound rather than a union. Read it beside the total
+rather than adding the two.
+
 `kind` is `page`, `worker` or `shared_worker`; `name` carries the script name, which is how you tell
 the coordinator worker from the observability worker.
+
+### The disjoint set, and what not to stack
+
+Four per-realm columns partition a realm's memory and can be stacked without double counting:
+
+| column                     | what it holds                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `heapUsedBytes*`           | live JS objects                                                                |
+| `wasmBytes*`               | wasm linear memory, committed                                                  |
+| `heapBackingNonWasmBytes*` | external backing stores that are NOT wasm — `ArrayBuffer`s and friends         |
+| `embedderBytes*`           | Blink-side objects attributed to the realm: DOM nodes, listeners, the document |
+
+`heapBackingBytes*` is the RAW reading and is **not** in that set: `backingStorageSize` counts wasm
+linear memory and `ArrayBuffer`s alike, so stacking it beside `wasmBytes` draws every wasm byte
+twice. It is published because it is the cross-check that validated the probe — on a real boot the
+worker read 31,949,677 backing against 23,396,352 wasm, and the difference is its non-wasm buffers.
+
+`wasmBytes*` is split by library into `wasmAutomergeBytes*`, `wasmSubductionBytes*`,
+`wasmSqliteBytes*` and `wasmOtherBytes*`, which partition it exactly. The classifier keys on the
+`.wasm` module's own filename rather than the chunk that created it, because a chunk name carries a
+content hash and changes on every build. **It tests subduction before automerge**: subduction ships
+as `automerge_subduction_wasm_bg.wasm`, so the other order reports all of it as automerge.
 
 ### `heapUsedTotalBytes`
 
 Sum of `usedBytes` across realms. Convenient, and lossy: it hides which realm grew, and still
-excludes wasm. Use `heap[]` when a number moves.
+excludes wasm — `wasmBytesTotal` is the companion column. Use `heap[]` when a number moves.
 
-### `peakRssBytes` — the trended one
+### `appFootprintBytes` — the trended one
 
-Peak resident set size over the browser **process tree**, sampled through the stage with `ps` so a
-spike that is freed before the boundary still counts.
+`footprintProcesses` is its integrity column, the role `sqliteRealms` plays for disk: the dump can
+fail or be pre-empted by another trace, and a failed read yields no processes — which sums to zero
+bytes and is otherwise indistinguishable from an app holding no memory. Zero processes means the
+row's footprints are ABSENT, not measured.
 
-This is the trended memory figure for two reasons: it is what a user's machine actually feels, and
-it is **the only number that counts wasm linear memory** — where automerge documents live, outside
-every JS-heap reading and never returned to the OS.
+Private footprint of the **renderer** processes at the stage's end, from a `light` memory-infra
+dump. It counts wasm linear memory, where automerge documents live, outside every JS-heap reading
+and never returned to the OS.
 
-Expect it to dwarf the heap. Our run: 1.2–2.3 GB RSS against an 87–323 MB JS heap.
+It replaced a peak of `ps` RSS summed over the browser's process tree, which was not a quantity.
+Every process's RSS counts the shared pages it maps, so the sum multi-counts: an empty headless
+Chromium sums to 1,335 MB that way against 408 MB of actual footprint. Private footprints are
+disjoint per process, which is what makes adding the renderers legitimate.
 
-**Linux/macOS only** (it shells out to `ps`).
+It is the figure closest to what a user's machine feels, and it counts wasm linear memory, which no
+JS-heap column does. It cannot ATTRIBUTE that memory: a dedicated worker is allocated in its
+creating context's renderer and a shared worker takes the creator's `SiteInstance`, so no
+process-level reading can separate ECHO's worker from the tab that spawned it. `wasmBytes` and
+`heapBackingBytes` are the per-realm answers; this is the whole-app one.
+
+Renderers only, by Chrome's own process name. The browser, GPU and service processes measured
+218 MB in a probe — Chrome's cost, not the app's — and they are reported separately as
+`chromeFootprintBytes` rather than hidden in the total. `Extension Renderer` and
+`WebUI Top Renderer` carry their own names and are excluded with them.
+
+A boundary read rather than a sampler: memory-infra delivers through the tracing stream, so each
+reading starts and ends a short trace around one dump, measured at 93-131 ms. A `light` dump costs
+19-24 ms against `detailed`'s 122 ms and carries `process_totals`, which is all this reads.
+
+`boot` is the exception. CDP records one trace at a time and the CPU trace is still running when
+boot's boundary arrives, so boot's reading is backfilled once that trace ends — a few seconds late,
+by the same offset every run.
 
 ### `domNodes`, `domListeners`, `domDocuments`
 
@@ -261,8 +321,49 @@ attributable: page and worker samples in one distribution let whichever realm sa
 the other, so a wedged worker could hide behind a calm page. `count: 0` means the realm stayed
 responsive, not that the probe was missing.
 
-Read this rather than `lagP95Ms` when a stall needs an owner. In the reference run every stall was
-the page's: 298 page samples, worst p95 2,943 ms, and zero samples over the floor in any worker.
+Read this rather than `lagP95Ms` when a stall needs an owner. A measured run shows the dedicated
+worker stalling 2.0 s in `await-replication` and 344 ms in `edit-document`, neither of which any
+page-side metric sees.
+
+**`boot` reports no worker samples and cannot.** The worker realms are created BY that stage, so
+nothing exists to probe at its opening boundary; catching them would need browser-level
+`Target.setAutoAttach` with `waitForDebuggerOnStart`. Every later stage is covered.
+
+**Read `count` before believing a zero.** Every worker lag column read zero for weeks on rows that
+also showed the dedicated workers burning 1,464 ms of CPU in `edit-document`, and nothing published
+said whether the probe had produced anything. It was the probe: the drain expression defines
+`globalThis.__perfLag`, and the installer's idempotence guard tested that same array, so a realm
+first drained at the closing boundary of the stage that created it answered `present` for the rest
+of the run with no interval ever armed. The guard is now a separate `__perfLagArmed` marker. Those
+zeros were an instrument reading its own absence, which is why `lagSamples{Tab,Worker,…}` is
+trended — it is to the drift probe what `sqliteRealms` is to the disk counters.
+
+### `rpc[]` — lag measured from real traffic
+
+One entry per realm, from the app's own RPC timing middleware
+(`RpcTiming` in `@dxos/worker-framework`) rather than from a probe the harness installs. The
+middleware stamps a send timestamp on every outbound call and the server derives two quantities
+from it; the client records a third.
+
+| Field                              | Measured in           | Meaning                                                                                                                                                    |
+| ---------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `calls`                            | the realm that SERVED | Requests dispatched here during the stage, from the running total's difference.                                                                            |
+| `queueWaitP95Ms`, `queueWaitMaxMs` | the realm that SERVED | How long a request sat before this event loop picked it up. **This is the realm's responsiveness**, measured by the traffic a user is actually waiting on. |
+| `serviceMaxMs`                     | the realm that SERVED | Worst handler duration.                                                                                                                                    |
+| `clientCalls`                      | the realm that ISSUED | Requests this realm sent.                                                                                                                                  |
+| `roundTripP95Ms`, `roundTripMaxMs` | the realm that ISSUED | Send to settle, including the transport in both directions.                                                                                                |
+| `samples`, `clientSamples`         | both                  | How many samples the percentiles cover.                                                                                                                    |
+
+**Round trip is not the other two added up**, and the gap is the point: a worker reporting 2 ms of
+queue wait and 3 ms of service while the tab waited 400 ms says the time went somewhere neither
+column covers. Queue wait is the complement to `lagByRealm` — same quantity, different instrument,
+and this one cannot silently produce nothing while the app is working, because it is driven by the
+app's own calls.
+
+`samples` is the integrity column. The middleware keeps a bounded ring (100 entries), so a stage
+serving more calls than it holds reports a percentile over the stage's TAIL; `rpcCallsTotal` above
+`rpcSamples` in the trended columns is what says so. A realm that published no counters at all is
+absent from the array entirely, which `rpcRealms` counts.
 
 ### `stillFrameMaxMs`, `stillFrameCount` — `diagnose` only
 
@@ -396,9 +497,19 @@ Recorded here so nobody rediscovers them as bugs.
 
 4. ~~Lag is pooled across realms.~~ Done: `lagByRealm` reports p95, max and sample count per realm.
    The pooled `lagP95Ms`/`lagMaxMs` remain, and remain the weaker reading.
-5. **`backingBytes` is recorded but not surfaced** in the report tables, which is where wasm memory
-   would be visible per realm.
-6. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
+5. ~~`backingBytes` is recorded but not surfaced.~~ Done, and wasm no longer depends on it:
+   `heapBackingBytes{realm}` is trended, and `wasmBytes{realm}` measures linear memory directly
+   from an instantiation probe rather than inferring it from a backing-store total that also counts
+   every `Uint8Array` automerge passes around.
+
+6. ~~Worker timer drift has never produced a sample.~~ Done: the installer's idempotence guard
+   tested `globalThis.__perfLag`, which the drain expression itself defines, so every worker realm
+   — first drained at the closing boundary of the stage that created it — answered `present`
+   forever and never armed an interval. Instrumenting a full flow showed 40 installs, all
+   `present`, none `installed`. The guard is a separate `__perfLagArmed` marker now, and
+   `lagSamples{realm}` is what made the failure visible rather than plausible; `rpc[]`'s queue wait
+   measures the same responsiveness from traffic the app generates itself.
+7. ~~One iteration per mode.~~ Done: the nightly runs `DX_PERF_ITERATIONS=10` per mode — and the
    first ten-iteration run corrected the premise. WITHIN a run the spread is tiny (CV 1.6% on total
    wall time, 0.11% on DOM nodes); the ~20% figure below came from comparing separate RUNS, which
    also differ by machine cell and cache state. Ten iterations therefore pin down one job very
@@ -412,7 +523,7 @@ Recorded here so nobody rediscovers them as bugs.
    different questions: one slow but SUCCESSFUL iteration moves the mean and not the median. A
    failed stage is not that case and never was — `writePosthogBatch` filters on `row.ok`, so an
    expired stage lowers the sample count instead of dragging anything.
-7. **`boot` carries no profile** in either mode: there is no target to attach to until the page
+8. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
 
 ## Where the numbers go
