@@ -17,7 +17,7 @@
 
 import { chromium } from '@playwright/test';
 import { execFileSync, spawn } from 'node:child_process';
-import { closeSync, mkdtempSync, openSync, readFileSync, readdirSync, rmSync, writeFileSync, writeSync } from 'node:fs';
+import { closeSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -183,11 +183,31 @@ const readRollup = (pid) => {
   return Object.keys(rollup).length ? rollup : null;
 };
 
-/** Every live pid, for a rollup sample taken at the instant of a dump. */
-const livePids = () => {
+/**
+ * The browser's own processes, for a rollup sample taken at the instant of a dump.
+ *
+ * Filtered by executable rather than taken as every pid under `/proc`: the sample
+ * is the thing being timed against the dump, and reading the rollup of every
+ * unrelated process on a busy host puts that cost between the two readings.
+ */
+const browserPids = () => {
+  const executable = path.basename(chromium.executablePath());
   try {
     return readdirSync('/proc')
       .filter((entry) => /^\d+$/.test(entry))
+      .filter((entry) => {
+        try {
+          // Split on whitespace as well as NUL: a zygote-forked child's argv is
+          // rewritten as one space-separated block, so a NUL-only split returns the
+          // whole command line and matches nothing. Compared by basename because
+          // that child carries the path the zygote was executed with, which is the
+          // resolved one where Playwright's `executablePath()` may be a link.
+          const argv0 = readFileSync(`/proc/${entry}/cmdline`, 'utf8').split(/[\0\s]/)[0];
+          return path.basename(argv0) === executable;
+        } catch {
+          return false;
+        }
+      })
       .map(Number);
   } catch {
     return [];
@@ -214,12 +234,14 @@ const takeDump = async (pageWs, rawLabel = 'dump') => {
     },
     transferMode: 'ReportEvents',
   });
-  // `deterministic` forces a GC first, so the ledger describes live memory.
-  // Sampled on both sides of the dump, because `deterministic` forces a GC inside
-  // it: a rollup read afterwards describes a process that has already given the
+  // `deterministic` forces a GC first, so the ledger describes live memory — and
+  // the rollup is sampled on both sides of it for that reason: a rollup read afterwards describes a process that has already given the
   // collected pages back, and the difference is memory the dump still counted.
+  // One set for both samples: a process that starts between them would otherwise
+  // appear only in the second and read as growth.
+  const pids = browserPids();
   const rollupsBefore = {};
-  for (const pid of livePids()) {
+  for (const pid of pids) {
     const rollup = readRollup(pid);
     if (rollup) {
       rollupsBefore[pid] = rollup;
@@ -230,7 +252,7 @@ const takeDump = async (pageWs, rawLabel = 'dump') => {
   // renderer keeps decommitting after the dump, and comparing a footprint against
   // a rollup read afterwards reads that decommit as memory nobody can name.
   const rollups = {};
-  for (const pid of livePids()) {
+  for (const pid of pids) {
     const rollup = readRollup(pid);
     if (rollup) {
       rollups[pid] = rollup;
@@ -690,7 +712,10 @@ try {
         group = mapping === '' ? '[anon]' : mapping.startsWith('[') ? mapping : path.basename(mapping);
         continue;
       }
-      const field = group && line.match(/^(Private_Dirty|Private_Clean|Swap):\s+(\d+) kB/);
+      // `SwapPss` rather than `Swap`: a swapped shmem mapping's `Swap` counts pages
+      // of the shared object behind it, which would report another process's memory
+      // as this one's private residual.
+      const field = group && line.match(/^(Private_Dirty|Private_Clean|SwapPss):\s+(\d+) kB/);
       if (field) {
         regions[group] = (regions[group] ?? 0) + Number(field[2]) * 1024;
       }
@@ -1111,7 +1136,7 @@ try {
       const dump = row.rollupAtDump;
       console.log(
         `      vm (at dump)  rss ${MB(dump.VmRSS)}MB  anon ${MB(dump.RssAnon)}MB  file ${MB(dump.RssFile)}MB` +
-          `  shmem ${MB(dump.RssShmem)}MB  private ${MB((dump.Private_Clean ?? 0) + (dump.Private_Dirty ?? 0) + (dump.VmSwap ?? 0))}MB` +
+          `  shmem ${MB(dump.RssShmem)}MB  private ${MB((dump.Private_Clean ?? 0) + (dump.Private_Dirty ?? 0) + (dump.SwapPss ?? 0))}MB` +
           `  pss ${MB(dump.Pss ?? 0)}MB  vs footprint ${MB(row.footprintBytes)}MB`,
       );
       if (row.rollupBeforeDump?.RssAnon) {
@@ -1152,7 +1177,7 @@ try {
           `  swap ${MB(rollup.VmSwap ?? 0)}MB  private-mappings ${MB(row.vm.dirtyBytes)}MB`,
       );
       console.log(
-        `      vm (rollup)  pss ${MB(rollup.Pss ?? 0)}MB  private ${MB((rollup.Private_Clean ?? 0) + (rollup.Private_Dirty ?? 0))}MB` +
+        `      vm (rollup)  pss ${MB(rollup.Pss ?? 0)}MB  private ${MB((rollup.Private_Clean ?? 0) + (rollup.Private_Dirty ?? 0) + (rollup.SwapPss ?? 0))}MB` +
           `  shared ${MB((rollup.Shared_Clean ?? 0) + (rollup.Shared_Dirty ?? 0))}MB` +
           `  pss-anon ${MB(rollup.Pss_Anon ?? 0)}MB  pss-file ${MB(rollup.Pss_File ?? 0)}MB  pss-shmem ${MB(rollup.Pss_Shmem ?? 0)}MB`,
       );

@@ -218,10 +218,12 @@ linear memory and native allocation, so optimizing a JS heap cannot move the mem
 total are read at different points in the garbage collector's cycle: `readHeap` forces a three-pass
 GC before every heap, wasm and backing-store reading, while `readProcessFootprint` asks for a
 `light` dump with `deterministic: false`, which forces nothing. On Linux — where the nightly runs —
-`private_footprint_bytes` IS `RssAnon`, so the total is whatever anonymous memory happened to be
-resident at the boundary and the band absorbs every collectable byte between the two reads.
-Measured against `composer-app/scripts/memory/ledger.mjs`, which dumps with `deterministic: true`
-and therefore reads both sides post-GC, on the same flow and the same bundle:
+`private_footprint_bytes` tracked `RssAnon` to within a megabyte on every process of every run taken
+here, so the total is whatever anonymous memory happened to be resident at the boundary and the band
+absorbs every collectable byte between the two reads. (Read that as an observation, not an identity:
+shared memory is accounted separately and these runs held little of it.) Measured against
+`composer-app/scripts/memory/ledger.mjs`, whose footprint and allocator tree both come out of ONE
+`deterministic: true` dump and are therefore the same instant, after the GC that dump forces:
 
 | stage         | band, this harness | residual, post-GC ledger |
 | ------------- | -----------------: | -----------------------: |
@@ -237,8 +239,9 @@ maps is in no band because `RssAnon` does not count it. Read the band as "garbag
 boundary" until the footprint is read after the same GC the heaps are.
 
 Two further caveats, both recorded in the tile's SQL. The footprint is read at each phase boundary
-while a heap peak is that phase's maximum, so the total is exact and the boundary between the
-segments is approximate. And the size of the gap is NOT what this file claimed before `ciPeakRssBytes` was
+while a heap peak is that phase's maximum, and — per the paragraph above — the two are read under
+different GC states, so the stack is not a decomposition of any total that existed at one instant:
+read the footprint as the level and the segments as a lower bound on what is named within it. And the size of the gap is NOT what this file claimed before `ciPeakRssBytes` was
 retired: that figure divided the heap into a sum of RSS over Chrome's whole process tree, which
 multi-counts shared pages and included the browser, GPU and service processes. Read the ratio off
 the tile rather than from any number written here.
