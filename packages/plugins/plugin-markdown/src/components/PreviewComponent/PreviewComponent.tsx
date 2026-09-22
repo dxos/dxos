@@ -22,6 +22,7 @@ import { isTruthy } from '@dxos/util';
 import { meta } from '#meta';
 
 import { parseEmbedLabel } from './parse-embed-label.ts';
+import { parseObjectUri } from './parse-object-uri.ts';
 
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](eid)`.
 
@@ -105,7 +106,9 @@ export const PreviewComponent = ({
 
   // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
-  const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
+  // Guarded: a link is claimed by scheme alone, so this renders against half-typed source — see
+  // `parseObjectUri`, where an incomplete URI would otherwise throw out of render.
+  const uri = useMemo(() => parseObjectUri(eid), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
   // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
