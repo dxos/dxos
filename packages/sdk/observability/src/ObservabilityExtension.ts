@@ -158,7 +158,10 @@ export type Ai = {
   captureToolCall(toolCall: ToolCall): void;
 };
 
-/** What every event in one MCP session carries; learned at `initialize` and stamped on the calls that follow. */
+/** The client name an MCP event carries when no request named its client; `@posthog/mcp` drops a falsy one. */
+export const UNKNOWN_MCP_CLIENT = 'unknown';
+
+/** What every MCP event carries: the session it groups under and the client it came from. */
 export type McpSession = {
   /** Groups the session's events; one server process is one session over a stdio transport. */
   sessionId: string;
@@ -169,6 +172,7 @@ export type McpSession = {
 
 /** MCP extension API (kind-specific methods only). */
 export type Mcp = {
+  /** A client connected successfully. */
   captureInitialize(session: McpSession): void;
   captureToolCall(
     call: McpSession & { toolName: string; parameters?: unknown; durationMs: number; isError: boolean },

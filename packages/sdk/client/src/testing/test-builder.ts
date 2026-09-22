@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -28,7 +27,6 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
-import { RpcRouter } from '@dxos/rpc';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
@@ -131,7 +129,7 @@ export class TestBuilder {
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
     // Served straight off the host's router, as a worker session serves a tab; resolved on open so
     // a host opened after this call is served.
-    const server = Rpc.serveRouterOnPort(() => EffectContext.get(host.stack, RpcRouter.RpcRouter), channel.port2);
+    const server = Rpc.serveRouterOnPort(() => host.router, channel.port2);
 
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());

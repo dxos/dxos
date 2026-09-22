@@ -1,0 +1,159 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { expect, test } from '@playwright/test';
+import { platform } from 'node:os';
+
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
+import { StackPlugin } from './plugins/index.ts';
+
+// TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
+//   https://github.com/microsoft/playwright/issues/2973
+/**
+ * Wait until a settings write made on `from` has reached `to`.
+ *
+ * A negative assertion needs this: without a write that IS expected to arrive, it passes on a
+ * channel that simply has not delivered yet. The dev-plugin URL is an ordinary synced setting, so
+ * anything leaked alongside it would have arrived with it.
+ */
+const awaitSettingsSync = async (from: AppManager, to: AppManager) => {
+  const marker = `http://localhost:${Math.floor(Math.random() * 10_000) + 20_000}`;
+  await from.openPluginSettings('org.dxos.plugin.registry');
+  await from.getDevPluginUrlInput().fill(marker);
+  await to.openPluginSettings('org.dxos.plugin.registry');
+  await expect(to.getDevPluginUrlInput()).toHaveValue(marker, { timeout: 60_000 });
+};
+
+test.describe('HALO tests', () => {
+  let host: AppManager;
+  let guest: AppManager;
+
+  test.beforeEach(async ({ browser, browserName }) => {
+    test.skip(browserName === 'firefox');
+    test.skip(browserName === 'webkit' && platform() !== 'darwin');
+
+    host = new AppManager(browser, false);
+    guest = new AppManager(browser, false);
+
+    await host.init();
+    await guest.init();
+  });
+
+  test.afterEach(async () => {
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
+    if (host !== undefined && guest !== undefined) {
+      await Promise.all([host.close(), guest.close()]);
+    }
+  });
+
+  test('join new identity', { tag: ['@QA-7'] }, async () => {
+    test.setTimeout(90_000);
+
+    await host.createSpace();
+
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+    // The guest has only its own default space until it joins the host's identity.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT);
+
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    await guest.openUserDevices();
+    // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
+    // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
+    // for it — no need to race the reload against a fixed deadline.
+    await guest.joinNewIdentity();
+    await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
+    const authCode = await host.getAuthCode();
+    await guest.shell.authenticateDevice(authCode);
+
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+    // TODO(wittjosiah): Why so slow?
+    // Wait for replication to complete — guest inherits all of host's spaces.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 60_000 });
+
+    // TODO(wittjosiah): Display name is not currently set in this test.
+    // await host.openIdentityManager();
+    // await guest.openIdentityManager();
+    // await waitForExpect(async () => {
+    //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
+    // });
+  });
+
+  test('settings sync across devices, and one device can keep its own', { tag: ['@QA-7'] }, async () => {
+    test.setTimeout(180_000);
+
+    // Both boots have to land first: the navigation to the default space arrives seconds after the
+    // shell renders and closes any dialog opened before it.
+    await host.waitForDefaultWorkspace();
+    await guest.waitForDefaultWorkspace();
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    await guest.openUserDevices();
+    await guest.joinNewIdentity();
+    await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
+    const authCode = await host.getAuthCode();
+    await guest.shell.authenticateDevice(authCode);
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+    await guest.waitForJoinedWorkspace();
+
+    await host.openRegistryCategory('recommended');
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+
+    // 1. Sync: the host's decision replicates to the guest.
+    await guest.openRegistryCategory('recommended');
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
+
+    // 2. Local override: the guest leaves the account for the plugin set only.
+    await guest.openPluginSettings('org.dxos.plugin.registry');
+    await guest.usePluginSetForThisDeviceOnly();
+
+    await guest.openRegistryCategory('recommended');
+    await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+
+    // 3. The host keeps the account's decision.
+    await awaitSettingsSync(guest, host);
+    await host.openRegistryCategory('recommended');
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+  });
+
+  test('deleting a space replicates across devices', { tag: ['@QA-7'] }, async () => {
+    test.setTimeout(120_000);
+
+    // Host creates a space; guest joins the host's identity and inherits it.
+    await host.createSpace();
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    await guest.openUserDevices();
+    // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
+    // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
+    // for it — no need to race the reload against a fixed deadline.
+    await guest.joinNewIdentity();
+    await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
+    const authCode = await host.getAuthCode();
+    await guest.shell.authenticateDevice(authCode);
+
+    // Both devices see the shared space.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 60_000 });
+
+    // Return the host to a clean navtree (the device-join flow left the account panel open).
+    await host.page.goto(INITIAL_URL);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 30_000 });
+
+    // Delete the shared space on the host.
+    await host.deleteSpace();
+
+    // The deletion is applied locally on the host...
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+    // ...and replicates to the guest via the HALO.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+  });
+});

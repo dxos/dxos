@@ -170,6 +170,11 @@ packages/sdk/observability/src/cli-observability-secrets.json
 heap-samples.ndjson
 profiles/
 
+# Memory-harness results. Both scripts hardcode their output next to themselves, so a
+# re-run overwrites whatever a previous run left; nothing reads either file.
+packages/apps/composer-app/scripts/memory/boot-census.json
+packages/apps/composer-app/scripts/memory/soak-run.json
+
 # Debug logging for require hooks
 .trace-compiled
 
