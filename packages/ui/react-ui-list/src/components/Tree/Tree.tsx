@@ -706,6 +706,9 @@ export const Tree = <T extends { id: string } = any>({
           // is one control tall and its toggle track one control wide) — so `density` alone is
           // enough and a consumer needs no `dx-density-*` class of its own.
           data-density={density}
+          // Whether the tree is windowing, which is otherwise invisible: a tree that quietly failed
+          // to find its scroller renders exactly like one that was never asked to window.
+          data-windowed={windowed || undefined}
           // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
           // row holds it, which must not draw a focus ring around the whole tree.
           // Row spacing belongs to the container: as a margin on each row it also offset the first
