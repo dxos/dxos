@@ -4,6 +4,7 @@
 
 import { type Scene, type SceneId } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
+import { portId } from './ports.ts';
 
 export type SceneTree = { scenes: Scene[]; root: SceneId };
 
@@ -72,7 +73,8 @@ const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => str
     )
     .curve(elementId('ab'), elementId('a'), elementId('b'))
     .line(elementId('ac'), elementId('a'), elementId('c'), { directed: true })
-    .spline(elementId('bc'), elementId('b'), elementId('c'), [
+    // Pinned ports rather than automatic ones, so the spline leaves and arrives where its corners turn.
+    .spline(elementId('bc'), `${elementId('b')}#${portId('s')}`, `${elementId('c')}#${portId('n', 3)}`, [
       { x: scale(20), y: scale(12) },
       { x: scale(10), y: scale(12) },
     ]);

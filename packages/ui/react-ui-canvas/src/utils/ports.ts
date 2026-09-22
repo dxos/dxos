@@ -17,8 +17,14 @@ export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
 export const DEFAULT_PORTS_PER_SIDE = 3;
 
 /**
- * `count` ports spread evenly along each side, named `<side><index>` from the side's start (`e1` is the
- * top of the east side). Each side lists its centre port first so an automatic link ties to the centre.
+ * The id of the `index`th port along `side`, counting from 1 at the side's start: `e1` is the top of the
+ * east side, `s2` the middle of the south side. Pin a link end to one by naming `<node>#<portId>`.
+ */
+export const portId = (side: Side, index: number): string => `${side}${index}`;
+
+/**
+ * `count` ports spread evenly along each side, named by `portId`. Each side lists its centre port first
+ * so an automatic link ties to the centre.
  */
 export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
   const middle = (count + 1) / 2;
@@ -26,7 +32,7 @@ export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
     (left, right) => Math.abs(left - middle) - Math.abs(right - middle) || left - right,
   );
   return SIDES.flatMap((side) =>
-    indices.map((index) => ({ id: `${side}${index}`, side, offset: index / (count + 1) })),
+    indices.map((index) => ({ id: portId(side, index), side, offset: index / (count + 1) })),
   );
 };
 
