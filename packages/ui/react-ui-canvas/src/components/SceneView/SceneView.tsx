@@ -211,7 +211,21 @@ export const SceneView = ({
     },
     [portalTo],
   );
-  const bounds = useMemo(() => frameOf(path, scene), [frameOf, path, scene]);
+  // A scene entered through a portal keeps the frame it arrived with. Deriving it from the content on
+  // every edit moves the child under the user as they work, and maps a drill-out differently from the
+  // drill-in that opened it; the root has no portal to sit in, so its bounds stay derived.
+  const frameRef = useRef<{ key: string; frame: Bounds } | undefined>(undefined);
+  const bounds = useMemo(() => {
+    if (path.length < 2) {
+      frameRef.current = undefined;
+      return frameOf(path, scene);
+    }
+    const key = path.join(' ');
+    if (frameRef.current?.key !== key) {
+      frameRef.current = { key, frame: frameOf(path, scene) };
+    }
+    return frameRef.current.frame;
+  }, [frameOf, path, scene]);
   // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
   const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
 
@@ -399,7 +413,9 @@ export const SceneView = ({
         if (!child || !portal) {
           break;
         }
-        camera = exitPortal(camera, portal, portalFrame(portal, sceneBounds(child)));
+        // The level being left exits through the frame it was entered with, so the camera lands where
+        // the drill-in took it from however the child was edited in between.
+        camera = exitPortal(camera, portal, level === 0 ? bounds : portalFrame(portal, sceneBounds(child)));
         next = next.slice(0, -1);
       }
       registry.set(atoms.path, next);
@@ -411,7 +427,7 @@ export const SceneView = ({
       }
       pushHistory({ path: next, camera });
     },
-    [registry, atoms.path, atoms.camera, scenes, viewport, animateTo, setCamera, select, pushHistory, frameOf],
+    [registry, atoms.path, atoms.camera, scenes, viewport, animateTo, setCamera, select, pushHistory, frameOf, bounds],
   );
 
   const goHistory = useCallback(
