@@ -4,7 +4,9 @@
 
 //
 // Records a walkthrough of the post-M4 fixes (`POST-M4.mdl`) as a video. Not a check — it asserts
-// nothing and is tagged out of the default run; `--grep @demo` records it.
+// nothing, so it has no place in CI, where it only spends a browser's time and can fail on a cold
+// storybook. `DX_DEMO=1 pnpm exec playwright test --config=src/playwright/playwright.config.ts
+// src/playwright/demo.spec.ts` records it.
 //
 
 import { test } from '@playwright/test';
@@ -22,7 +24,11 @@ const BEAT = 900;
 test.use({ video: { mode: 'on', size: { width: 1400, height: 900 } }, viewport: { width: 1400, height: 900 } });
 
 test.describe('demo', () => {
-  test('@demo post-M4 fixes', async ({ page }) => {
+  // Skipped unless asked for: playwright runs every spec it finds, so a tag alone would not keep this
+  // out of the suite.
+  test.skip(!process.env.DX_DEMO, 'set DX_DEMO=1 to record');
+
+  test('post-M4 fixes', async ({ page }) => {
     const settle = () => page.waitForTimeout(BEAT);
     const drag = async (from: { x: number; y: number }, to: { x: number; y: number }) => {
       await page.mouse.move(from.x, from.y);

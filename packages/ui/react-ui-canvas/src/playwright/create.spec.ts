@@ -53,8 +53,9 @@ test.describe('create sizing', () => {
     const box = await scene.box(scene.node(drawn!));
     // Both ends snap to the grid, so each axis can land a cell either side of what the pointer swept —
     // but it tracks the pointer rather than falling back to the type's default, whose 2:1 shape a
-    // 240x160 sweep would not produce.
-    const cell = 64 * 0.64;
+    // 240x160 sweep would not produce. The cell is read against the live zoom: the story fits itself to
+    // the viewport, so a hard-coded percentage is a local accident.
+    const cell = (64 * (await scene.zoom())) / 100;
     expect(Math.abs(box.width - 240)).toBeLessThan(cell);
     expect(Math.abs(box.height - 160)).toBeLessThan(cell);
 
@@ -87,8 +88,11 @@ test.describe('create sizing', () => {
     const from = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
     await scene.drag(from, { x: from.x + 5, y: from.y });
     const after = await scene.box(scene.node(id!));
+    // A snapped move lands a whole visible cell away or not at all; the cell is derived from the zoom
+    // this many steps out, never assumed.
+    const cell = (64 * (await scene.zoom())) / 100;
     const moved = Math.abs(after.x - before.x);
-    expect(moved === 0 || moved > 8).toBe(true);
+    expect(moved === 0 || moved > cell / 2).toBe(true);
   });
 
   test('a toolbar create covers the same screen area whatever the zoom', async () => {
