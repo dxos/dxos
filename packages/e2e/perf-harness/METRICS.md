@@ -140,17 +140,20 @@ One entry per attached realm (page, each worker), each from `Runtime.getHeapUsag
 **three-pass forced GC** — one pass leaves `FinalizationRegistry` callbacks and `WeakRef` clears
 pending, so a single collection under-reports what is actually garbage.
 
-| Field           | Source                 | Meaning                                                                                                    |
-| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                          |
-| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                            |
-| `backingBytes`  | `backingStorageSize`   | External backing stores — `ArrayBuffer`s and friends, which is where automerge's buffers sit.              |
-| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                                   |
-| `wasmBytes`     | `@dxos/util` probe     | Wasm linear memory this realm holds — automerge, subduction and SQLite. Counted by nothing else per realm. |
-| `wasmInstances` | `@dxos/util` probe     | Memories counted. The integrity column: absent fields mean an uninstrumented realm, `0` means no wasm.     |
+| Field           | Source                 | Meaning                                                                                                |
+| --------------- | ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `usedBytes`     | `usedSize`             | Live JS objects. **Excludes wasm linear memory.**                                                      |
+| `totalBytes`    | `totalSize`            | Heap capacity, including unused space V8 holds.                                                        |
+| `backingBytes`  | `backingStorageSize`   | Every external backing store: `ArrayBuffer`s **and** wasm linear memory, indistinguishably.            |
+| `embedderBytes` | `embedderHeapUsedSize` | Blink-side objects attributed to this realm (DOM, etc.).                                               |
+| `wasmBytes`     | `@dxos/util` probe     | The wasm share of `backingBytes` — automerge, subduction and SQLite. The only column that isolates it. |
+| `wasmInstances` | `@dxos/util` probe     | Memories counted. The integrity column: absent fields mean an uninstrumented realm, `0` means no wasm. |
 
-The gap between the two matters. At `open-tasks` the dedicated worker holds **29 MB `usedBytes`
-against 135 MB `backingBytes`** — the JS heap is small, the buffers are not.
+The gap between `usedBytes` and `backingBytes` matters: the realm running ECHO keeps almost nothing
+in the JS heap and almost everything outside it. Which is why `wasmBytes` is not redundant with
+`backingBytes` — the two move for different reasons, a wasm heap expanding and buffers piling up
+have different fixes, and only the split says which happened. See
+[the disjoint set](#the-disjoint-set-and-what-not-to-stack) before trending either.
 
 `wasmBytes` comes from `installWasmMemoryProbe()` (`@dxos/util`), which wraps
 `WebAssembly.instantiate`/`instantiateStreaming` and keeps a weak set of every memory an instance
