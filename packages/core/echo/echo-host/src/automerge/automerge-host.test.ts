@@ -360,10 +360,52 @@ describe('AutomergeHost', () => {
     await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
 
     // A removed document never converges, so its retry budget has to go with it.
-    const resyncHeads: Map<string, { documentId: string }> = (host as any)._divergedResyncHeads;
+    const resyncHeads: Map<string, { documentId: string }> = (host as any)._stalledResyncHeads;
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(true);
     await host.removeDocument(documentId);
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
+  });
+
+  // A document the remote does not hold at all is a push, and under Subduction `findWithProgress`
+  // only ever pulls — so without the resync lever the local bytes were never offered and the pair
+  // stayed on `missingOnRemote` forever, freezing everything indexed behind it (DX-1310).
+  test('a document missing on the remote is resynced once per head pair', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+
+    const resynced: DocumentId[] = [];
+    const resyncDocument = host.resyncDocument.bind(host);
+    host.resyncDocument = (id) => {
+      resynced.push(id);
+      resyncDocument(id);
+    };
+
+    // A peer holding nothing for this collection, so the diff is a pure `missingOnRemote`.
+    const peerId = 'test-peer' as PeerId;
+    const remoteState = { documents: {} };
+    const synchronizer = (host as any)._collectionSynchronizer;
+
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(1);
+
+    // The heal loop retries on its own backoff, so an unchanged state must not re-arm it.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
+    await sleep(500);
+    expect(resynced).toEqual([documentId]);
   });
 
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
