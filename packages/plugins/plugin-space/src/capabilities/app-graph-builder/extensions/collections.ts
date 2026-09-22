@@ -13,6 +13,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -37,6 +38,7 @@ import {
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
+  REMOVE_FROM_COLLECTION_LABEL,
   SHOW_ORIGINAL_LABEL,
 } from './shared.ts';
 
@@ -404,6 +406,16 @@ const constructObjectActions = ({
               icon: 'ph--arrow-square-out--regular',
               disposition: 'list-item',
               testId: 'spacePlugin.showOriginal',
+            },
+          }),
+          AppGraphNode.makeAction({
+            id: 'removeFromCollection',
+            data: () => Effect.sync(() => CollectionModel.unlink({ object, from: linkedFrom })),
+            properties: {
+              label: REMOVE_FROM_COLLECTION_LABEL,
+              icon: 'ph--minus-circle--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.removeFromCollection',
             },
           }),
         ]
