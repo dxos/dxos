@@ -58,7 +58,7 @@ import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } fro
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
-import { runSubductionMigrations } from './subduction-migrations/index.ts';
+import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -616,11 +616,7 @@ export class AutomergeHost extends Resource {
    */
   private async _runSubductionMigrations(): Promise<void> {
     try {
-      await runSubductionMigrations({
-        runtime: this._runtime,
-        storage: this._storage,
-        subduction: await this._repo.subduction,
-      });
+      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
     } catch (err) {
       log.error('subduction migrations failed; continuing on the stored records', { err });
     }

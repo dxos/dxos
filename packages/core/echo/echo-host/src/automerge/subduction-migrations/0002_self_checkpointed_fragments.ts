@@ -14,7 +14,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type SqliteStorageAdapter, SUBDUCTION_PREFIX } from '../sqlite-storage-adapter.ts';
-import { type SubductionMigration } from './index.ts';
+import { type Migration } from './index.ts';
 
 const FRAGMENTS_FAMILY = 'fragments';
 const FRAGMENT_BLOBS_FAMILY = 'fragment-blobs';
@@ -115,14 +115,15 @@ export const repairSelfCheckpointedFragments = async (
 };
 
 /**
- * Store-wide {@link repairSelfCheckpointedFragments}. Complete — and so recorded — once no rewrite
+ * Store-wide {@link repairSelfCheckpointedFragments}. Done — and so recorded — once no rewrite
  * failed; a permanently skipped record does not hold it open, since nothing later can change it.
  */
-export const selfCheckpointedFragments: SubductionMigration = {
+export const selfCheckpointedFragments: Migration = {
   name: '0002_self_checkpointed_fragments',
   run: async ({ subduction, storage }) => {
     const result = await repairSelfCheckpointedFragments(subduction, storage);
-    return { complete: result.failed === 0, counts: { ...result } };
+    log.info('subduction fragment migration', result);
+    return result.failed === 0;
   },
 };
 

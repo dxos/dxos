@@ -3,9 +3,10 @@
 //
 
 import { RuntimeProvider } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 import { deleteSubductionRemoteHeads } from '../delete-subduction-remote-heads.ts';
-import { type SubductionMigration } from './index.ts';
+import { type Migration } from './index.ts';
 
 /**
  * The repair behind the recovery page's Repair button, run once on every profile: deletes the
@@ -13,10 +14,13 @@ import { type SubductionMigration } from './index.ts';
  * restart, and vacuums the file so the space comes back. See {@link deleteSubductionRemoteHeads}
  * for why nothing is lost.
  */
-export const deleteRemoteHeads: SubductionMigration = {
+export const deleteRemoteHeads: Migration = {
   name: '0001_delete_remote_heads',
-  run: async ({ runtime }) => {
-    const { deleted, reclaimedBytes } = await RuntimeProvider.runPromise(runtime)(deleteSubductionRemoteHeads());
-    return { complete: true, counts: { deleted, reclaimedBytes } };
+  run: async ({ storage }) => {
+    const { deleted, reclaimedBytes } = await RuntimeProvider.runPromise(storage.runtime)(
+      deleteSubductionRemoteHeads(),
+    );
+    log.info('subduction remote heads deleted', { deleted, reclaimedBytes });
+    return true;
   },
 };

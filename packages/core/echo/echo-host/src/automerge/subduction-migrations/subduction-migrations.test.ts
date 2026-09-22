@@ -39,7 +39,7 @@ import {
   selfCheckpointedFragments,
   selfCheckpointRepair,
 } from './0002_self_checkpointed_fragments.ts';
-import { type SubductionMigration, hasSubductionMigration, runSubductionMigrations } from './index.ts';
+import { type Migration, runMigrations } from './index.ts';
 
 /**
  * What a client on `@automerge/automerge` 3.3.2 stored for one synthetic document, produced by that
@@ -95,7 +95,15 @@ describe('subduction migrations', () => {
   };
 
   const applied = (runtime: TestSqliteRuntime['runtime'], name: string) =>
-    RuntimeProvider.runPromise(runtime)(hasSubductionMigration(name));
+    RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<{
+          n: number;
+        }>`SELECT count(*) AS n FROM automerge_subduction_migrations WHERE name = ${name}`;
+        return rows[0].n > 0;
+      }),
+    );
 
   /** Empties the ledger, as a profile from before it existed has none. */
   const forgetMigrations = (runtime: TestSqliteRuntime['runtime']) =>
@@ -107,18 +115,18 @@ describe('subduction migrations', () => {
     );
 
   describe('runner', () => {
-    const migration = (name: string, complete: boolean, ran: string[]): SubductionMigration => ({
+    const migration = (name: string, done: boolean, ran: string[]): Migration => ({
       name,
       run: async () => {
         ran.push(name);
-        return { complete, counts: {} };
+        return done;
       },
     });
 
     test('runs unrecorded migrations in order, records the complete ones, and stops at a throw', async () => {
       const { runtime, adapter } = await setup();
       const subduction = new Subduction({ signer: MemorySigner.generate(), storage: memoryStorage() });
-      const context = { runtime, storage: adapter, subduction };
+      const context = { storage: adapter, subduction };
       const ran: string[] = [];
       const migrations = [
         migration('0001_first', true, ran),
@@ -128,7 +136,7 @@ describe('subduction migrations', () => {
         migration('0005_after', true, ran),
       ];
 
-      await expect(runSubductionMigrations(context, migrations)).rejects.toThrow('boom');
+      await expect(runMigrations(context, migrations)).rejects.toThrow('boom');
       expect(ran).toEqual(['0001_first', '0002_partial', '0003_complete']);
       expect(await applied(runtime, '0001_first')).toBe(true);
       expect(await applied(runtime, '0002_partial')).toBe(false);
@@ -137,7 +145,7 @@ describe('subduction migrations', () => {
 
       // A second run picks up the partial one again and nothing that is recorded.
       ran.length = 0;
-      await runSubductionMigrations(context, migrations.slice(0, 3));
+      await runMigrations(context, migrations.slice(0, 3));
       expect(ran).toEqual(['0002_partial']);
     });
   });
