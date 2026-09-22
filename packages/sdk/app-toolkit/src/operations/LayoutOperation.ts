@@ -346,6 +346,12 @@ export const Open = Operation.make({
       }),
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
+    dedupe: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Whether a subject whose object is already open under another path reuses that plank. Defaults to true; false opens the paths as given.',
+      }),
+    ),
     scrollIntoView: Schema.optional(Schema.Boolean.annotate({ description: 'Scroll the items into view.' })),
     focus: Schema.optional(
       Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({

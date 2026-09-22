@@ -394,7 +394,11 @@ const constructObjectActions = ({
                 });
                 const target = targets[0];
                 if (target) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path], navigation: 'immediate' });
+                  yield* Operation.invoke(LayoutOperation.Open, {
+                    subject: [target.path],
+                    navigation: 'immediate',
+                    dedupe: false,
+                  });
                 }
               }),
             properties: {
