@@ -146,6 +146,7 @@ await task.assignee.load({ deleted: 'include' }); // resolves a tombstoned targe
 // Effect forms.
 const program = Effect.gen(function* () {
   const assignee = yield* Database.load(task.assignee); // fails with EntityNotFoundError
+  const ghost = yield* Database.loadIncludingDeleted(task.assignee); // resolves a tombstoned target
   const watchers = yield* Ref.loadAll(task.watchers); // order kept, deduped by id, deleted skipped
 });
 ```

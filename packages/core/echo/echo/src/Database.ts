@@ -478,14 +478,31 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, Error.EntityNotFoundError, never> =
-  Effect.fn('Database.load')(function* (ref, options) {
-    const object = yield* Effect.promise(() => ref.tryLoad(options));
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
+  function* (ref) {
+    const object = yield* Effect.promise(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
-  });
+  },
+);
+
+/**
+ * Loads an object reference, resolving a target that has been deleted.
+ *
+ * Separate from {@link load} rather than an option on it: `load` is applied point-free
+ * (`Effect.forEach(refs, Database.load)`), where a second parameter collides with the iteratee index.
+ */
+export const loadIncludingDeleted: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn(
+  'Database.loadIncludingDeleted',
+)(function* (ref) {
+  const object = yield* Effect.promise(() => ref.tryLoad({ deleted: 'include' }));
+  if (!object) {
+    return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
+  }
+  return object;
+});
 
 /**
  * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
