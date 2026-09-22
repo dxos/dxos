@@ -321,7 +321,13 @@ attributable: page and worker samples in one distribution let whichever realm sa
 the other, so a wedged worker could hide behind a calm page. `count: 0` means the realm stayed
 responsive, not that the probe was missing.
 
-Read this rather than `lagP95Ms` when a stall needs an owner.
+Read this rather than `lagP95Ms` when a stall needs an owner. A measured run shows the dedicated
+worker stalling 2.0 s in `await-replication` and 344 ms in `edit-document`, neither of which any
+page-side metric sees.
+
+**`boot` reports no worker samples and cannot.** The worker realms are created BY that stage, so
+nothing exists to probe at its opening boundary; catching them would need browser-level
+`Target.setAutoAttach` with `waitForDebuggerOnStart`. Every later stage is covered.
 
 **Read `count` before believing a zero.** Every worker lag column read zero for weeks on rows that
 also showed the dedicated workers burning 1,464 ms of CPU in `edit-document`, and nothing published
