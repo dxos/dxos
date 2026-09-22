@@ -13,26 +13,11 @@ export type SqliteSynchronous = 'off' | 'normal' | 'full' | 'extra';
 export type OpfsPragmaOptions = {
   readonly journalMode?: SqliteJournalMode;
   readonly synchronous?: SqliteSynchronous;
-  readonly pageSize?: number;
 };
 
 export const DEFAULT_JOURNAL_MODE: SqliteJournalMode = 'wal';
 
 export const DEFAULT_SYNCHRONOUS: SqliteSynchronous = 'normal';
-
-/**
- * Page size, in bytes. Four times the 2 KB the wasm build defaults to.
- *
- * An OPFS write costs per CALL, not per byte: every write this VFS issues is one page plus a 12-byte
- * WAL frame header, and measured on the perf flow a 2,060-byte write takes ~1.2 ms — so typing one
- * sentence into a document cost 760 writes and ~900 ms of worker time for 1.5 MB. Four times the
- * page is a quarter of the calls for the same bytes.
- *
- * SQLite ignores `page_size` on a database that already has pages, and rejects it outright in WAL
- * mode, so this applies to a database being created and never rewrites an existing one — which is
- * also why it is set before the journal mode.
- */
-export const DEFAULT_PAGE_SIZE = 8192;
 
 type Sqlite3 = ReturnType<typeof WaSqlite.Factory>;
 
@@ -43,9 +28,7 @@ type Sqlite3 = ReturnType<typeof WaSqlite.Factory>;
 export const applyOpfsPragmas = (sqlite3: Sqlite3, db: number, options: OpfsPragmaOptions = {}): void => {
   const journalMode = options.journalMode ?? DEFAULT_JOURNAL_MODE;
   const synchronous = options.synchronous ?? DEFAULT_SYNCHRONOUS;
-  const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
   const pragmas = [
-    `PRAGMA page_size=${pageSize}`,
     ...(journalMode === 'wal' ? ['PRAGMA locking_mode=EXCLUSIVE'] : []),
     `PRAGMA journal_mode=${journalMode}`,
     `PRAGMA synchronous=${synchronous}`,
