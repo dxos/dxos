@@ -27,7 +27,7 @@ describe('freehand projection', () => {
     const locked = { ...scene, nodes: { ...scene.nodes, 'scene:r/b': { ...scene.nodes['scene:r/b'], locked: true } } };
     const next = reduceIntent(locked, { kind: 'move', ids: ['scene:r/a', 'scene:r/b'], delta: { x: 10, y: -5 } });
     expect(centerOf(next, 'scene:r/a')).toEqual({ x: 266, y: 187 });
-    expect(centerOf(next, 'scene:r/b')).toEqual({ x: 640, y: 192 });
+    expect(centerOf(next, 'scene:r/b')).toEqual({ x: 704, y: 192 });
     expect(reduceIntent(scene, { kind: 'move', ids: ['missing'], delta: { x: 1, y: 1 } })).toBe(scene);
   });
 

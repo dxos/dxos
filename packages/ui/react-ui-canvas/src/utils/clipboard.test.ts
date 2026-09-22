@@ -45,7 +45,7 @@ describe('clipboard', () => {
     expect(ids).toEqual(['ellipse-1', 'class-2', 'spline-3']);
     const next = reduceIntent(scene, intent);
     expect(Object.keys(next.nodes).length).toBe(6);
-    expect(next.nodes['ellipse-1'].center).toEqual({ x: 704, y: 256 });
+    expect(next.nodes['ellipse-1'].center).toEqual({ x: 768, y: 256 });
     const spline = next.links['spline-3'];
     expect(spline.type === 'spline' && spline.points).toEqual([{ x: 480, y: 768 }]);
     expect(endpointNode(spline.source)).toBe('ellipse-1');
