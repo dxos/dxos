@@ -86,6 +86,21 @@ describe('parsePlan', () => {
     expect(buildChapterPrompt(plan!, plan!.chapters[0], 'diff')).to.not.contain('[object Object]');
   });
 
+  test('reads a fenced plan whose JSON contains a fence-like sequence', () => {
+    const response = [
+      'Here is the plan:',
+      '```json',
+      JSON.stringify({
+        title: 'A change',
+        overview: 'Chapters are written as ```text blocks elsewhere.',
+        chapters: [{ title: 'One', files: ['src/core.ts'] }],
+      }),
+      '```',
+    ].join('\n');
+
+    expect(parsePlan(response, PATHS)?.chapters[0].title).to.eq('One');
+  });
+
   test('refuses an unreadable answer rather than inventing a plan', () => {
     expect(parsePlan('I cannot help with that.', PATHS)).to.be.undefined;
     expect(parsePlan('{"title": "A change"}', PATHS)).to.be.undefined;

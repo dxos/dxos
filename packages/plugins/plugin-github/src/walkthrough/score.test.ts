@@ -123,6 +123,15 @@ describe('scoreWalkthrough', () => {
     expect(dimension(scoreWalkthrough(body, patch).correctness, 'numbers-grounded').score).to.eq(1);
   });
 
+  test('a fence carrying another file\u2019s lines is invented, not filled', () => {
+    // The lines are real, the file is wrong: the reader is pointed at code that never changed here.
+    const body = GOOD.replace('```diff file=src/a.ts lines=10-13\n```', '```diff file=src/a.ts\n+extra();\n```');
+    const { correctness } = scoreWalkthrough(body, PATCH);
+
+    expect(dimension(correctness, 'fences-authentic').score).to.eq(0.5);
+    expect(dimension(correctness, 'fences-authentic').evidence).to.deep.eq(['src/a.ts']);
+  });
+
   test('a body with no H1 loses half the structure mark', () => {
     const { correctness } = scoreWalkthrough(GOOD.replace('# Retry the first call', '## Retry the first call'), PATCH);
     expect(dimension(correctness, 'structure').score).to.eq(0.5);

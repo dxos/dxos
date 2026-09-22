@@ -271,23 +271,31 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
 
   const { claimedHunks, signalHunks, uncoveredFiles } = coverage(files, fences);
   const unresolvedFences = fences.filter((fence) => !fence.file || !paths.has(fence.file));
-  // A filled fence carries the patch's own lines; an invented one does not. Checked line by line so
-  // a stored walkthrough (always filled) grades the same as the model output it came from.
-  const patchLines = new Set(
-    patch
+  // A filled fence carries its OWN file's lines; an invented one does not. Per file rather than
+  // over the whole patch, because a fence for one file carrying another's lines is exactly the
+  // transcription this grades — and it points the reader at the wrong code.
+  const linesByFile = new Map(
+    [...files].map(([path, file]) => [
+      path,
+      new Set(
+        file.hunks
+          .flatMap((hunk) => [hunk.header, ...hunk.lines])
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0),
+      ),
+    ]),
+  );
+  const invented = fences.filter((fence) => {
+    if (fence.empty) {
+      return false;
+    }
+    const own = fence.file ? linesByFile.get(fence.file) : undefined;
+    const written = fence.contents
       .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0),
-  );
-  const invented = fences.filter(
-    (fence) =>
-      !fence.empty &&
-      fence.contents
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-        .some((line) => !patchLines.has(line)),
-  );
+      .filter((line) => line.length > 0);
+    return !own || written.some((line) => !own.has(line));
+  });
   const generatedFences = fences
     .map((fence) => fence.file)
     // Resolved through the patch so a binary the extension does not announce — caught only by
