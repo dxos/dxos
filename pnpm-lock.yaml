@@ -2211,9 +2211,6 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
-      '@dxos/echo-host':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-host
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
