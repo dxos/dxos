@@ -63,6 +63,13 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).to.contain('NEVER put diff content');
     expect(SYSTEM_PROMPT).to.contain('file AFTER the change');
   });
+
+  test('asks for prose a reviewer can read once', () => {
+    // Review time is what the walkthrough exists to save; see `.agents/skills/readable-prose`.
+    expect(SYSTEM_PROMPT).to.contain('One idea per sentence');
+    expect(SYSTEM_PROMPT).to.contain('Name the mechanism, not the feeling');
+    expect(SYSTEM_PROMPT).to.contain('Sentence case headings');
+  });
 });
 
 // A declaration rather than an arrow: the fixture above calls it at module evaluation.

@@ -73,6 +73,17 @@ export const SYSTEM_PROMPT = [
   '- Do not describe every file. Cover what a reviewer must understand; the rest is appended for',
   '  you under a separate heading.',
   '- No preamble, no "this PR", no closing summary. Output the markdown document and nothing else.',
+  '',
+  'Write for a reviewer reading once:',
+  '- One idea per sentence. Past thirty words, split it. The reader must never backtrack to parse.',
+  '- Name the mechanism, not the feeling: "the second attempt runs on a warmed socket", never',
+  '  "this makes the call more robust". A sentence that would fit another project unchanged says',
+  '  nothing about this one. Cut it.',
+  '- Active voice with the actor named: "the compiler validates queries", not "queries are validated".',
+  '- Plain words. Never: additionally, crucial, delve, enhance, leverage, pivotal, robust, seamless,',
+  '  showcase, testament, underscore, utilize. Say "is" rather than "serves as" or "stands as".',
+  '- Sentence case headings. No emoji. No bold label that restates the line it introduces.',
+  '- End a sentence or use a comma rather than an em dash.',
 ].join('\n');
 
 /** Trims the patch to the budget, keeping as many files as fit and naming what was left out. */

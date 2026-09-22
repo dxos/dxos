@@ -6,3 +6,4 @@ export * from './fill.ts';
 export * from './generate.ts';
 export * from './patch.ts';
 export * from './prompt.ts';
+export * from './score.ts';
