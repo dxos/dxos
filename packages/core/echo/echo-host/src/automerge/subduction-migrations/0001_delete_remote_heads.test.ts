@@ -12,9 +12,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { RuntimeProvider } from '@dxos/effect';
 import { bufferToArray } from '@dxos/util';
 
-import { type TestSqliteRuntime, createTestSqliteRuntime } from '../testing/index.ts';
-import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
-import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
+import { type TestSqliteRuntime, createTestSqliteRuntime } from '../../testing/index.ts';
+import { SqliteStorageAdapter } from '../sqlite-storage-adapter.ts';
+import { deleteSubductionRemoteHeads } from './0001_delete_remote_heads.ts';
 
 describe('deleteSubductionRemoteHeads', () => {
   const setup = async ({ onDisk = false }: { onDisk?: boolean } = {}) => {
