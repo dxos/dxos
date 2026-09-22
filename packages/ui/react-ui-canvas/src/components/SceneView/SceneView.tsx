@@ -642,6 +642,20 @@ export const SceneView = ({
     [capabilities.update, removePoint, registry, atoms.point, startDrag],
   );
 
+  /** The midpoint of a span: pressing it adds a control point there and moves it in the same gesture. */
+  const onMidpointPointerDown = useCallback(
+    (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update) {
+        return;
+      }
+      event.stopPropagation();
+      registry.set(atoms.point, { link: link.id, index });
+      const points = [...link.points.slice(0, index), point, ...link.points.slice(index)];
+      startDrag({ kind: 'point', id: link.id, index, points }, event);
+    },
+    [capabilities.update, registry, atoms.point, startDrag],
+  );
+
   // The right-click menu opens at the pointer, anchored to an empty element parked under the cursor
   // (the menu positions itself at a real element); what it offers depends on what was pressed.
   const menuAnchorRef = useRef<HTMLSpanElement>(null);
@@ -1530,6 +1544,7 @@ export const SceneView = ({
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
           onPointPointerDown={onPointPointerDown}
+          onMidpointPointerDown={onMidpointPointerDown}
           onPointContextMenu={onPointContextMenu}
         />
         {overlay}

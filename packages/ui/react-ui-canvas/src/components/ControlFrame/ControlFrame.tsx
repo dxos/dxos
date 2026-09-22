@@ -70,7 +70,18 @@ export type ControlFrameProps = {
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
   onPointPointerDown?: (link: SplineLink, index: number, event: React.PointerEvent) => void;
+  /** `index` is where in the link's points a control point at `point` would be inserted. */
+  onMidpointPointerDown?: (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => void;
   onPointContextMenu?: (link: SplineLink, index: number, event: React.MouseEvent) => void;
+};
+
+/** The midpoint of every span of a spline's polyline, each with the index a control point there takes. */
+const midpoints = (source: Point, points: readonly Point[], target: Point) => {
+  const vertices = [source, ...points, target];
+  return vertices.slice(1).map((vertex, index) => ({
+    index,
+    point: { x: (vertices[index].x + vertex.x) / 2, y: (vertices[index].y + vertex.y) / 2 },
+  }));
 };
 
 export const ControlFrame = memo(
@@ -88,11 +99,13 @@ export const ControlFrame = memo(
     onPortPointerDown,
     onEndPointerDown,
     onPointPointerDown,
+    onMidpointPointerDown,
     onPointContextMenu,
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
     const handleSize = 8 * unit;
     const portRadius = 5 * unit;
+    const midpointRadius = 4 * unit;
     const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
@@ -210,6 +223,18 @@ export const ControlFrame = memo(
                   onPointerDown={(event) => onEndPointerDown?.(link, end, event)}
                 />
               ))}
+              {/* Midpoints first, so a control point wins wherever the two land on each other. */}
+              {link.type === 'spline' &&
+                midpoints(geometry.source.point, points, geometry.target.point).map(({ index, point }) => (
+                  <circle
+                    key={`midpoint-${index}`}
+                    cx={point.x}
+                    cy={point.y}
+                    r={midpointRadius}
+                    className='fill-primary-500/40 pointer-events-auto cursor-copy hover:fill-primary-500'
+                    onPointerDown={(event) => onMidpointPointerDown?.(link, index, point, event)}
+                  />
+                ))}
               {link.type === 'spline' &&
                 points.map((point, index) => (
                   <rect

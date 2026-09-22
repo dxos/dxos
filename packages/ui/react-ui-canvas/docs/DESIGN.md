@@ -143,7 +143,7 @@ Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   
 LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, directed? /* = ends: { end: 'arrow' } */, ends?: { start?: Marker, end?: Marker } }
 Line     = LinkBase & { type: 'line' }
 Curve    = LinkBase & { type: 'curve' }                       // cubic, tangent along each port's normal
-Spline   = LinkBase & { type: 'spline', points: Point[] }     // Catmull-Rom through the control points
+Spline   = LinkBase & { type: 'spline', points: Point[] }     // rounded polyline bending around the points
 Endpoint = { node: NodeId, port?: PortId } | { point: Point } // no port = automatic (closest appropriate pair); a point = free end
 Marker   = 'arrow' | 'circle'
 
@@ -194,9 +194,12 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
   distance; it is recomputed whenever the projection re-emits, so re-arranging the diagram re-attaches links. A
   user who drags a link end onto a specific port pins it (`port` set); dragging it onto the node body unpins it.
 - **Link routes** by type (`route.ts`): `line` straight, `curve` cubic leaving each port along its normal, `spline`
-  Catmull-Rom through `[source, ...points, target]` emitted as cubic segments; `ortho` (phase 2) from
-  `@dxos/diagram`'s router. A selected spline shows its control points as handles: drag moves one, double-click
-  on the spline inserts one at the nearest segment, alt-click removes one; each is an `update` of `points`.
+  the polyline through `[source, ...points, target]` with each interior point rounded by a quadratic whose
+  control it is, so the route bends around a control point rather than through it and the radius shrinks on a
+  short segment; `ortho` (phase 2) from `@dxos/diagram`'s router. A selected spline shows its control points as
+  diamond handles and the midpoint of every span as a dot: drag a diamond to move a point, drag a dot to add
+  one there and move it in the same gesture, double-click on the spline inserts one at the nearest segment,
+  alt-click removes one; each is an `update` of `points`.
 - A scene referenced from two portals is a Muse "linked card"; nothing forbids it.
 - Ephemeral state (selection, hover, drag offset, camera, scene path, tool, last link type) lives in per-view
   atoms, never in the model.
@@ -410,7 +413,7 @@ packages/ui/react-ui-canvas/src/
       camera.ts            zoomAt, panBy, fitBounds, portalFrame, enterPortal / exitPortal, coverage, animateCamera
       hit.ts               derived sceneBounds, hitTest, nodesIntersecting, bounds helpers
       ports.ts             sidePorts, nodePorts, portPoint (exact offset), sideNormal, pairPorts (automatic pairing), nearestPort
-      route.ts             linePath, curvePath, splinePath (Catmull-Rom), linkPath by type, linkGeometry (free ends face the other end), insertIndex; ortho later †
+      route.ts             linePath, curvePath, splinePath (rounded polyline), linkPath by type, linkGeometry (free ends face the other end), insertIndex; ortho later †
       dnd.ts               nodeDragData / nodeDragType: the pragmatic-dnd payload a node type drops onto the canvas as
       order.ts             fractional z keys: between, sortByZ, topZ, initialKeys
       parts.ts             text parts of a node: partText, partValues, isMultiline
