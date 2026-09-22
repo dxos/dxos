@@ -341,8 +341,8 @@ Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to to
    on both sides of the swap: the major grid is preserved across levels. `g` and the Snap button toggle snapping only. **Creation snaps to the major grid**
    (`MAJOR_GRID`, 64 scene px), the derived scene bounds grow outward to it, and the fixture and the solver /
    layout defaults (pitch, size, origin) are multiples of it, so an untouched layout is already snapped and the
-   frame sits on lines. **Moving and resizing snap to the minor grid** (a drag, a resize handle, or an
-   arrow nudge; shift nudges by a major cell): a node arrives on the major grid, and neither its position nor
+   frame sits on lines. **Moving and resizing snap to the minor grid** (a drag, a resize handle, a spline's
+   control point, or an arrow nudge; shift nudges by a major cell): a node arrives on the major grid, and neither its position nor
    its size is coarse thereafter. Ports are exempt: each sits exactly at its offset along its side, so a short side still
    spreads them.
 2. **Scene layer**: one `div` whose transform is `scale(zoom) translate(x, y)`, set **imperatively from the

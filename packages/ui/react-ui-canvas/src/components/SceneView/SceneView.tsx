@@ -885,9 +885,11 @@ export const SceneView = ({
           break;
         }
         case 'point': {
+          // A control point moves on the minor grid, as a node does; the double-click that adds one is a
+          // creation and stays on the major grid.
           const point = toScene(event);
           const points = [...current.points];
-          points[current.index] = { x: snap(point.x), y: snap(point.y) };
+          points[current.index] = { x: snapMinor(point.x), y: snapMinor(point.y) };
           setDrag({ ...current, points });
           break;
         }
