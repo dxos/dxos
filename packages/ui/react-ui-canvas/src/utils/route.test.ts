@@ -20,23 +20,34 @@ describe('route', () => {
     const spline: Link = { type: 'spline', id: 's', ...ends, points: [{ x: 150, y: 100 }] };
     expect(linkPath(line, from, to)).toBe('M 0 0 L 300 0');
     expect(linkPath(curve, from, to)).toMatch(/^M 0 0 C .* 300 0$/);
-    expect(linkPath(spline, from, to)).toMatch(/^M 0 0 C .* 150 100 C .* 300 0$/);
+    expect(linkPath(spline, from, to)).toMatch(/^M 0 0 L .* Q 150 100, .* L 300 0$/);
   });
 
-  test('a spline through two points is a line and passes through every control point', ({ expect }) => {
+  test('a spline is a rounded polyline that bends around its control points', ({ expect }) => {
+    // Nothing between the ends is a plain line.
     expect(
       splinePath([
         { x: 0, y: 0 },
         { x: 10, y: 10 },
       ]),
     ).toBe('M 0 0 L 10 10');
-    const path = splinePath([
-      { x: 0, y: 0 },
-      { x: 5, y: 9 },
-      { x: 10, y: 0 },
-    ]);
-    expect(path).toContain(', 5 9');
-    expect(path).toContain(', 10 0');
+    // A right angle is cut 32 back along each segment; the corner is the quadratic's control, so the
+    // route bends around it and never reaches it.
+    expect(
+      splinePath([
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+      ]),
+    ).toBe('M 0 0 L 68 0 Q 100 0, 100 32 L 100 100');
+    // Segments shorter than two radii share what they have, so neighbouring corners never overlap.
+    expect(
+      splinePath([
+        { x: 0, y: 0 },
+        { x: 20, y: 0 },
+        { x: 40, y: 0 },
+      ]),
+    ).toBe('M 0 0 L 10 0 Q 20 0, 30 0 L 40 0');
   });
 
   test('insertIndex picks the nearest segment of the polyline', ({ expect }) => {
@@ -64,24 +75,5 @@ describe('route', () => {
     const half = linkGeometry(scene, defaultNodeRegistry, scene.links.half);
     expect(half?.target).toEqual({ point: { x: 256, y: 64 }, side: 'e' });
     expect(half?.source.side).toBe('w');
-  });
-
-  test('a spline leaves and enters its ports along the side normals', ({ expect }) => {
-    const path = splinePath(
-      [
-        { x: 0, y: 0 },
-        { x: 150, y: 100 },
-        { x: 300, y: 0 },
-      ],
-      'e',
-      'w',
-    );
-    // First control point is due east of the start, last control point due west of the end.
-    expect(path).toMatch(/^M 0 0 C (\d+(\.\d+)?) 0, /);
-    expect(path).toMatch(/, (\d+(\.\d+)?) 0, 300 0$/);
-    const [, firstX] = path.match(/^M 0 0 C (\d+(\.\d+)?) 0, /) ?? [];
-    const [, lastX] = path.match(/, (\d+(\.\d+)?) 0, 300 0$/) ?? [];
-    expect(Number(firstX)).toBeGreaterThan(0);
-    expect(Number(lastX)).toBeLessThan(300);
   });
 });

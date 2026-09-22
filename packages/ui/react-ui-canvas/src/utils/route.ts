@@ -4,8 +4,8 @@
 
 //
 // Link routes as SVG path data in scene coordinates, one per link type: `line` is straight, `curve`
-// leaves each port along its side's normal and bends toward the other end, `spline` passes through the
-// link's control points (Catmull-Rom, emitted as cubic segments). `ortho` (phase 2) will come from
+// leaves each port along its side's normal and bends toward the other end, `spline` is the polyline
+// through the link's control points with its corners rounded. `ortho` (phase 2) will come from
 // `@dxos/diagram`'s router.
 //
 
@@ -25,6 +25,9 @@ import { nodeBounds } from './shapes.ts';
 
 const MIN_TANGENT = 40;
 const TANGENT_RATIO = 0.4;
+
+/** How far a rounded corner reaches back along each of its segments, in scene px (half a major cell). */
+const CORNER_RADIUS = 32;
 
 export type RouteEnd = { point: Point; side: Side };
 
@@ -62,36 +65,37 @@ export const curvePoint = (from: RouteEnd, to: RouteEnd, t: number): Point => {
   };
 };
 
+const distance = (from: Point, to: Point): number => Math.hypot(to.x - from.x, to.y - from.y);
+
+/** The point `length` along the way from `from` towards `to`, or `from` when the two coincide. */
+const towards = (from: Point, to: Point, length: number): Point => {
+  const span = distance(from, to);
+  return span === 0
+    ? from
+    : { x: from.x + ((to.x - from.x) / span) * length, y: from.y + ((to.y - from.y) / span) * length };
+};
+
 /**
- * Catmull-Rom through every point, as cubic segments (the standard conversion with tension 1/6). At an
- * end that has a `side`, the tangent is that side's outward normal instead, so the curve leaves and
- * enters its ports perpendicular to the frame; two points without sides degrade to a line.
+ * The polyline through every point with its corners rounded: each interior point becomes a quadratic
+ * Bézier that takes the point as its control, so the route bends around a control point rather than
+ * through it and a corner reads as a corner. The radius shrinks to half the shorter adjoining segment
+ * where a point is close to its neighbours, so two corners never eat into each other.
  */
-export const splinePath = (points: readonly Point[], from?: Side, to?: Side): string => {
+export const splinePath = (points: readonly Point[]): string => {
   if (points.length < 2) {
     return '';
   }
-  if (points.length === 2 && !from && !to) {
-    return linePath(points[0], points[1]);
-  }
   const last = points.length - 1;
   const segments: string[] = [`M ${pt(points[0])}`];
-  for (let index = 0; index < last; index++) {
-    const p0 = points[Math.max(index - 1, 0)];
-    const p1 = points[index];
-    const p2 = points[index + 1];
-    const p3 = points[Math.min(index + 2, last)];
-    const reach = Math.max(MIN_TANGENT, Math.hypot(p2.x - p1.x, p2.y - p1.y) * TANGENT_RATIO);
-    const c1 =
-      index === 0 && from
-        ? { x: p1.x + sideNormal(from).x * reach, y: p1.y + sideNormal(from).y * reach }
-        : { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
-    const c2 =
-      index === last - 1 && to
-        ? { x: p2.x + sideNormal(to).x * reach, y: p2.y + sideNormal(to).y * reach }
-        : { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
-    segments.push(`C ${pt(c1)}, ${pt(c2)}, ${pt(p2)}`);
+  for (let index = 1; index < last; index++) {
+    const previous = points[index - 1];
+    const vertex = points[index];
+    const next = points[index + 1];
+    const radius = Math.min(CORNER_RADIUS, distance(previous, vertex) / 2, distance(vertex, next) / 2);
+    segments.push(`L ${pt(towards(vertex, previous, radius))}`);
+    segments.push(`Q ${pt(vertex)}, ${pt(towards(vertex, next, radius))}`);
   }
+  segments.push(`L ${pt(points[last])}`);
   return segments.join(' ');
 };
 
@@ -103,7 +107,7 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd): string => {
     case 'curve':
       return curvePath(from, to);
     case 'spline':
-      return splinePath([from.point, ...link.points, to.point], from.side, to.side);
+      return splinePath([from.point, ...link.points, to.point]);
   }
 };
 
