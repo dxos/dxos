@@ -42,6 +42,9 @@
       "path": "../react-ui-menu"
     },
     {
+      "path": "../react-ui-virtual"
+    },
+    {
       "path": "../ui-theme"
     },
     {

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -139,7 +139,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
 
   const handleApprove = useCallback(async () => {
     setBusy(true);
-    const { error } = await invokePromise(
+    const { data, error } = await invokePromise(
       GitHubOperation.SubmitPullRequestApproval,
       { pullRequest: pullRequestRef },
       { spaceId },
@@ -150,7 +150,11 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       await toast('approve', 'approve-pull-request-error.title', false, error.message);
       return;
     }
-    await toast('approve', 'approve-pull-request-success.title', true);
+    await toast(
+      'approve',
+      data?.commented ? 'approve-pull-request-commented.title' : 'approve-pull-request-success.title',
+      true,
+    );
     void refreshStatus();
   }, [invokePromise, pullRequestRef, spaceId, toast, refreshStatus]);
 
@@ -298,6 +302,19 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     [busy, generating, walkthrough, pullRequest.url, state, handleApprove, handleGenerate, handleCopyLink],
   );
 
+  // Cmd/Ctrl+Enter submits the composer, matching GitHub's own comment form.
+  const handleComposerKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        if (!busy && comment.trim()) {
+          void handleComment();
+        }
+      }
+    },
+    [busy, comment, handleComment],
+  );
+
   const extensions = useMemo(
     () => [
       createThemeExtensions({ themeMode, slots }),
@@ -348,6 +365,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 placeholder={t('comment-placeholder.label')}
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
+                onKeyDown={handleComposerKeyDown}
               />
             </Field.Root>
             <div className='flex justify-end gap-2'>
