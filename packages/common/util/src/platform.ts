@@ -86,3 +86,23 @@ export const getHostPlatform = () => {
     return 'unknown';
   }
 };
+
+/**
+ * The binding for this host, honouring the platform fallbacks: iOS reads macOS bindings, and Linux
+ * (or an unrecognized platform) reads Windows ones. Definitions carry `macos`/`windows` only, so a
+ * caller indexing by platform alone shows no shortcut on Linux for a key that does fire.
+ */
+export const resolveKeyBinding = (
+  keyBinding: string | Partial<Record<string, string>> | undefined,
+): string | undefined => {
+  if (typeof keyBinding === 'string' || keyBinding === undefined) {
+    return keyBinding;
+  }
+
+  const platform = getHostPlatform();
+  if (platform in keyBinding) {
+    return keyBinding[platform];
+  }
+
+  return platform === 'ios' ? keyBinding.macos : keyBinding.windows;
+};

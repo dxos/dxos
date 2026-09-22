@@ -24,7 +24,8 @@ import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
 export type QueryServiceProps = {
-  indexEngine: IndexEngine;
+  /** Read on each query: the host builds its engine when it opens, after this service is constructed. */
+  indexEngine: () => IndexEngine;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
@@ -201,7 +202,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
-        indexEngine: this._params.indexEngine,
+        indexEngine: this._params.indexEngine(),
         runtime: this._params.runtime,
         automergeHost: this._params.automergeHost,
         queryId: request.queryId ?? raise(new Error('query id required')),

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -30,6 +30,7 @@ import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
 import { newestWalkthrough } from '../../walkthrough/index.ts';
+import { pullRequestFailureKey } from './failure.ts';
 
 /** A definite content width, which the diff chunks cap themselves against. */
 const slots: ThemeExtensionsOptions['slots'] = {
@@ -164,7 +165,15 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     setGenerating(false);
     if (error) {
       log.warn('walkthrough generation failed', { error });
-      await toast('walkthrough', 'walkthrough-failed.title', false, error.message);
+      // A rejected credential is the one failure the user can act on, and `error.message` states it
+      // only as a bare `401` inside an HTTP error string.
+      const failureKey = pullRequestFailureKey(error, 'walkthrough-failed.title');
+      await toast(
+        'walkthrough',
+        failureKey,
+        false,
+        failureKey === 'walkthrough-failed.title' ? error.message : undefined,
+      );
       return;
     }
     await toast('walkthrough', 'walkthrough-ready.title', true);
@@ -289,6 +298,19 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     [busy, generating, walkthrough, pullRequest.url, state, handleApprove, handleGenerate, handleCopyLink],
   );
 
+  // Cmd/Ctrl+Enter submits the composer, matching GitHub's own comment form.
+  const handleComposerKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        if (!busy && comment.trim()) {
+          void handleComment();
+        }
+      }
+    },
+    [busy, comment, handleComment],
+  );
+
   const extensions = useMemo(
     () => [
       createThemeExtensions({ themeMode, slots }),
@@ -339,6 +361,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 placeholder={t('comment-placeholder.label')}
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
+                onKeyDown={handleComposerKeyDown}
               />
             </Field.Root>
             <div className='flex justify-end gap-2'>

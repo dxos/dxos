@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.11.4",
+  "version": "0.11.5",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -209,7 +209,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/shell": "workspace:*",
     "@dxos/solid-ui-geo": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
