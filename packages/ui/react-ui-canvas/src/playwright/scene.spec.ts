@@ -143,6 +143,14 @@ test.describe('SceneView', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
+  test('picking a creation tool clears the selection', async () => {
+    await scene.clickNode('scene:root/a');
+    expect(await scene.selectedNodes()).toEqual(['scene:root/a']);
+    await scene.focus();
+    await page.keyboard.press('r');
+    expect(await scene.selectedNodes()).toEqual([]);
+  });
+
   test('the line tool links two node bodies, without aiming at a port', async () => {
     const before = await scene.linkCount();
     await scene.focus();

@@ -509,7 +509,18 @@ export const SceneView = ({
   // Pointer state machine.
   //
 
-  const major = grid * MAJOR_GRID_RATIO;
+  /**
+   * The finest grid level actually drawn, which is what gestures snap to. A level fixed in scene units
+   * parts company with the lines as soon as the zoom moves: `Grid` keeps a level only while its cells are
+   * legible on screen, so far enough in the drawn lines are finer than the snap and far enough out (a
+   * nested scene, entered at a fraction of the parent's zoom) they are coarser and the snap stops landing
+   * on anything visible. Reading the level back from the same rule keeps the two the same by construction.
+   */
+  const minor = useMemo(() => {
+    const levels = GRID_LEVELS.map((ratio) => ratio * grid);
+    return levels.find((size) => size * camera.zoom >= GRID_RANGE[0]) ?? levels[levels.length - 1];
+  }, [grid, camera.zoom]);
+  const major = minor * MAJOR_GRID_RATIO;
   const snap = useCallback(
     (value: number) => (snapEnabled ? Math.round(value / major) * major : value),
     [snapEnabled, major],
@@ -517,8 +528,8 @@ export const SceneView = ({
   // Moving is finer than creating or resizing: a placed node keeps its major-grid size and edges land on
   // minor lines, so ports (drawn at the nearest major line) stay aligned while placement is not coarse.
   const snapMinor = useCallback(
-    (value: number) => (snapEnabled ? Math.round(value / grid) * grid : value),
-    [snapEnabled, grid],
+    (value: number) => (snapEnabled ? Math.round(value / minor) * minor : value),
+    [snapEnabled, minor],
   );
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
@@ -538,8 +549,14 @@ export const SceneView = ({
       if (next.kind === 'link') {
         registry.set(atoms.linkType, next.type);
       }
+      // A creation tool is about what comes next, so the outgoing selection's outline and handles would
+      // only sit over the drawing; the node the gesture makes becomes the selection.
+      if (next.kind === 'node' || next.kind === 'link') {
+        registry.set(atoms.selection, new Set<ElementId>());
+        registry.set(atoms.point, undefined);
+      }
     },
-    [registry, atoms.tool, atoms.linkType],
+    [registry, atoms.tool, atoms.linkType, atoms.selection, atoms.point],
   );
 
   const startDrag = useCallback(

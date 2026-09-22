@@ -67,6 +67,30 @@ test.describe('create sizing', () => {
     expect(clicked).toBeUndefined();
   });
 
+  test('a move snaps to the grid the user can see, however far the view is zoomed out', async () => {
+    const id = await added(async () => {
+      await page.keyboard.press('r');
+      await scene.drag({ x: 380, y: 640 }, { x: 620, y: 800 });
+    });
+    expect(id).toBeDefined();
+
+    // Zoom out until the finest level fixed in scene units would no longer be drawn: a snap to it would
+    // then move the node by less than a screen pixel, which reads as no snapping at all.
+    for (let step = 0; step < 6; ++step) {
+      await page.getByTestId('toolbar-zoom-out').click();
+    }
+    await page.waitForTimeout(300);
+
+    const before = await scene.box(scene.node(id!));
+    // Nudge by a few pixels: with snapping live the node must land on a line, so it either stays put or
+    // jumps a whole visible cell — never drifts by the few pixels the pointer moved.
+    const from = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
+    await scene.drag(from, { x: from.x + 5, y: from.y });
+    const after = await scene.box(scene.node(id!));
+    const moved = Math.abs(after.x - before.x);
+    expect(moved === 0 || moved > 8).toBe(true);
+  });
+
   test('a toolbar create covers the same screen area whatever the zoom', async () => {
     const createFromToolbar = async () => {
       await page.getByTestId('toolbar-create').click();
