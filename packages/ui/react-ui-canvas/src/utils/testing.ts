@@ -195,15 +195,15 @@ const childScene = (id: SceneId, name: string, elementId: (suffix: string) => st
       return builder
         .class(
           elementId('person'),
-          { x: scale(-14), y: scale(-4), width: scale(8), height: scale(8) },
+          { x: scale(-18), y: scale(-4), width: scale(8), height: scale(8) },
           'Person',
           ['name: string'],
           ['greet()'],
         )
         .class(
           elementId('org'),
-          { x: scale(6), y: scale(-4), width: scale(8), height: scale(8) },
-          'Organization',
+          { x: scale(-4), y: scale(-4), width: scale(8), height: scale(8) },
+          'Organization!!!',
           ['title: string'],
           ['hire(person)'],
         )

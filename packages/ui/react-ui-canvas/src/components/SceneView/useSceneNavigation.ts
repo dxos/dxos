@@ -164,9 +164,10 @@ export const useSceneNavigation = ({
         pushHistory({ path: registry.get(atoms.path), camera: entered });
       };
       if (animate) {
-        // Zoom onto the portal, but only as far as leaves the child at 1:1 after the swap, so its text
-        // lands at its natural size rather than magnified to fill the view.
-        const target = fitBounds(nodeBounds(portal), viewport, 0, 1 / portalScale(portal, childBounds));
+        // Land the child where fitting it would, margin and all, but never past 1:1, so its text lands at
+        // its natural size rather than magnified to fill the view. Expressed in the child's own space and
+        // mapped back out, so the zoom ends exactly where the swap puts the camera.
+        const target = exitPortal(fitBounds(childBounds, viewport, inset, 1), portal, childBounds);
         animateTo(target, () => swap(target));
         setOpening(portal.id);
       } else {
@@ -181,6 +182,7 @@ export const useSceneNavigation = ({
       atoms.hover,
       atoms.editing,
       viewport,
+      inset,
       interactedRef,
       animateTo,
       setCamera,
