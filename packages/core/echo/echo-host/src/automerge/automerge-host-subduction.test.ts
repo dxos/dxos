@@ -659,10 +659,11 @@ describe('AutomergeHost with Subduction', () => {
           host1Replicator.context!.onConnectionAuthScopeChanged(connection);
         }
 
-        // Its own window rather than the shared one: recovery here rides `_sharePolicyChangedTask`,
-        // which throttles to `SHARE_POLICY_KICK_MIN_INTERVAL_MS` (1s) before it even fans out, so
-        // the floor is seconds where every other assertion in the suite is milliseconds.
-        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
+        // Its own window, and the widest in the suite: recovery here rides `_sharePolicyChangedTask`,
+        // which throttles to `SHARE_POLICY_KICK_MIN_INTERVAL_MS` (1s) before it even fans out, over
+        // five documents. 10s held when the file ran alone but not against the rest of the suite in
+        // parallel; 15s is the value measured green across 20 consecutive full runs.
+        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 15_000 }).toBe(true);
       } finally {
         await host1.close();
         await host2.close();
