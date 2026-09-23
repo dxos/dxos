@@ -711,7 +711,7 @@ suite multi-peer: Journeys that need a second browser profile
     every member needs a profile the other suites do not: a second TAB shares storage and would
     pass these without replicating anything.
   tags: [nightly]
-  tests: [QA-7, QA-8]
+  tests: [QA-7, QA-8, QA-10]
 ```
 
 ```mdl

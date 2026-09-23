@@ -53,7 +53,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
   const identityKeyHex = identityHex(identity);
   // Confirmed only once the write resolves, since `writeText` rejects without focus or permission.
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string>();
+  const copied = copiedKey !== undefined && copiedKey === identityKeyHex;
   return (
     <>
       <div className='grow flex flex-col justify-center'>
@@ -85,8 +86,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           onClick={() => {
             if (identityKeyHex) {
               void navigator.clipboard.writeText(identityKeyHex).then(
-                () => setCopied(true),
-                () => setCopied(false),
+                () => setCopiedKey(identityKeyHex),
+                () => setCopiedKey(undefined),
               );
             }
           }}

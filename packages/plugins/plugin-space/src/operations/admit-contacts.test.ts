@@ -7,7 +7,9 @@ import { describe, expect, test } from 'vitest';
 import { SpaceMember_Role } from '@dxos/client/echo';
 import { type Contact } from '@dxos/client/halo';
 import { PublicKey } from '@dxos/keys';
-import { requirePublicKey } from '@dxos/protocols/buf';
+import { createBuf, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { admitContacts } from './admit-contacts.ts';
 
@@ -32,5 +34,21 @@ describe('admitContacts', () => {
       SpaceMember_Role.READER,
       SpaceMember_Role.READER,
     ]);
+  });
+
+  test('admits a known contact with its profile', async () => {
+    const key = PublicKey.random();
+    const known = createBuf(ContactSchema, {
+      identityKey: fromPublicKey(key),
+      profile: createBuf(ProfileDocumentSchema, { displayName: 'Alice' }),
+    });
+    const admitted: Contact[] = [];
+    const space = {
+      admitContact: async (contact: Contact) => {
+        admitted.push(contact);
+      },
+    };
+    await admitContacts(space, [key.toHex(), PublicKey.random().toHex()], SpaceMember_Role.EDITOR, [known]);
+    expect(admitted.map((contact) => contact.profile?.displayName)).toEqual(['Alice', undefined]);
   });
 });
