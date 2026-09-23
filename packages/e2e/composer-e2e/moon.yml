@@ -37,10 +37,14 @@ tasks:
       # The tag's own `bundle-e2e` dep is `~:bundle-e2e` and optional, so it resolves to nothing
       # here: the bundle this suite serves belongs to the app, not to this package.
       - composer-app:bundle-e2e
+      # `crx-extension.spec.ts` loads this unpacked build; without it the spec skips itself and the
+      # flow it automates silently stops being covered.
+      - composer-crx:bundle
     inputs:
       # The served bundle is not in this package's `@group(sources)`, so without this a change to
       # the app would replay a cached green run against a bundle it never tested.
       - /packages/apps/composer-app/out/composer/index.html
+      - /packages/apps/composer-crx/dist/manifest.json
 
   # Publishes the Playwright JSON report of the run that just finished to PostHog. Its own task
   # rather than a step inside `e2e`: a publish must never fail the suite, and the suite's exit code

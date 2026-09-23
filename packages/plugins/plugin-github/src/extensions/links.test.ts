@@ -116,4 +116,18 @@ describe('githubLinks', () => {
     expect(parsePullRequestReference('dxos/dxos')).toBeUndefined();
     expect(parsePullRequestReference('#13031')).toBeUndefined();
   });
+
+  // The extension's page action matches `https://github.com/*/*/pull/*` and passes the page's URL
+  // straight through, so every URL that pattern admits must name a pull request here.
+  test('every pull request page the extension matches is a readable reference', ({ expect }) => {
+    for (const url of [
+      'https://github.com/dxos/dxos/pull/1',
+      'https://github.com/dxos/dxos/pull/1/files',
+      'https://github.com/dxos/dxos/pull/1/commits',
+      'https://github.com/dxos/dxos/pull/1#issuecomment-1',
+      'https://github.com/dxos/dxos/pull/1?w=1',
+    ]) {
+      expect(parsePullRequestReference(url), url).toEqual({ owner: 'dxos', repo: 'dxos', number: 1 });
+    }
+  });
 });

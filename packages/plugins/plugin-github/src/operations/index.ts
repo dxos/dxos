@@ -13,6 +13,9 @@ export const GitHubOperationHandlerSet = OperationHandlerSet.lazy([
   GitHubOperation.SyncGitHubRepositories.pipe(Operation.lazyHandler(() => import('./sync.ts'))),
   GitHubOperation.GenerateWalkthrough.pipe(Operation.lazyHandler(() => import('./generate-walkthrough.ts'))),
   GitHubOperation.ImportPullRequest.pipe(Operation.lazyHandler(() => import('./import-pull-request.ts'))),
+  GitHubOperation.ImportPullRequestFromSnapshot.pipe(
+    Operation.lazyHandler(() => import('./import-pull-request-from-snapshot.ts')),
+  ),
   GitHubOperation.SubmitPullRequestApproval.pipe(
     Operation.lazyHandler(() => import('./submit-pull-request-approval.ts')),
   ),

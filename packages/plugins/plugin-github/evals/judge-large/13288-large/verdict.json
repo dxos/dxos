@@ -1,0 +1,38 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Opens with the compiler and its executor/service wiring (`SqlPlanCompiler`, `QueryPlan.SqlStep`, `resolveQueryExecutorMode`, `hasCompleteSnapshots`) and only then moves to the index-schema consequences, client comparator alignment and benchmarks/doc, so the core lands first even if the `parentId`/`propPathNormalized` migrations would read slightly better before the tests chapter.",
+      "why": "Prose repeatedly supplies the constraint rather than narrating: `INDEXED BY`/`NOT INDEXED` exist because SQLite without `ANALYZE` rates a `queueId` equality as cheap as `(spaceId, objectId)`, `localEntityId` returns null cross-space because ids can collide after a join, and `buildTypeDxnCondition`'s range exists because `= OR LIKE` cannot seek.",
+      "load": "Each chapter introduces its terms before use (mode resolution before `#execCompiled`, `planReadsObjectMeta` before the fallback), though the tests chapter points back to \"the earlier benchmark chapter\" that actually appears last.",
+      "trust": "Numbers and symbols check out (17× traversal regression, `idx_object_index_queueObjectId` pin, 200 differential rounds), but the client chapter calls `WorkingSetQueryExecutor` \"the client-side fallback path that runs when a query can't be ... evaluated by the SQL engine on the host\", which the patch and design doc contradict — it is the optimistic local layer."
+    }
+  },
+  "B": {
+    "order": 3,
+    "why": 4,
+    "load": 3,
+    "trust": 3,
+    "reasons": {
+      "order": "The compiler leads, which is right, but the executor/service wiring that makes it reachable (`QueryPlan.SqlStep`, `resolveQueryExecutorMode`, `#execCompiled`) is deferred two chapters behind the schema work, forcing the compiler chapter to promise \"covered in the pipeline wiring chapter\".",
+      "why": "Names the load-bearing reasons explicitly: `planReadsObjectMeta` declines because `objectSnapshot` strips `@meta`, the index hints are a deliberate override of a planner with no `ANALYZE` statistics, and the `localEntityId` null is to stop cross-space id collisions after a join.",
+      "load": "The entire 1,513-line `compile.ts` block is emitted twice — once for the class overview and again for \"predicate compilation\" — so a reviewer scrolls the same file body a second time before reaching the tests.",
+      "trust": "Most claims verify, but the client chapter describes `WorkingSetQueryExecutor` as \"the in-memory (host) executor used as the baseline for comparison tests\" when it lives in `echo-client/src/query/`, and it places the `hasCompleteSnapshots`/`countMissingSnapshots` pair together on `ObjectSnapshotIndex` when the former is on `IndexEngine`."
+    }
+  },
+  "C": {
+    "order": 2,
+    "why": 3,
+    "load": 3,
+    "trust": 3,
+    "reasons": {
+      "order": "The opening declares that \"the compiler itself (`echo-host/src/query/sql/compile.ts`) and its wiring into the executor are covered elsewhere\", so the core of the change is pushed into the 58-hunk \"Also changed\" dump and the document sequences only prerequisites.",
+      "why": "Good constraint-level reasoning inside its scope — `parent`/`source`/`target` hold full EID strings so a join needs concatenation the `(spaceId, objectId)` index cannot serve; trigram terms under three characters fall back to `LIKE` and cannot rank — but the title's \"behind a flag\" is never explained and `DX_ECHO_QUERY_EXECUTOR` never appears.",
+      "load": "Individually the sections are short and clear, yet a reviewer who has not seen the code is left without the compiler, the mode switch, or the fallback rule that the plan-step and `propPathNormalized` sections exist to serve.",
+      "trust": "\"The column list the migration test checks picks up all six new columns\" is wrong — the `migrations.test.ts` hunk adds three (`parentId`, `sourceId`, `targetId`) — and the fts fence names a malformed path, `packages/core/index-core/../../index-core/src/indexes/fts-index.ts`."
+    }
+  }
+}

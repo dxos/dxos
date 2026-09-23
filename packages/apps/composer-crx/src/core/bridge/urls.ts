@@ -12,8 +12,8 @@ import { decodeStringArray, defineState } from '../state/index.ts';
 export const DEFAULT_COMPOSER_URLS = [
   'http://localhost:5173/*',
   'http://localhost:4200/*',
-  'https://composer.dxos.org/*',
-  'https://labs.composer.space/*',
+  'https://preview.composer.space/*',
+  'https://composer.space/*',
 ];
 
 /** Configured Composer URL patterns, synced across the user's browsers (defaults to {@link DEFAULT_COMPOSER_URLS}). */

@@ -1,0 +1,50 @@
+{
+  "A": {
+    "order": 3,
+    "why": 3,
+    "load": 4,
+    "trust": 2,
+    "reasons": {
+      "order": "It leads with the `services: [Capability.Service, Database.Service]` change and then the call-site consequences, which is the right shape, but it stops after three hunks and never reaches the handler rewrite in `remove-objects.ts` (the `getSpace` → `Database.Service`, `ref.target` → `ref.peek()`, `loadRootCollection` changes) or the new `remove-objects.test.ts`, so the sequence ends before the core mechanics are covered.",
+      "why": "The opening does supply the constraint — a host with no client `Space` such as edge operation-service behind composer.dxos.network/mcp — but the second section mostly restates what the hunks show (\"Call sites source the space id ... from the object's own database reference\") without saying what breaks if they don't.",
+      "load": "The prose is short and readable in one pass, and terms like `spaceId` and invoke options are introduced before use, though the reader is left with no map of how many call sites exist.",
+      "trust": "The hunk reference `lines=394-224` is malformed (reversed range), and two claims go beyond the diff: \"silently removed nothing\" (the patch describes a failing `invariant`, not silence) and \"every existing call site continues to compile\", which the patch nowhere establishes."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 4,
+    "load": 5,
+    "trust": 4,
+    "reasons": {
+      "order": "The service declaration comes first, then call sites are ordered by *how* each one obtains `spaceId` — db already in scope, derived via `Obj.getDatabase`/`Type.getDatabase`, dependency-array growth, Effect generators, create-object cleanup paths — so each group builds on the previous rather than following file order.",
+      "why": "The intro names the failure avoided (\"on edge operation-service behind composer.dxos.network/mcp there is no such client, so the invariant failed and nothing was removed\") and each group states the reason its source is available, e.g. the game/illustrator cleanup path \"already has the space that created it, from the same options it used to create the object\".",
+      "load": "Each group is one sentence of setup followed by its hunks, no term is used before introduction, and a reviewer can follow the whole thing straight through without backtracking.",
+      "trust": "Nothing is fabricated, but `ConnectorCompanion.tsx` is filed under \"An Effect-based caller ... instead of a hook dependency array\" when it is in fact a `useCallback` whose deps grow to `[invokePromise, subject, db]`, and the handler rewrite plus `ConnectionArticle.tsx`/`plugin-blogger/app-graph-builder.ts` are silently absent."
+    }
+  },
+  "C": {
+    "order": 3,
+    "why": 4,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "It puts the `services` declaration first and consequences second, but the second section collapses thirteen call sites into one undifferentiated prose list after a single blogger hunk, so there is no progression inside the bulk of the change and no coverage of the handler rewrite or the new test.",
+      "why": "The first section gives the real constraint clearly — the space could be recovered from entities only on a client `Space`, and on the edge host \"every `removeObjects` call failed its invariant and removed nothing\" — and frames the declaration as making the space an invoker-resolved input.",
+      "load": "It is the shortest document and reads in one pass, but the run-on enumeration of plugin names forces the reader to hold a dozen file locations in mind with only one worked example to anchor them.",
+      "trust": "Two claims overreach: \"the same three lines at each of the dozen call sites\" is not what the hunks show, and \"either way the hook's dependency array grows to include it\" is false for the `Obj.getDatabase` cases — `EventArticle`, `MessageArticle` and `PublicationArticle` keep their original deps."
+    }
+  },
+  "D": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Declaration first with the removed comment explained, then a representative hunk for each sourcing pattern (`Obj.getDatabase` in EventArticle, in-scope `db` in TableArticle), then a closing summary of the remaining plugins — consequences follow the core rather than file order, though the handler rewrite and new test are never reached.",
+      "why": "It explains the rejected assumption by quoting the deleted comment's content (\"the space comes from live entities or space-qualified refs\") and why it fails behind the edge operation-service, and gives the reason each hook's dependency array must grow.",
+      "load": "Sections are short and each new pattern is named before its hunk; the only friction is the final paragraph asking the reader to extrapolate to seven named plugins from two examples.",
+      "trust": "Claims track the patch closely, including the correctly hedged \"each one that closes over that value in a `useCallback` adds it to the dependency array\" and an accurate plugin list; \"roughly a dozen call sites\" is hedged and matches the ~14 in the diff."
+    }
+  }
+}

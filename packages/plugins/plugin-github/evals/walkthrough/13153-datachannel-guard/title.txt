@@ -1,0 +1,1 @@
+mesh: guard the inbound data-channel path against disposal mid-blob (#13153)
