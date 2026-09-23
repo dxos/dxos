@@ -2,11 +2,36 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { PullRequest } from '@dxos/types';
+
 import { meta } from '#meta';
+import { Walkthrough } from '#types';
 
 export const translations = [
   {
     'en-US': {
+      [Type.getTypename(PullRequest.PullRequest)]: {
+        'typename.label': 'Pull request',
+        'typename.label_zero': 'Pull requests',
+        'typename.label_one': 'Pull request',
+        'typename.label_other': 'Pull requests',
+        'object-name.placeholder': 'New pull request',
+        'rename-object.label': 'Rename pull request',
+        'delete-object.label': 'Delete pull request',
+        'object-deleted.label': 'Pull request deleted',
+      },
+      [Type.getTypename(Walkthrough.Walkthrough)]: {
+        'typename.label': 'Walkthrough',
+        'typename.label_zero': 'Walkthroughs',
+        'typename.label_one': 'Walkthrough',
+        'typename.label_other': 'Walkthroughs',
+        'object-name.placeholder': 'New walkthrough',
+        'rename-object.label': 'Rename walkthrough',
+        'delete-object.label': 'Delete walkthrough',
+        'object-deleted.label': 'Walkthrough deleted',
+      },
       [meta.profile.key]: {
         'plugin.name': 'GitHub',
         'sync-now.label': 'Sync now',
@@ -54,4 +79,4 @@ export const translations = [
       },
     },
   },
-];
+] as const satisfies Resource[];
