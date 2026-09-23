@@ -48,7 +48,12 @@ describe('admitContacts', () => {
         admitted.push(contact);
       },
     };
-    await admitContacts(space, [key.toHex(), PublicKey.random().toHex()], SpaceMember_Role.EDITOR, [known]);
+    const unknownKey = PublicKey.random();
+    await admitContacts(space, [key.toHex().toUpperCase(), unknownKey.toHex()], SpaceMember_Role.EDITOR, [known]);
+    expect(admitted.map((contact) => requirePublicKey(contact.identityKey).toHex())).toEqual([
+      key.toHex(),
+      unknownKey.toHex(),
+    ]);
     expect(admitted.map((contact) => contact.profile?.displayName)).toEqual(['Alice', undefined]);
   });
 });

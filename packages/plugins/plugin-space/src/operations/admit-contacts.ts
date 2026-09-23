@@ -22,9 +22,10 @@ export const admitContacts = async (
   const result: AdmitContactsResult = { admitted: [], failed: [] };
   for (const key of identityKeys) {
     try {
+      const identityKey = PublicKey.from(key);
       const contact =
-        knownContacts.find((known) => toPublicKey(known.identityKey)?.toHex() === key) ??
-        createBuf(ContactSchema, { identityKey: fromPublicKey(PublicKey.from(key)) });
+        knownContacts.find((known) => toPublicKey(known.identityKey)?.equals(identityKey)) ??
+        createBuf(ContactSchema, { identityKey: fromPublicKey(identityKey) });
       await space.admitContact(contact, role);
       result.admitted.push(key);
     } catch (error) {
