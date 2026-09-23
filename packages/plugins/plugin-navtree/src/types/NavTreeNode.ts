@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Label } from '@dxos/react-ui';
+import { type DropKind, type TreeData } from '@dxos/react-ui-list';
 import { type MaybePromise, type Position } from '@dxos/util';
 
 export type NavTreeItemGraphNode = AppGraphNode.Node<
@@ -23,6 +26,7 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
         index?: number,
       ) => MaybePromise<void>;
       onLink: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
+      getDropKind: (source: TreeData, instruction: Instruction) => DropKind;
     }
   >
 >;

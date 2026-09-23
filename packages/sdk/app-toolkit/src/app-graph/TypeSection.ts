@@ -14,7 +14,7 @@ import { type Space, isSpace } from '@dxos/client/echo';
 import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import { type TreeData } from '@dxos/react-ui-list';
+import { type DropKind, type TreeData } from '@dxos/react-ui-list';
 import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
@@ -168,12 +168,8 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
 
   const { container } = options;
   const isJoin = (instruction: AppNode.Instruction) => instruction.type === 'make-child';
-  const blocksSameTypeJoin = (source: TreeData, instruction: AppNode.Instruction) =>
-    canDropSameType(source) && isJoin(instruction);
-  const blocksOtherReorder = (source: TreeData, instruction: AppNode.Instruction) =>
-    !canDropSameType(source) && !isJoin(instruction);
-  const blockInstruction = (source: TreeData, instruction: AppNode.Instruction) =>
-    blocksSameTypeJoin(source, instruction) || blocksOtherReorder(source, instruction);
+  const getDropKind = (source: TreeData, instruction: AppNode.Instruction): DropKind =>
+    canDropSameType(source) ? (isJoin(instruction) ? 'reject' : 'move') : isJoin(instruction) ? 'link' : 'reject';
 
   const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) => {
     const onRearrange = makeSectionRearrangeCallback(space, typename);
@@ -185,7 +181,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
           object,
           onRearrange,
           ...(container
-            ? { container: container(object), canDrop: AppNode.CAN_DROP_OBJECT, blockInstruction }
+            ? { container: container(object), canDrop: AppNode.CAN_DROP_OBJECT, getDropKind }
             : { canDrop: canDropSameType }),
         }),
       )

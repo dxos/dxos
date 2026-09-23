@@ -4,6 +4,7 @@
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { type DropKind } from '@dxos/react-ui-list';
 import { isNonNullable } from '@dxos/util';
 
 import { NavTreeNode } from '#types';
@@ -19,9 +20,7 @@ export const getParent = (
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
-export type DropOperation = 'move' | 'link' | 'reject';
-
-export const resolveDropOperation = ({
+export const resolveDropKind = ({
   source,
   sourceParent,
   destination,
@@ -29,7 +28,7 @@ export const resolveDropOperation = ({
   source: NavTreeNode.NavTreeItemGraphNode;
   sourceParent?: NavTreeNode.NavTreeItemGraphNode;
   destination?: NavTreeNode.NavTreeItemGraphNode;
-}): DropOperation => {
+}): DropKind => {
   const { persistenceClass, persistenceKey } = source.properties;
   if (
     !destination ||

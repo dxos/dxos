@@ -150,9 +150,8 @@ const L1PanelContent = ({
             draggable
             gridTemplateColumns={`[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
-            blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
-            getDropEffect={navTreeContext.getDropEffect}
+            getDropKind={navTreeContext.getDropKind}
             canSelect={navTreeContext.canSelect}
             onOpenChange={navTreeContext.onOpenChange}
             onSelect={navTreeContext.onSelect}

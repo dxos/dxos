@@ -19,7 +19,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -27,7 +27,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { type DropOperation, filterItems, getParent, resolveDropOperation } from '../../util.ts';
+import { filterItems, getParent, resolveDropKind } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -51,7 +51,7 @@ const resolveDrop = (
   graph: AppGraph.ReadableGraph,
   { source, target, instruction }: { source: TreeData; target: TreeData; instruction: Instruction },
 ): {
-  operation: 'rearrange' | DropOperation;
+  operation: 'rearrange' | DropKind;
   sourceParent?: NavTreeNode.NavTreeItemGraphNode;
   destination?: NavTreeNode.NavTreeItemGraphNode;
 } => {
@@ -64,7 +64,7 @@ const resolveDrop = (
 
   const destination = instruction.type === 'make-child' ? targetNode : getParent(graph, targetNode, target.path);
   return {
-    operation: resolveDropOperation({ source: sourceNode, sourceParent, destination }),
+    operation: resolveDropKind({ source: sourceNode, sourceParent, destination }),
     sourceParent,
     destination,
   };
@@ -149,20 +149,18 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [invokePromise, graph],
     );
 
-    const blockInstruction = useCallback(
-      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }) => {
-        return target.item.properties.blockInstruction?.(source, instruction) ?? false;
-      },
-      [],
-    );
-
     const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
       return target.item.properties.canDrop?.(source) ?? false;
     }, []);
 
-    const getDropEffect = useCallback(
-      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }) =>
-        resolveDrop(graph, { source, target, instruction }).operation === 'link' ? 'link' : 'move',
+    const getDropKind = useCallback(
+      ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }): DropKind => {
+        if (target.item.properties.getDropKind?.(source, instruction) === 'reject') {
+          return 'reject';
+        }
+        const { operation } = resolveDrop(graph, { source, target, instruction });
+        return operation === 'rearrange' ? 'move' : operation;
+      },
       [graph],
     );
 
@@ -322,10 +320,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         model,
         popoverAnchorId,
         renderItemEnd: NavTreeItemEnd,
-        blockInstruction,
         canDrop,
         canSelect,
-        getDropEffect,
+        getDropKind,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
         onSelect: handleSelect,
@@ -335,10 +332,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [
         model,
         popoverAnchorId,
-        blockInstruction,
         canDrop,
         canSelect,
-        getDropEffect,
+        getDropKind,
         handleBack,
         handleOpenChange,
         handleSelect,

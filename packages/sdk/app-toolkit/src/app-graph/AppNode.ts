@@ -14,7 +14,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { type TreeData } from '@dxos/react-ui-list';
+import { type DropKind, type TreeData } from '@dxos/react-ui-list';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app/index.ts';
@@ -104,7 +104,6 @@ export const canDropMemberOf =
 // Module-level caches.
 //
 
-export const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
 export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
 export const containerPartialsCache = new Map<string, ReturnType<typeof buildContainerPartials>>();
 
@@ -193,7 +192,7 @@ export const makeObject = ({
   onRearrange,
   container,
   canDrop: canDropOverride,
-  blockInstruction: blockInstructionOverride,
+  getDropKind,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.AtomContext;
@@ -216,8 +215,8 @@ export const makeObject = ({
   container?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
-  /** Blocks drop instructions the row accepts from some sources but not others. */
-  blockInstruction?: (source: TreeData, instruction: Instruction) => boolean;
+  /** What a drop at each instruction does, for a row whose answer depends on the source. */
+  getDropKind?: (source: TreeData, instruction: Instruction) => DropKind;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -261,13 +260,6 @@ export const makeObject = ({
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
-  const objectUri = Obj.getURI(object);
-  let blockInstruction = blockInstructionOverride ?? blockInstructionCache.get(objectUri);
-  if (!blockInstruction) {
-    blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectUri, blockInstruction);
-  }
-
   const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
 
   return {
@@ -291,7 +283,7 @@ export const makeObject = ({
       droppable: droppable ? undefined : false,
       onRearrange,
       ...(container ? getContainerPartials(container, db) : {}),
-      blockInstruction,
+      getDropKind,
       canDrop,
       [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,

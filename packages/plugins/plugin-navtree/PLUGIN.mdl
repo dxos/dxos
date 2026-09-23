@@ -231,8 +231,11 @@ feat F-4: Drag and Drop
     when: the drop crosses a move scope and the target accepts links
     then: onLink callback on the target is called and the source's parent is left alone
   req F-4.6:
-    when: target node reports blockInstruction for an instruction type
+    when: target node's getDropKind returns reject for an instruction
     then: that instruction is blocked and the drop is not applied
+  req F-4.7:
+    when: a drop would link rather than move
+    then: the drop indicator is dashed
 ```
 
 ```mdl

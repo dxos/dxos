@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { NavTreeNode } from '#types';
 
-import { resolveDropOperation } from './util.ts';
+import { resolveDropKind } from './util.ts';
 
 const SPACE = 'space';
 
@@ -24,33 +24,31 @@ const parent = (id: string, properties: Partial<NavTreeNode.NavTreeItemGraphNode
     ...properties,
   });
 
-describe('resolveDropOperation', () => {
+describe('resolveDropKind', () => {
   test('moves between parents that share a move scope', ({ expect }) => {
     const sourceParent = parent('from', { moveScope: 'collection' });
     const destination = parent('to', { moveScope: 'collection' });
-    expect(resolveDropOperation({ source: item, sourceParent, destination })).toBe('move');
+    expect(resolveDropKind({ source: item, sourceParent, destination })).toBe('move');
   });
 
   test('links when the drop crosses a move scope', ({ expect }) => {
     const destination = parent('to', { moveScope: 'collection' });
-    expect(resolveDropOperation({ source: item, sourceParent: parent('project'), destination })).toBe('link');
-    expect(resolveDropOperation({ source: item, sourceParent: destination, destination: parent('project') })).toBe(
-      'link',
-    );
+    expect(resolveDropKind({ source: item, sourceParent: parent('project'), destination })).toBe('link');
+    expect(resolveDropKind({ source: item, sourceParent: destination, destination: parent('project') })).toBe('link');
   });
 
   test('rejects a drop back into its own parent', ({ expect }) => {
     const sourceParent = parent('from', { moveScope: 'collection' });
-    expect(resolveDropOperation({ source: item, sourceParent, destination: sourceParent })).toBe('reject');
+    expect(resolveDropKind({ source: item, sourceParent, destination: sourceParent })).toBe('reject');
   });
 
   test('rejects a drop from another space', ({ expect }) => {
     const destination = parent('to', { acceptPersistenceKey: new Set(['other']) });
-    expect(resolveDropOperation({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
+    expect(resolveDropKind({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
   });
 
   test('rejects a destination that accepts neither a move nor a link', ({ expect }) => {
     const destination = parent('to', { onMove: undefined, onLink: undefined });
-    expect(resolveDropOperation({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
+    expect(resolveDropKind({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
   });
 });
