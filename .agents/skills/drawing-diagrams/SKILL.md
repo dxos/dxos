@@ -23,9 +23,8 @@ this prints what each module imports, internal and workspace:
 
 ```bash
 cd packages/<area>/<pkg>/src
-for f in *.ts */*.ts; do
-  case $f in *.test.ts|*.tst.ts|index.ts|*/index.ts) continue;; esac
-  echo "$f -> $(grep -oE "from '(\.\.?/|@dxos/)[^']+'" $f | sed -E "s/from '//;s/'//" | sort -u | tr '\n' ' ')"
+find . -name '*.ts' ! -name '*.test.ts' ! -name '*.tst.ts' ! -name index.ts | sort | while read -r f; do
+  echo "$f -> $(grep -oE "from '(\.\.?/|@dxos/)[^']+'" "$f" | sed -E "s/from '//;s/'//" | sort -u | tr '\n' ' ')"
 done
 ```
 
