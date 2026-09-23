@@ -3,14 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Blob, Obj, Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
+import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Task } from '@dxos/types';
+import { File, PullRequest, Question, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -175,6 +176,264 @@ const seedDrag = (): Task.Task[] => {
   const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
   const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
   return [a, b, c];
+};
+
+/** A public CC0 clip; video is too large to generate or inline, so its blob points at it externally. */
+const SAMPLE_VIDEO_URL = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm';
+
+/** A small PNG drawn on a canvas, so the image blob carries real inline bytes without a fixture file. */
+const makePngBytes = (): Uint8Array => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 320;
+  canvas.height = 200;
+  const context = canvas.getContext('2d');
+  if (context) {
+    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#6f4e37');
+    gradient.addColorStop(1, '#e0b973');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#ffffff';
+    context.font = 'bold 28px sans-serif';
+    context.fillText('Label v2', 24, 110);
+  }
+  const base64 = canvas.toDataURL('image/png').split(',')[1];
+  return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+};
+
+/**
+ * One task per artifact kind — a GitHub pull request, an image, a video and a question — plus one
+ * carrying the first three, so a row with several tags is covered too. Media is a `File` owning a `Blob`, which is the
+ * shape an uploaded attachment takes in a space.
+ */
+const seedArtifacts = (): Task.Task[] => {
+  const pullRequest = PullRequest.make({
+    owner: 'dxos',
+    repo: 'dxos',
+    number: 12752,
+    title: 'react-ui-task: render task artifacts',
+    url: 'https://github.com/dxos/dxos/pull/12752',
+    state: 'open',
+    author: 'scout',
+    baseBranch: 'main',
+    headBranch: 'task-artifacts',
+    additions: 214,
+    deletions: 38,
+  });
+
+  const imageBytes = makePngBytes();
+  const image = File.make({
+    name: 'label-v2.png',
+    data: Ref.make(Blob.make({ type: 'image/png', size: imageBytes.length, data: Blob.inlineData(imageBytes) })),
+  });
+
+  const video = File.make({
+    name: 'roast-timelapse.webm',
+    data: Ref.make(Blob.make({ type: 'video/webm', size: 554_058, data: Blob.externalData(SAMPLE_VIDEO_URL) })),
+  });
+
+  // The question points back at the task it blocks, so the task exists first and takes it after.
+  const blocked = Task.make({
+    title: 'Choose the launch roast',
+    status: 'blocked',
+    assignee: { role: 'assistant', name: 'Scout' },
+  });
+  const question = Question.make({
+    text: 'Which roast should launch first?',
+    context: 'Both lots cupped well; the label and the post need one name.',
+    options: [
+      { title: 'Ethiopian Guji', description: 'Brighter, fruit-forward.' },
+      { title: 'Colombian Huila', description: 'Rounder, chocolate notes.' },
+    ],
+    task: Ref.make(blocked),
+  });
+  Obj.update(blocked, (blocked) => {
+    blocked.artifacts = [Ref.make(question)];
+  });
+
+  return [
+    blocked,
+    Task.make({
+      title: 'Render artifacts in the task list',
+      status: 'review',
+      priority: 'high',
+      assignee: { role: 'assistant', name: 'Scout' },
+      artifacts: [Ref.make(pullRequest)],
+    }),
+    Task.make({
+      title: 'Design the new label',
+      status: 'done',
+      assignee: { email: 'riley@example.com' },
+      artifacts: [Ref.make(image)],
+    }),
+    Task.make({
+      title: 'Film the roast',
+      status: 'started',
+      artifacts: [Ref.make(video)],
+    }),
+    Task.make({
+      title: 'Prepare the launch post',
+      status: 'todo',
+      description: 'Collects everything the other tasks produced.',
+      artifacts: [Ref.make(pullRequest), Ref.make(image), Ref.make(video)],
+    }),
+  ];
+};
+
+/** A URL the browser can load for a blob: an object URL for inline bytes, the URI itself for http(s). */
+const useBlobUrl = (blob: Blob.Blob | undefined): string | undefined => {
+  const [url, setUrl] = useState<string>();
+  useEffect(() => {
+    if (!blob) {
+      setUrl(undefined);
+      return;
+    }
+    if (blob.data._tag === 'external') {
+      setUrl(/^https?:/.test(blob.data.uri) ? blob.data.uri : undefined);
+      return;
+    }
+    // `globalThis` because the `Blob` namespace import shadows the DOM class; the copy narrows the
+    // bytes to an `ArrayBuffer`-backed view, which is what `BlobPart` accepts.
+    const objectUrl = URL.createObjectURL(new globalThis.Blob([new Uint8Array(blob.data.bytes)], { type: blob.type }));
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [blob]);
+  return url;
+};
+
+const FilePreview = ({ file }: { file: File.File }) => {
+  const blob = file.data.target;
+  const url = useBlobUrl(blob);
+  const type = blob?.type ?? '';
+  if (!url) {
+    return null;
+  }
+  if (type.startsWith('image/')) {
+    return <img src={url} alt={file.name} className='w-full rounded-sm' data-testid='artifact-preview.image' />;
+  }
+  if (type.startsWith('video/')) {
+    return <video src={url} controls muted className='w-full rounded-sm' data-testid='artifact-preview.video' />;
+  }
+  return null;
+};
+
+const QuestionPreview = ({ question }: { question: Question.Question }) => (
+  <>
+    {question.context && (
+      <Card.Row>
+        <Card.Text variant='description'>{question.context}</Card.Text>
+      </Card.Row>
+    )}
+    {(question.options ?? []).map((option) => (
+      <Card.Row key={option.title}>
+        <Card.Text data-testid='artifact-preview.question.option'>
+          {option.title}
+          {option.description && ` — ${option.description}`}
+        </Card.Text>
+      </Card.Row>
+    ))}
+  </>
+);
+
+const iconFor = (artifact: Obj.Unknown): string =>
+  PullRequest.instanceOf(artifact)
+    ? 'ph--git-pull-request--regular'
+    : Obj.instanceOf(Question.Question, artifact)
+      ? 'ph--question--regular'
+      : 'ph--file--regular';
+
+const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
+  <>
+    <Card.Row>
+      <Card.Text variant='description'>
+        {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
+      </Card.Text>
+    </Card.Row>
+    <Card.Row>
+      <Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
+        +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
+      </Card.Text>
+    </Card.Row>
+  </>
+);
+
+/**
+ * Answers the card request an artifact tag dispatches, standing in for PreviewPlugin so the story
+ * shows what each artifact is without the plugin layers. The event does not bubble, so it is caught
+ * in the capture phase on `window`, as the app's own host does.
+ */
+const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifacts: Obj.Unknown[] }>) => {
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const [artifact, setArtifact] = useState<Obj.Unknown>();
+  const [open, setOpen] = useState(false);
+
+  const handleActivate = useCallback(
+    (event: Event) => {
+      if (!(event instanceof DxAnchorActivate)) {
+        return;
+      }
+      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
+      if (match) {
+        triggerRef.current = event.trigger;
+        setArtifact(match);
+        setOpen(true);
+      }
+    },
+    [artifacts],
+  );
+
+  useEffect(() => {
+    window.addEventListener(DX_ANCHOR_ACTIVATE, handleActivate, true);
+    return () => window.removeEventListener(DX_ANCHOR_ACTIVATE, handleActivate, true);
+  }, [handleActivate]);
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.VirtualTrigger virtualRef={triggerRef} />
+      {children}
+      {artifact && (
+        <Popover.Portal>
+          <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+            <Popover.Viewport classNames='dx-card-popover-width'>
+              <Card.Root border={false} data-testid='artifact-preview'>
+                <Card.Header>
+                  <Card.Block>
+                    <Icon icon={iconFor(artifact)} />
+                  </Card.Block>
+                  <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
+                </Card.Header>
+                {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
+                {Obj.instanceOf(Question.Question, artifact) && <QuestionPreview question={artifact} />}
+                {Obj.instanceOf(File.File, artifact) && (
+                  <Card.Row>
+                    <FilePreview file={artifact} />
+                  </Card.Row>
+                )}
+              </Card.Root>
+            </Popover.Viewport>
+            <Popover.Arrow />
+          </Popover.Content>
+        </Popover.Portal>
+      )}
+    </Popover.Root>
+  );
+};
+
+/** The default story under a preview host that knows the seed's artifacts. */
+const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
+  const tasks = useMemo(() => (props.seed ?? seedArtifacts)(), [props.seed]);
+  const artifacts = useMemo(
+    () => [
+      ...new Set(tasks.flatMap((task) => (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : [])))),
+    ],
+    [tasks],
+  );
+  const seed = useCallback(() => tasks, [tasks]);
+  return (
+    <ArtifactPreviewHost artifacts={artifacts}>
+      <DefaultStory {...props} seed={seed} />
+    </ArtifactPreviewHost>
+  );
 };
 
 const DefaultStory = ({
@@ -499,6 +758,57 @@ export const TestLongArtifactTag: Story = {
       await expect(chips.scrollWidth).toBeGreaterThan(chips.clientWidth);
       await expect(title.getBoundingClientRect().width).toBeGreaterThan(0);
     });
+  },
+};
+
+/**
+ * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
+ * `Blob`), and a question blocking its task. Clicking a tag opens a preview of the artifact it names;
+ * the question's also opens on hover.
+ */
+export const WithArtifacts: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedArtifacts,
+    showGroupLabels: false,
+    showDescription: true,
+  },
+};
+
+/** Each artifact kind opens its own preview: the pull request's summary, the image, the video, the question. */
+export const TestArtifactPreviews: Story = {
+  ...WithArtifacts,
+  play: async ({ canvasElement }) => {
+    const findTag = (label: string) =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"] .col-\\[chips\\] *')].find(
+        (element) => element.textContent === label,
+      );
+    const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
+
+    const open = async (label: string, testId: string) => {
+      const tag = await waitFor(
+        async () => {
+          const tag = findTag(label);
+          if (!tag) {
+            throw new Error(`Artifact tag not found: ${label}`);
+          }
+          return tag;
+        },
+        { timeout: 10_000 },
+      );
+      await userEvent.click(tag);
+      await waitFor(async () => expect(preview()?.querySelector(`[data-testid="${testId}"]`)).toBeTruthy(), {
+        timeout: 5_000,
+      });
+      await expect(preview()?.textContent).toContain(label);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(async () => expect(preview()).toBeNull());
+    };
+
+    await open('react-ui-task: render task artifacts', 'artifact-preview.pullRequest');
+    await open('label-v2.png', 'artifact-preview.image');
+    await open('roast-timelapse.webm', 'artifact-preview.video');
+    await open('Which roast should launch first?', 'artifact-preview.question.option');
   },
 };
 
