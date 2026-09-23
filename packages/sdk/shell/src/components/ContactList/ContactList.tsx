@@ -8,20 +8,12 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Avatar, Clipboard, Tag, ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
-import { IdentityListItem } from '../IdentityList/index.ts';
-
-export type ContactSpace = { id: string; key: PublicKey; name?: string };
-
-export type ContactListProps = {
-  contacts: Contact[];
-  spaces: ContactSpace[];
-  filter?: string;
-  onSelectSpace?: (space: ContactSpace) => void;
-};
+import { profileString } from '../../util/index.ts';
 
 export const contactKeyHex = (contact: Pick<Contact, 'identityKey'>): string =>
   requirePublicKey(contact.identityKey).toHex();
@@ -39,7 +31,16 @@ export const filterContacts = (contacts: Contact[], filter: string): Contact[] =
   );
 };
 
-export const ContactList = ({ contacts, spaces, filter = '', onSelectSpace }: ContactListProps) => {
+export type ContactSpace = { id: string; key: PublicKey; name?: string };
+
+export type ContactListProps = ThemedClassName<{
+  contacts: Contact[];
+  spaces: ContactSpace[];
+  filter?: string;
+  onSelectSpace?: (space: ContactSpace) => void;
+}>;
+
+export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelectSpace }: ContactListProps) => {
   const { t } = useTranslation(translationKey);
   // filterContacts returns the input array unchanged when the filter is empty, so copy before sorting to avoid mutating the caller's prop.
   const visible = useMemo(
@@ -53,32 +54,74 @@ export const ContactList = ({ contacts, spaces, filter = '', onSelectSpace }: Co
   }
 
   return (
-    <Listbox.Root>
-      <Listbox.Content classNames='flex flex-col gap-2' aria-label={t('contacts.label')} data-testid='contact-list'>
-        {visible.map((contact) => {
-          const common = (contact.commonSpaces ?? [])
-            .map((key) => spaces.find((space) => toPublicKey(key)?.equals(space.key)))
-            .filter((space): space is ContactSpace => space !== undefined);
-          return (
-            <div key={contactKeyHex(contact)} className='flex flex-col gap-1'>
-              <IdentityListItem identity={contact} />
-              <div className='flex flex-wrap gap-1 ps-12'>
+    <Clipboard.Provider>
+      <Listbox.Root>
+        <Listbox.Content
+          classNames={[classNames, 'flex flex-col gap-2']}
+          aria-label={t('contacts.label')}
+          data-testid='contact-list'
+        >
+          {visible.map((contact) => (
+            <ContactListItem
+              key={contactKeyHex(contact)}
+              contact={contact}
+              spaces={spaces}
+              onSelectSpace={onSelectSpace}
+            />
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
+    </Clipboard.Provider>
+  );
+};
+
+type ContactListItemProps = Pick<ContactListProps, 'spaces' | 'onSelectSpace'> & { contact: Contact };
+
+/** `Listbox.ItemContent` aligns the key and shared-space tags under the name, beside the avatar rail. */
+const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProps) => {
+  const { t } = useTranslation(translationKey);
+  const labelId = useId('contactListItem__label');
+  const identityKey = requirePublicKey(contact.identityKey);
+  const fallback = keyToFallback(identityKey);
+  const displayName = contactDisplayName(contact);
+  const common = (contact.commonSpaces ?? [])
+    .map((key) => spaces.find((space) => toPublicKey(key)?.equals(space.key)))
+    .filter((space): space is ContactSpace => space !== undefined);
+
+  return (
+    <Listbox.Item id={identityKey.toHex()} data-testid='contact-list.item'>
+      <Listbox.ItemContent
+        icon={
+          <Avatar.Root labelId={labelId}>
+            <Avatar.Content
+              hue={profileString(contact, 'hue') ?? fallback.hue}
+              fallback={profileString(contact, 'emoji') ?? fallback.emoji}
+            />
+          </Avatar.Root>
+        }
+        title={<span id={labelId}>{displayName}</span>}
+        description={
+          <span className='flex flex-col gap-1'>
+            <span className='flex items-center gap-1'>
+              <span className='font-mono truncate' title={identityKey.toHex()}>
+                {identityKey.truncate()}
+              </span>
+              <Clipboard.IconButton variant='ghost' size={4} value={identityKey.toHex()} label={t('copy-key.label')} />
+            </span>
+            {common.length > 0 && (
+              <span className='flex flex-wrap gap-1'>
                 {common.map((space) => (
-                  <Button
-                    key={space.id}
-                    variant='ghost'
-                    density='sm'
-                    onClick={() => onSelectSpace?.(space)}
-                    data-testid='contact-list.space'
-                  >
-                    {space.name ?? t('unnamed-space.label')}
-                  </Button>
+                  <Tag key={space.id} asChild>
+                    <button type='button' onClick={() => onSelectSpace?.(space)} data-testid='contact-list.space'>
+                      {space.name ?? t('unnamed-space.label')}
+                    </button>
+                  </Tag>
                 ))}
-              </div>
-            </div>
-          );
-        })}
-      </Listbox.Content>
-    </Listbox.Root>
+              </span>
+            )}
+          </span>
+        }
+      />
+    </Listbox.Item>
   );
 };

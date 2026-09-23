@@ -184,6 +184,7 @@ export const translations = [
         'contacts.label': 'Contacts',
         'empty-contacts.message': 'No contacts yet — people appear here once you share a space with them.',
         'unnamed-space.label': 'Untitled space',
+        'copy-key.label': 'Copy public key',
         'contact-picker.placeholder': 'Choose people',
         'contact-picker.search': 'Search contacts…',
         'contact-picker.empty': 'No matching contacts.',
