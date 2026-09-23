@@ -811,6 +811,12 @@ type TaskListEditProps = ComposableProps<{
    * a list (a dialog, a story) has no columns to line up with.
    */
   grid?: boolean;
+  /**
+   * Only ever create — the pane ignores the selection instead of editing it. For a host whose detail
+   * lives elsewhere (a task plank opened from the row): there, a selected row would otherwise turn
+   * the only create affordance into an editor, leaving no way to type a new task.
+   */
+  createOnly?: boolean;
 }>;
 
 /**
@@ -827,6 +833,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       descriptionPlaceholder = 'Add a description',
       descriptionExtensions,
       grid,
+      createOnly = false,
       ...props
     },
     forwardedRef,
@@ -837,7 +844,10 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
 
-    const task = useMemo(() => tasks.find(({ id }) => id === selected), [tasks, selected]);
+    const task = useMemo(
+      () => (createOnly ? undefined : tasks.find(({ id }) => id === selected)),
+      [createOnly, tasks, selected],
+    );
     // Subscribe to the selected task so the pane follows a rename made anywhere else.
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;

@@ -1002,22 +1002,25 @@ companion).
       project's Tasks tab has none. Add label chips beside the text (the model is
       plugin-inbox's `MailboxFilter` + `mailbox-search.ts`) and a sort control,
       and surface them in the project's toolbar.
-- [ ] **Level chain for task detail** — `DeckAnnotation` on `TaskSet`
+- [x] **Level chain for task detail** — `DeckAnnotation` on `TaskSet`
       (`taskSet → task`) and a `task` rung on `Project`, so a row opened from
       either host reuses one plank rather than stacking one per click.
-- [ ] **Hidden graph children per task** — a `taskSetTasks` connector in
+- [x] **Hidden graph children per task** — a `taskSetTasks` connector in
       plugin-tasks (hidden `Task` nodes under a `TaskSet` node) and a matching
       one in plugin-projects under `PROJECT_URL`, plus a `paths.ts` helper, so a
       task is addressable by path from either host.
-- [ ] **`TaskArticle`** — the detail container, on
+- [x] **`TaskArticle`** — the detail container, on
       `AppSurface.object(Article, Task.Task)`. Starts with what `TaskList.Edit`
       shows (title, description, status, estimate) and grows into the fields a
       strip cannot hold: assignee, dependencies, sub-tasks, history, delegation.
-- [ ] **Row opens the detail** — `TaskSetArticle` rows invoke
+- [x] **Row opens the detail** — `TaskSetArticle` rows invoke
       `LayoutOperation.Select` + `LayoutOperation.Open` at `level: 'task'`;
       meta-click opens its own plank; arrow keys read down the list through
       `useArticleKeyboardNavigation`.
-- [ ] **Retire the `TaskList.Edit` strip** — only once creation has somewhere
-      else to live: an inline new row in the list, or a toolbar action that
-      creates the task and opens its plank (plugin-inbox's draft pattern).
-      Removing it first takes away the only way to type a new task.
+- [ ] **Retire the `TaskList.Edit` strip** — it is `createOnly` in
+      `TaskSetArticle` now (the article is the editor, so a selected row no
+      longer turns the add row into one), which was forced: once a click both
+      selects and opens, an editing strip left no way to type a new task. What
+      remains is removing it, which needs creation somewhere else — an inline new
+      row in the list, or a toolbar action that creates the task and opens its
+      plank (plugin-inbox's draft pattern).

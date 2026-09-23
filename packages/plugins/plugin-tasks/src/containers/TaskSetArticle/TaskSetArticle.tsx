@@ -156,7 +156,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
         <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
       <div className='p-2 pt-0'>
+        {/* Create-only: the detail is the task plank a row opens, so the pane stays the add row
+            rather than turning into an editor the moment a row is selected. */}
         <TaskList.Edit
+          createOnly
           showDescription
           descriptionExtensions={descriptionExtensions}
           classNames='dx-document bg-input-surface border border-separator rounded-md p-2'

@@ -56,9 +56,10 @@ node id standalone and the project's inside the tab; nothing else differs betwee
    fields a strip could never hold.
 5. **Row → detail** — `TaskSetArticle` rows invoke `Select` + `Open` at `level: 'task'`; meta-click
    opens its own plank. Keyboard navigation reuses `useArticleKeyboardNavigation`.
-6. **Retire the strip** — only once creation has somewhere else to live: either an inline new row in
+6. **Retire the strip** (not done) — only once creation has somewhere else to live: either an inline new row in
    the list, or a toolbar action that creates the task and opens its plank (the mail draft pattern).
-   Removing the strip before that takes away the only way to type a new task.
+   Removing the strip before that takes away the only way to type a new task. In the meantime it is
+   `createOnly`: the article is the editor, so a selected row must not turn the add row into one.
 
 ### What this is not
 
