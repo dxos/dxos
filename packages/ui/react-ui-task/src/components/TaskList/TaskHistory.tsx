@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -17,13 +17,15 @@ import { UNSET_ICON } from './status-icons.ts';
  * The glyph per event, keyed by the `Task.Event` the entry records — a table rather than a ternary,
  * so a new event kind is one line here instead of a condition to find in the markup.
  */
-const EVENT_ICONS: Record<Task.Event, string> = {
-  created: 'ph--plant--regular',
-  updated: 'ph--pencil-simple--regular',
+type EventIcon = { icon: string; hue: string };
+
+const EVENT_ICONS: Record<Task.Event, EventIcon> = {
+  created: { icon: 'ph--plant--regular', hue: 'emerald' },
+  updated: { icon: 'ph--pencil-simple--regular', hue: 'indigo' },
 };
 
 /** Falls back to the unset glyph: an entry written by an older schema still renders as a row. */
-const eventIcon = (event: Task.Event): string => EVENT_ICONS[event] ?? UNSET_ICON;
+const eventIcon = (event: Task.Event): EventIcon => EVENT_ICONS[event] ?? { icon: UNSET_ICON, hue: 'neutral' };
 
 export type TaskHistoryProps = ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
@@ -48,7 +50,17 @@ export type TaskHistoryProps = ThemedClassName<{
 export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: TaskHistoryProps) => {
   const { t } = useTranslation(translationKey);
   // Newest first, without mutating the task's own array (append-only, oldest first).
-  const visible = useMemo(() => [...entries].reverse().slice(0, limit), [entries, limit]);
+  const visible = useMemo(
+    () =>
+      [...entries]
+        .reverse()
+        .slice(0, limit)
+        .map((entry) => {
+          const { icon, hue } = eventIcon(entry.event);
+          return { entry, icon, hue: getStyles(hue).text };
+        }),
+    [entries, limit],
+  );
   if (visible.length === 0) {
     return null;
   }
@@ -69,7 +81,7 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
         classNames,
       )}
     >
-      {visible.map((entry, index) => (
+      {visible.map(({ entry, icon, hue }, index) => (
         // A subgrid spanning the log's three tracks: the entry keeps its `listitem` semantics while
         // its cells sit on the shared columns rather than on tracks of its own.
         // `items-start`, since a wrapped description makes the row taller than one line: centring
@@ -79,10 +91,14 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
           role='listitem'
           className={mx('grid grid-cols-subgrid items-start', subgrid ? 'col-span-full' : 'col-span-3')}
         >
-          {/* One line box tall, with the glyph centred inside it: the row aligns to the top so a
-              wrapped description does not float the glyph down the paragraph, which would otherwise
-              pin the glyph to the text's ascender rather than to the middle of its first line. */}
-          <Icon icon={eventIcon(entry.event)} classNames={mx('block h-[1lh] self-start text-subdued', cells?.icon)} />
+          {/* An `IconBlock`, so the glyph holds the same square an `IconButton iconOnly` occupies and
+              lines up with the controls in the column above it. One line box tall and top-aligned:
+              a wrapped description would otherwise float the glyph down the paragraph rather than
+              leaving it on the first line. The hue comes from the event table, through the same
+              palette the status and priority glyphs read. */}
+          <IconBlock square classNames={mx('h-[1lh] self-start', cells?.icon)}>
+            <Icon icon={icon} classNames={hue} size={4} />
+          </IconBlock>
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
               time column is fixed, so the description takes the height it needs. */}
           <span className={mx('min-w-0', cells?.description)}>{entry.description ?? entry.event}</span>

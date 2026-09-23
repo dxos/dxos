@@ -295,7 +295,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             nothing to cancel, and two dead controls on an empty row read as a form to fill in
             rather than a place to type. */}
         {(current || draft.trim().length > 0) && (
-          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
+          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] justify-self-end p-0 bg-transparent'>
             {/* Only when editing an existing task: the create row has nothing to set an estimate or
                 priority on until it is saved. */}
             {task && showEstimates && <TaskEstimateControl task={task} />}
