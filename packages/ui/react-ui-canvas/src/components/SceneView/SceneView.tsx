@@ -41,8 +41,6 @@ import {
 } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
-  type Bounds,
-  type Camera,
   DEFAULT_GRID,
   type ElementId,
   type Endpoint,
@@ -63,22 +61,10 @@ import {
   isPointEndpoint,
   isPortalNode,
 } from '../../model/types.ts';
-import {
-  boundsCenter,
-  cameraTransform,
-  coverage,
-  enterPortal,
-  exitPortal,
-  fitBounds,
-  panBy,
-  portalFrame,
-  portalScale,
-  screenToScene,
-  zoomAt,
-} from '../../utils/camera.ts';
+import { boundsCenter, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
 import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
-import { boundsFromPoints, hitTest, nodesIntersecting, sceneBounds, unionBounds } from '../../utils/hit.ts';
+import { boundsFromPoints, hitTest, nodesIntersecting, unionBounds } from '../../utils/hit.ts';
 import { between, topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
@@ -92,10 +78,8 @@ import { Palette, toolForKey } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { useSceneCamera } from './useSceneCamera.ts';
+import { useSceneNavigation } from './useSceneNavigation.ts';
 
-const AUTO_ENTER = 0.85;
-const AUTO_EXIT = 0.3;
-const AUTO_DRILL_MS = 150;
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 1;
 /** Zoom factor of one toolbar step. */
@@ -210,57 +194,6 @@ export const SceneView = ({
   const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;
   const canRedo = !readonly && undoState.key === sceneId && undoState.future.length > 0;
 
-  const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
-  /** The portal in `parent` that shows `childId`, if any. */
-  const portalTo = useCallback(
-    (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
-      const parent = parentId ? scenes[parentId] : undefined;
-      return parent
-        ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === childId)
-        : undefined;
-    },
-    [scenes],
-  );
-  /** The frame of the scene at the head of `path`: the parent portal's frame, or the derived bounds at the root. */
-  const frameOf = useCallback(
-    (scenePath: SceneId[], current: Scene): Bounds => {
-      const derived = sceneBounds(current);
-      const portal = portalTo(scenePath[scenePath.length - 2], current.id);
-      return portal ? portalFrame(portal, derived) : derived;
-    },
-    [portalTo],
-  );
-  // A scene entered through a portal keeps the frame it arrived with. Deriving it from the content on
-  // every edit moves the child under the user as they work, and maps a drill-out differently from the
-  // drill-in that opened it; the root has no portal to sit in, so its bounds stay derived.
-  const frameRef = useRef<{ key: string; frame: Bounds } | undefined>(undefined);
-  const bounds = useMemo(() => {
-    if (path.length < 2) {
-      frameRef.current = undefined;
-      return frameOf(path, scene);
-    }
-    const key = path.join(' ');
-    if (frameRef.current?.key !== key) {
-      frameRef.current = { key, frame: frameOf(path, scene) };
-    }
-    return frameRef.current.frame;
-  }, [frameOf, path, scene]);
-  /**
-   * The camera's zoom against the level's own 1:1 rather than the root's. A portal frame is the portal's
-   * box times a power of the grid ratio, so entering one divides the camera by that factor; reported raw,
-   * the number would drop fourfold on a drill-in that changed nothing the user can see. Display only —
-   * nothing derives geometry from it, so the frame growing with its content cannot feed back.
-   */
-  const nominalZoom = useMemo(() => {
-    const scale = path.slice(1).reduce((accumulated, sceneId, index) => {
-      const parent = scenes[path[index]];
-      const child = scenes[sceneId];
-      const portal = parent && child ? portalTo(parent.id, sceneId) : undefined;
-      return portal && child ? accumulated * portalScale(portal, portalFrame(portal, sceneBounds(child))) : accumulated;
-    }, 1);
-    return camera.zoom / scale;
-  }, [path, scenes, portalTo, camera.zoom]);
-
   // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
   const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
 
@@ -284,6 +217,35 @@ export const SceneView = ({
   // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
   // effect, so the fit lands before the first paint instead of one frame after it.
   const interactedRef = useRef(false);
+
+  const select = useCallback(
+    (ids: Iterable<ElementId>) => {
+      registry.set(atoms.selection, new Set(ids));
+      registry.set(atoms.point, undefined);
+    },
+    [registry, atoms.selection, atoms.point],
+  );
+
+  const { nameOf, portalTo, frameOf, bounds, nominalZoom, pushHistory, drillIn, drillOut, goHistory } =
+    useSceneNavigation({
+      registry,
+      atoms,
+      store,
+      scenes,
+      scene,
+      path,
+      camera,
+      viewport,
+      inset,
+      drag,
+      interactedRef,
+      select,
+      animateTo,
+      setCamera,
+      setOpening,
+      isAnimating,
+    });
+
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
     if (!interactedRef.current && measured) {
@@ -312,23 +274,6 @@ export const SceneView = ({
   // Navigation.
   //
 
-  const pushHistory = useCallback(
-    (entry: { path: SceneId[]; camera: Camera }) => {
-      const history = registry.get(atoms.history);
-      const entries = [...history.entries.slice(0, history.index + 1), entry];
-      registry.set(atoms.history, { entries, index: entries.length - 1 });
-    },
-    [registry, atoms.history],
-  );
-
-  const select = useCallback(
-    (ids: Iterable<ElementId>) => {
-      registry.set(atoms.selection, new Set(ids));
-      registry.set(atoms.point, undefined);
-    },
-    [registry, atoms.selection, atoms.point],
-  );
-
   // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
   const onUndo = useCallback(() => {
     if (!readonly && undo(projection, registry, atoms.undo, sceneId)) {
@@ -340,140 +285,6 @@ export const SceneView = ({
       select([]);
     }
   }, [readonly, projection, registry, atoms.undo, sceneId, select]);
-
-  const drillIn = useCallback(
-    (portal: Node, animate = true) => {
-      const child = isPortalNode(portal) ? scenes[portal.scene] : undefined;
-      if (!child) {
-        return;
-      }
-      interactedRef.current = true;
-      // The zoom is into the child, so the portal's selection outline and ports go before it starts.
-      select([]);
-      registry.set(atoms.hover, undefined);
-      registry.set(atoms.editing, undefined);
-      const childBounds = portalFrame(portal, sceneBounds(child));
-      const swap = (camera: Camera) => {
-        const next = enterPortal(camera, portal, childBounds);
-        registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
-        setCamera(next);
-        setOpening(undefined);
-        pushHistory({ path: registry.get(atoms.path), camera: next });
-      };
-      if (animate) {
-        // Zoom onto the portal, but only as far as leaves the child at 1:1 after the swap, so its text lands at
-        // its natural size rather than magnified to fill the view.
-        const target = fitBounds(nodeBounds(portal), viewport, 0, 1 / portalScale(portal, childBounds));
-        animateTo(target, () => swap(target));
-        setOpening(portal.id);
-      } else {
-        swap(registry.get(atoms.camera));
-      }
-    },
-    [
-      scenes,
-      registry,
-      atoms.path,
-      atoms.camera,
-      atoms.hover,
-      atoms.editing,
-      viewport,
-      animateTo,
-      setCamera,
-      select,
-      pushHistory,
-    ],
-  );
-
-  const drillOut = useCallback(
-    (levels = 1, animate = true) => {
-      const current = registry.get(atoms.path);
-      if (current.length < 2 || levels < 1) {
-        return;
-      }
-      let camera = registry.get(atoms.camera);
-      let next = current;
-      for (let level = 0; level < levels && next.length > 1; level++) {
-        const child = scenes[next[next.length - 1]];
-        const parent = scenes[next[next.length - 2]];
-        const portal = parent
-          ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === child?.id)
-          : undefined;
-        if (!child || !portal) {
-          break;
-        }
-        // The level being left exits through the frame it was entered with, so the camera lands where
-        // the drill-in took it from however the child was edited in between.
-        camera = exitPortal(camera, portal, level === 0 ? bounds : portalFrame(portal, sceneBounds(child)));
-        next = next.slice(0, -1);
-      }
-      registry.set(atoms.path, next);
-      select([]);
-      setCamera(camera);
-      const parent = scenes[next[next.length - 1]];
-      if (animate && parent) {
-        animateTo(fitBounds(frameOf(next, parent), viewport, inset));
-      }
-      pushHistory({ path: next, camera });
-    },
-    [
-      registry,
-      atoms.path,
-      atoms.camera,
-      scenes,
-      viewport,
-      inset,
-      animateTo,
-      setCamera,
-      select,
-      pushHistory,
-      frameOf,
-      bounds,
-    ],
-  );
-
-  const goHistory = useCallback(
-    (offset: number) => {
-      const history = registry.get(atoms.history);
-      const index = history.index + offset;
-      const entry = history.entries[index];
-      if (!entry) {
-        return;
-      }
-      registry.set(atoms.history, { ...history, index });
-      registry.set(atoms.path, entry.path);
-      select([]);
-      animateTo(entry.camera);
-    },
-    [registry, atoms.history, atoms.path, select, animateTo],
-  );
-
-  // Auto drill: a portal filling the viewport becomes the root; a root shrunk well below its size on arrival
-  // yields to its parent. Arrival is the history entry for this path, so a child capped at 1:1 (or a frame
-  // that shrinks under a stationary camera) is measured against itself rather than an absolute coverage.
-  useEffect(() => {
-    if (isAnimating() || drag || viewport.width === 0) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      const portal = Object.values(scene.nodes).find(
-        (node) => isPortalNode(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
-      );
-      if (portal) {
-        drillIn(portal, false);
-      } else if (path.length > 1) {
-        const history = registry.get(atoms.history);
-        const arrival = history.entries[history.index];
-        const arrived =
-          arrival && arrival.path.length === path.length && arrival.path.every((id, index) => id === path[index]);
-        const reference = arrived ? coverage(arrival.camera, bounds, viewport) : 1;
-        if (coverage(camera, bounds, viewport) < AUTO_EXIT * reference) {
-          drillOut(1, false);
-        }
-      }
-    }, AUTO_DRILL_MS);
-    return () => clearTimeout(timer);
-  }, [camera, scene, bounds, path, viewport, drag, drillIn, drillOut, registry, atoms.history]);
 
   //
   // Pointer state machine.
