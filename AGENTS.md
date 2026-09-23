@@ -303,7 +303,12 @@ Deeper conventions:
 
 ## Handing an agent a credential
 
-Put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
+**Prefer the 1Password CLI whenever it is available.** If `op whoami` succeeds (the cloud sandbox
+authenticates it through `OP_SERVICE_ACCOUNT_TOKEN`), read the credential with `op run` / `op read`
+before asking the user for anything, since the value then never passes through the conversation →
+`1password` skill. The `.secrets/` flow below is the fallback when `op` cannot reach the item.
+
+Otherwise, put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
 prompt writes it to the transcript permanently; a file can be deleted.
 
 - `.secrets/` is gitignored at every depth. That is default exclusion, not enforcement — `git add -f`
@@ -353,6 +358,8 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).
+- **Credentials (API keys, tokens, passwords)** — the `op` CLI first, `.secrets/` as the fallback →
+  `1password` skill (`.agents/skills/1password/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →

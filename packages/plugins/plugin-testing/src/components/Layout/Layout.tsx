@@ -198,7 +198,16 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                           )}
                           <Card.ActionIconButton action='close' onClick={handleClose} />
                         </Card.Header>
-                        <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
+                        {layout.popoverContent ? (
+                          <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
+                        ) : (
+                          // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
+                          <Card.Body classNames='min-h-8'>
+                            <Card.Row>
+                              <Card.Text variant='description'>No preview available.</Card.Text>
+                            </Card.Row>
+                          </Card.Body>
+                        )}
                       </Card.Root>
                     )}
                     {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
