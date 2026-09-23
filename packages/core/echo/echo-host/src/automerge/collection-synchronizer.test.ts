@@ -454,7 +454,7 @@ describe('CollectionSynchronizer', () => {
         'ctx.peerId': peerId,
         'ctx.collectionId': collectionId,
         'ctx.spaceId': spaceId,
-        'ctx.trigger': 'connect',
+        'ctx.trigger': 'initial',
         'ctx.missingOnLocal': 1,
         'ctx.missingOnRemote': 0,
         'ctx.different': 0,
@@ -487,10 +487,44 @@ describe('CollectionSynchronizer', () => {
           span.endAttributes?.['ctx.outcome'],
         ]),
       ).toEqual([
-        ['connect', 'synced'],
+        ['initial', 'synced'],
         ['local', 'synced'],
         ['remote', 'synced'],
       ]);
+    });
+
+    test('compares a state that arrived before registration once the collection registers', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+      expect(spans).toEqual([]);
+
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      expect(
+        spansFor(collectionId).map((span) => [
+          span.options.attributes?.['ctx.trigger'],
+          span.endAttributes?.['ctx.outcome'],
+        ]),
+      ).toEqual([['initial', 'synced']]);
+    });
+
+    test('opens no span for a late state from a gone peer or a cleared collection', async ({ expect }) => {
+      const synchronizer = await openSynchronizer();
+      synchronizer.onConnectionOpen(peerId);
+      synchronizer.setLocalCollectionState(collectionId, STATE_1);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+
+      synchronizer.clearLocalCollectionState(collectionId);
+      synchronizer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+
+      const otherCollectionId = deriveCollectionIdFromSpaceId(SpaceId.random());
+      synchronizer.setLocalCollectionState(otherCollectionId, STATE_1);
+      synchronizer.onConnectionClosed(peerId);
+      synchronizer.onRemoteStateReceived(otherCollectionId, peerId, structuredClone(STATE_2));
+
+      expect(spans).toEqual([]);
     });
 
     test('ends as disconnected when the peer drops before syncing', async ({ expect }) => {

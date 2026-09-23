@@ -99,10 +99,11 @@ export class CollectionSynchronizer extends Resource {
 
     log('setLocalCollectionState', { collectionId, state });
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const trigger = perCollectionState.localState ? 'local' : 'initial';
     perCollectionState.localState = state;
 
     for (const peerId of this._connectedPeers) {
-      this._diffCollectionState(collectionId, peerId, 'local');
+      this._diffCollectionState(collectionId, peerId, trigger);
     }
 
     this._scheduleBroadcast(collectionId);
@@ -236,7 +237,7 @@ export class CollectionSynchronizer extends Resource {
       return;
     }
     perCollectionState.remoteStates.set(peerId, state);
-    this._diffCollectionState(collectionId, peerId, previousRemoteState ? 'remote' : 'connect');
+    this._diffCollectionState(collectionId, peerId, previousRemoteState ? 'remote' : 'initial');
   }
 
   /** True when the last recorded state for `peerId` has no outstanding work against our local state. */
@@ -262,7 +263,7 @@ export class CollectionSynchronizer extends Resource {
     const localState = perCollectionState.localState ?? { documents: {} };
     const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
     if (isDiffEmpty(diff)) {
-      this._endSyncSpans('synced', (entry) => entry.collectionId === collectionId && entry.peerId === peerId);
+      this._endSyncSpan(this._getSyncSpanId(collectionId, peerId), 'synced');
     } else {
       this._startSyncSpan(collectionId, peerId, trigger, diff);
     }
@@ -290,9 +291,14 @@ export class CollectionSynchronizer extends Resource {
     trigger: SyncSpanTrigger,
     diff: CollectionStateDiff,
   ): void {
-    const spanId = `${this._spanIdPrefix}-${collectionId}-${peerId}`;
-    // Nothing would end a span opened after close, since `_close` sweeps the open ones only once.
-    if (!this.isOpen || this._syncSpans.has(spanId)) {
+    const spanId = this._getSyncSpanId(collectionId, peerId);
+    // Nothing would end a span for a pair that is not syncing, so the peer and collection must still be live.
+    if (
+      !this.isOpen ||
+      !this._connectedPeers.has(peerId) ||
+      !this._activeCollections.has(collectionId) ||
+      this._syncSpans.has(spanId)
+    ) {
       return;
     }
 
@@ -317,16 +323,25 @@ export class CollectionSynchronizer extends Resource {
     });
   }
 
+  private _endSyncSpan(spanId: string, outcome: SyncSpanOutcome): void {
+    if (this._syncSpans.delete(spanId)) {
+      trace.spanEnd(spanId, { attributes: { outcome } });
+    }
+  }
+
   private _endSyncSpans(
     outcome: SyncSpanOutcome,
     matches: (entry: { collectionId: string; peerId: PeerId }) => boolean,
   ): void {
-    for (const [spanId, entry] of [...this._syncSpans]) {
+    for (const [spanId, entry] of this._syncSpans) {
       if (matches(entry)) {
-        this._syncSpans.delete(spanId);
-        trace.spanEnd(spanId, { attributes: { outcome } });
+        this._endSyncSpan(spanId, outcome);
       }
     }
+  }
+
+  private _getSyncSpanId(collectionId: string, peerId: PeerId): string {
+    return `${this._spanIdPrefix}-${collectionId}-${peerId}`;
   }
 
   private _getOrCreatePerCollectionState(collectionId: string): PerCollectionState {
@@ -411,9 +426,9 @@ export type CollectionStateDiff = {
 };
 
 /**
- * What exposed a divergence: the peer's first state since connecting, a later change to it, or a local change.
+ * What exposed a divergence: the pair's first comparison, a later change to the peer's state, or a later local change.
  */
-type SyncSpanTrigger = 'connect' | 'remote' | 'local';
+type SyncSpanTrigger = 'initial' | 'remote' | 'local';
 
 /**
  * How a sync span ended: the pair converged, the peer disconnected, or the collection or synchronizer closed.
