@@ -42,15 +42,12 @@ const orientationStyles: Record<
   },
 };
 
-// The line sits just INSIDE the row's edge rather than straddling it: a branch's content box clips
-// vertically while its disclosure animates, so a line offset outside the row can vanish for the last
-// child in a branch — present in the DOM, invisible on screen, which reads as "there is no drop
-// target after the last row".
+// The line sits in the gap between rows, so below one row and above the next draw on the same pixels.
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
-  'reorder-above': 'top-0 before:top-(--offset-terminal)',
-  'reorder-below': 'bottom-0 before:bottom-(--offset-terminal)',
+  'reorder-above': 'top-(--line-offset) before:top-(--offset-terminal)',
+  'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-bg',
-  'reparent': 'bottom-0 before:bottom-(--offset-terminal)',
+  'reparent': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
 };
 
 const strokeSize = 2;
