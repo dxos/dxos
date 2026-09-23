@@ -14,7 +14,7 @@ import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { runAction } from '@dxos/plugin-graph';
 import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';
 
@@ -29,20 +29,7 @@ export default Capability.makeModule(
 
     // TODO(wittjosiah): Factor out.
     const visitor = (seen: Set<string>) => (node: AppGraphNode.Node, path: string[]) => {
-      let shortcut: string | undefined;
-      if (typeof node.properties.keyBinding === 'object') {
-        const availablePlatforms = Object.keys(node.properties.keyBinding);
-        const platform = getHostPlatform();
-        shortcut = availablePlatforms.includes(platform)
-          ? node.properties.keyBinding[platform]
-          : platform === 'ios'
-            ? node.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-            : platform === 'linux' || platform === 'unknown'
-              ? node.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-              : undefined;
-      } else {
-        shortcut = node.properties.keyBinding;
-      }
+      const shortcut = resolveKeyBinding(node.properties.keyBinding);
 
       if (shortcut && AppGraphNode.isAction(node)) {
         // The parent's id is already the full scope path.

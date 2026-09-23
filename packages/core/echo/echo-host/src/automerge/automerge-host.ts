@@ -27,7 +27,7 @@ import {
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
+import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -58,6 +58,7 @@ import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } fro
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
+import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -144,6 +145,12 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
  * short log-buffer window without emitting the diagnostic on every poll.
  */
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
+
+/**
+ * Passes after which non-convergence is reported at `error` rather than `warn`: at a ~10s poll this
+ * is ~15min of a pair making no progress, which no in-flight replication explains.
+ */
+const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
 
 /**
  * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
@@ -465,6 +472,11 @@ export class AutomergeHost extends Resource {
       });
     }
 
+    // Here, and awaited: the Repo constructs its engine without loading any tree, and nothing can
+    // attach a document or start a sync round until `open()` returns, so a rewrite the migrations
+    // make lands before the engine's in-memory view of that tree exists.
+    await this._runSubductionMigrations();
+
     // An auth-scope change and a transport reset both re-announce a peer that never left, and
     // dropping its collection state costs a diff over every document in the collection (DX-1275).
     let updatingAuthScope = false;
@@ -596,6 +608,21 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
+   * Contained: a failed migration is logged and the host opens on the records as stored, since
+   * every migration is a repair of data the host can already read. Only stored records are
+   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
+   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
+   */
+  private async _runSubductionMigrations(): Promise<void> {
+    try {
+      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
+    } catch (err) {
+      log.error('subduction migrations failed; continuing on the stored records', { err });
+    }
+  }
+
+  /**
    * Creates automerge_chunks and automerge_heads tables if they do not exist.
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
@@ -642,6 +669,11 @@ export class AutomergeHost extends Resource {
       }
     }
     return counted.size;
+  }
+
+  /** The Repo's Subduction engine, for storage-level inspection (tests, devtools). */
+  get subduction(): Promise<Subduction> {
+    return this._repo.subduction;
   }
 
   get storage(): SqliteStorageAdapter {
@@ -1515,24 +1547,35 @@ export class AutomergeHost extends Resource {
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
-      log.warn('collection sync not converging', {
+      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
+      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
+      // got a handle" when the document is resident and the remote holds a headless fragment for it.
+      const stuck = [...different, ...missingOnRemote];
+      const context = {
         collectionId,
         peerId,
         passes,
         missingOnLocal,
         missingOnRemote,
         different,
-        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
         // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the diverged document's storage or policy activity.
+        // searched for the stuck document's storage or policy activity.
         sedimentreeIds: Object.fromEntries(
-          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
         ),
         handleStates: Object.fromEntries(
-          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
         ),
-      });
+      };
+      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
+      // the call site, so an alias loses its file and line.
+      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
+        log.error('collection sync not converging', context);
+      } else {
+        log.warn('collection sync not converging', context);
+      }
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
