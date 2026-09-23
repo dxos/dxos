@@ -59,7 +59,7 @@ Two things follow, and both matter:
    through a type-only import removes the emitted `require` and nothing else —
    the service type is still the class, with its whole public surface. Worse, a
    checker that measures runtime edges then reports the graph as acyclic, so the
-   cycle survives *and* stops being visible.
+   cycle survives _and_ stops being visible.
 2. **The grouping is by subsystem, not by kind.** One file of "all the tags" is
    the same mistake as one file of "all the events": to see what the identity
    subsystem promises you would have to visit three files and filter each. A
@@ -109,11 +109,11 @@ acyclic — the worst of both, because the cycle is still there and nothing poin
 So the tags moved into **subsystem contract modules** under `src/contracts/`, grouped by subsystem
 rather than by kind, each owning the interfaces its tags are typed against:
 
-| contract | interfaces | tags |
-| --- | --- | --- |
-| `contracts/identity.ts` | `Manager`, `Provider`, `Lifecycle`, `JoinIdentityProps`, `CreateIdentityOptions` | `ManagerService`, `ProviderService`, `LifecycleService` |
-| `contracts/spaces.ts` | `Manager`, `SigningContext`, `SigningContextProvider`, the space option types | `ManagerService`, `SigningContextProviderService` |
-| `contracts/invitations.ts` | `Manager` | `ManagerService` |
+| contract                   | interfaces                                                                       | tags                                                    |
+| -------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `contracts/identity.ts`    | `Manager`, `Provider`, `Lifecycle`, `JoinIdentityProps`, `CreateIdentityOptions` | `ManagerService`, `ProviderService`, `LifecycleService` |
+| `contracts/spaces.ts`      | `Manager`, `SigningContext`, `SigningContextProvider`, the space option types    | `ManagerService`, `SigningContextProviderService`       |
+| `contracts/invitations.ts` | `Manager`                                                                        | `ManagerService`                                        |
 
 `contracts/invitation-protocol.ts` moved here whole: it was already a pure interface module.
 
