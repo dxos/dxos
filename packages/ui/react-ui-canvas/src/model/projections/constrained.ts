@@ -13,6 +13,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
 
+import { centeredOrigin } from '../../utils/layout.ts';
 import { initialKeys } from '../../utils/order.ts';
 import { createNode, withLabel } from '../../utils/shapes.ts';
 import { type Projection } from '../projection.ts';
@@ -46,14 +47,14 @@ export type ConstrainedOptions = {
   pitch?: Size;
   /** Every node has the same size (§3: equal sizes, snapped to the grid). */
   size?: Size;
+  /** The first slot's centre; by default the layout straddles the origin. */
   origin?: Point;
 };
 
 /** Multiples of the major grid, so a solved layout is already snapped. */
-const DEFAULTS: Required<ConstrainedOptions> = {
+const DEFAULTS: Required<Omit<ConstrainedOptions, 'origin'>> = {
   pitch: { width: 256, height: 192 },
   size: { width: 192, height: 128 },
-  origin: { x: 160, y: 128 },
 };
 
 export const CONSTRAINED_SCENE_ID = 'constrained';
@@ -177,8 +178,13 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
 
 /** Solve the model to a positioned scene. */
 export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {}): Scene => {
-  const { pitch, size, origin } = { ...DEFAULTS, ...options };
+  const { pitch, size } = { ...DEFAULTS, ...options };
   const { rows, columns } = solveRanks(model);
+  const extent = {
+    columns: Math.max(...columns.values(), 0) + 1,
+    rows: Math.max(...rows.values(), 0) + 1,
+  };
+  const origin = options.origin ?? centeredOrigin(extent, pitch, size);
   const keys = initialKeys(model.nodes.length);
   const nodes: Record<string, Node> = {};
   model.nodes.forEach((node, index) => {
