@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+/// <reference types="@vitest/browser-playwright" />
+
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { cleanup, render, screen } from '@testing-library/react';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { StrictMode } from 'react';
 import { afterEach, describe, test } from 'vitest';
+import { cdp } from 'vitest/browser';
 
 import { MenuBuilder } from '../builder.ts';
 import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../types.ts';
@@ -169,7 +172,7 @@ describe('useMenuBuilder', () => {
     cleanup();
   });
 
-  test('once unmounted, leaves nothing in the registry that no mount holds', async ({ expect }) => {
+  test('once unmounted and collected, leaves nothing in the registry', async ({ expect }) => {
     const registry = Registry.make();
     const renderToolbar = (label: string) => (
       <StrictMode>
@@ -185,13 +188,13 @@ describe('useMenuBuilder', () => {
     expect(screen.getByTestId('item-0').textContent).toBe('three');
 
     unmount();
-    // Removal runs on the registry's scheduler. What remains is held by a mount: owned atoms, and the
-    // pins of graphs StrictMode discarded without a cleanup (development only).
+    // StrictMode discards a render per update, whose graph and contributions only a finalizer releases.
     await expect
-      .poll(() =>
-        [...registry.getNodes().values()].filter((node) => node.listeners.size === 0 && node.children.size === 0),
-      )
-      .toHaveLength(0);
+      .poll(async () => {
+        await cdp().send('HeapProfiler.collectGarbage');
+        return registry.getNodes().size;
+      })
+      .toBe(0);
   });
 
   test('renders when its dependencies change on every render', ({ expect }) => {

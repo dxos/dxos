@@ -39,6 +39,33 @@ const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
 /** Unmounts the contributions of a menu whose component was collected; see {@link AtomEx.Owner}. */
 const contributionsFinalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
 
+/** Disposes the graph of a render React discarded, whose effect cleanup never runs. */
+const graphFinalizer = new FinalizationRegistry<AppGraph.BaseGraph>((graph) => AppGraph.dispose(graph));
+
+/**
+ * A graph built during render, disposed when `deps` change or the component unmounts. A discarded
+ * render (Suspense, StrictMode) leaves its graph to a finalizer on the render's memo.
+ */
+export const useOwnedGraph = <G extends AppGraph.BaseGraph | undefined>(build: () => G, deps: DependencyList): G => {
+  const owner = useMemo(() => {
+    const owner = { graph: build() };
+    if (owner.graph) {
+      graphFinalizer.register(owner, owner.graph);
+    }
+    return owner;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  useEffect(
+    () => () => {
+      if (owner.graph) {
+        AppGraph.dispose(owner.graph);
+      }
+    },
+    [owner],
+  );
+  return owner.graph;
+};
+
 /** A `MenuActions` over a given accessor, for sources that are not an action graph (tests, fixtures). */
 export const makeMenuActions = ({
   items,
@@ -64,13 +91,12 @@ export const useMenuActions = (
   // (AppGraph.addEdges appends rather than replaces, which breaks ordering on updates.)
   // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
   // which would trigger atom state updates in other components (setState-in-render React warning).
-  const graph = useMemo(() => {
+  const graph = useOwnedGraph(() => {
     const newGraph = AppGraph.make({ registry });
     AppGraph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
     AppGraph.addEdges(newGraph, menuGraphProps.edges);
     return newGraph;
   }, [registry, menuGraphProps]);
-  useEffect(() => () => AppGraph.dispose(graph), [graph]);
 
   const items: MenuItemsAccessor = useCallback(
     (group?: MenuItemGroup) => {

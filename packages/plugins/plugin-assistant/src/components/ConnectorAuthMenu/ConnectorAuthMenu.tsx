@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -14,7 +14,7 @@ import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useGraphMenuActions } from '@dxos/react-ui-menu';
+import { ActionMenu, useGraphMenuActions, useOwnedGraph } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -50,7 +50,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
   const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
 
-  const graph = useMemo(() => {
+  const graph = useOwnedGraph(() => {
     if (!db) {
       return undefined;
     }
@@ -69,14 +69,6 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
     AppGraph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
   }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);
-  useEffect(
-    () => () => {
-      if (graph) {
-        AppGraph.dispose(graph);
-      }
-    },
-    [graph],
-  );
 
   // Read the group's children (reuse / connect entries) as the menu content.
   const menuActions = useGraphMenuActions(graph, ConnectorAuth.GROUP_ID);
