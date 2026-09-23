@@ -13,6 +13,7 @@ import type * as WorkerThreads from 'node:worker_threads';
 
 import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@dxos/client-protocol';
 import { Database, JsonSchema, Type } from '@dxos/echo';
+import { PublicKey } from '@dxos/keys';
 
 import * as Sandbox from './Sandbox.ts';
 import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
@@ -36,14 +37,8 @@ export type WorkerHandle = {
   readonly terminate: () => void;
 };
 
-/**
- * What the worker's own ECHO client connects to: the host services a tab would connect to, and the
- * space to open. Supplied by whoever wires the sandbox, since `Database` publishes neither the
- * space key nor the root url — a sandbox has no business reconstructing them.
- */
-export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'> & {
-  readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
-};
+/** What the worker's own ECHO client connects to: the host services a tab would connect to. */
+export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'>;
 
 export type WorkerSandboxOptions = {
   /**
@@ -79,11 +74,22 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
   evaluate: ({ code, dialect, context, timeout }) =>
     Effect.gen(function* () {
       const { db } = Context.get(context.runtime, Database.Service);
-      const echo = options.echo();
+      const space = spaceOf(db);
+      if (space === undefined) {
+        return yield* Effect.fail(
+          new Sandbox.EvaluationError({ message: `Database ${db.spaceId} has no root to open in the worker.` }),
+        );
+      }
+      // The host's services can be unavailable (a client mid-reconnect); that is this call's failure.
+      const echo = yield* Effect.try({
+        try: () => options.echo(),
+        catch: (error) =>
+          new Sandbox.EvaluationError({ message: `No ECHO services for the worker: ${describe(error)}` }),
+      });
       const init: SandboxInit = {
         code,
         dialect: dialect.name,
-        space: echo.space,
+        space,
         types: registrySnapshot(db),
         operations: context.operations.map((operation) => ({
           key: String(operation.definition?.meta.key ?? operation.name),
@@ -217,6 +223,21 @@ const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
       ? []
       : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity) }];
   });
+
+/**
+ * The space as the worker's client must name it to open the same database.
+ *
+ * `Database` publishes only the space id; the key and root document are on the ECHO client's
+ * concrete database (every database a host hands a turn), so they are read structurally rather
+ * than widening the interface for the one caller that needs them.
+ */
+const spaceOf = (db: Database.Database): SandboxInit['space'] | undefined => {
+  const rootUrl = 'rootUrl' in db && typeof db.rootUrl === 'string' ? db.rootUrl : undefined;
+  const spaceKey = 'spaceKey' in db && db.spaceKey instanceof PublicKey ? db.spaceKey.toHex() : undefined;
+  return rootUrl === undefined || spaceKey === undefined
+    ? undefined
+    : { spaceId: String(db.spaceId), spaceKey, rootUrl };
+};
 
 const describe = (error: unknown): string => {
   if (error instanceof Error) {
