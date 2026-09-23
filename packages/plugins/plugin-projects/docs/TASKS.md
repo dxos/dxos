@@ -1001,3 +1001,12 @@ the hierarchical list, which is #12787.
 - [ ] **Create/edit a task inline** — editing happens in the row itself instead of
       the `TaskList.Edit` strip at the bottom of the panel; the strip's create
       case becomes an inline new row.
+- [ ] **Master-detail: the selected task in a companion** — the project's Tasks
+      tab shows the list alone and the selected row's detail opens in a
+      companion surface, replacing the `TaskList.Edit` strip at the bottom
+      (`TaskSetArticle.tsx`, the `<div className='p-2 pt-0'>` block). Selection
+      already exists (`TaskList` `selectable` / `selected` / `onTaskSelect`);
+      what is missing is the companion surface for a `Task` and the wiring that
+      opens it from the row. Pairs with "navigate to a task's article" —
+      companion for the detail beside the list, article for a task opened on its
+      own.
