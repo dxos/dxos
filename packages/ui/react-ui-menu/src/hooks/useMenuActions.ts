@@ -5,6 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { type DependencyList, useCallback, useContext, useEffect, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -36,34 +37,45 @@ const DEFAULT_PRIORITY = 100;
 
 const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
 
-/** Unmounts the contributions of a menu whose component was collected; see {@link AtomEx.Owner}. */
-const contributionsFinalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
+/** What a menu holds in the atom registry, released once the owner is collected; see {@link AtomEx.Owner}. */
+class MenuOwner implements AtomEx.Owner {
+  static readonly #finalizer = new FinalizationRegistry<() => void>((release) => release());
 
-/** Disposes the graph of a render React discarded, whose effect cleanup never runs. */
-const graphFinalizer = new FinalizationRegistry<AppGraph.BaseGraph>((graph) => AppGraph.dispose(graph));
+  readonly [AtomEx.OwnerId]: AtomEx.Owner[typeof AtomEx.OwnerId];
+
+  constructor(registry: Registry.AtomRegistry) {
+    this[AtomEx.OwnerId] = { registry, finalizer: MenuOwner.#finalizer };
+  }
+
+  /** Disposes `graph` once this owner is collected. */
+  own<G extends AppGraph.BaseGraph | undefined>(graph: G): G {
+    if (graph) {
+      MenuOwner.#finalizer.register(this, () => AppGraph.dispose(graph));
+    }
+    return graph;
+  }
+}
 
 /**
- * A graph built during render, disposed when `deps` change or the component unmounts. A discarded
- * render (Suspense, StrictMode) leaves its graph to a finalizer on the render's memo.
+ * A graph built during render, disposed when `deps` change or the component unmounts. A render React
+ * discards (Suspense, StrictMode) never runs that cleanup, so its owner disposes the graph once collected.
  */
 export const useOwnedGraph = <G extends AppGraph.BaseGraph | undefined>(build: () => G, deps: DependencyList): G => {
-  const owner = useMemo(() => {
-    const owner = { graph: build() };
-    if (owner.graph) {
-      graphFinalizer.register(owner, owner.graph);
-    }
-    return owner;
+  const registry = useContext(RegistryContext);
+  const owned = useMemo(() => {
+    const owner = new MenuOwner(registry);
+    return { owner, graph: owner.own(build()) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   useEffect(
     () => () => {
-      if (owner.graph) {
-        AppGraph.dispose(owner.graph);
+      if (owned.graph) {
+        AppGraph.dispose(owned.graph);
       }
     },
-    [owner],
+    [owned],
   );
-  return owner.graph;
+  return owned.graph;
 };
 
 /** A `MenuActions` over a given accessor, for sources that are not an action graph (tests, fixtures). */
@@ -106,12 +118,11 @@ export const useMenuActions = (
     [graph],
   );
 
-  // Held by the component, so the contributions last as long as it is mounted.
-  const owner = useMemo(
-    (): AtomEx.Owner => ({ [AtomEx.OwnerId]: { registry, finalizer: contributionsFinalizer } }),
-    [registry],
-  );
-  const contributions = useMemo(() => AtomEx.makeOwned(owner, Atom.make<MenuItemsMap>(new Map())), [owner]);
+  // The component holds the owner, so the contributions last as long as it is mounted.
+  const { contributions } = useMemo(() => {
+    const owner = new MenuOwner(registry);
+    return { owner, contributions: AtomEx.makeOwned(owner, Atom.make<MenuItemsMap>(new Map())) };
+  }, [registry]);
 
   const { onAction, caller, iconSize } = options;
   return useMemo(
