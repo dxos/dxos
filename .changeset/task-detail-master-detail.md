@@ -15,4 +15,6 @@ Reading a task now works the way reading a message does: a row in a project's le
 
 Task lists also filter from a query editor in their toolbar — free text over title and description, `#tag` over the task's tags, and typed terms like `status:started` — in the standalone article and in the section a project embeds, which had no filter at all. A query that does not parse matches nothing rather than everything.
 
+In a task list the arrows now travel without selecting and `Enter` opens the focused row, so reading down a list no longer opens the detail of every row passed on the way.
+
 Smaller fixes that travelled with it: a tree row keyboard focus lands on is painted with the current-item background rather than ringed; focus-following no longer selects on a meta-click, which opened a second plank; and restoring an editor's recorded scroll position is skipped for an editor that does not scroll itself, which was pulling its host form down by the editor's offset on every mount.

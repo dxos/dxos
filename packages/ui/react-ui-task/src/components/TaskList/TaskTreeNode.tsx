@@ -295,9 +295,10 @@ export const TaskTreeNode = ({
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
-      // The highlight is what tells the reader where they are; a tree that only highlights (rather
-      // than navigating on select) wants it to travel with the arrows.
-      selectionFollowsFocus
+      // Deliberately NOT `selectionFollowsFocus`: selecting a task opens its detail (a companion, or
+      // a plank), so arrows that selected as they travelled would open every row the reader passes
+      // on the way to the one they want. The arrows move focus — the row is painted where focus
+      // lands — and `Enter` commits it.
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
