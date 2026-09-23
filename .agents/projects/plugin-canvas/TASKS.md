@@ -186,7 +186,7 @@ before), not reasoned about from the source.
 - [ ] Implement `text-to-image` against HeyGen. It is a stub today — `VoidOutput` and an `exec` that
       throws `Not implemented` — so the `plugins` and `image-gen` circuits wire an edge to a `result`
       output that does not exist and the graph says so (`output does not exist on node:
-    [text-to-image] -> result`). A real implementation settles the output schema the edge needs. The
+[text-to-image] -> result`). A real implementation settles the output schema the edge needs. The
       same fault is in the old editor; `chat` likewise has no `exec`, which is the console's
       `No compute function for node type: chat`.
 - [ ] `scene--plugins`: the Text node renders as an empty box — no header, icon or run control — where
