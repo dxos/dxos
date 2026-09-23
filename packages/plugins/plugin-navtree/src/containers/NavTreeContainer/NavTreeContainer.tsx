@@ -47,6 +47,11 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   );
 };
 
+/** What a row opens. A section node groups rows without standing for anything itself. */
+const hasSubject = (node: AppGraphNode.Node) => !!node.data;
+
+const isSelectable = (node: AppGraphNode.Node) => hasSubject(node) && (node.properties.selectable ?? true);
+
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   tab: string;
@@ -137,9 +142,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       return target.item.properties.canDrop?.(source) ?? false;
     }, []);
 
-    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
-      return item.properties.selectable ?? true;
-    }, []);
+    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => isSelectable(item), []);
 
     const handleSelect = useCallback(
       ({
@@ -155,7 +158,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         shift: boolean;
         keyboard?: boolean;
       }) => {
-        if (!node.data) {
+        if (!isSelectable(node)) {
           return;
         }
 
@@ -167,8 +170,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           return;
         }
 
-        // A click leaves focus on the row, so the arrows keep walking the tree; Enter is the reader
-        // committing to the item, so focus goes on into its content and they can type at once.
         const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
         if (!current) {

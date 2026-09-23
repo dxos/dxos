@@ -6,9 +6,28 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
-import { SUBDUCTION_PREFIX, descendantRange, encodeKey } from './sqlite-storage-adapter.ts';
+import { SUBDUCTION_PREFIX, descendantRange, encodeKey } from '../sqlite-storage-adapter.ts';
+import { type Migration } from './index.ts';
+
+/**
+ * Run once on every profile: deletes the stored remote-heads records, which a long-lived profile
+ * collected one per document per edge restart, and vacuums the file so the space comes back. See
+ * {@link deleteSubductionRemoteHeads} for why nothing is lost.
+ */
+export const deleteRemoteHeads: Migration = {
+  name: '0001_delete_remote_heads',
+  run: async ({ storage }) => {
+    const { deleted, reclaimedBytes } = await RuntimeProvider.runPromise(storage.runtime)(
+      deleteSubductionRemoteHeads(),
+    );
+    log.info('subduction remote heads deleted', { deleted, reclaimedBytes });
+    return true;
+  },
+};
 
 export type DeleteSubductionRemoteHeadsOptions = {
   /**
@@ -17,10 +36,23 @@ export type DeleteSubductionRemoteHeadsOptions = {
    */
   batchSize?: number;
   /**
+   * Whether to `VACUUM` after deleting, if the file has free pages. A delete only moves pages to SQLite's freelist;
+   * the file keeps its size (700 MB on a bloated profile) until a vacuum rewrites it, which needs about that much
+   * free space. Default `true`; a caller that vacuums on its own schedule passes `false`.
+   */
+  vacuum?: boolean;
+  /**
    * Called once the total is known (`deleted: 0`), then after every batch, or once when a rebuild commits. Not called
    * when there is nothing to delete.
    */
   onProgress?: (progress: { deleted: number; total: number }) => void;
+};
+
+export type DeleteSubductionRemoteHeadsResult = {
+  /** Records deleted. */
+  deleted: number;
+  /** Bytes the database shrank by in the vacuum that followed; `0` when no vacuum ran. */
+  reclaimedBytes: number;
 };
 
 /**
@@ -34,6 +66,50 @@ export type DeleteSubductionRemoteHeadsOptions = {
  * under a new Subduction identity after every restart, which is how a long-lived profile collects one record per
  * document per restart — the bulk of the table.
  *
+ * Deleting only moves pages to SQLite's freelist, so the file is then vacuumed (see `vacuum`) — gated on the
+ * freelist, not on this run's count, so a run interrupted between the delete and the vacuum finishes the job when
+ * rerun. A vacuum that fails propagates: the caller must not record the repair as done.
+ */
+export const deleteSubductionRemoteHeads = ({
+  batchSize = 100_000,
+  vacuum = true,
+  onProgress,
+}: DeleteSubductionRemoteHeadsOptions = {}): Effect.Effect<
+  DeleteSubductionRemoteHeadsResult,
+  SqlError.SqlError,
+  SqlClient.SqlClient
+> =>
+  Effect.gen(function* () {
+    const deleted = yield* deleteRecords({ batchSize, onProgress });
+    const reclaimedBytes = vacuum ? yield* vacuumFreePages : 0;
+    return { deleted, reclaimedBytes };
+  }).pipe(Effect.withSpan('deleteSubductionRemoteHeads'));
+
+/**
+ * Rewrites the database without its free pages, when it has any, and reports how much it shrank. Not inside a
+ * transaction: SQLite refuses `VACUUM` there. The WAL checkpoint after it is what shrinks the main file on disk in
+ * WAL mode (the app's OPFS default); it is a no-op under a rollback journal.
+ */
+const vacuumFreePages: Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient;
+  const [{ freelist }] = yield* sql<{
+    freelist: number;
+  }>`SELECT freelist_count AS freelist FROM pragma_freelist_count()`;
+  if (freelist === 0) {
+    return 0;
+  }
+  const fileBytes = Effect.map(
+    sql<{ bytes: number }>`SELECT page_count * page_size AS bytes FROM pragma_page_count(), pragma_page_size()`,
+    ([row]) => row.bytes,
+  );
+  const before = yield* fileBytes;
+  yield* sql`VACUUM`;
+  yield* sql`PRAGMA wal_checkpoint(TRUNCATE)`;
+  const after = yield* fileBytes;
+  return Math.max(0, before - after);
+}).pipe(Effect.withSpan('deleteSubductionRemoteHeads.vacuum'));
+
+/**
  * Two strategies, picked by which side of the table is bigger:
  * - The records outnumber everything else (a bloated profile): the other rows are set aside, the table is emptied
  *   with an unqualified `DELETE`, and they are put back, in one transaction. SQLite's truncate optimization frees an
@@ -44,14 +120,13 @@ export type DeleteSubductionRemoteHeadsOptions = {
  *   a rerun resumes. Each batch is cut at an existing key rather than selected with `IN (SELECT … LIMIT)`, which
  *   would materialize the batch in a temp B-tree.
  */
-export const deleteSubductionRemoteHeads = ({
-  batchSize = 100_000,
+const deleteRecords = ({
+  batchSize,
   onProgress,
-}: DeleteSubductionRemoteHeadsOptions = {}): Effect.Effect<
-  { deleted: number },
-  SqlError.SqlError,
-  SqlClient.SqlClient
-> =>
+}: {
+  batchSize: number;
+  onProgress?: DeleteSubductionRemoteHeadsOptions['onProgress'];
+}): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     invariant(Number.isInteger(batchSize) && batchSize > 0, 'batchSize must be a positive integer');
     const sql = yield* SqlClient.SqlClient;
@@ -64,7 +139,7 @@ export const deleteSubductionRemoteHeads = ({
 
     const total = yield* countRemaining;
     if (total === 0) {
-      return { deleted: 0 };
+      return 0;
     }
     onProgress?.({ deleted: 0, total });
 
@@ -88,7 +163,7 @@ export const deleteSubductionRemoteHeads = ({
         }),
       );
       onProgress?.({ deleted: total, total });
-      return { deleted: total };
+      return total;
     }
 
     let deleted = 0;
@@ -112,5 +187,5 @@ export const deleteSubductionRemoteHeads = ({
       deleted += remaining;
       onProgress?.({ deleted, total });
     }
-    return { deleted };
-  }).pipe(Effect.withSpan('deleteSubductionRemoteHeads'));
+    return deleted;
+  });

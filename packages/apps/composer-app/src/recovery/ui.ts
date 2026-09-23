@@ -4,7 +4,7 @@
 
 import { Domino } from '@dxos/ui';
 
-export type RecoveryAction = 'diagnostics' | 'boot' | 'reset' | 'repair' | 'export' | 'import' | 'logs' | 'debug-port';
+export type RecoveryAction = 'diagnostics' | 'boot' | 'reset' | 'export' | 'import' | 'logs' | 'debug-port';
 
 export type RecoveryUi = {
   print: (message: string) => void;
@@ -41,13 +41,6 @@ const FOOTER_ACTIONS: ActionSpec[] = [
     label: 'Reset',
     title: 'Wipe all origin storage',
     className: 'danger',
-  },
-  {
-    action: 'repair',
-    label: 'Repair',
-    title: 'Run repair tool cleaning up stale data',
-    // Amber: the one variant Boot (primary) and Reset (danger) have not taken.
-    className: 'running',
   },
   {
     action: 'export',
