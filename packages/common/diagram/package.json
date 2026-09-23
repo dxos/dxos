@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@lezer/generator": "catalog:",
+    "@uiw/codemirror-theme-vscode": "catalog:",
     "effect": "catalog:",
     "tsx": "catalog:"
   },

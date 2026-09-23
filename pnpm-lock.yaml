@@ -3264,6 +3264,9 @@ importers:
       '@lezer/generator':
         specifier: 'catalog:'
         version: 1.8.0
+      '@uiw/codemirror-theme-vscode':
+        specifier: 'catalog:'
+        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.1)(@codemirror/view@6.43.9)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117

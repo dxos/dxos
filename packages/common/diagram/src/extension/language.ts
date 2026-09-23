@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LanguageDescription, LanguageSupport } from '@codemirror/language';
+import { LanguageDescription, LanguageSupport, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
 import { diagramComplete } from './complete.ts';
+import { diagramHighlightStyle } from './highlight.ts';
 import { diagramLint, type LintOptions } from './lint.ts';
 import { diagramLanguage } from './syntax.ts';
 
@@ -21,9 +22,10 @@ export const diagramBlockDescription = LanguageDescription.of({
   support: new LanguageSupport(diagramLanguage),
 });
 
-/** The whole editing surface for a standalone DSL buffer: mode, completion, lint. */
+/** The whole editing surface for a standalone DSL buffer: mode, highlighting, completion, lint. */
 export const diagram = (options: LintOptions = {}): Extension => [
   new LanguageSupport(diagramLanguage),
+  syntaxHighlighting(diagramHighlightStyle()),
   diagramComplete,
   diagramLint(options),
 ];

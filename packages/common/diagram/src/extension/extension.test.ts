@@ -2,9 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { HighlightStyle } from '@codemirror/language';
+import { highlightTree } from '@lezer/highlight';
+import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import { describe, test } from 'vitest';
 
 import { printCommands } from '../dsl/print.ts';
+import { diagramHighlightStyle } from './highlight.ts';
 import { diagram } from './language.ts';
 import { diagramDiagnostics } from './lint.ts';
 import { diagramLanguage } from './syntax.ts';
@@ -28,7 +32,63 @@ describe('diagram language', () => {
     expect(names).toContain('AttrName');
     expect(names).not.toContain('⚠');
   });
+
+  //
+  // The tags are standard so the theme colours most of a document, but `vscode*Style` defines
+  // neither `attributeValue` nor `null` — enum values and the unbound arrow end rendered plain
+  // until `diagramHighlightStyle` filled them. Asserting against the real theme is what catches
+  // the next tag added to `styleTags` with nothing to colour it.
+  //
+  for (const [mode, themeStyle] of [
+    ['light', vscodeLightStyle],
+    ['dark', vscodeDarkStyle],
+  ] as const) {
+    test(`every token is coloured under the ${mode} theme`, ({ expect }) => {
+      expect(uncoloured(SAMPLE, themeStyle)).toEqual([]);
+    });
+  }
 });
+
+/** Every element kind, both arrow forms, a quoted id, a comment — one of each tag the grammar emits. */
+const SAMPLE = `# comment
+object pkgA @ -24,-24 scale=1 index="a1" {
+  rect frame 0,0 248x172 "Package A" color=grey stroke=dashed
+  line path 0,0 10,10 closed=true
+  arc smile 50,50 20 0..180
+  arrow e1 A/box#left -> B/box "extends" head=triangle
+  arrow e2 10,20 -> _
+  portal "1st" 0,0 10x10 ref="dxn:echo:@:01"
+}
+`;
+
+/** Non-whitespace runs that no highlighter claimed, as `offset:"text"`. */
+const uncoloured = (source: string, themeStyle: Parameters<typeof HighlightStyle.define>[0]): string[] => {
+  const covered = new Uint8Array(source.length);
+  for (const style of [HighlightStyle.define(themeStyle), diagramHighlightStyle()]) {
+    highlightTree(diagramLanguage.parser.parse(source), style, (from, to, classes) => {
+      if (classes) {
+        covered.fill(1, from, to);
+      }
+    });
+  }
+
+  const gaps: string[] = [];
+  let run = '';
+  let start = 0;
+  for (let index = 0; index <= source.length; index++) {
+    const bare = index < source.length && !covered[index] && !/\s/.test(source[index]);
+    if (bare) {
+      if (!run) {
+        start = index;
+      }
+      run += source[index];
+    } else if (run) {
+      gaps.push(`${start}:${JSON.stringify(run)}`);
+      run = '';
+    }
+  }
+  return gaps;
+};
 
 describe('diagram lint', () => {
   test('a clean document reports nothing', ({ expect }) => {
