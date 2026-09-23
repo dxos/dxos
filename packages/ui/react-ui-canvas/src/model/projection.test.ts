@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { createSceneTree } from '../utils/testing.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
 import { createMemoryStore, updateScene } from './store.ts';
-import { type Scene, isRectNode } from './types.ts';
+import { type Point, type Scene, isRectNode } from './types.ts';
 
 const fixture = (): Scene => {
   const { scenes, root } = createSceneTree(1, 'r');
@@ -21,6 +21,15 @@ const fixture = (): Scene => {
 
 const centerOf = (scene: Scene, id: string) => scene.nodes[id]?.center;
 
+/** The centre of a node the fixture is known to hold; the throw names the id rather than asserting it away. */
+const originOf = (scene: Scene, id: string): Point => {
+  const center = centerOf(scene, id);
+  if (!center) {
+    throw new Error(`fixture has no node ${id}`);
+  }
+  return center;
+};
+
 describe('freehand projection', () => {
   test('move shifts the selected nodes and skips locked ones', ({ expect }) => {
     const scene = fixture();
@@ -28,7 +37,7 @@ describe('freehand projection', () => {
     const delta = { x: 10, y: -5 };
     const next = reduceIntent(locked, { kind: 'move', ids: ['scene:r/a', 'scene:r/b'], delta });
     // Read against the fixture rather than its coordinates, which are a layout and change with it.
-    const before = centerOf(scene, 'scene:r/a')!;
+    const before = originOf(scene, 'scene:r/a');
     expect(centerOf(next, 'scene:r/a')).toEqual({ x: before.x + delta.x, y: before.y + delta.y });
     expect(centerOf(next, 'scene:r/b')).toEqual(centerOf(scene, 'scene:r/b'));
     expect(reduceIntent(scene, { kind: 'move', ids: ['missing'], delta: { x: 1, y: 1 } })).toBe(scene);
@@ -109,11 +118,13 @@ describe('freehand projection', () => {
     const { scenes, root } = createSceneTree(1, 'r');
     const store = createMemoryStore(scenes);
     const projection = createFreehandProjection({ registry, store, sceneId: root });
+    // Read the starting centre off the fixture, not the atom: a read of its own would count as an emission.
+    const before = originOf(fixture(), 'scene:r/a');
     const seen: Scene[] = [];
     const unsubscribe = registry.subscribe(projection.scene, (scene) => seen.push(scene));
 
     projection.apply({ kind: 'move', ids: ['scene:r/a'], delta: { x: 5, y: 5 } });
-    expect(centerOf(registry.get(projection.scene), 'scene:r/a')).toEqual({ x: 261, y: 197 });
+    expect(centerOf(registry.get(projection.scene), 'scene:r/a')).toEqual({ x: before.x + 5, y: before.y + 5 });
 
     updateScene(registry, store, root, (scene) => reduceIntent(scene, { kind: 'delete', ids: ['scene:r/t'] }));
     expect(registry.get(projection.scene).nodes['scene:r/t']).toBeUndefined();

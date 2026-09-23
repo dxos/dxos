@@ -302,7 +302,7 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => {
       part='label'
       text={label}
       editing={editing}
-      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-lg'))}
+      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-2xl'))}
     >
       {label}
     </TextPart>
