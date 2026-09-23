@@ -70,10 +70,9 @@ import {
   screenToScene,
   zoomAt,
 } from '../../utils/camera.ts';
-import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting, unionBounds } from '../../utils/hit.ts';
-import { between, topZ } from '../../utils/order.ts';
+import { topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
 import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
 import { resizeBounds } from '../../utils/resize.ts';
@@ -86,7 +85,9 @@ import { Palette, toolForKey } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, DebugToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { useSceneCamera } from './useSceneCamera.ts';
+import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
+import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 1;
@@ -94,14 +95,6 @@ const DEFAULT_MARGIN = 1;
 const ZOOM_STEP = 1.25;
 /** Length of a dash of the scene's frame, in screen px. */
 const FRAME_DASH = 4;
-/**
- * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels
- * on screen depend on the zoom alone: a child scene seen at a quarter scale draws the same lines as its
- * parent, and a far zoom-out still shows a grid.
- */
-const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2, MAJOR_GRID_RATIO ** 3] as const;
-/** Cells under 6px are noise; past 2048px a level is a line or two across the view. */
-const GRID_RANGE = [6, 2048] as const;
 /**
  * A type's default size in scene units such that it covers the same screen area whatever the camera is
  * doing. A nested scene is entered at a fraction of the parent's zoom, so a size fixed in scene units
@@ -300,28 +293,7 @@ export const SceneView = ({
   // Pointer state machine.
   //
 
-  /**
-   * The finest grid level actually drawn, which is what gestures snap to. A level fixed in scene units
-   * parts company with the lines as soon as the zoom moves: `Grid` keeps a level only while its cells are
-   * legible on screen, so far enough in the drawn lines are finer than the snap and far enough out (a
-   * nested scene, entered at a fraction of the parent's zoom) they are coarser and the snap stops landing
-   * on anything visible. Reading the level back from the same rule keeps the two the same by construction.
-   */
-  const minor = useMemo(() => {
-    const levels = GRID_LEVELS.map((ratio) => ratio * grid);
-    return levels.find((size) => size * camera.zoom >= GRID_RANGE[0]) ?? levels[levels.length - 1];
-  }, [grid, camera.zoom]);
-  const major = minor * MAJOR_GRID_RATIO;
-  const snap = useCallback(
-    (value: number) => (snapEnabled ? Math.round(value / major) * major : value),
-    [snapEnabled, major],
-  );
-  // Moving is finer than creating or resizing: a placed node keeps its major-grid size and edges land on
-  // minor lines, so ports (drawn at the nearest major line) stay aligned while placement is not coarse.
-  const snapMinor = useCallback(
-    (value: number) => (snapEnabled ? Math.round(value / minor) * minor : value),
-    [snapEnabled, minor],
-  );
+  const { major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
   const toScene = useCallback(
@@ -577,47 +549,17 @@ export const SceneView = ({
   // Clipboard.
   //
 
-  const copy = useCallback(() => {
-    const fragment = copySelection(scene, registry.get(atoms.selection));
-    if (fragment) {
-      registry.set(atoms.clipboard, fragment);
-    }
-    return fragment !== undefined;
-  }, [scene, registry, atoms.selection, atoms.clipboard]);
-
-  const cut = useCallback(() => {
-    if (!capabilities.delete || !copy()) {
-      return;
-    }
-    projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
-    select([]);
-  }, [capabilities.delete, copy, projection, registry, atoms.selection, select]);
-
-  /** Paste one grid step further each time, or with the fragment's top-left at `at` when given. */
-  const paste = useCallback(
-    (at?: Point) => {
-      const fragment = registry.get(atoms.clipboard);
-      if (!fragment || !capabilities.create) {
-        return;
-      }
-      const bounds = clipboardBounds(fragment);
-      const step = major * (fragment.pasted + 1);
-      const offset = at && bounds ? { x: snap(at.x) - bounds.x, y: snap(at.y) - bounds.y } : { x: step, y: step };
-      let nodeZ = topZ(Object.values(scene.nodes));
-      let linkZ = topZ(Object.values(scene.links));
-      const { intent, ids } = pasteFragment({
-        clipboard: fragment,
-        offset,
-        createId,
-        nodeZ: () => (nodeZ = between(nodeZ, undefined)),
-        linkZ: () => (linkZ = between(linkZ, undefined)),
-      });
-      projection.apply(intent);
-      registry.set(atoms.clipboard, { ...fragment, pasted: at ? fragment.pasted : fragment.pasted + 1 });
-      select(ids);
-    },
-    [registry, atoms.clipboard, capabilities.create, major, snap, scene.nodes, scene.links, projection, select],
-  );
+  const { copy, cut, paste } = useSceneClipboard({
+    registry,
+    atoms,
+    scene,
+    projection,
+    capabilities,
+    select,
+    createId,
+    major,
+    snap,
+  });
 
   /** Dragging a link's end re-attaches it; the other end stays put and anchors the rubber band. */
   const onEndPointerDown = useCallback(
