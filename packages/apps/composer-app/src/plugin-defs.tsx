@@ -179,18 +179,27 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Deduped: a mobile labs build lists transcription in both sets.
     .filter((key, index, keys) => keys.indexOf(key) === index);
 
+// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in;
+// a chunk that fails to load degrades to the standard producer rather than failing the agent.
+const codeModeTurnProducer: MakeTurnProducer = (options) =>
+  Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
+    Effect.matchEffect({
+      onSuccess: ({ makeCodeModeTurnProducer }) => makeCodeModeTurnProducer()(options),
+      onFailure: (error) =>
+        Effect.logWarning('code mode unavailable; using the standard turn producer', error).pipe(
+          // Already loaded by the agent service that calls this, so the import resolves from cache.
+          Effect.andThen(Effect.promise(() => import('@dxos/agent-runtime'))),
+          Effect.flatMap(({ makeAiSessionTurnProducer }) => makeAiSessionTurnProducer(options)),
+        ),
+    }),
+  );
+
 /**
  * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  *
  * NOTE: Keep alphabetically sorted.
  */
-// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in.
-const codeModeTurnProducer: MakeTurnProducer = (options) =>
-  Effect.promise(() => import('@dxos/agent-code-mode')).pipe(
-    Effect.flatMap(({ makeCodeModeTurnProducer }) => makeCodeModeTurnProducer()(options)),
-  );
-
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
