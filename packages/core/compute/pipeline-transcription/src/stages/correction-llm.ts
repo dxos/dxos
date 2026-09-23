@@ -37,4 +37,4 @@ export const correctWithLanguageModel = (
     return response.value.blocks.map((block) => ({ index: block.index, corrected: block.corrected }));
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures stay
     // recoverable so callers can retry.
-  }).pipe(Effect.provide(AiService.model(DXN.getName(model)).pipe(Layer.orDie)));
+  }).pipe(Effect.provide(AiService.languageModel(DXN.getName(model)).pipe(Layer.orDie)));

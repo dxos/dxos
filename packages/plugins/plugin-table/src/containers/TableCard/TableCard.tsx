@@ -7,7 +7,7 @@ import React, { useContext, useMemo, useRef } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery, useType } from '@dxos/echo-react';
+import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Card } from '@dxos/react-ui';
 import {
@@ -28,7 +28,8 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const tableRef = useRef<TableController>(null);
 
   const db = Obj.getDatabase(object);
-  const typeUri = object.view.target?.query ? getTypeURIFromQuery(object.view.target?.query.ast) : undefined;
+  const [view] = useObject(object.view);
+  const typeUri = getTypeURIFromQuery(view?.query?.ast);
   const schema = useType(db, typeUri);
   const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);

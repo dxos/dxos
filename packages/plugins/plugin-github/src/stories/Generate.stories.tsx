@@ -101,7 +101,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
         LanguageModel.generateText({ prompt: `${SYSTEM_PROMPT}\n\n---\n\n${prompt}` }).pipe(
           Effect.provide(
             Layer.provideMerge(
-              AiService.model(MODEL).pipe(Layer.orDie),
+              AiService.languageModel(MODEL).pipe(Layer.orDie),
               AiServiceTestingPreset('edge-remote').pipe(Layer.orDie),
             ),
           ),
@@ -146,7 +146,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
         )}
       </div>
       {error ? (
-        <div className='p-4 text-sm text-error'>{error}</div>
+        <div className='p-4 text-sm text-error-text'>{error}</div>
       ) : (
         <div ref={parentRef} className='dx-fill overflow-auto' />
       )}

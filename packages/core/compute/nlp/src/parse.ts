@@ -48,7 +48,7 @@ export const parseText = (text: string) =>
       }),
     );
     return assembleDocument(text, value.sentences);
-  }).pipe(Effect.provide(AiService.model(PARSE_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(PARSE_MODEL)));
 
 /** The pluggable parser contract consumed by the editor extension and pipeline. */
 export type Parser = (text: string) => Promise<Document>;

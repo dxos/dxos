@@ -10,6 +10,8 @@ export * from './protocol.ts';
 export * as ProcessHandle from './ProcessHandle.ts';
 export * as ProcessManager from './ProcessManager.ts';
 export * as ProcessMonitor from './ProcessMonitor.ts';
+export * as QueuedRemoteControl from './QueuedRemoteControl.ts';
+export * from './remote-command-queue.ts';
 export * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 export * as RemoteProcessManager from './RemoteProcessManager.ts';
 export * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';

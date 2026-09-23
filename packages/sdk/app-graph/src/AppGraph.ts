@@ -355,7 +355,7 @@ export class GraphImpl implements WritableGraph {
       if (!id) {
         return [];
       }
-      return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
+      return get(this._connections(connectionKey(id, Node.action))) as (Node.Action | Node.ActionGroup)[];
     }).pipe(withLabel(`graph:actions:${id}`));
   });
 
@@ -663,7 +663,8 @@ export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> 
  *
  * Fires the `onExpand` callback to add connections to the node. That callback subscribes to the node's
  * connector atom immediately, so every matching builder extension runs before this returns — which is why
- * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}.
+ * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}. Their
+ * output reaches the graph on the builder's next flush, not by the time this returns.
  *
  * Expanding a node that is already expanded for the same relation is a no-op.
  */
@@ -688,6 +689,18 @@ export const expandSync = <T extends ExpandableGraph | WritableGraph>(
   if (!expanded) {
     internal._expanded.add(key);
     internal._onExpand?.(id, normalizedRelation);
+  }
+  return graph;
+};
+
+/**
+ * {@link expandSync} the `child` relation of every ancestor of a qualified id, and of the id itself.
+ * A missing ancestor's expand is deferred until it arrives, so a single call populates the whole path.
+ */
+export const expandPath = <T extends ExpandableGraph | WritableGraph>(graph: T, qualifiedId: string): T => {
+  const segments = qualifiedId.split('/');
+  for (let index = 1; index <= segments.length; index++) {
+    expandSync(graph, segments.slice(0, index).join('/'), 'child');
   }
   return graph;
 };
@@ -763,20 +776,19 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
     for (const id of ids) {
       internal._unpin(id);
       internal._relations.delete(id);
-      releaseExpansion(internal, id);
     }
 
+    releaseExpansions(internal, new Set(ids));
     internal._model.release(ids);
   });
 
   return graph;
 };
 
-/** Forgets that any relation of `id` was ever expanded, so the next read expands it again. */
-const releaseExpansion = (internal: GraphImpl, id: string): void => {
+const releaseExpansions = (internal: GraphImpl, ids: ReadonlySet<string>): void => {
   for (const set of [internal._expanded, internal._pendingExpands]) {
-    for (const key of [...set]) {
-      if (primaryParts(key)[0] === id) {
+    for (const key of set) {
+      if (ids.has(primaryParts(key)[0])) {
         set.delete(key);
       }
     }
@@ -895,13 +907,12 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
 
   if (actions) {
     addNodes(graph, actions);
-    const actionRelation = Node.actionRelation();
-    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: actionRelation }));
+    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: Node.action }));
     addEdges(graph, _edges);
     sortEdges(
       graph,
       id,
-      actionRelation,
+      Node.action,
       actions.map((node) => node.id),
     );
   }

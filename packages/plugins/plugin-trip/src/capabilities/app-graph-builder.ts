@@ -54,6 +54,7 @@ export default Capability.makeModule(
 
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'tripSegment',
+      relation: AppNode.companion,
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
         const trip = matched.trip;

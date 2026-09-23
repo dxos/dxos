@@ -87,11 +87,6 @@ export type PluginState = {
   viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
 
   /**
-   * Object that was linked to directly but not found and is being awaited.
-   */
-  awaiting: string | undefined;
-
-  /**
    * Cached space names, used when spaces are closed or loading.
    */
   spaceNames: Record<string, string>;

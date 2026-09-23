@@ -72,7 +72,6 @@ const counts = ({ registry, builder, graph }: ReturnType<typeof setup>) => {
     modelEdges: internal._model.edges.length,
     subscriptions: builder._subscriptions.size,
     connectors: builder._connectorPrevious.size,
-    provenance: builder._nodeExtensions.size,
     expanded: internal._expanded.size,
     relations: internal._relations.size,
   };
@@ -139,9 +138,8 @@ describe('retention', () => {
 
     const after = counts(harness);
     // Nothing here is mounted any more, yet every visited workspace's items are still in the model,
-    // still carry provenance, and still hold an expansion subscription. This is what release is for.
+    // and still hold an expansion subscription. This is what release is for.
     expect(after.modelNodes - before.modelNodes).to.equal(WORKSPACES * CHILDREN);
-    expect(after.provenance - before.provenance).to.equal(WORKSPACES * CHILDREN);
     expect(after.subscriptions - before.subscriptions).to.equal(WORKSPACES);
   });
 
@@ -166,7 +164,6 @@ describe('retention', () => {
     const after = counts(harness);
     expect(after.modelNodes).to.equal(baseline.modelNodes);
     expect(after.modelEdges).to.equal(baseline.modelEdges);
-    expect(after.provenance).to.equal(baseline.provenance);
     expect(after.relations).to.equal(baseline.relations);
   });
 

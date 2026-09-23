@@ -3,40 +3,29 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ProjectionState } from '../../hooks/index.ts';
 import { GridComponent, type GridProps } from './Grid.tsx';
 
-const DefaultStory = (props: GridProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [{ scale, offset }] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });
+const DefaultStory = (props: GridProps) => (
+  <div className='grow'>
+    <GridComponent scale={1} offset={{ x: 0, y: 0 }} {...props} />
+  </div>
+);
 
-  return (
-    <div ref={ref} className='grow'>
-      <GridComponent scale={scale} offset={offset} {...props} />
-    </div>
-  );
-};
-
-const meta = {
-  title: 'ui/react-ui-canvas/Grid',
+const meta: Meta<GridProps> = {
+  title: 'ui/react-ui-canvas/scene/Grid',
   component: GridComponent,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
-} satisfies Meta<typeof GridComponent>;
+};
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
-  args: {
-    size: 16,
-  },
+  args: { size: 16, showAxes: true },
 };

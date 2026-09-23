@@ -304,11 +304,14 @@ export const makeObject = ({
 // Companion helpers.
 //
 
+/** The relation companions hang off their plank or the root through. */
+export const companion: AppGraphNode.Relation = AppGraphNode.relation('companion');
+
 /**
  * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
  * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
- * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
- * nodes (the declared `linked` tier).
+ * addressable as `companion/<variant>` in the URL. Return it from an extension declared with
+ * {@link companion}.
  */
 export const makeCompanion = <TData = string>({
   variant,
@@ -340,7 +343,7 @@ export const makeCompanion = <TData = string>({
  */
 export type DeckCompanionMount = 'always' | 'selected' | 'open';
 
-/** Build a deck-level (workspace-wide) companion panel node. */
+/** Build a deck-level (workspace-wide) companion panel node, returned from a root extension with {@link companion}. */
 export const makeDeckCompanion = <TData = any>({
   id,
   label,
@@ -544,7 +547,7 @@ export const makeToolbarAction = <R = never>({
  * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
  * extension callback — not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
  * returned node and would clobber the group's type — with the extension's `relation` set to
- * `AppGraphNode.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
+ * `AppGraphNode.action` so `graph.actions(nodeId)` picks the group up as one of the node's
  * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
  * recurses into any `NodeArg.actions` field), so the children need no separate extension.
  */

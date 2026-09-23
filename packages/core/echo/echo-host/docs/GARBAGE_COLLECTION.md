@@ -95,9 +95,11 @@ GC has to reason about the concrete stores, so they are enumerated here.
 ### Index
 
 - `EntityMetaIndex` (`objectMeta` table) has one row per indexed object with a
-  `deleted` flag and a `recordId`. Dependent indexes key off `recordId`: FTS
-  (`ftsIndex`) and reverse-refs (`reverseRef`). `IndexTracker` stores per-document
-  indexing cursors keyed by `documentId`.
+  `deleted` flag and a `recordId`. Dependent stores key off `recordId`: the object
+  snapshots (`objectSnapshot`), the full-text index over them (`ftsIndex`, which
+  tracks how far it has re-tokenized as a cursor over `objectMeta.version`) and
+  reverse-refs (`reverseRef`). `IndexTracker` stores per-document indexing cursors keyed by
+  `documentId`.
 - Today nothing ever deletes an `objectMeta` row; a deleted object simply flips
   `deleted = 1` and stays. GC deletes the rows for objects it reclaims.
 
@@ -226,9 +228,10 @@ id (the tombstone and all superseded content blocks).
 
 For every document wiped in step 2 and every object removed in step 1, delete the
 corresponding index rows: `objectMeta` (by `spaceId` + `documentId`, or by
-`objectId`), cascading to `ftsIndex` and `reverseRef` (by `recordId`) and the
-`IndexTracker` cursor (by `documentId`). This keeps the index from carrying
-tombstone rows for storage that no longer exists.
+`objectId`), cascading to `objectSnapshot`, `ftsIndex` and
+`reverseRef` (by `recordId`) and the `IndexTracker` cursor (by `documentId`).
+This keeps the index from carrying tombstone rows for storage that no longer
+exists.
 
 Correctness note: query correctness for deleted objects already holds before GC
 (soft-deleted objects carry `deleted = 1` and are filtered out). Step 5 is

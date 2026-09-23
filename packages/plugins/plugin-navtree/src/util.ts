@@ -14,7 +14,7 @@ export const getParent = (
   path: string[],
 ): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound')).find(
+  return AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child)).find(
     (n: AppGraphNode.Node) => n.id === parentId,
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };

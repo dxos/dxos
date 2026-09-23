@@ -123,20 +123,6 @@ export const OpenSettings = Operation.make({
   output: Schema.Void,
 });
 
-export const WaitForObject = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.space.waitForObject'),
-    name: 'Wait For Object',
-    description: 'Wait for an object to be available.',
-    icon: 'ph--clock-countdown--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    id: Schema.optional(Schema.String),
-  }),
-  output: Schema.Void,
-});
-
 /**
  * An object described rather than held: the typename plus its properties, which is all a caller
  * outside this process can supply. References are the `{ "/": "echo:..." }` envelope form.

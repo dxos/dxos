@@ -118,7 +118,7 @@ export const SpaceReplicationProgress = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./space-replication-progress.ts'),
 );
@@ -130,7 +130,7 @@ export const TraceProgress = Capability.lazyModule(
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./trace-progress.ts'),
 );

@@ -51,6 +51,11 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     return this.#open;
   }
 
+  /** The SQL runtime the chunks live in, for the data migrations that run beside them. */
+  get runtime(): RuntimeProvider.RuntimeProvider<SqlClient.SqlClient> {
+    return this.#runtime;
+  }
+
   async open(): Promise<void> {
     this.#open = true;
   }

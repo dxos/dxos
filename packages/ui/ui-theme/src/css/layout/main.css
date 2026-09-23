@@ -3,13 +3,19 @@
  */
 
 @layer dx-components {
+  /* One clock for every slide in the layout and for the view transition that stands in for them. */
+  :root {
+    --dx-main-transition-duration: 200ms;
+    --dx-main-transition-easing: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
   /**
    * Main Web app.
    */
   .dx-main-bounce-layout {
     @apply fixed overflow-auto overscroll-auto;
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
     transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
     inset-inline-start: 0;
     inset-inline-end: 0;
@@ -20,8 +26,8 @@
 
   /** TODO(burdon): Reconcile with dx-main-bounce-layout */
   .dx-main-content-padding-transitions {
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
     transition-property:
       padding-inline-start, padding-inline-end, padding-block-end, scroll-padding-start, scroll-padding-end;
   }
@@ -32,8 +38,8 @@
   .dx-main-intrinsic-size {
     inline-size: calc(100dvw - 2 * var(--main-spacing));
     transition-property: inline-size;
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
 
     @media (width >= theme(--breakpoint-lg)) {
       &[data-sidebar-left-state='closed'][data-sidebar-right-state='closed'] {
@@ -74,8 +80,8 @@
 @layer dx-components {
   .dx-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
     @apply rounded-md;
     @apply backdrop-blur-md;
     .dark & {
@@ -127,10 +133,11 @@
     }
 
     &[data-resizing='false'] {
-      @apply duration-200;
+      transition-duration: var(--dx-main-transition-duration);
     }
 
     &[data-side='is'] {
+      view-transition-name: dx-main-navigation-sidebar;
       @apply -start-[100vw] border-e;
       border-inline-end-width: var(--border-width-landmark-line) !important;
       border-inline-end-style: solid;
@@ -161,6 +168,7 @@
     }
 
     &[data-side='ie'] {
+      view-transition-name: dx-main-complementary-sidebar;
       @apply -end-[100vw] border-s;
       border-inline-start-width: var(--border-width-landmark-line);
       border-inline-start-style: solid;
@@ -190,10 +198,11 @@
   }
 
   .dx-main-overlay {
+    view-transition-name: dx-main-overlay;
     @apply fixed inset-0 bg-scrim-surface;
     transition-property: opacity;
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
     @apply opacity-0 hidden;
     z-index: 6;
 
@@ -211,6 +220,7 @@
    * them); the content pads for it.
    */
   .dx-main-drawer {
+    view-transition-name: dx-main-drawer;
     @apply fixed grid grid-rows-[min-content_1fr] border-t border-separator overflow-hidden;
     --surface-bg: var(--dx-surface-chrome);
     background-color: var(--surface-bg);
@@ -219,8 +229,8 @@
     inset-inline-end: 0;
     z-index: 6;
     transition-property: inset-inline-start, inset-inline-end;
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
 
     @media (width >= theme(--breakpoint-lg)) {
       &[data-sidebar-left-state='collapsed'] {
@@ -286,5 +296,41 @@
         scroll-padding-inline-end: var(--dx-complementary-sidebar-size);
       }
     }
+  }
+}
+
+/*
+ * Every fixed region is named because a named group paints above the root snapshot and the content's
+ * group spans the viewport, so an unnamed sidebar or drawer would vanish under it for the transition.
+ */
+@layer dx-components {
+  .dx-main-content {
+    view-transition-name: dx-main-content;
+  }
+
+  /*
+   * The app's own dialog overlay. Only this one is named: the name has to be unique among rendered
+   * elements or the transition is abandoned, and `dx-dialog__overlay` is worn by every dialog in the
+   * app, including ones a plank puts on screen beside this one.
+   */
+  .dx-main-dialog {
+    view-transition-name: dx-main-dialog;
+  }
+
+  /* The new-state snapshot is captured a frame into a running slide, so the layout would jump the rest of the way when the view transition ends. */
+  :root:active-view-transition {
+    .dx-main-sidebar,
+    .dx-main-bounce-layout,
+    .dx-main-content-padding-transitions,
+    .dx-main-intrinsic-size,
+    .dx-main-drawer,
+    .dx-main-overlay {
+      transition: none;
+    }
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: var(--dx-main-transition-duration);
+    animation-timing-function: var(--dx-main-transition-easing);
   }
 }

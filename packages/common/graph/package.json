@@ -43,6 +43,11 @@
       "types": "./dist/types/src/GraphNodeMatcher.d.ts",
       "import": "./dist/lib/GraphNodeMatcher.mjs"
     },
+    "./Retention": {
+      "source": "./src/Retention.ts",
+      "types": "./dist/types/src/Retention.d.ts",
+      "import": "./dist/lib/Retention.mjs"
+    },
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",

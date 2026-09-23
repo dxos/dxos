@@ -383,7 +383,8 @@ const meta = {
                     );
                   }
                 }
-                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+                // The search story matches the full-text index, which lags the indexing pass until a flush drains it.
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
               }),
           }),
 

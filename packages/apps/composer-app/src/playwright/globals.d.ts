@@ -6,6 +6,9 @@
 // casting at every `page.evaluate` site. Everything here is optional and framework-internal: these
 // hooks appear only once the app has mounted (and `composer.manager` only after React does), so the
 // call sites still guard — the declaration buys type-checking, not a presence guarantee.
+//
+// Only the hooks the STARTUP and PERF harnesses reach are declared here; the behavioural suite keeps
+// its own in `@dxos/composer-e2e`, so neither package declares a hook it does not use.
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 
@@ -17,14 +20,8 @@ import type { ProfilerSnapshot } from '../util/profiler';
 declare module '@dxos/app-framework' {
   interface ComposerDevtools {
     profiler?: { snapshot?: () => ProfilerSnapshot };
-    changeStorageVersionInMetadata?: (version: number) => void;
     /** The plugin manager; readers narrow the module shape to what they use. */
     manager?: { getModules?: () => readonly Plugin.PluginModule[] };
-    /** The focused markdown editor, exposed so specs can drive selection the way a user would. */
-    editorView?: {
-      state: { doc: { toString: () => string } };
-      dispatch: (spec: { selection: { anchor: number; head: number } }) => void;
-    };
   }
 }
 

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -11,7 +13,6 @@ import { Panel, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
-import { isNonNullable } from '@dxos/util';
 
 import { MessageThread } from '#components';
 import { useStatus } from '#hooks';
@@ -37,9 +38,17 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     const members = useMembers(space?.id);
     const activity = useStatus(space, id);
 
-    const messages = useMemo(
-      () => thread.messages.map((message) => message.target).filter(isNonNullable),
-      [thread.messages],
+    const messages = useAtomValue(
+      useMemo(
+        () =>
+          Atom.make((get) =>
+            (get(Obj.atomProperty(thread, 'messages')) ?? []).flatMap((message) => {
+              const value = get(message.atom);
+              return value ? [value] : [];
+            }),
+          ),
+        [thread],
+      ),
     );
 
     const handleSend = (text: string) => {

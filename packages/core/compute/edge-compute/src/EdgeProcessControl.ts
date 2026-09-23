@@ -52,13 +52,28 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
       Effect.orDie,
     ),
 
-  submitInput: ({ spaceId, pid, input }: RemoteProcessManager.ProcessTarget & { readonly input: unknown }) =>
-    Effect.tryPromise(() => getEdgeClient().submitProcessInput(DxosContext.default(), spaceId, pid, { input })).pipe(
-      Effect.orDie,
-    ),
+  submitInput: ({
+    spaceId,
+    pid,
+    input,
+    idempotencyKey,
+  }: RemoteProcessManager.ProcessTarget & RemoteProcessManager.Idempotent & { readonly input: unknown }) =>
+    Effect.tryPromise(() =>
+      getEdgeClient().submitProcessInput(DxosContext.default(), spaceId, pid, {
+        input,
+        ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
+      }),
+    ).pipe(Effect.orDie),
 
-  terminate: ({ spaceId, pid }: RemoteProcessManager.ProcessTarget) =>
-    Effect.tryPromise(() => getEdgeClient().terminateProcess(DxosContext.default(), spaceId, pid)).pipe(Effect.orDie),
+  terminate: ({ spaceId, pid, idempotencyKey }: RemoteProcessManager.ProcessTarget & RemoteProcessManager.Idempotent) =>
+    Effect.tryPromise(() =>
+      getEdgeClient().terminateProcess(
+        DxosContext.default(),
+        spaceId,
+        pid,
+        idempotencyKey !== undefined ? { idempotencyKey } : undefined,
+      ),
+    ).pipe(Effect.orDie),
 
   readEvents: ({ spaceId, pid, cursor }: RemoteProcessManager.ProcessTarget & { readonly cursor: number }) =>
     Effect.tryPromise(() => getEdgeClient().readProcessEvents(DxosContext.default(), spaceId, pid, cursor)).pipe(

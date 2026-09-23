@@ -10,7 +10,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -40,7 +39,7 @@ export const useOpenObject = (): ((object: Obj.Any) => Promise<void>) => {
         query: { uri: EID.make({ spaceId: db.spaceId, entityId: object.id }) },
       });
       const path = data?.targets[0]?.path ?? GraphPath.getObjectPathFromObject(object);
-      NotFound.expandPath(graph, path);
+      AppGraph.expandPath(graph, path);
       await EffectEx.runPromise(AppGraph.waitFor(graph, path).pipe(Effect.timeout(GRAPH_NODE_TIMEOUT), Effect.ignore));
       await invokePromise(LayoutOperation.Open, { subject: [path], disposition: 'add' });
     },

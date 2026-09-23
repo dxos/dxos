@@ -123,8 +123,8 @@ jobs:
           {
             echo '### Performance flows'
             echo
-            echo '| flow | mode | scale | stage | wall ms | cpu ms | peak RSS MB | dom nodes | lag max ms |'
-            echo '| --- | --- | --- | --- | --- | --- | --- | --- | --- |'
+            echo '| flow | mode | scale | stage | wall ms | cpu ms | app MB | chrome MB | dom nodes | lag max ms |'
+            echo '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
             # Read from the rows rather than recomputed: the harness already decided what each
             # column means, and a second implementation here would drift from it.
             cat test-results/perf/*.rows.ndjson 2>/dev/null | node -e '
@@ -134,9 +134,14 @@ jobs:
                 for (const line of input.split("\n").filter(Boolean)) {
                   const row = JSON.parse(line);
                   const mb = (bytes) => Math.round(bytes / 1024 / 1024);
+                  // Chrome process totals, beside the app rather than inside it. No
+                  // apostrophes in this program: it is single-quoted for bash, so one ends the quote.
+                  const chrome = (r) =>
+                    (r.footprint ?? []).reduce((t, p) => t + (p.process === "Renderer" ? 0 : p.bytes), 0);
                   console.log(
                     `| ${row.flow} | ${row.mode} | ${row.scale} | ${row.stage} | ${row.wallMs} | ` +
-                      `${row.cpuMsTotal} | ${mb(row.peakRssBytes)} | ${row.domNodes} | ${row.responsiveness.lagMaxMs} |`,
+                      `${row.cpuMsTotal} | ${mb(row.appFootprintBytes)} | ${mb(chrome(row))} | ` +
+                      `${row.domNodes} | ${row.responsiveness.lagMaxMs} |`,
                   );
                 }
               });

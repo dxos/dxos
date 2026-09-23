@@ -85,6 +85,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createTypeExtension({
         id: 'callCompanion',
+        relation: AppNode.companion,
         type: Channel.Channel,
         connector: (channel, get) =>
           Effect.gen(function* () {
@@ -122,6 +123,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createTypeExtension({
         id: 'callTranscript',
+        relation: AppNode.companion,
         type: Channel.Channel,
         actions: (channel, get) =>
           Effect.gen(function* () {
@@ -207,6 +209,7 @@ export default Capability.makeModule(
       // plank can hold the call (its Call tab).
       AppGraphBuilder.createTypeExtension({
         id: 'meetingCallCompanion',
+        relation: AppNode.companion,
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.gen(function* () {

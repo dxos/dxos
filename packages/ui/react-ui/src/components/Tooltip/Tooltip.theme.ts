@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx, positionerUnplaced } from '@dxos/ui-theme';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
-
-import { tooltipContent } from './tooltipContent.ts';
 
 export type TooltipStyleProps = Partial<{
   elevation: Elevation;
@@ -22,12 +20,20 @@ const positioner: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc)
     ...etc,
   );
 
+const content: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc) =>
+  mx(
+    'inline-flex items-center p-1 max-w-64 text-sm [overflow-wrap:anywhere] bg-inverse-surface text-inverse-fg rounded-sm',
+    surfaceShadow({ elevation: 'positioned' }),
+    surfaceZIndex({ elevation, level: 'tooltip' }),
+    ...etc,
+  );
+
 /** Two rotated squares painted from `--arrow-background`; the size is the machine's `--arrow-size`. */
 const arrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) =>
   mx('[--arrow-size:8px] [--arrow-background:var(--color-inverse-surface)]', ...etc);
 
 export const tooltipTheme: Theme<TooltipStyleProps> = {
   positioner,
-  content: tooltipContent,
+  content,
   arrow,
 };

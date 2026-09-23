@@ -331,7 +331,13 @@ export default Capability.makeModule(
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
       AppGraphBuilder.createExtension({
         id: 'mailboxMessages',
-        url: { key: 'message', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
+        // Deeper than a mailbox (`mail`), including a mailbox's views and the messages under them.
+        url: {
+          key: 'message',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()],
+          minDepth: 2,
+        },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -430,7 +436,12 @@ export default Capability.makeModule(
       // deep-link shape.
       AppGraphBuilder.createExtension({
         id: 'calendarEvents',
-        url: { key: 'event', kind: 'item', path: [GraphPath.GroupSegments.communications, calendarTypename] },
+        url: {
+          key: 'event',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.communications, calendarTypename],
+          minDepth: 2,
+        },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {
           const db = Obj.getDatabase(calendar);

@@ -7,13 +7,13 @@
       "path": "packages/core/compute/agent-claude/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/agent-code-mode/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
       "path": "packages/core/compute/ai/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/ai-typesafe/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
@@ -82,6 +82,9 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
+      "path": "packages/e2e/composer-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/apps/composer-stream-deck/tsconfig.json"
     },
     {
@@ -125,6 +128,9 @@
     },
     {
       "path": "packages/devtools/devtools-extension/tsconfig.json"
+    },
+    {
+      "path": "packages/common/diagram/tsconfig.json"
     },
     {
       "path": "packages/experimental/discord-bot/tsconfig.json"
@@ -374,6 +380,9 @@
     },
     {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-canvas/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-chess/tsconfig.json"

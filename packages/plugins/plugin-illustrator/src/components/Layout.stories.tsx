@@ -8,13 +8,13 @@ import { mermaid as mermaidLanguage } from 'codemirror-lang-mermaid';
 import Mermaid from 'mermaid';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 
+import { Diagnostics, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
+import { BASIC } from '@dxos/diagram/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-
-import { Diagnostics, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '#model';
 
 import appFramework from '../../docs/diagrams/app-framework.mmd?raw';
 import assistant from '../../docs/diagrams/assistant.mmd?raw';
@@ -22,7 +22,6 @@ import compute from '../../docs/diagrams/compute.mmd?raw';
 import echo from '../../docs/diagrams/echo.mmd?raw';
 import edge from '../../docs/diagrams/edge.mmd?raw';
 import pipeline from '../../docs/diagrams/pipeline.mmd?raw';
-import { BASIC } from '../model/testing.ts';
 import { SceneSvg } from './SceneSvg.tsx';
 
 //

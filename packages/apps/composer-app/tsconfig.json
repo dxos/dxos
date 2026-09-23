@@ -82,7 +82,10 @@
       "path": "../../core/compute/agent-claude"
     },
     {
-      "path": "../../core/echo/echo-host"
+      "path": "../../core/compute/agent-code-mode"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/echo/echo-solid"
@@ -125,6 +128,9 @@
     },
     {
       "path": "../../plugins/plugin-calls"
+    },
+    {
+      "path": "../../plugins/plugin-canvas"
     },
     {
       "path": "../../plugins/plugin-chess"
@@ -443,9 +449,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/shell"
     },
     {
       "path": "../../sdk/worker-framework"

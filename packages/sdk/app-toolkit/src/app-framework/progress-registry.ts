@@ -17,7 +17,7 @@ import * as AppCapabilities from './AppCapabilities.ts';
  */
 export const createProgressRegistry = (registry: Registry.AtomRegistry): AppCapabilities.ProgressRegistry => {
   const core = Progress.make();
-  const snapshotAtom = Atom.make<Progress.ProgressSnapshot>(core.snapshot()).pipe(Atom.keepAlive);
+  const snapshotAtom = Atom.make<Progress.Snapshot>(core.snapshot()).pipe(Atom.keepAlive);
   core.subscribe((snapshot) => registry.set(snapshotAtom, snapshot));
 
   const monitorAtoms = new Map<string, Atom.Atom<Progress.TaskProgress | undefined>>();

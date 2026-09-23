@@ -14,7 +14,3 @@ export const SETTINGS_KEY = 'settings';
  */
 export const getPluginSettingsSectionPath = (pluginId: string): string =>
   GraphPath.getSpacePath(SETTINGS_ID, `${SETTINGS_KEY}:${pluginId.replaceAll('/', ':')}`);
-
-/** Canonical qualified path to the plugin registry section in the settings workspace. */
-export const getPluginRegistrySectionPath = (): string =>
-  GraphPath.getSpacePath(SETTINGS_ID, `${SETTINGS_KEY}:plugins`);

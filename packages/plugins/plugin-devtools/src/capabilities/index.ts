@@ -23,7 +23,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.devtoolsOverview'],
+  roles: ['org.dxos.plugin.debug.surface.page', 'org.dxos.role.deckCompanion.devtoolsOverview'],
 });
 export const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }, () =>
   Effect.sync(() => setupDevtools()),
@@ -42,11 +42,11 @@ const setupDevtools = () => {
   // Used to test how composer handles breaking protocol changes.
   (globalThis as any).composer.changeStorageVersionInMetadata = async (version: number) => {
     const { changeStorageVersionInMetadata } = await import('@dxos/client-services/testing');
-    const { createStorageObjects } = await import('@dxos/client-services');
+    const { Storage } = await import('@dxos/client-services');
     const client: Client = (window as any).dxos.client;
     const config = client.config;
     await client.destroy();
-    const { storage } = createStorageObjects(
+    const { storage } = Storage.createStorageObjects(
       config.values?.runtime?.client?.storage ?? create(Runtime_Client_StorageSchema, {}),
     );
     await changeStorageVersionInMetadata(storage, version);

@@ -200,7 +200,7 @@ only one tile is visible at a time.
 1. A plank is the main container for a single object's content within a deck.
 2. Resolves a graph node by ID via `useNode(graph, id)`.
 3. Optionally pairs with a companion plank (secondary panel showing related content).
-4. Companion resolution: finds child nodes of type `PLANK_COMPANION_TYPE`, selects by variant preference.
+4. Companion resolution: reads the node's companion relation, selects by variant preference.
 5. In solo mode, wraps content in a grid container (`PlankContainer`) with optional companion column.
 6. In deck mode, renders as a `StackItem.Root` with resizable width.
 7. Renders a `PlankHeading` with icon, label, action menu, and layout controls.

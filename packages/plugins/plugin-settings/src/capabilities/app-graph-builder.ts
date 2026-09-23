@@ -67,7 +67,12 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'plugin', kind: 'item', path: [] },
+        url: {
+          key: 'plugin',
+          kind: 'item',
+          path: [],
+          workspace: (workspace) => workspace === SettingsPath.SETTINGS_ID,
+        },
         match: GraphNodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);

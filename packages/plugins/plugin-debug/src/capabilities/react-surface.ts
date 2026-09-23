@@ -45,7 +45,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        filter: AppSurface.literal(AppSurface.Article, DebugNodes.SpaceType),
+        filter: AppSurface.literal(DebugSurface.Page, DebugNodes.SpaceType),
         component: SpaceGeneratorSurface,
         props: ({ role }) => ({ role }),
       }),
@@ -72,12 +72,12 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'console',
-        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Console),
+        filter: AppSurface.literal(DebugSurface.Page, DebugNodes.Console),
         component: DebugConsoleArticle,
       }),
       Surface.create({
         id: 'logsArticle',
-        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Logs),
+        filter: AppSurface.literal(DebugSurface.Page, DebugNodes.Logs),
         component: LoggerPanel,
       }),
       Surface.create({

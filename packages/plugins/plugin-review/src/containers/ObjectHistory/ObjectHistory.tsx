@@ -83,6 +83,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             })()
           : MAIN_BRANCH;
 
+  // The timeline windows its rows against this scroller.
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+
   // Recomputed per render: the component subscribes to history mutations and the model is
   // cheap at panel scale (a handful of records).
   const rootText = provider?.getTarget(subject);
@@ -222,8 +225,14 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Timeline branches={branches} branch={currentBranch} commits={commits} onSelect={handleSelect} />
+          <ScrollArea.Viewport ref={setViewport}>
+            <Timeline
+              branches={branches}
+              branch={currentBranch}
+              commits={commits}
+              scroller={viewport}
+              onSelect={handleSelect}
+            />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

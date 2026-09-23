@@ -18,6 +18,14 @@ const languages = {
   ts: 'typescript',
 };
 
+/**
+ * Above this, source is rendered unhighlighted. react-syntax-highlighter splices every line into a
+ * single token array and wraps every token in an inline-styled element, so tokenizing grows
+ * super-linearly in one synchronous render — a 3 MB payload takes about 30 s, and past roughly 123k
+ * lines it throws. Plain text skips the tokenizer and keeps this component's own `pre`/`code` styles.
+ */
+const MAX_HIGHLIGHTED_LENGTH = 20_000;
+
 export type SyntaxHighlighterProps = Pick<
   NaturalSyntaxHighlighterProps,
   | 'language'
@@ -110,7 +118,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
       role,
       style,
       themeStyle,
-      language = 'text',
+      language: languageProp = 'text',
       fallback = zeroWidthSpace,
       copyButton,
       ...nativeProps
@@ -119,6 +127,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
   ) => {
     const { themeMode } = useThemeContext();
     const source = sourceOf(children, fallback);
+    const language = source.length > MAX_HIGHLIGHTED_LENGTH ? 'text' : languageProp;
 
     const hasCustomTheme = themeStyle && typeof themeStyle === 'object' && Object.keys(themeStyle).length > 0;
     const prismTheme = hasCustomTheme ? themeStyle : themeMode === 'dark' ? dark : light;

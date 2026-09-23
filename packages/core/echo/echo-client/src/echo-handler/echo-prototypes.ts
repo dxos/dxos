@@ -72,6 +72,7 @@ import {
   EntityMetaSchema,
   EventId,
   type JsonSchemaType,
+  type LoadOptions,
   MetaId,
   ObjectBranchId,
   ObjectDatabaseId,
@@ -434,8 +435,8 @@ class CoreRefResolver implements RefResolver {
     return this.#database()?.resolveSync(uri, load, onLoad) ?? this.pinned(uri);
   }
 
-  async resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined> {
-    return (await this.#database()?.resolveLegacy(uri)) ?? this.pinned(uri);
+  async resolveLegacy(uri: URI.URI, options?: LoadOptions): Promise<AnyProperties | undefined> {
+    return (await this.#database()?.resolveLegacy(uri, options)) ?? this.pinned(uri);
   }
 
   async resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined> {

@@ -16,6 +16,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Model: 'src/types/Model.ts',
     Scene: 'src/types/Scene.ts',
+    SceneView: 'src/types/SceneView.ts',
     Settings: 'src/types/Settings.ts',
     SpacetimeCapabilities: 'src/types/SpacetimeCapabilities.ts',
     SpacetimeEvents: 'src/types/SpacetimeEvents.ts',

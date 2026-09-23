@@ -17,6 +17,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { CompanionViewState, DeckCapabilities } from '#types';
 
 import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util/index.ts';
+import { type NavigationIntent } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { projectUrl } from './project.ts';
 
@@ -33,20 +34,23 @@ export const currentNavigation = Effect.fnUntraced(function* () {
 });
 
 /**
- * Change what is open: push the URL, then project it. Returns the plank attention has to move to
- * because the one holding it is no longer open.
+ * Change what is open: push the URL, then project it. Answers whether the intent reached a write, which
+ * a navigation the URL already describes never does, so the caller can land it another way.
  */
 export const navigate = Effect.fnUntraced(function* (
   next: Navigation.Navigation,
-  options?: { method?: 'push' | 'replace'; navigatedIds?: Navigation.PlankIds },
+  options?: { method?: 'push' | 'replace'; navigatedIds?: Navigation.PlankIds; intent?: NavigationIntent },
 ) {
   if (!next.workspace) {
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
-    return undefined;
+    return false;
   }
-  return Navigation.push(next, options?.method)
-    ? yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds })
-    : undefined;
+  if (!Navigation.push(next, options?.method)) {
+    return false;
+  }
+
+  yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds, intent: options?.intent });
+  return true;
 });
 
 /**
@@ -75,10 +79,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
-      log.error('node has no URL binding, so it cannot be opened', {
-        nodeId,
-        extension: builder.getNodeExtensionId(nodeId),
-      });
+      log.error('node has no URL binding, so it cannot be opened', { nodeId });
       continue;
     }
     pairs.push(represented.value);
@@ -91,12 +92,15 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   return { navigation: { workspace, pairs }, navigatedIds };
 });
 
-/** Navigate to the deck `params` describes, returning the plank attention has to move to. */
+/** Navigate to the deck `params` describes, answering whether the intent reached a write. */
 export const navigateDeck = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
+  method?: 'push' | 'replace';
+  /** How this navigation lands; see {@link NavigationIntent}. */
+  intent?: NavigationIntent;
 }) {
   const { navigation, navigatedIds } = yield* deckNavigation(params);
-  return yield* navigate(navigation, { navigatedIds });
+  return yield* navigate(navigation, { method: params.method, navigatedIds, intent: params.intent });
 });

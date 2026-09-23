@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
@@ -77,17 +78,14 @@ const createMobileCompanionActions = (
     open.active[open.active.length - 1] ??
     (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
-  // Keys off the active plank's own child connections rather than `deck.companionPlanks` (the desktop
-  // side-by-side flag a declared-chain open in open.ts carries onto a replacement plank), so that
-  // bookkeeping stays inert for the mobile companion picker.
-  const companions = get(graph.connections(activeId, 'child'))
-    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
+  const activePlankCompanions = get(graph.connections(activeId, AppNode.companion))
+    .filter(DeckSchema.isPlankCompanion)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   const nodes: ActionGraphProps['nodes'] = [];
   const edges: ActionGraphProps['edges'] = [];
 
-  companions.forEach((companion) => {
+  activePlankCompanions.forEach((companion) => {
     const companionVariant = Attention.getLinkedVariant(companion.id);
     const companionAction = {
       id: `${idPrefix}-companion-${companion.id}`,

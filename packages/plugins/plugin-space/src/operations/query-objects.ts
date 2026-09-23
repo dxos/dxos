@@ -28,9 +28,15 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       const selected = yield* Match.value({ text, typename }).pipe(
         Match.withReturnType<Effect.Effect<Query.Any, Error, Database.Service>>(),
         Match.when({ text: present, typename: present }, ({ text, typename }) =>
-          typeFilter(typename).pipe(Effect.map((filter) => fullText(text).select(filter))),
+          typeFilter(typename).pipe(
+            Effect.map((filter) => Query.select(Filter.text(text, { type: 'full-text' })).select(filter)),
+          ),
         ),
-        Match.when({ text: present }, ({ text }) => Effect.succeed(fullText(text))),
+        // The phrase goes to the index whole: the full-text engine ANDs its terms, so splitting it
+        // here and combining the parts widened the result instead of narrowing it.
+        Match.when({ text: present }, ({ text }) =>
+          Effect.succeed(Query.select(Filter.text(text, { type: 'full-text' }))),
+        ),
         Match.when({ typename: present }, ({ typename }) =>
           typeFilter(typename).pipe(Effect.map((filter) => Query.select(filter))),
         ),
@@ -61,10 +67,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
 );
 
 export default handler;
-
-/** Every term must match, so the words of a phrase narrow the result rather than widening it. */
-const fullText = (text: string): Query.Any =>
-  Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
 
 /**
  * The filter for a caller-supplied typename: a bare-typename DXN, which is what `Filter.type`
