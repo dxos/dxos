@@ -23,9 +23,9 @@ const isFatal = (data: unknown): data is BrowserWorkerMessage =>
  * A `WorkerSandbox` spawner for a Web Worker running `WorkerSandboxBrowserEntry`.
  *
  * The caller constructs the worker because only it can: a bundler resolves a worker's module from
- * a `new Worker(new URL('…', import.meta.url))` literal in the caller's own source, so the entry is
- * named there, e.g. `() => new Worker(new URL('@dxos/agent-code-mode/browser-worker', import.meta.url), { type: 'module' })`.
- * The `entry` a `WorkerSandbox` passes is therefore ignored.
+ * a `new Worker(new URL('…', import.meta.url))` literal in the caller's own source. The module is
+ * either `WorkerSandboxBrowserEntry` or the app's own entry calling `serve` from
+ * `@dxos/agent-code-mode/browser-worker`. The `entry` a `WorkerSandbox` passes is therefore ignored.
  *
  * A Web Worker is a thread boundary, not a security boundary: it has no DOM and no `localStorage`,
  * but it shares the page's origin — its network, IndexedDB and OPFS.

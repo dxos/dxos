@@ -10,7 +10,7 @@ export default defineConfig({
     // Its own output because a worker is started from a real file: the bundle that contains this
     // module cannot also be the module the worker loads.
     WorkerSandboxEntry: 'src/WorkerSandboxEntry.ts',
-    WorkerSandboxBrowserEntry: 'src/WorkerSandboxBrowserEntry.ts',
+    WorkerSandboxBrowserWorker: 'src/WorkerSandboxBrowserWorker.ts',
   },
   test: {
     node: true,

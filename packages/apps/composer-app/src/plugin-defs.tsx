@@ -206,7 +206,7 @@ const codeModeTurnProducer =
             // Read per evaluation: the client's rpc surface is replaced on reconnect.
             echo: () => echoServices(client.services.rpc),
             spawn: WorkerSandboxBrowser.spawn(
-              () => new Worker(new URL('@dxos/agent-code-mode/browser-worker', import.meta.url), { type: 'module' }),
+              () => new Worker(new URL('./workers/code-mode-worker.ts', import.meta.url), { type: 'module' }),
             ),
           });
           return makeCodeModeTurnProducer({ dialect: EffectDialect, sandbox })(options);
