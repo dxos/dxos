@@ -15,6 +15,7 @@ import { Database, DXN, Obj, Ref } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as PageAction from '@dxos/plugin-crx/PageAction';
 import { PullRequest } from '@dxos/types';
 
 import * as Walkthrough from './Walkthrough.ts';
@@ -122,6 +123,31 @@ export const ImportPullRequest = Operation.make({
   }),
   types: [PullRequest.PullRequest],
 }).pipe(Operation.visible, Operation.mutation('write'));
+
+/**
+ * Import the pull request the browser extension is looking at, named by the page's own URL.
+ *
+ * Separate from {@link ImportPullRequest} because the extension bridge invokes every page action
+ * with the fixed `{ snapshot, target }` shape and reads an `{ id }` back. Nothing is extracted from
+ * the page: the URL in the snapshot's source names the pull request, and GitHub is the authority on
+ * everything else.
+ */
+export const ImportPullRequestFromSnapshot = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.importPullRequestFromSnapshot'),
+    name: 'Open pull request in Composer',
+    description: "Import the pull request a browser page shows, named by that page's URL.",
+    icon: 'ph--git-pull-request--regular',
+  },
+  input: Schema.Struct({
+    snapshot: PageAction.Snapshot,
+    target: Database.Database.annotate({ description: 'The database to add the pull request to.' }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+  }),
+  types: [PullRequest.PullRequest],
+}).pipe(Operation.mutation('write'));
 
 /**
  * Generate a walkthrough of a pull request: one markdown document narrating the change in reading
