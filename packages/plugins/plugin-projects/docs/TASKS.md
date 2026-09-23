@@ -996,12 +996,18 @@ companion).
       object a project's work can reference, plus the article that renders it.
       Today `#nnn` is only a markdown decoration resolving to a GitHub URL;
       nothing in the space holds the PR's title, state, branch or checks.
-- [ ] **Sort/filter tasks from a project** — `TaskSetArticle` already has a
-      free-text filter in its toolbar (`filter.placeholder`), but only in the
-      standalone article: embedded as a section the host owns the chrome, so the
-      project's Tasks tab has none. Add label chips beside the text (the model is
-      plugin-inbox's `MailboxFilter` + `mailbox-search.ts`) and a sort control,
-      and surface them in the project's toolbar.
+- [x] **Filter tasks from a project** — the free-text `Field.Input` is now a
+      `QueryEditor` filter row (`TaskFilter`, modelled on plugin-inbox's
+      `MailboxFilter`), rendered in BOTH roles: the standalone article's
+      `Panel.Toolbar` and, as a `Toolbar.Root` of its own, the section the
+      project's Tasks tab embeds — which had no filter at all. `util/task-filter.ts`
+      evaluates the parsed filter against each task in memory (free text over
+      title/description, `#tag` over `meta.tags`, and typed terms like
+      `status:started` over the task's own fields), keeping every ancestor of a
+      match so the tree never restructures under the reader. In memory rather
+      than as a query for exactly that reason. Tests in `task-filter.test.ts`.
+- [ ] **Sort tasks from a project** — the filter has no sort beside it yet; the
+      list keeps the set's canonical array order.
 - [x] **Level chain for task detail** — `DeckAnnotation` on `TaskSet`
       (`taskSet → task`) and a `task` rung on `Project`, so a row opened from
       either host reuses one plank rather than stacking one per click.

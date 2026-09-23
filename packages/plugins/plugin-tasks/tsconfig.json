@@ -52,6 +52,9 @@
       "path": "../../core/echo/echo-doc"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -86,6 +89,9 @@
     },
     {
       "path": "../../ui/react-ui-calendar"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-editor"
