@@ -66,7 +66,7 @@ describe('AiModelResolver', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model(DXN.getName(SONNET)).pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.languageModel(DXN.getName(SONNET)).pipe(Layer.provide(TestRouter))),
     ),
   );
 
@@ -77,7 +77,7 @@ describe('AiModelResolver', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model(DXN.getName(GEMMA)).pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.languageModel(DXN.getName(GEMMA)).pipe(Layer.provide(TestRouter))),
     ),
   );
 });

@@ -64,11 +64,17 @@ const stripInlineThemeScript = (): Plugin => ({
 /**
  * https://vitejs.dev/config
  */
+/** The oldest engines an MV3 extension has to run on; kept in step with composer-app. */
+const browserTargets = ['chrome108', 'edge107'] as const;
+
 export default defineConfig({
   root: dirname,
   build: {
     outDir,
     emptyOutDir: true,
+    // Matches composer-app's floor. Vite's default (`chrome87`) is below what the automerge worker's
+    // top-level await compiles to, and the bundle fails outright rather than degrading.
+    target: [...browserTargets],
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages
       // The side panel (panel.html) is referenced by the manifest `side_panel`
