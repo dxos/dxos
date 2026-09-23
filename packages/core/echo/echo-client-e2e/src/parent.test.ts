@@ -168,6 +168,31 @@ describe('Parent Hierarchy', () => {
       expect(queryResult.length).to.eq(0);
     }
   });
+
+  test('siblings follow their own parent’s deletion', { timeout: 30_000 }, async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      const removed = db.add(Obj.make(TestSchema.Person, { name: 'removed' }));
+      const kept = db.add(Obj.make(TestSchema.Person, { name: 'kept' }));
+      for (let index = 0; index < 3; index++) {
+        db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: removed, name: `removed child ${index}` }));
+        db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: kept, name: `kept child ${index}` }));
+      }
+      db.remove(removed);
+      await db.flush();
+    }
+
+    await peer.reload();
+
+    {
+      await using db = await peer.openLastDatabase();
+      const names = (await db.query(Filter.type(TestSchema.Person)).run()).map((person) => person.name).sort();
+      expect(names).to.deep.eq(['kept', 'kept child 0', 'kept child 1', 'kept child 2']);
+    }
+  });
 });
 
 describe('Annotation.SetParent', () => {
