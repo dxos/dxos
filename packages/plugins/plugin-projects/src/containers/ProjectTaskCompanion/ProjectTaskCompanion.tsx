@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { Flex, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Task } from '@dxos/types';
@@ -32,7 +32,9 @@ export type ProjectTaskCompanionProps = {
  */
 export const ProjectTaskCompanion = ({ role, attendableId, project }: ProjectTaskCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const taskSet = project.taskSet?.target;
+  // Resolved through the hook: on a cold load the ref has no target yet, and a direct read would
+  // leave the companion on its empty state once it arrives.
+  const taskSet = useResolveRef(project.taskSet);
   const db = Obj.getDatabase(project);
   const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   const selected = useSelection(attendableId, 'single');

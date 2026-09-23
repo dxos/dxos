@@ -46,6 +46,11 @@ const matchesAst = (ast: QueryAST.Filter | undefined, task: Task.Task): boolean 
       if (ast.typename && Obj.getTypeURI(task)?.toString() !== ast.typename) {
         return false;
       }
+      // An `id:` term lands here rather than in `props`, so a filter naming one id would otherwise
+      // match every task.
+      if (ast.id && !ast.id.includes(task.id)) {
+        return false;
+      }
       return Object.entries(ast.props ?? {}).every(([key, predicate]) =>
         matchesPredicate(predicate, getPath(task, key), task),
       );

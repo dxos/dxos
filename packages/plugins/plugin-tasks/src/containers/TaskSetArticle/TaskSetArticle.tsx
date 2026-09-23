@@ -127,7 +127,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   const currentId = useSelection(attendableId, 'single');
   const handleOpen = useCallback(
     (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => {
+      // Escape clears the row rather than leaving it current with nothing open: the list reads its
+      // selection back from the host, so a stale id would keep the row highlighted.
       if (!task) {
+        void invokePromise(LayoutOperation.Select, { contextId: attendableId, subject: { mode: 'single' } });
         return;
       }
 
