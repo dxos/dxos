@@ -272,6 +272,9 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob = undefined;
     for (const handle of Object.values(this._handles)) {
       handle.off('change');
+      // A load in flight can never complete now; `Trigger` already marks its own promise handled, since a close
+      // may fail a load nobody is awaiting.
+      handle._failReady(new RepoClosedError({ spaceId: this._spaceId, documentId: handle.documentId }));
     }
 
     this._handles = {};
