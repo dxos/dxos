@@ -19,6 +19,7 @@ import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
+import { type DeckSpec } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
 
 /** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
@@ -115,6 +116,13 @@ export const createTypeSectionExtension = (
      * then materialized on expand rather than inline.
      */
     sectionUrlKey?: string;
+    /**
+     * How the deck behaves when one of this section's objects is its root — the same answer
+     * {@link AppAnnotation.DeckAnnotation} gives, for a type that cannot carry it: the annotation lives
+     * in `@dxos/app-toolkit`, which a type defined below it (`@dxos/types`, `@dxos/compute`) cannot
+     * import. A type that can annotate itself should, so the answer travels with the type.
+     */
+    deck?: DeckSpec.DeckSpec;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -163,7 +171,9 @@ export const createTypeSectionExtension = (
   const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
     const onRearrange = makeSectionRearrangeCallback(space, typename);
     return orderedObjects
-      .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
+      .map((object) =>
+        AppNode.makeObject({ get, db: space.db, object, deck: options.deck, onRearrange, canDrop: canDropSameType }),
+      )
       .filter((node): node is NonNullable<typeof node> => node !== null);
   };
 

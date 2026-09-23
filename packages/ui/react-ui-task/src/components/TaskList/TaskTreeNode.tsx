@@ -43,7 +43,13 @@ import {
  * `Alt+Arrow` restructuring survives untouched — zag ignores modified arrows, verified against the
  * tree's own story, so indent/outdent/nudge still reach the row handler.
  */
-export type TaskTreeContentProps = {
+/**
+ * How a row was activated, so a host can tell a plain click from a modified one — e.g. opening the
+ * task in a plank of its own rather than reusing the one the list reads into.
+ */
+export type TaskSelectModifiers = { meta?: boolean };
+
+export type TaskTreeNodeProps = {
   /** Paint the drop bands on every row (development affordance). */
   debug?: boolean;
   /** Render status headers with their tasks flat beneath, instead of the hierarchy. */
@@ -64,7 +70,7 @@ export type TaskTreeContentProps = {
   descriptionComponents?: TaskDescriptionProps['components'];
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
-  onTaskSelect?: (task: Task.Task | undefined) => void;
+  onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
@@ -72,7 +78,7 @@ export type TaskTreeContentProps = {
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
-export const TaskTreeContent = ({
+export const TaskTreeNode = ({
   debug,
   groupByStatus,
   hierarchical,
@@ -92,7 +98,7 @@ export const TaskTreeContent = ({
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
-}: TaskTreeContentProps) => {
+}: TaskTreeNodeProps) => {
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
 
@@ -143,8 +149,10 @@ export const TaskTreeContent = ({
     [model, registry, onCollapseToggle],
   );
 
+  // `meta` rides along so a host can distinguish a plain activation (read into the pane the list
+  // reads into) from a modified one (open in its own plank), the way the nav tree does.
   const handleSelect = useCallback(
-    ({ item }: { item: TaskNode }) => item.task && onTaskSelect?.(item.task),
+    ({ item, meta }: { item: TaskNode; meta?: boolean }) => item.task && onTaskSelect?.(item.task, { meta }),
     [onTaskSelect],
   );
 

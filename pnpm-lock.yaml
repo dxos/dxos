@@ -16685,6 +16685,9 @@ importers:
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -16730,6 +16733,9 @@ importers:
       '@dxos/react-ui-calendar':
         specifier: workspace:*
         version: link:../../ui/react-ui-calendar
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -23307,6 +23313,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
