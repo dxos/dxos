@@ -83,7 +83,8 @@ const listStyles = tv({
     // single full-width column instead of being indented past an empty icon slot.
     hasIcon: {
       true: {
-        itemContentRoot: 'grid-cols-[var(--dx-rail-item)_minmax(0,1fr)]',
+        // Grows past the rail width for wide icons (avatars) rather than letting them overflow.
+        itemContentRoot: 'grid-cols-[minmax(var(--dx-rail-item),auto)_minmax(0,1fr)]',
         itemContentTitle: 'col-start-2',
         itemContentDescription: 'col-start-2',
       },
