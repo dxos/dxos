@@ -14,7 +14,7 @@ import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useGraphMenuActions, useOwnedGraph } from '@dxos/react-ui-menu';
+import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -50,7 +50,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
   const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
 
-  const graph = useOwnedGraph(() => {
+  const graph = useMenuGraph(() => {
     if (!db) {
       return undefined;
     }

@@ -57,10 +57,10 @@ class MenuOwner implements AtomEx.Owner {
 }
 
 /**
- * A graph built during render, disposed when `deps` change or the component unmounts. A render React
- * discards (Suspense, StrictMode) never runs that cleanup, so its owner disposes the graph once collected.
+ * The graph behind a menu, rebuilt when `deps` change. Each graph is disposed once replaced or unmounted,
+ * including one from a render React discarded.
  */
-export const useOwnedGraph = <G extends AppGraph.BaseGraph | undefined>(build: () => G, deps: DependencyList): G => {
+export const useMenuGraph = <G extends AppGraph.BaseGraph | undefined>(build: () => G, deps: DependencyList): G => {
   const registry = useContext(RegistryContext);
   const owned = useMemo(() => {
     const owner = new MenuOwner(registry);
@@ -103,7 +103,7 @@ export const useMenuActions = (
   // (AppGraph.addEdges appends rather than replaces, which breaks ordering on updates.)
   // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
   // which would trigger atom state updates in other components (setState-in-render React warning).
-  const graph = useOwnedGraph(() => {
+  const graph = useMenuGraph(() => {
     const newGraph = AppGraph.make({ registry });
     AppGraph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
     AppGraph.addEdges(newGraph, menuGraphProps.edges);
