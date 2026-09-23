@@ -215,7 +215,9 @@ export default Capability.makeModule(
               icon: 'ph--line-segments--regular',
               data: 'trace',
               position: Position.last,
-              mount: 'always',
+              // Only while chosen: mounted, it holds the space's whole trace history and a row per
+              // process the session has run.
+              mount: 'selected',
             }),
           ]),
       }),

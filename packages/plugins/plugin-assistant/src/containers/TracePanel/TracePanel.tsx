@@ -111,35 +111,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [invokePromise],
     );
 
-    // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
-    // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
-    // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
-    // (and logs it). Gated on `import.meta.env.DEV` so it's stripped from production builds.
-    const traceMessages = useTraceMessages(space);
-    useEffect(() => {
-      if (!import.meta.env.DEV) {
-        return;
-      }
-
-      // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
-      const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
-      debugGlobal.dxosDumpTrace = () => {
-        const data = traceMessages.map((message) => ({
-          meta: message.meta,
-          isEphemeral: message.isEphemeral,
-          events: message.events,
-        }));
-        const json = JSON.stringify(data, null, 2);
-        // eslint-disable-next-line no-console
-        console.log(json);
-        void navigator.clipboard?.writeText(json);
-        return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
-      };
-
-      return () => {
-        delete debugGlobal.dxosDumpTrace;
-      };
-    }, [traceMessages]);
+    useTraceDumpHatch(space);
 
     return (
       <NaturalTracePanel
@@ -170,3 +142,35 @@ const feedKey = (uri: string): string => {
   const eid = EID.tryParse(uri);
   return (eid && EID.getEntityId(eid)) ?? uri;
 };
+
+/**
+ * Debug hatch (dev builds only): exposes the raw trace messages (the exact `buildExecutionGraph`
+ * input) so a real trace can be captured as a test fixture. While the panel is mounted, run
+ * `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
+ * (and logs it). Chosen at build time, so production never subscribes to the whole trace for it.
+ */
+const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta.env.DEV
+  ? (space) => {
+      const traceMessages = useTraceMessages(space);
+      useEffect(() => {
+        // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
+        const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
+        debugGlobal.dxosDumpTrace = () => {
+          const data = traceMessages.map((message) => ({
+            meta: message.meta,
+            isEphemeral: message.isEphemeral,
+            events: message.events,
+          }));
+          const json = JSON.stringify(data, null, 2);
+          // eslint-disable-next-line no-console
+          console.log(json);
+          void navigator.clipboard?.writeText(json);
+          return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
+        };
+
+        return () => {
+          delete debugGlobal.dxosDumpTrace;
+        };
+      }, [traceMessages]);
+    }
+  : () => {};
