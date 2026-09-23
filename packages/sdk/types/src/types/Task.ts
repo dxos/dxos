@@ -121,13 +121,24 @@ export type AnswerOption = Schema.Schema.Type<typeof AnswerOption>;
  * A change to the task itself. `description` is the human-readable record ("status changed from
  * todo to done"), so a reader needs nothing but the entry to understand what happened; the `event`
  * is what a filter or an icon keys on.
+ *
+ * One struct per event rather than one struct over both: ECHO validates a union by a single literal
+ * tag per member, and a member whose tag is itself a union of literals is ambiguous to it.
  */
-export const ChangeEntry = Schema.Struct({
-  ...HistoryEntryBase,
-  event: Schema.Literals(['created', 'updated']).annotate({ title: 'Event' }),
-  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
-}).annotate({ title: 'Change Entry' });
-export type ChangeEntry = Schema.Schema.Type<typeof ChangeEntry>;
+const makeChangeEntry = <E extends 'created' | 'updated'>(event: E) =>
+  Schema.Struct({
+    ...HistoryEntryBase,
+    event: Schema.Literal(event).annotate({ title: 'Event' }),
+    description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
+  }).annotate({ title: event === 'created' ? 'Created Entry' : 'Updated Entry' });
+
+export const CreatedEntry = makeChangeEntry('created');
+export type CreatedEntry = Schema.Schema.Type<typeof CreatedEntry>;
+
+export const UpdatedEntry = makeChangeEntry('updated');
+export type UpdatedEntry = Schema.Schema.Type<typeof UpdatedEntry>;
+
+export type ChangeEntry = CreatedEntry | UpdatedEntry;
 
 /**
  * A question an agent put to a person about this task. It is open until an {@link AnswerEntry}
@@ -165,7 +176,7 @@ export const AnswerEntry = Schema.Struct({
 export type AnswerEntry = Schema.Schema.Type<typeof AnswerEntry>;
 
 /** One line of a task's activity log, discriminated by `event`. */
-export const HistoryEntry = Schema.Union([ChangeEntry, QuestionEntry, AnswerEntry]).annotate({
+export const HistoryEntry = Schema.Union([CreatedEntry, UpdatedEntry, QuestionEntry, AnswerEntry]).annotate({
   title: 'History Entry',
 });
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
@@ -380,8 +391,22 @@ const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0,
 export const appendHistory = (task: Task, entry: HistoryEntry): void => {
   Obj.update(task, (task) => {
     task.history ??= [];
-    task.history.push(entry);
+    task.history.push(mutableEntry(entry));
   });
+};
+
+/**
+ * A copy of `entry` the task can own. ECHO refuses to store a record another object already owns — an
+ * actor that is also the task's assignee, say — and the stored array is mutable where the schema
+ * type is read-only, so the nested records are copied rather than shared.
+ */
+const mutableEntry = (entry: HistoryEntry) => {
+  const actor = entry.actor ? { actor: { ...entry.actor } } : {};
+  if (!isQuestionEntry(entry)) {
+    return { ...entry, ...actor };
+  }
+  const { options, ...rest } = entry;
+  return { ...rest, ...actor, ...(options ? { options: options.map((option) => ({ ...option })) } : {}) };
 };
 
 /**
@@ -448,7 +473,7 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     return undefined;
   }
 
-  const entry: ChangeEntry = {
+  const entry: UpdatedEntry = {
     id: EntityId.random(),
     date: options.date ?? new Date().toISOString(),
     ...(options.actor ? { actor: options.actor } : {}),
@@ -495,7 +520,7 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
       }
     }
     task.history ??= [];
-    task.history.push(entry);
+    task.history.push(mutableEntry(entry));
   });
 
   return entry;
@@ -526,6 +551,97 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
     task.artifacts ??= [];
     task.artifacts.push(Ref.make(artifact));
   });
+};
+
+//
+// Questions. A question and its answer are two history entries joined by id, so the exchange sits
+// in the task's log in the order it happened, and "answered" is derived rather than stored.
+//
+
+/** A question entry paired with its answer, if it has one yet. */
+export type QuestionThread = { question: QuestionEntry; answer?: AnswerEntry };
+
+export const isChangeEntry = (entry: HistoryEntry): entry is ChangeEntry =>
+  entry.event === 'created' || entry.event === 'updated';
+
+export const isQuestionEntry = (entry: HistoryEntry): entry is QuestionEntry => entry.event === 'question';
+
+export const isAnswerEntry = (entry: HistoryEntry): entry is AnswerEntry => entry.event === 'answer';
+
+/**
+ * Every question in a log, oldest first, each with its answer. Takes the log rather than the task so
+ * a React snapshot — the shape a row actually renders from — answers the same way. Only the first
+ * answer to a question counts: the asker was resumed on it, so a later one describes a decision it
+ * never saw.
+ */
+export const getQuestions = (history: readonly HistoryEntry[] | undefined): QuestionThread[] => {
+  const answers = new Map<string, AnswerEntry>();
+  for (const entry of history ?? []) {
+    if (isAnswerEntry(entry) && !answers.has(entry.questionId)) {
+      answers.set(entry.questionId, entry);
+    }
+  }
+
+  return (history ?? []).filter(isQuestionEntry).map((question) => {
+    const answer = answers.get(question.id);
+    return answer ? { question, answer } : { question };
+  });
+};
+
+/** The questions in a log that nobody has answered yet. */
+export const getPendingQuestions = (history: readonly HistoryEntry[] | undefined): QuestionEntry[] =>
+  getQuestions(history).flatMap(({ question, answer }) => (answer ? [] : [question]));
+
+export type AskProps = Pick<QuestionEntry, 'text' | 'context' | 'options' | 'conversation'> &
+  Pick<EditOptions, 'actor' | 'date'>;
+
+/**
+ * Records a question on the task. Leaves the status alone: whether a question blocks the work is
+ * the asker's call, made with {@link setStatus} so the log records that transition too.
+ */
+export const ask = (task: Task, { text, context, options, conversation, actor, date }: AskProps): QuestionEntry => {
+  const entry: QuestionEntry = {
+    id: EntityId.random(),
+    date: date ?? new Date().toISOString(),
+    ...(actor ? { actor } : {}),
+    event: 'question',
+    text: text.trim(),
+    ...(context ? { context } : {}),
+    ...(options && options.length > 0 ? { options } : {}),
+    ...(conversation ? { conversation } : {}),
+  };
+  appendHistory(task, entry);
+  return entry;
+};
+
+/**
+ * Records an answer to one of the task's questions. Refused — returning `undefined` and writing
+ * nothing — when the text is blank, the question is not in this task's log, or it is already
+ * answered: a blank answer would resume an agent with nothing to go on, and a second one would
+ * resume it against a decision it never saw.
+ */
+export const answer = (
+  task: Task,
+  questionId: string,
+  text: string,
+  { actor, date }: Pick<EditOptions, 'actor' | 'date'> = {},
+): AnswerEntry | undefined => {
+  const trimmed = text.trim();
+  const thread = getQuestions(task.history).find(({ question }) => question.id === questionId);
+  if (trimmed === '' || !thread || thread.answer) {
+    return undefined;
+  }
+
+  const entry: AnswerEntry = {
+    id: EntityId.random(),
+    date: date ?? new Date().toISOString(),
+    ...(actor ? { actor } : {}),
+    event: 'answer',
+    questionId: thread.question.id,
+    answer: trimmed,
+  };
+  appendHistory(task, entry);
+  return entry;
 };
 
 /** Assigns a task, or unassigns it with `null`. */

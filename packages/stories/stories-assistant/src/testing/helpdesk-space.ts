@@ -12,7 +12,7 @@ import * as Project from '@dxos/compute/Project';
 import { Feed, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { Outline, Question, Task, TaskSet } from '@dxos/types';
+import { Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export const HELPDESK_SPACE_ID = 'com.example.space.helpdesk';
@@ -68,7 +68,6 @@ export const helpdeskSpace: AppCapabilities.SpaceTemplate = {
       Instructions.Instructions,
       TaskSet.TaskSet,
       Task.Task,
-      Question.Question,
       Outline.Outline,
       Feed.Feed,
     ]);

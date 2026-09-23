@@ -8,11 +8,12 @@ import { Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { Question, Task } from '@dxos/types';
+import { Database, Ref } from '@dxos/echo';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AskQuestion } from './definitions.ts';
+import { selfActor } from './update-tasks.ts';
 
 /**
  * Files a question on a checklist task and blocks the task on it.
@@ -22,15 +23,15 @@ import { AskQuestion } from './definitions.ts';
  * title are refused rather than guessed between — blocking the wrong one would leave the right one
  * looking live while nothing advances it.
  *
- * Three writes, deliberately together: without the artifact the question is unreachable from the
- * task, without `blocked` the checklist reads as work in progress that nothing is advancing, and
- * without the conversation ref the answer has no session to resume.
+ * The question lands in the task's own history, so it cannot be separated from the work it blocks.
+ * The task is set `blocked` alongside it — otherwise the checklist reads as work in progress that
+ * nothing is advancing — and the entry carries the conversation ref, without which the answer has
+ * no session to resume.
  */
 export default AskQuestion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: title, question: text, context, options }) {
       const chat = yield* Harness.getChat;
-      const { db } = yield* Database.Service;
 
       const tasks = yield* Chat.loadTasks(chat);
       const matches = tasks.filter((candidate) => candidate.title === title.trim());
@@ -60,14 +61,8 @@ export default AskQuestion.pipe(
 
       // A retried tool call must not file a second question: the reader would have two to answer
       // where only the first resumes anything cleanly, and the second answer would wake the same
-      // chat again. Checked against the task's own artifacts, which is where the first one landed.
-      const artifacts = yield* Effect.forEach(task.artifacts ?? [], (ref) =>
-        Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-      );
-      const pending = artifacts.find(
-        (artifact) => artifact && Obj.instanceOf(Question.Question, artifact) && !Question.isAnswered(artifact),
-      );
-      if (pending) {
+      // chat again.
+      if (Task.getPendingQuestions(task.history).length > 0) {
         return trim`
           "${task.title}" already has an unanswered question, so nothing was filed. Wait for it to be
           answered rather than asking again.
@@ -78,21 +73,15 @@ export default AskQuestion.pipe(
         `;
       }
 
-      // Parented to the task, so a question dies with the work it was about rather than outliving
-      // it as an orphan nobody can place.
-      const question = db.add(
-        Question.make({
-          text: text.trim(),
-          ...(context ? { context } : {}),
-          ...(options && options.length > 0
-            ? { options: options.map(({ title, description }) => ({ title, ...(description ? { description } : {}) })) }
-            : {}),
-          task: Ref.make(task),
-          conversation: Ref.make(chat),
-          [Obj.Parent]: task,
-        }),
-      );
-      Task.addArtifact(task, question);
+      const question = Task.ask(task, {
+        text,
+        ...(context ? { context } : {}),
+        ...(options && options.length > 0
+          ? { options: options.map(({ title, description }) => ({ title, ...(description ? { description } : {}) })) }
+          : {}),
+        conversation: Ref.make(chat),
+        actor: yield* selfActor(chat),
+      });
 
       const previousStatus = task.status;
       Task.setStatus(task, 'blocked');
@@ -114,10 +103,10 @@ export default AskQuestion.pipe(
 
       return trim`
         Question filed on "${task.title}", which is now blocked. Stop here and end your turn — you are
-        sent a message when it is answered, and you read the answer back with the get-objects tool.
+        sent a message when it is answered, and you read the answer back off the task's history.
         Show the reader the question by emitting this line verbatim, on its own:
 
-        <surface role="question">{"question":"${question.id}"}</surface>
+        <surface role="question">{"task":"${task.id}","question":"${question.id}"}</surface>
 
         <checklist>
         ${yield* Chat.formatChecklist(chat)}

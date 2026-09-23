@@ -177,6 +177,40 @@ const seedDrag = (): Task.Task[] => {
   return [a, b, c];
 };
 
+/**
+ * Tasks an agent stopped on to ask something: one question still open with options to pick from,
+ * one open with nothing but the free-form field, and one already answered — so the three shapes a
+ * question takes in a row sit side by side.
+ */
+const seedQuestions = (): Task.Task[] => {
+  const agent = { role: 'assistant' as const, name: 'Scout' };
+  const refunds = Task.make({ title: 'Draft the refund reply', status: 'started', priority: 'high', assignee: agent });
+  Task.ask(refunds, {
+    text: 'What is our refund window for annual plans?',
+    context: 'The order is 45 days old and nothing in the project states the policy.',
+    options: [
+      { title: '30 days', description: 'The standard terms on the pricing page.' },
+      { title: '60 days', description: 'The enterprise terms, if this customer is on them.' },
+    ],
+    actor: agent,
+  });
+  Task.setStatus(refunds, 'blocked', { actor: agent });
+
+  const launch = Task.make({ title: 'Schedule the launch post', status: 'started', assignee: agent });
+  Task.ask(launch, { text: 'Which day should the launch post go out?', actor: agent });
+  Task.setStatus(launch, 'blocked', { actor: agent });
+
+  const roast = Task.make({ title: 'Pick the house roast', status: 'started', assignee: agent });
+  const roastQuestion = Task.ask(roast, {
+    text: 'Light or medium for the house roast?',
+    options: [{ title: 'Light' }, { title: 'Medium' }],
+    actor: agent,
+  });
+  Task.answer(roast, roastQuestion.id, 'Medium', { actor: { name: 'Rich', role: 'user' } });
+
+  return [refunds, launch, roast, Task.make({ title: 'Design label', status: 'todo' })];
+};
+
 const DefaultStory = ({
   seed = seedFlat,
   readonly,
@@ -255,6 +289,12 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks]);
   }, []);
 
+  // Stands in for the `AnswerQuestion` operation, minus the resume: the answer lands in the history.
+  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
+    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
+    setTasks((tasks) => [...tasks]);
+  }, []);
+
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
   }, []);
@@ -294,6 +334,7 @@ const DefaultStory = ({
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
+      onQuestionAnswer={readonly ? undefined : handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -371,6 +412,48 @@ export const WithDescriptions: Story = {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: true,
+  },
+};
+
+export const WithQuestions: Story = {
+  args: {
+    seed: seedQuestions,
+    showGroupLabels: false,
+  },
+};
+
+/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
+export const TestAnswerQuestion: Story = {
+  args: {
+    seed: seedQuestions,
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const answers = () =>
+      [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+    });
+    const option = canvasElement.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
+    if (!option) {
+      throw new Error('the open question has no options');
+    }
+    await userEvent.click(option);
+    await waitFor(async () => {
+      await expect(answers()).toContain('30 days');
+    });
+
+    // Typing in the free-form field must not reach the row: its keys would move the selection.
+    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
+    if (!input) {
+      throw new Error('the open question has no answer field');
+    }
+    await userEvent.type(input, 'Tuesday{Enter}');
+    await waitFor(async () => {
+      await expect(answers()).toContain('Tuesday');
+    });
+    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
   },
 };
 

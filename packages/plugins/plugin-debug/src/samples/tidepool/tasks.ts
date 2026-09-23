@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { EntityId } from '@dxos/echo/Key';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import { type PersonKey, type PersonMap } from './team.ts';
@@ -168,9 +169,21 @@ const buildTasks = (
       parentTask: parent ? Ref.make(parent) : undefined,
       // Task carries no due date; its dates are activity-log lines, so that is where they go.
       history: [
-        { date: daysAgo(21), event: 'created' as const, description: 'Filed against the sync v2 work-stream.' },
+        {
+          id: EntityId.random(),
+          date: daysAgo(21),
+          event: 'created' as const,
+          description: 'Filed against the sync v2 work-stream.',
+        },
         ...(seed.status === 'done'
-          ? [{ date: daysAgo(9), event: 'updated' as const, description: 'Status changed to done.' }]
+          ? [
+              {
+                id: EntityId.random(),
+                date: daysAgo(9),
+                event: 'updated' as const,
+                description: 'Status changed to done.',
+              },
+            ]
           : []),
       ],
     });
