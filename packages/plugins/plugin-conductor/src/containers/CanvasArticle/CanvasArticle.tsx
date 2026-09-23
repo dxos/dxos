@@ -92,14 +92,19 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
     <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
       <Root>
         <KeyboardContainer id={id}>
-          <SceneView
+          <SceneView.Root
             store={store}
             root={sceneId}
             atoms={atoms}
             nodes={computeNodeRegistry}
             projection={projection}
-            overlay={<Bullets controller={controller} projection={projection} />}
-          />
+          >
+            <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
+            <SceneView.Navigation />
+            <SceneView.Actions />
+            <SceneView.Debug />
+            <SceneView.Palette />
+          </SceneView.Root>
         </KeyboardContainer>
       </Root>
     </ComputeContext.Provider>

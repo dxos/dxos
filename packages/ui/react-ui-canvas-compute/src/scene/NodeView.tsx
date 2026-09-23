@@ -25,7 +25,17 @@ export const computeNodeView = <S extends ComputeShape>(
     const { node, selected } = props;
     const { controller } = useComputeContext();
     useControllerUpdates(controller);
-    return isShape(node) ? <Component shape={node} selected={selected} /> : <UnknownNodeView {...props} />;
+    if (!isShape(node)) {
+      return <UnknownNodeView {...props} />;
+    }
+    // The shape components were written against the editor's frame body, which is a full-size flex
+    // container (`styles.frameContainer`); the engine's node frame is not, so their `grow` / `w-full`
+    // centring collapsed to the top-left corner. The wrapper restores that contract for every shape.
+    return (
+      <div className='dx-fullscreen flex'>
+        <Component shape={node} selected={selected} />
+      </div>
+    );
   };
   View.displayName = `ComputeNodeView(${Component.displayName ?? Component.name})`;
   return View;

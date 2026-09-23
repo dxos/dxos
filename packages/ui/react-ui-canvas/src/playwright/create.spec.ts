@@ -77,10 +77,7 @@ test.describe('create sizing', () => {
 
     // Zoom out until the finest level fixed in scene units would no longer be drawn: a snap to it would
     // then move the node by less than a screen pixel, which reads as no snapping at all.
-    for (let step = 0; step < 6; ++step) {
-      await page.getByTestId('toolbar-zoom-out').click();
-    }
-    await page.waitForTimeout(300);
+    await scene.zoomOut(6);
 
     const before = await scene.box(scene.node(id!));
     // Nudge by a few pixels: with snapping live the node must land on a line, so it either stays put or
@@ -107,15 +104,9 @@ test.describe('create sizing', () => {
     };
 
     const initial = await widthAt();
-    await page.getByTestId('toolbar-zoom-in').click();
-    await page.getByTestId('toolbar-zoom-in').click();
-    await page.waitForTimeout(300);
+    await scene.zoomIn(2);
     const zoomedIn = await widthAt();
-    await page.getByTestId('toolbar-zoom-out').click();
-    await page.getByTestId('toolbar-zoom-out').click();
-    await page.getByTestId('toolbar-zoom-out').click();
-    await page.getByTestId('toolbar-zoom-out').click();
-    await page.waitForTimeout(300);
+    await scene.zoomOut(4);
     const zoomedOut = await widthAt();
 
     // The default size is expressed in scene units, so without scaling by the zoom these would differ by

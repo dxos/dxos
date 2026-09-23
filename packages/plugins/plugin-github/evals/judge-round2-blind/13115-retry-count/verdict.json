@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 3,
+    "why": 3,
+    "load": 4,
+    "trust": 2,
+    "reasons": {
+      "order": "Single flat section restating the same fact twice (title and opening sentence), with no real build from core change to consequence.",
+      "why": "States a concrete failure motive ('Transient EDGE unavailability... failed the notarize call outright') that gives a reason, but that specific narrative is not shown anywhere in the one-line diff.",
+      "load": "Short and readable in one pass with no forward references.",
+      "trust": "The claim that notarization 'gave up after two retries' and failed 'outright' during a transient-unavailability window is an invented incident narrative the diff.patch (a bare constant bump with no logs, test, or comment) does not support."
+    }
+  },
+  "B": {
+    "order": 3,
+    "why": 3,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Also a single flat section, but at least explicitly notes 'a single constant edit with no accompanying logic change' before adding context, which is a mild build from fact to context.",
+      "why": "Explains the retry count's relationship to the visible DEFAULT_NOTARIZE_TIMEOUT (10s) and DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL (3s) constants rather than stating an unverifiable motive.",
+      "load": "Reads in one pass; the closing sentence about 'fits more attempts inside that timeout window' requires holding two numbers in mind but doesn't force backtracking.",
+      "trust": "The 10s timeout and 3s polling interval it cites are the real neighboring constants shown in the diff's context lines, and the 2-to-5 change is stated correctly with no invented incident; the 'fits more attempts' framing is a mild unverified inference but not a fabricated fact."
+    }
+  }
+}

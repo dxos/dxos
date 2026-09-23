@@ -6,18 +6,17 @@ import type * as Schema from 'effect/Schema';
 import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
-import { type CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import { getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeContext } from '../../hooks/compute-context.ts';
 import { Box, type BoxProps } from '../common/index.ts';
-import { getProperties } from '../defs.ts';
+import { type ComputeShape, getProperties } from '../defs.ts';
 import { bodyPadding } from './function-anchors.ts';
 
 const expandedHeight = 200;
 
 export type FunctionBodyProps = {
-  shape: CanvasBoard.Shape;
+  shape: ComputeShape;
   name?: string;
   content?: JSX.Element;
   inputSchema?: Schema.Top;
@@ -40,9 +39,6 @@ export const FunctionBody = ({
   const [open, setOpen] = useState(false);
 
   const handleAction: BoxProps['onAction'] = (action) => {
-    if (action !== 'open' && action !== 'close') {
-      return;
-    }
     const opening = action === 'open';
     if (resize) {
       resize(shape.id, opening ? expandedHeight : -expandedHeight);

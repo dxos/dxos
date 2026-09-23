@@ -21,6 +21,9 @@
       "path": "../../common/test-utils"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {

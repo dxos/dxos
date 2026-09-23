@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Client } from '@dxos/client';
-import { DevtoolsHostService } from '@dxos/client-services';
+import { Devtools } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
@@ -91,7 +91,7 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
   const devtoolsHost = await EffectEx.runPromise(
     (bootedClient.services as LocalClientServices).stack
       .getServiceResolver()
-      .resolve(DevtoolsHostService, {})
+      .resolve(Devtools.DevtoolsHostService, {})
       .pipe(Effect.orDie, Effect.scoped),
   );
   return devtoolsHost.exportSqliteDatabase();

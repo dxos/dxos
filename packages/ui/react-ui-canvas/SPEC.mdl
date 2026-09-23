@@ -63,7 +63,7 @@ type NodeBase
     log, one `update` intent for both.
   fields:
     id: NodeId
-    type: NodeType                    # 'rect' | 'ellipse' | 'class' | 'text' | 'scene' | a host's own
+    type: NodeType                    # 'rect' | 'ellipse' | 'class' | 'note' | 'scene' | a host's own
     z: string                         # fractional order key
     locked?: boolean                  # no intent moves, resizes or deletes it
     center: Point

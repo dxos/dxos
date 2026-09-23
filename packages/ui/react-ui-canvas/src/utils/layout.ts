@@ -90,3 +90,20 @@ const snap = ({ x, y }: Point): Point => ({
   x: Math.round(x / MAJOR_GRID) * MAJOR_GRID,
   y: Math.round(y / MAJOR_GRID) * MAJOR_GRID,
 });
+
+export type GridExtent = { columns: number; rows: number };
+
+/**
+ * Where the first slot's centre goes for a grid of `extent` equal slots, `size` each and `pitch` apart,
+ * placed so the whole arrangement straddles the origin. A slot spans an odd number of major cells, so
+ * its run's exact midpoint falls half a cell off the grid; the leading edge is rounded to the grid
+ * instead, which keeps every slot snapped at the cost of the arrangement sitting up to half a cell off
+ * centre.
+ */
+export const centeredOrigin = (extent: GridExtent, pitch: Size, size: Size): Point => ({
+  x: leadingEdge(extent.columns, pitch.width, size.width) + size.width / 2,
+  y: leadingEdge(extent.rows, pitch.height, size.height) + size.height / 2,
+});
+
+const leadingEdge = (count: number, pitch: number, extent: number): number =>
+  Math.round(-(Math.max(count - 1, 0) * pitch + extent) / 2 / MAJOR_GRID) * MAJOR_GRID;

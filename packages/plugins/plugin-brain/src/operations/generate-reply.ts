@@ -142,7 +142,7 @@ export const generateReply = (options: {
       sender: message.sender.name ?? message.sender.email ?? 'the sender',
     });
     const body = yield* LanguageModel.generateText({ prompt }).pipe(
-      Effect.provide(AiService.model(GENERATE_MODEL).pipe(Layer.orDie)),
+      Effect.provide(AiService.languageModel(GENERATE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
       Effect.catch((cause) => Effect.fail(new GenerateReplyError({ cause }))),

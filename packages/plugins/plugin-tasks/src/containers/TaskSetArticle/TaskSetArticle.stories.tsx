@@ -95,6 +95,7 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Schedule cuppings',
+      description: 'Waits on https://github.com/acme/private/pull/7.',
       status: 'todo',
     },
     {
@@ -211,6 +212,32 @@ export const DescriptionLinks: Story = {
     await expect(
       within(document.body).findByText('Open on GitHub', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * A link the resolver matches but cannot answer — a private repository the space holds no token for —
+ * still opens its card on hover, titled with the link's short name and saying there is no preview,
+ * rather than leaving a chip that does nothing.
+ */
+export const DescriptionLinkUnavailable: Story = {
+  play: async ({ canvasElement }) => {
+    const url = 'https://github.com/acme/private/pull/7';
+    const chip = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).find(
+        (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
+      );
+    await waitFor(() => expect(chip()).toBeTruthy(), { timeout: 10_000 });
+
+    const anchor = chip();
+    if (!anchor) {
+      throw new Error('The unreachable link did not render as a chip.');
+    }
+    await userEvent.hover(anchor);
+    const card = () => document.querySelector<HTMLElement>('.dx-card-popover');
+    await waitFor(() => expect(card()).toBeTruthy(), { timeout: 10_000 });
+    await expect(card()).toHaveTextContent('#7');
+    await expect(card()).toHaveTextContent('No preview available.');
   },
 };
 

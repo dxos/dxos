@@ -15,9 +15,9 @@ import { type ComponentType } from 'react';
 import {
   ClassNodeView,
   EllipseNodeView,
+  NoteNodeView,
   PortalNodeView,
   RectNodeView,
-  TextNodeView,
 } from '../components/SceneLayer/SceneLayer.tsx';
 import { type PartEditing } from '../utils/parts.ts';
 import { DEFAULT_SIZES, createNode } from '../utils/shapes.ts';
@@ -29,13 +29,13 @@ import {
   type Node,
   type NodeBase,
   type NodeType,
+  NoteNode,
   type Point,
   type Port,
   PortalNode,
   RectNode,
   type Scene,
   type Size,
-  TextNode,
 } from './types.ts';
 
 export type NodeViewProps = {
@@ -137,15 +137,15 @@ export const defaultNodeRegistry: NodeRegistry = {
     resizable: true,
     minSize: { width: 128, height: 96 },
   },
-  text: {
-    type: 'text',
-    name: 'Text',
+  note: {
+    type: 'note',
+    name: 'Note',
     icon: 'ph--text-t--regular',
     key: 'T',
-    schema: TextNode,
-    component: TextNodeView,
-    create: (props) => createNode({ type: 'text', ...props }),
-    defaultSize: DEFAULT_SIZES.text,
+    schema: NoteNode,
+    component: NoteNodeView,
+    create: (props) => createNode({ type: 'note', ...props }),
+    defaultSize: DEFAULT_SIZES.note,
     resizable: true,
     minSize: MIN_SIZE,
   },

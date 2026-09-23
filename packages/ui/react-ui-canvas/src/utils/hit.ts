@@ -11,7 +11,13 @@ import { type Bounds, MAJOR_GRID, type Node, type Point, type Scene } from '../m
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
-export const DEFAULT_EXTENT: Bounds = { x: 0, y: 0, width: 1600, height: 1024 };
+/**
+ * Centred on the origin, not anchored at it: a scene is laid out around (0, 0), so an extent running
+ * from the origin to (1600, 1024) puts its own centre well below and right of the content and the
+ * initial fit — which centres the frame — pushes everything into the top-left corner. Each half is a
+ * whole number of major cells, so the frame still lands on grid lines.
+ */
+export const DEFAULT_EXTENT: Bounds = { x: -832, y: -512, width: 1664, height: 1024 };
 export const BOUNDS_PADDING = MAJOR_GRID;
 
 export const containsPoint = (bounds: Bounds, point: Point) =>

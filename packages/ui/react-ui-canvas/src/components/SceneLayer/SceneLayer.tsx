@@ -23,9 +23,9 @@ import {
   type Scene,
   isClassNode,
   isEllipseNode,
+  isNoteNode,
   isPortalNode,
   isRectNode,
-  isTextNode,
   linkMarkers,
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
@@ -190,6 +190,8 @@ SceneLayer.displayName = 'SceneLayer';
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
 const Markers = ({ id, unit }: { id: string; unit: number }) => {
   const size = 6 * unit;
+  // An arrowhead has to read as a direction at a glance, so it carries twice the weight of an end dot.
+  const arrow = 2 * size;
   const ends = ['start', 'end'] as const;
   return (
     <>
@@ -200,8 +202,8 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           viewBox='0 0 10 10'
           refX={9}
           refY={5}
-          markerWidth={size}
-          markerHeight={size}
+          markerWidth={arrow}
+          markerHeight={arrow}
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
@@ -254,7 +256,7 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
   return (
     <div
       className={mx(
-        'absolute box-border border-2 overflow-hidden',
+        'absolute box-border border-4 overflow-hidden',
         ...frameClasses(node, selected, hovered),
         interactive && !node.locked && 'cursor-grab',
         ghost && 'opacity-50 border-dashed pointer-events-none',
@@ -300,7 +302,7 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => {
       part='label'
       text={label}
       editing={editing}
-      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-lg'))}
+      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-2xl'))}
     >
       {label}
     </TextPart>
@@ -344,8 +346,8 @@ export const UnknownNodeView = ({ node }: NodeViewProps) => (
   <div className='dx-fullscreen flex items-center justify-center text-xs text-description'>{node.type}</div>
 );
 
-export const TextNodeView = ({ node, editing }: NodeViewProps) => {
-  const text = isTextNode(node) ? node.text : '';
+export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
+  const text = isNoteNode(node) ? node.text : '';
   return (
     <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3'>
       {text}
@@ -372,11 +374,11 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
         child &&
         bounds && (
           // The nested layer is read-only: only the root scene receives handlers.
-          // Pulled out by the frame's `border-2`, so the child's origin is the node's corner as
-          // `portalTransform` and `enterPortal` assume; inside the padding box it sat two units in and
+          // Pulled out by the frame's border, so the child's origin is the node's corner as
+          // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
           // the scene jumped by that at the drill-in swap.
           <div
-            className='absolute -top-0.5 -left-0.5 pointer-events-none'
+            className='absolute -top-1 -left-1 pointer-events-none'
             style={{ transform: portalTransform(node, bounds), transformOrigin: '0 0' }}
           >
             <SceneLayer

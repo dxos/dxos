@@ -72,7 +72,7 @@ describe('compute scene', () => {
   test('a note becomes the engine text node and edges pin the property ports', ({ expect }) => {
     const circuit = createTransformCircuit();
     const scene = sceneFromCircuit(circuit);
-    const note = Object.values(scene.nodes).find((node) => node.type === 'text');
+    const note = Object.values(scene.nodes).find((node) => node.type === 'note');
     expect(note && 'text' in note && note.text).toBe('Random number generator');
     const expression = Object.values(scene.links).find(
       (link) => 'port' in link.target && link.target.port === `input.expression`,

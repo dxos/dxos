@@ -42,12 +42,12 @@ export class SceneManager {
     return Math.max(...boxes.map(({ x, width }) => x + width));
   }
 
-  /** The toolbar's zoom readout, as whole percent. */
+  /** The debug bar's zoom readout, as whole percent; the navigation bar carries the path and depth. */
   async zoom(): Promise<number> {
-    const readout = await this.page.getByTestId('canvas-toolbar').textContent();
+    const readout = await this.page.getByTestId('canvas-debug').textContent();
     const percent = readout?.match(/(\d+)%/);
     if (!percent) {
-      throw new Error(`toolbar shows no zoom: ${readout}`);
+      throw new Error(`debug bar shows no zoom: ${readout}`);
     }
     return Number(percent[1]);
   }
@@ -74,6 +74,31 @@ export class SceneManager {
   /** Focus the canvas without changing the selection. */
   async focus(): Promise<void> {
     await this.root.focus();
+  }
+
+  /**
+   * Wait out a camera animation. While one runs the view ignores the pointer behind a shield and the
+   * scene is still moving under it, so a gesture is dropped and a measurement is of a moving target —
+   * a timeout would be a guess at a duration that varies with the distance travelled.
+   */
+  async settle(): Promise<void> {
+    await this.page.getByTestId('navigation-shield').waitFor({ state: 'detached', timeout: 10_000 });
+  }
+
+  /** Zoom by `steps` toolbar steps, each landed before the next. */
+  async zoomIn(steps = 1): Promise<void> {
+    await this.#zoom('toolbar-zoom-in', steps);
+  }
+
+  async zoomOut(steps = 1): Promise<void> {
+    await this.#zoom('toolbar-zoom-out', steps);
+  }
+
+  async #zoom(testId: string, steps: number): Promise<void> {
+    for (let step = 0; step < steps; ++step) {
+      await this.page.getByTestId(testId).click();
+      await this.settle();
+    }
   }
 
   /** Press at `from`, move to `to` in steps, release; `modifier` is held for the whole gesture. */

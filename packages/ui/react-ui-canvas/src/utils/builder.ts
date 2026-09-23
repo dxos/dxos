@@ -83,7 +83,7 @@ export class SceneBuilder {
   }
 
   text(id: string, box: Box, text: string): this {
-    return this.#node({ type: 'text', id, center: center(box), size: { width: box.width, height: box.height }, text });
+    return this.#node({ type: 'note', id, center: center(box), size: { width: box.width, height: box.height }, text });
   }
 
   /** A portal to `scene`; its size fixes the frame the child is centred in. */
@@ -107,6 +107,11 @@ export class SceneBuilder {
 
   spline(id: string, from: string, to: string, points: Point[], options: LinkOptions = {}): this {
     return this.#link({ type: 'spline', id, source: endpoint(from), target: endpoint(to), points, ...options });
+  }
+
+  /** A routed link: it stores no geometry, so its path follows its ports as the nodes move. */
+  smart(id: string, from: string, to: string, options: LinkOptions = {}): this {
+    return this.#link({ type: 'smart', id, source: endpoint(from), target: endpoint(to), ...options });
   }
 
   /** Nodes and links in call order, each with its own z key. */

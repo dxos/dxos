@@ -115,7 +115,8 @@ const buildLevel = (level: LevelDef, path: string, scenes: Scene[]): SceneId => 
  * rectangle, an ellipse, a class, a text and one link of each type; above the leaves it also holds
  * two portals whose child scenes alternate between a few simple diagrams (a flow, a class model, a
  * cycle, a note). Ids are deterministic so tests can name elements (`scene:root/a`, `scene:root/left`);
- * every coordinate is a whole number of `scale` steps, so the untouched layout is already snapped.
+ * every coordinate is a whole number of `scale` steps and each scene is laid out symmetrically about
+ * the origin, so the untouched layout is already snapped and already centred.
  */
 export const createSceneTree = (depth: number, prefix = 'root'): SceneTree => {
   const scenes: Scene[] = [];
@@ -148,8 +149,8 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
     // Portals keep one aspect (16:10) so every child gets the same frame shape; 512×320 is the
     // smallest such size on the major grid.
     builder
-      .portal(elementId('left'), { x: scale(30), y: scale(4), ...PORTAL }, left)
-      .portal(elementId('right'), { x: scale(30), y: scale(18), ...PORTAL }, right);
+      .portal(elementId('left'), { x: scale(8), y: scale(-12), ...PORTAL }, left)
+      .portal(elementId('right'), { x: scale(8), y: scale(2), ...PORTAL }, right);
   }
 
   scenes.push(builder.build());
@@ -158,16 +159,16 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
 
 const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => string) =>
   SceneBuilder.create(id, name)
-    .rect(elementId('a'), { x: scale(4), y: scale(4), width: scale(8), height: scale(4) }, `${name} · A`)
-    .ellipse(elementId('b'), { x: scale(16), y: scale(4), width: scale(8), height: scale(4) }, `${name} · B`)
+    .rect(elementId('a'), { x: scale(-22), y: scale(-12), width: scale(8), height: scale(4) }, `${name} · A`)
+    .ellipse(elementId('b'), { x: scale(-10), y: scale(-12), width: scale(8), height: scale(4) }, `${name} · B`)
     .text(
       elementId('t'),
-      { x: scale(16), y: scale(24), width: scale(12), height: scale(4) },
+      { x: scale(-10), y: scale(8), width: scale(12), height: scale(4) },
       `Scene "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
     )
     .class(
       elementId('c'),
-      { x: scale(4), y: scale(22), width: scale(8), height: scale(6) },
+      { x: scale(-22), y: scale(6), width: scale(8), height: scale(6) },
       `${name} · C`,
       ['id: string', 'name: string'],
       ['save(): void'],
@@ -176,8 +177,8 @@ const rootScene = (id: SceneId, name: string, elementId: (suffix: string) => str
     .line(elementId('ac'), elementId('a'), elementId('c'), { directed: true })
     // Pinned ports rather than automatic ones, so the spline leaves and arrives where its corners turn.
     .spline(elementId('bc'), `${elementId('b')}#${portId('s')}`, `${elementId('c')}#${portId('n', 3)}`, [
-      { x: scale(20), y: scale(12) },
-      { x: scale(10), y: scale(12) },
+      { x: scale(-6), y: scale(-2) },
+      { x: scale(-16), y: scale(-2) },
     ]);
 
 const childScene = (id: SceneId, name: string, elementId: (suffix: string) => string, variant: Variant) => {
@@ -185,44 +186,48 @@ const childScene = (id: SceneId, name: string, elementId: (suffix: string) => st
   switch (variant) {
     case 'flow':
       return builder
-        .rect(elementId('start'), { x: scale(4), y: scale(6), width: scale(8), height: scale(4) }, 'Start')
-        .rect(elementId('work'), { x: scale(18), y: scale(6), width: scale(8), height: scale(4) }, 'Work')
-        .ellipse(elementId('done'), { x: scale(32), y: scale(6), width: scale(8), height: scale(4) }, 'Done')
+        .rect(elementId('start'), { x: scale(-18), y: scale(-2), width: scale(8), height: scale(4) }, 'Start')
+        .rect(elementId('work'), { x: scale(-4), y: scale(-2), width: scale(8), height: scale(4) }, 'Work')
+        .ellipse(elementId('done'), { x: scale(10), y: scale(-2), width: scale(8), height: scale(4) }, 'Done')
         .line(elementId('l1'), `${elementId('start')}#e2`, `${elementId('work')}#w2`, { directed: true })
         .line(elementId('l2'), `${elementId('work')}#e2`, `${elementId('done')}#w2`, { directed: true });
     case 'model':
       return builder
         .class(
           elementId('person'),
-          { x: scale(4), y: scale(4), width: scale(8), height: scale(6) },
+          { x: scale(-20), y: scale(-4), width: scale(8), height: scale(8) },
           'Person',
           ['name: string'],
           ['greet()'],
         )
         .class(
           elementId('org'),
-          { x: scale(22), y: scale(4), width: scale(8), height: scale(6) },
+          { x: scale(-4), y: scale(-4), width: scale(8), height: scale(8) },
           'Organization',
           ['title: string'],
           ['hire(person)'],
         )
         .curve(elementId('works'), `${elementId('person')}#e2`, `${elementId('org')}#w2`);
     case 'cycle':
-      return builder
-        .ellipse(elementId('n1'), { x: scale(14), y: scale(2), width: scale(6), height: scale(4) }, '1')
-        .ellipse(elementId('n2'), { x: scale(26), y: scale(10), width: scale(6), height: scale(4) }, '2')
-        .ellipse(elementId('n3'), { x: scale(2), y: scale(10), width: scale(6), height: scale(4) }, '3')
-        .spline(elementId('e12'), elementId('n1'), elementId('n2'), [{ x: scale(26), y: scale(4) }])
-        .spline(elementId('e23'), elementId('n2'), elementId('n3'), [{ x: scale(17), y: scale(18) }])
-        .spline(elementId('e31'), elementId('n3'), elementId('n1'), [{ x: scale(8), y: scale(4) }]);
+      return (
+        builder
+          .ellipse(elementId('n1'), { x: scale(-2), y: scale(-10), width: scale(4), height: scale(4) }, '1')
+          .ellipse(elementId('n2'), { x: scale(-2), y: scale(6), width: scale(4), height: scale(4) }, '2')
+          .ellipse(elementId('n3'), { x: scale(-14), y: scale(-2), width: scale(4), height: scale(4) }, '3')
+          // Routed rather than drawn: the ring is the one arrangement where a stored control point has to be
+          // re-placed every time a node moves.
+          .smart(elementId('e12'), elementId('n1'), elementId('n2'))
+          .smart(elementId('e23'), elementId('n2'), elementId('n3'))
+          .smart(elementId('e31'), elementId('n3'), elementId('n1'))
+      );
     case 'note':
       return builder
         .text(
           elementId('note'),
-          { x: scale(6), y: scale(4), width: scale(16), height: scale(6) },
+          { x: scale(-14), y: scale(-4), width: scale(16), height: scale(8) },
           `A note in "${name}". Portals below.`,
         )
-        .rect(elementId('box'), { x: scale(26), y: scale(4), width: scale(8), height: scale(6) }, 'Box')
+        .rect(elementId('box'), { x: scale(6), y: scale(-4), width: scale(8), height: scale(8) }, 'Box')
         .curve(elementId('nb'), elementId('note'), elementId('box'));
   }
 };

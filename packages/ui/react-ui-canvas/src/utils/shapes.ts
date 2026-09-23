@@ -21,8 +21,8 @@ import {
   type Size,
   isClassNode,
   isEllipseNode,
+  isNoteNode,
   isRectNode,
-  isTextNode,
 } from '../model/types.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
@@ -46,7 +46,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   rect: { width: 256, height: 128 },
   ellipse: { width: 256, height: 128 },
   class: { width: 256, height: 192 },
-  text: { width: 256, height: 128 },
+  note: { width: 256, height: 128 },
   scene: { width: 512, height: 320 },
 };
 
@@ -77,8 +77,8 @@ export const createNode = ({
       return { type, id, z, center, size };
     case 'class':
       return { type, id, z, center, size, name: 'Class', attributes: ['id: string'], methods: ['save(): void'] };
-    case 'text':
-      return { type, id, z, center, size, text: 'Text' };
+    case 'note':
+      return { type, id, z, center, size, text: 'Note' };
     case 'scene':
       return { type, id, z, center, size, scene: scene ?? id };
   }
@@ -92,7 +92,7 @@ export const withLabel = <N extends Node>(node: N, label: string): N => {
   if (isClassNode(node)) {
     return { ...node, name: label };
   }
-  if (isTextNode(node)) {
+  if (isNoteNode(node)) {
     return { ...node, text: label };
   }
   return node;
