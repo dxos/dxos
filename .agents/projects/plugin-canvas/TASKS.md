@@ -195,5 +195,27 @@ before), not reasoned about from the source.
       The engine's def won, so every compute Text output was drawn by `TextNodeView`, which reads a
       `text` field the compute shape does not carry. The engine's node is renamed `note` — what the
       canvas-editor model already calls it — leaving `text` to the host.
-- [ ] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
-      audio, voice), same treatment.
+- [x] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
+      audio, voice), same treatment. All nine walked in Chromium at 1400×900: every node carries the
+      `dx-fullscreen flex` wrapper, every compute shape its chrome, and no story raises a page error.
+      The only console error left is the known `chat` stub (`No compute function for node type:
+    chat`), in the six circuits that wire one; `audio` and `voice` are clean of even that. Framing
+      per story, as (offset, coverage) fractions of the viewport:
+
+      | story | nodes | offset x, y | coverage x, y | zoom |
+          | --- | --- | --- | --- | --- |
+          | beacon | 4 | 0.000, 0.000 | 0.18, 0.17 | 78% |
+          | control | 9 | 0.009, -0.014 | 0.52, 0.47 | 78% |
+          | template | 12 | 0.011, 0.000 | 0.41, 0.86 | 50% |
+          | gpt | 6 | 0.000, 0.007 | 0.82, 0.71 | 78% |
+          | plugins | 8 | 0.000, 0.007 | 0.82, 0.71 | 78% |
+          | artifact | 5 | 0.034, -0.066 | 0.64, 0.66 | 74% |
+          | image-gen | 5 | 0.000, 0.007 | 0.82, 0.71 | 78% |
+          | audio | 2 | 0.009, 0.000 | 0.20, 0.11 | 78% |
+          | voice | 1 | 0.000, 0.000 | 0.14, 0.22 | 78% |
+
+          Every story is centred to within 0.034 of the viewport, so the origin-centred extent holds
+          across the set. The floor is what six of the nine fit to: they land on exactly 78% whatever
+          they contain, because their content is smaller than `DEFAULT_EXTENT` and the fit frames the
+          floor rather than the circuit. Only `template` (taller than the floor) and `artifact` fit to
+          their own bounds. That is the open framing question below, not a separate fault.
