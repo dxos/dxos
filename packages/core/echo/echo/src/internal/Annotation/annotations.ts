@@ -625,7 +625,6 @@ const setParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
 });
 
 export type SetParentAnnotationOptions = {
-  readonly value?: boolean;
   readonly override?: boolean;
 };
 
@@ -634,8 +633,7 @@ export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotation
   set: (options?: SetParentAnnotationOptions) => <S extends Schema.Top>(schema: S) => S;
 } = {
   ...setParentAnnotation,
-  set: ({ value = true, override = true }: SetParentAnnotationOptions = {}) =>
-    setParentAnnotation.set({ value, override }),
+  set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
 };
 
 /**

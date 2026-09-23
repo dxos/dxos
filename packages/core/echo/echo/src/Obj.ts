@@ -777,12 +777,6 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
   return entity[internal.ParentId] as Unknown | undefined;
 };
 
-/** Whether `owner` may act as the entity's owner: it is the entity's parent, or the entity has none. */
-export const isOwnedBy = (entity: Unknown | Snapshot, owner: Unknown | undefined): boolean => {
-  const parent = getParent(entity);
-  return parent === undefined || parent.id === owner?.id;
-};
-
 /**
  * Whether the parent's own data or meta annotations hold a ref to the child. A parent edge without
  * one leaves the child reachable only by index query (no graph path reaches it), and the child
