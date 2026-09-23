@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { formatDistanceToNow } from 'date-fns';
 import React, { useMemo } from 'react';
 
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -11,6 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { formatRelative } from '../../util/index.ts';
 import { UNSET_ICON } from './status-icons.ts';
 
 /**
@@ -81,9 +81,3 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
 };
 
 TaskHistory.displayName = 'TaskList.History';
-
-/** Tolerates an unparseable date rather than throwing: the log is decoration, never the source. */
-const formatRelative = (date: string): string => {
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? date : formatDistanceToNow(parsed, { addSuffix: true });
-};

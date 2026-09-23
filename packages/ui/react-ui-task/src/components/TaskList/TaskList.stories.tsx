@@ -80,7 +80,11 @@ const seedFlat = (): Task.Task[] => [
     status: 'started',
     priority: 'high',
     assignee: { role: 'assistant', name: 'Scout' },
-    history: seedHistory(1, 'Created this task', 'Assigned to an agent', 'Status changed from todo to started'),
+    // Spans the cut-off: the oldest entries are past three days and read as calendar dates.
+    history: seedHistory(1, 'Created this task', 'Assigned to an agent', 'Status changed from todo to started').map(
+      (entry, index) =>
+        index === 0 ? { ...entry, date: new Date(Date.now() - 9 * 24 * 60 * 60_000).toISOString() } : entry,
+    ),
   }),
   Task.make({
     title: 'Design label',
