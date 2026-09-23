@@ -76,6 +76,31 @@ export class SceneManager {
     await this.root.focus();
   }
 
+  /**
+   * Wait out a camera animation. While one runs the view ignores the pointer behind a shield and the
+   * scene is still moving under it, so a gesture is dropped and a measurement is of a moving target —
+   * a timeout would be a guess at a duration that varies with the distance travelled.
+   */
+  async settle(): Promise<void> {
+    await this.page.getByTestId('navigation-shield').waitFor({ state: 'detached', timeout: 10_000 });
+  }
+
+  /** Zoom by `steps` toolbar steps, each landed before the next. */
+  async zoomIn(steps = 1): Promise<void> {
+    await this.#zoom('toolbar-zoom-in', steps);
+  }
+
+  async zoomOut(steps = 1): Promise<void> {
+    await this.#zoom('toolbar-zoom-out', steps);
+  }
+
+  async #zoom(testId: string, steps: number): Promise<void> {
+    for (let step = 0; step < steps; ++step) {
+      await this.page.getByTestId(testId).click();
+      await this.settle();
+    }
+  }
+
   /** Press at `from`, move to `to` in steps, release; `modifier` is held for the whole gesture. */
   async drag(from: { x: number; y: number }, to: { x: number; y: number }, modifier?: string): Promise<void> {
     if (modifier) {

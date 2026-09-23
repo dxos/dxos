@@ -132,7 +132,7 @@ test.describe('SceneView', () => {
 
   test('the line tool draws a free-ended link on empty canvas', async () => {
     // Zoom out once so the band below is there whatever the initial fit frames.
-    await page.getByTestId('toolbar-zoom-out').click();
+    await scene.zoomOut();
     const view = await scene.box(scene.root);
     await scene.focus();
     await page.keyboard.press('l');
@@ -173,7 +173,7 @@ test.describe('SceneView', () => {
   test('the toolbar zooms, creates at the centre and deletes the selection', async () => {
     // The fit zoom follows the fixture's bounds, so the step is read against it rather than named.
     const fitted = await scene.zoom();
-    await page.getByTestId('toolbar-zoom-in').click();
+    await scene.zoomIn();
     // One step is ×1.25; both readouts round, so they can disagree by a point.
     await expect.poll(async () => Math.abs((await scene.zoom()) - fitted * 1.25)).toBeLessThanOrEqual(1);
     await page.getByTestId('toolbar-create').click();
