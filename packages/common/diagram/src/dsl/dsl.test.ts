@@ -220,6 +220,27 @@ describe('dsl round-trip hazards', () => {
     expect(toScene(parse(text).commands)).toEqual(scene);
   });
 
+  //
+  // The exponent support the printer needs also admits `1e309`, which `parseFloat` turns into
+  // Infinity — an infinite coordinate poisons layout and cannot be printed back, so `parse` must
+  // refuse what `print` refuses.
+  //
+  for (const [name, source] of Object.entries({
+    origin: 'object A @ 1e309,0 {\n  rect b 0,0 1x1\n}\n',
+    size: 'object A @ 0,0 {\n  rect b 0,0 1e309x1\n}\n',
+    radius: 'object A @ 0,0 {\n  circle c 0,0 1e309\n}\n',
+    range: 'object A @ 0,0 {\n  arc a 0,0 5 0..1e309\n}\n',
+    attribute: 'object A @ 0,0 {\n  rect b 0,0 1x1 rotation=1e309\n}\n',
+  })) {
+    test(`an overflowing ${name} is reported, not silently Infinity`, ({ expect }) => {
+      const { commands, problems } = parse(source);
+      expect(problems.length).toBeGreaterThan(0);
+      // Nothing infinite may reach a command, since `Draw` would apply it and `print` could not
+      // write it back.
+      expect(JSON.stringify(commands)).not.toContain('null');
+    });
+  }
+
   test('a non-finite coordinate is refused rather than printed unreadably', ({ expect }) => {
     const scene: Scene.Scene = {
       objects: [{ id: 'A', origin: { x: Number.NaN, y: 0 }, elements: [] }],

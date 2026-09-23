@@ -100,26 +100,45 @@ export const parse = (text: string): ParseResult => {
     return raw.startsWith('"') ? unquote(raw) : raw;
   };
 
-  const readNumber = (node: SyntaxNode): number => Number.parseFloat(slice(node));
+  /**
+   * A coordinate the rest of the system can use. The grammar accepts exponent notation because the
+   * printer emits it, which also admits `1e309` — `parseFloat` turns that into `Infinity`, and an
+   * infinite coordinate poisons layout, renders as nothing, and cannot be printed back at all
+   * (`formatNumber` refuses it). Rejecting it here keeps `parse` and `print` accepting the same
+   * documents.
+   */
+  const readNumber = (node: SyntaxNode): number | undefined => {
+    const value = Number.parseFloat(slice(node));
+    if (!Number.isFinite(value)) {
+      report(node, `"${slice(node)}" is not a finite number.`);
+      return undefined;
+    }
+    return value;
+  };
 
   // Error recovery can leave a `Point` or `Range` holding one number instead of two, so every
   // reader returns undefined rather than indexing past the end — `parse` reports problems, and a
   // reader that threw would take the whole document down with the line being typed.
   const readPoint = (node: SyntaxNode): Scene.Point | undefined => {
-    const [x, y] = childrenOf(node).filter((child) => child.name === 'Number');
-    return x && y ? { x: readNumber(x), y: readNumber(y) } : undefined;
+    const [first, second] = childrenOf(node).filter((child) => child.name === 'Number');
+    const [x, y] = [first && readNumber(first), second && readNumber(second)];
+    return x !== undefined && y !== undefined ? { x, y } : undefined;
   };
 
   // `100x50`; `x` appears only as the separator, so a negative extent needs no special case.
   const readSize = (node: SyntaxNode): { w: number; h: number } | undefined => {
-    const [w, h] = slice(node).split('x');
-    const [width, height] = [Number.parseFloat(w), Number.parseFloat(h)];
-    return Number.isNaN(width) || Number.isNaN(height) ? undefined : { w: width, h: height };
+    const [width, height] = slice(node).split('x').map(Number.parseFloat);
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+      report(node, `"${slice(node)}" is not a finite size.`);
+      return undefined;
+    }
+    return { w: width, h: height };
   };
 
   const readRange = (node: SyntaxNode): { startAngle: number; endAngle: number } | undefined => {
-    const [start, end] = childrenOf(node).filter((child) => child.name === 'Number');
-    return start && end ? { startAngle: readNumber(start), endAngle: readNumber(end) } : undefined;
+    const [first, second] = childrenOf(node).filter((child) => child.name === 'Number');
+    const [startAngle, endAngle] = [first && readNumber(first), second && readNumber(second)];
+    return startAngle !== undefined && endAngle !== undefined ? { startAngle, endAngle } : undefined;
   };
 
   //
@@ -156,8 +175,8 @@ export const parse = (text: string): ParseResult => {
       return undefined;
     }
     const value = Number.parseFloat(slice(attr.valueNode));
-    if (Number.isNaN(value)) {
-      report(attr.node, `"${name}" takes a number.`);
+    if (!Number.isFinite(value)) {
+      report(attr.node, `"${name}" takes a finite number.`);
       return undefined;
     }
     return value;
@@ -293,9 +312,10 @@ export const parse = (text: string): ParseResult => {
       }
 
       case 'circle': {
-        const radius = parts.find((part) => part.name === 'Number');
+        const radiusNode = parts.find((part) => part.name === 'Number');
         const centre = points[0] && readPoint(points[0]);
-        if (!radius || !centre) {
+        const radius = radiusNode && readNumber(radiusNode);
+        if (radius === undefined || !centre) {
           return undefined;
         }
         return {
@@ -303,7 +323,7 @@ export const parse = (text: string): ParseResult => {
           id,
           cx: centre.x,
           cy: centre.y,
-          r: readNumber(radius),
+          r: radius,
           ...optional('text', text),
           ...style,
         };
@@ -322,14 +342,15 @@ export const parse = (text: string): ParseResult => {
         return { kind, id, points: readPoints(points), ...style };
 
       case 'arc': {
-        const radius = parts.find((part) => part.name === 'Number');
+        const radiusNode = parts.find((part) => part.name === 'Number');
         const rangeNode = parts.find((part) => part.name === 'Range');
         const centre = points[0] && readPoint(points[0]);
+        const radius = radiusNode && readNumber(radiusNode);
         const range = rangeNode && readRange(rangeNode);
-        if (!radius || !centre || !range) {
+        if (radius === undefined || !centre || !range) {
           return undefined;
         }
-        return { kind, id, cx: centre.x, cy: centre.y, r: readNumber(radius), ...range, ...style };
+        return { kind, id, cx: centre.x, cy: centre.y, r: radius, ...range, ...style };
       }
 
       case 'text': {
