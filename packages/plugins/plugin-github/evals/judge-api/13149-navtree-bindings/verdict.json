@@ -1,0 +1,50 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "It opens with the scope fix (\"The scope was never the attended node\") and defers config to the end, but the closing section promises \"moon to know a browser test task exists\" while only citing `vite.config.ts lines=1-26`, so the moon.yml consequence is asserted without ever being shown, and the hotkeys.test.tsx comment removal is dropped altogether.",
+      "why": "It supplies the real constraint — \"The scope a component sets with `setHotkeyScope` is a single node id, so that joined string never matched it\" — and explains the dedupe as avoiding churn \"proportional to the number of bindings rather than the number that actually changed.\"",
+      "load": "Each section states its problem before the hunk (e.g. \"A binding that is kept across a graph update still needs to run against the current node\"), so a newcomer can follow in one pass, though the final paragraph mixes two config files into one undifferentiated claim.",
+      "trust": "The two test citations, `plugin.browser.test.ts lines=209-230` and `lines=232-265`, point past the end of a file the patch creates with only 159 lines, so those blocks name hunks that do not exist."
+    }
+  },
+  "B": {
+    "order": 5,
+    "why": 5,
+    "load": 5,
+    "trust": 4,
+    "reasons": {
+      "order": "Scope fix first, then the dedupe it enables, then the fire-time lookup that dedupe forces, then the store's `conflictBehavior` and its immediate consequence in `hotkeys.test.tsx`, with vite/moon/test-file last — every section is a consequence of the one before.",
+      "why": "It names the actual constraint (\"The hotkey store activates a scope by node id, and a node's id already encodes its own path\") and the rationale for allowing conflicts (\"even though only one scope is ever active at a time\"), rather than restating the diff.",
+      "load": "Prose like \"An unchanged binding keeps the closure it was registered under, so its `action` closed over a graph node that can go stale\" introduces the staleness hazard before the code, and no term is used before being defined.",
+      "trust": "Line ranges all fall inside real hunks, but \"since the store now allows conflicts by default\" overstates the change: the patch sets `conflictBehavior: 'allow'` only on the shared `hotkeyStore` instance, not on `createHotkeyStore`'s default, and the edited test constructs its own store."
+    }
+  },
+  "C": {
+    "order": 5,
+    "why": 5,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "The sequence scope → skip re-registration → \"Because an unchanged binding now keeps the closure it was registered with\" → store conflict behavior → test-comment fallout → environments → browser test makes each section depend on the prior one.",
+      "why": "It gives the rejected alternative explicitly — \"scoping — not global uniqueness — is what actually prevents collisions in this system\" — and explains the browser test as needed because \"a node test environment cannot exercise\" keyboard events and `document`.",
+      "load": "Mostly one-pass readable, but \"registering the same hotkey (e.g. a `Present` shortcut)\" leans on a label that only appears in the test file introduced two sections later, forcing a small forward reference.",
+      "trust": "The closure section cites `keyboard.ts lines=80-92`, outside the patch's hunk which ends at new line 73, and `plugin.browser.test.ts lines=124-180` runs past the file's 159 lines, so two named hunks do not correspond to changed code."
+    }
+  },
+  "D": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Core scope fix leads and configs trail, but \"Skip re-registering an unchanged binding\" and the stale-closure paragraph share one section with no diff block of their own, so two distinct changes are folded under the earlier `lines=45-73` block.",
+      "why": "It supplies the constraint for the conflict change — \"an N-squared blow-up now that bindings are correctly scoped per object\" — and ties the fire-time lookup to the dedupe (\"An unchanged binding keeps the closure it was registered with\"), though the dedupe rationale stops at \"fans out unnecessary work across the app.\"",
+      "load": "The test description is concrete and easy to follow (\"bumps a reactive atom to add a second action, asserts only the new binding was registered\"), but the blockless middle section makes the reader scroll back to the large opening hunk to see the code being discussed.",
+      "trust": "Hunk ranges for `hotkey-store.ts lines=20-29`, `index.ts lines=40-47` and `moon.yml lines=4-10` match the patch exactly; only \"instead of failing at import time\" adds an unsupported failure mode and `plugin.browser.test.ts lines=124-180` overshoots the 159-line file."
+    }
+  }
+}

@@ -358,7 +358,8 @@ export type ServiceOptions = {
 
 /** Wraps an upstream {@link AiService.Service} so every model it builds replays through the fixture store. */
 export const makeService = (options: ServiceOptions): AiService.Service => ({
-  model: (model) =>
+  ...options.upstream,
+  languageModel: (model) =>
     Layer.provide(
       layer({
         modelName: model,
@@ -366,7 +367,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       }),
-      options.upstream.model(model),
+      options.upstream.languageModel(model),
     ),
 });
 

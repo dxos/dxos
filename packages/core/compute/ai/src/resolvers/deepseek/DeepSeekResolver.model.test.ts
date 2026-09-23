@@ -49,7 +49,7 @@ const WeatherLayer = WeatherToolkit.toLayer({
   }),
 });
 
-const TestLayer = AiService.model(FLASH).pipe(Layer.provide(TestAiService({ preset: 'deepseek' })));
+const TestLayer = AiService.languageModel(FLASH).pipe(Layer.provide(TestAiService({ preset: 'deepseek' })));
 
 /**
  * Replays a recorded DeepSeek turn that calls two tools at once — the shape that crashed the parser

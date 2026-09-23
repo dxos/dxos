@@ -83,8 +83,17 @@ export const createPullRequest = (
   });
 };
 
+/** A repository the fixture source cannot reach, standing in for a private one the space holds no token for. */
+export const UNREACHABLE_REPO = 'private';
+
 /** A `LinkSource` answering from fixtures, so a story exercises the resolver without the network. */
 export const fixtureLinkSource: GitHubCapabilities.GitHubLinkSource = (link) =>
   Effect.succeed(
-    link.kind === 'repo' ? createRepo(link) : link.kind === 'pull' ? createPullRequest(link) : createIssue(link),
+    link.repo === UNREACHABLE_REPO
+      ? undefined
+      : link.kind === 'repo'
+        ? createRepo(link)
+        : link.kind === 'pull'
+          ? createPullRequest(link)
+          : createIssue(link),
   );

@@ -83,6 +83,17 @@ export const DocumentUpdate = Schema.Struct({
    * give up on a load without waiting on the network.
    */
   requesting: Schema.optional(Schema.Boolean),
+  /**
+   * Set by the host when it cannot produce this document at all — the data
+   * plane it reads has no bytes for the id and no other source to fetch them
+   * from. The client settles the corresponding `DocHandleProxy` as
+   * `'unavailable'` and rejects its `whenReady()`, so a load fails at once
+   * instead of waiting on bytes that are not coming. A host that is still
+   * fetching sends `requesting` instead; a document whose bytes arrive later
+   * (replication catching up) is delivered as a normal `mutation` update and
+   * returns the handle to `'ready'`.
+   */
+  unavailable: Schema.optional(Schema.Boolean),
 });
 export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate> {}
 

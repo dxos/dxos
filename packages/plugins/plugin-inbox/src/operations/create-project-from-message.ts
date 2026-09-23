@@ -43,7 +43,7 @@ const handler = InboxOperation.CreateProjectFromMessage.pipe(
       const summarize = (prompt: string) =>
         EffectEx.runPromise(
           LanguageModel.generateText({ prompt }).pipe(
-            Effect.provide(AiService.model(resolveModel('summarize-topic')).pipe(Layer.orDie)),
+            Effect.provide(AiService.languageModel(resolveModel('summarize-topic')).pipe(Layer.orDie)),
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('30 seconds'),
             Effect.map((response) => response.text),
