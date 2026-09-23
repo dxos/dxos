@@ -15,7 +15,13 @@ import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
+import {
+  type LinkWidgetState,
+  type WidgetProps,
+  parseObjectUri,
+  releaseBlockHeight,
+  setLinkWidgetState,
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -105,7 +111,7 @@ export const PreviewComponent = ({
 
   // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
-  const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
+  const uri = useMemo(() => parseObjectUri(eid), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
   // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
@@ -365,10 +371,11 @@ export const PreviewComponent = ({
 
           <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
             <IconButton
+              data-testid='markdown.embed.open'
               density='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly
-              label='Open'
+              label={t('open-embed.label')}
               variant='ghost'
               onClick={handleOpen}
             />

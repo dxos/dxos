@@ -19,6 +19,7 @@
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-jmap": "workspace:*",

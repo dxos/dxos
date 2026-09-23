@@ -47,6 +47,18 @@ export class PlankManager {
   membersPresence(): Locator {
     return this.locator.getByTestId('spacePlugin.presence.member');
   }
+
+  /**
+   * The navigation-history crumbs in the heading. Flat mode renders only the current plank, so a
+   * crumb is how a test sees what is still open behind it.
+   */
+  breadcrumbs(): Locator {
+    return this.locator.getByTestId('plankHeading.breadcrumb');
+  }
+
+  breadcrumb(crumbId: string): Locator {
+    return this.breadcrumbs().and(this._page.locator(`[data-crumb-id="${crumbId}"]`));
+  }
 }
 
 const closePlank = async (locator: Locator) => locator.getByTestId('plankHeading.close').click();
