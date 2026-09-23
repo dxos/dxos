@@ -109,6 +109,11 @@ export class SceneBuilder {
     return this.#link({ type: 'spline', id, source: endpoint(from), target: endpoint(to), points, ...options });
   }
 
+  /** A routed link: it stores no geometry, so its path follows its ports as the nodes move. */
+  smart(id: string, from: string, to: string, options: LinkOptions = {}): this {
+    return this.#link({ type: 'smart', id, source: endpoint(from), target: endpoint(to), ...options });
+  }
+
   /** Nodes and links in call order, each with its own z key. */
   build(): Scene {
     const keys = initialKeys(this.#elements.length);

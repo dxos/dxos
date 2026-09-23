@@ -149,8 +149,8 @@ const buildScene = (depth: number, name: string, scenes: Scene[], variant: numbe
     // Portals keep one aspect (16:10) so every child gets the same frame shape; 512×320 is the
     // smallest such size on the major grid.
     builder
-      .portal(elementId('left'), { x: scale(6), y: scale(-12), ...PORTAL }, left)
-      .portal(elementId('right'), { x: scale(6), y: scale(2), ...PORTAL }, right);
+      .portal(elementId('left'), { x: scale(8), y: scale(-12), ...PORTAL }, left)
+      .portal(elementId('right'), { x: scale(8), y: scale(2), ...PORTAL }, right);
   }
 
   scenes.push(builder.build());
@@ -195,7 +195,7 @@ const childScene = (id: SceneId, name: string, elementId: (suffix: string) => st
       return builder
         .class(
           elementId('person'),
-          { x: scale(-18), y: scale(-4), width: scale(8), height: scale(8) },
+          { x: scale(-20), y: scale(-4), width: scale(8), height: scale(8) },
           'Person',
           ['name: string'],
           ['greet()'],
@@ -203,19 +203,23 @@ const childScene = (id: SceneId, name: string, elementId: (suffix: string) => st
         .class(
           elementId('org'),
           { x: scale(-4), y: scale(-4), width: scale(8), height: scale(8) },
-          'Organization!!!',
+          'Organization',
           ['title: string'],
           ['hire(person)'],
         )
         .curve(elementId('works'), `${elementId('person')}#e2`, `${elementId('org')}#w2`);
     case 'cycle':
-      return builder
-        .ellipse(elementId('n1'), { x: scale(-4), y: scale(-6), width: scale(6), height: scale(4) }, '1')
-        .ellipse(elementId('n2'), { x: scale(8), y: scale(2), width: scale(6), height: scale(4) }, '2')
-        .ellipse(elementId('n3'), { x: scale(-14), y: scale(2), width: scale(6), height: scale(4) }, '3')
-        .spline(elementId('e12'), elementId('n1'), elementId('n2'), [{ x: scale(8), y: scale(-4) }])
-        .spline(elementId('e23'), elementId('n2'), elementId('n3'), [{ x: scale(0), y: scale(8) }])
-        .spline(elementId('e31'), elementId('n3'), elementId('n1'), [{ x: scale(-8), y: scale(-4) }]);
+      return (
+        builder
+          .ellipse(elementId('n1'), { x: scale(-2), y: scale(-4), width: scale(4), height: scale(4) }, '1')
+          .ellipse(elementId('n2'), { x: scale(8), y: scale(2), width: scale(4), height: scale(4) }, '2')
+          .ellipse(elementId('n3'), { x: scale(-14), y: scale(2), width: scale(4), height: scale(4) }, '3')
+          // Routed rather than drawn: the ring is the one arrangement where a stored control point has to be
+          // re-placed every time a node moves.
+          .smart(elementId('e12'), elementId('n1'), elementId('n2'))
+          .smart(elementId('e23'), elementId('n2'), elementId('n3'))
+          .smart(elementId('e31'), elementId('n3'), elementId('n1'))
+      );
     case 'note':
       return builder
         .text(
