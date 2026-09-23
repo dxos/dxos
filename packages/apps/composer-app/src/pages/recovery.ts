@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import { getDebugPortController, mountDevtoolsHooks, resolveDebugPortOrigin } from '@dxos/client/devtools';
 import { toPublicKey } from '@dxos/protocols/buf';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
@@ -72,10 +72,14 @@ const exportProfileArchiveBytes = async (): Promise<Uint8Array> => {
   const archiveOptions = { origin: window.location.host };
   if (isRecoveryClientBooted()) {
     const database = await exportBootedSqlite();
-    return encodeProfileArchive(createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, archiveOptions));
+    return Storage.encodeProfileArchive(
+      Storage.createSqliteProfileArchive(Storage.OPFS_SQLITE_DB_FILENAME, database, archiveOptions),
+    );
   }
   const database = await exportOpfsSqlite();
-  return encodeProfileArchive(createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, archiveOptions));
+  return Storage.encodeProfileArchive(
+    Storage.createSqliteProfileArchive(Storage.OPFS_SQLITE_DB_FILENAME, database, archiveOptions),
+  );
 };
 
 const recoveryHelpers: RecoveryHelpers = {

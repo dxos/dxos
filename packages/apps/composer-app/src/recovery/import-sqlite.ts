@@ -2,12 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  OPFS_SQLITE_DB_FILENAME,
-  decodeProfileArchive,
-  getSqliteProfileEntries,
-  isValidSqliteDatabase,
-} from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 
 import { destroyRecoveryClient } from './boot-client.ts';
@@ -41,19 +36,19 @@ const resolveSqliteImport = ({ bytes, name }: PickedFile): { database: Uint8Arra
   const lowerName = name.toLowerCase();
 
   if (lowerName.endsWith('.sqlite') || lowerName.endsWith('.db')) {
-    if (!isValidSqliteDatabase(bytes)) {
+    if (!Storage.isValidSqliteDatabase(bytes)) {
       throw new Error('File is not a valid SQLite database (missing SQLite format 3 header)');
     }
-    return { database: bytes, opfsFilename: OPFS_SQLITE_DB_FILENAME };
+    return { database: bytes, opfsFilename: Storage.OPFS_SQLITE_DB_FILENAME };
   }
 
-  const archive = decodeProfileArchive(bytes);
-  const entries = getSqliteProfileEntries(archive);
+  const archive = Storage.decodeProfileArchive(bytes);
+  const entries = Storage.getSqliteProfileEntries(archive);
   if (entries.length === 0) {
     throw new Error('Profile archive has no valid SQLITE_DATABASE entries');
   }
 
-  const primary = entries.find((entry) => entry.opfsFilename === OPFS_SQLITE_DB_FILENAME) ?? entries[0]!;
+  const primary = entries.find((entry) => entry.opfsFilename === Storage.OPFS_SQLITE_DB_FILENAME) ?? entries[0]!;
   return { database: primary.database, opfsFilename: primary.opfsFilename };
 };
 
@@ -66,8 +61,8 @@ export const importProfileBytes = async (
 ): Promise<{ byteLength: number; opfsFilename: string }> => {
   const { database, opfsFilename } = resolveSqliteImport({ bytes, name });
 
-  if (opfsFilename !== OPFS_SQLITE_DB_FILENAME) {
-    throw new Error(`Unsupported OPFS database name "${opfsFilename}" (expected ${OPFS_SQLITE_DB_FILENAME})`);
+  if (opfsFilename !== Storage.OPFS_SQLITE_DB_FILENAME) {
+    throw new Error(`Unsupported OPFS database name "${opfsFilename}" (expected ${Storage.OPFS_SQLITE_DB_FILENAME})`);
   }
 
   await destroyRecoveryClient();
