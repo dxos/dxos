@@ -28,9 +28,16 @@ find . -name '*.ts' ! -name '*.test.ts' ! -name '*.tst.ts' ! -name index.ts | so
 done
 ```
 
-For a set of packages, read each `package.json`'s `dependencies` instead. Pick the nodes that
-carry the story and drop leaves (errors, constants, small helpers); an edge points **at what the
-source imports**.
+For a set of packages, read each `package.json`'s `dependencies` instead. An edge points **at what
+the source imports**.
+
+A real package has far more modules than a diagram holds (`@dxos/compute-runtime` has 40). To cut it
+to ≲ 14:
+
+- Drop `testing/`, `errors`, constants, ids, and helpers nothing interesting imports.
+- Keep the modules with the most internal edges and the largest files (`wc -l`); they carry the story.
+- Group by role (often the subdirectory: `triggers/`, `services/`), at most 3 groups.
+- When you drop a module, keep the edge it relayed: `A → b-helper → C` becomes `A → C`.
 
 ## 2. Write the source
 
@@ -39,7 +46,9 @@ Conventions (full text in `plugin-illustrator/docs/diagrams/README.md`):
 - Only this subset parses: `flowchart TB|LR`, `subgraph id [Label] … end` (**no nesting**), `Id[Label]`,
   `A --> B`, `A -->|label| B`. Anything else is silently ignored — check the node count in the report.
 - **≲ 14 nodes, ≤ 3 groups.** Past that crossings climb fast; split into two diagrams.
-- Keep labels short (≲ 20 chars): the box is a fixed size, so a longer label overflows it.
+- **Labels ≤ 17 chars.** The box is a fixed width and the SVG draws a label on one line, so
+  `RemoteProcessHandle` (19) spills over both edges. The node id can stay long; shorten only the
+  `[Label]`.
 - Label only the edges that say something (`|invokes handlers|`); unlabelled edges route more cleanly.
 - End with one `%% ref <Id> <repo-relative path>` per node. It is a mermaid comment, so the file
   still renders elsewhere; in the corpus test every ref must point at a path that exists.
@@ -71,7 +80,9 @@ compute-core: 17 nodes, 20 connectors, 6 crossings, 32 bends
 ```
 
 `nodes` counts group frames too. Warnings are soft metrics; an `error` (overlap, route through a
-node, label overflow) fails the task with exit 1. If crossings are high, try
+node) fails the task with exit 1. The `label-overflow` check assumes long labels wrap to a second
+line, which the SVG does not do, so an over-long label passes the report. Only looking at the image
+catches it. If crossings are high, try
 `-- --scoreboard` to compare the `layered` and `elk` strategies, reorder nodes inside groups, or
 split the diagram, then render again.
 
