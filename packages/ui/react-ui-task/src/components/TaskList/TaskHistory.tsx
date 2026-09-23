@@ -32,19 +32,31 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
   }
 
   return (
+    // One grid for the whole log, not a stack of rows each laying itself out: the glyph column and
+    // the time column are then the same width down every entry, so the times line up as a column
+    // instead of trailing each description wherever it happens to end.
     <div
       role='list'
       aria-label={t('task-history.label')}
       data-testid='taskList.history'
-      className={mx('flex flex-col gap-0.5 text-xs text-subdued', classNames)}
+      className={mx(
+        'grid grid-cols-[min-content_1fr_min-content] items-baseline gap-x-1.5 gap-y-0.5 text-sm text-subdued',
+        classNames,
+      )}
     >
       {visible.map((entry, index) => (
-        <div key={`${entry.date}-${index}`} role='listitem' className='flex min-w-0 items-baseline gap-1.5'>
+        // A subgrid spanning the log's three tracks: the entry keeps its `listitem` semantics while
+        // its cells sit on the shared columns rather than on tracks of its own.
+        <div
+          key={`${entry.date}-${index}`}
+          role='listitem'
+          className='grid grid-cols-subgrid col-span-3 items-baseline'
+        >
           <Icon icon={entry.event === 'created' ? 'ph--plus--regular' : 'ph--pencil-simple--regular'} size={3} />
           <span className='truncate'>{entry.description ?? entry.event}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
               to cite; the exact timestamp stays on the entry for a surface that needs it. */}
-          <span className='shrink-0 tabular-nums'>{formatRelative(entry.date)}</span>
+          <span className='whitespace-nowrap tabular-nums'>{formatRelative(entry.date)}</span>
         </div>
       ))}
     </div>
