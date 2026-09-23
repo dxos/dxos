@@ -155,9 +155,15 @@ before), not reasoned about from the source.
       every value arrived as a type error and the lamp was dark whatever the roll. Its input is now
       `Any`, read through `isTruthy`, which already treats an empty list as false: 6 of 14 rolls lit.
       The same fault is in the old editor, so it was never a scene regression.
-- [ ] The graph never runs at mount. `AUTO_TRIGGER_NODES` names `constant` and its comment promises
-      execution on startup, but `exec()` is only ever reached from `setOutput()`, so a circuit is inert
-      until something writes a forced output (the dice, a switch, an edited constant).
+- [x] The graph never runs at mount. `AUTO_TRIGGER_NODES` names `constant` and its comment promises
+      execution on startup, but `exec()` was only ever reached from `setOutput()`, so a circuit was inert
+      until something wrote a forced output (the dice, a switch, an edited constant). The controller
+      extends `Resource` and never overrode `_open`; it now runs the graph once there, for both call
+      sites that open it.
+- [x] Every circuit is laid out around the origin. The layouts had drifted — transform by two cells,
+      control by three and a half, template by fifteen — so a scene opened off to one side of its own
+      content. `circuits.test.ts` holds each one's centre extent to half a cell (a cell for the GPT
+      circuit, which is assembled from optional blocks over a shared core).
 - [ ] The run control on a `json-transform` does nothing: `JsonTransformComponent` renders a bare
       `<Box>` with no `onAction`, and `FunctionBody` handles only `open` / `close`. Either wire `run` to
       `controller.exec(nodeId)` or stop drawing the button on a node that cannot run.
