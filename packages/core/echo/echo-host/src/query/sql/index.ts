@@ -6,6 +6,7 @@ export {
   type CompiledQuery,
   type CompiledRow,
   type CompileOptions,
+  type PlanSubquery,
   SqlPlanCompiler,
   compilePlan,
   planReadsObjectMeta,

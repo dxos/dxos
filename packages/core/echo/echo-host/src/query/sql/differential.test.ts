@@ -21,6 +21,9 @@ import { compilePlan } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
+/** Subquery planner the compiler takes by injection; see `PlanSubquery`. */
+const planSubquery = (query: QueryAST.Query) => new QueryPlanner().createPlan(query);
+
 const TYPE = DXN.make('com.example.type.item', '0.1.0');
 
 /** Deterministic generator, so a failing case reproduces from its seed. */
@@ -170,7 +173,7 @@ describe('SqlPlanCompiler differential', () => {
             ? Query.select(Filter.fromAst(filters[0])).from(scope)
             : Query.all(...filters.map((filter) => Query.select(Filter.fromAst(filter)))).from(scope);
         const plan = new QueryPlanner().createPlan(query.ast);
-        const compiled = yield* compilePlan(plan);
+        const compiled = yield* compilePlan(plan, planSubquery);
         const rows = yield* compiled.statement;
         const expected = objects
           .filter((object) => filters.some((filter) => filterMatchObjectJSON(filter, object.data)))

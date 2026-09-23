@@ -73,6 +73,8 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
 // TODO(dmaretskyi): Implement inefficient versions of complex queries.
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
+  /** Passed to the compiler, which plans `in-query` subqueries through it rather than importing this module. */
+  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.createPlan(query);
 
   constructor(options?: Partial<QueryPlannerOptions>) {
     this._options = {
@@ -109,7 +111,7 @@ export class QueryPlanner {
     if (!this.compiles(plan)) {
       return Effect.succeed(plan);
     }
-    return Effect.map(compileToSql(plan), (compiled) => compiled.plan);
+    return Effect.map(compileToSql(plan, this.#planSubquery), (compiled) => compiled.plan);
   }
 
   /**
@@ -118,7 +120,7 @@ export class QueryPlanner {
    * rows, so a plan reading it runs step by step whatever the mode says.
    */
   compiles(plan: QueryPlan.Plan): boolean {
-    return this._options.executor === 'sql' && !planReadsObjectMeta(plan);
+    return this._options.executor === 'sql' && !planReadsObjectMeta(plan, this.#planSubquery);
   }
 
   /**

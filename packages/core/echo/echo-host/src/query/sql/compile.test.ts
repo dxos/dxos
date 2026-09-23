@@ -10,6 +10,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Aggregate, Filter, Order, Query } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -27,6 +28,9 @@ import { QueryPlanner } from '../query-planner.ts';
 import { compilePlan, planReadsObjectMeta } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
+
+/** Subquery planner the compiler takes by injection; see `PlanSubquery`. */
+const planSubquery = (query: QueryAST.Query) => new QueryPlanner().createPlan(query);
 
 const TASK = DXN.make('com.example.type.task', '0.1.0');
 const PROJECT = DXN.make('com.example.type.project', '0.1.0');
@@ -116,7 +120,7 @@ const seed = Effect.gen(function* () {
 const run = (fixture: Fixture, query: Query.Any) =>
   Effect.gen(function* () {
     const plan = new QueryPlanner().createPlan(query.ast);
-    const compiled = yield* compilePlan(plan);
+    const compiled = yield* compilePlan(plan, planSubquery);
     if (process.env.DX_DEBUG_SQL) {
       // eslint-disable-next-line no-console
       console.log(compiled.sql);
@@ -202,15 +206,20 @@ describe('SqlPlanCompiler', () => {
     Effect.gen(function* () {
       const fixture = yield* seed;
       const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
-      const plan = (query: Query.Any) => new QueryPlanner().createPlan(query.ast);
+      const planner = new QueryPlanner();
+      const planSubquery = (query: QueryAST.Query) => planner.createPlan(query);
+      const plan = (query: Query.Any) => planner.createPlan(query.ast);
 
-      expect(planReadsObjectMeta(plan(Query.select(Filter.type(TASK)).from(scope)))).toBe(false);
+      expect(planReadsObjectMeta(plan(Query.select(Filter.type(TASK)).from(scope)), planSubquery)).toBe(false);
       expect(
         planReadsObjectMeta(
           plan(Query.select(Filter.foreignKeys(TASK, [{ source: 'github.com', id: '42' }])).from(scope)),
+          planSubquery,
         ),
       ).toBe(true);
-      expect(planReadsObjectMeta(plan(Query.select(Filter.key('example.com/type/Contact')).from(scope)))).toBe(true);
+      expect(
+        planReadsObjectMeta(plan(Query.select(Filter.key('example.com/type/Contact')).from(scope)), planSubquery),
+      ).toBe(true);
       // A meta predicate nested under a union is still a meta predicate.
       expect(
         planReadsObjectMeta(
@@ -220,6 +229,7 @@ describe('SqlPlanCompiler', () => {
               Query.select(Filter.foreignKeys(TASK, [{ source: 'github.com', id: '42' }])),
             ).from(scope),
           ),
+          planSubquery,
         ),
       ).toBe(true);
     }).pipe(Effect.provide(TestLayer)),

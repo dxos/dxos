@@ -25,7 +25,6 @@ import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 import { QueryError } from '../errors.ts';
 import { GroupBy } from '../group-by.ts';
 import { QueryPlan } from '../plan.ts';
-import { QueryPlanner } from '../query-planner.ts';
 
 /**
  * Depth bounds shared with the in-memory executor and `DeletionResolver`, so a query and garbage
@@ -78,6 +77,12 @@ export type CompiledRow = {
    */
   aggregates: string | null;
 };
+
+/**
+ * Builds the plan of an `in-query` subquery. Injected rather than imported, because the planner
+ * owns plan building and calls this compiler — importing it back would make the two modules cyclic.
+ */
+export type PlanSubquery = (query: QueryAST.Query) => QueryPlan.Plan;
 
 export type CompiledQuery = {
   statement: Statement.Statement<CompiledRow>;
@@ -132,13 +137,16 @@ export class SqlPlanCompiler {
   readonly #dayStarts: DayStarts;
   /** Whether any select in the plan scopes a space with its feeds, which lets a traversal reach feed items. */
   #includeAllFeeds = false;
+  readonly #planSubquery: PlanSubquery;
 
   constructor(
     sql: SqlClient.SqlClient,
+    planSubquery: PlanSubquery,
     metaVersions: Map<string, readonly string[]> = new Map(),
     dayStarts: DayStarts = new Map(),
   ) {
     this.#sql = sql;
+    this.#planSubquery = planSubquery;
     this.#metaVersions = metaVersions;
     this.#dayStarts = dayStarts;
   }
@@ -603,7 +611,7 @@ export class SqlPlanCompiler {
     if (existing !== undefined) {
       return existing;
     }
-    const subPlan = new QueryPlanner().createPlan(filter.subquery);
+    const subPlan = this.#planSubquery(filter.subquery);
     const result = this.#compilePlan(subPlan, undefined);
     const at = jsonPathLiteral(sql, [filter.property]);
     const refAt = jsonPathLiteral(sql, [filter.property, '/']);
@@ -1156,12 +1164,13 @@ export type CompileOptions = {
  */
 export const compilePlan = (
   plan: QueryPlan.Plan,
+  planSubquery: PlanSubquery,
   options: CompileOptions = {},
 ): Effect.Effect<CompiledQuery, SqlError.SqlError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
     const metaVersions = new Map<string, readonly string[]>();
-    for (const [key, range] of collectMetaVersionFilters(plan)) {
+    for (const [key, range] of collectMetaVersionFilters(plan, planSubquery)) {
       const keyPath = jsonPathLiteral(sql, [ATTR_META, 'key']);
       const versionPath = jsonPathLiteral(sql, [ATTR_META, 'version']);
       const rows = yield* sql<{ version: string | null }>`
@@ -1181,7 +1190,7 @@ export const compilePlan = (
         dayStarts.set(timeZone, dayStartsBetween(range?.min ?? null, range?.max ?? null, timeZone));
       }
     }
-    return new SqlPlanCompiler(sql, metaVersions, dayStarts).compile(plan, options);
+    return new SqlPlanCompiler(sql, planSubquery, metaVersions, dayStarts).compile(plan, options);
   });
 
 //
@@ -1265,7 +1274,7 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
  * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
  * sees both, so this declines the plan wholesale rather than by scope.
  */
-export const planReadsObjectMeta = (plan: QueryPlan.Plan): boolean => {
+export const planReadsObjectMeta = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean => {
   const readsMeta = (filter: QueryAST.Filter): boolean => {
     if (filter.type === 'object') {
       if (filter.foreignKeys !== undefined || filter.metaKey !== undefined) {
@@ -1301,9 +1310,9 @@ export const planReadsObjectMeta = (plan: QueryPlan.Plan): boolean => {
       case 'FilterStep':
         return readsMeta(step.filter);
       case 'UnionStep':
-        return step.plans.some(planReadsObjectMeta);
+        return step.plans.some((nested) => planReadsObjectMeta(nested, planSubquery));
       case 'SetDifferenceStep':
-        return planReadsObjectMeta(step.source) || planReadsObjectMeta(step.exclude);
+        return planReadsObjectMeta(step.source, planSubquery) || planReadsObjectMeta(step.exclude, planSubquery);
       default:
         return false;
     }
@@ -1311,7 +1320,10 @@ export const planReadsObjectMeta = (plan: QueryPlan.Plan): boolean => {
 };
 
 /** Every `(metaKey, metaVersion)` pair in the plan, sub-plans and subqueries included. */
-const collectMetaVersionFilters = (plan: QueryPlan.Plan): [key: string, range: string][] => {
+const collectMetaVersionFilters = (
+  plan: QueryPlan.Plan,
+  planSubquery: PlanSubquery,
+): [key: string, range: string][] => {
   const found: [string, string][] = [];
   const visitFilter = (filter: QueryAST.Filter): void => {
     switch (filter.type) {
@@ -1324,7 +1336,7 @@ const collectMetaVersionFilters = (plan: QueryPlan.Plan): [key: string, range: s
         }
         break;
       case 'in-query':
-        visitPlan(new QueryPlanner().createPlan(filter.subquery));
+        visitPlan(planSubquery(filter.subquery));
         break;
       case 'not':
         visitFilter(filter.filter);

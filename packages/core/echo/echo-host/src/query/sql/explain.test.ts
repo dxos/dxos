@@ -10,6 +10,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Filter, Query } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EntityMetaIndex, ObjectSnapshotIndex, ReverseRefIndex } from '@dxos/index-core';
 import { SpaceId } from '@dxos/keys';
@@ -19,6 +20,9 @@ import { compilePlan } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
+/** Subquery planner the compiler takes by injection; see `PlanSubquery`. */
+const planSubquery = (query: QueryAST.Query) => new QueryPlanner().createPlan(query);
+
 /** `EXPLAIN QUERY PLAN` rows of a compiled query, against the real index migrations. */
 const explain = (query: Query.Any) =>
   Effect.gen(function* () {
@@ -27,7 +31,7 @@ const explain = (query: Query.Any) =>
     yield* new ObjectSnapshotIndex(sql).migrate();
     yield* new ReverseRefIndex(sql).migrate();
     const plan = new QueryPlanner().createPlan(query.ast);
-    const compiled = yield* compilePlan(plan);
+    const compiled = yield* compilePlan(plan, planSubquery);
     const rows = yield* sql.unsafe<{ detail: string }>(
       `EXPLAIN QUERY PLAN ${compiled.sql}`,
       compiled.statement.compile()[1],
