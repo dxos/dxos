@@ -74,8 +74,7 @@ export const createDenyGate = (message = 'denied') => {
       return false;
     },
     /** Resolve as soon as the gate has refused. */
-    waitForDenial: ({ timeout = SYNC_WINDOW_MS }: { timeout?: number } = {}): Promise<void> =>
-      refused.wait({ timeout }),
+    waitForDenial: (): Promise<void> => refused.wait({ timeout: SYNC_WINDOW_MS }),
   };
 };
 
@@ -250,31 +249,27 @@ export const createStarTopology = (options?: ConnectedRepoOptions) =>
   });
 
 /**
- * Resolve once `repo` completes a subduction handshake with a peer. Armed before the peer
- * candidate goes out, since a fast handshake would otherwise bind before the listener attaches.
- */
-const onceSubductionPeerBound = (repo: Repo): Promise<void> => {
-  const trigger = new Trigger();
-  repo.once('subduction-peer-bound', () => trigger.wake());
-  return trigger.wait();
-};
-
-/**
- * Arm a per-pair handshake barrier, before any candidate goes out.
+ * Arm a per-pair handshake barrier, before any candidate goes out — a fast handshake would
+ * otherwise bind before the listener attached.
  *
  * Only the side that verifies the peer emits `subduction-peer-bound`, so a pair is bound once
  * EITHER of its repos reports — but every pair must report, or a later fetch can reach a still
  * unbound pair, settle success-empty, and never be re-asked.
  */
 const armBindings = (repoPairs: [Repo, Repo][]): Promise<unknown>[] =>
-  repoPairs.map(([left, right]) => Promise.race([onceSubductionPeerBound(left), onceSubductionPeerBound(right)]));
-
-const awaitBindings = (bound: Promise<unknown>[], timeout = SYNC_WINDOW_MS): Promise<unknown> =>
-  asyncTimeout(Promise.all(bound), timeout);
+  repoPairs.map((pair) =>
+    Promise.race(
+      pair.map((repo) => {
+        const bound = new Trigger();
+        repo.once('subduction-peer-bound', () => bound.wake());
+        return bound.wait();
+      }),
+    ),
+  );
 
 export const connectAdapters = async (
   pairs: [TestAdapter, TestAdapter][],
-  options?: { noEmitPeerCandidate?: boolean; repoPairs?: [Repo, Repo][]; timeout?: number },
+  options?: { noEmitPeerCandidate?: boolean; repoPairs?: [Repo, Repo][] },
 ) => {
   // `peer-candidate` only STARTS the handshake. A test whose data already exists must wait for it
   // to bind: a fetch issued first settles success-empty and subduction never re-asks, so the doc
@@ -289,7 +284,7 @@ export const connectAdapters = async (
     }
   }
   if (bound) {
-    await awaitBindings(bound, options?.timeout);
+    await asyncTimeout(Promise.all(bound), SYNC_WINDOW_MS);
   }
 };
 
@@ -306,7 +301,7 @@ export const disconnectAdapters = (pairs: [TestAdapter, TestAdapter][]) => {
 
 export const reconnectAdapters = async (
   pairs: [TestAdapter, TestAdapter][],
-  options?: { repoPairs?: [Repo, Repo][]; timeout?: number },
+  options?: { repoPairs?: [Repo, Repo][] },
 ) => {
   // Same handshake barrier as `connectAdapters`: the candidate only starts the new handshake, and a
   // fetch — or a `shareConfigChanged()` kick — issued before it binds sees no peers and settles.
@@ -318,7 +313,7 @@ export const reconnectAdapters = async (
     pair[1].peerCandidate(pair[0].peerId!);
   }
   if (bound) {
-    await awaitBindings(bound, options?.timeout);
+    await asyncTimeout(Promise.all(bound), SYNC_WINDOW_MS);
   }
 };
 
