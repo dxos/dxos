@@ -159,7 +159,7 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/c']);
   });
 
-  test("a connector's output lands on a microtask, its first output and its updates alike", async () => {
+  test("an update to a connector's output lands on a microtask, its first output on the scheduler", async () => {
     const { registry, builder, children } = setup();
     const state = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
     GraphBuilder.addExtension(builder, {
@@ -169,6 +169,8 @@ describe('GraphBuilder', () => {
 
     children(GraphNode.RootId);
     await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal([]);
+    await GraphBuilder.flush(builder);
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a', 'root/b']);
 
     registry.set(state, ['b', 'a']);
@@ -176,7 +178,7 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
   });
 
-  test('a flush stops at the frame budget and leaves the rest to the scheduler', async () => {
+  test('an update flush stops at the frame budget and leaves the rest to the scheduler', async () => {
     const { registry, builder, children } = setup();
     let flushed = 0;
     builder._frameBudget = () => ({ hasTime: () => flushed < 1, spend: () => flushed++ });
@@ -200,7 +202,6 @@ describe('GraphBuilder', () => {
     await GraphBuilder.flush(builder);
 
     const runs = secondRuns;
-    flushed = 0;
     registry.set(first, ['c']);
     registry.set(second, ['d']);
     await Promise.resolve();
