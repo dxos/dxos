@@ -98,7 +98,8 @@ const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
 const NAVIGATION_SETTLE_MS = 150;
-const FIT_INSET = 40;
+/** Grid cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
+const DEFAULT_MARGIN = 1;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
 /**
@@ -153,6 +154,8 @@ export type SceneViewProps = ThemedClassName<{
   atoms?: SceneViewAtoms;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
+  /** Least gap between the scene's frame and each viewport edge when fitting, in whole grid cells. */
+  margin?: number;
   /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
   liveDepth?: number;
   showPalette?: boolean;
@@ -176,6 +179,7 @@ export const SceneView = ({
   projection: projectionProp,
   atoms: atomsProp,
   grid = DEFAULT_GRID,
+  margin = DEFAULT_MARGIN,
   liveDepth = MAX_LIVE_DEPTH,
   showPalette = true,
   showToolbar = true,
@@ -197,6 +201,8 @@ export const SceneView = ({
   const selectedPoint = useAtomValue(atoms.point);
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
+  // The fit's margin is in grid cells, so it stays a whole number of visible cells at any grid size.
+  const inset = margin * grid;
 
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
@@ -330,9 +336,9 @@ export const SceneView = ({
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
     if (!interactedRef.current && measured) {
-      setCamera(fitBounds(bounds, viewport, FIT_INSET));
+      setCamera(fitBounds(bounds, viewport, inset));
     }
-  }, [measured, viewport, bounds, setCamera]);
+  }, [measured, viewport, bounds, inset, setCamera]);
 
   useWheel(
     rootRef,
@@ -455,11 +461,24 @@ export const SceneView = ({
       setCamera(camera);
       const parent = scenes[next[next.length - 1]];
       if (animate && parent) {
-        animateTo(fitBounds(frameOf(next, parent), viewport, FIT_INSET));
+        animateTo(fitBounds(frameOf(next, parent), viewport, inset));
       }
       pushHistory({ path: next, camera });
     },
-    [registry, atoms.path, atoms.camera, scenes, viewport, animateTo, setCamera, select, pushHistory, frameOf, bounds],
+    [
+      registry,
+      atoms.path,
+      atoms.camera,
+      scenes,
+      viewport,
+      inset,
+      animateTo,
+      setCamera,
+      select,
+      pushHistory,
+      frameOf,
+      bounds,
+    ],
   );
 
   const goHistory = useCallback(
@@ -1241,13 +1260,13 @@ export const SceneView = ({
           break;
         }
         case 'fit':
-          animateTo(fitBounds(bounds, viewport, FIT_INSET));
+          animateTo(fitBounds(bounds, viewport, inset));
           event.preventDefault();
           break;
         case 'fitSelection': {
           const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
           if (union) {
-            animateTo(fitBounds(union, viewport, FIT_INSET));
+            animateTo(fitBounds(union, viewport, inset));
           }
           break;
         }
@@ -1334,6 +1353,7 @@ export const SceneView = ({
       animateTo,
       bounds,
       viewport,
+      inset,
       goHistory,
       major,
       setTool,
@@ -1519,7 +1539,7 @@ export const SceneView = ({
       path,
       nameOf,
       onPath: (index) => drillOut(path.length - 1 - index),
-      fit: () => animateTo(fitBounds(bounds, viewport, FIT_INSET)),
+      fit: () => animateTo(fitBounds(bounds, viewport, inset)),
       zoomIn: () => zoomBy(ZOOM_STEP),
       zoomOut: () => zoomBy(1 / ZOOM_STEP),
       snap: snapEnabled,
@@ -1549,6 +1569,7 @@ export const SceneView = ({
       animateTo,
       bounds,
       viewport,
+      inset,
       zoomBy,
       snapEnabled,
       toggleSnap,
@@ -1610,7 +1631,7 @@ export const SceneView = ({
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
         <div
-          className='absolute border border-dashed border-orange-border pointer-events-none'
+          className='absolute border border-dashed border-orange-border opacity-50 pointer-events-none'
           data-testid='scene-frame'
           style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
         />
