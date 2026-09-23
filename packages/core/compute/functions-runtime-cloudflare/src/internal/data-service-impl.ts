@@ -78,20 +78,24 @@ export class DataServiceImpl implements DataService.Handlers {
         }),
       );
 
-      let missing = 0;
+      const missing: string[] = [];
       for (const documentId of addIds) {
         const mutation = loaded.get(documentId);
         log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!mutation });
         if (!mutation) {
-          missing++;
-          log.warn('not found', { documentId });
+          missing.push(documentId);
           continue;
         }
         sub.next({ updates: [{ documentId, mutation }] });
       }
-      // A document the host cannot produce is dropped here and the caller is told nothing, so the
-      // count is the only place a partial hydration becomes visible in a trace.
-      yield* Effect.annotateCurrentSpan('missingCount', missing);
+      if (missing.length > 0) {
+        // This data plane has no other source for a document its store does not hold, so the
+        // subscriber is told so rather than left waiting: dropping these silently is what turned a
+        // missing space root into a 15s hang with nothing on the wire to explain it.
+        log.warn('documents not available on this data plane', { spaceId: sub.spaceId, documentIds: missing });
+        sub.next({ updates: missing.map((documentId) => ({ documentId, unavailable: true })) });
+      }
+      yield* Effect.annotateCurrentSpan('missingCount', missing.length);
     }).pipe(
       // Hydration is where an operation invoked over MCP spends most of its wall clock; without
       // this span all of it sat inside `operation.handler` with no children to attribute it to.

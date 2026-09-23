@@ -46,7 +46,7 @@ export const extractProperNouns = (text: string) =>
     // Drop short tokens (e.g. "IT"): insertReferences replaces case-insensitive substrings, so a
     // short noun would match inside unrelated words ("secur[IT]y") and corrupt neighbouring links.
     return value.properNouns.map((noun) => noun.trim()).filter((noun) => noun.length >= 3);
-  }).pipe(Effect.provide(AiService.model(EXTRACTION_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(EXTRACTION_MODEL)));
 
 /**
  * Enriches a transcript message: for each transcript block, extracts proper nouns, links them to

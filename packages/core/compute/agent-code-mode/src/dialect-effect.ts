@@ -112,6 +112,18 @@ export const EffectDialect: Dialect = {
     \`Obj.update\` is synchronous and is the only way to change a stored object. \`Database.remove\`
     deletes one. Call \`Database.flush()\` before printing a final confirmation.
 
+    ### References
+
+    A \`Ref<typename>\` field takes \`Ref.make(obj)\` of an object you hold — never an id or a URI
+    string. Create the target first, then the object that points at it:
+
+    \`\`\`js
+    const owner = yield* Database.add(Obj.make(types['example.com/type/Person'], { name: 'Ada' }));
+    yield* Database.add(Obj.make(types['example.com/type/Task'], { title: 'Review', status: 'open', owner: Ref.make(owner) }));
+    \`\`\`
+
+    Read a reference back with \`yield* Database.load(task.owner)\`.
+
     ${renderTypes(types)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
@@ -132,6 +144,9 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
   \`\`\`
 
   A failed operation fails the effect, so wrap a call you expect to fail in \`Effect.result\`.
+  Where an input takes objects or references, pass the objects you hold (or \`Ref.make(obj)\`),
+  not ids. Most of what an operation does to one object is a line of \`Obj\`/\`Database\` code;
+  prefer that.
 
   ${operations
     .filter((operation) => operation.definition)

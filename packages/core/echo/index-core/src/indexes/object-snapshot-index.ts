@@ -11,10 +11,7 @@ import type { Obj } from '@dxos/echo';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
-import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
-
-/** Each upserted row binds two variables, so the batch is half what a single-column `IN` allows. */
-const UPSERT_CHUNK_SIZE = SQL_CHUNK_SIZE / 2;
+import { chunkArray, chunkRows } from '../utils.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -138,7 +135,7 @@ export class ObjectSnapshotIndex implements Index {
         return { recordId, snapshot: JSON.stringify(stored) };
       });
 
-      for (const chunk of chunkArray(rows, UPSERT_CHUNK_SIZE)) {
+      for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
             ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot

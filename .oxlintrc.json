@@ -61,6 +61,36 @@
     "@dxos/eslint-plugin-rules/operation-key-shape": "error",
     "@dxos/eslint-plugin-rules/prefer-sizing-utilities": "warn",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/no-similar-sibling-files": [
+      "error",
+      {
+        "allow": [
+          "packages/core/compute/assistant-toolkit/src/skills/delegation/operations/delegate-task.test.ts",
+          "packages/core/compute/assistant-toolkit/src/skills/delegation/operations/delegate-task.ts",
+          "packages/core/compute/assistant-toolkit/src/skills/delegation/operations/delegate-tasks.ts",
+          "packages/core/echo/echo-panproto/src/lens/codec.ts",
+          "packages/core/echo/echo-panproto/src/lens/codecs.ts",
+          "packages/plugins/plugin-assistant/src/components/Chat/Thread.stories.tsx",
+          "packages/plugins/plugin-assistant/src/components/Chat/thread.test.ts",
+          "packages/plugins/plugin-assistant/src/components/Chat/thread.ts",
+          "packages/plugins/plugin-crm/src/operations/EnrichImages.stories.tsx",
+          "packages/plugins/plugin-crm/src/operations/enrich-images.test.ts",
+          "packages/plugins/plugin-crm/src/operations/enrich-images.ts",
+          "packages/plugins/plugin-space/src/types/SpaceCapabilities.ts",
+          "packages/plugins/plugin-space/src/types/SpaceCapability.ts",
+          "packages/plugins/plugin-support/src/hooks/useTour.tsx",
+          "packages/plugins/plugin-support/src/hooks/useTours.ts",
+          "packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts",
+          "packages/sdk/app-toolkit/src/app-framework/AppCapability.ts",
+          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shape.tsx",
+          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shapes.tsx",
+          "packages/ui/react-ui-menu/src/components/ActionLabel.tsx",
+          "packages/ui/react-ui-menu/src/components/action-label.ts",
+          "packages/ui/react-ui/src/providers/ThemeProvider/IconRegistry.tsx",
+          "packages/ui/react-ui/src/providers/ThemeProvider/icon-registry.ts"
+        ]
+      }
+    ],
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",

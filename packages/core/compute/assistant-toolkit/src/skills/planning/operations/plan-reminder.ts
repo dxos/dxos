@@ -55,7 +55,7 @@ export default PlanReminder.pipe(
           ],
         });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
 );

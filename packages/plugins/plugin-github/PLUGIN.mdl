@@ -235,6 +235,24 @@ op ImportPullRequest
 ```
 
 ```mdl
+op ImportPullRequestFromSnapshot
+  key: org.dxos.operation.github.importPullRequestFromSnapshot
+  desc: |
+    The browser extension's page action: import the pull request the open page shows.
+    Nothing is extracted from the DOM — the snapshot's `source.url` names the pull request
+    and ImportPullRequest does the rest, so the anonymous-read fallback and the
+    already-held check are shared.  Answers with the object's id, which is the shape the
+    extension bridge acks and the Composer side opens.
+  input:
+    snapshot: PageAction.Snapshot   # the extension's generic page snapshot; only source.url is read
+    target: Database                # the active space's database
+  output: { id: string }
+  effects: [echo:read, echo:write, http]
+  errors:
+    GitHubPullRequestReferenceError: the page's URL names no pull request
+```
+
+```mdl
 op SubmitPullRequestApproval
   key: org.dxos.operation.github.submitPullRequestApproval
   desc: |
@@ -251,7 +269,6 @@ op SubmitPullRequestApproval
   effects: [echo:read, http]
   errors:
     Unauthorized: token missing or revoked
-
 ```
 
 ## Features
@@ -408,6 +425,12 @@ feat F-9: Pull Request Review
     then: the article renders its prose and diff chunks, and the toolbar action regenerates rather than generates
 
   req F-9.4: A Walkthrough opened by id resolves to the same article, through the pull request it narrates.
+
+  req F-9.5:
+    when: the user clicks "Open PR in Composer" in the browser extension on a github.com pull
+      request page
+    then: ImportPullRequestFromSnapshot files that pull request in the active space, and the
+      extension's auto-open setting opens it in the deck
 ```
 
 ## Acceptance
@@ -614,6 +637,66 @@ test QA-2: Local edit pushes back to GitHub
     - name: Disconnect the GitHub account
       do: In Settings -> Connectors -> GitHub, remove the connection.
       expect: the Connection object and its stored access token are removed
+```
+
+```mdl
+test QA-3: Open a pull request from the browser extension
+  desc: |
+    The plugin-crx page action, end to end through the operation it names.  Uses a public pull
+    request so no GitHub connection is needed — the import falls back to an anonymous read.
+  actors: both
+  covers: [F-9.5, F-9.3]
+  status: unverified
+  automated:
+    - composer-e2e:crx.spec.ts#Extension page actions › contributes the pull request action to the extension registry
+    - composer-e2e:crx.spec.ts#Extension page actions › imports the pull request the page names
+    - composer-e2e:crx-extension.spec.ts#Extension › opens the pull request the toolbar action is clicked on
+  given:
+    - an identity exists
+    - space: a space is open
+    - no PullRequest with owner "dxos", repo "dxos", number 1 exists — ABORT rather than
+      deleting one this test did not create
+  steps:
+    - name: Open the pull request from the extension
+      do: |
+        On https://github.com/dxos/dxos/pull/1, open the Composer extension side panel and click
+        "Open PR in Composer".  The extension captures the page snapshot and invokes the operation
+        against the active space.
+      invoke: |
+        org.dxos.operation.github.importPullRequestFromSnapshot {
+          snapshot: { source: { url: "https://github.com/dxos/dxos/pull/1", title: "chore: release 1.0.0 by github-actions[bot] - Pull Request #1 - dxos/dxos", clippedAt: "2026-09-22T00:00:00Z" } },
+          target: $given.space.db
+        }
+      capture: imported
+      expect: a PullRequest titled "chore: release 1.0.0" now exists in the space
+      assert: return !!$imported.id
+      note: |
+        Only `source.url` is read — the page title above is ignored, which is the point of the
+        operation taking a snapshot rather than an extraction.
+    - name: Re-invoke on the same pull request
+      do: Click "Open PR in Composer" again on the same page.
+      invoke: |
+        org.dxos.operation.github.importPullRequestFromSnapshot {
+          snapshot: { source: { url: "https://github.com/dxos/dxos/pull/1", title: "chore: release 1.0.0", clippedAt: "2026-09-22T00:00:00Z" } },
+          target: $given.space.db
+        }
+      expect: the same object is returned and the space still holds exactly one copy
+      assert: return $result.id === $imported.id
+    - name: Generate its walkthrough
+      do: Open the imported pull request and click "Generate walkthrough" in the article toolbar.
+      invoke: |
+        org.dxos.operation.github.generateWalkthrough { pullRequest: { "/": "echo://$given.space.id/$imported.id" } }
+      expect: the article renders narrated prose with the change's diff chunks spliced in
+      assert: return !!$result.walkthrough
+      note: |
+        Needs an AI provider configured — the only step here that does. GitHub itself is still read
+        anonymously, so no GitHub connection is required.
+  after:
+    - name: Delete the imported pull request
+      do: Right-click the pull request in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects { objects: [{ "/": "echo://$given.space.id/$imported.id" }], target: $given.space.db }
+      expect: the pull request no longer appears in the space
 ```
 
 ---

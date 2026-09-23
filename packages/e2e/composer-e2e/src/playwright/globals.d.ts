@@ -25,4 +25,31 @@ declare module '@dxos/app-framework' {
   }
 }
 
+declare global {
+  /** A space, narrowed to the database members this suite uses. */
+  type DebugSpace = {
+    id: string;
+    db: {
+      /**
+       * A HYDRATED reference to an object by URI (`echo:///<objectId>`), whose `.load()` resolves.
+       * `Ref.fromURI` returns an unhydrated one whose `.load`/`.target` do not work.
+       */
+      makeRef: (uri: string) => { load: () => Promise<Record<string, unknown>> };
+    };
+  };
+
+  /** The client/ECHO debug hook, mounted at the end of `client.initialize()`. */
+  var dxos: { spaces?: () => DebugSpace[] } | undefined;
+
+  /**
+   * The extension APIs, narrowed to what the extension spec drives from an extension page. Declared
+   * here rather than via `@types/chrome`: three members do not earn a dependency.
+   */
+  var chrome: {
+    storage: { sync: { set: (items: Record<string, unknown>) => Promise<void> } };
+    tabs: { query: (query: { url: string }) => Promise<Array<{ id?: number }>> };
+    runtime: { sendMessage: (message: unknown) => Promise<unknown> };
+  };
+}
+
 export {};

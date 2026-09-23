@@ -94,6 +94,9 @@
       "path": "../plugin-connector"
     },
     {
+      "path": "../plugin-crx"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
