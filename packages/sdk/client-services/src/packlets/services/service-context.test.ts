@@ -60,7 +60,7 @@ describe('services/ServiceContext', () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = await createOpenServiceContext(networkContext);
     await device1.createIdentity();
-    const space1 = await device1.dataSpaceManager!.createSpace(new Context());
+    const space1 = await (device1.dataSpaceManager ?? failedInvariant()).createSpace(new Context());
 
     const device2 = await createOpenServiceContext(networkContext);
     await device2.createIdentity();
@@ -68,9 +68,10 @@ describe('services/ServiceContext', () => {
 
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation_Kind.DEVICE } }));
 
-    await device2.dataSpaceManager!.waitUntilSpaceReady(space1.key);
-    const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await space2!.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
+    const dataSpaceManager2 = device2.dataSpaceManager ?? failedInvariant();
+    await dataSpaceManager2.waitUntilSpaceReady(space1.key);
+    const space2 = dataSpaceManager2.spaces.get(space1.key) ?? failedInvariant();
+    await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
   });
 
   const deleteIdentity = (serviceContext: ServiceContext) =>

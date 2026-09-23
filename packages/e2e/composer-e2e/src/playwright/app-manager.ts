@@ -230,6 +230,7 @@ export class AppManager {
     return tag;
   }
 
+  /** Fails unless the page still holds the document {@link markDocument} tagged. */
   async expectSameDocument(tag: string): Promise<void> {
     expect(await this.page.evaluate(() => globalThis.e2eDocumentTag), 'the page reloaded').toBe(tag);
   }

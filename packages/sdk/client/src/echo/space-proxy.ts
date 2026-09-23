@@ -507,10 +507,11 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   @synchronized
   async _destroy(): Promise<void> {
+    // Unregistered before anything awaits: a space that returns under the same id gets a new proxy,
+    // which constructs its own database straight away.
+    const removed = this._echoClient.removeDatabase(this._db);
     await this._reset();
-    // Unlike a reset, a destroyed proxy is never reopened, and a space that returns under the same id
-    // gets a new proxy that constructs its own database.
-    await this._echoClient.removeDatabase(this._db);
+    await removed;
   }
 
   private async _reset(): Promise<void> {

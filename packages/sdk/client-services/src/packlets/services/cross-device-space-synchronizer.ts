@@ -22,6 +22,7 @@ import { DataSpacesAvailable } from './events.ts';
  * Replicates cross-device space membership and deletion credentials from the halo space.
  */
 export interface CrossDeviceSpaceSynchronizer extends CredentialProcessor, Lifecycle {
+  readonly identity: Identity | undefined;
   setIdentity(identity: Identity): void;
 }
 
@@ -38,6 +39,10 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
 
   constructor(private readonly dataSpaceManager: DataSpaceManager) {
     super();
+  }
+
+  get identity(): Identity | undefined {
+    return this._identity;
   }
 
   setIdentity(identity: Identity): void {
@@ -141,6 +146,9 @@ export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
     yield* Hook.on(
       DataSpacesAvailable,
       Effect.fn('CrossDeviceSpaceSynchronizer.onDataSpacesAvailable')(function* ({ identity }) {
+        if (synchronizer.identity === identity) {
+          return;
+        }
         // Rebound on every identity: after an in-place deletion the next one arrives while this is
         // still open on the deleted identity's HALO, which would never admit the new one's spaces.
         yield* Effect.promise(async () => synchronizer.close?.());

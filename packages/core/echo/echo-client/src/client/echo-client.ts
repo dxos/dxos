@@ -191,15 +191,15 @@ export class EchoClient extends Resource {
    * Closes and unregisters a space's database, so the space can be constructed again should it
    * return (e.g. an identity deleted in place and then recovered brings back the same space ids).
    */
-  async removeDatabase(db: DatabaseImpl): Promise<void> {
+  removeDatabase(db: DatabaseImpl): Promise<void> {
     if (this._databases.get(db.spaceId) !== db) {
-      return;
+      return Promise.resolve();
     }
     this._databases.delete(db.spaceId);
     this._dbUpdateSubscriptions.get(db.spaceId)?.();
     this._dbUpdateSubscriptions.delete(db.spaceId);
     this._graph._unregisterDatabase(db.spaceId);
-    await db.close();
+    return db.close().then(() => undefined);
   }
 
   /**

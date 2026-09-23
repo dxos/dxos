@@ -46,7 +46,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(OnboardingCapabilities.Onboarding, manager),
       Capability.contribute(ClientCapabilities.OnIdentityDeleted, ({ target }) =>
-        Effect.promise(() => manager.onIdentityDeleted({ target })),
+        Effect.tryPromise(() => manager.onIdentityDeleted({ target })),
       ),
     ];
   }),

@@ -44,10 +44,7 @@ describe('OnboardingManager', () => {
     });
     await manager.initialize();
 
-    const dialogSubjects = calls
-      .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
-      .map((call) => (call.input as { subject?: string }).subject);
-    expect(dialogSubjects).not.toContain(WELCOME_SCREEN);
+    expect(dialogSubjects(calls)).not.toContain(WELCOME_SCREEN);
   });
 
   test('without a device invitation a fresh identity is created', async ({ expect }) => {
@@ -83,10 +80,7 @@ describe('OnboardingManager', () => {
     const { manager, calls, getCalls } = await createManager({ identity: true, hubUrl: 'https://hub.example.com' });
     await manager.onIdentityDeleted();
 
-    const dialogSubjects = calls
-      .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
-      .map((call) => (call.input as { subject?: string }).subject);
-    expect(dialogSubjects).toContain(WELCOME_SCREEN);
+    expect(dialogSubjects(calls)).toContain(WELCOME_SCREEN);
     expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
   });
 
@@ -202,6 +196,12 @@ const stubEmailProbe = (outcome: 'exists' | 'available' | 'unavailable') => {
     vi.unstubAllGlobals();
   });
 };
+
+/** The subjects of every dialog the manager opened, in order. */
+const dialogSubjects = (calls: readonly { key: string; input: unknown }[]) =>
+  calls
+    .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
+    .map((call) => (call.input as { subject?: string }).subject);
 
 const createManager = async (options: {
   identity?: boolean;

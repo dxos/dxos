@@ -449,7 +449,6 @@ export class OnboardingManager {
       mode: 'join-new-identity',
       invitationCode: this._deviceInvitationCode,
     });
-    removeQueryParamByValue(this._deviceInvitationCode);
   }
 
   private async _openJoinIdentity(): Promise<void> {

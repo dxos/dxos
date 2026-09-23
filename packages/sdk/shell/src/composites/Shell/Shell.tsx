@@ -65,8 +65,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     return baseUrl.toString();
   };
 
-  // The client stays open across the deletion, so the next identity flow runs in this same shell
-  // rather than after the host reloads.
+  // The client stays open across the deletion, so the next identity's flow runs in this same shell.
   const startNewIdentity = async (next: ShellLayout) => {
     runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
     await client.halo.deleteIdentity();
