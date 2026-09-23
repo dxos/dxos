@@ -9,9 +9,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { SearchList } from '@dxos/react-ui-search';
 import { ContactList, type ContactSpace } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -35,20 +34,20 @@ export const ContactsContainer = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('contacts.label')} description={t('contacts.description')}>
-            <SearchList.Root onSearch={setFilter}>
-              <SearchList.Input placeholder={t('contacts-search.placeholder')} data-testid='contacts.search' />
-              <ContactList
-                contacts={contacts}
-                spaces={contactSpaces}
-                filter={filter}
-                onSelectSpace={handleSelectSpace}
-              />
-            </SearchList.Root>
+            {contacts.length > 1 && (
+              <Field.Root>
+                <Field.Input
+                  placeholder={t('contacts-search.placeholder')}
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                  data-testid='contacts.search'
+                />
+              </Field.Root>
+            )}
+            <ContactList contacts={contacts} spaces={contactSpaces} filter={filter} onSelectSpace={handleSelectSpace} />
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
   );
 };
-
-ContactsContainer.displayName = 'ContactsContainer';
