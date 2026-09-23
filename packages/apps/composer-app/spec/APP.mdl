@@ -736,7 +736,7 @@ test QA-10: From the README to a diagram embedded in a document
           { typename: 'org.dxos.type.document', limit: 100 }, { spaceId: $given.defaultSpace.id });
         const row = rows.results.find((o) => o.dxn === $doc.id);
         return text.includes('local-first workspace') && text.includes('first-class citizen') &&
-          row?.label !== 'New document' && $stepErrors.length === 0;
+          !rows.truncated && !!row && row.label !== 'New document' && $stepErrors.length === 0;
       note: |
         An edit with no `oldString` appends. Three things ride on this step's exact text. The name is
         derived from the first heading, not typed into a title field — there is no
@@ -911,11 +911,11 @@ test QA-10: From the README to a diagram embedded in a document
         `markdown.embed` element proves the widget mounted, and the absence of a literal `![` proves
         the source line was replaced rather than rendered beside it, which is what a broken widget
         registration looks like and what a database-level check would miss.
-        Typing this URI by hand is the step that found the plank crash fixed in
-        `PreviewComponent`/`parse-object-uri.ts`: the widget is claimed by scheme alone, so every
-        prefix — `echo:`, `echo://<spaceId>` — reached a resolver that threw out of render and took
-        the whole plank down. A human run types it; an agent run applies it in one operation and
-        would never see it, which is why the human `do:` says "type".
+        Typing this URI by hand is the step that found the plank crash fixed in `PreviewComponent`
+        and in `parseObjectUri` (`ui-editor/src/extensions/widgets/object-links.ts`): the widget is
+        claimed by scheme alone, so every prefix — `echo:`, `echo://<spaceId>` — reached a resolver
+        that threw out of render and took the whole plank down. A human run types it; an agent run
+        applies it in one operation and would never see it, which is why the human `do:` says "type".
     - name: Navigate into the diagram
       id: into
       do: Click the ⧉ button in the top-right corner of the embedded canvas.
