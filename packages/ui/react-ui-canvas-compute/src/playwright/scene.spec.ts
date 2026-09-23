@@ -60,6 +60,30 @@ test.describe('compute scene', () => {
     expect(errors).toEqual([]);
   });
 
+  test('the circuit opens centred in the view rather than off in a corner', async () => {
+    const offset = await page.evaluate(() => {
+      const boxes = [...document.querySelectorAll('[data-node-id]')].map((node) => node.getBoundingClientRect());
+      const view = document.querySelector('[data-testid="scene-view"]')!.getBoundingClientRect();
+      const centre = (lo: number, hi: number) => (lo + hi) / 2;
+      return {
+        x:
+          Math.abs(
+            centre(Math.min(...boxes.map((b) => b.x)), Math.max(...boxes.map((b) => b.x + b.width))) -
+              centre(view.x, view.x + view.width),
+          ) / view.width,
+        y:
+          Math.abs(
+            centre(Math.min(...boxes.map((b) => b.y)), Math.max(...boxes.map((b) => b.y + b.height))) -
+              centre(view.y, view.y + view.height),
+          ) / view.height,
+      };
+    });
+    // The default extent is centred on the origin, so the fit lands on the content; anchored at the
+    // origin instead it pushed every circuit a third of the viewport up and to the left.
+    expect(offset.x).toBeLessThan(0.05);
+    expect(offset.y).toBeLessThan(0.05);
+  });
+
   test('a box run button executes its node, and a node with nothing to run has none', async () => {
     // The note carries no compute node, so it gets no run button; the constant and the transform do.
     const note = page.locator('[data-node-id]').filter({ hasText: 'Random number generator' }).first();

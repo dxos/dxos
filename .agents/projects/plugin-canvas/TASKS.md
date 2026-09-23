@@ -170,8 +170,14 @@ before), not reasoned about from the source.
       `FunctionBody`. `Box` now runs the shape's own node through `controller.exec`, which propagates
       downstream as a run should, and draws the button only for a shape that has a compute node — the
       note in the Transform circuit has none. Covered in e2e by counting the bullets a run fires.
-- [ ] Match the old editor where it is better (the user is specifying which): the circuit fits to the
-      padded scene bounds so it sits small in a corner where the editor centres it; the dashed scene
+- [x] The circuit no longer opens in a corner. `DEFAULT_EXTENT` ran from the origin to (1600, 1024)
+      rather than being centred on it, so the floor it puts under every scene's bounds had its own
+      centre well below and right of content laid out around (0, 0): the initial fit, which centres the
+      frame, pushed every story a sixth to a third of the viewport up and left. Measured across the ten
+      scene stories, the offset fell from -0.15..-0.35 of the viewport to under 0.02, and the share of
+      the viewport the content covers roughly doubled. Held by an e2e test.
+- [ ] Match the old editor where it is better (the user is specifying which): the remaining framing
+      question is the floor itself (below); the dashed scene
       frame draws where the editor shows none; the editor's one grouped horizontal toolbar against the
       corner toolbar plus the vertical palette rail; ports drawn at rest against hover-only.
 - [x] `scene--logic`: the switches drive the gates. Verified end to end in Chromium — two switches

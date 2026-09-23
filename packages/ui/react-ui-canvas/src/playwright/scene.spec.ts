@@ -111,9 +111,10 @@ test.describe('SceneView', () => {
 
   test('a marquee replaces the selection, shift adds and alt subtracts', async () => {
     const a = await scene.box(scene.node('scene:root/a'));
-    // The empty canvas below and right of A, dragging back over A's corner.
-    const outside = { x: a.x + a.width + 40, y: a.y + a.height + 60 };
-    const inside = { x: a.x + a.width - 20, y: a.y + a.height - 20 };
+    // The empty canvas above and left of A, dragging back over A's corner. Not the other corner: the
+    // B→C spline passes below and right of A, and a press on a link starts an endpoint drag.
+    const outside = { x: a.x - 40, y: a.y - 60 };
+    const inside = { x: a.x + 20, y: a.y + 20 };
     await scene.focus();
     await page.keyboard.press('Control+a');
     await scene.drag(outside, inside, 'Alt');
@@ -130,6 +131,8 @@ test.describe('SceneView', () => {
   });
 
   test('the line tool draws a free-ended link on empty canvas', async () => {
+    // Zoom out once so the band below is there whatever the initial fit frames.
+    await page.getByTestId('toolbar-zoom-out').click();
     const view = await scene.box(scene.root);
     await scene.focus();
     await page.keyboard.press('l');

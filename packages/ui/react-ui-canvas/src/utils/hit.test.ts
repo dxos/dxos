@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type BuiltinNode, type Scene } from '../model/types.ts';
+import { type BuiltinNode, MAJOR_GRID, type Scene } from '../model/types.ts';
 import { DEFAULT_EXTENT, boundsFromPoints, hitTest, nodesIntersecting, sceneBounds } from './hit.ts';
 
 const nodes: Record<string, BuiltinNode> = {
@@ -40,10 +40,20 @@ describe('hit', () => {
     expect(nodesIntersecting(scene, boundsFromPoints({ x: 0, y: 0 }, { x: 600, y: 600 })).length).toBe(3);
   });
 
+  test('the default extent is centred on the origin and lands on the major grid', ({ expect }) => {
+    // A scene is laid out around (0, 0); an extent anchored at the origin instead would put its centre
+    // — and so the initial fit — well below and right of the content.
+    expect(DEFAULT_EXTENT.x + DEFAULT_EXTENT.width / 2).toBe(0);
+    expect(DEFAULT_EXTENT.y + DEFAULT_EXTENT.height / 2).toBe(0);
+    expect(Math.abs(DEFAULT_EXTENT.x % MAJOR_GRID)).toBe(0);
+    expect(Math.abs(DEFAULT_EXTENT.y % MAJOR_GRID)).toBe(0);
+  });
+
   test('sceneBounds grows the default extent by the padded union of the nodes', ({ expect }) => {
     // Content inside the default extent leaves it as it is, whatever the padding or grid.
-    expect(sceneBounds(scene, 10, 1)).toEqual(DEFAULT_EXTENT);
-    expect(sceneBounds(scene, 10)).toEqual(DEFAULT_EXTENT);
+    const near: Scene = { id: 'near', nodes: { a: nodes.a }, links: {} };
+    expect(sceneBounds(near, 10, 1)).toEqual(DEFAULT_EXTENT);
+    expect(sceneBounds(near, 10)).toEqual(DEFAULT_EXTENT);
     expect(sceneBounds({ id: 'empty', nodes: {}, links: {} })).toEqual(DEFAULT_EXTENT);
     // A node beyond it grows the frame that way, and the default still holds the other three sides.
     const far: BuiltinNode = {
@@ -53,6 +63,11 @@ describe('hit', () => {
       center: { x: 2000, y: -400 },
       size: { width: 100, height: 100 },
     };
-    expect(sceneBounds({ ...scene, nodes: { ...nodes, far } })).toEqual({ x: -64, y: -576, width: 2240, height: 1600 });
+    expect(sceneBounds({ ...near, nodes: { ...near.nodes, far } })).toEqual({
+      x: -832,
+      y: -576,
+      width: 3008,
+      height: 1088,
+    });
   });
 });
