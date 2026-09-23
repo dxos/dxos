@@ -269,8 +269,10 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
           <Icon icon={icon} size={4} classNames='shrink-0' />
-          <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
-          {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
+          <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
+          {failed > 0 && (
+            <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+          )}
         </span>
       </TogglePanel.Header>
       {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
@@ -317,7 +319,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
                 hover={detail}
                 icon={entry.icon}
                 data-testid={`assistant.tool-${entry.kind}`}
-                classNames={mx('text-sm', entry.error !== undefined && 'text-error')}
+                classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
               >
                 {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
                 <span className='flex items-center h-(--dx-control-sm) min-w-0'>

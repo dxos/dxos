@@ -67,6 +67,9 @@ export const SupportRequest = Schema.Struct({
   ),
   // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
   version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  // Hidden — set by callers filing on the team's behalf (the debug console) so the issue lands
+  // under the same Linear label the PostHog submissions sync under.
+  labels: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 });
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;

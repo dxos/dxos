@@ -15,6 +15,16 @@
  * `StackTrace` itself. Keeping one in a never-pruned module-level container leaked an entire ECHO
  * client graph per query on Cloudflare Workers, where nothing ever reads the diagnostics (DX-1140).
  */
+/**
+ * Whether a `stack` line is a frame rather than a header.
+ *
+ * V8 prefixes the frames with the error's own header line (`Error`), JavaScriptCore — Safari, and
+ * tauri's WKWebView — emits no header and starts at the first frame, so the number of lines before
+ * the first frame is engine-dependent and cannot be a constant. Matching an `@` anywhere is safe
+ * only because the captured error is always message-less, so a header is never more than `Error`.
+ */
+const isFrameLine = (line: string): boolean => /^\s*at\s/.test(line) || line.includes('@');
+
 export class StackTrace {
   private _error: Error | undefined;
   private _frames: string[] | undefined;
@@ -50,6 +60,9 @@ export class StackTrace {
   }
 
   getStackArray(skipFrames = 0): string[] {
-    return this._format().slice(skipFrames + 2);
+    const frames = this._format();
+    // The header, when the engine emits one, plus this class's own constructor frame.
+    const headerOffset = frames.length > 0 && !isFrameLine(frames[0]) ? 1 : 0;
+    return frames.slice(headerOffset + skipFrames + 1);
   }
 }

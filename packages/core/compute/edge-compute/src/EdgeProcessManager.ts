@@ -6,11 +6,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as Scope from 'effect/Scope';
+import type * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
-import { RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
+import { QueuedRemoteControl, RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -76,9 +78,28 @@ const makeManager = (
   } satisfies RemoteProcessManager.Manager;
 };
 
+/**
+ * How a manager reaches EDGE when the caller wants commands queued rather than issued directly.
+ *
+ * Supplying `kvStore` is what turns a spawn into a durable command: state moves locally at once and
+ * the push is retried until it lands (see `QueuedRemoteControl`). Without it the control is used
+ * bare, and a call made while EDGE is unreachable is simply lost — which is the behaviour every
+ * caller had before the queue existed.
+ */
+export interface QueueOptions {
+  /** Command log storage. The same store the local process registry uses is the right one. */
+  readonly kvStore: KeyValueStore.KeyValueStore;
+  /**
+   * Fires when the link to EDGE comes back up, so the flusher retries at once instead of waiting out
+   * its backoff. Returns an unsubscribe. Optional: without it, recovery is the backoff alone.
+   */
+  readonly onConnected?: (listener: () => void) => () => void;
+}
+
 const make = (
   getEdgeClient?: () => EdgeHttpClient,
   control?: RemoteProcessManager.Control,
+  queue?: QueueOptions,
 ): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =>
   Layer.effect(
     RemoteProcessManager.Service,
@@ -87,9 +108,28 @@ const make = (
       // Declared requirement (not `serviceOption`): hosts with no swarm monitor provide
       // `RemoteTraceMonitor.layerNoop` rather than leaving the tag undeclared.
       const remoteTrace = yield* RemoteTraceMonitor.Service;
-      return makeManager(registry, getEdgeClient, control, remoteTrace);
+      const effective = control !== undefined && queue !== undefined ? yield* queued(control, queue) : control;
+      return makeManager(registry, getEdgeClient, effective, remoteTrace);
     }),
   );
+
+/** Wraps `control` in the durable command queue and arms its connection signal for this layer's life. */
+const queued = (
+  control: RemoteProcessManager.Control,
+  options: QueueOptions,
+): Effect.Effect<RemoteProcessManager.Control, never, Scope.Scope> =>
+  Effect.gen(function* () {
+    const client = yield* QueuedRemoteControl.make({ control, kvStore: options.kvStore });
+    if (options.onConnected) {
+      const unsubscribe = options.onConnected(() => {
+        // Fire-and-forget: the signal only cuts a backoff short, so a failed wake costs a retry
+        // delay and nothing else.
+        Effect.runFork(client.connected);
+      });
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    }
+    return client;
+  });
 
 /**
  * Trigger cancel only, from a pre-built edge client: no process control, empty process tree.
@@ -106,10 +146,12 @@ export const fromEdgeClient = (
  */
 export const fromEdgeProcessClient = (
   edgeClient: EdgeHttpClient,
+  queue?: QueueOptions,
 ): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> =>
   make(
     () => edgeClient,
     EdgeProcessControl.make(() => edgeClient),
+    queue,
   );
 
 /**
@@ -124,9 +166,10 @@ export const fromEdgeProcessClient = (
  */
 export const fromClient = (
   client: Client,
+  queue?: QueueOptions,
 ): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry | RemoteTraceMonitor.Service> => {
   let cached: EdgeHttpClient | undefined;
-  return make(() => (cached ??= createEdgeClient(client)), EdgeProcessControl.fromClient(client));
+  return make(() => (cached ??= createEdgeClient(client)), EdgeProcessControl.fromClient(client), queue);
 };
 
 /**

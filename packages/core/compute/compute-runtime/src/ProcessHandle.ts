@@ -26,6 +26,7 @@ import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
 import type * as Trace from '@dxos/compute/Trace';
 import { Performance, SpanAttributes } from '@dxos/effect';
+import { isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import type { PersistedEvent, PersistedEventInput } from './process-store.ts';
@@ -86,14 +87,24 @@ const failingValue = (cause: Cause.Cause<unknown>): unknown =>
   );
 
 /**
- * Report a crashed process at `error`, from the single point every FAILED transition passes through.
+ * Report a crashed process, from the single point every FAILED transition passes through.
+ *
+ * A user dismissing an interactive prompt (a passkey ceremony, an aborted signal) fails the process
+ * but is not a defect, so it reports at `info` — at `error` it swamps the production error stream
+ * and hides real regressions (DX-1281).
  *
  * The failing value is passed as `error` rather than only as pretty-printed text because the log
  * pipeline walks its `cause` chain, while `Cause.pretty` flattens to the outermost reason — the same
  * loss that makes a failed agent turn surface to the user as "An unexpected error occurred."
  */
 const logFailure = (pid: Process.ID, key: string, cause: Cause.Cause<unknown>): void => {
-  log.error('lifecycle: failed', { pid, key, error: failingValue(cause), cause: Cause.pretty(cause) });
+  const error = failingValue(cause);
+  const entry = { pid, key, error, cause: Cause.pretty(cause) };
+  if (isCancellation(error)) {
+    log.info('lifecycle: cancelled', entry);
+  } else {
+    log.error('lifecycle: failed', entry);
+  }
 };
 
 const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {

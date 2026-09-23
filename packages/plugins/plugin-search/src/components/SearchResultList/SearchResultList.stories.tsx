@@ -105,7 +105,8 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              // The story searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
       ],

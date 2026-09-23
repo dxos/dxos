@@ -18,10 +18,11 @@ import {
 } from './collectors/cpu.ts';
 import { diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
-import { readDomCounters, readHeap, sumHeapUsed, trackPeakRss } from './collectors/memory.ts';
+import { readDomCounters, readHeap, readProcessFootprint, sumAppFootprint, sumHeapUsed } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
 import { installWorkerProbe, readResponsiveness } from './collectors/responsiveness.ts';
+import { type RpcReading, diffRpc, readRpc } from './collectors/rpc.ts';
 import { STAGE_MARK_PREFIX } from './collectors/tracing.ts';
 import {
   type Comparability,
@@ -60,8 +61,6 @@ export type RunnerOptions = {
   page: Page;
   /** Browser-level CDP target — the only one that answers `SystemInfo.getProcessInfo`. */
   browserCdp: Cdp;
-  /** Root pid of the browser process tree, for the RSS reading. */
-  browserPid: number;
   debugPort: number;
   network: () => NetworkMetrics;
   comparability: Comparability;
@@ -83,6 +82,7 @@ type Boundary = {
   threadByRealm: RealmThreadMetrics[];
   network: NetworkMetrics;
   disk: DiskMetrics;
+  rpc: RpcReading[];
 };
 
 /**
@@ -166,7 +166,7 @@ export class StageRunner {
 
   /** Runs one stage, bracketing `body` with the boundary reads. */
   async stage(id: string, body: () => Promise<void>): Promise<StageRow> {
-    const { page, browserCdp, browserPid, debugPort, network, mode } = this.#options;
+    const { page, browserCdp, debugPort, network, mode } = this.#options;
 
     this.#targets = await refreshTargets(debugPort, this.#targets);
     const pageTarget = this.#targets.find((target) => target.kind === 'page');
@@ -188,8 +188,8 @@ export class StageRunner {
       threadByRealm: await readRealmThreadMetrics(this.#targets),
       network: network(),
       disk: await readDisk(this.#targets),
+      rpc: await readRpc(this.#targets),
     };
-    const stopRss = trackPeakRss(browserPid);
 
     let ok = true;
     let error: string | undefined;
@@ -205,7 +205,6 @@ export class StageRunner {
 
     await this.#mark(id, 'end');
     const wallMs = Date.now() - before.at;
-    const peakRssBytes = stopRss();
     const cpu = diffProcessCpu(before.cpu, await readProcessCpu(browserCdp));
     const thread = pageTarget
       ? diffThreadMetrics(before.thread, await readThreadMetrics(pageTarget))
@@ -228,9 +227,18 @@ export class StageRunner {
     // was missing from every run. A realm that appeared during the stage contributes its whole
     // counters, which is right: it did that work inside this stage.
     const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
+    // After the refresh for the same reason as disk: `boot` is the stage that creates the worker
+    // serving every later RPC, so a set captured at the opening boundary would miss it entirely.
+    const rpc = diffRpc(before.rpc, await readRpc(this.#targets));
 
     const responsiveness = await readResponsiveness(page, this.#targets);
     const domCounters = await readDomCounters(this.#targets.find((target) => target.kind === 'page'));
+
+    // LAST of the closing reads, and at the boundary rather than sampled. It starts and ends a
+    // trace around one dump, which costs ~100 ms — an order of magnitude more than every other
+    // read here — so taking it first put the harness's own overhead, and whatever the app did
+    // during it, inside the CPU, thread, network, disk and RPC deltas that close the same stage.
+    const footprint = await readProcessFootprint(browserCdp);
 
     const stills = this.#instruments.screencast?.endStage();
     const profiled = await this.#instruments.profiler?.endStage();
@@ -263,12 +271,14 @@ export class StageRunner {
       ...(profiled ? { cpuMsByRealm: profiled.cpu } : {}),
       heap,
       heapUsedTotalBytes: sumHeapUsed(heap),
-      peakRssBytes,
+      footprint,
+      appFootprintBytes: sumAppFootprint(footprint),
       domNodes: domCounters.nodes,
       domListeners: domCounters.listeners,
       domDocuments: domCounters.documents,
       network: networkDelta,
       disk: diskDelta,
+      rpc,
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),

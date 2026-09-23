@@ -44,11 +44,6 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@dxos/random": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@storybook/react-vite": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

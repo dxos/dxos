@@ -36,7 +36,8 @@ than trusting a caller to remember.
 | `cpuMsTotal`               | `SystemInfo.getProcessInfo` (browser) | The only reading covering the shared worker, GPU and browser process. A renderer-only number misleads for a DXOS flow, where the shared worker running ECHO is usually the dominant cost. |
 | `thread.*`                 | `Performance.getMetrics` (page only — the domain does not exist on a worker) | `taskMs` is the envelope; the script/layout/recalcStyle split is what separates "the database is slow" from "the list re-renders every row". |
 | `heap[]`                   | `Runtime.getHeapUsage` per target     | After a three-pass forced GC, per realm. |
-| `peakRssBytes`             | `ps` over the browser process tree    | Sampled through the stage, so a spike that is freed before the boundary still counts. The only number that includes wasm linear memory. |
+| `appFootprintBytes`        | `memory-infra` light dump, renderers  | Private footprint of the renderers, which in this harness is the app. Includes wasm linear memory. Read at the stage boundary; the read costs ~100 ms. |
+| `chromeFootprintBytes`     | the same dump, everything else        | Chrome's browser, GPU and service processes. Reported beside the app's figure so it is visible rather than folded in. |
 | `domNodes`, `domListeners` | `Memory.getDOMCounters`               | The cheap leak canary, and the direct signal for a list that renders every row rather than a viewport. |
 | `network.*`                | Playwright `response` events          | Classified code-load vs API. Content-length where present, body otherwise — the resource-timing buffer caps out on a graph this size. |
 | `responsiveness.lag*`      | timer-drift probe, page AND workers   | The page-side Long Tasks API cannot see a blocked shared worker; the worker probe is pushed in over CDP. |
@@ -68,7 +69,8 @@ Every row carries `comparability`, and a comparison that does not hold these con
   an inflated `tbtMs`/`wallMs` and do not compare with later ones.
 
 Memory means four different things that differ by 3-5x (JS heap, snapshot self size, attributed
-allocators, private footprint). The trended one is peak RSS, because it is what a user feels.
+allocators, private footprint). The trended one is the renderers' private footprint, because it is
+the app's own cost and it is a quantity: footprints are disjoint per process, so they can be added.
 
 ## Output
 

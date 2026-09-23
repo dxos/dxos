@@ -794,9 +794,23 @@ export class EdgeHttpClient extends BaseHttpClient {
     );
   }
 
-  /** Terminates the process and clears its durable storage on the host. */
-  public async terminateProcess(ctx: Context, spaceId: SpaceId, pid: string): Promise<void> {
-    await this._call(ctx, new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl), {
+  /**
+   * Terminates the process and clears its durable storage on the host.
+   *
+   * `idempotencyKey` travels as a query parameter rather than a body: the route is a DELETE, and a
+   * body there is not reliably forwarded.
+   */
+  public async terminateProcess(
+    ctx: Context,
+    spaceId: SpaceId,
+    pid: string,
+    options?: { idempotencyKey?: ProcessProtocol.IdempotencyKey },
+  ): Promise<void> {
+    const url = new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl);
+    if (options?.idempotencyKey !== undefined) {
+      url.searchParams.set('idempotencyKey', options.idempotencyKey);
+    }
+    await this._call(ctx, url, {
       method: 'DELETE',
       auth: true,
     });

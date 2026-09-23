@@ -40,7 +40,7 @@ describe('DebugOperation.Snapshot', () => {
     });
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const before = Date.now();
     log.error('snapshot test error');

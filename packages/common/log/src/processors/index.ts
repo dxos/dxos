@@ -6,3 +6,4 @@ export * from './browser-processor.ts';
 export * from './common.ts';
 export * from '#console-processor';
 export * from './debug-processor.ts';
+export * from './noop-processor.ts';

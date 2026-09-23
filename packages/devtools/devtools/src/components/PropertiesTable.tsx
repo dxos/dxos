@@ -11,7 +11,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 const styles = {
-  key: 'text-mono text-green-500',
+  key: 'font-mono text-green-500',
   unit: 'text-sm text-neutral-400 ml-1',
 };
 

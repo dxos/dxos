@@ -13,7 +13,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -706,6 +706,97 @@ describe('Database', () => {
 
       expect(fireCount).toBeGreaterThan(0);
       expect(registry.get(atom)).toBeUndefined();
+    });
+  });
+
+  describe('loading deleted targets', () => {
+    // Refs read back off the holder carry no inlined target, so these exercise the resolver.
+    const setup = async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+      const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: tasks.map((task) => Ref.make(task)) }));
+      await db.flush();
+      invariant(person.tasks, 'Person has no tasks.');
+      return { db, person, tasks, refs: person.tasks };
+    };
+
+    test('ref.load fails for a deleted target and resolves it when deleted are included', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      db.remove(tasks[0]);
+
+      const [ref] = refs;
+      expect(ref.target).toBeUndefined();
+      await expect(ref.load()).rejects.toThrow();
+      await expect(ref.tryLoad()).resolves.toBeUndefined();
+      expect(await ref.load({ deleted: 'include' })).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('an inlined target is checked too', async ({ expect }) => {
+      const { db, tasks } = await setup();
+      const ref = Ref.make(tasks[0]);
+      db.remove(tasks[0]);
+
+      await expect(ref.load()).rejects.toThrow();
+      expect(await ref.load({ deleted: 'include' })).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('Database.load fails with EntityNotFoundError for a deleted target', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      db.remove(tasks[0]);
+
+      const [ref] = refs;
+      const exit = await Effect.runPromiseExit(Database.load(ref));
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(await EffectEx.runPromise(Database.load(ref, { deleted: 'include' }))).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('a property traversal drops a deleted target', async ({ expect }) => {
+      const { db, person, tasks } = await setup();
+      db.remove(tasks[1]);
+
+      const titles = await db
+        .query(Query.select(Filter.entity(person)).reference('tasks'))
+        .run()
+        .then((results) => results.map((task) => task.title));
+      expect(titles.toSorted()).toEqual(['one', 'three']);
+    });
+
+    test('the ref atom family is keyed structurally', async ({ expect }) => {
+      const { person } = await setup();
+      // Separate reads: each yields a fresh Ref instance addressing the same target.
+      const [first] = person.tasks ?? [];
+      const [second] = person.tasks ?? [];
+
+      expect(Obj.atom(first)).toBe(Obj.atom(second));
+      expect(Obj.atom(first, { deleted: 'include' })).toBe(Obj.atom(second, { deleted: 'include' }));
+      expect(Obj.atom(first)).not.toBe(Obj.atom(first, { deleted: 'include' }));
+    });
+
+    test('Obj.atom(ref, { deleted: "include" }) resolves a target removed before the atom is read', async ({
+      expect,
+    }) => {
+      const { db, refs, tasks } = await setup();
+      const registry = AtomRegistry.make();
+      const [ref] = refs;
+      db.remove(tasks[0]);
+
+      const atom = Obj.atom(ref, { deleted: 'include' });
+      registry.subscribe(atom, () => {});
+      await expect.poll(() => registry.get(atom)).toMatchObject({ id: tasks[0].id });
+    });
+
+    test('Obj.atom(ref, { deleted: "include" }) keeps a removed target', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      const registry = AtomRegistry.make();
+      const [ref] = refs;
+
+      const atom = Obj.atom(ref, { deleted: 'include' });
+      expect(registry.get(atom)).not.toBeUndefined();
+
+      db.remove(tasks[0]);
+
+      expect(registry.get(atom)).toMatchObject({ id: tasks[0].id });
+      expect(registry.get(Obj.atom(ref))).toBeUndefined();
     });
   });
 

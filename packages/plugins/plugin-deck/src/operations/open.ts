@@ -34,6 +34,7 @@ import {
   openCompanionPlank,
   resolveDeckSpec,
   updateActiveDeck,
+  withViewTransition,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -51,11 +52,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         AppGraph.expandPath(graph, subjectId);
       }
 
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        if (input.workspace && state.activeDeck !== input.workspace) {
-          yield* applyWorkspace(input.workspace);
-        }
+      const workspaceToEnter = yield* Effect.map(Capabilities.getAtomValue(DeckCapabilities.State), (state) =>
+        input.workspace && state.activeDeck !== input.workspace ? input.workspace : undefined,
+      );
+      if (workspaceToEnter) {
+        yield* withViewTransition(applyWorkspace(workspaceToEnter));
       }
 
       // Dedup subjects against the active deck using EID identity.
@@ -205,7 +206,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          intent: { scrollIntoView: scrolled, transition: true },
+          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !workspaceToEnter },
         });
       }
 
@@ -215,7 +216,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
         // Nothing newly open means no URL changed, so no write carried the intent above.
         if (scrolled === undefined && input.scrollIntoView !== false && input.subject[0]) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0] });
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0], focus: input.focus });
         }
 
         if (newlyOpen[0] ?? input.subject[0]) {

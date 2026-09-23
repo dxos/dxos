@@ -4,10 +4,9 @@
 
 import React, { type MouseEvent, useId, useMemo } from 'react';
 
+import { Scene } from '@dxos/diagram';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-
-import { type Scene } from '#model';
 
 /**
  * Text sizes per scene weight for a standard UI font. Proportional to `Layout.FONT_METRICS`
@@ -21,7 +20,7 @@ const MARGIN = 40;
 type Rect = { x: number; y: number; w: number; h: number };
 type Point = Scene.Point;
 
-const rectOf = (object: Scene.WorldObject, element: Scene.Box): Rect => {
+const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): Rect => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   return { x: x + element.x * scale, y: y + element.y * scale, w: element.w * scale, h: element.h * scale };
@@ -103,7 +102,8 @@ const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
         case 'rect':
         case 'ellipse':
         case 'diamond':
-        case 'triangle': {
+        case 'triangle':
+        case 'portal': {
           const rect = rectOf(object, element);
           registry.set(`${object.id}/${element.id}`, rect);
           points.push(rect, { x: rect.x + rect.w, y: rect.y + rect.h });
@@ -275,9 +275,32 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         </text>
       );
     }
+    case 'portal': {
+      // A window onto another drawing; without nesting the frame stands in for its content.
+      const rect = rectOf(object, element);
+      return (
+        <g
+          className={mx('stroke-current fill-transparent', colorClass(element.color))}
+          strokeWidth={1.5}
+          strokeDasharray={strokeDash[element.stroke ?? 'dashed']}
+        >
+          <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={RADIUS} />
+          {element.text && (
+            <MultilineText
+              cx={center(rect).x}
+              cy={rect.y + LINE_H.s}
+              text={element.text}
+              weight='s'
+              className='stroke-none'
+            />
+          )}
+        </g>
+      );
+    }
     case 'arrow': {
-      // Bound refs resolve via the registry, clipping the center-to-center segment at each border.
-      const ref = (value: string) => registry.get(value.includes('/') ? value : `${object.id}/${value}`);
+      // Bound refs resolve via the registry, clipping the center-to-center segment at each border
+      // and dropping the `#port`: the SVG renderer has no ports.
+      const ref = (value: string) => registry.get(Scene.resolveRef(value, object.id));
       const fromRect = element.from ? ref(element.from) : undefined;
       const toRect = element.to ? ref(element.to) : undefined;
       const start = fromRect

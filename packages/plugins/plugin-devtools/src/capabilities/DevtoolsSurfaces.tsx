@@ -12,6 +12,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
+import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
@@ -61,11 +62,11 @@ export const SpaceInfoSurface = ({ role, onNavigate }: NavigableSurfaceProps) =>
 
 export const EdgeTracesSurface = ({ role }: { role?: string }) => {
   const space = useActiveSpace();
+  const feed = useResolveRef(space?.properties.invocationTraceFeed);
   if (!space) {
     return null;
   }
 
-  const feed = space.properties.invocationTraceFeed?.target;
   const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
 
   return <InvocationTraceContainer role={role} db={space.db} feedDXN={feedDXN} detailAxis='block' />;

@@ -75,6 +75,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

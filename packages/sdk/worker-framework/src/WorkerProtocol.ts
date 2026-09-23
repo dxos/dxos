@@ -43,6 +43,36 @@ export interface DedicatedWorkerReadyMessage {
    * Released if worker is terminated.
    */
   livenessLockKey: string;
+
+  /**
+   * Identifies this worker on the displacement channel, so its tab can tell an escalation raised
+   * against another worker from one this worker raised itself.
+   */
+  workerId: string;
+
+  /**
+   * Displacement channel for this worker's storage lock. The tab listens on it for the escalation a
+   * newer worker raises when this one ignores the cooperative stop signal.
+   */
+  displaceChannel: string;
+}
+
+/**
+ * Leader Client -> Worker to ask whether the worker is still servicing its event loop, which is what
+ * separates the wedged incumbent from every other worker on a storage lock when one is displaced.
+ */
+export interface DedicatedWorkerPingMessage {
+  type: 'ping';
+  /** Echoed back, so a reply to a superseded probe cannot answer the current one. */
+  nonce: string;
+}
+
+/**
+ * Worker -> Leader Client in reply to {@link DedicatedWorkerPingMessage}.
+ */
+export interface DedicatedWorkerPongMessage {
+  type: 'pong';
+  nonce: string;
 }
 
 /**
@@ -80,6 +110,8 @@ export interface DedicatedWorkerStartSessionMessage {
 export interface DedicatedWorkerSessionMessage {
   type: 'session';
   clientId: string;
+  /** The connect attempt this session serves, echoed from `start-session`; absent from a worker that predates it. */
+  attempt?: number;
   /** Client → worker RPC channel (tab runs the client, worker runs the server). */
   clientToWorker: MessagePort;
   /** Worker → client RPC channel (worker runs the client, tab runs the server). */
@@ -87,13 +119,27 @@ export interface DedicatedWorkerSessionMessage {
   isOwner: boolean;
 }
 
+/**
+ * Worker -> Leader Client when a session whose ports were already handed out could not be built;
+ * the tab holding those ports would otherwise only learn of it from its handshake timeout.
+ */
+export interface DedicatedWorkerSessionFailedMessage {
+  type: 'session-failed';
+  clientId: string;
+  attempt?: number;
+  error: SerializedError;
+}
+
 export type DedicatedWorkerMessage =
   | DedicatedWorkerListeningMessage
   | DedicatedWorkerInitMessage
   | DedicatedWorkerReadyMessage
+  | DedicatedWorkerPingMessage
+  | DedicatedWorkerPongMessage
   | DedicatedWorkerInitFailedMessage
   | DedicatedWorkerStartSessionMessage
-  | DedicatedWorkerSessionMessage;
+  | DedicatedWorkerSessionMessage
+  | DedicatedWorkerSessionFailedMessage;
 
 export type CoordinatorMessage =
   | {
@@ -118,13 +164,38 @@ export type CoordinatorMessage =
       type: 'provide-port';
       leaderId: string;
       clientId: string;
+      /** See {@link DedicatedWorkerSessionMessage.attempt}; a tab ignores a reply for an attempt it abandoned. */
+      attempt?: number;
       clientToWorker: MessagePort;
       workerToClient: MessagePort;
       livenessLockKey: string;
       isOwner: boolean;
+    }
+  | {
+      // The session behind an earlier `provide-port` could not be built; see
+      // {@link DedicatedWorkerSessionFailedMessage}. Broadcast (it is cloneable), so a coordinator that
+      // predates it still delivers it.
+      type: 'session-failed';
+      clientId: string;
+      attempt?: number;
+      error: SerializedError;
     };
 
 export type WorkerOrPort = Worker | MessagePort;
+
+/**
+ * A worker handle the tab can stop from the outside, releasing every Web Lock the worker held.
+ *
+ * A bare `MessagePort` is not one: `close()` detaches the channel and leaves `Worker.run` running
+ * with its storage and liveness locks, so forced displacement cannot be expressed through it.
+ */
+export interface TerminableWorker {
+  terminate(): void;
+}
+
+/** Whether this handle can stand its worker down without the worker's cooperation. */
+export const isTerminable = (worker: WorkerOrPort): worker is WorkerOrPort & TerminableWorker =>
+  'terminate' in worker && typeof worker.terminate === 'function';
 
 /**
  * Postable form of an error; structured clone drops a custom `name` and, on some engines, the `cause` chain.
@@ -190,5 +261,10 @@ export interface WorkerEndpoint {
  */
 export interface WorkerCoordinator {
   readonly onMessage: Event<CoordinatorMessage>;
+  /**
+   * Fires when the link itself has failed, e.g. the coordinator worker's script did not load. Nothing
+   * sent or awaited on this coordinator will complete afterwards.
+   */
+  readonly onError?: Event<Error>;
   sendMessage(message: CoordinatorMessage): void;
 }

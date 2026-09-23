@@ -24,9 +24,9 @@ import { range } from '@dxos/util';
 
 import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing/index.ts';
 import { AutomergeHost } from './automerge-host.ts';
-import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
+import { deleteSubductionRemoteHeads } from './subduction-migrations/0001_delete_remote_heads.ts';
 import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate } from './subduction-test-utils.ts';
 
 describe('AutomergeHost with Subduction', () => {

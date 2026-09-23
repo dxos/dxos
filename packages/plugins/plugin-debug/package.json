@@ -66,13 +66,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Debug": {
       "source": "./src/types/Debug.ts",
       "types": "./dist/types/src/types/Debug.d.ts",
@@ -103,15 +96,47 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
+    "./IncidentSpace": {
+      "source": "./src/samples/incident/IncidentSpace.ts",
+      "types": "./dist/types/src/samples/incident/IncidentSpace.d.ts",
+      "import": "./dist/lib/IncidentSpace.mjs"
+    },
+    "./PipelineSpace": {
+      "source": "./src/samples/crm/PipelineSpace.ts",
+      "types": "./dist/types/src/samples/crm/PipelineSpace.d.ts",
+      "import": "./dist/lib/PipelineSpace.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./sample": {
-      "source": "./src/sample/index.ts",
-      "types": "./dist/types/src/sample/index.d.ts",
-      "import": "./dist/lib/sample.mjs"
+    "./StockfishSpace": {
+      "source": "./src/samples/stockfish/StockfishSpace.ts",
+      "types": "./dist/types/src/samples/stockfish/StockfishSpace.d.ts",
+      "import": "./dist/lib/StockfishSpace.mjs"
+    },
+    "./TidepoolSpace": {
+      "source": "./src/samples/tidepool/TidepoolSpace.ts",
+      "types": "./dist/types/src/samples/tidepool/TidepoolSpace.d.ts",
+      "import": "./dist/lib/TidepoolSpace.mjs"
+    },
+    "./WeatherSpace": {
+      "source": "./src/samples/weather/WeatherSpace.ts",
+      "types": "./dist/types/src/samples/weather/WeatherSpace.d.ts",
+      "import": "./dist/lib/WeatherSpace.mjs"
+    },
+    "./WorkerSpace": {
+      "source": "./src/samples/worker/WorkerSpace.ts",
+      "types": "./dist/types/src/samples/worker/WorkerSpace.d.ts",
+      "import": "./dist/lib/WorkerSpace.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -142,7 +167,7 @@
     "scripts"
   ],
   "scripts": {
-    "build-sample": "vite-node ./scripts/build-sample-space.ts"
+    "build-template": "vite-node ./scripts/build-template-archive.ts"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -197,7 +222,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "react-resize-detector": "catalog:"

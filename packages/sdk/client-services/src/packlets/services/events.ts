@@ -13,7 +13,7 @@ import { type Identity } from '../identity/index.ts';
 //
 //   Opening → StorageReady → IdentityLoaded → NetworkReady   (host emits Opening, then cascades).
 //   IdentityBound                                            (a created or accepted identity).
-//   IdentityAvailable → DataSpacesReady                      (identity-bound services).
+//   IdentityAvailable → DataSpacesAvailable                      (identity-bound services).
 //   StackOpened                                              (host, once the cascade is done).
 //   NetworkingEnabled                                        (auto-connect, or the embedder).
 //
@@ -52,7 +52,7 @@ export const IdentityBound = Hook.make<{ identity: Identity; deviceCredential?: 
 export const IdentityAvailable = Hook.make<{ identity: Identity }>()('client-services/IdentityAvailable');
 
 /** The data space manager is open. */
-export const DataSpacesReady = Hook.make<{ identity: Identity }>()('client-services/DataSpacesReady');
+export const DataSpacesAvailable = Hook.make<{ identity: Identity }>()('client-services/DataSpacesAvailable');
 
 /** The open sequence has completed, with or without an identity. */
 export const StackOpened = Hook.make<void>()('client-services/StackOpened');

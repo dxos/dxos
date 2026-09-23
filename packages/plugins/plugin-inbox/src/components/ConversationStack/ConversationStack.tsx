@@ -663,7 +663,7 @@ const useSystemTag = (
   const db = mailbox && Obj.getDatabase(mailbox);
   const tag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(tagId)]))[0];
   const tagUri = tag && Obj.getURI(tag).toString();
-  const tagIndex = mailbox?.tags?.target;
+  const tagIndex = useResolveRef(mailbox?.tags);
   const taggedAtom = useMemo(
     () => (tagIndex && tagUri && message ? TagIndex.atom(tagIndex, message.id, tagUri) : NOT_TAGGED),
     [tagIndex, message, tagUri],

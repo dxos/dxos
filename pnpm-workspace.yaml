@@ -91,19 +91,19 @@ catalog:
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-rx/rx-react': ^0.42.4
-  '@effect/ai-anthropic': 4.0.0-rc.115
-  '@effect/ai-openai': 4.0.0-rc.115
-  '@effect/atom-react': 4.0.0-rc.115
+  '@effect/ai-anthropic': 4.0.0-rc.117
+  '@effect/ai-openai': 4.0.0-rc.117
+  '@effect/atom-react': 4.0.0-rc.117
   '@effect/language-service': ^0.86.4
-  '@effect/opentelemetry': 4.0.0-rc.115
-  '@effect/platform-browser': 4.0.0-rc.115
-  '@effect/platform-bun': 4.0.0-rc.115
-  '@effect/platform-node': 4.0.0-rc.115
-  '@effect/sql-sqlite-bun': 4.0.0-rc.115
-  '@effect/sql-sqlite-node': 4.0.0-rc.115
-  '@effect/sql-sqlite-wasm': 4.0.0-rc.115
+  '@effect/opentelemetry': 4.0.0-rc.117
+  '@effect/platform-browser': 4.0.0-rc.117
+  '@effect/platform-bun': 4.0.0-rc.117
+  '@effect/platform-node': 4.0.0-rc.117
+  '@effect/sql-sqlite-bun': 4.0.0-rc.117
+  '@effect/sql-sqlite-node': 4.0.0-rc.117
+  '@effect/sql-sqlite-wasm': 4.0.0-rc.117
   '@effect/tsgo': ^0.36.5
-  '@effect/vitest': 4.0.0-rc.115
+  '@effect/vitest': 4.0.0-rc.117
   '@effect/wa-sqlite': ^0.1.2
   '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
@@ -387,7 +387,7 @@ catalog:
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 4.0.0-rc.115
+  effect: 4.0.0-rc.117
   elkjs: ^0.12.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
@@ -788,7 +788,6 @@ peerDependencyRules:
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
-    # @effect/platform-node declares it for its Redis integration, which nothing here uses.
     - redis
     - stage-js
     - webpack

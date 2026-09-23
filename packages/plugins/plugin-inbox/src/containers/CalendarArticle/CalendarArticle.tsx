@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -43,7 +43,6 @@ export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calend
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   const [calendar] = useObject(subject);
   const db = Obj.getDatabase(calendar);
   // The calendar's graph node id: events open as its children and it is their pivot.
@@ -55,7 +54,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   // Pushing draft events to Google Calendar requires a connection bound to this calendar.
   const { connection } = useTargetConnection(subject);
 
-  const feed = calendar.feed?.target;
+  const feed = useResolveRef(calendar.feed);
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
   // to this calendar (not yet pushed to Google). Overlay both on the calendar.
   const syncedEvents = useQuery(
@@ -73,7 +72,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = calendar.tags?.target;
+  const tagIndex = useResolveRef(calendar.tags);
   const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
     return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;

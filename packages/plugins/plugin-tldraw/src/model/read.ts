@@ -8,7 +8,7 @@
 // resize shapes in the UI. An object's `origin` is the top-left of its bounding box.
 //
 
-import { type ReadResult, type ReadWorldObject, type Scene } from '@dxos/plugin-illustrator/model';
+import { type ReadResult, type ReadWorldObject, type Scene } from '@dxos/diagram';
 
 import { type CanvasContent } from './RecordBuilder.ts';
 import { type ExternalBox } from './render.ts';

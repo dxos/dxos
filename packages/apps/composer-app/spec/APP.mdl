@@ -46,6 +46,9 @@ test QA-1: Spaces and documents
   desc: The smallest journey through the app — a space, three documents, one deletion, and what survives.
   actors: both
   status: passing           # 2026-09-10, smoke run 3
+  automated:
+    - composer-e2e:basic.spec.ts#Basic tests › create document
+    - composer-e2e:collections.spec.ts#Collection tests › create collection
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
@@ -163,6 +166,8 @@ test QA-2: Rename, undo and a second space
   desc: Rename through the update operation, delete and undo from the toast, and switch between two spaces.
   actors: both
   status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 2 (which passed 2026-09-07)
+  automated:
+    - composer-e2e:collections.spec.ts#Collection tests › deletion undo restores collection
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
@@ -279,6 +284,13 @@ test QA-3: Comments
   actors: both
   covers: [review:F-1]
   status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 3 (which passed 2026-09-07)
+  automated:
+    - composer-e2e:comments.spec.ts#Comments tests › create
+    - composer-e2e:comments.spec.ts#Comments tests › edit message
+    - composer-e2e:comments.spec.ts#Comments tests › delete message
+    - composer-e2e:comments.spec.ts#Comments tests › delete thread
+    - composer-e2e:comments.spec.ts#Comments tests › undo delete thread
+    - composer-e2e:comments.spec.ts#Comments tests › selecting comment highlights thread and vice versa
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
@@ -380,6 +392,8 @@ test QA-4: The assistant edits the document
   actors: both
   covers: [assistant:F-1]
   status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 4 (which passed 2026-09-07)
+  automated:
+    - composer-e2e:chat.spec.ts#Chat › sends a message and receives a response
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
@@ -450,6 +464,200 @@ test QA-4: The assistant edits the document
           $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
 ```
 
+```mdl
+test QA-5: First run and logout
+  desc: What a brand new identity lands on, and what survives logging out — the journey every other test starts from.
+  actors: human
+  status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/basic.spec.ts
+  automated:
+    - composer-e2e:basic.spec.ts#Basic tests › create identity, space is created by default
+    - composer-e2e:basic.spec.ts#Basic tests › create space, which is displayed in tree
+    - composer-e2e:basic.spec.ts#Basic tests › logout
+  given:
+    - no identity exists — a first run, not a reset of an existing profile
+  steps:
+    - name: Boot into a new identity
+      do: Open the app with empty storage and let onboarding create the identity.
+      expect: |
+        exactly ONE space is listed, and the deck shows Home with a "Recent" heading listing the
+        seeded README. The exemplar space is NOT seeded on localhost, so a second space here means
+        the wrong build.
+    - name: Create a second space
+      do: Open the space list's + and create a space.
+      expect: the navtree lists two spaces
+    - name: Log out
+      do: Open the user's Devices panel and choose Log out.
+      expect: |
+        storage is wiped and the page reloads on its own. Boot after a reset is SLOW (~8-11s) —
+        an assertion here needs several times the usual budget before it means anything.
+    - name: A fresh identity comes back
+      do: Wait for the reload to settle.
+      expect: one space again — the second one is gone with the identity that owned it
+  then:
+    - no error is logged at any point; a reset that throws still reloads, so the reload alone is not the criterion
+```
+
+```mdl
+test QA-6: Collections — nest, reorder, delete and undo
+  desc: The navtree's containment model: a collection holds objects, drag changes containment and order, and a delete is undoable with its contents.
+  actors: human
+  status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/collections.spec.ts
+  automated:
+    - composer-e2e:collections.spec.ts#Collection tests › re-order collections
+    - composer-e2e:collections.spec.ts#Collection tests › drag object into collection
+    - composer-e2e:collections.spec.ts#Collection tests › delete a collection
+    - composer-e2e:collections.spec.ts#Collection tests › deletion undo restores collection
+  given:
+    - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
+    - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
+  before:
+    - name: Create a space
+      do: Create a space "QA: Collections $runId"; the navtree switches to it.
+      invoke: org.dxos.operation.space.create { name: "QA: Collections $runId" }
+      capture: space
+      expect: the space exists and is ready
+      assert: return $snapshot.spaces.some((s) => s.id === $space.id && s.state === 'SPACE_READY')
+  steps:
+    - name: Create two collections
+      do: Click + on the space, choose Collection, twice. Rename them "Collection 1" and "Collection 2".
+      expect: |
+        both appear under the space's Collections section. The section starts COLLAPSED, so a
+        missing row here usually means it was never expanded rather than never created.
+    - name: Reorder them
+      do: Drag "Collection 2" above "Collection 1".
+      expect: the navtree lists "Collection 2" then "Collection 1"
+      note: |
+        Rows are 32px tall, so the drop lands beside rather than inside only if the pointer clears
+        the row's midpoint. This step has no operation behind it by nature — the thing under test
+        is the drag.
+    - name: Nest one inside the other
+      do: Select "Collection 2", then drag "Collection 1" onto it.
+      expect: |
+        "Collection 1" is now a child of "Collection 2". A row's `data-object-id` is its canonical
+        graph path, so the child's path is the parent's path plus one segment — that, not the
+        rendered indentation, is what containment means here.
+      note: |
+        Selecting the target first is load-bearing: an unvisited collection takes a drop BESIDE it
+        rather than inside it, which reads as the drag having silently failed.
+    - name: Delete the outer collection
+      do: Open the ⋮ menu on "Collection 2" and choose Delete.
+      expect: both rows leave the navtree — deleting a collection takes its contents with it — and a toast with Undo appears
+    - name: Undo
+      do: Press Undo in the toast.
+      expect: |
+        the collection AND everything that was inside it come back, nesting intact. A partial
+        restore (the container without its children) is the defect this step exists to catch.
+  after:
+    - name: Delete the space
+      do: Delete the space from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($space.id) }
+      expect: it leaves the space list
+    - name: Return to the default space
+      do: Pick the default space.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
+      expect: no "QA:" space remains and the workspace is the default space
+```
+
+```mdl
+test QA-7: A second device on one identity
+  desc: Joining a device to an existing identity, and what replicates to it afterwards — settings and space membership.
+  actors: human
+  status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/halo.spec.ts
+  automated:
+    - composer-e2e:halo.spec.ts#HALO tests › join new identity
+    - composer-e2e:halo.spec.ts#HALO tests › settings sync across devices, and one device can keep its own
+    - composer-e2e:halo.spec.ts#HALO tests › deleting a space replicates across devices
+  given:
+    - deviceA: a booted app with an identity
+    - deviceB: a SECOND browser profile, empty — not a second tab, which would share storage and prove nothing
+  steps:
+    - name: Invite the second device
+      do: On device A open Devices and create a device invitation; enter the code on device B.
+      expect: device B lands on device A's identity and its workspace root, and A's Devices list shows two devices
+      note: |
+        B stops at the workspace ROOT, not at `/home` — a joined device does not replay the
+        first-run navigation, so asserting A's landing URL here fails for the wrong reason.
+    - name: Change a synced setting on A
+      do: Change a setting that belongs to the identity rather than to the installation.
+      expect: device B shows the new value without a reload
+    - name: Change a device-local setting on B
+      do: Change a setting that is explicitly per-device.
+      expect: |
+        A keeps its own value. This is the half that a naive "sync everything" implementation
+        breaks, and it fails silently — both devices simply agree.
+    - name: Delete a space on A
+      do: Delete a space from its settings on device A.
+      expect: the space leaves device B's space list too
+  then:
+    - no error is logged on either device; a replication failure often surfaces only in the log
+```
+
+```mdl
+test QA-8: Two peers in one space
+  desc: Sharing a space by invitation and editing one document from both sides — the collaboration path, as opposed to QA-7's one-identity replication.
+  actors: human
+  status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/collaboration.spec.ts
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › guest joins host's space
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' changes in same document
+  given:
+    - host: a booted app with an identity and a space containing one document
+    - guest: a SECOND browser profile with its own, different identity
+  steps:
+    - name: Invite the guest
+      do: On the host, open the space's share panel, create an invitation, and redeem it on the guest.
+      expect: the guest's navtree lists the host's space, and the document in it
+    - name: Both open the document
+      do: Open the same document on both peers.
+      expect: each peer's editor shows the same text
+    - name: Type on the host
+      do: Type into the document on the host.
+      expect: the guest's editor shows the host's text without a reload
+    - name: Type on the guest
+      do: Type into the same document on the guest.
+      expect: |
+        the host shows the guest's text, and NEITHER peer has lost the other's. Convergence is the
+        criterion — last-writer-wins would satisfy a per-peer check and still be the bug.
+  then:
+    - the two documents' text is identical once both peers are idle
+```
+
+```mdl
+test QA-9: The guided tours
+  desc: The help tours, including the steps other plugins contribute to a document's tour.
+  actors: human
+  status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/tour.spec.ts
+  automated:
+    - composer-e2e:tour.spec.ts#Tour tests › the global tour runs from the Home help companion and advances
+    - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up steps contributed by other plugins
+  given:
+    - an identity exists and the app is on Home
+  steps:
+    - name: Start the global tour
+      do: Open the help companion on Home and start the tour.
+      expect: the first step is "Sharing"
+    - name: Advance and go back
+      do: Press Next, then Back.
+      expect: the tour moves to "Creating content" and returns to "Sharing" — a tour that only advances is half-implemented
+    - name: Walk it to the end
+      do: Press Next until the tour finishes.
+      expect: |
+        the steps appear in order: Sharing, Creating content, Profile, Settings, Plugins,
+        Companions, Feedback
+    - name: Open a document and start its tour
+      do: Create a document, open the help companion on it, and start the tour.
+      expect: |
+        the steps include ones this plugin does not own — Comments comes from plugin-review and
+        Dictate from plugin-transcription. Their absence means contribution is broken, not that the
+        tour is short.
+      note: |
+        Contributed fragments arrive asynchronously; starting the tour before they land yields a
+        shorter tour that is otherwise indistinguishable from a correct one.
+    - name: The global tour still works afterwards
+      do: Reload the page and run the global tour again.
+      expect: it runs from "Sharing" to "Feedback" as before
+```
+
 ## Suites
 
 ```mdl
@@ -463,7 +671,24 @@ suite smoke: Boots, one space, three documents, one deletion
 suite basics: The app-level journeys
   desc: Spaces, documents, rename, undo and comments. No AI provider needed.
   tags: [nightly]
-  tests: [QA-1, QA-2, QA-3]
+  tests: [QA-1, QA-2, QA-3, QA-5, QA-6]
+```
+
+```mdl
+suite multi-peer: Journeys that need a second browser profile
+  desc: |
+    A second device on one identity, and a second identity in one space. Their own suite because
+    every member needs a profile the other suites do not: a second TAB shares storage and would
+    pass these without replicating anything.
+  tags: [nightly]
+  tests: [QA-7, QA-8]
+```
+
+```mdl
+suite onboarding: First run, logout and the guided tours
+  desc: What a new identity sees, and the help surface that explains it.
+  tags: [nightly]
+  tests: [QA-5, QA-9]
 ```
 
 ```mdl

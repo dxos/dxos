@@ -47,6 +47,11 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   );
 };
 
+/** What a row opens. A section node groups rows without standing for anything itself. */
+const hasSubject = (node: AppGraphNode.Node) => !!node.data;
+
+const isSelectable = (node: AppGraphNode.Node) => hasSubject(node) && (node.properties.selectable ?? true);
+
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   tab: string;
@@ -137,9 +142,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       return target.item.properties.canDrop?.(source) ?? false;
     }, []);
 
-    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
-      return item.properties.selectable ?? true;
-    }, []);
+    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => isSelectable(item), []);
 
     const handleSelect = useCallback(
       ({
@@ -147,13 +150,15 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         path,
         option,
         shift,
+        keyboard = false,
       }: {
         item: AppGraphNode.Node;
         path: string[];
         option: boolean;
         shift: boolean;
+        keyboard?: boolean;
       }) => {
-        if (!node.data) {
+        if (!isSelectable(node)) {
           return;
         }
 
@@ -165,6 +170,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           return;
         }
 
+        const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
         if (!current) {
           // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
@@ -173,11 +179,12 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             subject: [node.id],
             disposition: 'solo',
             modifiers: { shift },
+            focus,
           });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
+          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
         }
 
         const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>

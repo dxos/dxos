@@ -34,6 +34,8 @@ import { computeActiveUpdates } from './set-active.ts';
 export type NavigationIntent = {
   /** The plank this write focuses; an intent that names none declines the focus outright. */
   scrollIntoView?: string;
+  /** Where that focus lands; unset means the plank itself. */
+  focus?: boolean | 'content';
   /** Run the write as the update step of a view transition, so the content region crossfades. */
   transition?: boolean;
 };
@@ -55,9 +57,8 @@ export const applyActive = Effect.fnUntraced(function* (
   const stateAtom = yield* Capability.get(DeckCapabilities.State);
   const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
 
-  const ephemeral = registry.get(ephemeralAtom);
   const workspace = registry.get(stateAtom).activeDeck;
-  const open = ephemeral.open[workspace];
+  const open = registry.get(ephemeralAtom).open[workspace];
   const next = planks.map(({ id }) => id);
   const segments = Object.fromEntries(planks.flatMap(({ id, segment }) => (segment ? [[id, segment] as const] : [])));
   const { deckUpdates, toAttend } = computeActiveUpdates({
@@ -82,15 +83,17 @@ export const applyActive = Effect.fnUntraced(function* (
     // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
     // mounts its plank.
     if (changed || scrollIntoView !== undefined) {
-      registry.set(ephemeralAtom, {
-        ...ephemeral,
-        open: { ...ephemeral.open, [workspace]: { ...open, active, inactive, segments } },
-        ...(scrollIntoView !== undefined ? { scrollIntoView: { id: scrollIntoView } } : {}),
-      });
+      registry.update(ephemeralAtom, (current) => ({
+        ...current,
+        open: { ...current.open, [workspace]: { ...current.open[workspace], active, inactive, segments } },
+        ...(scrollIntoView !== undefined
+          ? { scrollIntoView: { id: scrollIntoView, ...(intent?.focus !== undefined ? { focus: intent.focus } : {}) } }
+          : {}),
+      }));
     }
     const stored = registry.get(stateAtom).decks[workspace];
     if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
-      registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
+      registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, plankNames }));
     }
   });
 

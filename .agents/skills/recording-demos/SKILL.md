@@ -43,8 +43,14 @@ the stills if the video adds nothing.
 ## 1. Get the app running
 
 ```bash
-DX_PWA=false moon run composer-app:serve -- --port 4173
+DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173
 ```
+
+**`VITE_DX_DISABLE_ANIMATIONS=true` is not optional here.** It turns off animation that runs without
+a user gesture — the tour's carousel auto-advancing every 10s is the one that bites — and unattended
+motion defeats §4 entirely: every frame differs from the last, so the trimmer finds no still runs to
+cull and a 13-minute session stays 13 minutes. Check it took effect the same way §4 does, from
+`--report`: a session that sat idle should be almost all `stillSeconds`.
 
 Wait for `ready in`. In the cloud sandbox, first read the `cloud-sandbox` skill — the dev server
 needs a full dependency build (`moon run composer-app:build`), and Chromium needs the proxy flags
@@ -53,7 +59,8 @@ that `driver.mjs` already applies.
 ### Storybook, when the demo is a component
 
 ```bash
-DX_STORIES=plugins/plugin-assistant,stories/stories-assistant moon run storybook-react:serve
+DX_STORIES=plugins/plugin-assistant,stories/stories-assistant VITE_DX_DISABLE_ANIMATIONS=true \
+  moon run storybook-react:serve
 ```
 
 `DX_STORIES` narrows which packages are crawled (see `.storybook/main.ts`); unset it and the whole
@@ -116,10 +123,14 @@ C '{"op":"screenshot","name":"01-registry.png"}'
 C '{"op":"stop"}'          # closes the context — this is what writes the video
 ```
 
-Ops: `goto` `click` `fill` `type` `press` `hover` `drag` `waitFor` `text` `count` `eval` `caption`
-`clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
+Ops: `goto` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval`
+`caption` `clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
+
+`press` also flashes a key chip in the top-right (`⌘ ⇧ K`), so a recording of a shortcut shows what
+was pressed — pass `"hud": false` to suppress it, or `keys` to raise the chip for a gesture the
+driver did not perform. The chip is the proof; without it a palette just appears.
 
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.
@@ -138,7 +149,8 @@ came from. A viewer then sees the spec and the app agreeing, which is the whole 
 ## 4. Trim the dead air
 
 An agent-driven recording is almost entirely still frames: the browser holds one frame while you decide
-the next gesture. Measure before tuning — `--report` costs one decode and no encode:
+the next gesture — provided nothing on the page animates on its own, which is why §1 sets
+`VITE_DX_DISABLE_ANIMATIONS=true`. Measure before tuning — `--report` costs one decode and no encode:
 
 ```bash
 node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --report

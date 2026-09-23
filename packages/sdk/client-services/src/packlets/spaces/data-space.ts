@@ -634,7 +634,7 @@ export class DataSpace {
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
     await this.inner.controlPipeline.state.waitUntilTimeframe(timeframe);
-    await this._echoHost.updateIndexes();
+    await this._echoHost.updateIndexes({ reason: 'epoch' });
 
     return { credential, timeframe };
   }

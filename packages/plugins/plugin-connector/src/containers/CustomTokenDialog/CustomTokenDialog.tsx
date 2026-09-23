@@ -98,7 +98,7 @@ export const CustomTokenDialog = ({
           </Dialog.Close>
         </Dialog.Header>
         <Dialog.Body>
-          <p className='text-error'>{t('provider-form-dialog.no-form.message')}</p>
+          <p className='text-error-text'>{t('provider-form-dialog.no-form.message')}</p>
         </Dialog.Body>
       </Dialog.Content>
     );
@@ -130,7 +130,7 @@ export const CustomTokenDialog = ({
             </Form.Content>
           </Column.Center>
         </Form.Root>
-        {error && <p className='text-error'>{error}</p>}
+        {error && <p className='text-error-text'>{error}</p>}
       </Dialog.Body>
     </Dialog.Content>
   );

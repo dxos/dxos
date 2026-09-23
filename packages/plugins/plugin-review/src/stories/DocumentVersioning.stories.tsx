@@ -65,8 +65,6 @@ import {
 } from '../testing/index.ts';
 import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook.ts';
 
-const concat = (...lines: string[]) => lines.join('\n');
-
 /** The phrase the story's seeded comment thread is anchored to; must appear in the story document. */
 const COMMENT_ANCHOR = 'Reviewers can work through the changes';
 
@@ -115,7 +113,7 @@ const AmbientReviewPlugin = Plugin.define(
   Plugin.make,
 );
 
-const PROSE = concat(
+const PROSE = [
   '# Release notes',
   '',
   'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against',
@@ -130,9 +128,9 @@ const PROSE = concat(
   '',
   'The last paragraph exists so there is something to delete at the end of the document.',
   '',
-);
+].join('\n');
 
-const PROSE_SUGGESTION_BOB = concat(
+const PROSE_SUGGESTION_BOB = [
   '# Release notes',
   '',
   'The editor now tracks suggestions from every collaborator at once. Each proposal is diffed against',
@@ -150,9 +148,9 @@ const PROSE_SUGGESTION_BOB = concat(
   '',
   'Bob also proposes this closing line, so a suggestion sits at the very end of the document.',
   '',
-);
+].join('\n');
 
-const PROSE_SUGGESTION_ALICE = concat(
+const PROSE_SUGGESTION_ALICE = [
   '# Release notes',
   '',
   'The editor now tracks suggestions from every collaborator at once, which is the point of the whole',
@@ -168,7 +166,7 @@ const PROSE_SUGGESTION_ALICE = concat(
   '',
   'The last paragraph exists so there is something to delete at the end of the document.',
   '',
-);
+].join('\n');
 
 // Play functions drive document edits through the data layer (exercising the editor's live
 // automerge binding) and all versioning actions through the UI. Captured per story run.
@@ -412,7 +410,7 @@ export const EditingTyping: Story = {
  */
 export const TimeTravel: Story = {
   args: {
-    content: concat('1'),
+    content: '1',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -915,8 +913,8 @@ export const SuggestingTest: Story = {
  */
 export const ReviewChromeTest: Story = {
   args: {
-    content: concat('# Hello World', ''),
-    suggestions: [{ creator: 'did:bob', content: concat('# Hello World', '', 'Bob: add an example.', '') }],
+    content: ['# Hello World', ''].join('\n'),
+    suggestions: [{ creator: 'did:bob', content: ['# Hello World', '', 'Bob: add an example.', ''].join('\n') }],
   },
   parameters: {
     ambientReview: true,

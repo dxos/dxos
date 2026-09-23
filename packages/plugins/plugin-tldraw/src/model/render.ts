@@ -8,7 +8,7 @@
 // so `read.ts` can reconstruct the scene and edits can address records by id.
 //
 
-import { Scene } from '@dxos/plugin-illustrator/model';
+import { Scene } from '@dxos/diagram';
 
 import {
   type CanvasContent,
@@ -92,8 +92,8 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
     builder.external(handle, box);
   }
 
-  // Refs are element ids within this object, or `objectId/elementId` across objects.
-  const ref = (value: string) => (value.includes('/') ? value : `${object.id}/${value}`);
+  // tldraw binds to the shape, so an endpoint's `#port` is dropped.
+  const ref = (value: string) => Scene.resolveRef(value, object.id);
 
   for (const element of object.elements) {
     const handle = `${object.id}/${element.id}`;

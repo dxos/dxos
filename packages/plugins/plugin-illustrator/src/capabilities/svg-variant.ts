@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { SVG_SCHEMA } from '@dxos/diagram';
 
 import { SvgArticle } from '#containers';
-import { SVG_SCHEMA, SvgBuilder } from '#model';
+import { SvgBuilder } from '#model';
 import { IllustratorCapabilities } from '#types';
 
 // The scene DSL is stored verbatim in the base `Drawing.Canvas` (no renderer-native encoding),

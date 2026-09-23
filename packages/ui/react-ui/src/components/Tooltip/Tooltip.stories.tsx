@@ -11,19 +11,20 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
 import { Button } from '../Button/index.ts';
-import { Tooltip } from './Tooltip.tsx';
+import { Tooltip, type TooltipSide } from './Tooltip.tsx';
 
 type StoryArgs = {
   tooltips: { label: string; content: string }[];
+  side?: TooltipSide;
   defaultOpen?: boolean;
 };
 
-const DefaultStory = ({ tooltips, defaultOpen }: StoryArgs) => {
+const DefaultStory = ({ tooltips, side, defaultOpen }: StoryArgs) => {
   return (
     <Tooltip.Provider defaultOpen={defaultOpen}>
       <div className='w-32'>
         {tooltips.map(({ label, content }, i) => (
-          <Tooltip.Trigger asChild key={i} content={content} side='right'>
+          <Tooltip.Trigger asChild key={i} content={content} side={side}>
             <Button classNames='block w-full'>{label}</Button>
           </Tooltip.Trigger>
         ))}
@@ -37,32 +38,84 @@ const meta = {
   component: Tooltip as any,
   render: DefaultStory,
   decorators: [withTheme()],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const tooltips = [
+  {
+    label: 'Tooltip trigger',
+    content: 'This is the tooltip content',
+  },
+];
+
 export const Default: Story = {
   args: {
-    tooltips: [
-      {
-        label: 'Tooltip trigger',
-        content: 'This is the tooltip content',
-      },
-    ],
+    tooltips,
   },
 };
 
 export const DefaultOpen: Story = {
   args: {
     defaultOpen: true,
-    tooltips: [
-      {
-        label: 'Tooltip trigger',
-        content: 'This is the tooltip content',
-      },
-    ],
+    tooltips,
+  },
+  play: async () => {
+    // Portaled, so read from the document; open on mount, before any trigger is hovered.
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+  },
+};
+
+export const Left: Story = {
+  args: {
+    defaultOpen: true,
+    tooltips,
+    side: 'left',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('left');
+  },
+};
+
+export const Right: Story = {
+  args: {
+    defaultOpen: true,
+    tooltips,
+    side: 'right',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('right');
+  },
+};
+
+export const Top: Story = {
+  args: {
+    defaultOpen: true,
+    tooltips,
+    side: 'top',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('top');
+  },
+};
+
+export const Bottom: Story = {
+  args: {
+    defaultOpen: true,
+    tooltips,
+    side: 'bottom',
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
+    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('bottom');
   },
 };
 
@@ -74,7 +127,9 @@ export const StressTest: Story = {
         label: random.lorem.words(2),
         content: random.lorem.words(5),
       }),
-      { count: 32 },
+      {
+        count: 32,
+      },
     ),
   },
 };

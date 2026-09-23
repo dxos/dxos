@@ -5,7 +5,7 @@
 import { createTLSchema } from '@tldraw/tlschema';
 import { describe, test } from 'vitest';
 
-import { type Scene } from '@dxos/plugin-illustrator/model';
+import { type Scene } from '@dxos/diagram';
 
 import { applyCommands } from './builder.ts';
 import { readScene } from './read.ts';

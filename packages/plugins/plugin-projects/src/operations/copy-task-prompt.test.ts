@@ -131,6 +131,6 @@ const setup = async () => {
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return harness;
 };

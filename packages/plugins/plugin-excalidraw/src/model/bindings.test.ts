@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, Mermaid } from '@dxos/plugin-illustrator/model';
+import { type ContentMap, Mermaid } from '@dxos/diagram';
 
 import { applyCommands } from './builder.ts';
 

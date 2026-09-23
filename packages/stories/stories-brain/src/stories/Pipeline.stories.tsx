@@ -510,7 +510,8 @@ const meta = {
       // TODO(burdon): From const.
       space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
       space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
-      await space.db.flush({ indexes: true });
+      // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+      await space.db.flush({ indexes: true, secondaryIndexes: true });
     },
     plugins: [
       SpacePlugin({}),

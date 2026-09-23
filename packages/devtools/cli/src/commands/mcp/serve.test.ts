@@ -10,7 +10,7 @@ import path from 'node:path';
 
 import { invariant } from '@dxos/invariant';
 
-import { dxBin } from '../../testing/index.ts';
+import { MCP_REQUEST_META, dxBin } from '../../testing/index.ts';
 
 /**
  * Protocol-level test for `dx mcp serve`: drives a real MCP session over stdio against an isolated
@@ -30,14 +30,8 @@ const SKILL = 'project';
  */
 const PROMPTS = [SKILL, 'database', 'registry'];
 
-const REQUESTS = [
-  {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'initialize',
-    params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '1' } },
-  },
-  { jsonrpc: '2.0', method: 'notifications/initialized' },
+/** The requests every session sends after its own opening, whichever revision it speaks. */
+const SURFACE_REQUESTS = [
   { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
   { jsonrpc: '2.0', id: 3, method: 'prompts/list', params: {} },
   { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: SKILL } } },
@@ -70,7 +64,11 @@ const REQUESTS = [
     method: 'tools/call',
     params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.space.queryTypes' } },
   },
+  // `key` is required, so these arguments fail input decoding before the handler runs.
+  { jsonrpc: '2.0', id: 14, method: 'tools/call', params: { name: 'invokeOperation', arguments: {} } },
 ];
+
+const SURFACE_IDS = SURFACE_REQUESTS.map((request) => request.id);
 
 /** All that is left of the host-local toolkits; see the TODO on `space-tools.ts`. */
 const STATIC_TOOLS = ['whoami'];
@@ -98,10 +96,14 @@ const PROJECTED_OBJECT_OPERATIONS = [
   'addType',
 ];
 
-type Response = { id?: number; result?: any };
+type Response = { id?: number; result?: any; error?: any };
 
 /** Boots the server, sends the requests, and resolves once every awaited id has answered. */
-const runSession = (awaitedIds: number[], timeout: number): Promise<Map<number, Response>> =>
+const runSession = (
+  requests: readonly unknown[],
+  awaitedIds: number[],
+  timeout: number,
+): Promise<Map<number, Response>> =>
   new Promise((resolve, reject) => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-test-'));
     const child = spawn(dxBin, ['mcp', 'serve'], {
@@ -133,13 +135,16 @@ const runSession = (awaitedIds: number[], timeout: number): Promise<Map<number, 
       const lines = buffer.split('\n');
       buffer = lines.pop() ?? '';
       for (const line of lines.filter((entry) => entry.trim().length > 0)) {
+        let message: Response;
         try {
-          const message: Response = JSON.parse(line);
-          if (message.id !== undefined) {
-            responses.set(message.id, message);
-          }
+          message = JSON.parse(line);
         } catch {
-          // Not a protocol message; the transport is line-delimited JSON and anything else is noise.
+          // stdout is the protocol stream: any other line corrupts a strictly parsing client's session.
+          finish(new Error(`non-protocol line on stdout: ${line}`));
+          return;
+        }
+        if (message.id !== undefined) {
+          responses.set(message.id, message);
         }
       }
       if (awaitedIds.every((id) => responses.has(id))) {
@@ -148,33 +153,30 @@ const runSession = (awaitedIds: number[], timeout: number): Promise<Map<number, 
     });
     child.on('error', finish);
 
-    for (const request of REQUESTS) {
+    for (const request of requests) {
       child.stdin.write(`${JSON.stringify(request)}\n`);
     }
   });
 
-describe('dx mcp serve', () => {
-  // Booting a client, activating plugins and reading the operation registry costs far more than the
-  // assertions, so one session answers every request and each test reads its own reply.
-  let responses: Map<number, Response>;
-  beforeAll(async () => {
-    responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 90_000);
-  }, 120_000);
+/** `responses` holds a fixed, known set of request ids, so a missing one is a broken session. */
+const responseOf = (responses: Map<number, Response>, id: number): Response => {
+  const response = responses.get(id);
+  invariant(response, `no response for request ${id}`);
+  return response;
+};
 
-  /** `responses` is populated in `beforeAll` from a fixed, known set of request ids. */
-  const getResult = (id: number) => {
-    const response = responses.get(id);
-    invariant(response, `no response for request ${id}`);
-    return response.result;
-  };
+const resultOf = (responses: Map<number, Response>, id: number) => {
+  const response = responseOf(responses, id);
+  invariant(response.error === undefined, `request ${id} failed: ${JSON.stringify(response.error)}`);
+  return response.result;
+};
+
+/** Registers the assertions every protocol revision must satisfy against its session's replies. */
+const surfaceTests = (responses: () => Map<number, Response>) => {
+  const getResult = (id: number) => resultOf(responses(), id);
 
   test('serves a fixed tool surface, whatever the registry holds', ({ expect }) => {
-    const initialize = responses.get(1)!.result;
-    expect(initialize.serverInfo.name).to.equal('DXOS Spaces');
-    // The shared server instructions, applied by the projection's response passes over stdio.
-    expect(initialize.instructions).to.include('queryOperations');
-
-    const tools: { name: string; inputSchema: any }[] = responses.get(2)!.result.tools;
+    const tools: { name: string; inputSchema: any }[] = getResult(2).tools;
     const names = tools.map((tool) => tool.name);
     expect(names.slice().sort()).to.deep.equal([...STATIC_TOOLS, ...SURFACE_TOOLS].sort());
     // The point of the reshape: an operation is a row, never a tool, so the client's context does
@@ -187,7 +189,7 @@ describe('dx mcp serve', () => {
       expect(tool.inputSchema.type, `${tool.name} input schema`).to.equal('object');
     }
 
-    const prompts: { name: string }[] = responses.get(3)!.result.prompts;
+    const prompts: { name: string }[] = getResult(3).prompts;
     expect(prompts.map((prompt) => prompt.name).sort()).to.deep.equal([...PROMPTS].sort());
   });
 
@@ -226,12 +228,12 @@ describe('dx mcp serve', () => {
   // SEP-2640's contract: a skill reaches the model either way, so a client without prompt support
   // loses nothing. Asserted on this host because only a live session exercises both paths at once.
   test('serves the same skill through loadSkill and prompts/get', ({ expect }) => {
-    const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
+    const loaded = JSON.parse(getResult(4).content[0].text);
     expect(loaded.skills[0].name).to.equal(SKILL);
     expect(loaded.skills[0].key).to.equal('org.dxos.skill.project');
     expect(loaded.instructions).to.be.a('string').and.to.have.length.greaterThan(0);
 
-    const messages: { role: string; content: { type: string; text: string } }[] = responses.get(5)!.result.messages;
+    const messages: { role: string; content: { type: string; text: string } }[] = getResult(5).messages;
     expect(messages).to.have.length(1);
     expect(messages[0].role).to.equal('user');
     expect(messages[0].content.text).to.equal(loaded.instructions);
@@ -240,7 +242,7 @@ describe('dx mcp serve', () => {
   // A model recovers from a tool result and cannot see a protocol error, so an unknown name has to
   // come back as `isError` with the names it could have used.
   test('reports an unknown skill as a tool failure, not a protocol error', ({ expect }) => {
-    const failure = responses.get(6)!.result;
+    const failure = getResult(6);
     expect(failure.isError).to.be.true;
     expect(failure.content[0].text).to.include('noSuchSkill');
     expect(failure.content[0].text).to.include(SKILL);
@@ -257,7 +259,7 @@ describe('dx mcp serve', () => {
   // What an agent reaches for first — which plugins, which spaces, which types — is dispatched like
   // any other verb now; `whoami` is the one fact this host still answers with a tool of its own.
   test('dispatches a host verb that needs no space, on a profile with no spaces', ({ expect }) => {
-    const names: string[] = responses.get(2)!.result.tools.map((tool: { name: string }) => tool.name);
+    const names: string[] = getResult(2).tools.map((tool: { name: string }) => tool.name);
     for (const tool of STATIC_TOOLS) {
       expect(names, `${tool} is advertised`).to.include(tool);
     }
@@ -275,7 +277,7 @@ describe('dx mcp serve', () => {
   // moved to the `mutation` field of a queryOperations row, asserted above.
   test('advertises safety hints, with no read-only tool marked destructive', ({ expect }) => {
     const tools: { name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } }[] =
-      responses.get(2)!.result.tools;
+      getResult(2).tools;
     for (const tool of tools) {
       expect(tool.annotations?.destructiveHint, `${tool.name} destructiveHint`).to.be.a('boolean');
       if (tool.annotations?.readOnlyHint) {
@@ -301,8 +303,90 @@ describe('dx mcp serve', () => {
   // This profile has no identity, which is the interesting case: the tool has to say so as a tool
   // failure the model can act on rather than crashing the session.
   test('reports a missing identity as a tool failure', ({ expect }) => {
-    const failure = responses.get(8)!.result;
+    const failure = getResult(8);
     expect(failure.isError).to.be.true;
     expect(failure.content[0].text).to.include('dx account login');
+  });
+};
+
+describe('dx mcp serve', () => {
+  // Booting a client, activating plugins and reading the operation registry costs far more than the
+  // assertions, so one session answers every request and each test reads its own reply.
+  let responses: Map<number, Response>;
+  beforeAll(async () => {
+    responses = await runSession(
+      [
+        { jsonrpc: '2.0', id: 1, method: 'server/discover', params: { _meta: MCP_REQUEST_META } },
+        ...SURFACE_REQUESTS.map((request) => ({ ...request, params: { _meta: MCP_REQUEST_META, ...request.params } })),
+      ],
+      [1, ...SURFACE_IDS],
+      90_000,
+    );
+  }, 120_000);
+
+  test('server/discover advertises the revision, the surface and the instructions', ({ expect }) => {
+    const discover = resultOf(responses, 1);
+    expect(discover.supportedVersions).to.include('2026-07-28');
+    expect(discover.capabilities.tools).to.be.an('object');
+    expect(discover.capabilities.prompts).to.be.an('object');
+    expect(discover._meta['io.modelcontextprotocol/serverInfo'].name).to.equal('DXOS Spaces');
+    // The shared server instructions, applied by the projection's response passes over stdio.
+    expect(discover.instructions).to.include('queryOperations');
+  });
+
+  test('answers a tool call with a complete result', ({ expect }) => {
+    expect(resultOf(responses, 4).resultType).to.equal('complete');
+  });
+
+  surfaceTests(() => responses);
+
+  // This revision answers invalid tool input with a result the model can read and retry against.
+  test('reports schema-invalid tool arguments as a tool failure', ({ expect }) => {
+    const failure = resultOf(responses, 14);
+    expect(failure.isError).to.be.true;
+    expect(failure.content[0].text).to.include('key');
+  });
+});
+
+// TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support.
+describe('2025-era MCP client', () => {
+  let responses: Map<number, Response>;
+  beforeAll(async () => {
+    responses = await runSession(
+      [
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '1' } },
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        ...SURFACE_REQUESTS,
+        { jsonrpc: '2.0', id: 15, method: 'server/discover', params: { _meta: MCP_REQUEST_META } },
+      ],
+      [1, ...SURFACE_IDS, 15],
+      90_000,
+    );
+  }, 120_000);
+
+  test('initialize names the server and carries the instructions', ({ expect }) => {
+    const initialize = resultOf(responses, 1);
+    expect(initialize.serverInfo.name).to.equal('DXOS Spaces');
+    // The layer is configured with a name and version only, so a title means the shared identity was merged.
+    expect(initialize.serverInfo.title).to.be.a('string');
+    expect(initialize.instructions).to.include('queryOperations');
+  });
+
+  surfaceTests(() => responses);
+
+  // This revision maps invalid tool input to a protocol error, which a model never sees.
+  test('reports schema-invalid tool arguments as a protocol error', ({ expect }) => {
+    const response = responseOf(responses, 14);
+    expect(response.result).to.be.undefined;
+    expect(response.error.code).to.equal(-32602);
+  });
+
+  test('server/discover on the same connection advertises this revision', ({ expect }) => {
+    expect(resultOf(responses, 15).supportedVersions).to.include('2025-06-18');
   });
 });

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as GraphNode from './GraphNode.ts';

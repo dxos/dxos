@@ -4,7 +4,8 @@
 
 import { test } from '@playwright/test';
 
-import { STRESS_COMMANDS, runRandomCommand, seededRandom } from './stress-commands.ts';
+import { seededRandom } from '../testing/seeded-random.ts';
+import { STRESS_COMMANDS, runRandomCommand } from './stress-commands.ts';
 import { StressFleet } from './stress-fleet.ts';
 import { HARNESS_URL } from './stress-harness-server.ts';
 import { assertRecovered } from './stress-recovery.ts';

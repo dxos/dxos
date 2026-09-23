@@ -82,16 +82,19 @@ const LONG_BODY =
 // Fake AiService whose `model(...)` returns a LanguageModel layer that always responds with
 // `MOCK_SUMMARY`, so the operation handler's `yield* LanguageModel.generateText(...)`
 // resolves to a deterministic value without hitting any real provider.
-const mockAiServiceLayer = Layer.succeed(AiService.AiService, {
-  model: () =>
-    Layer.effect(
-      LanguageModel.LanguageModel,
-      LanguageModel.make({
-        generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
-        streamText: () => Stream.empty as any,
-      }),
-    ),
-});
+const mockAiServiceLayer = Layer.succeed(
+  AiService.AiService,
+  AiService.make({
+    languageModel: () =>
+      Layer.effect(
+        LanguageModel.LanguageModel,
+        LanguageModel.make({
+          generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
+          streamText: () => Stream.empty as any,
+        }),
+      ),
+  }),
+);
 
 const makeMessage = (text: string, subject = 'Quarterly planning') =>
   Obj.make(Message.Message, {

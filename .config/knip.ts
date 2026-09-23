@@ -392,6 +392,9 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
 const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
   // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
   'packages/core/compute/mcp-server': ['sharp'],
+  // `scripts/{generate,judge}-walkthrough.ts` call the model to run the walkthrough evals by hand.
+  // Neither ships with the package nor runs in CI, and the SDK is already in the workspace store.
+  'packages/plugins/plugin-github': ['@anthropic-ai/sdk'],
 };
 
 /**
@@ -568,6 +571,9 @@ const config: KnipConfig = {
     '@dxos-theme',
     // Supplied by the editor at runtime to extensions, never installed.
     'vscode',
+    // `cloudflare:test` and `cloudflare:workers` are virtual modules the Workers runtime provides;
+    // knip reads the scheme as a package name.
+    'cloudflare',
     // `dxos:` is a virtual scheme the function runtime resolves for user scripts; the script
     // templates that import it are shipped as text, not compiled.
     'dxos',

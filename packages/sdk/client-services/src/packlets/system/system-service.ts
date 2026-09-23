@@ -4,6 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
@@ -17,12 +18,12 @@ import { toServiceError } from '@dxos/protocols';
 import { type Platform, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SystemService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import { type Diagnostics, createDiagnosticsFromHandlers } from '../diagnostics/index.ts';
+import { type Diagnostics, createDiagnosticsFromRouter } from '../diagnostics/index.ts';
 import { IdentityManagerService } from '../identity/index.ts';
 import { Closing, Reset, StackOpened, WipingStorage } from '../services/events.ts';
-import { type RpcServicesContext, rpcHandlersFromStack } from '../services/handlers.ts';
 import { getPlatform } from '../services/platform.ts';
 import { DataSpaceManagerService } from '../spaces/index.ts';
 
@@ -48,6 +49,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   readonly #status = MulticastObservable.from(this.#statusChanged, SystemStatus.INACTIVE);
   readonly #options: SystemServiceOptions;
   #resetting = false;
+  #resetFiber: Fiber.Fiber<void> | undefined;
 
   'constructor'(options: SystemServiceOptions) {
     this.#options = options;
@@ -74,7 +76,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
    * reloads.
    */
   'reset'(): Effect.Effect<void> {
-    return Effect.gen({ self: this }, function* () {
+    const chain = Effect.gen({ self: this }, function* () {
       log.info('resetting...');
       this.#resetting = true;
       this.#statusChanged.emit(SystemStatus.INACTIVE);
@@ -87,6 +89,19 @@ export class SystemServiceImpl implements SystemService.Handlers {
       log.info('reset');
       yield* Hook.emit(Reset, undefined);
     }).pipe(Effect.provideService(Hook.Controller, this.#options.controller));
+
+    // Detached from the request fiber: `Closing` above closes the RPC route this very call is
+    // served on, which would interrupt the chain before it ever wipes storage. Joining keeps the
+    // caller's timing — the join is interrupted, the chain is not.
+    //
+    // Single-flight over that fiber, because the RPC server dispatches concurrently and a detached
+    // chain no longer dies with its caller: a second `reset` would otherwise emit the whole
+    // `Closing`/`WipingStorage`/`Reset` sequence again, against a stack the first one already tore
+    // down. The fork and the assignment share one synchronous step, so no caller observes the gap.
+    return Effect.gen({ self: this }, function* () {
+      this.#resetFiber ??= yield* Effect.forkDetach(chain);
+      yield* Fiber.join(this.#resetFiber);
+    });
   }
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, BaseError> {
@@ -162,7 +177,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
 export const SystemServiceLayer: Layer.Layer<
   SystemService.Tag,
   never,
-  | RpcServicesContext
+  | RpcRouter.RpcRouter
   | ConfigService
   | Hook.Controller
   | IdentityManagerService
@@ -173,12 +188,13 @@ export const SystemServiceLayer: Layer.Layer<
   Effect.gen(function* () {
     const config = yield* ConfigService;
     const controller = yield* Hook.Controller;
+    const router = yield* RpcRouter.RpcRouter;
     const stack = yield* Effect.context<
-      RpcServicesContext | IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
+      IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
     >();
     const service = new SystemServiceImpl({
       config: () => config,
-      getDiagnostics: () => createDiagnosticsFromHandlers(() => rpcHandlersFromStack(stack), stack, config),
+      getDiagnostics: () => createDiagnosticsFromRouter(router, stack, config),
       controller,
     });
     yield* Hook.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));

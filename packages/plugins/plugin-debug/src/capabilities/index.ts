@@ -8,7 +8,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -60,12 +59,7 @@ export const MarkdownMenu = Capability.lazyModule(
   { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
   () => import('./markdown-menu.ts'),
 );
-export const SampleSpaces = AppCapability.sampleSpaces(() => import('./sample-spaces.ts'));
-export const SpaceTemplates = Capability.lazyModule(
-  'SpaceTemplates',
-  { provides: [SpaceCapabilities.SpaceTemplate], activatesOn: DebugEvents.Start },
-  () => import('./space-templates.ts'),
-);
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const LogRecording = Capability.lazyModule(
   'LogRecording',
   { provides: [], activatesOn: DebugEvents.Start },

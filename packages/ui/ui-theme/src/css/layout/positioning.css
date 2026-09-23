@@ -52,4 +52,15 @@
     translate: var(--arrow-inset, 0px) 0;
     clip-path: inset(-50% -50% -50% var(--arrow-clip));
   }
+
+  /* A drawn tip (`Popover.Arrow`) points right; the other sides turn it about the box's centre. */
+  [data-part='content'][data-side='top'] > [data-part='arrow'] > svg {
+    rotate: 90deg;
+  }
+  [data-part='content'][data-side='right'] > [data-part='arrow'] > svg {
+    rotate: 180deg;
+  }
+  [data-part='content'][data-side='bottom'] > [data-part='arrow'] > svg {
+    rotate: -90deg;
+  }
 }

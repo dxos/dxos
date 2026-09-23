@@ -303,6 +303,19 @@ export class HaloProxy implements Halo {
     return identity;
   }
 
+  /**
+   * Closes and deletes every space and the identity, then wipes the storage they left behind
+   * (automerge documents, hypercore files, the feed store, the index tables and the keyring).
+   * The client stays open, so {@link createIdentity} may be called straight afterwards.
+   */
+  async deleteIdentity(): Promise<void> {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc['IdentityService.deleteIdentity'](undefined), {
+      timeout: RPC_TIMEOUT,
+      label: 'IdentityService.deleteIdentity',
+    });
+    this._identityChanged.emit(null);
+  }
+
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,

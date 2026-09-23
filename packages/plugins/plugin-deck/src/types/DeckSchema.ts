@@ -175,8 +175,8 @@ export const getCompanionSelection = (
 export const ScrollIntoView = Schema.Struct({
   /** The identifier of the component. */
   id: Schema.String,
-  /** Whether the component takes focus once in view; unset means it does. */
-  focus: Schema.optional(Schema.Boolean),
+  /** Where focus goes once in view: the component (unset or true), its first focusable content, or nowhere. */
+  focus: Schema.optional(Schema.Union([Schema.Boolean, Schema.Literal('content')])),
 });
 export type ScrollIntoView = Schema.Schema.Type<typeof ScrollIntoView>;
 

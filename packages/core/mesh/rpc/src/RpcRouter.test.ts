@@ -3,6 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -13,6 +14,8 @@ import * as Stream from 'effect/Stream';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import { layerProtocolRpcPortClient, layerProtocolRpcPortServer } from './effect-rpc.ts';
 import * as RpcRouter from './RpcRouter.ts';
@@ -50,6 +53,8 @@ const counterHandlers = CounterRpcs.toLayer(
   }),
 );
 
+const makeInProcessEcho = (reply: string) => RpcTest.makeClient(EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
+
 const serveEcho = (reply: string) => RpcRouter.serve('Echo.', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
 const serveCatchAll = (reply: string) => RpcRouter.serve('', EchoRpcs).pipe(Effect.provide(echoHandlers(reply)));
 const serveCounter = RpcRouter.serve('Counter.', CounterRpcs).pipe(Effect.provide(counterHandlers));
@@ -61,7 +66,12 @@ const serveCounter = RpcRouter.serve('Counter.', CounterRpcs).pipe(Effect.provid
  */
 const makeHarness = Effect.gen(function* () {
   const [clientPort, serverPort] = createLinkedPorts();
-  const router = yield* Layer.build(RpcRouter.layer.pipe(Layer.provide(layerProtocolRpcPortServer(serverPort))));
+  const router = yield* Layer.build(
+    RpcRouter.layerTransport.pipe(
+      Layer.provideMerge(RpcRouter.layer),
+      Layer.provide(layerProtocolRpcPortServer(serverPort)),
+    ),
+  );
   // Built into the test's scope, not `Effect.provide`d: the protocol forks its receive loop into
   // the layer's scope, which a per-effect provide would close as soon as the client is constructed.
   const protocol = yield* Layer.build(layerProtocolRpcPortClient(clientPort));
@@ -170,6 +180,38 @@ describe('RpcRouter', () => {
 
       const exit = yield* Fiber.await(collecting);
       expect(Exit.isSuccess(exit) && exit.value === 1_000_000).toBe(false);
+    }),
+  );
+  it.live(
+    'a transport attached after a group was registered serves it',
+    Effect.fn(function* ({ expect }) {
+      const [clientPort, serverPort] = createLinkedPorts();
+      const router = yield* Layer.build(RpcRouter.layer);
+      yield* serveEcho('attached late').pipe(Effect.provide(router));
+      yield* RpcRouter.attach(
+        yield* Layer.build(layerProtocolRpcPortServer(serverPort)).pipe(
+          Effect.map((context) => Context.get(context, RpcServer.Protocol)),
+        ),
+      ).pipe(Effect.provide(router));
+
+      const protocol = yield* Layer.build(layerProtocolRpcPortClient(clientPort));
+      const client = yield* RpcClient.make(AllRpcs, { disableTracing: true }).pipe(Effect.provide(protocol));
+      expect(yield* client['Echo.echo']({ message: 'hi' })).toEqual('attached late: hi');
+    }),
+  );
+
+  it.live(
+    'the in-process client calls the handlers of every registration that supplies one',
+    Effect.fn(function* ({ expect }) {
+      const router = yield* Layer.build(RpcRouter.layer);
+      yield* RpcRouter.serve('Echo.', EchoRpcs, {
+        inProcessClient: makeInProcessEcho('in-process'),
+      }).pipe(Effect.provide(echoHandlers('in-process')), Effect.provide(router));
+
+      const client = yield* RpcRouter.client.pipe(Effect.provide(router));
+      expect(
+        yield* (client['Echo.echo'] as (payload: { message: string }) => Effect.Effect<string>)({ message: 'hi' }),
+      ).toEqual('in-process: hi');
     }),
   );
 });

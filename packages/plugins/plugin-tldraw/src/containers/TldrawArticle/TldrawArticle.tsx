@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +32,7 @@ export const TldrawArticle = ({
   onActivate,
 }: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
-  const settings = useAtomCapability(TldrawCapabilities.Settings);
+  const [settings, updateSettings] = useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
   const section = role === AppSurface.Section.role;
@@ -54,6 +54,7 @@ export const TldrawArticle = ({
       classNames='dx-attention-surface'
       canvas={canvas}
       settings={settings}
+      onSettingsChange={updateSettings}
       // Section embeds render read-only (no controls/grid) until focused, on every platform; the
       // isTauri allowance (always-on UI) applies only to the full article/slide roles.
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.

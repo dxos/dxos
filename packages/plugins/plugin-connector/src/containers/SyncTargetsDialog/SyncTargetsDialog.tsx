@@ -148,7 +148,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                               />
                             }
                             title={
-                              <Field.Label htmlFor={checkboxId} classNames='text-base text-base-text'>
+                              <Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
                                 {target.name}
                               </Field.Label>
                             }

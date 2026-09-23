@@ -10,6 +10,7 @@ import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
 import * as BookmarksPlugin from '@dxos/plugin-bookmarks/BookmarksPlugin';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
@@ -189,6 +190,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),
+    CanvasPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudePlugin.make(),
