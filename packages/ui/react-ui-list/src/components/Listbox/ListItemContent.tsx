@@ -43,7 +43,7 @@ export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
           </div>
         )}
         <span className={styles.itemContentTitle()}>{title}</span>
-        {description != null && <span className={styles.itemContentDescription()}>{description}</span>}
+        {description != null && <div className={styles.itemContentDescription()}>{description}</div>}
       </div>
     );
   },

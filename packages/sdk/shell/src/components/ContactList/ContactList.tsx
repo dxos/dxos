@@ -100,8 +100,8 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
         }
         title={<span id={labelId}>{displayName}</span>}
         description={
-          <span className='flex flex-col gap-1'>
-            <span className='flex items-center gap-1'>
+          <div className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2'>
               <span className='font-mono truncate' title={identityKey.toHex()}>
                 {identityKey.truncate()}
               </span>
@@ -112,9 +112,9 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
                 value={identityKey.toHex()}
                 label={t('copy-key.label')}
               />
-            </span>
+            </div>
             {common.length > 0 && (
-              <span className='flex flex-wrap gap-1'>
+              <div className='flex flex-wrap gap-1'>
                 {common.map((space) => (
                   <Tag key={space.id} hue={getHashStyles(space.id).hue} asChild>
                     <button type='button' onClick={() => onSelectSpace?.(space)} data-testid='contact-list.space'>
@@ -122,9 +122,9 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
                     </button>
                   </Tag>
                 ))}
-              </span>
+              </div>
             )}
-          </span>
+          </div>
         }
       />
     </Listbox.Item>
