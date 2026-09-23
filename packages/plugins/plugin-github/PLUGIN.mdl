@@ -647,6 +647,10 @@ test QA-3: Open a pull request from the browser extension
   actors: both
   covers: [F-9.5, F-9.3]
   status: unverified
+  automated:
+    - composer-e2e:crx.spec.ts#Extension page actions › contributes the pull request action to the extension registry
+    - composer-e2e:crx.spec.ts#Extension page actions › imports the pull request the page names
+    - composer-e2e:crx-extension.spec.ts#Extension › opens the pull request the toolbar action is clicked on
   given:
     - an identity exists
     - space: a space is open

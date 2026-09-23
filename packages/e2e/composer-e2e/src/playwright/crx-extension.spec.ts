@@ -116,7 +116,7 @@ test.describe('Extension', () => {
     await rm(userDataDir, { recursive: true, force: true });
   });
 
-  test('opens the pull request the toolbar action is clicked on', async () => {
+  test('opens the pull request the toolbar action is clicked on', { tag: ['@github:QA-3'] }, async () => {
     await stubPullRequestPage(context);
     const pullRequestPage = await context.newPage();
     await pullRequestPage.goto(PULL_REQUEST_URL);

@@ -104,7 +104,7 @@ test.describe('Extension page actions', () => {
     await host.close();
   });
 
-  test('contributes the pull request action to the extension registry', async () => {
+  test('contributes the pull request action to the extension registry', { tag: ['@github:QA-3'] }, async () => {
     const ack = await request<ListAck>(host.page, LIST_EVENT, LIST_ACK_EVENT, {});
     expect(ack.ok).toBe(true);
 
@@ -116,7 +116,7 @@ test.describe('Extension page actions', () => {
     expect(action?.contexts).toEqual(['popup', 'picker']);
   });
 
-  test('imports the pull request the page names', async () => {
+  test('imports the pull request the page names', { tag: ['@github:QA-3'] }, async () => {
     const snapshot = {
       source: { url: PULL_REQUEST_URL, title: 'ignored', clippedAt: new Date().toISOString() },
     };
