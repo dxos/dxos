@@ -45,7 +45,7 @@ export const ContactsContainer = () => {
               </Field.Root>
             )}
             <ContactList
-              classNames='border mt-2'
+              classNames='mt-3'
               contacts={contacts}
               spaces={contactSpaces}
               filter={filter}
