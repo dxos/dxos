@@ -123,7 +123,9 @@ v1 scores 2.50 on trust, at least a point and a quarter below every other varian
 subagent rounds reported: the baseline earns its "why" by asserting motives the diff cannot support.
 
 The earlier rounds below were graded by Claude Code subagents rather than by an API call, before the
-judge script existed. They are kept because the variance between them is itself a result.
+judge script existed. They are kept because the variance between them is itself a result — and
+because the round-two subagent verdict that put `v4` ahead is the one the API judge later
+overturned.
 
 Subagent round one, all three variants per packet:
 
@@ -208,10 +210,30 @@ the reason the design doc asks for human ratings before readability floors are e
 
 ## What to do with this
 
-`v4-evidence` is the variant to ship, on the round-two result and on its reasons rather than its mean.
-Before it graduates into `SYSTEM_PROMPT`, it wants one more round on fixtures it has not been tuned
-against, and the human ratings that tell us whether the judge's ranking is our ranking.
+`v2-readable` ships, and it is already what `SYSTEM_PROMPT` carries. An earlier draft of this
+document recommended `v4-evidence` on a subagent round; the API judge overturned that, first in the
+four-way run and then decisively head to head.
 
-Both scorers earn their keep already: `ranges-valid`, `fences-resolve`, `fences-empty` and
+| fixture              |       v2 |   v4 |
+| -------------------- | -------: | ---: |
+| 13115 one-line bump  | **3.75** | 2.75 |
+| 13149 eight files    | **4.50** | 3.25 |
+| 13150 nineteen files | **3.75** | 3.25 |
+| 13153 bug fix        |     3.75 | 3.75 |
+| mean                 | **3.94** | 3.25 |
+
+v4 loses on trust, 2.75 against 3.75 — the lowest number any variant scored on any dimension. The
+reason is the rule that was supposed to earn the "why" honestly. Told to mine unchanged context for
+evidence, the model quotes a real constant and then reasons past it: on the retry fixture it cites
+the true 10-second timeout and 3-second poll interval, then infers that five retries "fit" inside
+that window, which the patch does not support and which the judge called arguably backwards. A
+confident inference resting on a real number is harder for a reviewer to catch than an invented
+number, so the rule made the failure worse rather than better.
+
+The lesson generalises past this prompt: asking for richer justification buys invention unless the
+ask is bounded by what the diff can support. `v2`'s plainer instruction — say the mechanism, and
+stop where the diff stops — produces less and is trusted more.
+
+Both scorers earn their keep already: `ranges-valid`, `fences-resolve`, `fences-authentic` and
 `citations-grounded` catch documents that lie about the change, and they cost nothing to run on every
 generation.

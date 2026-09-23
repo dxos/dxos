@@ -1,0 +1,18 @@
+{
+  "13115-retry-count": {
+    "A": "v2-readable",
+    "B": "v4-evidence"
+  },
+  "13149-navtree-bindings": {
+    "A": "v4-evidence",
+    "B": "v2-readable"
+  },
+  "13150-database-service": {
+    "A": "v2-readable",
+    "B": "v4-evidence"
+  },
+  "13153-datachannel-guard": {
+    "A": "v2-readable",
+    "B": "v4-evidence"
+  }
+}
