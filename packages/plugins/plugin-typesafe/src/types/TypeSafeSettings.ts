@@ -16,7 +16,7 @@ export const Settings = Schema.Struct({
   apiUrl: Schema.optional(
     Schema.String.annotate({
       title: 'API base URL',
-      description: 'Direct System One base URL. Leave empty to route through EDGE.',
+      description: 'System One endpoint override.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
