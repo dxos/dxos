@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Tags } from '@dxos/client-services';
+import { IdentityContract } from '@dxos/client-services';
 import { runDedicatedWorker } from '@dxos/client/worker';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -46,7 +46,7 @@ runDedicatedWorker({
     const instance = await observability;
     if (instance) {
       const identityManager = await EffectEx.runPromise(
-        stack.getServiceResolver().resolve(Tags.IdentityManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+        stack.getServiceResolver().resolve(IdentityContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
       );
       await EffectEx.runPromise(
         instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),

@@ -12,8 +12,14 @@ import { afterAll, beforeEach, describe, expect, onTestFinished, test } from 'vi
 import { Trigger, chain, waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
-import { Invitations, Metadata, Spaces } from '@dxos/client-services';
-import { Tags } from '@dxos/client-services';
+import {
+  IdentityContract,
+  Invitations,
+  InvitationsContract,
+  Metadata,
+  Spaces,
+  SpacesContract,
+} from '@dxos/client-services';
 import {
   type PerformInvitationProps,
   type Result,
@@ -125,10 +131,10 @@ const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
     ServiceResolver.resolveAll(
       [
         Invitations.InvitationsHandlerService,
-        Tags.InvitationsManagerService,
+        InvitationsContract.ManagerService,
         SwarmNetworkManagerService,
-        Tags.DataSpaceManagerService,
-        Tags.IdentityManagerService,
+        SpacesContract.ManagerService,
+        IdentityContract.ManagerService,
       ],
       {},
     ).pipe(
@@ -139,10 +145,10 @@ const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
   );
   return {
     invitations: EffectContext.getUnsafe(services, Invitations.InvitationsHandlerService),
-    invitationsManager: EffectContext.getUnsafe(services, Tags.InvitationsManagerService),
+    invitationsManager: EffectContext.getUnsafe(services, InvitationsContract.ManagerService),
     networkManager: EffectContext.getUnsafe(services, SwarmNetworkManagerService),
-    dataSpaceManager: EffectContext.getUnsafe(services, Tags.DataSpaceManagerService),
-    identityManager: EffectContext.getUnsafe(services, Tags.IdentityManagerService),
+    dataSpaceManager: EffectContext.getUnsafe(services, SpacesContract.ManagerService),
+    identityManager: EffectContext.getUnsafe(services, IdentityContract.ManagerService),
   };
 };
 

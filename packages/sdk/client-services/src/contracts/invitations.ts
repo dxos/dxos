@@ -34,6 +34,7 @@ export interface Manager {
   setInvitationHandlerFactory(
     getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
   ): void;
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol;
   createInvitation(
     ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,
