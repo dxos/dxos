@@ -4,6 +4,7 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 import * as Struct from 'effect/Struct';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
@@ -604,9 +605,23 @@ export type SetParentAnnotationValue = {
  * })
  * ```
  */
+const SetParentValueSchema = Schema.Struct({ value: Schema.Boolean, override: Schema.Boolean });
+
 const setParentAnnotation = makeUserAnnotation<SetParentAnnotationValue>({
   id: 'org.dxos.annotation.setParent',
-  schema: Schema.Struct({ value: Schema.Boolean, override: Schema.Boolean }),
+  // Schemas persisted before the value was structured store a bare boolean.
+  schema: Schema.Union([
+    SetParentValueSchema,
+    Schema.Boolean.pipe(
+      Schema.decodeTo(
+        SetParentValueSchema,
+        SchemaTransformation.transform({
+          decode: (value: boolean): SetParentAnnotationValue => ({ value, override: true }),
+          encode: ({ value }: SetParentAnnotationValue) => value,
+        }),
+      ),
+    ),
+  ]),
 });
 
 export type SetParentAnnotationOptions = {
