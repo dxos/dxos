@@ -1,0 +1,5 @@
+---
+'@dxos/effect': minor
+---
+
+Graphs, menus and static trees keep atoms in the app's atom registry only for as long as the thing they belong to. A graph pins its nodes' atoms only while retained: the new `AppGraph.retain(graph)` pins every node, including ones added later, until the function it returns is called, and `release` unpins the nodes it drops. A graph builder retains its graph until `AppGraphBuilder.destroy`. `useMenuGraph` from `@dxos/react-ui-menu` builds a menu's graph and retains it from commit until it is replaced or unmounted, so a render React discards pins nothing. `AtomEx.makeOwned(owner, atom)` keeps an atom mounted while `owner` is alive and releases it once `owner` is garbage-collected; an owner implements `AtomEx.Owner`, exposing its atom registry and its class's static `FinalizationRegistry` under the `AtomEx.OwnerId` symbol; a graph model's version atom and a graph builder's extensions use it. Other graph atoms (edges, connections, actions) are views kept only while read: subscribe to them with `{ immediate: true }` or read them with `useAtomValue`.
