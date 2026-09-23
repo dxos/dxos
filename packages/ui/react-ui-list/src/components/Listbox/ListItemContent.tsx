@@ -16,7 +16,8 @@ import { listTheme } from '../List.theme.ts';
  *
  * The grid uses the same `var(--dx-rail-item)` rail track as `useListGrid`, so an adjacent body
  * (e.g. an `Accordion.ItemBody`) can reuse `grid-cols-[var(--dx-rail-item)_1fr]` to line its
- * content up under the same content column.
+ * content up under the same content column. An icon wider than the rail (e.g. an avatar) widens the
+ * track, and that alignment then no longer holds.
  */
 export type ListItemContentProps = ComposableProps<{
   /**
@@ -43,7 +44,7 @@ export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
           </div>
         )}
         <span className={styles.itemContentTitle()}>{title}</span>
-        {description != null && <span className={styles.itemContentDescription()}>{description}</span>}
+        {description != null && <div className={styles.itemContentDescription()}>{description}</div>}
       </div>
     );
   },
