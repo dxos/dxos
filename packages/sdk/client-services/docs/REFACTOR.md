@@ -143,13 +143,13 @@ that has a public surface gained a thin `src/<Name>.ts` facade marked
 package has no flat exports left — matching `@dxos/echo`, the reference for this
 pattern.
 
-| namespace                                                                                                             | internal module                                            |
-| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `Agents` `Devtools` `Diagnostics` `Invitations` `Metadata` `Storage` `System` `Worker`                                | the packlet of the same name                               |
-| `Spaces`                                                                                                              | `internal/space/`, `internal/spaces/` and `internal/space-export/` together |
-| `IdentityManager`                                                                                                     | `internal/identity/` (`Identity` is the aggregate, tier 1) |
-| `ServiceStack`                                                                                                        | `internal/services/`                                       |
-| `Auth` `CredentialsDocument` `Events` `Identity` `PlatformInfo` `Readiness` `Replication` `SqliteStorage` `Tags`      | already top-level from stages 1–3                          |
+| namespace                                                                                                        | internal module                                                             |
+| ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `Agents` `Devtools` `Diagnostics` `Invitations` `Metadata` `Storage` `System` `Worker`                           | the packlet of the same name                                                |
+| `Spaces`                                                                                                         | `internal/space/`, `internal/spaces/` and `internal/space-export/` together |
+| `IdentityManager`                                                                                                | `internal/identity/` (`Identity` is the aggregate, tier 1)                  |
+| `ServiceStack`                                                                                                   | `internal/services/`                                                        |
+| `Auth` `CredentialsDocument` `Events` `Identity` `PlatformInfo` `Readiness` `Replication` `SqliteStorage` `Tags` | already top-level from stages 1–3                                           |
 
 `internal/logging`, `internal/network`, `internal/pipeline` have no public surface
 and are reached only through the stack, so they get no facade.
