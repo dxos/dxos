@@ -9,12 +9,15 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 const PORT = 9007;
 const TRANSFORM_URL = storybookUrl('ui-react-ui-canvas-compute-scene--transform', PORT);
 const LOGIC_URL = storybookUrl('ui-react-ui-canvas-compute-scene--logic', PORT);
+const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-scene--template', PORT);
 
 /** The die a `random` shape draws; its icon name changes as it spins, so match the family. */
 const DICE = 'svg:has(use[href*="dice"])';
 const SWITCH = 'input.dx-checkbox--switch';
 const BEACON = 'svg:has(use[href*="sun"])';
 const RUN = 'button:has(use[href*="play"])';
+/** The Text output's icon; the engine's note draws none at all. Shared with the template shape. */
+const ARTICLE = 'svg:has(use[href*="article"])';
 
 // Serial: the story's cold compile is minutes of the budget, so it is paid once for the file.
 test.describe.configure({ mode: 'serial' });
@@ -108,6 +111,37 @@ test.describe('compute scene', () => {
     await page.locator('[data-node-id]').filter({ hasText: 'Transform' }).first().locator(RUN).click();
     await expect.poll(() => page.evaluate(() => (globalThis as any).__bullets), { timeout: 5_000 }).toBeGreaterThan(0);
     expect(errors).toEqual([]);
+  });
+});
+
+test.describe('compute scene template', () => {
+  let page: Page;
+  let close: (() => Promise<void>) | undefined;
+
+  test.beforeAll(async ({ browser }) => {
+    ({ page, close } = await setupPage(browser, { url: TEMPLATE_URL, viewportSize: { width: 1400, height: 900 } }));
+    await page.locator('[data-node-id]').first().waitFor({ state: 'visible', timeout: 150_000 });
+    await page.waitForTimeout(1_000);
+  });
+
+  test.afterAll(async () => {
+    await close?.();
+    close = undefined;
+  });
+
+  test('the Text output draws its own chrome, not the engine note view', async () => {
+    // By the title, not the icon: the template shape draws the same one.
+    const text = page
+      .locator('[data-node-id]')
+      .filter({ has: page.getByText('Text', { exact: true }) })
+      .first();
+    await expect(text).toBeVisible();
+    // `text` was claimed by both the compute output and the engine's free-text node, and one registry
+    // holds one def per name: the engine's won, so the output rendered as an empty `NoteNodeView` —
+    // no icon, no title, no run control, and a `data-part` the compute chrome never emits.
+    await expect(text.locator(ARTICLE)).not.toHaveCount(0);
+    await expect(text.locator(RUN)).toHaveCount(1);
+    await expect(text.locator('[data-part]')).toHaveCount(0);
   });
 });
 

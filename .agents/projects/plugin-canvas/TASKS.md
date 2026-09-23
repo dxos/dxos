@@ -188,7 +188,12 @@ before), not reasoned about from the source.
       output that does not exist, and the graph says so in a banner. A real implementation settles the
       output schema the edge needs. The same fault is in the old editor; `chat` likewise has no
       `exec`, which is the console's missing-compute-function error.
-- [ ] `scene--plugins`: the Text node renders as an empty box — no header, icon or run control — where
-      the editor draws it normally; its rendered text content is the empty string.
+- [x] `scene--plugins`: the Text node renders as an empty box — no header, icon or run control — where
+      the editor draws it normally; its rendered text content is the empty string. Two vocabularies
+      claimed one key: `computeNodeRegistry` spread the compute defs and then wrote `text` again for
+      the engine's free-text node, because `sceneFromCircuit` rewrote a circuit note as `type: 'text'`.
+      The engine's def won, so every compute Text output was drawn by `TextNodeView`, which reads a
+      `text` field the compute shape does not carry. The engine's node is renamed `note` — what the
+      canvas-editor model already calls it — leaving `text` to the host.
 - [ ] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
       audio, voice), same treatment.
