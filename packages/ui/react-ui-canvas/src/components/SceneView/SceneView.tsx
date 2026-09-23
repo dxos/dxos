@@ -18,7 +18,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
 import { type Drag, type SceneViewAtoms, createSceneViewAtoms } from '../../model/atoms.ts';
-import { isToolKey, keyAction } from '../../model/keys.ts';
 import {
   type FreehandProjectionOptions,
   type Projection,
@@ -46,19 +45,20 @@ import {
 } from '../../model/types.ts';
 import { MIN_ZOOM, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
-import { hitTest, unionBounds } from '../../utils/hit.ts';
+import { hitTest } from '../../utils/hit.ts';
 import { topZ } from '../../utils/order.ts';
 import { type PartKey, partKey, partText, partValues } from '../../utils/parts.ts';
 import { createLink, nodeBounds } from '../../utils/shapes.ts';
 import { redo, undo } from '../../utils/undo.ts';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
-import { Palette, toolForKey } from '../Palette/Palette.tsx';
+import { Palette } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, DebugToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { PREVIEW_NODE_ID, createId, usePointerMachine, viewSize } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
+import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
@@ -305,147 +305,35 @@ export const SceneView = ({
     snap,
   });
 
-  // Every chord comes from `KEY_BINDINGS`; this only decides what the action means in the current state.
-  const onKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      const selected = [...registry.get(atoms.selection)];
-      const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
-      const point = registry.get(atoms.point);
-      const action = keyAction(event);
-      switch (action) {
-        case 'cancel':
-          if (registry.get(atoms.drag)) {
-            cancelDrag();
-          } else if (point) {
-            registry.set(atoms.point, undefined);
-          } else if (selected.length > 0) {
-            select([]);
-          } else {
-            drillOut();
-          }
-          break;
-        case 'delete':
-          if (point) {
-            removePoint(point);
-          } else if (selected.length > 0 && capabilities.delete) {
-            projection.apply({ kind: 'delete', ids: selected });
-            select([]);
-          }
-          break;
-        case 'open': {
-          const node = selected.length === 1 ? scene.nodes[selected[0]] : undefined;
-          if (node && nodeDef(nodeRegistry, node)?.openable) {
-            drillIn(node);
-          }
-          break;
-        }
-        case 'fit':
-          animateTo(fitBounds(bounds, viewport, inset));
-          event.preventDefault();
-          break;
-        case 'fitSelection': {
-          const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
-          if (union) {
-            animateTo(fitBounds(union, viewport, inset));
-          }
-          break;
-        }
-        case 'zoomReset':
-          animateTo(zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, 1));
-          break;
-        case 'back':
-          goHistory(-1);
-          break;
-        case 'forward':
-          goHistory(1);
-          break;
-        case 'nudge': {
-          if (selectedNodes.length === 0 || !capabilities.move) {
-            break;
-          }
-          // Shift moves by a major cell rather than a minor one.
-          const step = event.shiftKey ? major : grid;
-          const delta = {
-            x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
-            y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
-          };
-          projection.apply({ kind: 'move', ids: selectedNodes, delta });
-          event.preventDefault();
-          break;
-        }
-        case 'copy':
-          copy();
-          event.preventDefault();
-          break;
-        case 'cut':
-          cut();
-          event.preventDefault();
-          break;
-        case 'paste':
-          paste();
-          event.preventDefault();
-          break;
-        case 'undo':
-          onUndo();
-          event.preventDefault();
-          break;
-        case 'redo':
-          onRedo();
-          event.preventDefault();
-          break;
-        case 'selectAll':
-          select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
-          event.preventDefault();
-          break;
-        case 'snap':
-          toggleSnap();
-          break;
-        case 'debug':
-          toggleDebug();
-          break;
-        case undefined:
-          if (isToolKey(event)) {
-            const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
-            if (next) {
-              setTool(next);
-            }
-          }
-          break;
-      }
-    },
-    [
-      registry,
-      atoms.selection,
-      atoms.drag,
-      atoms.camera,
-      atoms.point,
-      removePoint,
-      setDrag,
-      cancelDrag,
-      select,
-      drillOut,
-      drillIn,
-      capabilities,
-      projection,
-      scene,
-      nodeRegistry,
-      linkRegistry,
-      animateTo,
-      bounds,
-      viewport,
-      inset,
-      goHistory,
-      major,
-      setTool,
-      toggleSnap,
-      toggleDebug,
-      onUndo,
-      onRedo,
-      copy,
-      cut,
-      paste,
-    ],
-  );
+  const onKeyDown = useSceneKeys({
+    registry,
+    atoms,
+    scene,
+    nodeRegistry,
+    linkRegistry,
+    projection,
+    capabilities,
+    viewport,
+    bounds,
+    inset,
+    grid,
+    select,
+    toggleSnap,
+    toggleDebug,
+    onUndo,
+    onRedo,
+    animateTo,
+    drillIn,
+    drillOut,
+    goHistory,
+    major,
+    copy,
+    cut,
+    paste,
+    cancelDrag,
+    removePoint,
+    setTool,
+  });
 
   //
   // Render.
