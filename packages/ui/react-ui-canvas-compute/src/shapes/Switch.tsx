@@ -20,7 +20,13 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
   }, [value]);
 
   return (
-    <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
+    // The node frame would otherwise take the press as select-and-drag and capture the pointer, so the
+    // switch never sees the click.
+    <div
+      className='flex w-full justify-center items-center'
+      onPointerDown={(ev) => ev.stopPropagation()}
+      onClick={(ev) => ev.stopPropagation()}
+    >
       <Field.Root>
         <Field.Switch checked={value} onCheckedChange={(value) => setValue(value)} />
       </Field.Root>
