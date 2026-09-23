@@ -14,13 +14,18 @@ import { EntityId } from '@dxos/keys';
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { type EntityMeta } from './indexes/entity-meta-index.ts';
 import { type IndexerObject } from './indexes/interface.ts';
-import { SQL_CHUNK_SIZE } from './utils.ts';
 
 /**
  * Cursor identity of every index fed from this source. `objectMeta.version` is global, so one
  * unscoped cursor row per index covers every space.
  */
 const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: null };
+
+/**
+ * Objects one pass reads, and so one downstream transaction writes. Independent of how many bound
+ * variables a statement may carry — the indexes chunk their own SQL (see `chunkRows`).
+ */
+const INDEX_BATCH_SIZE = 500;
 
 /**
  * The index read back as a data source, ordered by the `objectMeta.version` counter the primary
@@ -50,9 +55,7 @@ export class IndexedObjectSource implements IndexDataSource {
       const sql = this.#sql;
       const position = cursors[0]?.cursor;
       const cursor = typeof position === 'number' ? position : 0;
-      // One batch is one transaction downstream, so the chunk size bounds it regardless of the
-      // document-oriented limit a caller passes.
-      const limit = Math.min(opts?.limit ?? SQL_CHUNK_SIZE, SQL_CHUNK_SIZE);
+      const limit = Math.min(opts?.limit ?? INDEX_BATCH_SIZE, INDEX_BATCH_SIZE);
 
       // Inner join: a record's snapshot row is written in the same transaction that stamps its
       // counter, so a counter with no snapshot names a record that no longer exists.

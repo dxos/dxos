@@ -9,10 +9,35 @@ import { invariant } from '@dxos/invariant';
 export type EntityPropPath = string[];
 
 /**
- * SQLite bound-variable limit (`SQLITE_LIMIT_VARIABLE_NUMBER`, typically 999 in wasm builds).
- * Batch `IN (...)` queries below this; 500 gives a safe margin.
+ * Bound variables one statement may carry (`SQLITE_LIMIT_VARIABLE_NUMBER`).
+ *
+ * Sized for Durable Object SQLite, which is what production indexes against and which caps this at
+ * 100 — a tenth of the node and wasm builds this package's own tests run on, so the lowest
+ * supported runtime is the only safe bound.
  */
-export const SQL_CHUNK_SIZE = 500;
+export const SQL_MAX_BOUND_VARIABLES = 100;
+
+/**
+ * Variables a statement may bind outside the chunked list — `spaceId = ${...}` and friends — so a
+ * caller gets a usable chunk size without having to count its own predicates.
+ */
+const RESERVED_BOUND_VARIABLES = 8;
+
+/** Rows one statement may carry when each binds `variablesPerRow` variables. */
+export const chunkSizeForBoundVariables = (variablesPerRow: number): number => {
+  invariant(Number.isInteger(variablesPerRow) && variablesPerRow > 0, 'variables per row must be a positive integer');
+  return Math.max(1, Math.floor((SQL_MAX_BOUND_VARIABLES - RESERVED_BOUND_VARIABLES) / variablesPerRow));
+};
+
+/** Chunk size for a list binding one variable per element, as `IN (...)` does. */
+export const SQL_CHUNK_SIZE: number = chunkSizeForBoundVariables(1);
+
+/**
+ * Split rows for a multi-row `sql.insert`, sizing the batch by the columns the rows actually
+ * carry — so adding a column narrows the batch instead of silently overrunning the limit.
+ */
+export const chunkRows = <T extends Record<string, unknown>>(rows: readonly T[]): T[][] =>
+  rows.length === 0 ? [] : chunkArray(rows, chunkSizeForBoundVariables(Object.keys(rows[0]).length));
 
 /** Split an array into chunks of at most `size` for batched SQL `IN (...)` clauses. */
 export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE): T[][] => {
