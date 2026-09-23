@@ -191,6 +191,38 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
     results.push({ name: `  of which the ${BURST} sets`, ms: burst, unit: `${perBurst} connector recomputes` });
   });
 
+  test('update: one connector among many expanded relations', async () => {
+    // What a flush costs beyond its own connector: the builder's bookkeeping scales with every
+    // expanded relation, and Composer expands thousands.
+    const state = Atom.make(0).pipe(Atom.keepAlive);
+    const { registry, builder, graph } = setup((node) =>
+      Atom.make((get) =>
+        Option.match(get(node), {
+          onNone: () => [],
+          onSome: (source) =>
+            source.id === ROOT
+              ? nodeArgs(WIDE)
+              : source.id === `${ROOT}/n0`
+                ? [{ id: `leaf${get(state)}`, type: EXAMPLE_TYPE, data: 0 }]
+                : [],
+        }),
+      ),
+    );
+    Graph.expandSync(graph, ROOT, 'child');
+    await GraphBuilder.flush(builder);
+    for (const node of nodeArgs(WIDE)) {
+      Graph.expandSync(graph, `${ROOT}/${node.id}`, 'child');
+    }
+    await GraphBuilder.flush(builder);
+
+    await measure(`${UPDATES} updates of 1 connector @ ${WIDE} expanded`, `${UPDATES} flushes`, async () => {
+      for (let index = 0; index < UPDATES; index++) {
+        registry.set(state, registry.get(state) + 1);
+        await GraphBuilder.flush(builder);
+      }
+    });
+  });
+
   test('expand: a two-level tree', async () => {
     await measure(
       `expand ${PARENTS}x${CHILDREN} tree`,

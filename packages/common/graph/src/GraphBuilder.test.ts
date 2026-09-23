@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
+
+import { AtomEx } from '@dxos/effect';
 
 import * as GraphBuilder from './GraphBuilder.ts';
 import * as GraphNode from './GraphNode.ts';
@@ -28,6 +31,8 @@ const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
   const children = (id: string, relation?: string) => registry.get(builder.children(id, relation)).map(({ id }) => id);
   return { registry, builder, model: builder.graph, children };
 };
+
+const nextTask = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const connector =
   (
@@ -64,14 +69,32 @@ describe('GraphBuilder', () => {
     expect(children('root/a')).to.deep.equal(['root/a/a']);
   });
 
-  test('a segment id containing the path separator is rejected', async () => {
+  test('a segment id containing the path separator is rejected, and its siblings are kept', async () => {
     const { builder, children } = setup();
-    GraphBuilder.addExtension(builder, { id: 'children', connector: connector([{ id: 'a/b' }]) });
+    GraphBuilder.addExtension(builder, { id: 'children', connector: connector([{ id: 'a/b' }, { id: 'c' }]) });
 
     children(GraphNode.RootId);
     await GraphBuilder.flush(builder);
 
-    expect(children(GraphNode.RootId)).to.deep.equal([]);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/c']);
+  });
+
+  test('a throwing extension loses only its own nodes', async () => {
+    const { builder, children } = setup();
+    GraphBuilder.addExtension(builder, [
+      {
+        id: 'broken',
+        connector: connector(() => {
+          throw new Error('broken');
+        }),
+      },
+      { id: 'children', connector: connector([{ id: 'a' }]) },
+    ]);
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a']);
   });
 
   test('extensions on the same relation are applied in position order', async () => {
@@ -214,6 +237,68 @@ describe('GraphBuilder', () => {
     await GraphBuilder.flush(builder);
     expect(runs).to.equal(before + 1);
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a10']);
+  });
+
+  test('an atom batch write reads the connector once', async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(0).pipe(Atom.keepAlive);
+    let runs = 0;
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => {
+        runs++;
+        return [{ id: `a${get(state)}` }];
+      }),
+    });
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    const before = runs;
+
+    // A batch rebuilds the anchors while the connector is still dirty.
+    Atom.batch(() => registry.set(state, 1));
+    await GraphBuilder.flush(builder);
+    await nextTask();
+    await GraphBuilder.flush(builder);
+
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a1']);
+    expect(runs).to.be.at.most(before + 2);
+  });
+
+  test.each([
+    ['without an idle TTL', () => Registry.make()],
+    ['with an idle TTL', () => AtomEx.makeRegistry({ idleTTL: Duration.millis(1) })],
+  ])('a connector keeps its inputs between flushes, %s', async (_, makeRegistry) => {
+    const { registry, builder, children } = setup({ registry: makeRegistry() });
+    const source = Atom.make(['a']).pipe(Atom.keepAlive);
+    const other = Atom.make(0).pipe(Atom.keepAlive);
+    const sibling = Atom.make(0).pipe(Atom.keepAlive);
+    let inputRuns = 0;
+    const input = Atom.make((get) => {
+      inputRuns++;
+      return get(source);
+    });
+    GraphBuilder.addExtension(builder, [
+      { id: 'children', connector: connector((get) => [...get(input), `b${get(other)}`].map((id) => ({ id }))) },
+      { id: 'siblings', relation: 'sibling', connector: connector((get) => [{ id: `s${get(sibling)}` }]) },
+    ]);
+
+    children(GraphNode.RootId);
+    children(GraphNode.RootId, 'sibling');
+    await GraphBuilder.flush(builder);
+    const before = inputRuns;
+
+    // A connector the registry had dropped would rebuild `input` when read again.
+    for (let index = 1; index <= 3; index++) {
+      registry.set(sibling, index);
+      await GraphBuilder.flush(builder);
+      await nextTask(10);
+    }
+    registry.set(other, 1);
+    await GraphBuilder.flush(builder);
+
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a', 'root/b1']);
+    expect(inputRuns).to.equal(before);
   });
 
   test('an unrelated node changing leaves a connector alone', async () => {
