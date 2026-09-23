@@ -133,7 +133,7 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       const tags = mergeTags(result.tags, template.tags);
       return tags ? { ...result, tags } : result;
     }).pipe(
-      Effect.provide(AiService.model(template.model ?? DXN.getName(DEFAULT_MODEL)).pipe(Layer.orDie)),
+      Effect.provide(AiService.languageModel(template.model ?? DXN.getName(DEFAULT_MODEL)).pipe(Layer.orDie)),
       // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
       // fiber interruption untouched so cancellation propagates (neither catchAll nor
       // catchAllDefect catches interruption).

@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Browser, type ConsoleMessage, type Frame, type Locator, type Page, expect } from '@playwright/test';
+import {
+  type Browser,
+  type BrowserContext,
+  type ConsoleMessage,
+  type Frame,
+  type Locator,
+  type Page,
+  expect,
+} from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -86,7 +94,9 @@ export class AppManager {
 
   // prettier-ignore
   constructor(
-    private readonly _browser: Browser,
+    // A context, not only a browser: an extension test must run in the persistent context the
+    // extension is loaded into, and `setupPage` already accepts either.
+    private readonly _browser: Browser | BrowserContext,
     inIframe?: boolean,
   ) {
     this._inIframe = inIframe;

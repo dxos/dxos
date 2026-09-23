@@ -1,0 +1,18 @@
+{
+  "automerge": "3.3.2",
+  "note": "Synthetic document; what a client on @automerge/automerge 3.3.2 stored for it. Every fragment lists its own head as a checkpoint.",
+  "documentIdBytesHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+  "text": "edit 113",
+  "heads": ["0077618d5445350139cc8f7989cef3965b6179ef0e5722162e5aaf3ee031152a"],
+  "changes": 115,
+  "commits": [],
+  "fragments": [
+    {
+      "head": "0077618d5445350139cc8f7989cef3965b6179ef0e5722162e5aaf3ee031152a",
+      "level": 1,
+      "boundary": [],
+      "checkpoints": ["0077618d5445350139cc8f7989cef3965b6179ef0e5722162e5aaf3ee031152a"],
+      "bytes": "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"
+    }
+  ]
+}

@@ -82,7 +82,10 @@
       "path": "../../core/compute/agent-claude"
     },
     {
-      "path": "../../core/echo/echo-host"
+      "path": "../../core/compute/agent-code-mode"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/echo/echo-solid"

@@ -52,6 +52,7 @@ import {
   type ColumnRenderer,
   type HeadingRenderer,
   type IconRenderer,
+  type RowActivation,
   type SelectModifiers,
   type TreeItemDataProps,
   type TreeModel,
@@ -383,64 +384,31 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
-  // Values whose branch content is running its conceal animation; the model close commits when the
-  // animation finishes (the machine hides content the instant the controlled value shrinks,
-  // so an animated exit has to precede the commit).
-  const [closingValues, setClosingValues] = useState<ReadonlySet<string>>(() => new Set());
+  const setOpen = useCallback(
+    (node: TreeNodeEntry<T>, open: boolean) => onOpenChange?.({ item: node.item, path: node.path, open }),
+    [onOpenChange],
+  );
 
-  /** Starts a branch's conceal animation; the model close commits when it ends. */
-  const requestClose = useCallback((value: string) => {
-    setClosingValues((previous) => (previous.has(value) ? previous : new Set(previous).add(value)));
-  }, []);
+  const toggleOpen = useCallback((node: TreeNodeEntry<T>) => setOpen(node, !node.open), [setOpen]);
 
-  /**
-   * Flips a branch's disclosure, from the row, the chevron or the keyboard alike.
-   *
-   * Closing goes through the same deferral the chevron uses: committing it here hid the content
-   * before it could animate, so the same gesture read as instant from the row and animated from the
-   * chevron.
-   */
-  const toggleOpen = useCallback(
-    (node: TreeNodeEntry<T>) => {
-      if (node.open) {
-        requestClose(node.value);
-      } else {
-        onOpenChange?.({ item: node.item, path: node.path, open: true });
-      }
-    },
-    [onOpenChange, requestClose],
+  /** The consumer's verdict alone. A disabled row answers no activation at all, which is separate. */
+  const allowsSelect = useCallback(
+    (node: TreeNodeEntry<T>) => canSelect?.({ item: node.item, path: node.path }) ?? true,
+    [canSelect],
   );
 
   const onSelectNode = useCallback(
-    (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current = !node.current) => {
-      // A branch that is already current, or an option-activation, toggles instead of selecting.
-      // Not in multiple mode: there a click on a current row re-selects it alone, and disclosure
-      // stays on the chevron and the keyboard.
-      if (node.branch && (modifiers.option || (node.current && selectionMode !== 'multiple'))) {
-        // Closing goes through the same deferral the chevron uses. Calling `onOpenChange` here
-        // committed the close at once, so the machine hid the content before it could animate —
-        // the same gesture read as instant from the row and animated from the chevron.
+    (node: TreeNodeEntry<T>, activation: RowActivation) => {
+      if (node.props.disabled) {
+        return;
+      }
+      if (node.branch && (activation.option || !allowsSelect(node))) {
         toggleOpen(node);
-      } else if (canSelect?.({ item: node.item, path: node.path }) ?? true) {
-        onSelect?.({ item: node.item, path: node.path, current, ...modifiers });
+      } else if (allowsSelect(node)) {
+        onSelect?.({ item: node.item, path: node.path, ...activation });
       }
     },
-    [canSelect, onSelect, toggleOpen, selectionMode],
-  );
-
-  const onCommitClose = useCallback(
-    (node: TreeNodeEntry) => {
-      onOpenChange?.({ item: node.item, path: node.path, open: false });
-      setClosingValues((previous) => {
-        if (!previous.has(node.value)) {
-          return previous;
-        }
-        const next = new Set(previous);
-        next.delete(node.value);
-        return next;
-      });
-    },
-    [onOpenChange],
+    [allowsSelect, onSelect, toggleOpen],
   );
 
   const handleExpandedChange = useCallback(
@@ -450,19 +418,17 @@ export const Tree = <T extends { id: string } = any>({
       for (const value of expandedValue) {
         if (!previous.has(value)) {
           const entry = byValue.get(value);
-          entry && onOpenChange?.({ item: entry.item, path: entry.path, open: true });
+          entry && setOpen(entry, true);
         }
       }
-      const removed = expanded.filter((value) => !next.has(value) && byValue.has(value));
-      if (removed.length > 0) {
-        setClosingValues((current) => {
-          const merged = new Set(current);
-          removed.forEach((value) => merged.add(value));
-          return merged;
-        });
+      for (const value of expanded) {
+        if (!next.has(value)) {
+          const entry = byValue.get(value);
+          entry && setOpen(entry, false);
+        }
       }
     },
-    [expanded, byValue, onOpenChange],
+    [expanded, byValue, setOpen],
   );
 
   /** Last row the machine reported focus on — the target `Enter`/`Space` act upon. */
@@ -537,7 +503,7 @@ export const Tree = <T extends { id: string } = any>({
       }
       const entry = byValue.get(focusedValue);
       if (entry) {
-        onSelectNode(entry, NO_MODIFIERS);
+        onSelectNode(entry, { ...NO_MODIFIERS, current: true });
       }
     },
     [selectionFollowsFocus, selected, byValue, onSelectNode],
@@ -552,23 +518,13 @@ export const Tree = <T extends { id: string } = any>({
           : selectedValue.find((candidate) => !previous.has(candidate));
       const entry = value ? byValue.get(value) : undefined;
       if (entry) {
-        onSelectNode(entry, recentModifiers());
+        onSelectNode(entry, { ...recentModifiers(), current: true });
       }
     },
     [selected, byValue, onSelectNode, recentModifiers],
   );
 
-  /**
-   * `Space` discloses the focused branch; `Enter` activates the focused row.
-   *
-   * Both are handled here rather than left to the machine. The machine emits a selection change
-   * only when the selected value actually changes, so `Enter` on the row that is already selected
-   * reached nothing — and a consumer cannot tell a keyboard activation from a click, though only
-   * the former should carry focus on into what it opened. `Enter` therefore reports through
-   * `onSelect` with `keyboard` set, whether or not the row was already current, and never toggles:
-   * disclosure is `Space`'s, on any branch, so the two keys do not share a meaning that depends on
-   * which row happens to be current.
-   */
+  /** The machine emits no selection event for a row that is already selected, so `Enter` is taken here. */
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
@@ -586,18 +542,20 @@ export const Tree = <T extends { id: string } = any>({
         return;
       }
       if (event.key === ' ') {
-        if (entry.branch) {
+        // The machine refuses every disclosure path it owns for a disabled branch — the chevron's
+        // click and both arrows — and `Space` is the one it leaves to us.
+        if (entry.branch && !entry.props.disabled) {
           event.preventDefault();
           toggleOpen(entry);
         }
         return;
       }
       event.preventDefault();
-      if (canSelect?.({ item: entry.item, path: entry.path }) ?? true) {
-        onSelect?.({ item: entry.item, path: entry.path, current: entry.current, ...NO_MODIFIERS, keyboard: true });
+      if (!entry.props.disabled && allowsSelect(entry)) {
+        onSelect?.({ item: entry.item, path: entry.path, current: true, ...NO_MODIFIERS, keyboard: true });
       }
     },
-    [onKeyDown, byValue, toggleOpen, canSelect, onSelect],
+    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted
@@ -626,9 +584,8 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
+      canSelect,
       selectionMode,
-      closingValues,
-      commitClose: onCommitClose,
       mountedRef,
     }),
     [
@@ -647,11 +604,10 @@ export const Tree = <T extends { id: string } = any>({
       debug,
       dropBelowExpanded,
       onSelectNode,
+      canSelect,
       selectionMode,
-      closingValues,
       onOpenChange,
       onItemHover,
-      onCommitClose,
     ],
   );
 
@@ -868,25 +824,17 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
 
 TreeNodeRow.displayName = 'Tree.NodeRow';
 
-/** How long past the conceal animation before the close force-commits (animation may never run). */
-const CONCEAL_COMMIT_TIMEOUT = 300;
-
 /**
  * Branch children container. Disclosure animates height (via `interpolate-size`, opacity-only
  * where unsupported) — but only for content inserted after the initial paint, so a tree restoring
  * persisted open state does not animate every branch on load. The gate is stamped at DOM insertion
- * time because lazy-mounted content attaches long after the row first renders. A collapse first
- * runs the conceal animation and only then commits the model close (which is when the machine
- * actually hides the content).
+ * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef, closingValues, commitClose } = useTreeRender();
-  const elementRef = useRef<HTMLDivElement | null>(null);
-  const closing = closingValues.has(node.value);
+  const { mountedRef } = useTreeRender();
 
   const handleRef = useCallback(
     (element: HTMLDivElement | null) => {
-      elementRef.current = element;
       if (element && mountedRef.current) {
         element.dataset.animate = '';
       }
@@ -894,58 +842,20 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
     [mountedRef],
   );
 
-  // The latest entry, read by the close callback without being the effect's identity: a model that
-  // rebuilds on every tick (live data) produces new entry objects, and depending on the object would
-  // clear and re-arm the commit timer indefinitely, stranding the branch in `closingValues`.
-  const nodeRef = useRef(node);
-  nodeRef.current = node;
-
-  useEffect(() => {
-    if (!closing) {
-      return;
-    }
-    const element = elementRef.current;
-    if (!element || element.hidden) {
-      commitClose(nodeRef.current);
-      return;
-    }
-    let done = false;
-    const finish = () => {
-      if (!done) {
-        done = true;
-        commitClose(nodeRef.current);
-      }
-    };
-    const handleAnimationEnd = (event: AnimationEvent) => {
-      if (String(event.animationName).includes('tree-conceal')) {
-        finish();
-      }
-    };
-    element.addEventListener('animationend', handleAnimationEnd);
-    const timer = setTimeout(finish, CONCEAL_COMMIT_TIMEOUT);
-    return () => {
-      element.removeEventListener('animationend', handleAnimationEnd);
-      clearTimeout(timer);
-      // Unmounting mid-conceal (the ref is already detached) would otherwise strand the model
-      // open and the value in `closingValues`; a dep-change re-run keeps the element and re-arms.
-      if (!elementRef.current) {
-        finish();
-      }
-    };
-  }, [closing, node.value, commitClose]);
-
   return (
     <TreeView.BranchContent
       ref={handleRef}
       // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat, and
       // `empty:hidden` keeps a childless branch from occupying a row: even at zero height it would
       // draw the tree's row gap around it, so toggling an empty branch grew the tree by the gap.
+      // The machine sets `hidden` only once the conceal has run, so the two never fight.
       className={mx(
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
         'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
         '[interpolate-size:allow-keywords]',
-        closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
+        'data-[animate]:data-[state=open]:animate-tree-disclose',
+        'data-[animate]:data-[state=closed]:animate-tree-conceal',
       )}
     >
       {node.children?.map((child) => (
@@ -1012,6 +922,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
     onOpenChange,
     onItemHover,
     selectNode,
+    canSelect,
     selectionMode,
     focusNode,
   } = useTreeRender();
@@ -1037,6 +948,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
   const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
   const data = { treeId, id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
+  const selectable = !props.disabled && (canSelect?.({ item, path }) ?? true);
   const isItemDroppable = props.droppable !== false;
   const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
@@ -1171,23 +1083,21 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
 
   useEffect(() => () => onCancelExpand(), [onCancelExpand]);
 
-  // The machine skips selection events for an already-selected row, so re-activation (toggle a
-  // current branch, scroll a current leaf into view) is handled here.
   const handleClick = useCallback(
     (event: MouseEvent) => {
       if (current) {
         event.preventDefault();
-        selectNode(node, { option: event.altKey, shift: event.shiftKey, meta: event.metaKey || event.ctrlKey });
+        selectNode(node, {
+          option: event.altKey,
+          shift: event.shiftKey,
+          meta: event.metaKey || event.ctrlKey,
+          current: true,
+        });
       }
     },
     [current, node, selectNode],
   );
 
-  // In multiple mode a plain click selects the row alone and a meta-click toggles it. The machine
-  // reports a selection change one row at a time and nothing at all for a re-click of the only
-  // selected row (and `handleClick` would report a current row a second time), so both clicks are
-  // taken here in the capture phase and never reach it. A shift-click keeps the machine's range
-  // gesture, and a click on a control inside the row is the control's.
   const handleClickCapture = useCallback(
     (event: MouseEvent) => {
       if (selectionMode !== 'multiple' || event.shiftKey || event.altKey) {
@@ -1199,7 +1109,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
       event.stopPropagation();
       event.preventDefault();
       const meta = event.metaKey || event.ctrlKey;
-      selectNode(node, { option: false, shift: false, meta }, meta ? !current : true);
+      selectNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
     },
     [selectionMode, node, current, selectNode],
   );
@@ -1225,7 +1135,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
       // is why a windowed tree is one whose item ids are unique.
       data-index={windowIndex}
       className={mx(
-        'col-[tree-row] outline-none cursor-pointer select-none',
+        'col-[tree-row] outline-none select-none',
+        selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
+        isItemDraggable && 'active:cursor-grabbing',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
         // copy left behind in place reads as a second row rather than as the one being moved. A
         // branch's children go with it, since the drag start collapses it.
@@ -1328,8 +1240,7 @@ const TreeNodeHeading = <T extends { id: string }>({
       <div
         data-testid='treeItem.heading'
         className={mx(
-          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) cursor-pointer select-none',
-          props.disabled && 'cursor-default',
+          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) select-none',
           props.headingClassName,
         )}
       >

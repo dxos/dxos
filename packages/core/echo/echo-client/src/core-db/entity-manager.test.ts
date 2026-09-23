@@ -476,6 +476,19 @@ describe('DatabaseImpl', () => {
       await expect(db._loadObjectById(object.id)).rejects.toBeInstanceOf(ContextDisposedError);
     });
 
+    test('a link load reaching a closed repo proxy is abandoned, not an invariant violation', async () => {
+      const object = Obj.make(TestSchema.Expando, { content: 'Hello, world!' });
+      // The object lives in its own linked document, so loading it reaches `RepoProxy.find`.
+      const db = await createClientDbInSpaceWithObject(object);
+
+      // The proxy's lifetime is not the manager's: async work the manager started while open — query
+      // hydration, a graph rebuild on a timer — reaches the proxy after it has gone.
+      await db._repo.close();
+
+      expect(() => db.getObjectCoreById(object.id)).to.not.throw();
+      expect(db.getObjectCoreById(object.id)).to.be.undefined;
+    });
+
     test('a load pending across close and reopen is cancelled, not resolved from the new lifetime', async () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);

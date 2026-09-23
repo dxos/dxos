@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Accordion, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -356,6 +356,9 @@ const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: 
   );
 };
 
+/** Longer than this, JSON rendering truncates a string, so a text field is shown as text instead. */
+const MAX_JSON_STRING_LENGTH = 128;
+
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
     {/* No horizontal padding of its own: the containing body already insets by `trim-sm`, and a
@@ -373,13 +376,46 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
         onCopy={() => JSON.stringify(data)}
       />
     </div>
-    <JsonHighlighter
-      data={data}
-      // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
-      // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
-      scroll='horizontal'
-      classNames='text-xs bg-transparent'
-      replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
-    />
+    {multilineFields(data)?.map(([key, value], _, fields) => (
+      <div key={key} className='flex flex-col'>
+        {fields.length > 1 && <span className='text-xs text-description'>{key}</span>}
+        <SyntaxHighlighter
+          language={key === 'code' ? 'js' : 'text'}
+          scroll='horizontal'
+          classNames='text-xs bg-transparent'
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    )) ?? (
+      <JsonHighlighter
+        data={data}
+        // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
+        // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
+        scroll='horizontal'
+        classNames='text-xs bg-transparent'
+        replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: MAX_JSON_STRING_LENGTH }}
+      />
+    )}
   </div>
 );
+
+/**
+ * The entries of a record whose fields are all strings, when one spans lines or runs long — a
+ * code-mode `eval`'s `code` and `output`. JSON would escape every newline onto one line and cut the
+ * string short, so these render as the text they are.
+ */
+const multilineFields = (data: unknown): [string, string][] | undefined => {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return undefined;
+  }
+  const entries = Object.entries(data);
+  const strings = entries.flatMap(([key, value]): [string, string][] =>
+    typeof value === 'string' ? [[key, value]] : [],
+  );
+  return strings.length > 0 &&
+    strings.length === entries.length &&
+    strings.some(([, value]) => value.includes('\n') || value.length > MAX_JSON_STRING_LENGTH)
+    ? strings
+    : undefined;
+};
