@@ -19,6 +19,7 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       acceptPersistenceKey: Set<string>;
       /** Parents sharing a scope move items between them; a drop from outside it links instead. */
       moveScope: string;
+      canDrop: (source: TreeData) => boolean;
       getDropKind: (source: TreeData, instruction: Instruction) => DropKind;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
       /** An item moved here from another parent; `index` is its position among this node's children. */

@@ -291,8 +291,9 @@ export const createProjectArtifactsExtension = () =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
         : Option.none(),
-    connector: ({ project, space }) =>
-      Effect.succeed([
+    connector: ({ project, space }) => {
+      const db = Obj.getDatabase(project);
+      return Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
         // would pull @dxos/client into this plugin's dependencies for a value it only passes through.
         AppGraphNode.make({
@@ -313,10 +314,11 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
-            [AppNode.CONTAINER_PROPERTY]: artifacts(project),
+            ...(db ? AppNode.getContainerPartials(artifacts(project), db) : {}),
           },
         }),
-      ]),
+      ]);
+    },
   });
 
 /**
@@ -344,10 +346,9 @@ export const createProjectArtifactsActionExtension = () =>
       }
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
-      const memberOf = artifacts(project);
       return Effect.succeed(
         objects
-          .map((object) => AppNode.makeObject({ get, db, object, navigable: true, memberOf }))
+          .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },

@@ -171,22 +171,17 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
   const getDropKind = (source: TreeData, instruction: AppNode.Instruction): DropKind =>
     canDropSameType(source) ? (isJoin(instruction) ? 'reject' : 'move') : isJoin(instruction) ? 'link' : 'reject';
 
-  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) => {
-    const onRearrange = makeSectionRearrangeCallback(space, typename);
-    return orderedObjects
+  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) =>
+    orderedObjects
       .map((object) =>
         AppNode.makeObject({
           get,
           db: space.db,
           object,
-          onRearrange,
-          ...(container
-            ? { container: container(object), canDrop: AppNode.CAN_DROP_OBJECT, getDropKind }
-            : { canDrop: canDropSameType }),
+          ...(container ? { container: container(object), getDropKind } : {}),
         }),
       )
       .filter((node): node is NonNullable<typeof node> => node !== null);
-  };
 
   /** Matches this type's section node (the parent the objects and the create action hang off). */
   const whenSection = (node: AppGraphNode.Node): Option.Option<Space> => {
@@ -234,6 +229,8 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
             role: 'branch',
             draggable: false,
             droppable: false,
+            canDrop: canDropSameType,
+            onRearrange: makeSectionRearrangeCallback(space, typename),
             space,
             testId,
             ...(options.position ? { position: options.position } : {}),

@@ -184,7 +184,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 object,
                 navigable: true,
                 deck: collectionDeck(object, ephemeralState.navigableCollections),
-                memberOf: collectionRef?.target ? ContainerModel.collection(collectionRef.target) : undefined,
               }),
             )
             .filter(isNonNullable),
@@ -245,7 +244,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   db,
                   navigable: true,
                   deck: collectionDeck(object, ephemeralState.navigableCollections),
-                  memberOf: ContainerModel.collection(collection),
                 }),
             )
             .filter(isNonNullable),

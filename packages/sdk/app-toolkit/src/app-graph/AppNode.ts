@@ -121,6 +121,8 @@ const buildContainerPartials = (container: ContainerModel.Container, db: Databas
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   moveScope: container.moveScope,
+  canDrop: canDropInto(container),
+  onRearrange: rearrangeCallback(container),
   onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
     ContainerModel.link({ container, object: child.data, index }),
   onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>) => ContainerModel.release({ container, object: child.data }),
@@ -146,7 +148,6 @@ export const getContainerPartials = (container: ContainerModel.Container, db: Da
 /** Build collection partials for drag/drop behavior. */
 export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
   role: 'branch' as const,
-  canDrop: canDropInto(ContainerModel.collection(collection)),
   ...getContainerPartials(ContainerModel.collection(collection), db),
 });
 
@@ -180,9 +181,7 @@ export const makeObject = ({
   droppable = true,
   navigable = false,
   deck,
-  onRearrange,
   container,
-  memberOf,
   canDrop: canDropOverride,
   getDropKind,
 }: {
@@ -201,12 +200,8 @@ export const makeObject = ({
    * {@link AppAnnotation.DeckAnnotation} instead.
    */
   deck?: DeckSpec.DeckSpec;
-  /** Rearrange callback invoked with the next sibling order on drop. */
-  onRearrange?: (nextOrder: unknown[]) => void;
   /** The list this row stands for; objects dropped onto the row join it. */
   container?: ContainerModel.Container;
-  /** The list this row is an item of; the row reorders within it and takes what it accepts. */
-  memberOf?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
   /** What a drop at each instruction does, for a row whose answer depends on the source. */
@@ -254,7 +249,7 @@ export const makeObject = ({
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
-  const canDrop = droppable ? (canDropOverride ?? (memberOf ? canDropInto(memberOf) : CAN_DROP_OBJECT)) : undefined;
+  const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
 
   return {
     id: object.id,
@@ -275,7 +270,6 @@ export const makeObject = ({
       selectable,
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
-      onRearrange: onRearrange ?? (memberOf ? rearrangeCallback(memberOf) : undefined),
       ...(container ? getContainerPartials(container, db) : {}),
       getDropKind,
       canDrop,

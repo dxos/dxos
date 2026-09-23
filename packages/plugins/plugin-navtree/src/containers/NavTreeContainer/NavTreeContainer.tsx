@@ -59,12 +59,15 @@ const resolveDrop = (
   const targetNode = target.item as NavTreeNode.NavTreeItemGraphNode;
   const sourceParent = getParent(graph, sourceNode, source.path);
   if (source.path.slice(0, -1).join() === target.path.slice(0, -1).join() && instruction.type !== 'make-child') {
-    return { operation: 'rearrange', sourceParent };
+    const reorders = sourceParent?.properties.onRearrange && sourceParent.properties.canDrop?.(source);
+    return { operation: reorders ? 'rearrange' : 'reject', sourceParent, destination: sourceParent };
   }
 
   const destination = instruction.type === 'make-child' ? targetNode : getParent(graph, targetNode, target.path);
   return {
-    operation: resolveDropKind({ source: sourceNode, sourceParent, destination }),
+    operation: destination?.properties.canDrop?.(source)
+      ? resolveDropKind({ source: sourceNode, sourceParent, destination })
+      : 'reject',
     sourceParent,
     destination,
   };
@@ -149,9 +152,12 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [invokePromise, graph],
     );
 
-    const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-      return target.item.properties.canDrop?.(source) ?? false;
-    }, []);
+    const canDrop = useCallback(
+      ({ source, target }: { source: TreeData; target: TreeData }) =>
+        !!target.item.properties.canDrop?.(source) ||
+        !!getParent(graph, target.item, target.path)?.properties.canDrop?.(source),
+      [graph],
+    );
 
     const getDropKind = useCallback(
       ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }): DropKind => {
@@ -265,7 +271,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
                 arrayMove(nextItems, sourceIndex, targetIndex);
-                void sourceNode.properties.onRearrange?.(nextItems);
+                void sourceParent?.properties.onRearrange?.(nextItems);
                 break;
               }
               case 'move': {
