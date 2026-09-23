@@ -256,19 +256,19 @@ export class GraphBuilder<
   readonly _tracker: ConnectorTracker<ConnectorEntry<Arg>[]>;
   /** What each connector key last wrote into the store; a key without an entry has never flushed. */
   readonly _flushed = new Map<string, Flushed<Arg>>();
-  /** Whether a dirty-flush task is already scheduled. */
-  _flushScheduled = false;
-  /** Whether a flush of updates to connectors already in the store is queued. */
-  _updateScheduled = false;
+  /** Whether a budgeted flush is queued on a microtask. */
+  _frameFlushQueued = false;
+  /** Whether a flush of what the budget left is scheduled. */
+  _drainScheduled = false;
   _retentions: readonly Retention.Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
   _collectedAskKey?: string;
   _collectScheduled = false;
   _collectPromise: Promise<void> = Promise.resolve();
-  /** Resolves when the current flush completes. */
-  _flushPromise: Promise<void> = Promise.resolve();
-  /** Resolves when the queued update flush completes. */
-  _updatePromise: Promise<void> = Promise.resolve();
+  /** Resolves when the queued budgeted flush completes. */
+  _frameFlushPromise: Promise<void> = Promise.resolve();
+  /** Resolves when the scheduled drain completes. */
+  _drainPromise: Promise<void> = Promise.resolve();
   readonly _extensions: Atom.Writable<Record<string, Extension<Node, Arg, Rel, Meta>>>;
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
@@ -293,7 +293,7 @@ export class GraphBuilder<
     this._tracker = new ConnectorTracker({
       registry: this._registry,
       read: (get, key) => this._readConnectors(get, key),
-      onDirty: (key) => this._scheduleDirtyFlush(this._flushed.has(key)),
+      onDirty: () => this._scheduleFlush(),
     });
     this._store = store(
       {
@@ -360,40 +360,34 @@ export class GraphBuilder<
   }
 
   /**
-   * An update to output already in the store flushes on a microtask, so an edit renders in the frame it
-   * was made, until the frame's budget runs out; the rest, and a connector's first output, wait for
-   * {@link GraphBuilder._schedule}.
+   * Dirty connectors flush on a microtask, so an edit renders in the frame it was made, until the
+   * frame's budget runs out; the rest wait for {@link GraphBuilder._schedule}, which drains them.
    */
-  _scheduleDirtyFlush(update: boolean): void {
-    if (update) {
-      if (!this._updateScheduled) {
-        this._updateScheduled = true;
-        this._updatePromise = Promise.resolve().then(() => {
-          this._updateScheduled = false;
-          this._flushDirtyConnectors((key) => this._flushed.has(key), this._frameBudget());
-          if (this._tracker.dirty.size > 0) {
-            this._scheduleDirtyFlush(false);
-          }
-        });
-      }
+  _scheduleFlush(): void {
+    if (this._frameFlushQueued) {
       return;
     }
-    if (!this._flushScheduled) {
-      this._flushScheduled = true;
-      this._flushPromise = this._schedule(() => {
-        this._flushScheduled = false;
-        this._flushDirtyConnectors();
-      });
-    }
+    this._frameFlushQueued = true;
+    this._frameFlushPromise = Promise.resolve().then(() => {
+      this._frameFlushQueued = false;
+      this._flushDirtyConnectors(this._frameBudget());
+      if (this._tracker.dirty.size > 0 && !this._drainScheduled) {
+        this._drainScheduled = true;
+        this._drainPromise = this._schedule(() => {
+          this._drainScheduled = false;
+          this._flushDirtyConnectors();
+        });
+      }
+    });
   }
 
   /**
-   * Reads each selected dirty connector, then applies whatever changed. The budget covers the reads,
-   * which are most of the cost: a key the budget does not reach stays dirty and unread.
+   * Reads each dirty connector, then applies whatever changed. The budget covers the reads, which are
+   * most of the cost: a key the budget does not reach stays dirty and unread.
    */
-  _flushDirtyConnectors(select: (key: string) => boolean = () => true, budget?: FrameBudget): void {
+  _flushDirtyConnectors(budget?: FrameBudget): void {
     while (!budget || budget.hasTime()) {
-      const keys = [...this._tracker.dirty].filter(select);
+      const keys = [...this._tracker.dirty];
       if (keys.length === 0) {
         break;
       }
@@ -492,8 +486,8 @@ export class GraphBuilder<
   }
 
   /**
-   * When a connector's first output is flushed. Defaults to the next microtask; override to hand the work to
-   * a scheduler that can yield to the main thread.
+   * Where the connectors a frame's budget left are flushed, and retention collects. Defaults to the next
+   * microtask; override to hand the work to a scheduler that can yield to the main thread.
    */
   _schedule(callback: () => void): Promise<void> {
     return Promise.resolve().then(callback);
@@ -727,8 +721,8 @@ export const removeExtension: {
 
 /** Waits for the pending flushes, then for the collection pending once they land, which covers any they triggered. */
 export const flush = async (builder: Any): Promise<void> => {
-  await builder._updatePromise;
-  await builder._flushPromise;
+  await builder._frameFlushPromise;
+  await builder._drainPromise;
   await builder._collectPromise;
 };
 

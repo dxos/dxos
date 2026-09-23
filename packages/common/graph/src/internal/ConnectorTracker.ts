@@ -15,7 +15,7 @@ export type ConnectorTrackerOptions<A> = {
   /** Computes the connector tracked under `key`. */
   read: (get: Atom.AtomContext, key: string) => A;
   /** Called when a tracked key goes from clean to dirty. */
-  onDirty: (key: string) => void;
+  onDirty: () => void;
 };
 
 type Holder<A> = { current?: ConnectorTracker<A> };
@@ -117,7 +117,7 @@ export class ConnectorTracker<A> {
       return;
     }
     this.#dirty.add(key);
-    this.#options.onDirty(key);
+    this.#options.onDirty();
   }
 
   #readAnchor(get: Atom.AtomContext, index: number): void {
