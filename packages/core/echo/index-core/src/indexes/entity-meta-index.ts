@@ -392,11 +392,15 @@ export class EntityMetaIndex implements Index {
         }
         const sql = this.#sql;
         const column = endpoint === 'source' ? 'source' : 'target';
-        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
-          column,
-          anchorDxns,
-        )}`;
-        return rows.map((row) => ({
+        // A relation carries one value in this column, so chunks partition the matches and the
+        // results concatenate without duplicates.
+        const results: EntityMeta[] = [];
+        for (const chunk of chunkArray(anchorDxns)) {
+          const rows =
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(column, chunk)}`;
+          results.push(...rows);
+        }
+        return results.map((row) => ({
           ...row,
           deleted: !!row.deleted,
         }));
