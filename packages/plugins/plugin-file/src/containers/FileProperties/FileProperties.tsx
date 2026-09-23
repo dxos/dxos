@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Clipboard, Field, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { File } from '@dxos/types';
 
@@ -69,38 +69,34 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
   }
 
   return (
-    // Its own provider: `useClipboard` falls back to a no-op context, so a copy button outside one
-    // fails silently rather than visibly.
-    <Clipboard.Provider>
-      <Form.FieldSet>
-        {reference && (
-          <Field.Root>
-            <Field.Label>{t('properties.reference.label')}</Field.Label>
-            <div className='flex w-full gap-1'>
-              <Field.Input readOnly value={reference} classNames='grow' />
-              <SystemIconButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
-            </div>
-          </Field.Root>
-        )}
-        {url && (
-          <Field.Root>
-            <Field.Label>{t('properties.url.label')}</Field.Label>
-            <div className='flex w-full gap-1'>
-              <Field.Input readOnly value={url} classNames='grow' />
-              <SystemIconButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
-              <IconButton
-                iconOnly
-                icon='ph--arrows-clockwise--regular'
-                label={t('properties.url.regenerate.label')}
-                disabled={pending}
-                onClick={() => void resolve()}
-              />
-            </div>
-            <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
-          </Field.Root>
-        )}
-      </Form.FieldSet>
-    </Clipboard.Provider>
+    <Form.FieldSet>
+      {reference && (
+        <Field.Root>
+          <Field.Label>{t('properties.reference.label')}</Field.Label>
+          <div className='flex w-full gap-1'>
+            <Field.Input readOnly value={reference} classNames='grow' />
+            <SystemIconButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
+          </div>
+        </Field.Root>
+      )}
+      {url && (
+        <Field.Root>
+          <Field.Label>{t('properties.url.label')}</Field.Label>
+          <div className='flex w-full gap-1'>
+            <Field.Input readOnly value={url} classNames='grow' />
+            <SystemIconButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
+            <IconButton
+              iconOnly
+              icon='ph--arrows-clockwise--regular'
+              label={t('properties.url.regenerate.label')}
+              disabled={pending}
+              onClick={() => void resolve()}
+            />
+          </div>
+          <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
+        </Field.Root>
+      )}
+    </Form.FieldSet>
   );
 };
 

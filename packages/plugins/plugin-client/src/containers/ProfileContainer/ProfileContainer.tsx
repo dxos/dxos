@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Clipboard, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -167,23 +167,21 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <Clipboard.Provider>
-      <Form.Root
-        variant='settings'
-        schema={UserProfile}
-        values={values}
-        fieldMap={fieldMap}
-        onValuesChanged={handleChange}
-      >
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.FieldSet label={t('profile.label')} description={t('profile.description')}>
-              <Form.Fields />
-            </Form.FieldSet>
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Clipboard.Provider>
+    <Form.Root
+      variant='settings'
+      schema={UserProfile}
+      values={values}
+      fieldMap={fieldMap}
+      onValuesChanged={handleChange}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('profile.label')} description={t('profile.description')}>
+            <Form.Fields />
+          </Form.FieldSet>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

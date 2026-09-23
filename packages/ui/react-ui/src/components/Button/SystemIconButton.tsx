@@ -211,7 +211,7 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
         classNames={classNames}
         iconClassNames={copied && 'text-green-500'}
         icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'}
-        label={label ?? t('system-button.clipboard.label')}
+        label={copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))}
         onClick={handleCopy}
         ref={forwardedRef}
       />

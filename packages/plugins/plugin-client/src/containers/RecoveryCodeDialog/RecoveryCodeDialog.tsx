@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Clipboard, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -24,9 +24,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
       <AlertDialog.Body>
         <AlertDialog.Title>{t('recovery-code-dialog.title')}</AlertDialog.Title>
         <AlertDialog.Description classNames='py-4'>{t('recovery-code-dialog.description')}</AlertDialog.Description>
-        <Clipboard.Provider>
-          <Code code={code} />
-        </Clipboard.Provider>
+        <Code code={code} />
         <Flex column gap='sm' classNames='py-4'>
           <p>{t('recovery-code-dialog-warning-1.message')}</p>
           <p>{t('recovery-code-dialog-warning-2.message')}</p>

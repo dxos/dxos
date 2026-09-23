@@ -22,7 +22,7 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Clipboard, Icon, QrCode, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -169,50 +169,48 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   return (
-    <Clipboard.Provider>
-      <Form.Root variant='settings'>
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
-              <Form.FieldSet>
+    <Form.Root variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
+            <Form.FieldSet>
+              <div role='group' className='min-w-0'>
+                <h3 className='text-lg mb-2'>{t('members.label')}</h3>
+                <SpaceMemberList spaceKey={space.key} includeSelf />
+              </div>
+              {showContactPicker && (
                 <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('members.label')}</h3>
-                  <SpaceMemberList spaceKey={space.key} includeSelf />
+                  <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
+                  <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
                 </div>
-                {showContactPicker && (
-                  <div role='group' className='min-w-0'>
-                    <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
-                    <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
-                  </div>
+              )}
+              <div role='group' className='min-w-0'>
+                <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
+                {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+                {!selectedInvitation && (
+                  <>
+                    <p className='text-description mb-2'>{t('space-invitation.description')}</p>
+                    <InvitationList
+                      className='mb-2'
+                      send={handleSend}
+                      invitations={visibleInvitations ?? []}
+                      onClickRemove={(invitation) => invitation.cancel()}
+                      createInvitationUrl={createInvitationUrl}
+                    />
+                    <BifurcatedAction
+                      actions={inviteActions}
+                      activeAction={activeAction}
+                      onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                      data-testid='membersContainer.createInvitation'
+                    />
+                  </>
                 )}
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
-                  {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                  {!selectedInvitation && (
-                    <>
-                      <p className='text-description mb-2'>{t('space-invitation.description')}</p>
-                      <InvitationList
-                        className='mb-2'
-                        send={handleSend}
-                        invitations={visibleInvitations ?? []}
-                        onClickRemove={(invitation) => invitation.cancel()}
-                        createInvitationUrl={createInvitationUrl}
-                      />
-                      <BifurcatedAction
-                        actions={inviteActions}
-                        activeAction={activeAction}
-                        onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                        data-testid='membersContainer.createInvitation'
-                      />
-                    </>
-                  )}
-                </div>
-              </Form.FieldSet>
+              </div>
             </Form.FieldSet>
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Clipboard.Provider>
+          </Form.FieldSet>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
@@ -278,7 +276,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-        <Clipboard.Button value={url ?? 'never'} />
+        <SystemIconButton.Clipboard value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}

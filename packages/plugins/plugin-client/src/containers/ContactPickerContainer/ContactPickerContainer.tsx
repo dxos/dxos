@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Button, Clipboard, Field, Select, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -68,56 +68,54 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <Clipboard.Provider>
-      <div role='group' className='flex flex-col gap-2'>
-        <ContactPicker
-          contacts={contacts}
-          excludeKeys={memberKeys}
-          value={selected}
-          onChange={(keys) => {
-            setSelected(keys);
-            setJoinUrl(undefined);
-          }}
-          disabled={!canAdmit}
-        />
-        <div className='flex gap-2'>
-          <Select.Root
-            value={String(role)}
-            onValueChange={(value) =>
-              setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
-            }
-          >
-            <Select.TriggerButton disabled={!canAdmit} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {ROLES.map((value) => (
-                    <Select.Option key={value} value={String(value)}>
-                      {t(roleLabel[value])}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-          <Button
-            disabled={!canAdmit || pending || selected.length === 0}
-            onClick={handleAdd}
-            data-testid='contactPicker.add'
-          >
-            {t('contact-picker-add.label')}
-          </Button>
-        </div>
-        {joinUrl && (
-          <div className='flex gap-2'>
-            <Field.Root readOnly>
-              <Field.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
-            </Field.Root>
-            <Clipboard.Button value={joinUrl} />
-          </div>
-        )}
+    <div role='group' className='flex flex-col gap-2'>
+      <ContactPicker
+        contacts={contacts}
+        excludeKeys={memberKeys}
+        value={selected}
+        onChange={(keys) => {
+          setSelected(keys);
+          setJoinUrl(undefined);
+        }}
+        disabled={!canAdmit}
+      />
+      <div className='flex gap-2'>
+        <Select.Root
+          value={String(role)}
+          onValueChange={(value) =>
+            setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
+          }
+        >
+          <Select.TriggerButton disabled={!canAdmit} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {ROLES.map((value) => (
+                  <Select.Option key={value} value={String(value)}>
+                    {t(roleLabel[value])}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+        <Button
+          disabled={!canAdmit || pending || selected.length === 0}
+          onClick={handleAdd}
+          data-testid='contactPicker.add'
+        >
+          {t('contact-picker-add.label')}
+        </Button>
       </div>
-    </Clipboard.Provider>
+      {joinUrl && (
+        <div className='flex gap-2'>
+          <Field.Root readOnly>
+            <Field.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+          </Field.Root>
+          <SystemIconButton.Clipboard value={joinUrl} />
+        </div>
+      )}
+    </div>
   );
 };
 
