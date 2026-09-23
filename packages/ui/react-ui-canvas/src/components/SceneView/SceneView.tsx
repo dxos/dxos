@@ -61,7 +61,15 @@ import {
   isPointEndpoint,
   isPortalNode,
 } from '../../model/types.ts';
-import { boundsCenter, cameraTransform, fitBounds, panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import {
+  MIN_ZOOM,
+  boundsCenter,
+  cameraTransform,
+  fitBounds,
+  panBy,
+  screenToScene,
+  zoomAt,
+} from '../../utils/camera.ts';
 import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
 import { nodeDragType } from '../../utils/dnd.ts';
 import { boundsFromPoints, hitTest, nodesIntersecting, unionBounds } from '../../utils/hit.ts';
@@ -84,6 +92,8 @@ import { useSceneNavigation } from './useSceneNavigation.ts';
 const DEFAULT_MARGIN = 1;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
+/** Length of a dash of the scene's frame, in screen px. */
+const FRAME_DASH = 4;
 /**
  * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels
  * on screen depend on the zoom alone: a child scene seen at a quarter scale draws the same lines as its
@@ -1351,6 +1361,9 @@ export const SceneView = ({
     ],
   );
 
+  /** One screen pixel in scene units, for chrome that should not grow with the camera. */
+  const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
+
   return (
     <div
       ref={rootRef}
@@ -1390,11 +1403,22 @@ export const SceneView = ({
         className={mx('absolute pointer-events-none', !measured && 'invisible')}
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
-        <div
-          className='absolute border border-dashed border-orange-border opacity-50 pointer-events-none'
-          data-testid='scene-frame'
-          style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
-        />
+        {/* The frame is chrome rather than content, so its stroke and dashes are divided by the zoom
+            the parent applies, the way the control frame's are. It is drawn as a stroke rather than a
+            CSS border because a border's width is rounded to whole local pixels, which puts a floor of
+            one scene unit under it — exactly the thickening that zooming in would cause. */}
+        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
+          <rect
+            data-testid='scene-frame'
+            x={bounds.x}
+            y={bounds.y}
+            width={bounds.width}
+            height={bounds.height}
+            className='fill-none stroke-orange-border opacity-50'
+            strokeWidth={frameUnit}
+            strokeDasharray={`${FRAME_DASH * frameUnit} ${FRAME_DASH * frameUnit}`}
+          />
+        </svg>
         <div className='pointer-events-auto'>
           <SceneLayer
             store={store}
