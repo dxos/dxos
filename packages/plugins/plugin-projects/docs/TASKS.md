@@ -987,26 +987,37 @@ the hierarchical list, which is #12787.
 
 ### Tracked 2026-09-23 (user) — task surfaces
 
+Design: [TASK-DETAIL.md](TASK-DETAIL.md) — the master-detail items below follow
+plugin-inbox's mailbox/message precedent (a level chain of planks, not a
+companion).
+
 - [ ] **Stored ECHO object for a pull request, with an article** — a durable PR
       type (alongside `Repo`/`Project.repo`) so a pull request is a first-class
       object a project's work can reference, plus the article that renders it.
       Today `#nnn` is only a markdown decoration resolving to a GitHub URL;
       nothing in the space holds the PR's title, state, branch or checks.
-- [ ] **Sort/filter tasks from a project** — a filter textbox with labels in the
-      `TaskSetArticle`/`ProjectArticle` toolbar, modelled on
-      `plugin-inbox`'s `MailboxFilter` (`containers/MailboxArticle/MailboxFilter.tsx` + `mailbox-search.ts`): free text plus label chips narrowing the list, with
-      the sort order alongside it.
-- [ ] **Navigate to a task's article** — a row (list, chat checklist, gantt lane)
-      opens the task in its own article rather than only selecting it in place.
-- [ ] **Create/edit a task inline** — editing happens in the row itself instead of
-      the `TaskList.Edit` strip at the bottom of the panel; the strip's create
-      case becomes an inline new row.
-- [ ] **Master-detail: the selected task in a companion** — the project's Tasks
-      tab shows the list alone and the selected row's detail opens in a
-      companion surface, replacing the `TaskList.Edit` strip at the bottom
-      (`TaskSetArticle.tsx`, the `<div className='p-2 pt-0'>` block). Selection
-      already exists (`TaskList` `selectable` / `selected` / `onTaskSelect`);
-      what is missing is the companion surface for a `Task` and the wiring that
-      opens it from the row. Pairs with "navigate to a task's article" —
-      companion for the detail beside the list, article for a task opened on its
-      own.
+- [ ] **Sort/filter tasks from a project** — `TaskSetArticle` already has a
+      free-text filter in its toolbar (`filter.placeholder`), but only in the
+      standalone article: embedded as a section the host owns the chrome, so the
+      project's Tasks tab has none. Add label chips beside the text (the model is
+      plugin-inbox's `MailboxFilter` + `mailbox-search.ts`) and a sort control,
+      and surface them in the project's toolbar.
+- [ ] **Level chain for task detail** — `DeckAnnotation` on `TaskSet`
+      (`taskSet → task`) and a `task` rung on `Project`, so a row opened from
+      either host reuses one plank rather than stacking one per click.
+- [ ] **Hidden graph children per task** — a `taskSetTasks` connector in
+      plugin-tasks (hidden `Task` nodes under a `TaskSet` node) and a matching
+      one in plugin-projects under `PROJECT_URL`, plus a `paths.ts` helper, so a
+      task is addressable by path from either host.
+- [ ] **`TaskArticle`** — the detail container, on
+      `AppSurface.object(Article, Task.Task)`. Starts with what `TaskList.Edit`
+      shows (title, description, status, estimate) and grows into the fields a
+      strip cannot hold: assignee, dependencies, sub-tasks, history, delegation.
+- [ ] **Row opens the detail** — `TaskSetArticle` rows invoke
+      `LayoutOperation.Select` + `LayoutOperation.Open` at `level: 'task'`;
+      meta-click opens its own plank; arrow keys read down the list through
+      `useArticleKeyboardNavigation`.
+- [ ] **Retire the `TaskList.Edit` strip** — only once creation has somewhere
+      else to live: an inline new row in the list, or a toolbar action that
+      creates the task and opens its plank (plugin-inbox's draft pattern).
+      Removing it first takes away the only way to type a new task.
