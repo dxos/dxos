@@ -247,8 +247,8 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
-  /** Set by {@link expedite} until the current task ends. */
-  _expedited = false;
+  /** Whether a flush of updates to connectors already in the store is queued. */
+  _updateScheduled = false;
   _retentions: readonly Retention.Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
   _collectedAskKey?: string;
@@ -256,6 +256,8 @@ export class GraphBuilder<
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
+  /** Resolves when the queued update flush completes. */
+  _updatePromise: Promise<void> = Promise.resolve();
   /** Registered extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
     Atom.keepAlive,
@@ -340,9 +342,19 @@ export class GraphBuilder<
     }
   }
 
-  _scheduleDirtyFlush(): void {
-    if (this._expedited) {
-      void Promise.resolve().then(() => this._flushDirtyConnectors());
+  /**
+   * An update to output already in the store flushes on a microtask, so an edit renders in the frame it
+   * was made; a connector's first output waits for {@link GraphBuilder._schedule}.
+   */
+  _scheduleDirtyFlush(update: boolean): void {
+    if (update) {
+      if (!this._updateScheduled) {
+        this._updateScheduled = true;
+        this._updatePromise = Promise.resolve().then(() => {
+          this._updateScheduled = false;
+          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key));
+        });
+      }
       return;
     }
     if (!this._flushScheduled) {
@@ -354,10 +366,15 @@ export class GraphBuilder<
     }
   }
 
-  _flushDirtyConnectors(): void {
-    while (this._dirtyConnectors.size > 0) {
-      const entries = [...this._dirtyConnectors.entries()];
-      this._dirtyConnectors.clear();
+  _flushDirtyConnectors(select: (key: string) => boolean = () => true): void {
+    while (true) {
+      const entries = [...this._dirtyConnectors.entries()].filter(([key]) => select(key));
+      if (entries.length === 0) {
+        return;
+      }
+      for (const [key] of entries) {
+        this._dirtyConnectors.delete(key);
+      }
 
       const apply = () => {
         for (const [key, { nodes, previous }] of entries) {
@@ -415,8 +432,8 @@ export class GraphBuilder<
   }
 
   /**
-   * When a flush runs. Defaults to the next microtask; override to hand the work to a scheduler that can
-   * yield to the main thread.
+   * When a connector's first output is flushed. Defaults to the next microtask; override to hand the work to
+   * a scheduler that can yield to the main thread.
    */
   _schedule(callback: () => void): Promise<void> {
     return Promise.resolve().then(callback);
@@ -490,7 +507,7 @@ export class GraphBuilder<
 
         log('update', { id, relation, ids });
         this._dirtyConnectors.set(key, { nodes, previous });
-        this._scheduleDirtyFlush();
+        this._scheduleDirtyFlush(this._connectorPrevious.has(key));
       },
       { immediate: true },
     );
@@ -757,21 +774,11 @@ export const removeExtension: {
   return builder;
 });
 
-/** Waits for the pending flush, then for the collection pending once it lands, which covers any it triggered. */
+/** Waits for the pending flushes, then for the collection pending once they land, which covers any they triggered. */
 export const flush = async (builder: Any): Promise<void> => {
+  await builder._updatePromise;
   await builder._flushPromise;
   await builder._collectPromise;
-};
-
-/**
- * Until the current task ends, connector updates flush on a microtask rather than through the scheduler,
- * so a change the user just made reaches the graph before the next paint.
- */
-export const expedite = (builder: Any): void => {
-  builder._expedited = true;
-  setTimeout(() => {
-    builder._expedited = false;
-  });
 };
 
 /**

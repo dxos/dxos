@@ -132,7 +132,7 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/c']);
   });
 
-  test('an expedited update lands on a microtask until the task ends', async () => {
+  test("an update to a connector's output lands on a microtask, its first output on the scheduler", async () => {
     const { registry, builder, children } = setup();
     const state = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
     GraphBuilder.addExtension(builder, {
@@ -141,19 +141,14 @@ describe('GraphBuilder', () => {
     });
 
     children(GraphNode.RootId);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal([]);
     await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a', 'root/b']);
 
-    GraphBuilder.expedite(builder);
     registry.set(state, ['b', 'a']);
     await Promise.resolve();
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
-
-    await new Promise((resolve) => setTimeout(resolve));
-    registry.set(state, ['a', 'b']);
-    await Promise.resolve();
-    expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
-    await GraphBuilder.flush(builder);
-    expect(children(GraphNode.RootId)).to.deep.equal(['root/a', 'root/b']);
   });
 
   test('an unrelated node changing leaves a connector alone', async () => {

@@ -12,7 +12,6 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
@@ -89,8 +88,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const [isLg] = useMediaQuery('lg');
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
-    const builder = useAppGraph();
-    const { graph } = builder;
+    const { graph } = useAppGraph();
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
     // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
     // the message and the sidebar is never blank.
@@ -266,7 +264,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
             const insertIndex = instruction.type === 'reorder-below' ? targetIndex + 1 : targetIndex;
             const migrationIndex = instruction.type === 'make-child' ? undefined : insertIndex;
-            AppGraphBuilder.expedite(builder);
             switch (operation) {
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
@@ -289,7 +286,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           }
         },
       });
-    }, [builder, graph]);
+    }, [graph]);
 
     // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open
