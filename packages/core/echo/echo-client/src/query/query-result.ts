@@ -154,7 +154,15 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
+    // Idempotent: results are cached and shared per query, so a caller releasing twice would
+    // otherwise stop the query under every other subscriber and leave the count negative.
+    let subscribed = true;
     const unsubscribe = () => {
+      if (!subscribed) {
+        log.warn('query unsubscribed twice', { query: Query.pretty(this._query) });
+        return;
+      }
+      subscribed = false;
       log('unsubscribe', { query: Query.pretty(this._query), active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
