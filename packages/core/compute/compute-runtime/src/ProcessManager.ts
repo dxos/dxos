@@ -72,6 +72,12 @@ const makeLoopbackRpcClient = (
  * is widened to the untyped `RpcClient<any>` surface stored on handles (`RpcClient` is invariant in its
  * group, so a `RpcClient<never>` is not otherwise assignable; see design spec §4.4).
  */
+/**
+ * Finished processes the monitor keeps listing after their handles are released, most recent last.
+ * The handle holds the process's scope, services and RPC client; the summary is a few hundred bytes.
+ */
+const FINISHED_PROCESS_RETENTION = 200;
+
 const EMPTY_RPC_CLIENT: RpcClient.RpcClient<any> = Effect.runSync(
   // `RpcGroup`/`RpcClient` are invariant in their group; the empty group is widened to the untyped
   // `any` surface so the resulting client matches `Handle.rpc` (see design spec §4.4).
@@ -353,6 +359,8 @@ export class ProcessManagerImpl implements Manager {
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
 
+  /** Summaries of released finished processes, most recent last; see {@link FINISHED_PROCESS_RETENTION}. */
+  readonly #finished: Process.Info[] = [];
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
   /**
@@ -444,7 +452,28 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Info[] {
-    return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
+    return [...this.#finished, ...[...this.#handles.values()].map((handle) => handle.snapshotProcessInfo())];
+  }
+
+  /**
+   * Releases a handle once its process is finished, keeping a summary for the monitor. Its status
+   * atom stays mounted: a caller still holding the handle reads it, and an unmounted writable atom
+   * would come back with its initial state.
+   */
+  #onStatusChanged(pid: Process.ID): void {
+    const handle = this.#handles.get(pid);
+    if (handle && !ProcessManagerImpl.#isNonTerminal(handle)) {
+      this.#handles.delete(pid);
+      this.#finished.push(handle.snapshotProcessInfo());
+      if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
+        this.#finished.shift();
+      }
+    }
+    this.#refreshProcessTree();
+  }
+
+  #isFinished(pid: Process.ID): boolean {
+    return this.#finished.some((info) => info.pid === pid);
   }
 
   #refreshProcessTree(): void {
@@ -470,6 +499,7 @@ export class ProcessManagerImpl implements Manager {
           }
         }
         this.#handles.clear();
+        this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
         log('lifecycle: manager suspended', { suspended: handleCount });
@@ -630,7 +660,7 @@ export class ProcessManagerImpl implements Manager {
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
-            } else {
+            } else if (!this.#isFinished(handle.parentId)) {
               log.warn('lifecycle: parent missing for child exit', {
                 parentPid: handle.parentId,
                 childPid: handle.pid,
@@ -681,7 +711,7 @@ export class ProcessManagerImpl implements Manager {
         this.#traceSink,
         rpcClient,
         onFinished,
-        () => this.#refreshProcessTree(),
+        () => this.#onStatusChanged(id),
         () => this.#hasNonTerminalChildren(id),
         () => this.#terminateChildren(id),
         persistence,
@@ -873,7 +903,7 @@ export class ProcessManagerImpl implements Manager {
         this.#traceSink,
         rpcClient,
         onFinished,
-        () => this.#refreshProcessTree(),
+        () => this.#onStatusChanged(id),
         () => this.#hasNonTerminalChildren(id),
         () => this.#terminateChildren(id),
         persistence,
@@ -915,6 +945,9 @@ export class ProcessManagerImpl implements Manager {
       if (existing) {
         log('lifecycle: hydrate skipped (already live)', { pid: id });
         return existing as unknown as Handle<I, O, Rpcs>;
+      }
+      if (this.#isFinished(id)) {
+        return yield* Effect.die(new Error(`Cannot hydrate terminal process: ${id}`));
       }
 
       const record = yield* this.#store.getProcess(id);
@@ -1018,7 +1051,8 @@ export class ProcessManagerImpl implements Manager {
 
       const persisted = yield* this.#store.listProcesses();
       for (const record of persisted) {
-        if (seenIds.has(record.id)) {
+        // A released process's record can still read as live until its teardown persists.
+        if (seenIds.has(record.id) || this.#isFinished(record.id)) {
           continue;
         }
         if (

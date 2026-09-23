@@ -707,9 +707,9 @@ describe('ManagerImpl', () => {
       yield* Effect.yieldNow;
 
       // A remount lookup adopts the first process it finds in a non-terminal state. While teardown
-      // blocks, this handle must not be that process.
+      // blocks, this handle must not be that process: it is already released from the live set.
       const listed = yield* manager.list({ key: 'test.stalling' });
-      expect(listed.map((process) => process.status.state)).toEqual([Process.State.TERMINATED]);
+      expect(listed).toEqual([]);
 
       // Input after the stop is refused outright. Queueing it would be worse than dropping it: the
       // handler never runs again, so the caller would wait on a turn that cannot come.
@@ -857,6 +857,22 @@ describe('ManagerImpl', () => {
         expect(info.state).toEqual(Process.State.HYBERNATING);
 
         yield* handle.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a finished process is released but stays in processTree',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+
+        const handle = yield* manager.spawn(makeWaitingExecutable());
+        yield* handle.terminate();
+
+        const tree = yield* monitor.processTree;
+        expect(tree.map((info) => [info.pid, info.state])).toEqual([[handle.pid, Process.State.TERMINATED]]);
+        const attached = yield* manager.attach(handle.pid).pipe(Effect.exit);
+        expect(Exit.isFailure(attached)).toBe(true);
       }, Effect.provide(TestLayer)),
     );
 
@@ -1494,7 +1510,6 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const monitor = yield* Process.ProcessMonitorService;
-      const manager = yield* ProcessManager.Service;
 
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
@@ -1506,15 +1521,14 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       yield* fiber.await;
 
       // The parent op spawns the child via Operation.invoke; locate the
-      // child's handle through the process tree and assert its environment
+      // child through the process tree and assert its environment
       // carries both inherited fields.
       const tree = yield* monitor.processTree;
       const childInfo = tree.find((node) => node.parentPid === fiber.pid);
       if (!childInfo) {
         throw new Error('child process not present in process tree');
       }
-      const childHandle = yield* manager.attach(childInfo.pid);
-      expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
+      expect(childInfo.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
   );
 });
