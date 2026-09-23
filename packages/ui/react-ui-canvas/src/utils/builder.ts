@@ -83,7 +83,7 @@ export class SceneBuilder {
   }
 
   text(id: string, box: Box, text: string): this {
-    return this.#node({ type: 'text', id, center: center(box), size: { width: box.width, height: box.height }, text });
+    return this.#node({ type: 'note', id, center: center(box), size: { width: box.width, height: box.height }, text });
   }
 
   /** A portal to `scene`; its size fixes the frame the child is centred in. */

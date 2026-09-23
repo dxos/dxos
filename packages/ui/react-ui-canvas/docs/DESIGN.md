@@ -135,9 +135,9 @@ NodeStyle = { hue?: Hue /* theme hue: fill, text and border */, rounded?, fill?,
 Rect     = NodeBase & { type: 'rect', label? }
 Ellipse  = NodeBase & { type: 'ellipse', label? }                // inscribed in the frame
 Class    = NodeBase & { type: 'class', name, attributes: string[], methods: string[] }   // UML
-Text     = NodeBase & { type: 'text', text }
+Note     = NodeBase & { type: 'note', text }
 Portal   = NodeBase & { type: 'scene', scene: SceneId }
-BuiltinNode = Rect | Ellipse | Class | Text | Portal            // the engine's own; a host type is NodeBase & its fields
+BuiltinNode = Rect | Ellipse | Class | Note | Portal            // the engine's own; a host type is NodeBase & its fields
 Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   // phase 2: Surface + derived props
 
 LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, directed? /* = ends: { end: 'arrow' } */, ends?: { start?: Marker, end?: Marker } }

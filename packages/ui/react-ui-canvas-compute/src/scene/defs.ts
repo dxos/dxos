@@ -151,8 +151,8 @@ const entries: Entry[] = [
 
 export const computeNodeDefs: NodeDef[] = entries.map(({ def }) => def);
 
-/** The compute types plus the engine's text note under a `Misc` group. */
+/** The compute types plus the engine's note under a `Misc` group. */
 export const computeNodeRegistry: NodeRegistry = {
   ...Object.fromEntries(computeNodeDefs.map((def) => [def.type, def])),
-  text: { ...defaultNodeRegistry.text, group: 'Misc' },
+  note: { ...defaultNodeRegistry.note, group: 'Misc' },
 };

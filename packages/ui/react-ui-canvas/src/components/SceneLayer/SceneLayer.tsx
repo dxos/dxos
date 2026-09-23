@@ -23,9 +23,9 @@ import {
   type Scene,
   isClassNode,
   isEllipseNode,
+  isNoteNode,
   isPortalNode,
   isRectNode,
-  isTextNode,
   linkMarkers,
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
@@ -346,8 +346,8 @@ export const UnknownNodeView = ({ node }: NodeViewProps) => (
   <div className='dx-fullscreen flex items-center justify-center text-xs text-description'>{node.type}</div>
 );
 
-export const TextNodeView = ({ node, editing }: NodeViewProps) => {
-  const text = isTextNode(node) ? node.text : '';
+export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
+  const text = isNoteNode(node) ? node.text : '';
   return (
     <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3'>
       {text}

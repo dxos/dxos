@@ -10,7 +10,7 @@ import { DEFAULT_EXTENT, boundsFromPoints, hitTest, nodesIntersecting, sceneBoun
 const nodes: Record<string, BuiltinNode> = {
   a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
   b: { type: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, size: { width: 100, height: 100 } },
-  t: { type: 'text', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
+  t: { type: 'note', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
 };
 
 const scene: Scene = {

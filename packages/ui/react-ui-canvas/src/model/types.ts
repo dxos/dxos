@@ -121,12 +121,13 @@ export const ClassNode = Schema.Struct({
 });
 export type ClassNode = Schema.Schema.Type<typeof ClassNode>;
 
-export const TextNode = Schema.Struct({
-  type: Schema.Literal('text'),
+/** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
+export const NoteNode = Schema.Struct({
+  type: Schema.Literal('note'),
   ...nodeBase,
   text: Schema.String,
 });
-export type TextNode = Schema.Schema.Type<typeof TextNode>;
+export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
 
 /** Portal to the next depth: renders the referenced scene scaled into this node's bounds. */
 export const PortalNode = Schema.Struct({
@@ -137,10 +138,10 @@ export const PortalNode = Schema.Struct({
 export type PortalNode = Schema.Schema.Type<typeof PortalNode>;
 
 /** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
-export const BuiltinNode = Schema.Union([RectNode, EllipseNode, ClassNode, TextNode, PortalNode]);
+export const BuiltinNode = Schema.Union([RectNode, EllipseNode, ClassNode, NoteNode, PortalNode]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
-export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'class', 'text', 'scene'];
+export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'class', 'note', 'scene'];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
 export type Node = NodeBase;
@@ -151,7 +152,7 @@ export type NodeType = string;
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isClassNode = (node: NodeBase): node is ClassNode => node.type === 'class';
-export const isTextNode = (node: NodeBase): node is TextNode => node.type === 'text';
+export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isPortalNode = (node: NodeBase): node is PortalNode => node.type === 'scene';
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
@@ -252,7 +253,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
   });
 
 /** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([RectNode, EllipseNode, ClassNode, TextNode, PortalNode]);
+export const Scene = createSceneSchema([RectNode, EllipseNode, ClassNode, NoteNode, PortalNode]);
 
 /** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
 export const OpenScene = createSceneSchema([NodeBase]);

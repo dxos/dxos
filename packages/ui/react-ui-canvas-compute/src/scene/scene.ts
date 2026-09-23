@@ -4,7 +4,7 @@
 
 //
 // A canvas-editor circuit as a scene: shapes become nodes with a z key (a note becomes the engine's
-// text node), connections become curves pinned to the ports the properties name. The circuit factories
+// note node), connections become curves pinned to the ports the properties name. The circuit factories
 // and `createComputeGraph` stay as they are; this is the seam the M4 store migration builds on.
 //
 
@@ -22,7 +22,7 @@ export const sceneFromCircuit = (model: CanvasGraphModel<ComputeShape>, id = 'ci
     const z = keys[index];
     nodes[shape.id] =
       shape.type === 'note'
-        ? { type: 'text', id: shape.id, z, center: shape.center, size: shape.size, text: shape.text ?? '' }
+        ? { type: 'note', id: shape.id, z, center: shape.center, size: shape.size, text: shape.text ?? '' }
         : { ...shape, z };
   });
   const links: Record<string, Link> = {};

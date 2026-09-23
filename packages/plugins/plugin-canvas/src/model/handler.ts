@@ -16,15 +16,15 @@ import {
   type Link,
   type Node,
   type NodeStyle,
+  type NoteNode,
   type RectNode,
-  type TextNode,
   between,
   createLink,
   endpointNode,
   isClassNode,
   isEllipseNode,
+  isNoteNode,
   isRectNode,
-  isTextNode,
   nodeBounds,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
@@ -143,10 +143,10 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'text': {
-          const width = element.w ?? DEFAULT_SIZES.text.width;
-          const height = DEFAULT_SIZES.text.height;
-          const node: TextNode = {
-            type: 'text',
+          const width = element.w ?? DEFAULT_SIZES.note.width;
+          const height = DEFAULT_SIZES.note.height;
+          const node: NoteNode = {
+            type: 'note',
             id,
             z: nextZ(),
             center: place(element.x + width / 2, element.y + height / 2),
@@ -211,7 +211,7 @@ export const SceneHandler: ContentHandler = {
           const frame = nodeBounds(node);
           const local = { x: frame.x - origin.x, y: frame.y - origin.y, w: frame.width, h: frame.height };
           const text = textOf(node);
-          if (isTextNode(node)) {
+          if (isNoteNode(node)) {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
@@ -260,7 +260,7 @@ const textOf = (node: Node): string => {
   if (isRectNode(node) || isEllipseNode(node)) {
     return node.label ?? '';
   }
-  if (isTextNode(node)) {
+  if (isNoteNode(node)) {
     return node.text;
   }
   if (isClassNode(node)) {
