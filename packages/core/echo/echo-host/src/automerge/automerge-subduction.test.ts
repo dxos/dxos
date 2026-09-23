@@ -483,57 +483,53 @@ describe('automerge-subduction', () => {
   // After B drops handshake state and rehydrates from durable storage, does
   // subduction re-handshake on the reused logical channel when A pushes?
   // Empirical answer: no — A's auto-broadcast does not reach B'.
-  test(
-    'does not auto-rehydrate handshake on a logical connection where one end dropped it',
-    { timeout: 15_000 },
-    async ({ expect }) => {
-      const signerA = MemorySigner.generate();
-      const signerB = MemorySigner.generate();
-      const storageA = new MemoryStorage();
-      const signalB = withSaveSignal(new MemoryStorage());
-      const storageB = signalB.storage;
-      const [transportA, transportB] = createMemoryTransportPair();
+  test('does not auto-rehydrate handshake on a logical connection where one end dropped it', async ({ expect }) => {
+    const signerA = MemorySigner.generate();
+    const signerB = MemorySigner.generate();
+    const storageA = new MemoryStorage();
+    const signalB = withSaveSignal(new MemoryStorage());
+    const storageB = signalB.storage;
+    const [transportA, transportB] = createMemoryTransportPair();
 
-      const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
-      let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
+    const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
+    let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
 
-      const [authA, authB] = await Promise.all([
-        AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
-        AuthenticatedTransport.accept(transportB, signerB),
-      ]);
-      await subA.addConnection(authA);
-      await subB.addConnection(authB);
+    const [authA, authB] = await Promise.all([
+      AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
+      AuthenticatedTransport.accept(transportB, signerB),
+    ]);
+    await subA.addConnection(authA);
+    await subB.addConnection(authB);
 
-      const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
-      // `addCommit` broadcasts only to peers subscribed to the sedimentree, so B
-      // subscribes before A writes.
-      await subB.syncWithAllPeers(sid, true);
-      await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
-      await signalB.saved(sid);
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
+    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
+    // `addCommit` broadcasts only to peers subscribed to the sedimentree, so B
+    // subscribes before A writes.
+    await subB.syncWithAllPeers(sid, true);
+    await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
+    await signalB.saved(sid);
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
 
-      // Simulate B crash: clearing the queue's waiters halts the orphaned
-      // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
-      // `disconnectFromPeer` — those send a graceful goodbye A would observe.
-      await transportB.disconnect();
-      subB.free();
+    // Simulate B crash: clearing the queue's waiters halts the orphaned
+    // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
+    // `disconnectFromPeer` — those send a graceful goodbye A would observe.
+    await transportB.disconnect();
+    subB.free();
 
-      subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
-      expect(await subB.getConnectedPeerIds()).toHaveLength(0);
-      expect(await subA.getConnectedPeerIds()).toHaveLength(1);
+    subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
+    expect(await subB.getConnectedPeerIds()).toHaveLength(0);
+    expect(await subA.getConnectedPeerIds()).toHaveLength(1);
 
-      await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
-      await sleep(500);
+    await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
+    await sleep(500);
 
-      // TODO(mykola): When subduction-core grows channel-level handshake
-      // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
+    // TODO(mykola): When subduction-core grows channel-level handshake
+    // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
 
-      subA.free();
-      subB.free();
-    },
-  );
+    subA.free();
+    subB.free();
+  });
 
   test('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
     const storage = new CountingStorageAdapter(new MemoryStorageAdapter());

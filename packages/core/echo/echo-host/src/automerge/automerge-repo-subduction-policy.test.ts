@@ -12,6 +12,7 @@ import {
   FIND_STATES,
   NO_TRAFFIC_WINDOW_MS,
   PERMISSIVE_POLICY,
+  SYNC_WINDOW_MS,
   connectAdapters,
   createCountingPolicy,
   createDenyGate,
@@ -115,7 +116,7 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('pushed');
     });
 
@@ -177,7 +178,7 @@ describe('SubductionPolicy', () => {
 
       // Allowed doc arrives.
       await expect
-        .poll(async () => (await fetcher.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await fetcher.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('B-allowed');
 
       // Denied doc stays out of `'ready'`: docB (the control, above) already
@@ -226,7 +227,9 @@ describe('SubductionPolicy', () => {
 
       // Allowed peer's doc arrives.
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(docFromServer2.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(docFromServer2.url)).doc()?.text, {
+          timeout: SYNC_WINDOW_MS,
+        })
         .toEqual('from-server2');
 
       // Denied peer's doc stays out of `'ready'`: docFromServer2 (the control,
@@ -278,7 +281,7 @@ describe('SubductionPolicy', () => {
       await connectAdapters(adapters2, { repoPairs: repoPairs2 });
 
       await expect
-        .poll(async () => (await fetcher.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await fetcher.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('B');
 
       // We expect `authorizePut` to have been called at least once total
@@ -329,7 +332,7 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await host.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await host.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('from-client');
     });
 
@@ -398,7 +401,7 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await host.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await host.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('from-client');
     });
 
@@ -477,7 +480,7 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(doc2.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(doc2.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('from-server2');
 
       // doc2 (the control, above) already replicated over the same client,
@@ -488,7 +491,7 @@ describe('SubductionPolicy', () => {
 
       // Connect hook fired at least once per peer (server1 deny + server2 allow). Polled: the
       // denied peer's handshake attempt is not ordered against server2's replication.
-      await expect.poll(() => counters.authorizeConnect, { timeout: 5_000 }).toBeGreaterThanOrEqual(2);
+      await expect.poll(() => counters.authorizeConnect, { timeout: SYNC_WINDOW_MS }).toBeGreaterThanOrEqual(2);
     });
 
     // Hypothesis: the role matrix requires at least one peer to be
@@ -548,12 +551,14 @@ describe('SubductionPolicy', () => {
       // Allow initial handshake to land: poll the counter itself (an
       // observable positive signal) instead of guessing how long a
       // handshake takes.
-      await expect.poll(() => counters.authorizeConnect, { timeout: 5_000 }).toBeGreaterThanOrEqual(1);
+      await expect.poll(() => counters.authorizeConnect, { timeout: SYNC_WINDOW_MS }).toBeGreaterThanOrEqual(1);
       const initial = counters.authorizeConnect;
 
       for (let i = 0; i < 2; i++) {
         await reconnectAdapters(adapters);
-        await expect.poll(() => counters.authorizeConnect, { timeout: 5_000 }).toBeGreaterThanOrEqual(initial + i + 1);
+        await expect
+          .poll(() => counters.authorizeConnect, { timeout: SYNC_WINDOW_MS })
+          .toBeGreaterThanOrEqual(initial + i + 1);
       }
 
       // Each reconnect should have triggered at least one more invocation.
@@ -602,10 +607,10 @@ describe('SubductionPolicy', () => {
       // (once at connect-time-sync, once per `#save`).
       // Polled rather than read once: the broadcast is asynchronous, and polling the counter
       // issues no `find`, so the "before any explicit fetch" property still holds.
-      await expect.poll(() => pushCounters.authorizeFetch, { timeout: 5_000 }).toBeGreaterThan(0);
+      await expect.poll(() => pushCounters.authorizeFetch, { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(0);
       await expect
         .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
-          timeout: 5_000,
+          timeout: SYNC_WINDOW_MS,
         })
         .toEqual('pushed');
 
@@ -628,7 +633,7 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(fetchRepos);
       const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
       await reconnectAdapters(fetchAdapters, { repoPairs: fetchRepoPairs });
-      await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
+      await waitForQueryState(fetchProgress, ['ready'], { timeout: SYNC_WINDOW_MS });
       expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
     });
 
@@ -657,7 +662,9 @@ describe('SubductionPolicy', () => {
       const handle = pushHost.create<{ text?: string }>({ text: 'snapshot' });
       await waitForSubductionSave(pushRepos);
       await expect
-        .poll(async () => (await pushClient.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await pushClient.find<{ text?: string }>(handle.url)).doc()?.text, {
+          timeout: SYNC_WINDOW_MS,
+        })
         .toEqual('snapshot');
       expect(pushCounters.filterAuthorizedFetch).to.equal(0);
 
@@ -685,7 +692,7 @@ describe('SubductionPolicy', () => {
       fetchClient.shareConfigChanged();
       await expect
         .poll(async () => (await fetchClient.find<{ text?: string }>(fetchHandle.url)).doc()?.text, {
-          timeout: 10_000,
+          timeout: SYNC_WINDOW_MS,
         })
         .toEqual('snapshot-fetch');
       expect(fetchCounters.filterAuthorizedFetch).to.equal(0);
@@ -714,10 +721,10 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(a.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(a.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('a');
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(b.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(b.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('b');
     });
   });
@@ -769,10 +776,10 @@ describe('SubductionPolicy', () => {
       // Sequence the hop: a fetch C issues while B is still empty settles success-empty and is
       // never re-asked, so B has to be observed holding the doc before C asks for it.
       await expect
-        .poll(async () => (await repoB.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: 10_000 })
+        .poll(async () => (await repoB.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('from-A');
       await expect
-        .poll(async () => (await repoC.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: 10_000 })
+        .poll(async () => (await repoC.find<{ text?: string }>(docA.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('from-A');
 
       const aId = sigA.peerId().toString();
@@ -843,7 +850,7 @@ describe('SubductionPolicy', () => {
 
       // Control: B-authored doc lands at C.
       await expect
-        .poll(async () => (await repoC.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: 10_000 })
+        .poll(async () => (await repoC.find<{ text?: string }>(docB.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('from-B-allowed');
 
       // Test: A-authored doc does NOT land at C, despite B relaying. docB
@@ -904,6 +911,9 @@ describe('SubductionPolicy', () => {
       // Flipping the policy + shareConfigChanged alone does not recover: it
       // resets the heal state but does not re-drive the holder's stuck
       // 'all-failed' push.
+      // The refusal is observed the instant it fires, but the entry settles `all-failed` a moment
+      // later and the flip below only helps once it has. Nothing reports that transition.
+      await sleep(NO_TRAFFIC_WINDOW_MS);
       allowPut = true;
       host.shareConfigChanged();
       client.shareConfigChanged();
@@ -917,7 +927,7 @@ describe('SubductionPolicy', () => {
       // it land.
       await reconnectAdapters(adapters, { repoPairs });
       await expect
-        .poll(() => peekDoc<{ text?: string }>(client, handle.url)?.text, { timeout: 10_000 })
+        .poll(() => peekDoc<{ text?: string }>(client, handle.url)?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('gated-put');
     });
 
@@ -961,6 +971,9 @@ describe('SubductionPolicy', () => {
       // Flip but DO NOT kick. The heal scheduler's behaviour on
       // `'all-failed'` is the known fork gap from the SKILL doc;
       // we assert it stays denied for at least 1500 ms.
+      // The refusal is observed the instant it fires, but the entry settles `all-failed` a moment
+      // later and the flip below only helps once it has. Nothing reports that transition.
+      await sleep(NO_TRAFFIC_WINDOW_MS);
       allowPut = true;
       // A flipped policy that fails to re-drive a stuck push emits nothing, so this
       // negative rests on a bounded window.
@@ -1007,7 +1020,7 @@ describe('SubductionPolicy', () => {
       const handle = host.create<{ text?: string }>({ text: 'initial' });
       await waitForSubductionSave(repos);
       const clientHandle = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
-      await expect.poll(() => clientHandle.doc()?.text, { timeout: 5_000 }).toEqual('initial');
+      await expect.poll(() => clientHandle.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('initial');
 
       denyPut = true;
       handle.change((doc: any) => {

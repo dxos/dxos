@@ -24,6 +24,7 @@ import {
   NO_TRAFFIC_WINDOW_MS,
   SUBDUCTION_MESSAGE_TYPE,
   SUBDUCTION_SERVICE_NAME,
+  SYNC_WINDOW_MS,
   connectAdapters,
   createDenyGate,
   createHostClientRepoTopology,
@@ -92,7 +93,7 @@ describe('AutomergeRepo with Subduction', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual(text);
     });
 
@@ -113,7 +114,7 @@ describe('AutomergeRepo with Subduction', () => {
       await waitForSubductionSave(repos);
 
       await expect
-        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
         .toEqual('Hello world');
     });
 
@@ -149,13 +150,13 @@ describe('AutomergeRepo with Subduction', () => {
       await waitForSubductionSave(repos);
 
       const docB = await findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES);
-      await expect.poll(() => docB.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
+      await expect.poll(() => docB.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('Hello world');
 
       const docC = await findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES);
-      await expect.poll(() => docC.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
+      await expect.poll(() => docC.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('Hello world');
 
       const docD = await findInStates<{ text?: string }>(repoD, docA.url, FIND_STATES);
-      await expect.poll(() => docD.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
+      await expect.poll(() => docD.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('Hello world');
     });
 
     test('documents loaded from disk get replicated', async () => {
@@ -180,12 +181,12 @@ describe('AutomergeRepo with Subduction', () => {
 
       const hostHandle = await peer1.find<any>(url as AutomergeUrl);
       await hostHandle.whenReady();
-      await expect.poll(() => hostHandle.doc()?.text, { timeout: 5_000 }).toEqual('foo');
+      await expect.poll(() => hostHandle.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('foo');
       const peer2Handle = await findInStates<any>(peer2, hostHandle.url, FIND_STATES);
       // Bumped from 5_000 to 10_000: on a loaded CI box, the subduction RequestId
       // round-trip can hit its internal timeout (~5 s) and only the heal retry succeeds,
       // pushing past the original 5 s window. See the same fix on `accept/connect syncs`.
-      await expect.poll(() => peer2Handle.doc(), { timeout: 10_000 }).toEqual(hostHandle.doc());
+      await expect.poll(() => peer2Handle.doc(), { timeout: SYNC_WINDOW_MS }).toEqual(hostHandle.doc());
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
@@ -244,7 +245,7 @@ describe('AutomergeRepo with Subduction', () => {
       await waitForSubductionSave(repos);
 
       expect(handleA.doc()!.text).to.equal(text);
-      await expect.poll(() => handleB.doc()?.text, { timeout: 5_000 }).toEqual(text);
+      await expect.poll(() => handleB.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual(text);
     });
 
     // TODO(mykola): Mirrored from `automerge-repo.test.ts:'recovering from a
@@ -306,7 +307,7 @@ describe('AutomergeRepo with Subduction', () => {
       });
       await waitForSubductionSave(repos);
       const handleB = await findInStates<{ fromHost?: string; fromClient?: string }>(client, handleA.url, FIND_STATES);
-      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 10_000 }).toEqual('initial');
+      await expect.poll(() => handleB.doc()?.fromHost, { timeout: SYNC_WINDOW_MS }).toEqual('initial');
 
       // Gate the transport rather than `disconnectAdapters`, which clears the peer ids
       // `reconnectAdapters` needs, then edit both sides so neither head descends from the other.
@@ -323,8 +324,8 @@ describe('AutomergeRepo with Subduction', () => {
       connectionState = 'on';
       await reconnectAdapters(adapters, { repoPairs });
 
-      await expect.poll(() => handleB.doc()?.fromHost, { timeout: 10_000 }).toEqual('host-offline');
-      await expect.poll(() => handleA.doc()?.fromClient, { timeout: 10_000 }).toEqual('client-offline');
+      await expect.poll(() => handleB.doc()?.fromHost, { timeout: SYNC_WINDOW_MS }).toEqual('host-offline');
+      await expect.poll(() => handleA.doc()?.fromClient, { timeout: SYNC_WINDOW_MS }).toEqual('client-offline');
     });
 
     // Mirrored from `automerge-repo.test.ts:'replicate document after request'`,
@@ -365,7 +366,7 @@ describe('AutomergeRepo with Subduction', () => {
       // source re-syncs. We must reconnect on BOTH sides; with only one side
       // emitting `peer-candidate`, only one transport is initiated.
       await reconnectAdapters(adapters, { repoPairs });
-      await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
+      await waitForQueryState(progress, ['ready'], { timeout: SYNC_WINDOW_MS });
     });
 
     // Regression test for the concurrent-shutdown stall in
@@ -449,7 +450,7 @@ describe('AutomergeRepo with Subduction', () => {
         await waitForSubductionSave(repos);
 
         await expect
-          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
+          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
           .toEqual('connect/accept');
       });
 
@@ -472,7 +473,7 @@ describe('AutomergeRepo with Subduction', () => {
         // window. Local runs land in ~200-300 ms; CI was occasionally flaking
         // at exactly 5005 ms.
         await expect
-          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
+          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
           .toEqual('accept/connect');
       });
 
@@ -580,7 +581,7 @@ describe('AutomergeRepo with Subduction', () => {
 
         await expect
           .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, {
-            timeout: 5_000,
+            timeout: SYNC_WINDOW_MS,
           })
           .toEqual('should-fetch');
       });
@@ -673,11 +674,14 @@ describe('AutomergeRepo with Subduction', () => {
 
         // (2) Flip the policy and (3) kick the source. Without the kick,
         // recovery is left to heal-retry exponential backoff (slow + flaky).
+        // The refusal is observed the instant it fires, but the entry settles `all-failed` a moment
+        // later and the flip below only helps once it has. Nothing reports that transition.
+        await sleep(NO_TRAFFIC_WINDOW_MS);
         allowFetch = true;
         client.shareConfigChanged();
 
         // Sync now succeeds: doc reaches the client.
-        await expect.poll(() => docHandle?.doc()?.text, { timeout: 5_000 }).toEqual('gated');
+        await expect.poll(() => docHandle?.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('gated');
       });
     });
 
@@ -736,10 +740,10 @@ describe('AutomergeRepo with Subduction', () => {
       // Wait for the doc to reach B before C asks for it. A fetch C issues while B is still empty
       // settles success-empty and is never re-asked, so the hop has to be observed, not assumed.
       const docB = await findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES);
-      await expect.poll(() => docB.doc()?.text, { timeout: 10_000 }).toEqual('relayed');
+      await expect.poll(() => docB.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('relayed');
 
       const docC = await findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES);
-      await expect.poll(() => docC.doc()?.text, { timeout: 10_000 }).toEqual('relayed');
+      await expect.poll(() => docC.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('relayed');
 
       // If C reached `'ready'` AND we observed subduction-typed messages on the
       // B↔C pair, B is relaying via subduction (not via some classical bypass).
@@ -769,7 +773,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     });
     await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
-    await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+    await expect.poll(() => observed.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
 
     framesDelivered = 'off';
     handle.change((doc: any) => {
@@ -801,7 +805,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     });
     await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
-    await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+    await expect.poll(() => observed.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
 
     server1Reachable = 'off';
     handle.change((doc: any) => {
@@ -843,7 +847,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     });
     await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(server2, handle.url, FIND_STATES);
-    await expect.poll(() => observed.doc()?.text, { timeout: 10_000 }).toEqual('first');
+    await expect.poll(() => observed.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
 
     server1Reachable = 'off';
     handle.change((doc: any) => {

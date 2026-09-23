@@ -27,7 +27,7 @@ import { AutomergeHost } from './automerge-host.ts';
 import { deleteSubductionRemoteHeads } from './delete-subduction-remote-heads.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
-import { NO_TRAFFIC_WINDOW_MS, createDenyGate } from './subduction-test-utils.ts';
+import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate } from './subduction-test-utils.ts';
 
 describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
@@ -113,7 +113,7 @@ describe('AutomergeHost with Subduction', () => {
       await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
 
       using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
-      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('first');
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
 
       created[Symbol.dispose]();
       await host1.drainEvictions();
@@ -126,7 +126,7 @@ describe('AutomergeHost with Subduction', () => {
       });
       await host1.flush(Context.default());
 
-      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('second');
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('second');
     } finally {
       await host1.close();
       await host2.close();
@@ -156,8 +156,8 @@ describe('AutomergeHost with Subduction', () => {
       const documentId = created.documentId;
       await host1.flush(Context.default());
       using mirrored = (await host2.loadDoc<any>(Context.default(), documentId))!;
-      await expect.poll(() => mirrored.doc()?.text, { timeout: 10_000 }).toEqual('first');
-      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: 10_000 }).toBeGreaterThan(0);
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
+      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(0);
 
       created[Symbol.dispose]();
       await host1.close();
@@ -173,12 +173,12 @@ describe('AutomergeHost with Subduction', () => {
       mirrored.change((doc: any) => {
         doc.pulled = true;
       });
-      await expect.poll(() => reopened.doc()?.pulled, { timeout: 10_000 }).toBe(true);
+      await expect.poll(() => reopened.doc()?.pulled, { timeout: SYNC_WINDOW_MS }).toBe(true);
       reopened.change((doc: any) => {
         doc.pushed = true;
       });
-      await expect.poll(() => mirrored.doc()?.pushed, { timeout: 10_000 }).toBe(true);
-      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: 10_000 }).toBeGreaterThan(0);
+      await expect.poll(() => mirrored.doc()?.pushed, { timeout: SYNC_WINDOW_MS }).toBe(true);
+      await expect.poll(() => countStoredRemoteHeads(rt1.runtime), { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(0);
     } finally {
       await host1.close();
       await host2.close();
@@ -483,7 +483,7 @@ describe('AutomergeHost with Subduction', () => {
         host2Replicator.shouldAdvertise = () => true;
         await host2.createDoc({ kick: true });
 
-        await expect.poll(() => progress.state, { timeout: 5_000 }).toEqual('ready');
+        await expect.poll(() => progress.state, { timeout: SYNC_WINDOW_MS }).toEqual('ready');
         expect(progress.doc()?.text).toEqual('recover-me');
       } finally {
         await host1.close();
@@ -642,7 +642,7 @@ describe('AutomergeHost with Subduction', () => {
         // failed round for the scope-change signal below to re-drive. Waiting on the first
         // refusal alone flips the policy before the later entries have settled, and nothing
         // then re-drives them; a fixed span was the previous stand-in for this.
-        await expect.poll(() => refused.size, { timeout: 10_000 }).toBeGreaterThanOrEqual(documentIds.length);
+        await expect.poll(() => refused.size, { timeout: SYNC_WINDOW_MS }).toBeGreaterThanOrEqual(documentIds.length);
         // `refused` is observed on host1, but host2's round settles failed a moment later, and the
         // scope-change signal below only re-drives entries that have ALREADY failed. Nothing
         // reports that transition, so this last hop is a short bounded grace rather than an event.
@@ -659,6 +659,9 @@ describe('AutomergeHost with Subduction', () => {
           host1Replicator.context!.onConnectionAuthScopeChanged(connection);
         }
 
+        // Its own window rather than the shared one: recovery here rides `_sharePolicyChangedTask`,
+        // which throttles to `SHARE_POLICY_KICK_MIN_INTERVAL_MS` (1s) before it even fans out, so
+        // the floor is seconds where every other assertion in the suite is milliseconds.
         await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
       } finally {
         await host1.close();
@@ -681,7 +684,7 @@ describe('AutomergeHost with Subduction', () => {
         await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
         await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
 
-        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 5_000 }).toBe(true);
+        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: SYNC_WINDOW_MS }).toBe(true);
       } finally {
         await host1.close();
         await host2.close();
@@ -846,7 +849,7 @@ describe('AutomergeHost with Subduction', () => {
           async () =>
             (await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 500 }))?.doc()
               ?.text,
-          { timeout: 5_000 },
+          { timeout: SYNC_WINDOW_MS },
         )
         .toEqual('mesh-recover');
     });

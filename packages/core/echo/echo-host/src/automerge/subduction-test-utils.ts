@@ -17,7 +17,7 @@ import {
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, SedimentreeId } from '@automerge/automerge-subduction';
-import { expect, onTestFinished } from 'vitest';
+import { onTestFinished } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { isNonNullable } from '@dxos/util';
@@ -30,6 +30,15 @@ export const SUBDUCTION_SERVICE_NAME = 'test-subduction-service';
 export type QueryStateName = QueryState<unknown>['state'];
 
 export const FIND_STATES: readonly QueryStateName[] = ['ready', 'loading'];
+
+/**
+ * Window for an assertion that waits on subduction doing its work.
+ *
+ * Every such wait is now event-driven and lands in well under 500 ms locally, and the slowest test
+ * in the suite is 2.5 s including teardown — so this is roughly a 10x margin, which absorbs CI
+ * contention without letting a genuinely stuck sync sit around burning the job's clock.
+ */
+export const SYNC_WINDOW_MS = 5_000;
 
 /**
  * Window for the handful of negative tests whose subject is that NOTHING happens — no transport at
@@ -45,32 +54,28 @@ export const NO_TRAFFIC_WINDOW_MS = 500;
 export const SUBDUCTION_MESSAGE_TYPE = 'subduction-connection';
 
 /**
- * A policy denial that records itself.
+ * A policy denial that latches when it fires.
  *
  * Lets a negative assertion rest on the refusal having happened — the peer asked and was told no —
  * instead of on a guessed delay that is either too short on a loaded box or wasted time on an idle
  * one. It also fails loudly if the denial never fires, where a sleep would have passed vacuously.
  */
 export const createDenyGate = (message = 'denied') => {
-  let denials = 0;
+  const refused = new Trigger();
   return {
-    get denials() {
-      return denials;
-    },
-    /** Body for a policy hook: records the refusal, then refuses. */
+    /** Body for a policy hook: latches the refusal, then refuses. */
     deny: (): never => {
-      denials++;
+      refused.wake();
       throw new Error(message);
     },
     /** Same, for a predicate that denies by returning `false` rather than throwing. */
     refuse: (): boolean => {
-      denials++;
+      refused.wake();
       return false;
     },
-    /** Resolve once the gate has refused at least `count` times. */
-    waitForDenial: async ({ count = 1, timeout = 5_000 }: { count?: number; timeout?: number } = {}) => {
-      await expect.poll(() => denials, { timeout }).toBeGreaterThanOrEqual(count);
-    },
+    /** Resolve as soon as the gate has refused. */
+    waitForDenial: ({ timeout = SYNC_WINDOW_MS }: { timeout?: number } = {}): Promise<void> =>
+      refused.wait({ timeout }),
   };
 };
 
@@ -264,7 +269,7 @@ const onceSubductionPeerBound = (repo: Repo): Promise<void> => {
 const armBindings = (repoPairs: [Repo, Repo][]): Promise<unknown>[] =>
   repoPairs.map(([left, right]) => Promise.race([onceSubductionPeerBound(left), onceSubductionPeerBound(right)]));
 
-const awaitBindings = (bound: Promise<unknown>[], timeout = 10_000): Promise<unknown> =>
+const awaitBindings = (bound: Promise<unknown>[], timeout = SYNC_WINDOW_MS): Promise<unknown> =>
   asyncTimeout(Promise.all(bound), timeout);
 
 export const connectAdapters = async (
@@ -350,27 +355,11 @@ export const createRepo = (
  * miss is permanent (`Document <id> is unavailable`, a push that never fires) rather than slow.
  *
  * Deliberately says nothing about delivery: a positive assertion polls the receiver until the doc
- * lands, and a negative one uses {@link drainToPeer}, so neither needs a guessed settle window.
+ * lands, and a negative one latches on the refusal ({@link createDenyGate}), so neither needs a
+ * guessed settle window.
  */
 export const waitForSubductionSave = async (repos: Repo[]): Promise<void> => {
   await Promise.all(repos.map((repo) => repo.flush()));
-};
-
-/**
- * Round-trip a probe document from `from` to `to`, so a negative assertion rests on an observed
- * event rather than a guessed duration: once the probe has crossed, anything the peer was going to
- * push ahead of it has been pushed, and a doc still missing is missing because it was refused.
- *
- * Deterministic where a fixed delay is not — it scales with the machine instead of hoping 500 ms is
- * enough on a loaded CI box, and it fails loudly (rather than passing vacuously) if the connection
- * the assertion depends on is not actually carrying traffic.
- */
-export const drainToPeer = async (from: Repo, to: Repo, { timeout = 10_000 }: { timeout?: number } = {}) => {
-  const probe = from.create<{ probe?: string }>({ probe: 'drain' });
-  await from.flush();
-  await expect
-    .poll(async () => (await to.find<{ probe?: string }>(probe.url)).doc()?.probe, { timeout })
-    .toEqual('drain');
 };
 
 export const createSqliteAdapter = async (filename = ':memory:') => {
