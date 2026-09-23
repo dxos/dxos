@@ -46,8 +46,8 @@ keypair whose private half travels inside the invitation code. It is not used he
   contact with a presence dot and chips for the spaces in common; clicking a chip calls
   `onSelectSpace`.
 - `ContactPicker` — `{ contacts, excludeKeys, value, onChange }`. Multi-select `Combobox`, search on
-  display name and identity key, `excludeKeys` hides existing members, selections render as
-  removable chips.
+  display name and identity key, `excludeKeys` hides existing members, selections show as checked
+  items and a comma-separated trigger summary.
 
 **Contacts article (plugin-client)**
 
@@ -59,8 +59,9 @@ keypair whose private half travels inside the invitation code. It is not used he
 **Picker container (plugin-client, via surface)**
 
 - New surface role `contact-picker` with data `{ space }`, served by `ContactPickerContainer`:
-  `ContactPicker` + role select (Editor default; Viewer, Admin) + **Add** button.
-- **Add** invokes `SpaceOperation.AddMembers`; on success the button becomes **Copy join link**.
+  `ContactPicker` + role select (Editor default; Viewer (`READER`), Admin) + **Add** button.
+- **Add** calls the slot's `onAdd`, which MembersContainer implements with `SpaceOperation.AddMembers`
+  (plugin-client cannot import plugin-space); on success the button becomes **Copy join link**.
 - plugin-space never imports plugin-client; the slot renders nothing if no plugin contributes it.
 
 **Members article (plugin-space)**
@@ -87,7 +88,7 @@ keypair whose private half travels inside the invitation code. It is not used he
 ### 4. Testing
 
 - **SDK:** extend `sdk/client-e2e/src/contact-book.test.ts` — `admitContact(contact, VIEWER)` yields
-  a member with role Viewer after `joinBySpaceKey`; default is Editor.
+  a member with role Viewer (`READER`) after `joinBySpaceKey`; default is Editor.
 - **Operation:** plugin-space unit test for `AddMembers` — multiple keys, one failure reported,
   others admitted, `joinUrl` contains the space key.
 - **Navigation handler:** unit test that `?spaceKey=` calls `joinBySpaceKey` and navigates.
