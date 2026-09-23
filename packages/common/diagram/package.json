@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./extension": {
+      "source": "./src/extension/index.ts",
+      "types": "./dist/types/src/extension/index.d.ts",
+      "import": "./dist/lib/extension.mjs"
+    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -31,6 +36,11 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/lint": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dagrejs/dagre": "catalog:",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",

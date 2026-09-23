@@ -22,9 +22,17 @@ export type Problem = {
   to: number;
 };
 
+export type Range = { from: number; to: number };
+
 export type ParseResult = {
   commands: Scene.Command[];
   problems: Problem[];
+  /**
+   * Source range of each `objectId` and `objectId/elementId` — the two spellings
+   * `Diagnostics.Diagnostic.refs` uses, so a layout report can be shown against the line that
+   * produced it rather than at the top of the document.
+   */
+  ranges: Map<string, Range>;
 };
 
 const ESCAPES: Record<string, string> = { n: '\n', t: '\t', r: '\r' };
@@ -72,6 +80,7 @@ const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
 export const parse = (text: string): ParseResult => {
   const problems: Problem[] = [];
   const commands: Scene.Command[] = [];
+  const ranges = new Map<string, Range>();
 
   const slice = (node: SyntaxNode): string => text.slice(node.from, node.to);
 
@@ -334,13 +343,17 @@ export const parse = (text: string): ParseResult => {
     }
   };
 
-  const readElements = (body: SyntaxNode | null): Scene.Element[] =>
+  const readElements = (body: SyntaxNode | null, objectId: string): Scene.Element[] =>
     body
       ? childrenOf(body)
           .filter((child) => child.name === 'Element')
           .flatMap((child) => {
             const element = readElement(child);
-            return element ? [element] : [];
+            if (!element) {
+              return [];
+            }
+            ranges.set(`${objectId}/${element.id}`, { from: child.from, to: child.to });
+            return [element];
           })
       : [];
 
@@ -372,20 +385,22 @@ export const parse = (text: string): ParseResult => {
           .filter((child) => child.name === 'ObjectAttr')
           .flatMap(childrenOf);
         const origin = objectAttrs.find((child) => child.name === 'Origin')?.getChild('Point');
+        const objectId = readId(ids[0]);
         const attrs = readAttrs(
           objectAttrs.filter((child) => child.name === 'Attribute'),
           OBJECT_ATTRS,
-          `object "${readId(ids[0])}"`,
+          `object "${objectId}"`,
         );
+        ranges.set(objectId, { from: statement.from, to: statement.to });
         commands.push({
           op: 'upsert-object',
           object: {
-            id: readId(ids[0]),
+            id: objectId,
             ...optional('origin', origin ? readPoint(origin) : undefined),
             ...optional('scale', numberAttr(attrs, 'scale')),
             ...optional('index', stringAttr(attrs, 'index')),
             ...optional('ref', stringAttr(attrs, 'ref')),
-            elements: readElements(statement.getChild('Body')),
+            elements: readElements(statement.getChild('Body'), objectId),
           },
         });
         break;
@@ -396,7 +411,7 @@ export const parse = (text: string): ParseResult => {
           commands.push({
             op: 'upsert-elements',
             objectId: readId(ids[0]),
-            elements: readElements(statement.getChild('Body')),
+            elements: readElements(statement.getChild('Body'), readId(ids[0])),
           });
         }
         break;
@@ -427,7 +442,7 @@ export const parse = (text: string): ParseResult => {
     }
   }
 
-  return { commands, problems };
+  return { commands, problems, ranges };
 };
 
 /** Applies commands in order, the same semantics `Scene.Command` documents. */

@@ -155,6 +155,15 @@ describe('dsl diagnostics', () => {
     );
   });
 
+  test('ranges point at the statement and the element a layout report names', ({ expect }) => {
+    const source = 'object A @ 0,0 {\n  rect box 0,0 10x10\n}\n';
+    const { ranges } = parse(source);
+    expect(source.slice(ranges.get('A')!.from, ranges.get('A')!.to)).toEqual(
+      'object A @ 0,0 {\n  rect box 0,0 10x10\n}',
+    );
+    expect(source.slice(ranges.get('A/box')!.from, ranges.get('A/box')!.to)).toEqual('rect box 0,0 10x10');
+  });
+
   test('a syntax error is located', ({ expect }) => {
     const { problems } = parse('object A @ 0,0 {\n  rect box 0,0\n}\n');
     expect(problems.length).toBeGreaterThan(0);
