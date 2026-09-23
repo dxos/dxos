@@ -664,6 +664,20 @@ describe('RepoProxy', () => {
     await closing;
   });
 
+  test('a load still in flight is settled when the proxy closes', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    // Nothing will ever produce this document: the host has no bytes for it and no peer to fetch
+    // them from, so the handle stays in flight until the close settles it.
+    const pending = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    const ready = pending.whenReady();
+    await clientRepo.close();
+
+    await expect(asyncTimeout(ready, 1000)).rejects.toThrow(RepoClosedError);
+  });
+
   test('find on a closed proxy reports the client going away', async () => {
     const { dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);
