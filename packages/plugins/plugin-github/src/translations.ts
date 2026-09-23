@@ -33,6 +33,7 @@ export const translations = [
         'walkthrough-failed.title': 'Walkthrough generation failed',
         'approve-pull-request.label': 'Approve',
         'approve-pull-request-success.title': 'Pull request approved',
+        'approve-pull-request-commented.title': 'Approval posted as a comment',
         'approve-pull-request-error.title': 'Could not approve the pull request',
         'comment-pull-request.label': 'Comment',
         'comment-placeholder.label': 'Leave a comment on the pull request',
