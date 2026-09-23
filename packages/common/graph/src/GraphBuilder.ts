@@ -61,6 +61,12 @@ export type NodeArgLike = { readonly id: string; readonly properties?: Record<st
  * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
  * on changes, and the resulting difference is applied to the graph.
  */
+/** Time update flushes may spend in the current frame. */
+export type FrameBudget = {
+  hasTime: () => boolean;
+  spend: (ms: number) => void;
+};
+
 export type Connector<Node extends NodeLike, Arg extends NodeArgLike> = (
   node: Atom.Atom<Option.Option<Node>>,
 ) => Atom.Atom<Arg[]>;
@@ -344,7 +350,8 @@ export class GraphBuilder<
 
   /**
    * An update to output already in the store flushes on a microtask, so an edit renders in the frame it
-   * was made; a connector's first output waits for {@link GraphBuilder._schedule}.
+   * was made, until the frame's budget runs out; the rest, and a connector's first output, wait for
+   * {@link GraphBuilder._schedule}.
    */
   _scheduleDirtyFlush(update: boolean): void {
     if (update) {
@@ -352,7 +359,10 @@ export class GraphBuilder<
         this._updateScheduled = true;
         this._updatePromise = Promise.resolve().then(() => {
           this._updateScheduled = false;
-          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key));
+          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key), this._frameBudget());
+          if (this._dirtyConnectors.size > 0) {
+            this._scheduleDirtyFlush(false);
+          }
         });
       }
       return;
@@ -366,19 +376,22 @@ export class GraphBuilder<
     }
   }
 
-  _flushDirtyConnectors(select: (key: string) => boolean = () => true): void {
-    while (true) {
+  _flushDirtyConnectors(select: (key: string) => boolean = () => true, budget?: FrameBudget): void {
+    while (!budget || budget.hasTime()) {
       const entries = [...this._dirtyConnectors.entries()].filter(([key]) => select(key));
       if (entries.length === 0) {
         return;
       }
-      for (const [key] of entries) {
-        this._dirtyConnectors.delete(key);
-      }
 
       const apply = () => {
         for (const [key, { nodes, previous }] of entries) {
+          if (budget && !budget.hasTime()) {
+            return;
+          }
+          this._dirtyConnectors.delete(key);
+          const start = budget ? performance.now() : 0;
           this._applyConnectorUpdate(key, nodes, previous);
+          budget?.spend(performance.now() - start);
         }
       };
       // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
@@ -437,6 +450,11 @@ export class GraphBuilder<
    */
   _schedule(callback: () => void): Promise<void> {
     return Promise.resolve().then(callback);
+  }
+
+  /** What an update flush may spend in the current frame; unlimited by default. */
+  _frameBudget(): FrameBudget | undefined {
+    return undefined;
   }
 
   /** Where a traversal yields between nodes; overridden alongside {@link GraphBuilder._schedule}. */
