@@ -8,7 +8,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
-import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Collection, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
@@ -36,6 +36,7 @@ describe('deleting a project', () => {
         Project.Project,
         Instructions.Instructions,
         Chat.Chat,
+        Collection.Collection,
         Feed.Feed,
         Text.Text,
         Routine.Routine,
@@ -142,14 +143,31 @@ describe('deleting a project', () => {
     expect(descendantIds).toContain(textId);
   });
 
-  test('artifacts are NOT removed with it — they are referenced, not owned', async ({ expect }) => {
+  test('an artifact the project claimed is removed with it', async ({ expect }) => {
     const { db, project } = await setup();
-    // An artifact is listed on the project by ref; its parent stays wherever it was created.
     const artifact = db.add(Feed.make());
     Obj.update(project, (project) => {
       project.artifacts.push(Ref.make(artifact));
     });
     await db.flush();
+    expect(Obj.getParent(artifact)?.id).toBe(project.id);
+
+    db.remove(project);
+    await db.flush();
+
+    const remaining = await db.query(Query.select(Filter.type(Feed.Feed))).run();
+    expect(remaining.map((object) => object.id)).not.toContain(artifact.id);
+  });
+
+  test('an artifact owned elsewhere survives, because the project only links it', async ({ expect }) => {
+    const { db, project } = await setup();
+    const artifact = db.add(Feed.make());
+    const collection = db.add(Collection.make({ objects: [Ref.make(artifact)] }));
+    Obj.update(project, (project) => {
+      project.artifacts.push(Ref.make(artifact));
+    });
+    await db.flush();
+    expect(Obj.getParent(artifact)?.id).toBe(collection.id);
 
     db.remove(project);
     await db.flush();

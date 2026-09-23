@@ -20,7 +20,11 @@ import * as Type from './Type.ts';
 export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.type.collection', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
+    /** Members, in order. */
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+      Annotation.SetParent.set({ override: false }),
+      internal.FormInputAnnotation.set(false),
+    ),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' })),
 ) {}
 
