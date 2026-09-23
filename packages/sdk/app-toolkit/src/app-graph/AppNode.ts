@@ -14,7 +14,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { type DropKind, type TreeData } from '@dxos/react-ui-list';
+import { type TreeData } from '@dxos/react-ui-list';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app/index.ts';
@@ -111,7 +111,7 @@ const canDropInto = createFactory(
 );
 
 /** Node property on a branch whose children are a container's list. */
-export const CONTAINER_PROPERTY = 'container';
+const CONTAINER_PROPERTY = 'container';
 
 export const getContainer = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
   node?.properties[CONTAINER_PROPERTY];
@@ -123,7 +123,10 @@ const buildContainerPartials = (container: ContainerModel.Container, db: Databas
   moveScope: container.moveScope,
   canDrop: canDropInto(container),
   onRearrange: rearrangeCallback(container),
-  onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>) => ContainerModel.release({ container, object: child.data }),
+  isLink: (child: AppGraphNode.Node<Obj.Unknown>, from?: AppGraphNode.Node) =>
+    ContainerModel.wouldLink({ container, object: child.data, from: getContainer(from) }),
+  onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) =>
+    ContainerModel.release({ container, object: child.data, to: getContainer(destination) }),
   onMoveIn: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
     ContainerModel.link({ container, object: child.data, index }),
   onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
@@ -157,7 +160,7 @@ export const makeObject = ({
   deck,
   container,
   canDrop: canDropOverride,
-  getDropKind,
+  blockInstruction,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.AtomContext;
@@ -178,8 +181,8 @@ export const makeObject = ({
   container?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
-  /** What a drop at each instruction does, for a row whose answer depends on the source. */
-  getDropKind?: (source: TreeData, instruction: Instruction) => DropKind;
+  /** Blocks a drop instruction, for a row whose answer depends on the source. */
+  blockInstruction?: (source: TreeData, instruction: Instruction) => boolean;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -245,7 +248,7 @@ export const makeObject = ({
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
       ...(container ? getContainerPartials(container, db) : {}),
-      getDropKind,
+      blockInstruction,
       canDrop,
       [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,

@@ -87,8 +87,9 @@ describe('container partials: move', () => {
 
   const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
     const node = { data: doc } as any;
-    AppNode.getContainerPartials(ContainerModel.collection(from), db).onMoveOut(node);
-    AppNode.getContainerPartials(ContainerModel.collection(to), db).onMoveIn(node);
+    const destination = { properties: AppNode.getContainerPartials(ContainerModel.collection(to), db) } as any;
+    AppNode.getContainerPartials(ContainerModel.collection(from), db).onMoveOut(node, destination);
+    destination.properties.onMoveIn(node);
   };
 
   test('dragging between collections re-parents the object', async ({ expect }) => {

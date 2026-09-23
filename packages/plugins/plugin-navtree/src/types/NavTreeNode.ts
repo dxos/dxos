@@ -6,7 +6,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Label } from '@dxos/react-ui';
-import { type DropKind, type TreeData } from '@dxos/react-ui-list';
+import { type TreeData } from '@dxos/react-ui-list';
 import { type MaybePromise, type Position } from '@dxos/util';
 
 export type NavTreeItemGraphNode = AppGraphNode.Node<
@@ -20,7 +20,9 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       /** Parents sharing a scope move items between them; a drop from outside it links instead. */
       moveScope: string;
       canDrop: (source: TreeData) => boolean;
-      getDropKind: (source: TreeData, instruction: Instruction) => DropKind;
+      blockInstruction: (source: TreeData, instruction: Instruction) => boolean;
+      /** Whether an item added here would only be listed, its parent elsewhere; `from` is the parent it moves out of. */
+      isLink: (activeNode: NavTreeItemGraphNode, from?: NavTreeItemGraphNode) => boolean;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
       /** An item is moving from here to `destinationParent`; called before the destination's `onMoveIn`. */
       onMoveOut: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;

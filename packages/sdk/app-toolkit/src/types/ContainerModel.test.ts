@@ -119,15 +119,37 @@ describe('ownership', () => {
     expect(Obj.getParent(person)?.id).toBe(first.id);
   });
 
+  const move = (object: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
+    const source = ContainerModel.collection(from);
+    const destination = ContainerModel.collection(to);
+    ContainerModel.release({ container: source, object, to: destination });
+    ContainerModel.link({ container: destination, object });
+  };
+
   test('moving from the owning collection hands ownership to the destination', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(Item, { name: 'alice' }));
     const from = db.add(Collection.make({ objects: [Ref.make(person)] }));
     const to = db.add(Collection.make({ objects: [] }));
-    ContainerModel.move({ object: person, from: ContainerModel.collection(from), to: ContainerModel.collection(to) });
+    move(person, from, to);
     await db.flush();
 
     expect(from.objects).toHaveLength(0);
+    expect(to.objects).toHaveLength(1);
+    expect(Obj.getParent(person)?.id).toBe(to.id);
+  });
+
+  test('moving into a collection that already lists the object hands it ownership', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = db.add(Obj.make(Item, { name: 'alice' }));
+    const from = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const to = db.add(Collection.make({ objects: [] }));
+    Obj.update(to, (to) => {
+      to.objects.push(Ref.make(person));
+    });
+    move(person, from, to);
+    await db.flush();
+
     expect(to.objects).toHaveLength(1);
     expect(Obj.getParent(person)?.id).toBe(to.id);
   });
@@ -141,16 +163,37 @@ describe('ownership', () => {
       linked.objects.push(Ref.make(person));
     });
     const elsewhere = db.add(Collection.make({ objects: [] }));
-    ContainerModel.move({
-      object: person,
-      from: ContainerModel.collection(linked),
-      to: ContainerModel.collection(elsewhere),
-    });
+    move(person, linked, elsewhere);
     await db.flush();
 
     expect(Obj.getParent(person)?.id).toBe(owner.id);
     expect(linked.objects).toHaveLength(0);
     expect(elsewhere.objects).toHaveLength(1);
+  });
+
+  test('an object would be linked only where something else owns it', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const owned = db.add(Obj.make(Item, { name: 'owned' }));
+    const loose = db.add(Obj.make(Item, { name: 'loose' }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(owned)] }));
+    const other = ContainerModel.collection(db.add(Collection.make({ objects: [] })));
+    await db.flush();
+
+    expect(ContainerModel.wouldLink({ container: other, object: owned })).toBe(true);
+    expect(ContainerModel.wouldLink({ container: other, object: owned, from: ContainerModel.collection(owner) })).toBe(
+      false,
+    );
+    expect(ContainerModel.wouldLink({ container: other, object: loose })).toBe(false);
+  });
+
+  test('reordering leaves entries it was not given in place', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const [a, hidden, b, c] = ['a', 'hidden', 'b', 'c'].map((name) => db.add(Obj.make(Item, { name })));
+    const collection = db.add(Collection.make({ objects: [a, hidden, b, c].map((item) => Ref.make(item)) }));
+    ContainerModel.reorder({ container: ContainerModel.collection(collection), objects: [c, a, b] });
+    await db.flush();
+
+    expect(collection.objects.map((ref) => ref.peek()?.id)).toEqual([c.id, hidden.id, a.id, b.id]);
   });
 
   test('linking lists the object once and leaves its parent', async ({ expect }) => {

@@ -57,6 +57,8 @@ const resolveDrop = (
   { source, target, instruction }: { source: TreeData; target: TreeData; instruction: Instruction },
 ): {
   operation: 'rearrange' | DropKind;
+  /** What the drop leaves behind, which the indicator shows: `link` when the item ends up only listed. */
+  kind: DropKind;
   sourceParent?: NavTreeNode.NavTreeItemGraphNode;
   destination?: NavTreeNode.NavTreeItemGraphNode;
 } => {
@@ -65,17 +67,22 @@ const resolveDrop = (
   const sourceParent = getParent(graph, sourceNode, source.path);
   if (source.path.slice(0, -1).join() === target.path.slice(0, -1).join() && instruction.type !== 'make-child') {
     const reorders = sourceParent?.properties.onRearrange && sourceParent.properties.canDrop?.(source);
-    return { operation: reorders ? 'rearrange' : 'reject', sourceParent, destination: sourceParent };
+    return reorders
+      ? { operation: 'rearrange', kind: 'move', sourceParent, destination: sourceParent }
+      : { operation: 'reject', kind: 'reject', sourceParent, destination: sourceParent };
   }
 
   const destination = instruction.type === 'make-child' ? targetNode : getParent(graph, targetNode, target.path);
-  return {
-    operation: destination?.properties.canDrop?.(source)
-      ? resolveDropKind({ source: sourceNode, sourceParent, destination })
-      : 'reject',
-    sourceParent,
-    destination,
-  };
+  const operation = destination?.properties.canDrop?.(source)
+    ? resolveDropKind({ source: sourceNode, sourceParent, destination })
+    : 'reject';
+  if (operation === 'reject') {
+    return { operation, kind: 'reject', sourceParent, destination };
+  }
+  const isLink =
+    destination?.properties.isLink?.(sourceNode, operation === 'move' ? sourceParent : undefined) ??
+    operation === 'link';
+  return { operation, kind: isLink ? 'link' : 'move', sourceParent, destination };
 };
 
 export type NavTreeContainerProps = {
@@ -166,11 +173,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     const getDropKind = useCallback(
       ({ instruction, source, target }: { instruction: Instruction; source: TreeData; target: TreeData }): DropKind => {
-        if (target.item.properties.getDropKind?.(source, instruction) === 'reject') {
+        if (target.item.properties.blockInstruction?.(source, instruction)) {
           return 'reject';
         }
-        const { operation } = resolveDrop(graph, { source, target, instruction });
-        return operation === 'rearrange' ? 'move' : operation;
+        return resolveDrop(graph, { source, target, instruction }).kind;
       },
       [graph],
     );

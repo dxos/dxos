@@ -51,7 +51,7 @@ const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
   return eid ? EID.getEntityId(eid) : undefined;
 };
 
-export const indexOf = (container: Container, object: Obj.Unknown): number =>
+const indexOf = (container: Container, object: Obj.Unknown): number =>
   refs(container).findIndex((ref) => refEntityId(ref) === object.id);
 
 export const includes = (container: Container, object: Obj.Unknown): boolean => indexOf(container, object) > -1;
@@ -59,6 +59,20 @@ export const includes = (container: Container, object: Obj.Unknown): boolean => 
 /** Whether the container only lists an object whose parent is `parent`; an object with no parent is its own. */
 export const isLink = (container: Container, parent: Obj.Unknown | undefined): boolean =>
   parent !== undefined && parent.id !== container.object.id;
+
+/** Whether adding the object leaves it only listed here; `from` is the container it moves out of, if any. */
+export const wouldLink = ({
+  container,
+  object,
+  from,
+}: {
+  container: Container;
+  object: Obj.Unknown;
+  from?: Container;
+}): boolean => {
+  const parent = Obj.getParent(object);
+  return from !== undefined && parent?.id === from.object.id ? false : isLink(container, parent);
+};
 
 type LinkProps = {
   container: Container;
@@ -94,33 +108,31 @@ export const unlink = ({ container, object }: Omit<LinkProps, 'index'>): void =>
   });
 };
 
-/** Replaces the list with `objects`, in that order. */
+/** Puts `objects` in the given order across the slots they hold, leaving every other entry in place. */
 export const reorder = ({ container, objects }: { container: Container; objects: readonly Obj.Unknown[] }): void => {
+  const ids = new Set(objects.map((object) => object.id));
   Obj.update(container.object, (mutable: any) => {
-    mutable[container.property] = objects.map((object) => Ref.make(object));
+    const list: Ref.Ref<Obj.Unknown>[] = mutable[container.property];
+    let next = 0;
+    for (let index = 0; index < list.length && next < objects.length; index++) {
+      const id = refEntityId(list[index]);
+      if (id === undefined || !ids.has(id)) {
+        continue;
+      }
+      const object = objects[next++];
+      if (id !== object.id) {
+        list.splice(index, 1, Ref.make(object));
+      }
+    }
   });
 };
 
-/** Drops the object from the list as it leaves for another; a container that owned it gives it up. */
-export const release = ({ container, object }: Omit<LinkProps, 'index'>): void => {
+/** Drops the object from the list as it leaves for `to`; a container that owned it hands it to `to`. */
+export const release = ({ container, object, to }: Omit<LinkProps, 'index'> & { to?: Container }): void => {
   unlink({ container, object });
   if (Obj.getParent(object)?.id === container.object.id) {
-    Obj.setParent(object, undefined);
+    Obj.setParent(object, to?.object);
   }
-};
-
-/** Moves the object between lists; the destination becomes its parent only when `from` owned it. */
-export const move = ({
-  object,
-  from,
-  to,
-  index,
-}: Omit<LinkProps, 'container'> & { from: Container; to: Container }): void => {
-  if (from.object.id === to.object.id && from.property === to.property) {
-    return;
-  }
-  release({ container: from, object });
-  link({ container: to, object, index });
 };
 
 type AddProps = {
@@ -146,7 +158,7 @@ const isHidden = (object: Obj.Unknown): boolean => {
 };
 
 /** Returns true when the object is eligible to live inside a collection. */
-export const isCollectionItem = (object: Obj.Unknown): boolean => {
+const isCollectionItem = (object: Obj.Unknown): boolean => {
   if (Obj.instanceOf(Collection.Collection, object)) {
     return true;
   }

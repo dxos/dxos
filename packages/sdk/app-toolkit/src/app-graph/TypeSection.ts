@@ -14,7 +14,7 @@ import { type Space, isSpace } from '@dxos/client/echo';
 import { Annotation, Filter, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import { type DropKind, type TreeData } from '@dxos/react-ui-list';
+import { type TreeData } from '@dxos/react-ui-list';
 import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
@@ -175,9 +175,9 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
   };
 
   const { container } = options;
-  const isJoin = (instruction: AppNode.Instruction) => instruction.type === 'make-child';
-  const getDropKind = (source: TreeData, instruction: AppNode.Instruction): DropKind =>
-    canDropSameType(source) ? (isJoin(instruction) ? 'reject' : 'move') : isJoin(instruction) ? 'link' : 'reject';
+  // A row takes other types onto itself and reorders among its own type.
+  const blockInstruction = (source: TreeData, instruction: AppNode.Instruction): boolean =>
+    canDropSameType(source) === (instruction.type === 'make-child');
 
   const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) =>
     orderedObjects
@@ -187,7 +187,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
           db: space.db,
           object,
           deck: options.deck,
-          ...(container ? { container: container(object), getDropKind } : {}),
+          ...(container ? { container: container(object), blockInstruction } : {}),
         }),
       )
       .filter((node): node is NonNullable<typeof node> => node !== null);
