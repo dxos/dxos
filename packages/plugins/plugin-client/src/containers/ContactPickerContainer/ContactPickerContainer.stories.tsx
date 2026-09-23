@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { ClientPlugin } from '#plugin';
-import { initializeIdentity } from '#testing';
+import { createFakeContacts, initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
 import { ContactPickerContainer } from './ContactPickerContainer.tsx';
@@ -41,7 +41,8 @@ const meta = {
         ClientPlugin({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* initializeIdentity(client);
+              yield* initializeIdentity(client, { displayName: 'Me' });
+              yield* createFakeContacts(client);
             }),
         }),
         ProcessManagerPlugin(),
