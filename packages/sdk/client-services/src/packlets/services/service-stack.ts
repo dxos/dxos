@@ -9,7 +9,13 @@ import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { type AutomergeReplicator, EchoHostLayer, EchoHostService, runSqliteHealthCheck } from '@dxos/echo-host';
+import {
+  type AutomergeReplicator,
+  EchoHostLayer,
+  EchoHostService,
+  type QueryExecutorMode,
+  runSqliteHealthCheck,
+} from '@dxos/echo-host';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { SqliteKeyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
@@ -39,6 +45,8 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
+    /** Query evaluation path for every host query; see `QueryExecutorMode`. */
+    queryExecutor?: QueryExecutorMode;
   };
 
 /**
@@ -161,7 +169,7 @@ export const storageLifecycleLayer = Layer.effectDiscard(
  * open/close is owned by the layer scope: it opens when the stack is built and closes when the
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle is driven by the events.
  */
-export const echoHostLayer = (options: { useSubduction?: boolean }) =>
+export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?: QueryExecutorMode }) =>
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
@@ -185,6 +193,7 @@ export const echoHostLayer = (options: { useSubduction?: boolean }) =>
             peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
             getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
             useSubduction: options.useSubduction,
+            queryExecutor: options.queryExecutor,
           });
         }),
       ),

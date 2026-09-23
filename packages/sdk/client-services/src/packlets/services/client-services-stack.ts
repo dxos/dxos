@@ -9,9 +9,11 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { LayerStack } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type Config, ConfigService } from '@dxos/config';
+import { type QueryExecutorMode } from '@dxos/echo-host';
 import { Hook } from '@dxos/effect';
 import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
+import { Runtime_Client_QueryExecutor } from '@dxos/protocols/buf/dxos/config_pb';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { NetworkingEnabled } from './events.ts';
@@ -42,6 +44,21 @@ export type ClientServicesStackOptions = {
 };
 
 /**
+ * The configured query evaluation path, if any. `EchoHost` falls back to `DX_ECHO_QUERY_EXECUTOR`
+ * and then to the in-memory executor, so an unset field stays undefined rather than defaulting here.
+ */
+const queryExecutorFromConfig = (config: Config): QueryExecutorMode | undefined => {
+  switch (config.get('runtime.client.queryExecutor')) {
+    case Runtime_Client_QueryExecutor.SQL:
+      return 'sql';
+    case Runtime_Client_QueryExecutor.MEMORY:
+      return 'memory';
+    default:
+      return undefined;
+  }
+};
+
+/**
  * Runtime props from config, with explicit overrides winning where defined.
  */
 export const runtimePropsFromConfig = (
@@ -50,6 +67,7 @@ export const runtimePropsFromConfig = (
 ): ServiceContextRuntimeProps => ({
   disableP2pReplication: config.get('runtime.client.disableP2pReplication', false),
   enableVectorIndexing: config.get('runtime.client.enableVectorIndexing', false),
+  queryExecutor: queryExecutorFromConfig(config),
   automergeCredentials: config.get('runtime.client.automergeCredentials', false),
   ...Object.fromEntries(Object.entries(overrides).filter(([, value]) => value !== undefined)),
 });

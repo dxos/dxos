@@ -1482,7 +1482,7 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction'
+  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction' | 'queryExecutor'
 >;
 
 /**
