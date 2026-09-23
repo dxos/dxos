@@ -10,6 +10,7 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
 import { Avatar, SystemIconButton, Tag, ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -115,7 +116,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
             {common.length > 0 && (
               <span className='flex flex-wrap gap-1'>
                 {common.map((space) => (
-                  <Tag key={space.id} asChild>
+                  <Tag key={space.id} hue={getHashStyles(space.id).hue} asChild>
                     <button type='button' onClick={() => onSelectSpace?.(space)} data-testid='contact-list.space'>
                       {space.name ?? t('unnamed-space.label')}
                     </button>

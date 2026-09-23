@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { fromPublicKey } from '@dxos/protocols/buf';
 import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -15,8 +15,8 @@ import { translations } from '../../translations.ts';
 import { ContactList, type ContactSpace } from './ContactList.tsx';
 
 const spaces: ContactSpace[] = [
-  { id: 'a', key: PublicKey.random(), name: 'Design' },
-  { id: 'b', key: PublicKey.random(), name: 'Engineering' },
+  { id: SpaceId.random(), key: PublicKey.random(), name: 'Design' },
+  { id: SpaceId.random(), key: PublicKey.random(), name: 'Engineering' },
 ];
 
 const contacts = ['Alice', 'Bob', 'Carol'].map((displayName, index) =>
