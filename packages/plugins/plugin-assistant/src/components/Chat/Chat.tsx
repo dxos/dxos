@@ -788,7 +788,14 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     (task: Task.Task, questionId: string, answer: string) => {
       const spaceId = Obj.getDatabase(task)?.spaceId;
       if (spaceId) {
-        void invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId });
+        // The operation reports a refused write in its result, not only by rejecting, so both are checked.
+        invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId })
+          .then((result) => {
+            if (result.error || !result.data?.accepted) {
+              log.warn('question was not answered', { task: task.id, question: questionId, error: result.error });
+            }
+          })
+          .catch((err) => log.catch(err));
       }
     },
     [invokePromise],
