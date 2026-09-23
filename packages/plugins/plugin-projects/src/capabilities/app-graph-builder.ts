@@ -344,12 +344,10 @@ export const createProjectArtifactsActionExtension = () =>
       }
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
-      const container = artifacts(project);
-      const onRearrange = AppNode.makeRearrangeCallback(container);
-      const canDrop = AppNode.canDropMemberOf(container);
+      const memberOf = artifacts(project);
       return Effect.succeed(
         objects
-          .map((object) => AppNode.makeObject({ get, db, object, navigable: true, onRearrange, canDrop }))
+          .map((object) => AppNode.makeObject({ get, db, object, navigable: true, memberOf }))
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },

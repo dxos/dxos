@@ -86,20 +86,6 @@ export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Se
 export const CAN_DROP_OBJECT = (source: TreeData) =>
   AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
-/** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
-export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
-  AppGraphNode.isGraphNode(source.item) &&
-  Obj.isObject(source.item.data) &&
-  ContainerModel.isCollectionItem(source.item.data);
-
-/** Accepts only objects the container already lists, so its rows can reorder but not take new members. */
-export const canDropMemberOf =
-  (container: ContainerModel.Container) =>
-  (source: TreeData): boolean =>
-    AppGraphNode.isGraphNode(source.item) &&
-    Obj.isObject(source.item.data) &&
-    ContainerModel.includes(container, source.item.data);
-
 //
 // Module-level caches.
 //
@@ -110,10 +96,18 @@ export const containerPartialsCache = new Map<string, ReturnType<typeof buildCon
 const containerKey = (container: ContainerModel.Container): string =>
   `${Obj.getURI(container.object)}#${container.property}`;
 
-/** Stable rearrange callback that reorders a container's list. Keyed by container. */
-export const makeRearrangeCallback = createFactory(
+const rearrangeCallback = createFactory(
   (container: ContainerModel.Container) => (nextOrder: unknown[]) =>
     ContainerModel.reorder({ container, objects: nextOrder.filter(Obj.isObject) }),
+  containerKey,
+);
+
+const canDropInto = createFactory(
+  (container: ContainerModel.Container) =>
+    (source: TreeData): boolean =>
+      AppGraphNode.isGraphNode(source.item) &&
+      Obj.isObject(source.item.data) &&
+      container.accepts?.(source.item.data) !== false,
   containerKey,
 );
 
@@ -152,7 +146,7 @@ export const getContainerPartials = (container: ContainerModel.Container, db: Da
 /** Build collection partials for drag/drop behavior. */
 export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
   role: 'branch' as const,
-  canDrop: CAN_DROP_COLLECTION_ITEM,
+  canDrop: canDropInto(ContainerModel.collection(collection)),
   ...getContainerPartials(ContainerModel.collection(collection), db),
 });
 
@@ -188,6 +182,7 @@ export const makeObject = ({
   deck,
   onRearrange,
   container,
+  memberOf,
   canDrop: canDropOverride,
   getDropKind,
 }: {
@@ -210,6 +205,8 @@ export const makeObject = ({
   onRearrange?: (nextOrder: unknown[]) => void;
   /** The list this row stands for; objects dropped onto the row join it. */
   container?: ContainerModel.Container;
+  /** The list this row is an item of; the row reorders within it and takes what it accepts. */
+  memberOf?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
   /** What a drop at each instruction does, for a row whose answer depends on the source. */
@@ -257,7 +254,7 @@ export const makeObject = ({
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
-  const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
+  const canDrop = droppable ? (canDropOverride ?? (memberOf ? canDropInto(memberOf) : CAN_DROP_OBJECT)) : undefined;
 
   return {
     id: object.id,
@@ -278,7 +275,7 @@ export const makeObject = ({
       selectable,
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
-      onRearrange,
+      onRearrange: onRearrange ?? (memberOf ? rearrangeCallback(memberOf) : undefined),
       ...(container ? getContainerPartials(container, db) : {}),
       getDropKind,
       canDrop,
