@@ -26,7 +26,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { DocumentUnavailableError, EchoClientError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
-import { toDocumentId } from './document-id.ts';
 import { RepoProxy } from './repo-proxy.ts';
 
 /** True once the handle's current heads have been written to the host's on-disk heads store. */
@@ -608,15 +607,11 @@ describe('RepoProxy', () => {
   });
 
   test('an unavailable report from the host settles the handle', async () => {
-    // A host that takes the subscription and loads nothing: the handle would otherwise stay
-    // `'requesting'` forever, which is the hang the report exists to end.
-    const { dataService } = await setup(undefined, (props) => new SilentDataService(props));
+    const { dataService } = await setup(undefined, (props) => new UnavailableDataService(props));
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
-    const url = generateAutomergeUrl();
-    const clientHandle = clientRepo.find<{ text: string }>(url);
-    clientRepo._receiveUpdate({ updates: [{ documentId: toDocumentId(url), unavailable: true }] });
+    const clientHandle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
 
     await expect(asyncTimeout(clientHandle.whenReady(), 1000)).rejects.toThrow(DocumentUnavailableError);
     expect(clientHandle.state).to.equal('unavailable');
@@ -676,12 +671,34 @@ class RefusingDataService extends DataServiceImpl {
   }
 }
 
-/** Registers subscriptions but loads no document, so nothing the host does races the test's report. */
-class SilentDataService extends DataServiceImpl {
-  override ['DataService.updateSubscription'](
-    _request: DataService.UpdateSubscriptionRequest,
-  ): Effect.Effect<void, Error> {
-    return Effect.void;
+/**
+ * A host that holds none of the documents it is asked for and reports each as unavailable, as the
+ * EDGE data plane does for a space whose documents never replicated to it. Neither call reaches the
+ * real host: a document it is still fetching is a different answer (`requesting`), and the one under
+ * test is the host having nothing and fetching nothing.
+ */
+class UnavailableDataService extends DataServiceImpl {
+  #emit: ((updates: DataService.BatchedDocumentUpdates) => void) | undefined;
+
+  override ['DataService.subscribe'](
+    _request: DataService.SubscribeRequest,
+  ): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
+      this.#emit = (updates) => void emit.single(updates);
+      // Ready beacon: `RepoProxy` gates every `updateSubscription` on the subscription's first batch.
+      this.#emit({ updates: [] });
+      return Effect.sync(() => {
+        this.#emit = undefined;
+      });
+    });
+  }
+
+  override ['DataService.updateSubscription']({
+    addIds,
+  }: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
+    return Effect.sync(() => {
+      this.#emit?.({ updates: (addIds ?? []).map((documentId) => ({ documentId, unavailable: true })) });
+    });
   }
 }
 
