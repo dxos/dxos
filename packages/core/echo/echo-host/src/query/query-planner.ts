@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -9,6 +13,7 @@ import { DXN, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors.ts';
 import { QueryPlan } from './plan.ts';
+import { compilePlan as compileToSql, planReadsObjectMeta } from './sql/index.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
@@ -27,8 +32,28 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
   });
 };
 
+/**
+ * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
+ * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
+ * index tables. `memory` is the default — the compiled path is opt-in per host through
+ * {@link QueryPlannerOptions.executor}, else by the `DX_ECHO_QUERY_EXECUTOR` environment variable.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
+
+export const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
+  if (explicit) {
+    return explicit;
+  }
+  const fromEnv =
+    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
+  return fromEnv === 'sql' ? 'sql' : 'memory';
+};
+
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
+  /** Evaluation path {@link QueryPlanner.compilePlan} targets; see {@link QueryExecutorMode}. */
+  executor?: QueryExecutorMode;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
    * Use when executing against an in-memory working set without SQL index access.
@@ -39,6 +64,7 @@ export type QueryPlannerOptions = {
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
   defaultTextSearchKind: 'full-text',
+  executor: 'memory',
 };
 
 /**
@@ -65,6 +91,27 @@ export class QueryPlanner {
     plan = this._optimizeLimits(plan);
     plan = this._optimizeBareAggregate(plan);
     return plan;
+  }
+
+  /**
+   * The plan as the executor will run it. Under `sql` the steps are compiled into one
+   * {@link QueryPlan.SqlStep}; otherwise, and for a plan the compiler declines, the steps are
+   * returned as {@link createPlan} built them.
+   *
+   * Separate from `createPlan` because compiling reads the store — `metaVersion` literal sets and
+   * the day boundaries of a named zone are resolved against it — while `createPlan` stays pure so
+   * the compiler can recurse into subqueries with it.
+   */
+  compilePlan(
+    query: QueryAST.Query,
+  ): Effect.Effect<QueryPlan.Plan, QueryError | SqlError.SqlError, SqlClient.SqlClient> {
+    const plan = this.createPlan(query);
+    // `objectSnapshot` drops `@meta` for document rows, so a plan reading it cannot be compiled and
+    // runs step by step whatever the mode says.
+    if (this._options.executor !== 'sql' || planReadsObjectMeta(plan)) {
+      return Effect.succeed(plan);
+    }
+    return Effect.map(compileToSql(plan), (compiled) => compiled.plan);
   }
 
   /**

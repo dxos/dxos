@@ -41,26 +41,13 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
-import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
-import { type CompiledRow, compilePlan, planReadsObjectMeta } from './sql/index.ts';
-
-/**
- * Which evaluation path answers queries: `memory` loads the objects a plan touches and evaluates
- * every step in JS; `sql` compiles the plan into one SQLite statement over the index tables and
- * loads nothing. `memory` is the default — the compiled path is opt-in per host through
- * {@link QueryExecutorOptions.executor}, else by the `DX_ECHO_QUERY_EXECUTOR` environment variable.
- */
-export type QueryExecutorMode = 'sql' | 'memory';
-
-export const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
-  if (explicit) {
-    return explicit;
-  }
-  const fromEnv =
-    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
-    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
-  return fromEnv === 'sql' ? 'sql' : 'memory';
-};
+import {
+  type QueryExecutorMode,
+  QueryPlanner,
+  filterContainsInQuery,
+  resolveQueryExecutorMode,
+} from './query-planner.ts';
+import { type CompiledRow } from './sql/index.ts';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -648,11 +635,9 @@ export class QueryExecutor extends Resource {
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
-  readonly #mode: QueryExecutorMode;
-  /** The plan the compiled path runs: one `SqlStep`. Null until the first compiled execution. */
-  #compiledPlan: QueryPlan.Plan | null = null;
-  /** Whether the compiled path can answer this plan at all; see {@link planReadsObjectMeta}. */
-  readonly #compilable: boolean;
+  readonly #planner: QueryPlanner;
+  /** Cleared until the first execution resolves it, because compiling the plan reads the store. */
+  #planned = false;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -677,13 +662,11 @@ export class QueryExecutor extends Resource {
     this._id = options.queryId;
     this._query = options.query;
     this._reactivity = options.reactivity;
-    this.#mode = resolveQueryExecutorMode(options.executor);
 
-    const queryPlanner = new QueryPlanner();
-    this._plan = queryPlanner.createPlan(this._query);
+    this.#planner = new QueryPlanner({ executor: resolveQueryExecutorMode(options.executor) });
+    // The uncompiled steps, which scope analysis reads; `execQuery` swaps in the compiled plan.
+    this._plan = this.#planner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
-    // `objectSnapshot` drops `@meta` for document rows, so a plan reading it cannot be compiled.
-    this.#compilable = !planReadsObjectMeta(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }
 
@@ -696,16 +679,19 @@ export class QueryExecutor extends Resource {
   }
 
   get plan(): QueryPlan.Plan {
-    return this.#compiledPlan ?? this._plan;
+    return this._plan;
   }
 
   get trace(): ExecutionTrace {
     return this._trace;
   }
 
-  /** The path this query actually takes, which is `memory` when `sql` cannot compile the plan. */
+  /**
+   * The path this query actually takes, which is `memory` whenever the planner declined to compile
+   * — either the mode is `memory` or the plan reads `@meta`. Resolved once the plan is.
+   */
   get mode(): QueryExecutorMode {
-    return this.#mode === 'sql' && this.#compilable ? 'sql' : 'memory';
+    return this._plan.steps.some((step) => step._tag === 'SqlStep') ? 'sql' : 'memory';
   }
 
   getResults(): QueryService.QueryResult[] {
@@ -773,39 +759,42 @@ export class QueryExecutor extends Resource {
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
+    // Compiling reads the store, so the plan resolves here rather than in the constructor. Its
+    // steps do not change between runs, so this happens once.
+    if (!this.#planned) {
+      this._plan = await this._runInRuntime(this.#planner.compilePlan(this._query));
+      this.#planned = true;
+    }
+
     log('exec query', {
       queryId: this._id,
       query: Query.pretty(Query.fromAst(this._query)),
       mode: this.mode,
     });
 
-    return this.mode === 'sql' ? this.#execCompiled() : this.#execInMemory();
-  }
-
-  /**
-   * The compiled path: the plan is compiled into a single `SqlStep` and run through the same step
-   * loop as any other plan. One statement over the index tables, no document loads — document rows
-   * ship identity only, since the client hydrates them from the document itself; feed rows carry
-   * the indexed snapshot.
-   */
-  async #execCompiled(): Promise<QueryExecutionResult> {
-    const plan = this._plan;
-    const compiled = await this._runInRuntime(compilePlan(plan));
-    this.#compiledPlan = compiled.plan;
+    // Subquery results can change between reactive runs, so resolved `in-query` sets must not
+    // survive across `execQuery` calls.
+    this.#inQuerySetCache = new Map();
+    this.#inQueryTracesAttached = new Set();
 
     const previous = this._lastResultSet;
-    const { workingSet, trace } = await this._execPlan(compiled.plan, []);
+    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
+    // Omit objects whose strong deps cannot be resolved from local state so they never reach the
+    // client, where hydration would fail or stall on them. A `SqlStep` resolved them in SQL.
+    const workingSet = this.mode === 'sql' ? rawWorkingSet : await this._filterUnresolvableStrongDeps(rawWorkingSet);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
-    // The statement ran one level down, in the step; surface it on the root the trace prints.
-    trace.sql = compiled.sql;
-    trace.explain = trace.children[0]?.explain;
+    // A `SqlStep` ran the statement one level down; surface it on the root the trace prints.
+    trace.sql = trace.children.find((child) => child.sql !== undefined)?.sql;
+    trace.explain = trace.children.find((child) => child.explain !== undefined)?.explain;
     this._trace = trace;
 
     const changed =
-      previous.length !== workingSet.length ||
-      previous.some((item, index) => !_sameCompiledResult(workingSet[index].result, item.result));
+      previous.length !== workingSet.length || previous.some((item, index) => !_sameResult(workingSet[index], item));
+
+    // Disabled because concurrent queries don't print hierarchies correctly.
+    // ExecutionTrace.putOnPerformanceTimeline(trace);
 
     if (TRACE_QUERY_EXECUTION) {
       // eslint-disable-next-line no-console
@@ -813,51 +802,6 @@ export class QueryExecutor extends Resource {
     }
 
     return { changed };
-  }
-
-  async #execInMemory(): Promise<QueryExecutionResult> {
-    // Subquery results can change between reactive runs, so resolved `in-query` sets must not
-    // survive across `execQuery` calls.
-    this.#inQuerySetCache = new Map();
-    this.#inQueryTracesAttached = new Set();
-
-    const prevResultSet = this._lastResultSet;
-    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
-    // Omit objects whose strong deps cannot be resolved from local state so they
-    // never reach the client, where hydration would fail or stall on them.
-    const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
-    this._lastResultSet = workingSet;
-    trace.name = 'Root';
-    trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
-    this._trace = trace;
-
-    const changed =
-      prevResultSet.length !== workingSet.length ||
-      prevResultSet.some(
-        (item, index) =>
-          workingSet[index].objectId !== item.objectId ||
-          workingSet[index].spaceId !== item.spaceId ||
-          workingSet[index].documentId !== item.documentId ||
-          workingSet[index].queueId !== item.queueId ||
-          workingSet[index].queueNamespace !== item.queueNamespace ||
-          // A property edit can move an item between groups without changing its flat position
-          // (e.g. the last item of group A becomes the first item of group B at the same index).
-          _serializeOptionalGroupKey(workingSet[index].groupKey) !== _serializeOptionalGroupKey(item.groupKey) ||
-          // A collapsed group ships only its size and aggregates, so those are what can change.
-          _serializeCollapsed(workingSet[index]) !== _serializeCollapsed(item),
-      );
-
-    // Disabled because concurrent queries don't print hierarchies correctly.
-    // ExecutionTrace.putOnPerformanceTimeline(trace);
-
-    if (TRACE_QUERY_EXECUTION) {
-      // eslint-disable-next-line no-console
-      console.log(ExecutionTrace.format(trace));
-    }
-
-    return {
-      changed,
-    };
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
@@ -2586,16 +2530,34 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
   };
 };
 
-/** Whether two compiled rows would ship the same record, for reactive change detection. */
-const _sameCompiledResult = (
-  a: QueryService.QueryResult | undefined,
-  b: QueryService.QueryResult | undefined,
-): boolean =>
-  a?.id === b?.id &&
-  a?.spaceId === b?.spaceId &&
-  a?.documentId === b?.documentId &&
-  a?.queueId === b?.queueId &&
-  a?.queueNamespace === b?.queueNamespace &&
-  a?.groupKey === b?.groupKey &&
-  a?.groupCount === b?.groupCount &&
-  a?.aggregates === b?.aggregates;
+/**
+ * Whether two working-set items would ship the same record, for reactive change detection. A
+ * `SqlStep` item already carries its shipped form, so comparing that is comparing the record; an
+ * item the steps built is compared on the fields `getResults` derives the record from.
+ */
+const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
+  if (a.result !== undefined || b.result !== undefined) {
+    return (
+      a.result?.id === b.result?.id &&
+      a.result?.spaceId === b.result?.spaceId &&
+      a.result?.documentId === b.result?.documentId &&
+      a.result?.queueId === b.result?.queueId &&
+      a.result?.queueNamespace === b.result?.queueNamespace &&
+      a.result?.groupKey === b.result?.groupKey &&
+      a.result?.groupCount === b.result?.groupCount &&
+      a.result?.aggregates === b.result?.aggregates
+    );
+  }
+  return (
+    a.objectId === b.objectId &&
+    a.spaceId === b.spaceId &&
+    a.documentId === b.documentId &&
+    a.queueId === b.queueId &&
+    a.queueNamespace === b.queueNamespace &&
+    // A property edit can move an item between groups without changing its flat position
+    // (e.g. the last item of group A becomes the first item of group B at the same index).
+    _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
+    // A collapsed group ships only its size and aggregates, so those are what can change.
+    _serializeCollapsed(a) === _serializeCollapsed(b)
+  );
+};

@@ -305,8 +305,13 @@ export class SqlPlanCompiler {
             step.selector.typename.length > 0 ? sql`(${buildTypeDxnCondition(sql, step.selector.typename)})` : sql`0`,
           );
         }
-        const rank = fts.ranked ? sql`-bm25(ftsIndex)` : sql`1.0`;
-        base = sql`SELECT m.recordId, m.objectId, m.spaceId, ${rank} AS rank FROM ftsIndex f JOIN objectMeta m ON m.recordId = f.rowid WHERE ${sql.and(conditions)}`;
+        // The unranked condition is a `LIKE` over the stored snapshot, and the full-text table does
+        // not stand in for it: it is flushed on a debounce, so a term below the trigram minimum has
+        // to scan `objectSnapshot` to match writes the index has not caught up with. `FtsIndex.query`
+        // aliases the same two tables the same way.
+        base = fts.ranked
+          ? sql`SELECT m.recordId, m.objectId, m.spaceId, -bm25(ftsIndex) AS rank FROM ftsIndex f JOIN objectMeta m ON m.recordId = f.rowid WHERE ${sql.and(conditions)}`
+          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectSnapshot f JOIN objectMeta m ON m.recordId = f.recordId WHERE ${sql.and(conditions)}`;
         break;
       }
       default:
