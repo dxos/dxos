@@ -52,8 +52,10 @@ node id standalone and the project's inside the tab; nothing else differs betwee
    task set, so a task is addressable by path from either host.
 3. **Path helper** — `plugin-tasks/src/paths.ts`, mirroring `getFeedObjectPath`.
 4. **`TaskArticle`** — the detail container, registered on `AppSurface.object(Article, Task.Task)`.
-   Starts with what `TaskList.Edit` shows (title, description, status, estimate) and grows into the
-   fields a strip could never hold.
+   Its body IS `TaskList.Edit`, wrapped in a `TaskList.Root` of one task held selected: a task then
+   reads and edits the same way wherever it is opened, and the description keeps the host's live
+   markdown extensions (links, `#nnn`) that a schema form renders as plain text. It grows from there
+   into the fields a strip has no room for — assignee, dependencies, sub-tasks, history.
 5. **Row → detail** — `TaskSetArticle` rows invoke `Select` + `Open` at `level: 'task'`; meta-click
    opens its own plank. Keyboard navigation reuses `useArticleKeyboardNavigation`.
 6. **Retire the strip** (not done) — only once creation has somewhere else to live: either an inline new row in

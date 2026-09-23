@@ -1010,9 +1010,11 @@ companion).
       one in plugin-projects under `PROJECT_URL`, plus a `paths.ts` helper, so a
       task is addressable by path from either host.
 - [x] **`TaskArticle`** — the detail container, on
-      `AppSurface.object(Article, Task.Task)`. Starts with what `TaskList.Edit`
-      shows (title, description, status, estimate) and grows into the fields a
-      strip cannot hold: assignee, dependencies, sub-tasks, history, delegation.
+      `AppSurface.object(Article, Task.Task)`. Its body is `TaskList.Edit` itself
+      (a `TaskList.Root` of one task, held selected) rather than a schema form,
+      so editing is the same gesture wherever a task is opened and the
+      description keeps its live markdown extensions. Still to grow into:
+      assignee, dependencies, sub-tasks, history, delegation.
 - [x] **Row opens the detail** — `TaskSetArticle` rows invoke
       `LayoutOperation.Select` + `LayoutOperation.Open` at `level: 'task'`;
       meta-click opens its own plank; arrow keys read down the list through
