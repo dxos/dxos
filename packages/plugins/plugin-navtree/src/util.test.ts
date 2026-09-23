@@ -44,6 +44,11 @@ describe('resolveDropOperation', () => {
     expect(resolveDropOperation({ source: item, sourceParent, destination: sourceParent })).toBe('reject');
   });
 
+  test('rejects a drop from another space', ({ expect }) => {
+    const destination = parent('to', { acceptPersistenceKey: new Set(['other']) });
+    expect(resolveDropOperation({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
+  });
+
   test('rejects a destination that accepts neither a move nor a link', ({ expect }) => {
     const destination = parent('to', { onTransferStart: undefined, onLink: undefined });
     expect(resolveDropOperation({ source: item, sourceParent: parent('from'), destination })).toBe('reject');

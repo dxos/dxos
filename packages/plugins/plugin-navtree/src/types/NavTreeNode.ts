@@ -15,7 +15,6 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       acceptPersistenceClass: Set<string>;
       acceptPersistenceKey: Set<string>;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
-      onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
       /** Parents sharing a scope move items between them; a drop from outside it links instead. */

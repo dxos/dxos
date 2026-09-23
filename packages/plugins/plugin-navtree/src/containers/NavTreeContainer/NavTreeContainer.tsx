@@ -271,10 +271,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
                 void sourceNode.properties.onRearrange?.(nextItems);
                 break;
               }
-              case 'copy': {
-                void destination?.properties.onCopy?.(sourceNode, migrationIndex);
-                break;
-              }
               case 'transfer': {
                 if (destination) {
                   void destination.properties.onTransferStart?.(sourceNode, migrationIndex);

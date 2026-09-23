@@ -19,7 +19,7 @@ export const getParent = (
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
-export type DropOperation = 'transfer' | 'link' | 'copy' | 'reject';
+export type DropOperation = 'transfer' | 'link' | 'reject';
 
 /**
  * What dropping `source` into `destination` does. A move (`transfer`) stays inside one transfer scope,
@@ -42,22 +42,16 @@ export const resolveDropOperation = ({
     !persistenceClass ||
     !persistenceKey ||
     !destination.properties.acceptPersistenceClass?.has(persistenceClass) ||
-    !destination.properties.acceptPersistenceKey
+    !destination.properties.acceptPersistenceKey?.has(persistenceKey)
   ) {
     return 'reject';
-  }
-  if (!destination.properties.acceptPersistenceKey.has(persistenceKey)) {
-    return destination.properties.onCopy ? 'copy' : 'reject';
   }
 
   const scope = destination.properties.transferScope;
   if (scope && sourceParent?.properties.transferScope === scope && destination.properties.onTransferStart) {
     return 'transfer';
   }
-  if (destination.properties.onLink) {
-    return 'link';
-  }
-  return destination.properties.onCopy ? 'copy' : 'reject';
+  return destination.properties.onLink ? 'link' : 'reject';
 };
 
 // TODO(wittjosiah): Move into node implementation?

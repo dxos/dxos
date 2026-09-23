@@ -160,18 +160,6 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
   ...getContainerPartials(ContainerModel.collection(collection), db),
-  // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
-  // onCopy: async (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
-  //   const newObject = await cloneObject(child.data, resolve, db);
-  //   db.add(newObject);
-  //   Obj.update(collection, (collection) => {
-  //     if (typeof index !== 'undefined') {
-  //       collection.objects.splice(index, 0, Ref.make(newObject));
-  //     } else {
-  //       collection.objects.push(Ref.make(newObject));
-  //     }
-  //   });
-  // },
 });
 
 export const getCollectionGraphNodePartials = ({
