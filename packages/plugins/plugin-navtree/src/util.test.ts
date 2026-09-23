@@ -19,7 +19,8 @@ const parent = (id: string, properties: Partial<NavTreeNode.NavTreeItemGraphNode
   node(id, {
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([SPACE]),
-    onMove: () => {},
+    onTransferStart: () => {},
+    onTransferEnd: () => {},
     onLink: () => {},
     ...properties,
   });
@@ -48,7 +49,7 @@ describe('resolveDropKind', () => {
   });
 
   test('rejects a destination that accepts neither a move nor a link', ({ expect }) => {
-    const destination = parent('to', { onMove: undefined, onLink: undefined });
+    const destination = parent('to', { onTransferStart: undefined, onLink: undefined });
     expect(resolveDropKind({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
   });
 });

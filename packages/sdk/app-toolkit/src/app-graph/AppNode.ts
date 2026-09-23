@@ -127,12 +127,9 @@ const buildContainerPartials = (container: ContainerModel.Container, db: Databas
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   moveScope: container.moveScope,
-  onMove: (child: AppGraphNode.Node<Obj.Unknown>, sourceParent: AppGraphNode.Node | undefined, index?: number) => {
-    const from = getContainer(sourceParent);
-    if (from) {
-      ContainerModel.move({ object: child.data, from, to: container, index });
-    }
-  },
+  onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+    ContainerModel.link({ container, object: child.data, index }),
+  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>) => ContainerModel.release({ container, object: child.data }),
   onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
     ContainerModel.link({ container, object: child.data, index }),
   [CONTAINER_PROPERTY]: container,

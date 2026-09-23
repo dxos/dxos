@@ -269,7 +269,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
                 break;
               }
               case 'move': {
-                void destination?.properties.onMove?.(sourceNode, sourceParent, migrationIndex);
+                if (destination) {
+                  void sourceParent?.properties.onTransferEnd?.(sourceNode, destination);
+                  void destination.properties.onTransferStart?.(sourceNode, migrationIndex);
+                }
                 break;
               }
               case 'link': {

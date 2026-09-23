@@ -101,7 +101,15 @@ export const reorder = ({ container, objects }: { container: Container; objects:
   });
 };
 
-/** Moves the object between lists; ownership follows only when `from` owned it. */
+/** Drops the object from the list as it leaves for another; a container that owned it gives it up. */
+export const release = ({ container, object }: Omit<LinkProps, 'index'>): void => {
+  unlink({ container, object });
+  if (Obj.getParent(object)?.id === container.object.id) {
+    Obj.setParent(object, undefined);
+  }
+};
+
+/** Moves the object between lists; the destination becomes its parent only when `from` owned it. */
 export const move = ({
   object,
   from,
@@ -111,12 +119,8 @@ export const move = ({
   if (from.object.id === to.object.id && from.property === to.property) {
     return;
   }
-  const owned = Obj.isOwnedBy(object, from.object);
+  release({ container: from, object });
   link({ container: to, object, index });
-  unlink({ container: from, object });
-  if (owned) {
-    Obj.setParent(object, to.object);
-  }
 };
 
 type AddProps = {

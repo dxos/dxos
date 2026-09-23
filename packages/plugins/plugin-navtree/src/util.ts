@@ -42,7 +42,12 @@ export const resolveDropKind = ({
   }
 
   const scope = destination.properties.moveScope;
-  if (scope && sourceParent?.properties.moveScope === scope && destination.properties.onMove) {
+  if (
+    scope &&
+    sourceParent?.properties.moveScope === scope &&
+    sourceParent.properties.onTransferEnd &&
+    destination.properties.onTransferStart
+  ) {
     return 'move';
   }
   return destination.properties.onLink ? 'link' : 'reject';

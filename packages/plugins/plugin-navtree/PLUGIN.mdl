@@ -226,7 +226,7 @@ feat F-4: Drag and Drop
     then: onRearrange callback on the parent node is called with the new order
   req F-4.4:
     when: the source's parent and the target share a move scope
-    then: onMove callback on the target is called with the source's parent
+    then: onTransferEnd is called on the source's parent, then onTransferStart on the target
   req F-4.5:
     when: the drop crosses a move scope and the target accepts links
     then: onLink callback on the target is called and the source's parent is left alone
