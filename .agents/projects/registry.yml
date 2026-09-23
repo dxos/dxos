@@ -6,16 +6,6 @@
 # status: active | paused | blocked | ended
 
 projects:
-  - name: stability
-    status: active
-    user: dmytro
-    host: cloud
-    created: 2026-09-23
-    summary: 'Stability work-stream — scope to be defined in DESIGN.md.'
-    tasks: .agents/projects/stability/TASKS.md
-    design: .agents/projects/stability/DESIGN.md
-    prs: []
-    resume: 'Registered 2026-09-23. NEXT: define scope and success criteria in DESIGN.md; inventory and rank known stability issues.'
   - name: composer-e2e
     status: active
     user: dmytro
