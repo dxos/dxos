@@ -46,7 +46,7 @@ import {
   type SaveStateChangedEvent,
   toDocumentId,
 } from '../automerge/index.ts';
-import { DocumentUnavailableError, EchoClientError } from '../errors.ts';
+import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -1725,7 +1725,18 @@ export class EntityManager implements IDatabaseBinding {
         log.warn('object document was already loaded', logMeta);
         continue;
       }
-      const handle = this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
+      let handle: DocHandleProxy<DatabaseDirectory>;
+      try {
+        handle = this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
+      } catch (err) {
+        if (!RepoClosedError.is(err)) {
+          throw err;
+        }
+        // The proxy closed under a load this manager started while open — its own `#closed` flag
+        // tracks a different object's lifetime, so it cannot stand in for this check.
+        log('repo closed while links were resolving, abandoning load', logMeta);
+        return;
+      }
       log.debug('document loading triggered', logMeta);
       this._bindObjectDocument(objectId, handle);
       void this._loadHandleForObject(handle, objectId, opts);
@@ -1908,7 +1919,18 @@ export class EntityManager implements IDatabaseBinding {
           existing.objectIds.push(object.id);
           continue;
         }
-        const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
+        let newDocHandle: DocHandleProxy<DatabaseDirectory>;
+        try {
+          newDocHandle = this._repoProxy.find<DatabaseDirectory>(newObjectDocUrl as DocumentId);
+        } catch (err) {
+          if (!RepoClosedError.is(err)) {
+            throw err;
+          }
+          // A root update delivered into teardown: no rebind can land, and the remaining objects
+          // would each fail the same way.
+          log('repo closed while rebinding objects, abandoning root update', { objectId: object.id });
+          return;
+        }
         try {
           await newDocHandle.whenReady();
         } catch (err) {

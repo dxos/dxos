@@ -23,7 +23,7 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { DocumentUnavailableError, EchoClientError } from '../errors.ts';
+import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
 import { RepoProxy } from './repo-proxy.ts';
@@ -634,6 +634,22 @@ describe('RepoProxy', () => {
     invariant(hostHandle);
     await hostHandle.waitUntilReady();
     expect(hostHandle.doc()?.text).toEqual(text);
+  });
+
+  test('find on a closed proxy reports the client going away', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    const url = handle.url;
+    invariant(url);
+    await clientRepo.close();
+
+    // A load started while the proxy was open routinely lands after it; the outcome is typed so a
+    // caller that can abandon the work recognises it, rather than an assertion failure.
+    expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
+    expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
   });
 });
 

@@ -8,12 +8,12 @@ import * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
+import { RepoClosedError } from '../errors.ts';
 import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 
@@ -183,6 +183,10 @@ export class RepoProxy extends Resource {
     return true;
   }
 
+  /**
+   * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
+   * a caller whose work is abandonable should treat this as the client going away.
+   */
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
@@ -432,8 +436,22 @@ export class RepoProxy extends Resource {
     return this._loadHandle<T>({ documentId });
   }
 
+  /**
+   * The update job is the only route a handle has to the host, and `Resource` still reports OPEN
+   * for the whole of `_close`, which drops the job before the state flips.
+   *
+   * @throws {RepoClosedError}
+   */
+  #requireOpen(documentId?: DocumentId): UpdateScheduler {
+    if (this._lifecycleState !== LifecycleState.OPEN || !this._sendUpdatesJob) {
+      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+    }
+    return this._sendUpdatesJob;
+  }
+
+  /** @throws {RepoClosedError} */
   private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    const sendUpdatesJob = this.#requireOpen(documentId);
 
     const onChange = ({ patchInfo }: ChangeEvent<T>) => {
       if (patchInfo.source !== 'change') {
@@ -465,13 +483,14 @@ export class RepoProxy extends Resource {
     this._pendingRemoveIds.delete(documentId);
     this._deferredReleaseIds.delete(documentId);
     this._pendingAddIds.add(documentId);
-    this._sendUpdatesJob!.trigger();
+    sendUpdatesJob.trigger();
 
     return handle;
   }
 
+  /** @throws {RepoClosedError} */
   private _createHandle<T>({ initialValue }: { initialValue?: T }): DocHandleProxy<T> {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    this.#requireOpen();
 
     const update = () => {
       // Called only when documentId is known (after onChange check or after creation).

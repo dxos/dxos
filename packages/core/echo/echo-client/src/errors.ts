@@ -20,3 +20,17 @@ export class DocumentUnavailableError extends BaseError.extend(
     super({ context, ...options });
   }
 }
+
+/**
+ * The repo proxy is no longer able to reach the host: the client is closing or has closed, so the
+ * document can never be produced. Expected during teardown — work started while the proxy was open
+ * routinely lands after it, and callers that can abandon quietly should.
+ */
+export class RepoClosedError extends BaseError.extend(
+  'RepoClosedError',
+  'Repo proxy is closed; the client is going away.',
+) {
+  constructor(context: { spaceId: string; documentId?: string }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
