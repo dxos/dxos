@@ -215,8 +215,7 @@ const groupKeyOf = (item: ChangeItem, aggregates: readonly QueryAST.GroupAggrega
 
 /** Chronological, with the key breaking ties so the order is stable across runs. */
 const compareNatural = (a: ChangeItem, b: ChangeItem): number =>
-  Number(a.record.time) - Number(b.record.time) ||
-  String(a.record.key ?? '').localeCompare(String(b.record.key ?? ''));
+  Number(a.record.time) - Number(b.record.time) || String(a.record.key ?? '').localeCompare(String(b.record.key ?? ''));
 
 const compareMultiOrder = (a: ChangeItem, b: ChangeItem, orders: readonly QueryAST.Order[]): number => {
   for (const order of orders) {
