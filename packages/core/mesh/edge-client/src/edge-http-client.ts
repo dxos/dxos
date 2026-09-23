@@ -162,7 +162,7 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
  * services run at different URLs and are never both available from the same base URL.
  */
 /** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
-export type EdgeAiService = 'anthropic' | 'deepseek';
+export type EdgeAiService = 'anthropic' | 'deepseek' | 'typesafe';
 
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {

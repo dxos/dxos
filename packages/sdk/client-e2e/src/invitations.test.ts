@@ -13,15 +13,12 @@ import { Trigger, chain, waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import {
-  type DataSpace,
-  DataSpaceManagerService,
-  IdentityManagerService,
-  InvitationsHandlerService,
-  InvitationsManager,
-  InvitationsManagerService,
-  InvitationsServiceImpl,
-  MetadataStore,
-  createAdmissionKeypair,
+  IdentityContract,
+  Invitations,
+  InvitationsContract,
+  Metadata,
+  Spaces,
+  SpacesContract,
 } from '@dxos/client-services';
 import {
   type PerformInvitationProps,
@@ -133,11 +130,11 @@ const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
   const services = await EffectEx.runPromise(
     ServiceResolver.resolveAll(
       [
-        InvitationsHandlerService,
-        InvitationsManagerService,
+        Invitations.InvitationsHandlerService,
+        InvitationsContract.ManagerService,
         SwarmNetworkManagerService,
-        DataSpaceManagerService,
-        IdentityManagerService,
+        SpacesContract.ManagerService,
+        IdentityContract.ManagerService,
       ],
       {},
     ).pipe(
@@ -147,11 +144,11 @@ const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
     ),
   );
   return {
-    invitations: EffectContext.getUnsafe(services, InvitationsHandlerService),
-    invitationsManager: EffectContext.getUnsafe(services, InvitationsManagerService),
+    invitations: EffectContext.getUnsafe(services, Invitations.InvitationsHandlerService),
+    invitationsManager: EffectContext.getUnsafe(services, InvitationsContract.ManagerService),
     networkManager: EffectContext.getUnsafe(services, SwarmNetworkManagerService),
-    dataSpaceManager: EffectContext.getUnsafe(services, DataSpaceManagerService),
-    identityManager: EffectContext.getUnsafe(services, IdentityManagerService),
+    dataSpaceManager: EffectContext.getUnsafe(services, SpacesContract.ManagerService),
+    identityManager: EffectContext.getUnsafe(services, IdentityContract.ManagerService),
   };
 };
 
@@ -189,7 +186,7 @@ const testSuite = (
   test('with shared keypair', async () => {
     const [host, guest] = await getPeers();
     const params = getProps();
-    const guestKeypair = createAdmissionKeypair();
+    const guestKeypair = Invitations.createAdmissionKeypair();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -202,8 +199,8 @@ const testSuite = (
 
   test('invalid shared keypair', async () => {
     const params = getProps();
-    const keypair1 = createAdmissionKeypair();
-    const keypair2 = createAdmissionKeypair();
+    const keypair1 = Invitations.createAdmissionKeypair();
+    const keypair2 = Invitations.createAdmissionKeypair();
     const invalidKeypair = buf.create(AdmissionKeypairSchema, {
       publicKey: keypair1.publicKey,
       privateKey: keypair2.privateKey,
@@ -224,7 +221,7 @@ const testSuite = (
 
   test('incomplete shared keypair', async () => {
     const params = getProps();
-    const keypair = createAdmissionKeypair();
+    const keypair = Invitations.createAdmissionKeypair();
     delete keypair.privateKey;
     const [hostResult, guestResult] = performInvitation({
       ...params,
@@ -389,7 +386,7 @@ describe('Invitations', () => {
     describe('space', () => {
       let host: ServiceContext;
       let guest: ServiceContext;
-      let space: DataSpace;
+      let space: Spaces.DataSpace;
 
       beforeEach(async () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -431,8 +428,8 @@ describe('Invitations', () => {
       let hostContext: ServiceContext;
       let guestContext: ServiceContext;
       let host: InvitationsProxy;
-      let space: DataSpace;
-      let hostMetadata: MetadataStore;
+      let space: Spaces.DataSpace;
+      let hostMetadata: Metadata.MetadataStore;
 
       beforeEach(async () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -641,7 +638,7 @@ describe('Invitations', () => {
       let guestContext: ServiceContext;
       let host: InvitationsProxy;
       let guest: InvitationsProxy;
-      let space: DataSpace;
+      let space: Spaces.DataSpace;
 
       beforeEach(async () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -773,9 +770,11 @@ const expectErrorState = async (args: {
 
 const createInvitationsApi = async (
   context: InvitationPeer,
-  metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+  metadata: Metadata.MetadataStore = new Metadata.MetadataStore(
+    createStorage({ type: StorageType.RAM }).createDirectory(),
+  ),
 ) => {
-  const manager = new InvitationsManager(context.invitations, metadata);
+  const manager = new Invitations.InvitationsManager(context.invitations, metadata);
   manager.setInvitationHandlerFactory((invitation) => context.invitationsManager.getInvitationHandler(invitation));
   // InvitationsProxy consumes the Promise/Stream shaped proto service; bridge the effect-rpc Handlers
   // impl in-process (no wire hop) and derive the proto surface from it. The endpoint is kept open for
@@ -784,9 +783,9 @@ const createInvitationsApi = async (
   const scope = Effect.runSync(Scope.make());
   invitationsApiScopes.push(scope);
   const rpc = await EffectEx.runPromise(
-    makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
-      Scope.provide(scope),
-    ),
+    makeInProcessClientServicesRpc(() => ({
+      InvitationsService: new Invitations.InvitationsServiceImpl(manager),
+    })).pipe(Scope.provide(scope)),
   );
   const service = makeServicesFromRpc(rpc, EffectContext.empty()).InvitationsService!;
   return { manager, service, metadata };

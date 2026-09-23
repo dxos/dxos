@@ -48,6 +48,7 @@ type Settings
     chatView?: ChatView
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
+    codeMode?: boolean
     tracePanelDebug?: boolean
 ```
 
@@ -269,6 +270,12 @@ feat F-5: Tool Execution
   req F-5.3:
     when: AI invokes a tool during a conversation
     then: operation is dispatched via the compute runtime and result returned to the model
+  req F-5.4: Code mode is opt-in via `Settings.codeMode`, off by default; the host supplies the engine
+             through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
+  req F-5.5:
+    when: Settings.codeMode is enabled, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
+          instead of AiSession
 ```
 
 ```mdl

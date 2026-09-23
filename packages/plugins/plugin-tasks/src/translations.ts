@@ -5,7 +5,7 @@
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
-import { Outline } from '@dxos/types';
+import { Outline, RemoteSession } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Journal } from '#types';
@@ -35,6 +35,16 @@ export const translations = [
         'rename-object.label': 'Rename outline',
         'delete-object.label': 'Delete outline',
         'object-deleted.label': 'Outline deleted',
+      },
+      [Type.getTypename(RemoteSession.RemoteSession)]: {
+        'typename.label': 'Agent session',
+        'typename.label_zero': 'Agent sessions',
+        'typename.label_one': 'Agent session',
+        'typename.label_other': 'Agent sessions',
+        'object-name.placeholder': 'New agent session',
+        'rename-object.label': 'Rename agent session',
+        'delete-object.label': 'Delete agent session',
+        'object-deleted.label': 'Agent session deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Tasks',
