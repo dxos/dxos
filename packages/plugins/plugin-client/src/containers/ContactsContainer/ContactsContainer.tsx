@@ -44,7 +44,13 @@ export const ContactsContainer = () => {
                 />
               </Field.Root>
             )}
-            <ContactList contacts={contacts} spaces={contactSpaces} filter={filter} onSelectSpace={handleSelectSpace} />
+            <ContactList
+              classNames='border mt-2'
+              contacts={contacts}
+              spaces={contactSpaces}
+              filter={filter}
+              onSelectSpace={handleSelectSpace}
+            />
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
