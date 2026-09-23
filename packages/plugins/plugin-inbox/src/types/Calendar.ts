@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
@@ -24,6 +25,13 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
+    /**
+     * Reading a calendar is a chain, as reading a mailbox is: the event replaces the event plank
+     * rather than growing the deck, so moving down the day reuses one plank.
+     */
+    AppAnnotation.DeckAnnotation.set({
+      levels: [{ key: 'calendar' }, { key: 'event' }],
+    }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
     // Providers are resolved from the registry — see `Mailbox`.

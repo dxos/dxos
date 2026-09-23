@@ -3,6 +3,7 @@
 //
 
 export * from './atoms.ts';
+export * from './keys.ts';
 export * from './projection.ts';
 export * from './projections/constrained.ts';
 export * from './projections/dynamic.ts';

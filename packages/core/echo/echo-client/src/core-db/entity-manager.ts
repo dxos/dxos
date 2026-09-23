@@ -874,16 +874,7 @@ export class EntityManager implements IDatabaseBinding {
     log('flush', { disk, indexes, secondaryIndexes, updates });
     await this._waitForPendingCreations();
     if (disk) {
-      await this._repoProxy.flush();
-      await runServiceCall(
-        this._runtime,
-        this._dataService['DataService.flush']({
-          documentIds: this._getAllDocHandles()
-            .map((handle) => handle.documentId)
-            .filter((id): id is DocumentId => id != null),
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
+      await this._repoProxy.flush({ disk: true });
     }
 
     if (indexes || secondaryIndexes) {
