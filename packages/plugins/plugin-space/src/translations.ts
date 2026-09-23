@@ -115,6 +115,8 @@ export const translations = [
         'plugin.name': 'Spaces',
         'navigation-failed-toast.title': 'Link could not be processed',
         'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
+        'join-by-key-failed-toast.title': 'Couldn’t join space',
+        'join-by-key-failed-toast.description': 'Couldn’t reach a member of this space — try again later.',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
