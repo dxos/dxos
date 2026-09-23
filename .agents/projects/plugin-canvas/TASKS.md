@@ -128,6 +128,14 @@ were wrong in ways only a measurement showed.
       segment joins them, rounded by `splinePath`. Nothing is stored, so the route follows the nodes.
 - [ ] Smart routing proper: avoid crossing the nodes it connects and other nodes in the way (phase 2,
       over `@dxos/diagram`'s `ortho-router`).
+- [ ] A click on a spline's span midpoint adds a control point without any movement. The handle is there
+      to be dragged; decide whether a bare click should commit one or whether it needs a threshold.
+- [ ] The default extent is a floor under every scene's bounds, including a child behind a portal, so a
+      small child now maps through a 1600×1024 frame and draws smaller in its tile. Decide whether the
+      floor belongs only to the scene being edited.
+- [ ] A new class still arrives as `Class` with one attribute and one method, and a new text node as
+      `Text`, while a rectangle and an ellipse now arrive with no label at all. Decide whether those two
+      should be blank too — an empty text node is invisible, which is why they were left.
 
 ## Phase 6: compute scene stories (started 2026-09-23, PR #13254)
 
@@ -142,5 +150,20 @@ before), not reasoned about from the source.
 - [x] `scene--transform`: a click on an interactive control runs its operation. The node frame takes a
       pointer press as select-and-drag and captures the pointer, so the `click` never arrived; the four
       shapes with a control (`RNG`, `Switch`, `Audio`, `GptRealtime`) now stop the gesture.
+- [x] `scene--transform`: the beacon lights. The transform emits what JSONPath returns, a list of
+      matches (`[0.68]` above the threshold, `[]` below), and the beacon declared a `Boolean` input, so
+      every value arrived as a type error and the lamp was dark whatever the roll. Its input is now
+      `Any`, read through `isTruthy`, which already treats an empty list as false: 6 of 14 rolls lit.
+      The same fault is in the old editor, so it was never a scene regression.
+- [ ] The graph never runs at mount. `AUTO_TRIGGER_NODES` names `constant` and its comment promises
+      execution on startup, but `exec()` is only ever reached from `setOutput()`, so a circuit is inert
+      until something writes a forced output (the dice, a switch, an edited constant).
+- [ ] The run control on a `json-transform` does nothing: `JsonTransformComponent` renders a bare
+      `<Box>` with no `onAction`, and `FunctionBody` handles only `open` / `close`. Either wire `run` to
+      `controller.exec(nodeId)` or stop drawing the button on a node that cannot run.
+- [ ] Match the old editor where it is better (the user is specifying which): the circuit fits to the
+      padded scene bounds so it sits small in a corner where the editor centres it; the dashed scene
+      frame draws where the editor shows none; the editor's one grouped horizontal toolbar against the
+      corner toolbar plus the vertical palette rail; ports drawn at rest against hover-only.
 - [ ] The remaining `scene` stories (beacon, logic, control, template, gpt, plugins, artifact,
       image-gen, audio, voice), same treatment.
