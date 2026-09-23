@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import { downloadBlob } from '@dxos/util';
 
 import { verifyOpfsSqliteImport } from './opfs-import-verify.ts';
 
-const DB_NAME = OPFS_SQLITE_DB_FILENAME;
+const DB_NAME = Storage.OPFS_SQLITE_DB_FILENAME;
 
 /**
  * Read the OPFS `DXOS` SQLite payload directly (no SQLite worker).
@@ -20,7 +20,7 @@ export const exportOpfsSqlite = async (): Promise<Uint8Array> => OpfsPool.readDa
  */
 export const exportOpfsProfileArchive = async (options?: { origin?: string }): Promise<Uint8Array> => {
   const database = await exportOpfsSqlite();
-  return encodeProfileArchive(createSqliteProfileArchive(DB_NAME, database, options));
+  return Storage.encodeProfileArchive(Storage.createSqliteProfileArchive(DB_NAME, database, options));
 };
 
 /**

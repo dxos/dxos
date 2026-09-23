@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isValidSqliteDatabase } from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 /** Compare a sample of bytes at both ends to detect truncated or partial writes cheaply. */
@@ -30,7 +30,7 @@ const sampleMismatch = (source: Uint8Array, payload: Uint8Array): boolean => {
  */
 export const verifyOpfsSqliteImport = async (sourceBytes: Uint8Array): Promise<number> => {
   const payload = await OpfsPool.readDatabase();
-  if (!isValidSqliteDatabase(payload)) {
+  if (!Storage.isValidSqliteDatabase(payload)) {
     throw new Error('Imported OPFS database has invalid SQLite header');
   }
 

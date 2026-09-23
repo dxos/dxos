@@ -8,7 +8,7 @@ import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { makeWorkerRuntime } from '@dxos/client-services';
+import { WorkerRuntime } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config } from '@dxos/config';
 import { BaseError } from '@dxos/errors';
@@ -75,7 +75,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
 
         log('dedicated-worker: starting WorkerRuntime');
-        const runtime = yield* makeWorkerRuntime({
+        const runtime = yield* WorkerRuntime.makeWorkerRuntime({
           configProvider: Effect.succeed(config),
           requestShutdown: Effect.sync(() => {
             log('dedicated-worker: WorkerRuntime requested shutdown');

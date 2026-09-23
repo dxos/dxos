@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// Prints the intra-package import graph and its strongly connected components,
-// so the structure claimed in docs/DEPENDENCY-GRAPH.md stays checkable.
+// Prints the import graph between the modules under `src/internal` and its strongly connected
+// components, so the structure claimed in docs/DEPENDENCY-GRAPH.md stays checkable.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize, relative, sep } from 'node:path';
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const includeTypes = process.argv.includes('--types');
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'packlets');
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'internal');
 
 const walk = (dir) =>
   readdirSync(dir).flatMap((entry) => {
@@ -97,7 +97,7 @@ for (const node of nodes.toSorted()) {
   total += outgoing.length;
   console.log(`  ${node} -> ${outgoing.map(([to, count]) => `${to}(${count})`).join(', ') || '-'}`);
 }
-console.log(`\n# ${nodes.length} packlets, ${total} edges`);
+console.log(`\n# ${nodes.length} modules, ${total} edges`);
 
 const cycles = components.filter((component) => component.length > 1);
 console.log('\n# Cycles');

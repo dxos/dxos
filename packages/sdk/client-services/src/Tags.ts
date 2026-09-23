@@ -6,10 +6,10 @@
 
 import * as EffectContext from 'effect/Context';
 
-import { type IdentityLifecycle } from './packlets/identity/identity-lifecycle.ts';
-import { type IdentityManager, type IdentityProvider } from './packlets/identity/identity-manager.ts';
-import { type InvitationsManager } from './packlets/invitations/invitations-manager.ts';
-import { type DataSpaceManager, type SigningContextProvider } from './packlets/spaces/data-space-manager.ts';
+import { type IdentityLifecycle } from './internal/identity/identity-lifecycle.ts';
+import { type IdentityManager, type IdentityProvider } from './internal/identity/identity-manager.ts';
+import { type InvitationsManager } from './internal/invitations/invitations-manager.ts';
+import { type DataSpaceManager, type SigningContextProvider } from './internal/spaces/data-space-manager.ts';
 
 //
 // Service tags for components whose consumers must not depend on the implementing module. Every

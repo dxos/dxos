@@ -31,9 +31,9 @@ import {
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Identity } from './Identity.ts';
-import { MetadataStore } from './packlets/metadata/index.ts';
-import { valueEncoding } from './packlets/pipeline/index.ts';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from './packlets/space/index.ts';
+import { MetadataStore } from './internal/metadata/index.ts';
+import { valueEncoding } from './internal/pipeline/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from './internal/space/index.ts';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });

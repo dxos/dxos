@@ -1,6 +1,7 @@
 # `@dxos/client-services` — dependency graph
 
-Measured from the source tree (`src/packlets/*`), production files only
+Measured from the source tree (`src/internal/*`, `src/packlets/*` at the time of the
+baseline), production files only
 (`*.test.ts` excluded).
 
 **Sections 1 and 2 record the graph as it was before the restructure**; section 3

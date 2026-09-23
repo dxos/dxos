@@ -719,8 +719,8 @@ describe('Spaces', () => {
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
 
-    const { extractSpaceArchive } = await import('@dxos/client-services');
-    const extracted = await extractSpaceArchive(archive);
+    const { SpaceExport } = await import('@dxos/client-services');
+    const extracted = await SpaceExport.extractSpaceArchive(archive);
     expect(Object.keys(extracted.feeds).length).to.be.greaterThan(0);
 
     const feedIds = Object.keys(extracted.feeds);

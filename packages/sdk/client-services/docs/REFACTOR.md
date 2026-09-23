@@ -109,16 +109,32 @@ already sits above them.
 Effect: **acyclic** — 57 edges down to 33, largest SCC 11 → 1.
 `dependency-graph.mjs --check` now exits 0 and is wired up as `client-services:graph`.
 
-### Stage 4 — namespace modules
+### Stage 4 — namespace modules — **done**
 
-Rename packlets to `src/<Name>.ts` + `src/internal/<name>/`, add
-`@import-as-namespace`, and reshape `index.ts` to `export * as`. Per the skill,
-drop the namespace prefix on members (`Spaces.Manager`, not
-`Spaces.DataSpaceManager`).
+Every packlet moved to `src/internal/<name>/`, which is not exported, and each one
+that has a public surface gained a thin `src/<Name>.ts` facade marked
+`@import-as-namespace`. `index.ts` is now nothing but `export * as`, so the
+package has no flat exports left — matching `@dxos/echo`, the reference for this
+pattern.
 
-26 symbols are imported from this package across 5 consumer packages, so the
-call-site churn is bounded; all of it is updated in the same change (no
-compatibility re-exports).
+| namespace                                                                                                             | internal module                                            |
+| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `Agents` `Devtools` `Diagnostics` `Invitations` `Metadata` `Space` `SpaceExport` `Spaces` `Storage` `System` `Worker` | the packlet of the same name                               |
+| `IdentityManager`                                                                                                     | `internal/identity/` (`Identity` is the aggregate, tier 1) |
+| `ServiceStack`                                                                                                        | `internal/services/`                                       |
+| `Auth` `CredentialsDocument` `Events` `Identity` `PlatformInfo` `Readiness` `Replication` `SqliteStorage` `Tags`      | already top-level from stages 1–3                          |
+
+`internal/logging`, `internal/network`, `internal/pipeline` have no public surface
+and are reached only through the stack, so they get no facade.
+
+17 flat symbols were imported from this package across 5 consumer packages; all
+are updated to the namespace form in the same change (no compatibility
+re-exports). The `./testing` subpath is unchanged.
+
+Still open: members are not yet renamed to drop the namespace prefix
+(`Spaces.DataSpaceManager` should read `Spaces.Manager`). That is a rename of the
+symbols themselves rather than of the module structure, so it is worth doing as
+its own pass.
 
 ### Stage 5 — specs move to their modules
 

@@ -2,13 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  OPFS_SQLITE_DB_FILENAME,
-  createSqliteProfileArchive,
-  decodeProfileArchive,
-  encodeProfileArchive,
-  getSqliteProfileEntries,
-} from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import { withPersistentStorage } from '@dxos/client/testing';
 import { type Client } from '@dxos/react-client';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
@@ -37,8 +31,8 @@ const readDatabase = async (client: Client): Promise<Uint8Array> => {
 /** Saves the current profile as `<name>.dxprofile`; resolves false if the user cancelled. */
 export const exportProfileArchive = async (client: Client, name: string): Promise<boolean> => {
   const database = await readDatabase(client);
-  const bytes = encodeProfileArchive(
-    createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, { origin: window.location.origin }),
+  const bytes = Storage.encodeProfileArchive(
+    Storage.createSqliteProfileArchive(Storage.OPFS_SQLITE_DB_FILENAME, database, { origin: window.location.origin }),
   );
   // Copied so the blob owns a plain ArrayBuffer rather than a view into the encoder's buffer.
   const copy = new Uint8Array(bytes.byteLength);
@@ -153,15 +147,15 @@ const applyStagedProfileImportOnce = async (): Promise<void> => {
 
     // Removed under the lock too, so a failure to take it leaves the import staged for the next
     // reload rather than discarding a profile the user picked.
-    await OpfsPool.writeDatabase(database, OPFS_SQLITE_DB_FILENAME);
+    await OpfsPool.writeDatabase(database, Storage.OPFS_SQLITE_DB_FILENAME);
     await removeStagedImport(root);
   });
 };
 
 /** The archive's main SQLite database, the one a persistent browser client opens. */
 const selectDatabase = (bytes: Uint8Array): Uint8Array => {
-  const entries = getSqliteProfileEntries(decodeProfileArchive(bytes));
-  const entry = entries.find((entry) => entry.opfsFilename === OPFS_SQLITE_DB_FILENAME) ?? entries[0];
+  const entries = Storage.getSqliteProfileEntries(Storage.decodeProfileArchive(bytes));
+  const entry = entries.find((entry) => entry.opfsFilename === Storage.OPFS_SQLITE_DB_FILENAME) ?? entries[0];
   if (!entry) {
     throw new Error('Profile archive holds no SQLite database.');
   }
