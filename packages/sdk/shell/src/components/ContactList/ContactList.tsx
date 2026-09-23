@@ -88,7 +88,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
     .filter((space): space is ContactSpace => space !== undefined);
 
   return (
-    <Listbox.Item classNames='p-3 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
+    <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
       <Listbox.ItemContent
         icon={
           <Avatar.Root labelId={labelId}>
@@ -98,21 +98,28 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
             />
           </Avatar.Root>
         }
-        title={<span id={labelId}>{displayName}</span>}
-        description={
-          <div className='flex flex-col gap-1'>
-            <div className='flex items-center gap-2'>
+        title={
+          <div className='flex items-center justify-between gap-1'>
+            <span id={labelId} className='truncate'>
+              {displayName}
+            </span>
+            <div className='flex items-center gap-1 text-sm text-description'>
               <span className='font-mono truncate' title={identityKey.toHex()}>
                 {identityKey.truncate()}
               </span>
               <SystemIconButton.Clipboard
                 iconOnly
+                density='sm'
                 variant='ghost'
                 size={4}
                 value={identityKey.toHex()}
                 label={t('copy-key.label')}
               />
             </div>
+          </div>
+        }
+        description={
+          <div className='flex flex-col gap-1'>
             {common.length > 0 && (
               <div className='flex flex-wrap gap-1'>
                 {common.map((space) => (
