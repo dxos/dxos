@@ -348,6 +348,7 @@ export {
   destroy,
   explore,
   flush,
+  flushSync,
   release,
   removeExtension,
   setRetention,

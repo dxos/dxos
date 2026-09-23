@@ -12,6 +12,7 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
@@ -27,7 +28,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveDropKind } from '../../util.ts';
+import { filterItems, getParent, getRearrangeIndex, resolveDropKind } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -88,7 +89,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const [isLg] = useMediaQuery('lg');
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
-    const { graph } = useAppGraph();
+    const builder = useAppGraph();
+    const { graph } = builder;
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
     // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
     // the message and the sidebar is never blank.
@@ -262,16 +264,12 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             const targetItems = getItems(graph, getParent(graph, targetNode, targetPath));
             const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
-            const migrationIndex =
-              instruction.type === 'make-child'
-                ? undefined
-                : instruction.type === 'reorder-below'
-                  ? targetIndex + 1
-                  : targetIndex;
+            const insertIndex = instruction.type === 'reorder-below' ? targetIndex + 1 : targetIndex;
+            const migrationIndex = instruction.type === 'make-child' ? undefined : insertIndex;
             switch (operation) {
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
-                arrayMove(nextItems, sourceIndex, targetIndex);
+                arrayMove(nextItems, sourceIndex, getRearrangeIndex(sourceIndex, insertIndex));
                 void sourceParent?.properties.onRearrange?.(nextItems);
                 break;
               }
@@ -287,10 +285,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
                 break;
               }
             }
+            AppGraphBuilder.flushSync(builder);
           }
         },
       });
-    }, [graph]);
+    }, [builder, graph]);
 
     // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open

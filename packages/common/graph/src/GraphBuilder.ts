@@ -343,19 +343,23 @@ export class GraphBuilder<
       this._flushScheduled = true;
       this._flushPromise = this._schedule(() => {
         this._flushScheduled = false;
-        while (this._dirtyConnectors.size > 0) {
-          const entries = [...this._dirtyConnectors.entries()];
-          this._dirtyConnectors.clear();
-
-          const apply = () => {
-            for (const [key, { nodes, previous }] of entries) {
-              this._applyConnectorUpdate(key, nodes, previous);
-            }
-          };
-          // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
-          this._store.batch ? this._store.batch(apply) : apply();
-        }
+        this._flushDirtyConnectors();
       });
+    }
+  }
+
+  _flushDirtyConnectors(): void {
+    while (this._dirtyConnectors.size > 0) {
+      const entries = [...this._dirtyConnectors.entries()];
+      this._dirtyConnectors.clear();
+
+      const apply = () => {
+        for (const [key, { nodes, previous }] of entries) {
+          this._applyConnectorUpdate(key, nodes, previous);
+        }
+      };
+      // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
+      this._store.batch ? this._store.batch(apply) : apply();
     }
   }
 
@@ -752,6 +756,9 @@ export const flush = async (builder: Any): Promise<void> => {
   await builder._flushPromise;
   await builder._collectPromise;
 };
+
+/** Applies pending connector updates now, so a change the user just made renders in the same frame. */
+export const flushSync = (builder: Any): void => builder._flushDirtyConnectors();
 
 /**
  * Unloads the nodes and everything the builder remembers about them: expansion subscriptions and the

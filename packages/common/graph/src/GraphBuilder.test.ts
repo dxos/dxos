@@ -132,6 +132,25 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/c']);
   });
 
+  test('flushSync applies a pending connector update without waiting for the scheduler', async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => get(state).map((id) => ({ id }))),
+    });
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    registry.set(state, ['b', 'a']);
+    GraphBuilder.flushSync(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
+
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
+  });
+
   test('an unrelated node changing leaves a connector alone', async () => {
     const { registry, builder, model, children } = setup();
     let runs = 0;

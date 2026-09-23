@@ -4,9 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { arrayMove } from '@dxos/util';
+
 import { NavTreeNode } from '#types';
 
-import { resolveDropKind } from './util.ts';
+import { getRearrangeIndex, resolveDropKind } from './util.ts';
 
 const SPACE = 'space';
 
@@ -51,5 +53,24 @@ describe('resolveDropKind', () => {
   test('rejects a destination that accepts neither a move nor a link', ({ expect }) => {
     const destination = parent('to', { onMoveIn: undefined, onLink: undefined });
     expect(resolveDropKind({ source: item, sourceParent: parent('from'), destination })).toBe('reject');
+  });
+});
+
+describe('getRearrangeIndex', () => {
+  test('an item moving down lands before the insertion point', ({ expect }) => {
+    const items = ['a', 'b', 'c'];
+    arrayMove(items, 0, getRearrangeIndex(0, 2));
+    expect(items).toEqual(['b', 'a', 'c']);
+  });
+
+  test('an item moving up lands at the insertion point', ({ expect }) => {
+    const items = ['a', 'b', 'c'];
+    arrayMove(items, 2, getRearrangeIndex(2, 1));
+    expect(items).toEqual(['a', 'c', 'b']);
+  });
+
+  test('an item dropped beside itself stays put', ({ expect }) => {
+    expect(getRearrangeIndex(1, 1)).toBe(1);
+    expect(getRearrangeIndex(1, 2)).toBe(1);
   });
 });

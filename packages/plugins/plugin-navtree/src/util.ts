@@ -53,6 +53,10 @@ export const resolveDropKind = ({
   return destination.properties.onLink ? 'link' : 'reject';
 };
 
+/** The index `arrayMove` takes to land an item at `insertIndex`, counted before the item leaves its slot. */
+export const getRearrangeIndex = (sourceIndex: number, insertIndex: number): number =>
+  sourceIndex < insertIndex ? insertIndex - 1 : insertIndex;
+
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: AppGraphNode.Action[]): AppGraphNode.Action[] =>
   actions.sort((a, b) => {
