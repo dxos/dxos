@@ -123,13 +123,17 @@ export const ProcessTree = React.memo(
 
       const renderIcon = useMemo(() => makeIconRenderer(), []);
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
+      const viewportRef = useRef<HTMLDivElement>(null);
 
       return (
         <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
-          <ScrollArea.Viewport>
+          <ScrollArea.Viewport ref={viewportRef}>
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
+              // One row per process the session has run, and finished ones stay listed.
+              virtualize
+              scrollerRef={viewportRef}
               density='sm'
               selectionMode='multiple'
               classNames='text-sm tabular-nums font-thin'

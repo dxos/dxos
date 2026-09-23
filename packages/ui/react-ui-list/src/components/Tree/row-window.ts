@@ -18,7 +18,13 @@ import { type TreeNodeEntry } from './TreeContext.ts';
 const NOMINAL_ROW_EXTENT = 40;
 
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
-export type RowUnit = { kind: 'header'; key: string; label: Label } | { kind: 'row'; key: string; node: TreeNodeEntry };
+export type RowUnit =
+  | { kind: 'header'; key: string; label: Label }
+  | { kind: 'row'; key: string; node: TreeNodeEntry }
+  | { kind: 'end'; key: string };
+
+/** Key of the "append at the end" drop strip; no item value is a bare word, so it cannot collide. */
+export const END_UNIT_KEY = 'end';
 
 /**
  * The id the window measures a row against — the item's own, because that is what the row element
@@ -30,14 +36,13 @@ export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.
  * Flattens the visible entries into the rows the window would mount, or `undefined` when the tree
  * cannot be windowed.
  *
- * A disclosable branch is one case it gives up on: its children live inside an `ark` `Branch` whose
- * open state the machine animates, so they are not a flat run of siblings the way a group's
- * children are, and lifting them out would take the disclosure with them.
+ * An open branch's children follow its row as rows of their own, since the window mounts a flat
+ * run; a closed branch contributes its row alone.
  *
- * A repeated item id is the other. The window keys a row's measured extent by the id the row
- * carries, so the same id twice would have each row read back the other's height — a row measured,
- * found to disagree and measured again, every commit. A tree that addresses one item at two paths
- * therefore renders whole, as every consumer did before this existed.
+ * A repeated item id is the case it gives up on. The window keys a row's measured extent by the id
+ * the row carries, so the same id twice would have each row read back the other's height — a row
+ * measured, found to disagree and measured again, every commit. A tree that addresses one item at
+ * two paths therefore renders whole.
  */
 export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
   const units: RowUnit[] = [];
@@ -52,12 +57,15 @@ export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): 
         }
         continue;
       }
-      if (node.branch || ids.has(node.id)) {
+      if (ids.has(node.id)) {
         return false;
       }
 
       ids.add(node.id);
       units.push({ kind: 'row', key: node.value, node });
+      if (node.branch && node.open && !visit(node.children)) {
+        return false;
+      }
     }
 
     return true;

@@ -46,7 +46,7 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import { END_UNIT_KEY, type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -282,8 +282,8 @@ export type TreeProps<T extends { id: string } = any> = {
    * measured extents and the scrollbar, and the tree renders the mounted range into a translated
    * parent. Off by default — a list short enough to render whole gains nothing.
    *
-   * A tree with a disclosable branch renders whole regardless, because a branch's children are
-   * inside the machine's animated disclosure rather than a flat run of siblings.
+   * An open branch's children are mounted as rows of the window after their parent, so windowed
+   * disclosure is immediate rather than animated.
    */
   virtualize?: boolean;
   /**
@@ -466,8 +466,9 @@ export const Tree = <T extends { id: string } = any>({
       return;
     }
     // Queried off the document, not a ref to the tree: `TreeView.Tree` is Ark's element and may not
-    // forward one.
-    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
+    // forward one. `[tabindex]` picks the row over a windowed branch's wrapper, which carries the id
+    // for the window but never holds focus.
+    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"][tabindex]`);
     if (!row) {
       return;
     }
@@ -501,8 +502,8 @@ export const Tree = <T extends { id: string } = any>({
       // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
       // following it selected the row the reader was about to act on: a delete briefly swapped the
       // edit pane onto the doomed task before it vanished. The row is the element carrying
-      // `data-object-id` (the item, or a branch's control — a branch's `treeitem` is its
-      // display-contents wrapper, which never holds focus itself).
+      // `data-object-id` (the item, or a branch's control — a branch's `treeitem` is its wrapper,
+      // which never holds focus itself).
       const active = document.activeElement;
       if (active && active !== document.body && active.closest('[data-object-id]') !== active) {
         return;
@@ -617,8 +618,16 @@ export const Tree = <T extends { id: string } = any>({
     ],
   );
 
-  // The rows the window would mount, or `undefined` when the tree has a branch and renders whole.
-  const units = useMemo(() => (virtualize ? flattenRowUnits(root.children) : undefined), [virtualize, root.children]);
+  // The rows the window would mount, or `undefined` when the tree renders whole.
+  const units = useMemo(() => {
+    const units = virtualize ? flattenRowUnits(root.children) : undefined;
+    return units && dropAtEnd && draggable ? [...units, { kind: 'end' as const, key: END_UNIT_KEY }] : units;
+  }, [virtualize, root.children, dropAtEnd, draggable]);
+  // Stable, so the windowed end strip does not re-register its drop target as the window scrolls.
+  const endData = useMemo<TreeData>(
+    () => ({ treeId, id: root.id, path: root.path, item: root.item }),
+    [treeId, root.id, root.path, root.item],
+  );
   const treeRef = useRef<HTMLDivElement | null>(null);
   const scroller = useScroller(treeRef, scrollerRef, !!units);
   const windowed = !!units && !!scroller;
@@ -667,7 +676,7 @@ export const Tree = <T extends { id: string } = any>({
           onKeyDown={handleKeyDown}
         >
           {windowed ? (
-            <TreeWindow units={units} scroller={scroller} focusedValue={focusedValue} />
+            <TreeWindow units={units} scroller={scroller} focusedValue={focusedValue} endData={endData} />
           ) : (
             <>
               {root.children?.map((node) => (
@@ -695,10 +704,13 @@ const TreeWindow = ({
   units,
   scroller,
   focusedValue,
+  endData,
 }: {
   units: RowUnit[];
   scroller: HTMLElement;
   focusedValue: string | null;
+  /** Payload of the end strip, when `units` ends with one. */
+  endData: TreeData;
 }) => {
   const scrollerRef = useRef<HTMLElement | null>(scroller);
   scrollerRef.current = scroller;
@@ -746,6 +758,8 @@ const TreeWindow = ({
     mounted.push(
       unit.kind === 'header' ? (
         <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} objectId={unit.key} />
+      ) : unit.kind === 'end' ? (
+        <TreeEndDropTarget key={unit.key} data={endData} windowIndex={index} objectId={unit.key} />
       ) : (
         <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} />
       ),
@@ -816,7 +830,17 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
 
   return (
     <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
-      {node.branch ? (
+      {node.branch && windowIndex !== undefined ? (
+        // Windowed, the children are rows of the window's own, so the branch holds only its row. It
+        // is also the element the window measures, which a `display: contents` wrapper cannot be.
+        <TreeView.Branch
+          className='col-[tree-row] grid grid-cols-subgrid'
+          data-index={windowIndex}
+          data-object-id={node.id}
+        >
+          <TreeNodeRowContent node={node} />
+        </TreeView.Branch>
+      ) : node.branch ? (
         <TreeView.Branch className='contents'>
           <TreeNodeRowContent node={node} />
           <TreeBranchContent node={node} />
@@ -879,7 +903,15 @@ TreeBranchContent.displayName = 'Tree.BranchContent';
  * It carries the tree's root as its payload with `atEnd`, so a consumer's monitor can tell this
  * drop from one onto the root itself. No hitbox: there is only one thing this can mean.
  */
-const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
+const TreeEndDropTarget = ({
+  data,
+  windowIndex,
+  objectId,
+}: {
+  data: TreeData;
+  windowIndex?: number;
+  objectId?: string;
+}) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [over, setOver] = useState(false);
 
@@ -900,7 +932,13 @@ const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
   }, [data]);
 
   return (
-    <div ref={ref} role='none' className='relative col-[tree-row] min-h-(--dx-control)'>
+    <div
+      ref={ref}
+      role='none'
+      data-index={windowIndex}
+      data-object-id={objectId}
+      className='relative col-[tree-row] min-h-(--dx-control)'
+    >
       {over && <div className='absolute inset-x-0 top-0 h-0.5 bg-accent-bg' />}
     </div>
   );
