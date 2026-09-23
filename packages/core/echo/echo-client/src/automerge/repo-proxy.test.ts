@@ -636,6 +636,34 @@ describe('RepoProxy', () => {
     expect(hostHandle.doc()?.text).toEqual(text);
   });
 
+  // `Resource` holds `_lifecycleState` at OPEN for the whole of `close()`, and the update job stays
+  // set across `_close`'s `join()`, so a find landing inside the close passed both of those checks
+  // while the context was already disposed — the handle it returned could never reach the host.
+  test('find reports the client going away once close has begun', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    const url = handle.url;
+    invariant(url);
+
+    // The document is still in `_handles` here — `_close` clears the cache only after its `join()`
+    // — so this is also the cached-hit path, which reached no guard at all before: `_getOrLoadHandle`
+    // returned the cached handle before ever calling one.
+    //
+    // Not awaited, so the assertions run while the close is still in flight. `close()` awaits the
+    // open promise before it starts, so the yield is what puts us inside the close rather than
+    // before it — and the lifecycle state is still OPEN throughout.
+    const closing = clientRepo.close();
+    await yieldToEventLoop();
+    expect(clientRepo.isOpen).to.be.false;
+
+    expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
+    expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
+    await closing;
+  });
+
   test('find on a closed proxy reports the client going away', async () => {
     const { dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);

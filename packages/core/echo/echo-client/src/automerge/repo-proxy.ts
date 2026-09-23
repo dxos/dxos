@@ -421,6 +421,10 @@ export class RepoProxy extends Resource {
     /** The documentId of the handle to look up or create. */
     documentId: DocumentId;
   }): DocHandleProxy<T> {
+    // Before the cache, so a cached hit cannot escape the contract `find` documents: once closing
+    // has begun the handle can never reach the host, whether or not it was loaded earlier.
+    this.#requireOpen(documentId);
+
     // If we have the handle cached, return it
     const cached = this._handles[documentId];
     if (cached) {
@@ -437,13 +441,14 @@ export class RepoProxy extends Resource {
   }
 
   /**
-   * The update job is the only route a handle has to the host, and `Resource` still reports OPEN
-   * for the whole of `_close`, which drops the job before the state flips.
+   * `isOpen` rather than the lifecycle state alone: `Resource` holds that at OPEN for the whole of
+   * `close()`, and only `isOpen` also accounts for the close already being under way. The update job
+   * is checked too, since it is the only route a handle has to the host and `_close` drops it.
    *
    * @throws {RepoClosedError}
    */
   #requireOpen(documentId?: DocumentId): UpdateScheduler {
-    if (this._lifecycleState !== LifecycleState.OPEN || !this._sendUpdatesJob) {
+    if (!this.isOpen || !this._sendUpdatesJob) {
       throw new RepoClosedError({ spaceId: this._spaceId, documentId });
     }
     return this._sendUpdatesJob;
