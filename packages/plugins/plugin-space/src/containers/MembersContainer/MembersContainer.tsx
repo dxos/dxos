@@ -13,6 +13,7 @@ import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type SpaceMember_Role, useSpaceInvitations } from '@dxos/react-client/echo';
+import { useContacts } from '@dxos/react-client/halo';
 import {
   type CancellableInvitationObservable,
   type Invitation,
@@ -32,6 +33,8 @@ import {
   InvitationList,
   SpaceMemberList,
   Viewport,
+  contactDisplayName,
+  contactKeyHex,
   translationKey as shellTranslationKey,
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
@@ -120,16 +123,32 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
     [t, space, target, invokePromise],
   );
 
+  const contacts = useContacts();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   const contactPickerData = useMemo(
     (): AppSurface.ContactPickerData => ({
       space,
       onAdd: async (identityKeys: string[], role: SpaceMember_Role) => {
-        const { data } = await invokePromise(SpaceOperation.AddMembers, { space, identityKeys, role });
-        const result = data ?? { joinUrl: '', failed: identityKeys.map((key) => ({ key, error: 'failed' })) };
+        const { data, error } = await invokePromise(SpaceOperation.AddMembers, { space, identityKeys, role });
+        if (error) {
+          log.catch(error);
+        }
+        const result = data ?? {
+          joinUrl: '',
+          failed: identityKeys.map((key) => ({ key, error: error?.message ?? 'Unknown error' })),
+        };
         if (result.failed.length > 0) {
+          const names = result.failed
+            .map(({ key }) => {
+              const contact = contacts.find((candidate) => contactKeyHex(candidate) === key);
+              return contact ? contactDisplayName(contact) : key.slice(0, 8);
+            })
+            .join(', ');
           await invokePromise(LayoutOperation.AddToast, {
             id: `${meta.profile.key}/add-members-failed`,
             title: ['add-members-failed-toast.title', { ns: meta.profile.key }],
+            // Label tuples carry no interpolation values, so the names are resolved here.
+            description: t('add-members-failed-toast.description', { names }),
             icon: 'ph--warning--regular',
           });
         }
@@ -137,8 +156,9 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         return result;
       },
     }),
-    [space, invokePromise],
+    [t, space, contacts, invokePromise],
   );
+  const showContactPicker = isSurfaceAvailable({ type: AppSurface.ContactPicker, data: contactPickerData });
 
   const [selectedInvitation, setSelectedInvitation] = useState<CancellableInvitationObservable | null>(null);
   const handleSend = (event: { type: 'selectInvitation'; invitation: CancellableInvitationObservable }) => {
@@ -159,10 +179,12 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                   <h3 className='text-lg mb-2'>{t('members.label')}</h3>
                   <SpaceMemberList spaceKey={space.key} includeSelf />
                 </div>
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
-                  <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
-                </div>
+                {showContactPicker && (
+                  <div role='group' className='min-w-0'>
+                    <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
+                    <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
+                  </div>
+                )}
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
                   {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}

@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
@@ -54,6 +55,9 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
       const result = await onAdd(selected, role);
       setJoinUrl(result.joinUrl);
       setSelected(result.failed.map((failure) => failure.key));
+    } catch (err) {
+      // Selection is kept so the user can retry.
+      log.catch(err);
     } finally {
       setPending(false);
     }

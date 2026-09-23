@@ -10,15 +10,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { translations as clientTranslations } from '@dxos/plugin-client/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { translations } from '#translations';
 
 import { MembersContainer } from './MembersContainer.tsx';
+
+const storyTranslations = [...translations, ...clientTranslations];
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -44,11 +46,11 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      capabilities: [Capability.contribute(AppCapabilities.Translations, [...translations, ...shellTranslations])],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, storyTranslations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        // Contributes the ContactPicker surface that fills the members article's slot.
+        // Without it the ContactPicker slot has no contribution and the section is hidden.
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -62,6 +64,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
+    translations: storyTranslations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

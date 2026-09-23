@@ -28,7 +28,8 @@ const pluginTranslations = [
         'contacts.description': 'People you share at least one space with.',
         'contacts-search.placeholder': 'Search contacts…',
         'contact-picker-add.label': 'Add',
-        'contact-picker-empty.message': 'No contacts yet — people appear here once you share a space with them.',
+        'contact-picker-empty.message':
+          'You have no contacts yet — people appear here once you share a space with them.',
         'role-editor.label': 'Editor',
         'role-viewer.label': 'Viewer',
         'role-admin.label': 'Admin',
