@@ -7,13 +7,22 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
@@ -29,9 +38,9 @@ import { translations as tasksTranslations } from '@dxos/plugin-tasks/translatio
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { AttendableContainer } from '@dxos/react-ui-attention';
+import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, TestGrid, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
@@ -182,6 +191,71 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   );
 };
 
+/**
+ * The project and the task it opens, side by side — the master-detail the deck renders as two planks
+ * (see `docs/TASK-DETAIL.md`). The grid stands in for the deck, as `MailboxArticle`'s three-column
+ * story does: the ledger row publishes its selection through `LayoutOperation.Select`, this reads it
+ * back, and the detail is the same `Task` article surface the deck would mount.
+ */
+const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
+  const [space] = useSpaces();
+  const projects = useQuery(space?.db, Filter.type(Project.Project));
+  const project = projects.find((entry) => entry.name === PROJECT_NAME);
+  const tasks = useQuery(space?.db, Filter.type(Task.Task));
+  const selectedId = useSelection(attendableId, 'single');
+  const task = tasks.find((entry) => entry.id === selectedId);
+  if (!space?.db || !project) {
+    return <Loading data={{ db: !!space?.db, project: !!project }} />;
+  }
+
+  return (
+    <TestGrid.Root>
+      <TestGrid.Stack>
+        <TestGrid.Panel>
+          <AttendableContainer id={attendableId} classNames='contents'>
+            <ProjectArticle role={role} subject={project} attendableId={attendableId} />
+          </AttendableContainer>
+        </TestGrid.Panel>
+        {task && (
+          <TestGrid.Panel>
+            {/* Through the surface rather than the component, so the story also proves plugin-tasks'
+                `article.task` registration is what the deck would resolve. */}
+            <Surface.Surface
+              type={AppSurface.Article}
+              data={{ subject: task, attendableId: `${attendableId}/task` }}
+              limit={1}
+            />
+          </TestGrid.Panel>
+        )}
+      </TestGrid.Stack>
+    </TestGrid.Root>
+  );
+};
+
+/**
+ * No-op for the one layout operation the ledger row invokes that belongs to DeckPlugin, which this
+ * story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin (in
+ * `corePlugins`), and it is what publishes the row the detail panel reads back.
+ */
+const MockDeckOperations = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.Open, () => Effect.succeed([] as string[]))),
+      ),
+    ]),
+);
+
+const MockDeckOperationsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.projects.story.mockDeckOperations'),
+    name: 'Mock Deck Ops',
+  }),
+).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
+
 const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
@@ -231,6 +305,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        MockDeckOperationsPlugin(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
       // the first render.
@@ -264,6 +339,24 @@ export const Default: Story = {
   args: {
     role: 'article',
     attendableId: 'test',
+  },
+};
+
+/**
+ * Master-detail: the ledger on the left, the selected task's article on the right — what the deck
+ * shows as two planks once a row is clicked.
+ */
+export const TaskDetail: Story = {
+  ...Default,
+  render: MasterDetailStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'tasks');
+    await userEvent.click(await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 }));
+    // The detail panel renders the same title as an editable field, so the form is what is asserted
+    // rather than a second copy of the row's text.
+    await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 
