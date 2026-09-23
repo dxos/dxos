@@ -38,6 +38,7 @@ import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
 import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
+import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
@@ -188,6 +189,13 @@ const QueryItem = Object.freeze({
           break;
         case 'timestamp':
           key[aggregate.name] = GroupBy.truncateTimestamp(item[aggregate.field], aggregate.unit, aggregate.timeZone);
+          break;
+        case 'time':
+          key[aggregate.name] = GroupBy.truncateTimeProperty(
+            QueryItem.getAggregateProperty(item, aggregate.property),
+            aggregate.unit,
+            aggregate.timeZone,
+          );
           break;
       }
     }
@@ -616,6 +624,8 @@ export class QueryExecutor extends Resource {
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
+  /** Results of a `Filter.changes` plan, which carries change records instead of objects. */
+  #changeResultSet: ChangeItem[] | undefined;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -664,6 +674,9 @@ export class QueryExecutor extends Resource {
   }
 
   getResults(): QueryService.QueryResult[] {
+    if (this.#changeResultSet) {
+      return changeResults(this.#changeResultSet);
+    }
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -734,6 +747,19 @@ export class QueryExecutor extends Resource {
     // survive across `execQuery` calls.
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
+
+    const [select] = this._plan.steps;
+    if (select?._tag === 'SelectStep' && select.selector._tag === 'ChangesSelector') {
+      const previous = this.#changeResultSet;
+      const next = await executeChangesPlan(this._ctx, this._plan, {
+        indexEngine: this._indexEngine,
+        automergeHost: this._automergeHost,
+        spaceStateManager: this._spaceStateManager,
+        runInRuntime: (effect) => this._runInRuntime(effect),
+      });
+      this.#changeResultSet = next;
+      return { changed: serializeChangeResults(previous ?? []) !== serializeChangeResults(next) };
+    }
 
     const prevResultSet = this._lastResultSet;
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
@@ -985,6 +1011,9 @@ export class QueryExecutor extends Resource {
 
         break;
       }
+
+      case 'ChangesSelector':
+        throw new Error('A changes plan runs through executeChangesPlan.');
 
       case 'IncomingReferenceSelector': {
         const beginIndexQuery = performance.now();

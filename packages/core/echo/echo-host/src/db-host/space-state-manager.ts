@@ -2,7 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type DocumentId,
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+} from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -11,7 +16,7 @@ import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -101,6 +106,22 @@ export class SpaceStateManager extends Resource {
       return undefined;
     }
     return this._roots.get(documentId);
+  }
+
+  /** True for a document registered in any loaded space root's branch registry. */
+  isBranchDocument(documentId: DocumentId): boolean {
+    for (const root of this._roots.values()) {
+      const doc = root.doc();
+      if (!doc) {
+        continue;
+      }
+      for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
+        if (isValidAutomergeUrl(url) && interpretAsDocumentId(url) === documentId) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

@@ -5,10 +5,13 @@
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
-/** Counts live objects by the local day in `timeZone` they were last updated; one row per day. */
+/**
+ * Counts Automerge changes by the local day in `timeZone` they were made; one row per day. Deleted
+ * objects keep their days, and every edit counts, not just the last one.
+ */
 export const dailyActivityQuery = (timeZone: string) =>
-  Query.select(Filter.everything()).aggregate({
-    day: Aggregate.updated('day', { timeZone }),
+  Query.select(Filter.changes()).aggregate({
+    day: Aggregate.time('time', 'day', { timeZone }),
     count: Aggregate.count(),
   });
 

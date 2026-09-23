@@ -58,13 +58,108 @@ export class QueryPlanner {
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
+    const selectsChanges = queryContainsChanges(query);
+    if (selectsChanges) {
+      this._validateChangesFilters(query);
+    }
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
+    if (selectsChanges) {
+      return this._routeChanges(plan, query);
+    }
     plan = this._optimizeLimits(plan);
     plan = this._optimizeBareAggregate(plan);
     return plan;
+  }
+
+  /** A changes filter must be a select's whole filter: it selects records no object predicate applies to. */
+  private _validateChangesFilters(query: QueryAST.Query): void {
+    QueryAST.visit(query, (node) => {
+      if (
+        (node.type === 'filter' && filterContainsChanges(node.filter)) ||
+        (node.type === 'select' && node.filter.type !== 'changes' && filterContainsChanges(node.filter))
+      ) {
+        throw new QueryError({
+          message: 'Filter.changes() cannot be combined with other filters, traversals or unions.',
+          context: { query: Query.pretty(Query.fromAst(query)) },
+        });
+      }
+    });
+  }
+
+  /**
+   * Validates a `Filter.changes` plan and picks its source. The activity index answers a query that
+   * only counts changes and sums their ops per hour or day; any other shape replays the targets'
+   * documents, which is refused space-wide since it would load every document in the space.
+   */
+  private _routeChanges(plan: QueryPlan.Plan, query: QueryAST.Query): QueryPlan.Plan {
+    const fail = (message: string): never => {
+      throw new QueryError({ message, context: { query: Query.pretty(Query.fromAst(query)) } });
+    };
+    const [select, ...rest] = plan.steps;
+    if (select?._tag !== 'SelectStep' || select.selector._tag !== 'ChangesSelector') {
+      return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
+    }
+    if (!select.scope.every((scope) => scope._tag === 'space')) {
+      return fail('Filter.changes() selects from spaces, not feeds.');
+    }
+    for (const step of rest) {
+      switch (step._tag) {
+        case 'LimitStep':
+        case 'SkipStep':
+          break;
+        case 'OrderStep':
+          if (!step.order.every((order) => order.kind === 'natural' || order.kind === 'property')) {
+            return fail('Changes can only be ordered by a property or naturally (by time).');
+          }
+          break;
+        case 'AggregateStep': {
+          const unsupported = step.aggregates.find(
+            (aggregate) => aggregate.kind === 'items' || aggregate.kind === 'type' || aggregate.kind === 'timestamp',
+          );
+          if (unsupported) {
+            const name =
+              unsupported.kind === 'timestamp'
+                ? unsupported.field === 'updatedAt'
+                  ? 'updated'
+                  : 'created'
+                : unsupported.kind;
+            return fail(`Aggregate.${name}() does not apply to changes.`);
+          }
+          break;
+        }
+        default:
+          return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
+      }
+    }
+
+    const aggregateIndex = rest.findIndex((step) => step._tag === 'AggregateStep');
+    const aggregate = rest[aggregateIndex];
+    const indexAnswers =
+      aggregate?._tag === 'AggregateStep' &&
+      rest
+        .slice(0, aggregateIndex)
+        .every((step) => step._tag === 'OrderStep' && step.order.every((order) => order.kind === 'natural')) &&
+      aggregate.aggregates.every(
+        (entry) =>
+          entry.kind === 'count' ||
+          (entry.kind === 'sum' && entry.property === 'ops') ||
+          (entry.kind === 'time' && entry.property === 'time') ||
+          (entry.kind === 'group' && entry.properties.length === 1 && entry.properties[0] === 'source'),
+      );
+    if (!indexAnswers && select.selector.targets === undefined) {
+      return fail(
+        "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', …), " +
+          "Aggregate.group('source'), Aggregate.count() and Aggregate.sum('ops'); pass targets to Filter.changes() " +
+          'for anything else.',
+      );
+    }
+    return QueryPlan.Plan.make([
+      { ...select, selector: { ...select.selector, source: indexAnswers ? 'index' : 'replay' } },
+      ...rest,
+    ]);
   }
 
   /**
@@ -373,6 +468,21 @@ export class QueryPlanner {
           {
             _tag: 'FilterStep',
             filter: { ...filter },
+          },
+        ]);
+      }
+
+      // Changes — selects change records instead of objects, so no deleted handling follows;
+      // `_routeChanges` validates what does.
+      case 'changes': {
+        if (context.selectionInverted) {
+          throw queryTooComplexError(context.originalQuery);
+        }
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: { _tag: 'ChangesSelector', targets: filter.targets, source: 'replay' },
           },
         ]);
       }
@@ -887,7 +997,7 @@ export class QueryPlanner {
    * pagination clauses `limit()`/`skip()` may wrap it. At most one `aggregate` may appear anywhere
    * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so an
    * aggregated subquery would otherwise produce an unsupported double-`aggregate`). The DSL's types
-   * can't enforce this (`Query<AggregateResult & ...>` still exposes `orderBy`/`select`/etc.), so
+   * can't enforce this (`Query<RecordResult & ...>` still exposes `orderBy`/`select`/etc.), so
    * it's validated here at plan time.
    *
    * `limit`/`skip` above an `aggregate` page over whole groups (see the group-aware `LimitStep`/
@@ -1452,6 +1562,34 @@ const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
  * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
  * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
  */
+const filterContainsChanges = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'changes':
+      return true;
+    case 'not':
+      return filterContainsChanges(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterContainsChanges);
+    default:
+      return false;
+  }
+};
+
+/**
+ * True when any filter in the query selects changes (`Filter.changes`). Such a query is planned
+ * and answered only by the host.
+ */
+export const queryContainsChanges = (query: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(query, (node) => {
+    if ((node.type === 'select' || node.type === 'filter') && filterContainsChanges(node.filter)) {
+      found = true;
+    }
+  });
+  return found;
+};
+
 export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'in-query':

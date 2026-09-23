@@ -29,3 +29,21 @@ describe('GroupBy.truncateTimestamp', () => {
     expect(GroupBy.truncateTimestamp(at('2026-01-05T18:45:00Z'), 'day')).toBe(at('2026-01-05T00:00:00Z'));
   });
 });
+
+describe('GroupBy aggregates', () => {
+  test('sum adds finite numbers and counts anything else as 0', () => {
+    expect(GroupBy.sum([1, 2.5, null, undefined, 'x', Number.NaN, Number.POSITIVE_INFINITY])).toBe(3.5);
+    expect(GroupBy.sum([])).toBe(0);
+  });
+
+  test('a weighted member counts as the changes it stands for', () => {
+    expect(GroupBy.countMembers([{ weight: 3 }, {}, { weight: 2 }])).toBe(6);
+  });
+
+  test('a time key truncates a numeric property and is null for anything else', () => {
+    const at = Date.parse('2026-01-05T18:45:12Z');
+    expect(GroupBy.truncateTimeProperty(at, 'hour')).toBe(Date.parse('2026-01-05T18:00:00Z'));
+    expect(GroupBy.truncateTimeProperty('2026-01-05', 'day')).toBeNull();
+    expect(GroupBy.truncateTimeProperty(undefined, 'day')).toBeNull();
+  });
+});

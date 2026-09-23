@@ -16,6 +16,9 @@ import { type IndexDataSource } from './data-source.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import { IndexedObjectSource } from './indexed-object-source.ts';
 import {
+  ActivityIndex,
+  type ActivityQuery,
+  type ActivityRow,
   type EntityMeta,
   EntityMetaIndex,
   FtsIndex,
@@ -104,6 +107,7 @@ const INDEX_NAMES = {
   objectSnapshot: 'objectSnapshot',
   reverseRef: 'reverseRef2',
   fts: 'fts7',
+  activity: 'activity',
 } as const;
 
 export class IndexEngine {
@@ -116,6 +120,7 @@ export class IndexEngine {
   readonly #ftsIndex: FtsIndex;
   readonly #objectSnapshotIndex: ObjectSnapshotIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #activityIndex: ActivityIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
   readonly #indexedObjectSource: IndexedObjectSource;
 
@@ -126,6 +131,7 @@ export class IndexEngine {
     this.#ftsIndex = new FtsIndex(sql);
     this.#objectSnapshotIndex = new ObjectSnapshotIndex(sql);
     this.#reverseRefIndex = new ReverseRefIndex(sql);
+    this.#activityIndex = new ActivityIndex(sql);
     this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
     this.#indexedObjectSource = new IndexedObjectSource(sql);
   }
@@ -137,6 +143,7 @@ export class IndexEngine {
       yield* this.#ftsIndex.migrate();
       yield* this.#objectSnapshotIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
+      yield* this.#activityIndex.migrate();
       yield* this.#convergenceKeyIntents.migrate();
     });
   }
@@ -155,6 +162,13 @@ export class IndexEngine {
   queryReverseRef(query: ReverseRefQuery) {
     // TODO(mykola): Join with metadata table here.
     return this.#reverseRefIndex.query(query);
+  }
+
+  /**
+   * Per-document hour buckets of Automerge changes in one space (see {@link ActivityIndex.query}).
+   */
+  queryActivity(query: ActivityQuery): Effect.Effect<readonly ActivityRow[], SqlError.SqlError> {
+    return this.#activityIndex.query(query);
   }
 
   /**
@@ -380,6 +394,18 @@ export class IndexEngine {
       result.done = result.done && doneReverseRefIndex;
       accumulateIndexingResult(result, reverseRefObjects);
 
+      const activity = yield* this.#updateActivity(ctx, dataSource, {
+        spaceId: opts.spaceId,
+        limit: opts.limit,
+        cursors: cursorsByIndex.get(INDEX_NAMES.activity) ?? [],
+      });
+      result.updated += activity.updated;
+      result.done = result.done && activity.done;
+      for (const { spaceId, documentId } of activity.documents) {
+        result.spaces.add(spaceId);
+        result.documents.add(documentId);
+      }
+
       return result as IndexingResult;
     }).pipe(
       // The snapshot must be dropped even when a pass fails, or the next pass would diff against
@@ -464,5 +490,62 @@ export class IndexEngine {
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
+  }
+
+  /**
+   * Update the activity index from a source's per-document changes. Simpler than {@link #update}:
+   * rows are keyed by document and hour rather than by object, so there is no recordId enrichment
+   * and no convergence-key bookkeeping.
+   */
+  #updateActivity(
+    ctx: Context,
+    source: IndexDataSource,
+    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
+  ): Effect.Effect<
+    { updated: number; done: boolean; documents: readonly { spaceId: SpaceId; documentId: string }[] },
+    SqlError.SqlError
+  > {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+
+      // Activity needs only the changes; skipping object extraction keeps this pass from
+      // re-serializing every object the other passes already handled.
+      const { cursors: updatedCursors, activity = [] } = yield* source.getChangedObjects(ctx, opts.cursors, {
+        limit: opts.limit,
+        activity: true,
+        objects: false,
+      });
+
+      if (updatedCursors.length === 0) {
+        return { updated: 0, done: true, documents: [] };
+      }
+
+      return yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          yield* this.#activityIndex.record(activity);
+          yield* this.#tracker.updateCursors(
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: INDEX_NAMES.activity,
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
+          );
+          // Progress is a cursor that moved, even when the batch held no countable change (branch documents,
+          // clockless changes); sources that hand back an unchanged cursor would otherwise keep the host re-running passes.
+          const previous = new Map(
+            opts.cursors
+              .filter((cursor) => cursor.sourceName === source.sourceName)
+              .map((cursor) => [`${cursor.spaceId}/${cursor.resourceId}`, cursor.cursor]),
+          );
+          const advanced = updatedCursors.some(
+            (cursor) => previous.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor,
+          );
+          const updated = activity.reduce((sum, entry) => sum + entry.changes.length, 0);
+          return { updated, done: !advanced, documents: activity };
+        }),
+      );
+    }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

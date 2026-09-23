@@ -28,6 +28,8 @@ export type EntryGroup = {
  */
 export type SourceEntry<O extends Entity.Unknown = Entity.Unknown> = QueryResult.EntityEntry<O> & {
   group?: EntryGroup;
+  /** A frozen plain record standing in for `result` when the query selects non-entities (`Filter.changes`). */
+  record?: Readonly<Record<string, unknown>>;
 };
 
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {

@@ -31,8 +31,8 @@ type SpaceHomeDashboardProps = {
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
 /**
- * Space stats and activity matrix for the Home article: a count of objects by type and a count by
- * local last-updated day, both answered by the host from index rows, so no object is loaded to draw them.
+ * Space stats and activity matrix for the Home article: a count of objects by type and a count of
+ * changes by local day, both answered by the host from index rows, so no object is loaded to draw them.
  */
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
   const { t } = useTranslation(meta.profile.key);

@@ -77,6 +77,13 @@ const WorkingSetItem = Object.freeze({
           // A core carries no index timestamps; `tryExecute` already declines these plans.
           key[aggregate.name] = null;
           break;
+        case 'time':
+          key[aggregate.name] = GroupBy.truncateTimeProperty(
+            WorkingSetItem.getAggregateProperty(item, aggregate.property),
+            aggregate.unit,
+            aggregate.timeZone,
+          );
+          break;
       }
     }
     return key;

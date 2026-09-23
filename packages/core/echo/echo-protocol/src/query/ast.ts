@@ -260,6 +260,19 @@ export interface FilterMnemonic extends Schema.Schema.Type<typeof FilterMnemonic
 export const FilterMnemonic: Schema.Codec<FilterMnemonic> = FilterMnemonic_;
 
 /**
+ * Select Automerge changes rather than objects: one record per change to the documents holding
+ * `targets`, or to every document in the space when `targets` is absent. Only the host answers it,
+ * and it cannot be combined with object predicates.
+ */
+const FilterChanges_ = Schema.Struct({
+  type: Schema.Literal('changes'),
+  targets: Schema.optional(Schema.Array(EID.Schema)),
+});
+
+export interface FilterChanges extends Schema.Schema.Type<typeof FilterChanges_> {}
+export const FilterChanges: Schema.Codec<FilterChanges> = FilterChanges_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union([
@@ -276,6 +289,7 @@ export const Filter = Schema.Union([
   FilterChildOf,
   FilterHasParent,
   FilterMnemonic,
+  FilterChanges,
   FilterNot,
   FilterAnd,
   FilterOr,
@@ -506,6 +520,8 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  * - `type` partitions members by their type URI; the field carries the URI string.
  * - `timestamp` partitions members by the hour or calendar day a system timestamp falls in; the field
  *   carries the start of that interval in unix ms. Days are local to `timeZone` (UTC when absent).
+ * - `time` is `timestamp` over a unix-ms member `property` instead of a system timestamp.
+ * - `sum` adds a numeric member `property`; non-numeric values count as 0.
  */
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
@@ -537,6 +553,16 @@ const GroupAggregateTimestamp_ = Schema.Struct({
   timeZone: Schema.optional(Schema.String),
 });
 
+const GroupAggregateTime_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('time'),
+  property: Schema.String,
+  unit: Schema.Literals(['hour', 'day']),
+  /** IANA time zone that `day` boundaries follow. */
+  timeZone: Schema.optional(Schema.String),
+});
+const GroupAggregateSum_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('sum'), property: Schema.String });
+
 const GroupAggregate_ = Schema.Union([
   GroupAggregateGroup_,
   GroupAggregateMax_,
@@ -545,13 +571,18 @@ const GroupAggregate_ = Schema.Union([
   GroupAggregateCount_,
   GroupAggregateType_,
   GroupAggregateTimestamp_,
+  GroupAggregateTime_,
+  GroupAggregateSum_,
 ]);
 
 /** Aggregate kinds that contribute a component to the group key. */
 export const isGroupKeyAggregate = (
   aggregate: GroupAggregate,
-): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' }> =>
-  aggregate.kind === 'group' || aggregate.kind === 'type' || aggregate.kind === 'timestamp';
+): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' | 'time' }> =>
+  aggregate.kind === 'group' ||
+  aggregate.kind === 'type' ||
+  aggregate.kind === 'timestamp' ||
+  aggregate.kind === 'time';
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;

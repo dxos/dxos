@@ -212,6 +212,21 @@ export const GroupBy = Object.freeze({
     return String(a).localeCompare(String(b));
   },
 
+  /** Members a group stands for: an item carrying a `weight` (an index bucket) counts that many times. */
+  countMembers: (members: readonly { weight?: number }[]): number =>
+    members.reduce((total, member) => total + (member.weight ?? 1), 0),
+
+  /** Adds the numeric values of a `sum` aggregate; anything else counts as 0. */
+  sum: (values: readonly unknown[]): number =>
+    values.reduce<number>(
+      (total, value) => (typeof value === 'number' && Number.isFinite(value) ? total + value : total),
+      0,
+    ),
+
+  /** The key component of a `time` aggregate: a unix-ms property truncated to its hour or day. */
+  truncateTimeProperty: (value: unknown, unit: 'hour' | 'day', timeZone?: string): number | null =>
+    typeof value === 'number' && Number.isFinite(value) ? GroupBy.truncateTimestamp(value, unit, timeZone) : null,
+
   /**
    * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing
    * or non-scalar); a group with no scalar values yields `null`.
@@ -251,7 +266,7 @@ export const GroupBy = Object.freeze({
    * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
    * rather than silently honoring only one of them.
    */
-  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates }>(
+  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates; weight?: number }>(
     items: readonly T[],
     getKey: (item: T) => string,
     aggregates: readonly QueryAST.GroupAggregate[],
@@ -303,14 +318,16 @@ export const GroupBy = Object.freeze({
         }
         computed[aggregate.name] =
           aggregate.kind === 'count'
-            ? members.length
-            : isGroupKeyAggregate(aggregate)
-              ? // All members of a group share the key, so read the component off any member.
-                (members[0].groupKey?.[aggregate.name] ?? null)
-              : GroupBy.reduceAggregate(
-                  members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
-                  aggregate.kind,
-                );
+            ? GroupBy.countMembers(members)
+            : aggregate.kind === 'sum'
+              ? GroupBy.sum(members.map((member) => getProperty(member, aggregate.property)))
+              : isGroupKeyAggregate(aggregate)
+                ? // All members of a group share the key, so read the component off any member.
+                  (members[0].groupKey?.[aggregate.name] ?? null)
+                : GroupBy.reduceAggregate(
+                    members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
+                    aggregate.kind,
+                  );
       }
       for (const member of members) {
         result.push({ ...member, aggregates: computed });
@@ -325,7 +342,7 @@ export const GroupBy = Object.freeze({
    * for no members, so nothing downstream has to carry or ship the objects.
    * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
    */
-  collapseGroups: <T extends { collapsed?: { size: number } }>(
+  collapseGroups: <T extends { collapsed?: { size: number }; weight?: number }>(
     items: readonly T[],
     getKey: (item: T) => string,
   ): T[] => {
@@ -337,7 +354,7 @@ export const GroupBy = Object.freeze({
       while (end < items.length && getKey(items[end]) === key) {
         end += 1;
       }
-      result.push({ ...items[index], collapsed: { size: end - index } });
+      result.push({ ...items[index], collapsed: { size: GroupBy.countMembers(items.slice(index, end)) } });
       index = end;
     }
     return result;

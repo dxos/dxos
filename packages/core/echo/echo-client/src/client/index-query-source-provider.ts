@@ -571,6 +571,16 @@ export class IndexQuerySource implements QuerySource {
       };
     }
 
+    // A change record is complete as sent: nothing to load, and it never becomes a live object.
+    if (result.recordJson !== undefined) {
+      return {
+        id: result.id,
+        match: { rank: result.rank },
+        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+        record: Object.freeze(JSON.parse(result.recordJson)),
+      };
+    }
+
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
       spaceId: result.spaceId,

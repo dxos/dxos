@@ -377,6 +377,117 @@ describe('Query', () => {
     });
   });
 
+  describe('changes', () => {
+    const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
+
+    test('a space-wide count by day follows new edits', async () => {
+      const { db } = await builder.createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush({ indexes: true });
+
+      let rows: readonly { day: number | null; changes: number; ops: number }[] = [];
+      const unsubscribe = db
+        .query(
+          Query.select(Filter.changes()).aggregate({
+            day: Aggregate.time('time', 'day'),
+            changes: Aggregate.count(),
+            ops: Aggregate.sum('ops'),
+          }),
+        )
+        .subscribe((result) => {
+          rows = result.results;
+        });
+      onTestFinished(unsubscribe);
+
+      await waitForCondition({ condition: () => total(rows) > 0, timeout: 5000 });
+      const before = total(rows);
+      expect(rows.every((row) => row.ops >= row.changes)).to.be.true;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+      await waitForCondition({ condition: () => total(rows) > before, timeout: 5000 });
+    });
+
+    test("an object's history comes back as frozen change records, newest first", async () => {
+      const { db } = await builder.createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      for (const value of [2, 3]) {
+        Obj.update(object, (object) => {
+          object.value = value;
+        });
+      }
+      await db.flush({ indexes: true });
+
+      const changes = await db
+        .query(Query.select(Filter.changes(object)).orderBy(Order.property('time', 'desc')).limit(2))
+        .run();
+
+      expect(changes).to.have.length(2);
+      expect(changes[0].time).to.be.greaterThanOrEqual(changes[1].time);
+      for (const change of changes) {
+        expect(change).to.include({ source: 'document' });
+        expect(change).to.include.keys('key', 'time', 'actor', 'seq', 'ops');
+        expect(Object.isFrozen(change)).to.be.true;
+        expect(Reflect.set(change, 'ops', 0)).to.be.false;
+      }
+    });
+
+    test("the index and a replay agree on an object's changes", async () => {
+      const { db } = await builder.createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+
+      // Grouping by actor is something only a replay answers.
+      const [indexed, replayed] = await Promise.all([
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({ changes: Aggregate.count(), ops: Aggregate.sum('ops') }),
+          )
+          .run(),
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({
+              actor: Aggregate.group('actor'),
+              changes: Aggregate.count(),
+              ops: Aggregate.sum('ops'),
+            }),
+          )
+          .run(),
+      ]);
+
+      expect(total(indexed)).to.be.greaterThan(0);
+      expect(total(replayed)).to.equal(total(indexed));
+      expect(replayed.reduce((sum, row) => sum + row.ops, 0)).to.equal(indexed[0].ops);
+    });
+
+    test('sums and time buckets apply to ordinary objects', async () => {
+      const { db } = await builder.createDatabase();
+      const day = Date.UTC(2026, 0, 2);
+      db.add(Obj.make(TestSchema.Expando, { at: day + 1_000, amount: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day + 2_000, amount: 3 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day - 1_000, amount: 7 }));
+      await db.flush({ indexes: true });
+
+      const rows = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Expando))
+            .aggregate({ day: Aggregate.time('at', 'day'), amount: Aggregate.sum('amount') })
+            .orderBy(Order.property('day', 'asc')),
+        )
+        .run();
+
+      expect(rows.map(({ day, amount }) => ({ day, amount }))).to.deep.equal([
+        { day: day - 86_400_000, amount: 7 },
+        { day, amount: 5 },
+      ]);
+    });
+  });
+
   describe('aggregate', () => {
     test('groups by a single property, with per-group counts', async () => {
       const { db } = await builder.createDatabase();

@@ -62,6 +62,29 @@ export interface IndexerObject {
 }
 
 /**
+ * One Automerge change as the activity index counts it.
+ */
+export interface ChangeSummary {
+  /** Author's clock, unix ms. */
+  time: number;
+  ops: number;
+}
+
+/**
+ * Changes to one document since its activity cursor.
+ */
+export interface DocumentActivity {
+  spaceId: SpaceId;
+  documentId: string;
+  /**
+   * `changes` is the document's whole history and replaces whatever was recorded for it; with no
+   * changes the document's rows are discarded (a branch document).
+   */
+  full: boolean;
+  changes: readonly ChangeSummary[];
+}
+
+/**
  * SQLite-based index for storing and querying object data.
  */
 export interface Index {

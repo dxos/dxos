@@ -226,9 +226,14 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
           this._objectCache as unknown as GroupResult[] | undefined,
           presented.objects as unknown as GroupResult[],
         )
-      : !this._objectCache ||
-        this._objectCache.length !== presented.objects.length ||
-        this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
+      : presented.records
+        ? // A change record has no `id`; its entry carries the change hash, and a record never changes.
+          !this._resultCache ||
+          this._resultCache.length !== presented.entries.length ||
+          this._resultCache.some((entry, index) => entry.id !== presented.entries[index].id)
+        : !this._objectCache ||
+          this._objectCache.length !== presented.objects.length ||
+          this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
 
     log('recomputeResult', { changed });
 
@@ -253,6 +258,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     objects: T[];
     entries: QueryResult.EntityEntry<T>[];
     grouped: boolean;
+    records?: boolean;
   } {
     const { kept, removed } = this._collapseDuplicates(entries);
     entries = kept;
@@ -270,6 +276,16 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
         objects: groups as unknown as T[],
         entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
         grouped: true,
+      };
+    }
+
+    if (entries.length > 0 && entries[0].record !== undefined) {
+      // Same boundary as the grouped path: T is the plain record type (`Change.Change`) here.
+      return {
+        objects: entries.map((entry) => entry.record) as unknown as T[],
+        entries,
+        grouped: false,
+        records: true,
       };
     }
 
@@ -457,7 +473,10 @@ const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly
     case 'group':
     case 'type':
     case 'timestamp':
+    case 'time':
       return undefined; // Group-key fields are assembled from the source key, not here.
+    case 'sum':
+      return GroupBy.sum(members.map((value) => getDeep(value as Record<string, unknown>, [aggregate.property])));
     case 'items':
       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
     case 'count':

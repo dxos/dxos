@@ -23,7 +23,9 @@ export type Spec =
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
   | { kind: 'count' }
   | { kind: 'type' }
-  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit; timeZone?: string };
+  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit; timeZone?: string }
+  | { kind: 'time'; property: string; unit: TimeUnit; timeZone?: string }
+  | { kind: 'sum'; property: string };
 
 export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
 export type AggregateTypeId = typeof AggregateTypeId;
@@ -50,7 +52,7 @@ export type ValueOf<A> = A extends Aggregate<any, infer V> ? V : never;
 
 /** Computes the flat result type of `Query.aggregate(aggregates)` for a given aggregate record `A`. */
 export type AggregationResult<A extends Record<string, Any>> = EffectTypes.Simplify<
-  Query.AggregateResult & { readonly [N in keyof A]: ValueOf<A[N]> }
+  Query.RecordResult & { readonly [N in keyof A]: ValueOf<A[N]> }
 >;
 
 class AggregateClass<T, V> implements Aggregate<T, V> {
@@ -113,6 +115,17 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
 export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Aggregate<T, T[]> =>
   new AggregateClass({ kind: 'items', limit: options?.limit, order: options?.order?.map((order) => order.ast) });
 
+/** Keys of `T` whose values are numbers. */
+export type NumericKeys<T> = { [K in keyof T & string]: T[K] extends number | null | undefined ? K : never }[keyof T &
+  string];
+
+/**
+ * Sum a numeric property across the group's members; values that are not numbers count as 0, so
+ * a group always sums to a number.
+ */
+export const sum = <T, K extends NumericKeys<T>>(property: K): Aggregate<T, number> =>
+  new AggregateClass({ kind: 'sum', property });
+
 /**
  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
  */
@@ -149,6 +162,27 @@ export const created = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate
   new AggregateClass({
     kind: 'timestamp',
     field: 'createdAt',
+    unit,
+    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
+  });
+
+/**
+ * Group members by the hour or calendar day a unix-ms property falls in, like {@link updated} over
+ * a property instead of a system timestamp. The field carries the start of that interval in unix
+ * ms, or `null` when the property is not a number.
+ *
+ * Over `Filter.changes()`, a space-wide query is answered from hourly UTC buckets, so days in a
+ * time zone offset by a fraction of an hour (India, Newfoundland) take changes from the wrong side
+ * of midnight.
+ */
+export const time = <T, K extends NumericKeys<T>>(
+  property: K,
+  unit: TimeUnit,
+  options?: TimeUnitOptions,
+): Aggregate<T, number | null> =>
+  new AggregateClass({
+    kind: 'time',
+    property,
     unit,
     ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
   });

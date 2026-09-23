@@ -11,9 +11,10 @@ const EMPTY_ARRAY: never[] = [];
 const noop = () => {};
 
 interface UseQueryFn {
-  // Aggregate queries produce flat records branded with `Query.AggregateResult`; return them as-is,
-  // never wrapped in `Entity.Entity` (they are not entities).
-  <R extends Query.AggregateResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
+  // Aggregate rows and changes are plain records branded with `Query.RecordResult`; return them
+  // as-is, never wrapped in `Entity.Entity` (they are not entities).
+  <R extends Query.RecordResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
+  <R extends Query.RecordResult>(resource: Database.Queryable | undefined, filter: Filter.Filter<R>): R[];
 
   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
     resource: Database.Queryable | undefined,
@@ -32,7 +33,7 @@ interface UseQueryFn {
  * @param queryOrFilter - The query or filter to apply. Query is memoized based on the AST. No need to call useMemo.
  */
 // The overloaded public signature returns `O[]` (entities) or the flat record `R[]` (aggregate
-// queries) depending on the query shape; the implementation forwards whatever the query result
+// rows and changes) depending on the query shape; the implementation forwards whatever the query result
 // produces, so — as with any implementation of a multi-signature overloaded function type — it is
 // typed as `any[]` here rather than picking one of the mutually-incompatible overload return shapes.
 export const useQuery: UseQueryFn = (
