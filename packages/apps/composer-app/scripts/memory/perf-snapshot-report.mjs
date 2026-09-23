@@ -79,17 +79,19 @@ for (const dir of findCheckpoints(input)) {
   const summary = JSON.parse(readFileSync(path.join(dir, 'summary.json'), 'utf8'));
   const processes = JSON.parse(readFileSync(path.join(dir, 'allocators.json'), 'utf8'));
 
-  let realms;
-  if (existsSync(cached) && !refresh) {
-    realms = JSON.parse(readFileSync(cached, 'utf8')).realms;
-  } else {
+  // Only a complete report made with the same `--dist` is reused.
+  const report = existsSync(cached) && !refresh ? JSON.parse(readFileSync(cached, 'utf8')) : undefined;
+  let realms = report && (report.dist ?? null) === distDir ? report.realms : undefined;
+  if (!realms) {
     realms = summary.realms.map((realm) => {
       console.error(`attributing ${realm.name} (${realm.bytes ? MB(realm.bytes) + ' MB snapshot' : 'no snapshot'})`);
       // Resolved beside the summary: older runs recorded absolute paths from before a move.
       const file = realm.file ? path.join(dir, path.basename(realm.file)) : undefined;
       return { ...realm, ...(file ? { attribution: attributeRealm(file) } : {}) };
     });
-    writeFileSync(cached, JSON.stringify({ processes, realms }, null, 2));
+    if (realms.every((realm) => !realm.attribution?.error)) {
+      writeFileSync(cached, JSON.stringify({ dist: distDir, processes, realms }, null, 2));
+    }
   }
 
   console.log(`\n## ${path.basename(dir)}\n`);

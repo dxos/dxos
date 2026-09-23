@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { type Attached } from '../cdp.ts';
+import { uniqueStem } from './snapshot.ts';
 
 /** One sample per 32 KiB allocated: fine enough to name a hot allocator, cheap enough to run a flow. */
 const SAMPLING_INTERVAL_BYTES = 32 * 1024;
@@ -44,12 +45,9 @@ export const startAllocationSampling = async (targets: Attached[]): Promise<Allo
         if (!result?.profile) {
           continue;
         }
-        // Two dedicated workers running one bundle share a name.
-        const count = used.get(target.name) ?? 0;
-        used.set(target.name, count + 1);
-        const file = path.join(dir, `${target.name}${count > 0 ? `-${count}` : ''}`.replace(/[^\w.-]/g, '_'));
-        writeFileSync(`${file}.heapprofile`, JSON.stringify(result.profile));
-        files.push(`${file}.heapprofile`);
+        const file = path.join(dir, `${uniqueStem(target.name, used)}.heapprofile`);
+        writeFileSync(file, JSON.stringify(result.profile));
+        files.push(file);
       }
       return files;
     },

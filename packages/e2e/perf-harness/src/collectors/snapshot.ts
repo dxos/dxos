@@ -147,8 +147,22 @@ export const parseDetailedDump = (events: DumpEvent[]): ProcessAllocators[] => {
   return result.sort((a, b) => b.footprintBytes - a.footprintBytes);
 };
 
+/** Resolves with `promise`, or with `undefined` after `ms`; the timer never outlives the race. */
+const withTimeout = async <T>(promise: Promise<T>, ms: number): Promise<T | undefined> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const expired = new Promise<undefined>((resolve) => {
+      timer = setTimeout(() => resolve(undefined), ms);
+    });
+    return await Promise.race([promise, expired]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 /**
- * Records one detailed memory-infra dump over the browser target.
+ * Records one detailed memory-infra dump over the browser target, or `undefined` if the dump did
+ * not complete.
  *
  * `deterministic` forces a GC in every process first, so the dump describes live memory; without
  * it the dump includes garbage the next collection would free.
@@ -156,14 +170,14 @@ export const parseDetailedDump = (events: DumpEvent[]): ProcessAllocators[] => {
 export const recordDetailedDump = async (
   browserCdp: Cdp,
   { deterministic = true }: { deterministic?: boolean } = {},
-): Promise<DumpEvent[]> => {
+): Promise<DumpEvent[] | undefined> => {
   const events: DumpEvent[] = [];
   const collect = (params: { value?: DumpEvent[] }) => {
     events.push(...(params?.value ?? []));
   };
   let settle: () => void = () => {};
-  const complete = new Promise<void>((resolve) => {
-    settle = resolve;
+  const complete = new Promise<true>((resolve) => {
+    settle = () => resolve(true);
   });
   browserCdp.on('Tracing.dataCollected', collect);
   browserCdp.on('Tracing.tracingComplete', settle);
@@ -176,16 +190,20 @@ export const recordDetailedDump = async (
       transferMode: 'ReportEvents',
     });
     if (started === undefined) {
-      return [];
+      return undefined;
     }
-    await browserCdp.trySend('Tracing.requestMemoryDump', { deterministic, levelOfDetail: 'detailed' });
-    await browserCdp.trySend('Tracing.end');
-    await Promise.race([complete, new Promise((resolve) => setTimeout(resolve, 60_000))]);
+    const dumped = await browserCdp.trySend('Tracing.requestMemoryDump', { deterministic, levelOfDetail: 'detailed' });
+    // Ended even when the dump failed, so tracing does not stay on for the rest of the run.
+    const ended = await browserCdp.trySend('Tracing.end');
+    if (ended === undefined) {
+      return undefined;
+    }
+    const completed = await withTimeout(complete, 60_000);
+    return dumped !== undefined && completed ? events : undefined;
   } finally {
     browserCdp.off('Tracing.dataCollected', collect);
     browserCdp.off('Tracing.tracingComplete', settle);
   }
-  return events;
 };
 
 /** Upper bound on one realm's snapshot; a loaded page serializes in well under a minute. */
@@ -205,19 +223,34 @@ const writeHeapSnapshot = async (target: Attached, file: string): Promise<boolea
   };
   target.cdp.on('HeapProfiler.addHeapSnapshotChunk', onChunk);
   try {
-    const taken = await Promise.race([
-      target.cdp.trySend('HeapProfiler.takeHeapSnapshot', {
+    const request = target.cdp
+      .trySend('HeapProfiler.takeHeapSnapshot', {
         captureNumericValue: false,
         reportProgress: false,
         treatGlobalObjectsAsRoots: true,
-      }),
-      new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), HEAP_SNAPSHOT_TIMEOUT_MS)),
-    ]);
-    return taken !== undefined && written > 0;
+      })
+      .then((result) => ({ result }));
+    const taken = await withTimeout(request, HEAP_SNAPSHOT_TIMEOUT_MS);
+    if (taken === undefined) {
+      // CDP cannot cancel the command, so the realm keeps serializing into every later stage.
+      throw new Error(`heap snapshot of ${target.name} did not finish in ${HEAP_SNAPSHOT_TIMEOUT_MS / 1000} s`);
+    }
+    return taken.result !== undefined && written > 0;
   } finally {
     target.cdp.off('HeapProfiler.addHeapSnapshotChunk', onChunk);
     closeSync(handle);
   }
+};
+
+/**
+ * A file stem for a realm, unique within one directory: two dedicated workers running one bundle
+ * share a name, and sanitizing can map distinct names onto one stem.
+ */
+export const uniqueStem = (name: string, used: Map<string, number>): string => {
+  const stem = name.replace(/[^\w.-]/g, '_');
+  const count = used.get(stem) ?? 0;
+  used.set(stem, count + 1);
+  return count > 0 ? `${stem}-${count}` : stem;
 };
 
 export type RealmSnapshot = { name: string; kind: TargetKind; file?: string; bytes?: number };
@@ -265,12 +298,14 @@ export const takeMemorySnapshot = async ({
   };
 
   const events = await recordDetailedDump(browserCdp);
-  write(
-    'memory-infra.json',
-    events.filter((event) => event.ph === 'v' || event.name === 'process_name'),
-  );
-  const processes = parseDetailedDump(events);
-  write('allocators.json', processes);
+  const processes = events ? parseDetailedDump(events) : [];
+  if (events) {
+    write(
+      'memory-infra.json',
+      events.filter((event) => event.ph === 'v' || event.name === 'process_name'),
+    );
+    write('allocators.json', processes);
+  }
   const preGcProcesses = preGc ? parseDetailedDump(preGc) : undefined;
   if (preGcProcesses) {
     write('allocators-pre-gc.json', preGcProcesses);
@@ -282,11 +317,7 @@ export const takeMemorySnapshot = async ({
   const realms: RealmSnapshot[] = [];
   const used = new Map<string, number>();
   for (const target of targets) {
-    // Two dedicated workers running one bundle share a name.
-    const count = used.get(target.name) ?? 0;
-    used.set(target.name, count + 1);
-    const base = `${target.name}${count > 0 ? `-${count}` : ''}`.replace(/[^\w.-]/g, '_');
-    const file = path.join(dir, `${base}.heapsnapshot`);
+    const file = path.join(dir, `${uniqueStem(target.name, used)}.heapsnapshot`);
     if (await writeHeapSnapshot(target, file)) {
       files.push(file);
       realms.push({ name: target.name, kind: target.kind, file, bytes: statSync(file).size });

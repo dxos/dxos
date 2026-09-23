@@ -61,7 +61,10 @@ Every row carries `comparability`, and a comparison that does not hold these con
 - **pluginSet** — a different set is a different app.
 - **profileState** — a first run performs onboarding and loads a different module set.
 - **settleMs** — modules keep arriving for ~3 minutes after ready.
-- **instruments** — `profiler` or `profiler+screencast`; neither mode is bare.
+- **instruments** — `profiler` or `profiler+screencast`, each with `+allocations` when
+  `DX_PERF_ALLOC_SAMPLE=1`; no mode is bare, and a sampled run does not compare with an unsampled one.
+- **snapshotStages** — present only when `DX_PERF_SNAPSHOTS` is set; every stage after a listed one
+  is perturbed.
 - **Playwright's own tracing**, which no row records. `playwright-perf.config.ts` sets `trace: 'off'`
   because `retain-on-failure` still RECORDS: the recorder's DOM snapshotter runs on the page's main
   thread and, on the 94k-node task list, took ~960 ms of the `reopen-project` stage — a third of

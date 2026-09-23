@@ -267,6 +267,7 @@ export class StageRunner {
     // paint and a PNG encode, and neither belongs in this stage's numbers or the next one's.
     const shot = await this.#screenshot(id);
 
+    // Not caught: a snapshot that times out keeps serializing into every later stage.
     const snapshot = snapshotting
       ? await takeMemorySnapshot({
           browserCdp,
@@ -274,7 +275,7 @@ export class StageRunner {
           dir: path.join(snapshotDir, id),
           preGc,
           preGcHeap,
-        }).catch(() => undefined)
+        })
       : undefined;
 
     const artifacts = [...profiles, ...(stills?.files ?? []), ...(shot ? [shot] : []), ...(snapshot?.files ?? [])];

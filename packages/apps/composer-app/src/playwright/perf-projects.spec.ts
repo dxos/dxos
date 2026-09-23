@@ -102,7 +102,12 @@ const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
  * last stage. Off by default — a snapshot of a loaded tab takes minutes and writes hundreds of
  * megabytes.
  */
-const SNAPSHOTS = new Set((process.env.DX_PERF_SNAPSHOTS ?? '').split(',').filter(Boolean));
+const SNAPSHOTS = new Set(
+  (process.env.DX_PERF_SNAPSHOTS ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean),
+);
 
 /**
  * Sample allocations from the start of the fixture to the end of `await-replication`
