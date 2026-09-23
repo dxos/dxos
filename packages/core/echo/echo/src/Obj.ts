@@ -1043,10 +1043,5 @@ export const atom = objInternal.makeAtom;
 export const atomReactive = objInternal.makeWithReactive;
 export const atomProperty = objInternal.makeProperty;
 export const labelAtom = objInternal.makeLabelAtom;
-
-/**
- * Create a read-only atom for an object's parent, for reading it inside an atom computation.
- * Fires when the parent edge changes; the parent loads together with the object.
- */
-export const parentAtom = objInternal.makeParentAtom;
 export const labelProperty = internal.getLabelProperty;
+export const parentAtom = objInternal.makeParentAtom;
