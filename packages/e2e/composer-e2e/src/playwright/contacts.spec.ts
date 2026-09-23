@@ -35,7 +35,6 @@ test.describe('Contacts', () => {
   });
 
   test('host adds a known contact to a second space', { tag: ['@QA-10'] }, async () => {
-    test.setTimeout(200_000);
     // Space A: establish the contact via a normal invitation.
     await host.createSpace();
     const spaceA = host.workspaceId;
@@ -70,28 +69,7 @@ test.describe('Contacts', () => {
     // wired, so swapping in the guest's current pathname would miss it.
     const hostJoinUrl = new URL(joinUrl);
     const resolvedJoinUrl = new URL(hostJoinUrl.pathname + hostJoinUrl.search, guest.page.url());
-    // eslint-disable-next-line no-console
-    console.log('DEBUG spaceB', spaceB, 'joinUrl', joinUrl, 'resolvedJoinUrl', resolvedJoinUrl.toString());
-    guest.page.on('response', (response) => {
-      if (response.status() >= 400) {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG guest failed response', response.status(), response.url());
-      }
-    });
-    guest.page.on('console', (message) => {
-      if (/join|spaceKey|navigation/i.test(message.text())) {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG guest console', message.type(), message.text());
-      }
-    });
     await guest.page.goto(resolvedJoinUrl.toString());
-    for (let i = 0; i < 6; i++) {
-      await guest.page.waitForTimeout(10_000);
-      // eslint-disable-next-line no-console
-      console.log('DEBUG guest url at', (i + 1) * 10, 's:', guest.page.url());
-    }
-    // eslint-disable-next-line no-console
-    console.log('DEBUG console errors', guest.recentConsoleErrors(20));
-    await expect.poll(() => guest.workspaceId, { timeout: 5_000 }).toBe(spaceB);
+    await expect.poll(() => guest.workspaceId, { timeout: 60_000 }).toBe(spaceB);
   });
 });
