@@ -32,7 +32,7 @@ const useTestGenerate = () => {
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
-      AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+      AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
         Layer.provide(AiServiceTestingPreset('edge-remote')),
         Layer.orDie,
       ),

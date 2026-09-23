@@ -52,15 +52,18 @@ const seededStore = Effect.gen(function* () {
 
 /** Stub `AiService` whose `generateText` echoes a canned response (summaries are not LLM-tested here). */
 const textAiService = (text: string): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text, content: [] }),
-        generateObject: () => Effect.succeed({ value: {}, content: [] }),
-        streamText: () => Stream.empty,
-        // Test stub: the LanguageModel surface is wider than the three methods exercised here.
-      } as any),
-  });
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: () => Effect.succeed({ text, content: [] }),
+          generateObject: () => Effect.succeed({ value: {}, content: [] }),
+          streamText: () => Stream.empty,
+          // Test stub: the LanguageModel surface is wider than the three methods exercised here.
+        } as any),
+    }),
+  );
 
 describe('QueryFacts', () => {
   test('filters by entity across subject and object positions', async ({ expect }) => {
@@ -114,11 +117,14 @@ describe('SummarizeSubject', () => {
         Effect.provide(
           Layer.provideMerge(
             FactStoreLive.layerMemory,
-            Layer.succeed(AiService.AiService, {
-              model: () => {
-                throw new Error('LLM must not be invoked');
-              },
-            }),
+            Layer.succeed(
+              AiService.AiService,
+              AiService.make({
+                languageModel: () => {
+                  throw new Error('LLM must not be invoked');
+                },
+              }),
+            ),
           ),
         ),
       ),

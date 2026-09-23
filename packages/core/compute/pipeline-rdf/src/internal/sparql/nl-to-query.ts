@@ -59,6 +59,6 @@ export const generateQuery = (
 
     return value;
   }).pipe(
-    Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
+    Effect.provide(AiService.languageModel(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to generate query', cause })),
   );

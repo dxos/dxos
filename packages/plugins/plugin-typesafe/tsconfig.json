@@ -28,6 +28,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -35,9 +38,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../experimental/ai-typesafe"
     },
     {
       "path": "../../sdk/app-framework"

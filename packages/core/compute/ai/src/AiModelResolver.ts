@@ -8,7 +8,6 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { DXN } from '@dxos/keys';
@@ -22,9 +21,8 @@ const telemetryLayer = Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemet
 /**
  * v4 removed `Layer.fail`; a failing layer is the failure effect lifted with `Layer.unwrap`.
  */
-const failedLayer = (
-  error: AiModelNotAvailableError,
-): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError> => Layer.unwrap(Effect.fail(error));
+const failedLayer = <A>(error: AiModelNotAvailableError): Layer.Layer<A, AiModelNotAvailableError> =>
+  Layer.unwrap(Effect.fail(error));
 
 export class AiModelResolver extends Context.Service<AiModelResolver, AiService.Service>()(
   '@dxos/ai/AiModelResolver',
@@ -36,49 +34,75 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
     const resolver = yield* AiModelResolver;
     return {
       metadata: resolver.metadata,
-      model: (name, options) => Layer.merge(resolver.model(name, options), telemetryLayer),
+      languageModel: (name, options) => Layer.merge(resolver.languageModel(name, options), telemetryLayer),
+      decisionModel: resolver.decisionModel,
     } satisfies Context.Service.Shape<typeof AiService.AiService>;
   }),
 );
 
-export const resolver = <R>(
+/**
+ * Chains a resolver onto the one below it: each kind of model this resolver serves falls back to the
+ * upstream resolver when it fails, and each kind it does not serve goes straight upstream.
+ */
+const chain = <R>(
   metadata: AiService.ServiceMetadata,
-  impl: Effect.Effect<
-    (
-      model: DXN.DXN,
-      options?: AiService.ResolveOptions,
-    ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
-    never,
-    R
-  >,
+  impl: Effect.Effect<Partial<Pick<AiService.Service, 'languageModel' | 'decisionModel'>>, never, R>,
 ): Layer.Layer<AiModelResolver, never, R> =>
   Layer.effect(
     AiModelResolver,
     Effect.gen(function* () {
-      const getModel = yield* impl;
+      const own = yield* impl;
       const upstream = yield* Effect.serviceOption(AiModelResolver);
+      const fallback = <A>(
+        resolve: ((service: AiService.Service) => Layer.Layer<A, AiModelNotAvailableError>) | undefined,
+        modelName: DXN.DXN,
+      ): Layer.Layer<A, AiModelNotAvailableError> =>
+        Option.isSome(upstream) && resolve
+          ? resolve(upstream.value)
+          : failedLayer(new AiModelNotAvailableError(modelName));
+
       return {
         metadata,
-        model: (modelName, options) =>
-          getModel(modelName, options).pipe(
-            Layer.catchCause(() =>
-              Option.isSome(upstream)
-                ? upstream.value.model(modelName, options)
-                : failedLayer(new AiModelNotAvailableError(modelName)),
-            ),
-          ),
+        languageModel: (modelName, options) => {
+          const next = (service: AiService.Service) => service.languageModel(modelName, options);
+          return own.languageModel
+            ? own.languageModel(modelName, options).pipe(Layer.catchCause(() => fallback(next, modelName)))
+            : fallback(next, modelName);
+        },
+        decisionModel: (modelName, options) => {
+          const next = (service: AiService.Service) => service.decisionModel(modelName, options);
+          return own.decisionModel
+            ? own.decisionModel(modelName, options).pipe(Layer.catchCause(() => fallback(next, modelName)))
+            : fallback(next, modelName);
+        },
       };
     }),
+  );
+
+/** A resolver serving language models; decision models go upstream. */
+export const resolver = <R>(
+  metadata: AiService.ServiceMetadata,
+  impl: Effect.Effect<AiService.LanguageModelResolver, never, R>,
+): Layer.Layer<AiModelResolver, never, R> =>
+  chain(
+    metadata,
+    Effect.map(impl, (languageModel) => ({ languageModel })),
+  );
+
+/** A resolver serving decision models; language models go upstream. */
+export const decisionResolver = <R>(
+  metadata: AiService.ServiceMetadata,
+  impl: Effect.Effect<AiService.DecisionModelResolver, never, R>,
+): Layer.Layer<AiModelResolver, never, R> =>
+  chain(
+    metadata,
+    Effect.map(impl, (decisionModel) => ({ decisionModel })),
   );
 
 export const fromModelMap = <R>(
   metadata: AiService.ServiceMetadata,
   provider: DXN.DXN,
-  models: Effect.Effect<
-    Partial<Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
-    never,
-    R
-  >,
+  models: Effect.Effect<Partial<Record<DXN.DXN, ReturnType<AiService.LanguageModelResolver>>>, never, R>,
 ): Layer.Layer<AiModelResolver, never, R> =>
   resolver(
     metadata,

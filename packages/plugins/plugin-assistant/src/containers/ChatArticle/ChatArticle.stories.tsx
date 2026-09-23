@@ -59,7 +59,7 @@ const scriptedAiServiceMiddleware = (replies: readonly string[]) => {
     ),
   );
   const layer = Layer.succeed(LanguageModel.LanguageModel, model);
-  return (_upstream: AiService.Service) => ({ model: () => layer });
+  return (upstream: AiService.Service): AiService.Service => ({ ...upstream, languageModel: () => layer });
 };
 
 /**

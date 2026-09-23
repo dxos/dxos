@@ -93,7 +93,7 @@ export default RunInstructions.pipe(
           systemText += `\n${data.systemInstructions}`;
         }
 
-        const modelLayer = AiService.model(DXN.getName(data.model ?? DEFAULT_MODEL));
+        const modelLayer = AiService.languageModel(DXN.getName(data.model ?? DEFAULT_MODEL));
 
         let feed: Feed.Feed;
         if (data.chat) {

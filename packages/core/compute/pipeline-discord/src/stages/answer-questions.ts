@@ -77,7 +77,7 @@ export const answerOpenQuestions = (
         const { value } = yield* LanguageModel.generateObject({
           schema: AnswerShape,
           prompt: answerPrompt(question.text, facts),
-        }).pipe(Effect.provide(AiService.model(DEFAULT_MODEL)));
+        }).pipe(Effect.provide(AiService.languageModel(DEFAULT_MODEL)));
         const text = value.answer?.trim();
         if (!text) {
           return false;
