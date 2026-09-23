@@ -22,10 +22,10 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       canDrop: (source: TreeData) => boolean;
       getDropKind: (source: TreeData, instruction: Instruction) => DropKind;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
-      /** An item moved here from another parent; `index` is its position among this node's children. */
-      onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
-      /** An item moved from here to `destinationParent`. */
-      onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** An item is moving from here to `destinationParent`; called before the destination's `onMoveIn`. */
+      onMoveOut: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+      /** An item is moving here from another parent; `index` is its position among this node's children. */
+      onMoveIn: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
       onLink: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
     }
   >

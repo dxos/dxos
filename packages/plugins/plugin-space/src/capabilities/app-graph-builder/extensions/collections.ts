@@ -119,7 +119,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? AppNode.getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
+          ? AppNode.getContainerPartials(ContainerModel.collection(rootCollection), space.db)
           : undefined;
 
         return Effect.succeed([

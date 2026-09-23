@@ -45,8 +45,8 @@ export const resolveDropKind = ({
   if (
     scope &&
     sourceParent?.properties.moveScope === scope &&
-    sourceParent.properties.onTransferEnd &&
-    destination.properties.onTransferStart
+    sourceParent.properties.onMoveOut &&
+    destination.properties.onMoveIn
   ) {
     return 'move';
   }

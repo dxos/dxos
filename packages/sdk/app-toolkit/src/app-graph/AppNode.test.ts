@@ -11,6 +11,7 @@ import { Annotation, Collection, type Database, DXN, Obj, Ref, Type } from '@dxo
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
+import * as ContainerModel from '../types/ContainerModel.ts';
 import * as AppNode from './AppNode.ts';
 
 const TYPENAME = 'com.example.type.doc';
@@ -69,7 +70,7 @@ describe('makeObject', () => {
 const iconAtom = (db: Database.Database, object: Obj.Unknown) =>
   Atom.make((get) => AppNode.makeObject({ get, db, object })?.properties.icon);
 
-describe('collection partials: transfer', () => {
+describe('container partials: move', () => {
   let testBuilder: EchoTestBuilder;
   let db: Database.Database;
 
@@ -86,8 +87,8 @@ describe('collection partials: transfer', () => {
 
   const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
     const node = { data: doc } as any;
-    AppNode.buildCollectionPartials(from, db).onTransferEnd(node);
-    AppNode.buildCollectionPartials(to, db).onTransferStart(node);
+    AppNode.getContainerPartials(ContainerModel.collection(from), db).onMoveOut(node);
+    AppNode.getContainerPartials(ContainerModel.collection(to), db).onMoveIn(node);
   };
 
   test('dragging between collections re-parents the object', async ({ expect }) => {

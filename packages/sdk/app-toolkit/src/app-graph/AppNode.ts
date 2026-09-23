@@ -90,8 +90,7 @@ export const CAN_DROP_OBJECT = (source: TreeData) =>
 // Module-level caches.
 //
 
-export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
-export const containerPartialsCache = new Map<string, ReturnType<typeof buildContainerPartials>>();
+const containerPartialsCache = new Map<string, ReturnType<typeof buildContainerPartials>>();
 
 const containerKey = (container: ContainerModel.Container): string =>
   `${Obj.getURI(container.object)}#${container.property}`;
@@ -118,14 +117,15 @@ export const getContainer = (node: AppGraphNode.Node | undefined): ContainerMode
   node?.properties[CONTAINER_PROPERTY];
 
 const buildContainerPartials = (container: ContainerModel.Container, db: Database.Database) => ({
+  role: 'branch' as const,
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   moveScope: container.moveScope,
   canDrop: canDropInto(container),
   onRearrange: rearrangeCallback(container),
-  onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+  onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>) => ContainerModel.release({ container, object: child.data }),
+  onMoveIn: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
     ContainerModel.link({ container, object: child.data, index }),
-  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>) => ContainerModel.release({ container, object: child.data }),
   onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
     ContainerModel.link({ container, object: child.data, index }),
   [CONTAINER_PROPERTY]: container,
@@ -137,32 +137,6 @@ export const getContainerPartials = (container: ContainerModel.Container, db: Da
   if (!cached) {
     cached = buildContainerPartials(container, db);
     containerPartialsCache.set(key, cached);
-  }
-  return cached;
-};
-
-//
-// Collection partials.
-//
-
-/** Build collection partials for drag/drop behavior. */
-export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
-  role: 'branch' as const,
-  ...getContainerPartials(ContainerModel.collection(collection), db),
-});
-
-export const getCollectionGraphNodePartials = ({
-  db,
-  collection,
-}: {
-  db: Database.Database;
-  collection: Collection.Collection;
-}) => {
-  const id = Obj.getURI(collection);
-  let cached = collectionPartialsCache.get(id);
-  if (!cached) {
-    cached = buildCollectionPartials(collection, db);
-    collectionPartialsCache.set(id, cached);
   }
   return cached;
 };
@@ -240,7 +214,7 @@ export const makeObject = ({
   const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ db, collection: object })
+    ? getContainerPartials(ContainerModel.collection(object), db)
     : graphProps;
 
   const label =

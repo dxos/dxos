@@ -276,8 +276,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               }
               case 'move': {
                 if (destination) {
-                  void sourceParent?.properties.onTransferEnd?.(sourceNode, destination);
-                  void destination.properties.onTransferStart?.(sourceNode, migrationIndex);
+                  void sourceParent?.properties.onMoveOut?.(sourceNode, destination);
+                  void destination.properties.onMoveIn?.(sourceNode, migrationIndex);
                 }
                 break;
               }
