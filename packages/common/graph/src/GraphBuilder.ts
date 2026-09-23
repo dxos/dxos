@@ -57,16 +57,16 @@ export type NodeLike = { readonly id: string };
  */
 export type NodeArgLike = { readonly id: string; readonly properties?: Record<string, any> };
 
-/**
- * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
- * on changes, and the resulting difference is applied to the graph.
- */
 /** Time update flushes may spend in the current frame. */
 export type FrameBudget = {
   hasTime: () => boolean;
   spend: (ms: number) => void;
 };
 
+/**
+ * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
+ * on changes, and the resulting difference is applied to the graph.
+ */
 export type Connector<Node extends NodeLike, Arg extends NodeArgLike> = (
   node: Atom.Atom<Option.Option<Node>>,
 ) => Atom.Atom<Arg[]>;
