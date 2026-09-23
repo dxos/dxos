@@ -57,6 +57,12 @@ export type NodeLike = { readonly id: string };
  */
 export type NodeArgLike = { readonly id: string; readonly properties?: Record<string, any> };
 
+/** Time update flushes may spend in the current frame. */
+export type FrameBudget = {
+  hasTime: () => boolean;
+  spend: (ms: number) => void;
+};
+
 /**
  * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
  * on changes, and the resulting difference is applied to the graph.
@@ -247,6 +253,8 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
+  /** Whether a flush of updates to connectors already in the store is queued. */
+  _updateScheduled = false;
   _retentions: readonly Retention.Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
   _collectedAskKey?: string;
@@ -254,6 +262,8 @@ export class GraphBuilder<
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
+  /** Resolves when the queued update flush completes. */
+  _updatePromise: Promise<void> = Promise.resolve();
   /** Registered extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
     Atom.keepAlive,
@@ -338,24 +348,54 @@ export class GraphBuilder<
     }
   }
 
-  _scheduleDirtyFlush(): void {
+  /**
+   * An update to output already in the store flushes on a microtask, so an edit renders in the frame it
+   * was made, until the frame's budget runs out; the rest, and a connector's first output, wait for
+   * {@link GraphBuilder._schedule}.
+   */
+  _scheduleDirtyFlush(update: boolean): void {
+    if (update) {
+      if (!this._updateScheduled) {
+        this._updateScheduled = true;
+        this._updatePromise = Promise.resolve().then(() => {
+          this._updateScheduled = false;
+          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key), this._frameBudget());
+          if (this._dirtyConnectors.size > 0) {
+            this._scheduleDirtyFlush(false);
+          }
+        });
+      }
+      return;
+    }
     if (!this._flushScheduled) {
       this._flushScheduled = true;
       this._flushPromise = this._schedule(() => {
         this._flushScheduled = false;
-        while (this._dirtyConnectors.size > 0) {
-          const entries = [...this._dirtyConnectors.entries()];
-          this._dirtyConnectors.clear();
-
-          const apply = () => {
-            for (const [key, { nodes, previous }] of entries) {
-              this._applyConnectorUpdate(key, nodes, previous);
-            }
-          };
-          // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
-          this._store.batch ? this._store.batch(apply) : apply();
-        }
+        this._flushDirtyConnectors();
       });
+    }
+  }
+
+  _flushDirtyConnectors(select: (key: string) => boolean = () => true, budget?: FrameBudget): void {
+    while (!budget || budget.hasTime()) {
+      const entries = [...this._dirtyConnectors.entries()].filter(([key]) => select(key));
+      if (entries.length === 0) {
+        return;
+      }
+
+      const apply = () => {
+        for (const [key, { nodes, previous }] of entries) {
+          if (budget && !budget.hasTime()) {
+            return;
+          }
+          this._dirtyConnectors.delete(key);
+          const start = budget ? performance.now() : 0;
+          this._applyConnectorUpdate(key, nodes, previous);
+          budget?.spend(performance.now() - start);
+        }
+      };
+      // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
+      this._store.batch ? this._store.batch(apply) : apply();
     }
   }
 
@@ -405,11 +445,16 @@ export class GraphBuilder<
   }
 
   /**
-   * When a flush runs. Defaults to the next microtask; override to hand the work to a scheduler that can
-   * yield to the main thread.
+   * When a connector's first output is flushed. Defaults to the next microtask; override to hand the work to
+   * a scheduler that can yield to the main thread.
    */
   _schedule(callback: () => void): Promise<void> {
     return Promise.resolve().then(callback);
+  }
+
+  /** What an update flush may spend in the current frame; unlimited by default. */
+  _frameBudget(): FrameBudget | undefined {
+    return undefined;
   }
 
   /** Where a traversal yields between nodes; overridden alongside {@link GraphBuilder._schedule}. */
@@ -480,7 +525,7 @@ export class GraphBuilder<
 
         log('update', { id, relation, ids });
         this._dirtyConnectors.set(key, { nodes, previous });
-        this._scheduleDirtyFlush();
+        this._scheduleDirtyFlush(this._connectorPrevious.has(key));
       },
       { immediate: true },
     );
@@ -747,8 +792,9 @@ export const removeExtension: {
   return builder;
 });
 
-/** Waits for the pending flush, then for the collection pending once it lands, which covers any it triggered. */
+/** Waits for the pending flushes, then for the collection pending once they land, which covers any they triggered. */
 export const flush = async (builder: Any): Promise<void> => {
+  await builder._updatePromise;
   await builder._flushPromise;
   await builder._collectPromise;
 };

@@ -169,6 +169,7 @@ export const translations = [
         'create-object-in-space.label': 'Add to space',
         'create-object-in-collection.label': 'Add to collection',
         'remove-from-collection.label': 'Remove from collection',
+        'show-original.label': 'Show original',
         'create-object-in-system-collection.label': 'Add to system collection',
         'new-type.label': 'New type',
         'add-view-to-schema.label': 'Add view for type',

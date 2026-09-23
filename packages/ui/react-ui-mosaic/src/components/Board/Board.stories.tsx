@@ -14,8 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';

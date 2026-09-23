@@ -51,6 +51,7 @@ export const createSelectField = ({
     presentation,
     getValue,
     onValueChange,
+    onBlur,
   }: FormFieldRendererProps<string | undefined>) => {
     const value = getValue();
     const control = presentationFor(presentation).isStatic ? (
@@ -61,7 +62,11 @@ export const createSelectField = ({
       <Select.Root
         disabled={!!readonly}
         value={value ?? sentinel}
-        onValueChange={(next) => onValueChange(type, hasDefault && next === sentinel ? undefined : next)}
+        // A choice is a commit: the select never blurs, so it commits itself.
+        onValueChange={(next) => {
+          onValueChange(type, hasDefault && next === sentinel ? undefined : next);
+          onBlur();
+        }}
       >
         <Select.TriggerButton classNames='w-full' disabled={!!readonly} />
         {normalized.length > 0 && (

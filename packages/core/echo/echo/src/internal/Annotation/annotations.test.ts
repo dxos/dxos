@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -13,6 +14,8 @@ import { EntityKind } from '../common/types/index.ts';
 import { EchoObjectSchema } from '../Entity/index.ts';
 import {
   LabelAnnotation,
+  PropertyMeta,
+  SetParentAnnotation,
   TypenameSchema,
   VersionSchema,
   getLabelWithSchema,
@@ -167,5 +170,17 @@ describe('annotations', () => {
       expect(annotation).toBeDefined();
       expect(annotation?.typename).toBe('org.dxos.type.test');
     });
+  });
+});
+
+describe('SetParentAnnotation', () => {
+  test('reads a bare boolean persisted before the value was structured', ({ expect }) => {
+    const legacy = Schema.String.pipe(PropertyMeta(SetParentAnnotation.key, true));
+    expect(SetParentAnnotation.get(legacy)).toEqual(Option.some({ value: true, override: true }));
+  });
+
+  test('reads the structured value', ({ expect }) => {
+    const field = Schema.String.pipe(SetParentAnnotation.set({ override: false }));
+    expect(SetParentAnnotation.get(field)).toEqual(Option.some({ value: true, override: false }));
   });
 });

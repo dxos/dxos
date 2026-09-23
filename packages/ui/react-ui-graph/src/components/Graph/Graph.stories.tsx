@@ -14,8 +14,7 @@ import type * as GraphModel from '@dxos/graph/GraphModel';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Pulsar } from '../../fx/index.ts';

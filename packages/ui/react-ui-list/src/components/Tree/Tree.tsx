@@ -62,7 +62,7 @@ import {
   useTreeRender,
 } from './TreeContext.ts';
 import { TreeDropDebug } from './TreeDropDebug.tsx';
-import { TreeDropIndicator } from './TreeDropIndicator.tsx';
+import { type DropKind, TreeDropIndicator } from './TreeDropIndicator.tsx';
 import { TreeItemToggle } from './TreeItemToggle.tsx';
 
 const hoverableDescriptionIcons =
@@ -232,8 +232,9 @@ export type TreeProps<T extends { id: string } = any> = {
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
-  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  /** What dropping at an instruction does; `reject` blocks it and `link` draws a dashed indicator. A move when absent. */
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /**
    * Whether a row with no children can be dropped onto to adopt the dragged item. Off by default:
    * in a tree whose leaves are terminal (a navtree's documents) nesting into one is meaningless, so
@@ -332,8 +333,8 @@ export const Tree = <T extends { id: string } = any>({
   renderColumns,
   renderIcon,
   renderHeading,
-  blockInstruction,
   canDrop,
+  getDropKind,
   leavesAcceptChildren = false,
   selectionFollowsFocus = false,
   debug = false,
@@ -490,6 +491,12 @@ export const Tree = <T extends { id: string } = any>({
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
+      // A modified activation is the pointer's to report: the machine moves focus first, and
+      // following it here would select (and open) the row a heartbeat before the meta-click says it
+      // wanted a second view of it instead.
+      if (recentModifiers().meta) {
+        return;
+      }
       // Only the row's own focus selects — the arrows, or a click on the row. Focus landing on a
       // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
       // following it selected the row the reader was about to act on: a delete briefly swapped the
@@ -505,7 +512,7 @@ export const Tree = <T extends { id: string } = any>({
         onSelectNode(entry, { ...NO_MODIFIERS, current: true });
       }
     },
-    [selectionFollowsFocus, selected, byValue, onSelectNode],
+    [selectionFollowsFocus, selected, byValue, onSelectNode, recentModifiers],
   );
 
   const handleSelectionChange = useCallback(
@@ -575,8 +582,8 @@ export const Tree = <T extends { id: string } = any>({
       renderColumns,
       renderIcon,
       renderHeading,
-      blockInstruction,
       canDrop,
+      getDropKind,
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
@@ -597,8 +604,8 @@ export const Tree = <T extends { id: string } = any>({
       renderColumns,
       renderIcon,
       renderHeading,
-      blockInstruction,
       canDrop,
+      getDropKind,
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
@@ -913,8 +920,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
     density,
     renderColumns: Columns,
     renderHeading: RenderHeading,
-    blockInstruction,
     canDrop,
+    getDropKind,
     leavesAcceptChildren,
     debug,
     dropBelowExpanded,
@@ -930,6 +937,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
   const [dragState, setDragState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
+  const [dropKind, setDropKind] = useState<DropKind>('move');
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { id, value, item, path, level, branch, open, last, current, props } = node;
@@ -1019,10 +1027,15 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
         const desired = extractInstruction(self.data);
-        const block =
-          desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+        const kind =
+          desired && desired.type !== 'instruction-blocked'
+            ? (getDropKind?.({ instruction: desired, source: source.data as TreeData, target: data }) ?? 'move')
+            : 'move';
         const next: Instruction | null =
-          block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
+          kind === 'reject' && desired && desired.type !== 'instruction-blocked'
+            ? { type: 'instruction-blocked', desired }
+            : desired;
+        setDropKind(kind);
 
         if (source.data.id !== id) {
           if (next?.type === 'make-child' && branch && !open && !cancelExpandRef.current) {
@@ -1067,8 +1080,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
     level,
     branch,
     open,
-    blockInstruction,
     canDrop,
+    getDropKind,
     onOpenChange,
     onCancelExpand,
     shouldSeedNativeDragData,
@@ -1141,7 +1154,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
         // there reads as selection.
         'hover:bg-hover-surface',
         'data-[selected]:bg-current-surface data-[selected]:text-current-fg',
-        'dx-focus-ring-inset',
+        // Keyboard travel paints the row it lands on rather than ringing it: a ring inside a row
+        // that is already a filled band reads as a second, competing highlight, and the fill says
+        // what selection says — this is the row you are on. Keyed on `:focus-visible` rather than
+        // the machine's `data-focus`, which stays on the tabbable row after the tree loses focus and
+        // would leave a row lit that nothing is pointing at.
+        'dx-focus-ring-none',
+        'focus-visible:bg-current-surface focus-visible:text-current-fg',
         // Highlight the row while a descendant marks an open popover anchor (e.g. inline rename).
         'has-[[data-popover-anchor]]:bg-current-surface',
         hoverableControls,
@@ -1152,6 +1171,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
         // strength like a focused one's. Both dimmers had a hover and a focus case but no selected
         // case, which left the current row's icons faded — the opposite of what selection means.
         'data-[selected]:[--controls-opacity:1] data-[selected]:[--icons-color:inherit]',
+        'focus-visible:[--icons-color:inherit]',
         props.className,
       )}
       onClick={handleClick}
@@ -1196,7 +1216,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
           <TreeNodeHeading item={item} path={path} props={props} />
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-        {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
+        {instruction && (
+          <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
+        )}
         {debug && (
           <TreeDropDebug
             mode={mode}
