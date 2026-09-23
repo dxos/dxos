@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { TypeSafeClient } from '@dxos/ai-typesafe';
+import { TypeSafeResolver } from '@dxos/ai/resolvers';
 
 export const Settings = Schema.Struct({
   /**
@@ -27,4 +27,4 @@ export const Settings = Schema.Struct({
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 
-export const defaults = (): Settings => ({ endpoint: TypeSafeClient.DEFAULT_ENDPOINT });
+export const defaults = (): Settings => ({ endpoint: TypeSafeResolver.DEFAULT_ENDPOINT });

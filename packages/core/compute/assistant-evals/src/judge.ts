@@ -39,6 +39,6 @@ export const judge = (rubric: string, content: string): Effect.Effect<JudgeVerdi
     `,
     schema: JudgeVerdict,
   }).pipe(
-    Effect.provide(Layer.provideMerge(AiService.model(JUDGE_MODEL), AiServiceTestingPreset('direct'))),
+    Effect.provide(Layer.provideMerge(AiService.languageModel(JUDGE_MODEL), AiServiceTestingPreset('direct'))),
     Effect.map((response) => response.value),
   );

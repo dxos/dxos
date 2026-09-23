@@ -5629,6 +5629,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/index-core':
+        specifier: workspace:*
+        version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7511,18 +7514,6 @@ importers:
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
-  packages/experimental/ai-typesafe:
-    dependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
-      effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
 
   packages/experimental/discord-bot:
     dependencies:
@@ -12164,9 +12155,9 @@ importers:
 
   packages/plugins/plugin-labeler:
     dependencies:
-      '@dxos/ai-typesafe':
+      '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai-typesafe
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -17741,9 +17732,9 @@ importers:
 
   packages/plugins/plugin-typesafe:
     dependencies:
-      '@dxos/ai-typesafe':
+      '@dxos/ai':
         specifier: workspace:*
-        version: link:../../experimental/ai-typesafe
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
