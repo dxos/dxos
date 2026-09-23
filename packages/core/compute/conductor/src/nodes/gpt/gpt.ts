@@ -149,7 +149,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     const runDeps = Layer.mergeAll(
-      AiService.model(DXN.getName(Model.DEFAULT_EDGE)).pipe(
+      AiService.languageModel(DXN.getName(Model.DEFAULT_EDGE)).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.

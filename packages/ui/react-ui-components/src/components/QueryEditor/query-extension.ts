@@ -9,8 +9,8 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
-import { Tag } from '@dxos/echo';
-import { QueryDSL } from '@dxos/echo-query';
+import { type Tag } from '@dxos/echo';
+import { QueryDSL, findTagByToken } from '@dxos/echo-query';
 import { Domino } from '@dxos/ui';
 import { type CompletionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
 import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
@@ -115,9 +115,11 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
           case QueryDSL.Node.TagFilter: {
             const tagNode = node.node.getChild(QueryDSL.Node.Tag);
             if (tagNode) {
-              const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
-              const tag = Tag.findTagByLabel(tags, label);
-              const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
+              const token = state.sliceDoc(tagNode.from, tagNode.to);
+              const match = findTagByToken(tags, token);
+              // The chip names the tag as the user wrote it, not the token form it had to be typed in.
+              const label = match?.tag.label ?? token.slice(1);
+              const hue = match?.tag.hue ?? getHashHue(match?.key ?? label);
               // Atomic at its own edges too, so Backspace against a tag takes the chip rather than a
               // character of the label; typing still grows it, since an insertion at the range's
               // boundary lands outside it.

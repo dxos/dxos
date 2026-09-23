@@ -23,7 +23,7 @@ const ResolverLayer = OllamaResolver.make().pipe(Layer.provide(FetchHttpClient.l
 
 // The catalog's shared model ids are served by several providers, so the provider must accompany the
 // request — `(provider, id)` is the resolver key.
-const ModelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(
+const ModelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
   Layer.provide(AiModelResolver.buildAiService),
   Layer.provide(ResolverLayer),
 );
