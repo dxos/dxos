@@ -52,11 +52,7 @@ test.describe('Contacts', () => {
     const spaceB = host.workspaceId;
     await host.shareSpace();
     await host.page.getByTestId('contact-picker.trigger').click();
-    // `Combobox.Item`'s `data-testid` prop is silently dropped by the shared Combobox primitive
-    // (`ComboboxItem` in packages/ui/react-ui-list/src/components/Combobox/Combobox.tsx destructures
-    // a named prop list with no rest spread, unlike `ComboboxTrigger`), so `contact-picker.item` never
-    // reaches the DOM — `role='option'` is the only way to reach it until that is fixed.
-    await host.page.getByRole('option').first().click();
+    await host.page.getByTestId('contact-picker.item').first().click();
     await host.page.keyboard.press('Escape');
     await host.page.getByTestId('contactPicker.add').click();
     const joinUrlField = host.page.getByTestId('contactPicker.joinUrl');

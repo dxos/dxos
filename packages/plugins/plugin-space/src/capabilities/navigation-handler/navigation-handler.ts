@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
@@ -80,7 +81,11 @@ export default Capability.makeModule(
         const join = yield* Effect.forkDetach(
           (existing ? Effect.succeed(existing) : Effect.tryPromise(() => client.spaces.joinBySpaceKey(spaceKey))).pipe(
             Effect.tap(() => Effect.sync(() => removeQueryParam(joinSpaceKeyProp))),
-            Effect.flatMap((space) => Operation.invoke(SpaceOperation.Open, { space })),
+            Effect.tap((space) => Operation.invoke(SpaceOperation.Open, { space })),
+            // `Open` only readies the space's database; switching the workspace is what takes the user there.
+            Effect.flatMap((space) =>
+              Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) }),
+            ),
           ),
         );
         const joined = yield* Fiber.join(join).pipe(
