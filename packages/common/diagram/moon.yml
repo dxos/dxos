@@ -6,6 +6,18 @@ tags:
   - pack
 
 tasks:
+  build:
+    deps:
+      - ~:#prebuild
+  prebuild-lezer:
+    command: pnpm exec lezer-generator --typeScript ./src/dsl/diagram.grammar -o ./src/dsl/gen/diagram.ts
+    inputs:
+      - src/dsl/diagram.grammar
+    outputs:
+      - src/dsl/gen/diagram.terms.ts
+      - src/dsl/gen/diagram.ts
+    tags:
+      - prebuild
   test:
     # The mermaid/UML layout suites run ~180s locally but exceed the 600s preset default under CI
     # contention, so the task was killed with every test passing. Raised until the CI-side slowdown

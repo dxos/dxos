@@ -34,10 +34,15 @@
     "@dagrejs/dagre": "catalog:",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "@lezer/lr": "catalog:",
     "elkjs": "catalog:"
   },
   "devDependencies": {
-    "effect": "catalog:"
+    "@lezer/generator": "catalog:",
+    "effect": "catalog:",
+    "tsx": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

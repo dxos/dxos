@@ -1,0 +1,199 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import * as MermaidEngine from '../mermaid-engine.ts';
+import type * as Scene from '../scene.ts';
+import { BASIC } from '../testing.ts';
+import { parse, parseScene, toScene } from './parse.ts';
+import { print, printCommands } from './print.ts';
+
+/** Every element kind, every attribute family, in canonical form. */
+const KITCHEN_SINK = `object pkgA @ -24,-24 scale=2 index="a1" ref="dxn:echo:@:01ABC" {
+  rect frame 0,0 248x172 "Package A" rotation=45 corners=top color=grey stroke=dashed
+  ellipse blob 4,4 20x10 fill=pattern
+  diamond gate 0,0 30x30
+  triangle warn 0,0 30x30 weight=xl
+  circle dot 10,10 4 "o" color=red
+  line path 0,0 10,10 20,0 closed=true stroke=dotted
+  curve wave 0,0 10,10 20,0
+  arc smile 50,50 20 0..180
+  text note 4,4 "A label" w=120 weight=s
+  arrow bound A/box -> B/box#left "extends" head=triangle tail=circle
+  arrow free 10,20 -> 30,40
+  arrow half A/box -> _
+  portal inner 0,0 240x160 "Inner" ref="dxn:echo:@:01XYZ"
+}
+`;
+
+const COMMANDS = `object A @ 0,0 {
+  rect box 0,0 100x50 "A"
+}
+
+elements A {
+  rect extra 0,0 5x5
+}
+
+move A @ 10,20
+
+remove elements A extra
+
+remove object A
+`;
+
+/** Ids the grammar reserves or cannot lex bare; the printer has to quote them back. */
+const AWKWARD_IDS = `object "1st" @ 0,0 {
+  rect "rect" 0,0 10x10 "quote \\" and \\\\ and \\n"
+  rect "has space" 0,0 10x10
+}
+`;
+
+const NEGATIVES = `object neg @ -1.5,-2 scale=0.25 {
+  rect box -10,-20 -30x-40
+  arc back 0,0 5 -90..270
+}
+`;
+
+const roundTrip = (source: string) => printCommands(parse(source).commands);
+
+describe('dsl round trip', () => {
+  for (const [name, source] of Object.entries({ KITCHEN_SINK, COMMANDS, AWKWARD_IDS, NEGATIVES })) {
+    test(`print(parse(x)) === x — ${name}`, ({ expect }) => {
+      expect(parse(source).problems).toEqual([]);
+      expect(roundTrip(source)).toEqual(source);
+    });
+  }
+
+  test('an empty document is empty', ({ expect }) => {
+    expect(roundTrip('')).toEqual('');
+    expect(roundTrip('# just a comment\n')).toEqual('');
+  });
+
+  test('comments parse and are dropped, as documented', ({ expect }) => {
+    const { commands, problems } = parse(`
+      # leading
+      object A @ 0,0 {   # trailing
+        rect box 0,0 10x10
+      }
+    `);
+    expect(problems).toEqual([]);
+    expect(print(toScene(commands))).toEqual('object A @ 0,0 {\n  rect box 0,0 10x10\n}\n');
+  });
+
+  test('whitespace is insignificant', ({ expect }) => {
+    const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
+    const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';
+    expect(roundTrip(dense)).toEqual(roundTrip(loose));
+  });
+});
+
+describe('dsl scene mapping', () => {
+  test('bound arrow ends survive, with ports', ({ expect }) => {
+    const { scene } = parseScene('object e @ 0,0 {\n  arrow a A/box#left -> B/box\n}\n');
+    const [arrow] = scene.objects[0].elements;
+    expect(arrow).toEqual({ kind: 'arrow', id: 'a', from: 'A/box#left', to: 'B/box' });
+  });
+
+  test('an unbound end is absent, not a point', ({ expect }) => {
+    const { scene } = parseScene('object e @ 0,0 {\n  arrow a _ -> 1,2\n}\n');
+    expect(scene.objects[0].elements[0]).toEqual({ kind: 'arrow', id: 'a', end: { x: 1, y: 2 } });
+  });
+
+  test('a portal carries its target', ({ expect }) => {
+    const { scene } = parseScene('object p @ 0,0 {\n  portal win 0,0 10x10 "T" ref="dxn:echo:@:01"\n}\n');
+    expect(scene.objects[0].elements[0]).toEqual({
+      kind: 'portal',
+      id: 'win',
+      x: 0,
+      y: 0,
+      w: 10,
+      h: 10,
+      ref: 'dxn:echo:@:01',
+      text: 'T',
+    });
+  });
+
+  test('omitting @ leaves the object where it is', ({ expect }) => {
+    const { scene } = parseScene('object A {\n  rect box 0,0 10x10\n}\n');
+    expect(scene.objects[0].origin).toBeUndefined();
+  });
+
+  test('commands apply in order', ({ expect }) => {
+    const { scene } = parseScene(COMMANDS);
+    expect(scene.objects).toEqual([]);
+  });
+
+  test('upsert-elements replaces by id and keeps the rest', ({ expect }) => {
+    const { scene } = parseScene(
+      'object A @ 0,0 {\n  rect a 0,0 1x1\n  rect b 0,0 1x1\n}\n\nelements A {\n  rect b 5,5 2x2\n}\n',
+    );
+    expect(scene.objects[0].elements.map((element) => element.id)).toEqual(['a', 'b']);
+    expect(scene.objects[0].elements[1]).toMatchObject({ x: 5, y: 5, w: 2, h: 2 });
+  });
+});
+
+describe('dsl diagnostics', () => {
+  test('an unknown attribute is reported, not fatal', ({ expect }) => {
+    const { commands, problems } = parse('object A @ 0,0 {\n  rect box 0,0 10x10 colour=red\n}\n');
+    expect(problems).toHaveLength(1);
+    expect(problems[0].message).toContain('Unknown attribute "colour"');
+    expect(commands).toHaveLength(1);
+  });
+
+  test('a value outside the schema literals is reported', ({ expect }) => {
+    const { problems } = parse('object A @ 0,0 {\n  rect box 0,0 10x10 color=puce\n}\n');
+    expect(problems).toHaveLength(1);
+    expect(problems[0].message).toContain('"color" takes one of');
+  });
+
+  test('a portal without a ref is reported', ({ expect }) => {
+    const { problems } = parse('object A @ 0,0 {\n  portal p 0,0 10x10\n}\n');
+    expect(problems.map(({ message }) => message)).toContain(
+      'portal "p" needs ref="<dxn>": it is the drawing shown inside the frame.',
+    );
+  });
+
+  test('a syntax error is located', ({ expect }) => {
+    const { problems } = parse('object A @ 0,0 {\n  rect box 0,0\n}\n');
+    expect(problems.length).toBeGreaterThan(0);
+    expect(problems[0].to).toBeGreaterThan(problems[0].from);
+  });
+});
+
+describe('dsl over the reference fixture', () => {
+  test('BASIC survives a mermaid compile, a print, and a reparse', async ({ expect }) => {
+    const commands = await MermaidEngine.compile(BASIC.trim());
+    const upserts = commands.filter((command) => command.op === 'upsert-object');
+    expect(upserts).toHaveLength(commands.length);
+
+    const text = printCommands(commands);
+    const { commands: reparsed, problems } = parse(text);
+    expect(problems).toEqual([]);
+
+    // Text identity: the printed form is canonical, so a second pass changes nothing.
+    expect(printCommands(reparsed)).toEqual(text);
+    // Scene identity: the model survives the text, not merely its formatting.
+    expect(toScene(reparsed)).toEqual(toScene(commands));
+  });
+
+  test('BASIC prints objects a reviewer can read', async ({ expect }) => {
+    const text = printCommands(await MermaidEngine.compile(BASIC.trim()));
+    // The frames, the type boxes, and the one `edges` object holding the routes.
+    expect(text).toMatch(/^object pkgA @ /m);
+    expect(text).toMatch(/^ {2}rect frame 0,0 \d/m);
+    expect(text).toMatch(/^object edges @ /m);
+    expect(text).toMatch(/ -> /);
+  });
+});
+
+describe('dsl scene printing', () => {
+  test('print emits only object statements', ({ expect }) => {
+    const scene: Scene.Scene = {
+      objects: [{ id: 'A', origin: { x: 1, y: 2 }, elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: 3, h: 4 }] }],
+    };
+    expect(print(scene)).toEqual('object A @ 1,2 {\n  rect box 0,0 3x4\n}\n');
+    expect(toScene(parse(print(scene)).commands)).toEqual(scene);
+  });
+});

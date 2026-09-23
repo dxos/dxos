@@ -5,6 +5,7 @@
 export * from './content.ts';
 export * from './dialect.ts';
 export * as Diagnostics from './diagnostics.ts';
+export * as Dsl from './dsl/index.ts';
 export * as Layout from './layout.ts';
 export * as Mermaid from './mermaid.ts';
 export * as MermaidEngine from './mermaid-engine.ts';
