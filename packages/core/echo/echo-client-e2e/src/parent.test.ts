@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Aggregate, Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -169,10 +169,11 @@ describe('Parent Hierarchy', () => {
     }
   });
 
-  test('siblings follow their own parent’s deletion', { timeout: 30_000 }, async () => {
+  test('siblings follow their own parent’s deletion, looking each parent up once', { timeout: 30_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
 
+    let parentIds: string[];
     {
       await using db = await peer.createDatabase(spaceKey);
       const removed = db.add(Obj.make(TestSchema.Person, { name: 'removed' }));
@@ -181,6 +182,7 @@ describe('Parent Hierarchy', () => {
         db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: removed, name: `removed child ${index}` }));
         db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: kept, name: `kept child ${index}` }));
       }
+      parentIds = [removed.id, kept.id];
       db.remove(removed);
       await db.flush();
     }
@@ -191,6 +193,17 @@ describe('Parent Hierarchy', () => {
       await using db = await peer.openLastDatabase();
       const names = (await db.query(Filter.type(TestSchema.Person)).run()).map((person) => person.name).sort();
       expect(names).to.deep.eq(['kept', 'kept child 0', 'kept child 1', 'kept child 2']);
+
+      // A count reads index rows, so the host checks each child's parent against the index.
+      await db.updateIndexes();
+      const lookups = vi.spyOn(peer.host.indexEngine, 'queryObjectIds');
+      const rows = await db
+        .query(Query.select(Filter.everything()).aggregate({ type: Aggregate.type(), count: Aggregate.count() }))
+        .run();
+      expect(rows.find((row) => String(row.type).includes(Type.getTypename(TestSchema.Person)))?.count).to.eq(4);
+      const lookupsOf = (id: string) =>
+        lookups.mock.calls.filter(([{ objectIds }]) => objectIds?.some((objectId) => objectId === id)).length;
+      expect(parentIds.map(lookupsOf)).to.deep.eq([1, 1]);
     }
   });
 });

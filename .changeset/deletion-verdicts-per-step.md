@@ -1,5 +1,5 @@
 ---
-'@dxos/echo': patch
+'@dxos/echo-host': patch
 ---
 
-Queries check each shared parent's deletion once per evaluation instead of once per result: the host's deleted-object filter memoizes each strong dependency's verdict for the step. A query over 200 tasks under one project made 200 index lookups for that project on every re-evaluation.
+Queries load each object's parent and relation endpoints once per evaluation instead of once per result: the host shares loaded dependencies between its deleted-object and unresolvable-dependency filters for the run. A query over 200 tasks under one project made 400 index lookups for that project on every re-evaluation.

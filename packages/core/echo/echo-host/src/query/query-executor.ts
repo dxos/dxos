@@ -629,6 +629,12 @@ export class QueryExecutor extends Resource {
   /** Subquery-resolution traces already attached to a FilterStep's trace this `execQuery` run. */
   #inQueryTracesAttached = new Set<string>();
 
+  /**
+   * Strong dependencies loaded during one `execQuery` run, keyed by how they resolve (see
+   * {@link QueryExecutor._loadDependency}). Siblings share their parents, and each load is a lookup.
+   */
+  #dependencyCache = new Map<string, Promise<QueryItem | null>>();
+
   constructor(options: QueryExecutorOptions) {
     super();
 
@@ -734,6 +740,7 @@ export class QueryExecutor extends Resource {
     // survive across `execQuery` calls.
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
+    this.#dependencyCache = new Map();
 
     const prevResultSet = this._lastResultSet;
     const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
@@ -1305,14 +1312,12 @@ export class QueryExecutor extends Resource {
     const expected = step.mode === 'only-deleted';
 
     const deletedState = workingSet.map((item) => QueryItem.isDeleted(item));
-    // Shared for the step: siblings share their parents, and each check is an index lookup.
-    const verdicts = new Map<string, Promise<boolean>>();
     await Promise.all(
       workingSet.map(async (item, index) => {
         if (deletedState[index]) {
           return;
         }
-        deletedState[index] ||= await this._getTransitiveDeletionState(item, MAX_DEPTH_FOR_DELETION_TRACING, verdicts);
+        deletedState[index] ||= await this._getTransitiveDeletionState(item, MAX_DEPTH_FOR_DELETION_TRACING);
       }),
     );
 
@@ -2239,18 +2244,29 @@ export class QueryExecutor extends Resource {
 
   /**
    * Resolves an object `item` depends on, in the same form as `item`: an item selected from the index
-   * resolves its dependencies from the index too, so checking them loads no documents either.
+   * resolves its dependencies from the index too, so checking them loads no documents either. Each
+   * dependency loads once per `execQuery` run.
    */
-  private async _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
-    if (item.doc || item.data || !item.meta) {
-      return this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId });
+  private _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
+    const fromDocument = Boolean(item.doc || item.data || !item.meta);
+    const key = compositeKey(item.spaceId, dxn, fromDocument ? 'document' : 'index');
+    let loaded = this.#dependencyCache.get(key);
+    if (!loaded) {
+      loaded = fromDocument
+        ? this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId })
+        : this._loadDependencyFromIndex(item.spaceId, dxn);
+      this.#dependencyCache.set(key, loaded);
     }
+    return loaded;
+  }
+
+  private async _loadDependencyFromIndex(sourceSpaceId: SpaceId, dxn: URI.URI): Promise<QueryItem | null> {
     const echoUri = EID.tryParse(dxn);
     const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
     if (!echoUri || !objectId) {
       return null;
     }
-    const spaceId = EID.getSpaceId(echoUri) ?? item.spaceId;
+    const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
     const metas = await this._runInRuntime(
       this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
     );
@@ -2258,16 +2274,7 @@ export class QueryExecutor extends Resource {
     return meta ? QueryItem.fromIndexRow(meta) : null;
   }
 
-  /**
-   * Whether a strong dependency of `item`, transitively, is deleted. `verdicts` memoizes each
-   * dependency's answer, keyed by how it is resolved and the depth left, which is all the answer
-   * depends on.
-   */
-  private async _getTransitiveDeletionState(
-    item: QueryItem,
-    remainingDepth: number,
-    verdicts: Map<string, Promise<boolean>> = new Map(),
-  ): Promise<boolean> {
+  private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
     const strongDeps = [
       QueryItem.getParent(item),
       QueryItem.getRelationSource(item),
@@ -2280,27 +2287,18 @@ export class QueryExecutor extends Resource {
 
     // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
     const strongDepStates = await Promise.all(
-      strongDeps.map((dxn) => {
-        const fromIndex = !(item.doc || item.data || !item.meta);
-        const key = compositeKey(item.spaceId, String(dxn), fromIndex ? 'index' : 'document', String(remainingDepth));
-        let verdict = verdicts.get(key);
-        if (!verdict) {
-          verdict = (async () => {
-            const dep = await this._loadDependency(item, dxn);
-            if (!dep) {
-              return false;
-            }
-            if (QueryItem.isDeleted(dep)) {
-              return true;
-            }
-            if (remainingDepth > 0) {
-              return this._getTransitiveDeletionState(dep, remainingDepth - 1, verdicts);
-            }
-            return false;
-          })();
-          verdicts.set(key, verdict);
+      strongDeps.map(async (dxn) => {
+        const dep = await this._loadDependency(item, dxn);
+        if (!dep) {
+          return false;
         }
-        return verdict;
+        if (QueryItem.isDeleted(dep)) {
+          return true;
+        }
+        if (remainingDepth > 0) {
+          return this._getTransitiveDeletionState(dep, remainingDepth - 1);
+        }
+        return false;
       }),
     );
 
