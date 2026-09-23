@@ -173,12 +173,12 @@ CloseIconButton.displayName = 'SystemIconButton.Close';
 // Clipboard
 //
 
-type ClipboardIconButtonProps = StaticPresetProps & {
-  onCopy: () => string;
-};
+/** Copy a fixed `value`, or text produced on click by `onCopy` when it is costly or changes. */
+type ClipboardIconButtonProps = StaticPresetProps &
+  ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
 
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
-  ({ label, onCopy, classNames, ...props }, forwardedRef) => {
+  ({ label, value, onCopy, classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
 
@@ -187,7 +187,7 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
     // or the permission is refused, and a checkmark shown before that reports a copy that never
     // happened — besides leaving the rejection unhandled.
     const handleCopy = useCallback(() => {
-      const text = onCopy();
+      const text = onCopy ? onCopy() : value;
       if (!text) {
         return;
       }
@@ -200,7 +200,7 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
           timeoutRef.current = setTimeout(() => setCopied(false), 1_000);
         })
         .catch(() => setCopied(false));
-    }, [onCopy]);
+    }, [onCopy, value]);
 
     // The pending reset outlives an unmount otherwise, setting state on a gone component.
     useEffect(() => () => clearTimeout(timeoutRef.current), []);

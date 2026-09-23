@@ -7,17 +7,16 @@ import React from 'react';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useTranslation } from '../../providers/index.ts';
-import { Button, type ButtonProps, IconButton } from '../Button/index.ts';
+import { Button, type ButtonProps } from '../Button/index.ts';
 import { Icon, type IconProps } from '../Icon/index.ts';
-import { useTooltipContext } from '../Tooltip/index.ts';
 import { useClipboard } from './ClipboardContext.ts';
+
+const inactiveLabelStyles = 'invisible h-px -mb-px overflow-hidden';
 
 export type CopyButtonProps = ButtonProps &
   Pick<IconProps, 'size'> & {
     value: string;
   };
-
-const inactiveLabelStyles = 'invisible h-px -mb-px overflow-hidden';
 
 export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
   const { t } = useTranslation(osTranslations);
@@ -39,29 +38,5 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
         <Icon icon='ph--check--regular' size={size} />
       </div>
     </Button>
-  );
-};
-
-type CopyButtonIconOnlyProps = CopyButtonProps & {
-  label?: string;
-};
-
-export const CopyButtonIconOnly = ({ value, classNames, size, variant, ...props }: CopyButtonIconOnlyProps) => {
-  const { t } = useTranslation(osTranslations);
-  const { textValue, setTextValue } = useClipboard();
-  const isCopied = textValue === value;
-  const label = isCopied ? t('copy-success.label') : (props.label ?? t('copy.label'));
-  const { onOpen } = useTooltipContext('CopyButton');
-  return (
-    <IconButton
-      iconOnly
-      label={label!}
-      icon='ph--copy--regular'
-      size={size}
-      variant={variant}
-      classNames={['inline-flex flex-col justify-center', classNames]}
-      onClick={() => setTextValue(value).then(onOpen)}
-      data-testid='copy-invitation'
-    />
   );
 };

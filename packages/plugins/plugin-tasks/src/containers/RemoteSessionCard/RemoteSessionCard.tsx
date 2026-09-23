@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, Clipboard, Icon } from '@dxos/react-ui';
+import { Card, Clipboard, Icon, SystemIconButton } from '@dxos/react-ui';
 import { RemoteSession } from '@dxos/types';
 
 export type RemoteSessionCardProps = AppSurface.ObjectCardProps<RemoteSession.RemoteSession>;
@@ -103,7 +103,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
               the web URL needs the bridge id, which the harness does not put in the hook payload. */}
             <div className='flex items-center gap-1 min-w-0'>
               <code className='text-xs text-subdued select-all truncate'>{resumeCommand(sessionId)}</code>
-              <Clipboard.IconButton variant='ghost' size={4} value={resumeCommand(sessionId)} />
+              <SystemIconButton.Clipboard iconOnly variant='ghost' size={4} value={resumeCommand(sessionId)} />
             </div>
           </Card.Row>
         )}

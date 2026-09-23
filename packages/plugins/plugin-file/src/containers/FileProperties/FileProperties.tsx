@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Clipboard, Field, IconButton, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Field, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { File } from '@dxos/types';
 
@@ -78,7 +78,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
             <Field.Label>{t('properties.reference.label')}</Field.Label>
             <div className='flex w-full gap-1'>
               <Field.Input readOnly value={reference} classNames='grow' />
-              <Clipboard.IconButton value={reference} label={t('properties.reference.copy.label')} />
+              <SystemIconButton.Clipboard iconOnly value={reference} label={t('properties.reference.copy.label')} />
             </div>
           </Field.Root>
         )}
@@ -87,7 +87,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
             <Field.Label>{t('properties.url.label')}</Field.Label>
             <div className='flex w-full gap-1'>
               <Field.Input readOnly value={url} classNames='grow' />
-              <Clipboard.IconButton value={url} label={t('properties.url.copy.label')} />
+              <SystemIconButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
               <IconButton
                 iconOnly
                 icon='ph--arrows-clockwise--regular'

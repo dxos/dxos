@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Clipboard, Field, Flex, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Clipboard, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -56,7 +56,11 @@ const Code = ({ code }: { code: string }) => {
   const words = code.split(' ');
   return (
     <div className='relative p-2 border border-separator rounded-sm group'>
-      <Clipboard.IconButton value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
+      <SystemIconButton.Clipboard
+        iconOnly
+        value={code}
+        classNames='absolute top-2 right-2 invisible group-hover:visible'
+      />
       <div className='grid grid-cols-4'>
         {words.map((word, i) => (
           <Flex key={i} gap='sm' align='center' classNames='p-2'>

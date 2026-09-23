@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Clipboard, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Flex, Icon, IconButton, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -123,7 +123,7 @@ const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvita
       <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
     </Flex>
-    <Clipboard.IconButton value={row.code} />
+    <SystemIconButton.Clipboard iconOnly value={row.code} />
   </Listbox.Item>
 );
 

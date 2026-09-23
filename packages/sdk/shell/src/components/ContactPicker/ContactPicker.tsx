@@ -44,7 +44,7 @@ export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, dis
     <Combobox.Root placeholder={t('contact-picker.placeholder')} displayValue={selectedNames} value={value.join(',')}>
       <Combobox.Trigger disabled={disabled} data-testid='contact-picker.trigger' />
       <Combobox.Content>
-        <Combobox.Input placeholder={t('contact-picker.search')} value={query} onValueChange={setQuery} />
+        <Combobox.Input placeholder={t('contact-picker-search.placeholder')} value={query} onValueChange={setQuery} />
         <Combobox.List>
           {candidates.map((contact) => {
             const key = contactKeyHex(contact);
@@ -61,7 +61,7 @@ export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, dis
             );
           })}
         </Combobox.List>
-        {candidates.length === 0 && <Combobox.Empty>{t('contact-picker.empty')}</Combobox.Empty>}
+        {candidates.length === 0 && <Combobox.Empty>{t('contact-picker-empty.message')}</Combobox.Empty>}
       </Combobox.Content>
     </Combobox.Root>
   );

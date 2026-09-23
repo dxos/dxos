@@ -11,17 +11,7 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import {
-  Avatar,
-  type AvatarContentProps,
-  Button,
-  Clipboard,
-  IconButton,
-  type ThemedClassName,
-  Tooltip,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Avatar, type AvatarContentProps, Button, IconButton, SystemIconButton, type ThemedClassName, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -183,7 +173,7 @@ export const InvitationListItemImpl = ({
               <span>{t('open-share-panel.label')}</span>
             </Button>
           </Tooltip.Trigger>
-          <Clipboard.IconButton variant='ghost' value={invitationUrl} />
+          <SystemIconButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />

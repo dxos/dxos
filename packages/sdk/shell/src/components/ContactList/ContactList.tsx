@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, Clipboard, Tag, ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, SystemIconButton, Tag, ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
@@ -54,24 +54,22 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
   }
 
   return (
-    <Clipboard.Provider>
-      <Listbox.Root>
-        <Listbox.Content
-          classNames={[classNames, 'flex flex-col gap-2']}
-          aria-label={t('contacts.label')}
-          data-testid='contact-list'
-        >
-          {visible.map((contact) => (
-            <ContactListItem
-              key={contactKeyHex(contact)}
-              contact={contact}
-              spaces={spaces}
-              onSelectSpace={onSelectSpace}
-            />
-          ))}
-        </Listbox.Content>
-      </Listbox.Root>
-    </Clipboard.Provider>
+    <Listbox.Root>
+      <Listbox.Content
+        classNames={[classNames, 'flex flex-col gap-2']}
+        aria-label={t('contacts.label')}
+        data-testid='contact-list'
+      >
+        {visible.map((contact) => (
+          <ContactListItem
+            key={contactKeyHex(contact)}
+            contact={contact}
+            spaces={spaces}
+            onSelectSpace={onSelectSpace}
+          />
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 
@@ -106,7 +104,13 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
               <span className='font-mono truncate' title={identityKey.toHex()}>
                 {identityKey.truncate()}
               </span>
-              <Clipboard.IconButton variant='ghost' size={4} value={identityKey.toHex()} label={t('copy-key.label')} />
+              <SystemIconButton.Clipboard
+                iconOnly
+                variant='ghost'
+                size={4}
+                value={identityKey.toHex()}
+                label={t('copy-key.label')}
+              />
             </span>
             {common.length > 0 && (
               <span className='flex flex-wrap gap-1'>

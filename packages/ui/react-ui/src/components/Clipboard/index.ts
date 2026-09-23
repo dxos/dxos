@@ -3,11 +3,10 @@
 //
 
 import { ClipboardProvider } from './ClipboardProvider.tsx';
-import { CopyButton, CopyButtonIconOnly } from './CopyButton.tsx';
+import { CopyButton } from './CopyButton.tsx';
 
 export const Clipboard = {
   Button: CopyButton,
-  IconButton: CopyButtonIconOnly,
   Provider: ClipboardProvider,
 };
 
