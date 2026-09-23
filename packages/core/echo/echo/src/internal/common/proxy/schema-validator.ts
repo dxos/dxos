@@ -12,6 +12,21 @@ import { SchemaId } from '../types/index.ts';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
+const schemas = new WeakMap<SchemaAST.AST, Schema.Top>();
+
+/**
+ * One schema per AST node. `Schema.make` builds a new schema, closures included, on every call, and
+ * the typed handler stamps a property's schema on every nested object it wraps.
+ */
+const schemaOf = (ast: SchemaAST.AST): Schema.Top => {
+  let schema = schemas.get(ast);
+  if (!schema) {
+    schema = Schema.make<Schema.Top>(ast);
+    schemas.set(ast, schema);
+  }
+  return schema;
+};
+
 /** Formats v4 schema issues; the thrown validation error carries the issue as its `cause`. */
 const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
 
@@ -44,7 +59,7 @@ export class SchemaValidator {
    * Validates there are no ambiguous discriminated union types.
    */
   public static validateSchema(schema: Schema.Top): void {
-    const visitAll = (nodes: SchemaAST.AST[]) => nodes.forEach((node) => this.validateSchema(Schema.make(node)));
+    const visitAll = (nodes: SchemaAST.AST[]) => nodes.forEach((node) => this.validateSchema(schemaOf(node)));
     if (SchemaAST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => SchemaAST.isObjects(type)) as SchemaAST.Objects[];
       // Check we can handle a discriminated union.
@@ -91,14 +106,14 @@ export class SchemaValidator {
         if (propertyType == null) {
           const indexSignatureType = getIndexSignatureValueType(schema.ast);
           if (indexSignatureType != null) {
-            schema = Schema.make<Schema.Top>(indexSignatureType);
+            schema = schemaOf(indexSignatureType);
             continue;
           }
 
           throw new TypeError(`Unknown property: ${formatPropertyPath([...propertyPath.slice(0, i), propertyName])}`);
         }
 
-        schema = Schema.make<Schema.Top>(propertyType);
+        schema = schemaOf(propertyType);
       }
     }
 
@@ -134,14 +149,14 @@ export class SchemaValidator {
           throw new TypeError(`Unknown property: ${formatPropertyPath(propertyPath)}`);
         }
 
-        const indexSchema = Schema.make<Schema.Top>(indexSignatureType);
+        const indexSchema = schemaOf(indexSignatureType);
         this.assertExactProperties(indexSchema, value[key], getProperty, propertyPath);
         continue;
       }
 
       const propertySignature = propertySignatures.find((property) => String(property.name) === key);
       invariant(propertySignature, 'Property signature must exist.');
-      const propertySchema = Schema.make<Schema.Top>(propertySignature.type);
+      const propertySchema = schemaOf(propertySignature.type);
       this.assertExactProperties(propertySchema, value[key], getProperty, propertyPath);
     }
   }
@@ -221,13 +236,13 @@ export class SchemaValidator {
     if (propertyType == null) {
       const indexSignatureType = getIndexSignatureValueType(schema.ast);
       if (indexSignatureType != null) {
-        return Schema.make<Schema.Top>(indexSignatureType);
+        return schemaOf(indexSignatureType);
       }
 
       throw new TypeError(`Unknown property: ${String(prop)}`);
     }
 
-    return Schema.make<Schema.Top>(propertyType);
+    return schemaOf(propertyType);
   }
 }
 
@@ -244,10 +259,10 @@ const getArrayElementSchema = (tupleAst: SchemaAST.Arrays, property: string | sy
     return Schema.Number;
   }
   if (elementIndex < tupleAst.elements.length) {
-    return Schema.make<Schema.Top>(tupleAst.elements[elementIndex]);
+    return schemaOf(tupleAst.elements[elementIndex]);
   }
 
-  return Schema.make<Schema.Top>(tupleAst.rest[0]);
+  return schemaOf(tupleAst.rest[0]);
 };
 
 const flattenUnion = (typeAst: SchemaAST.AST): SchemaAST.AST[] =>

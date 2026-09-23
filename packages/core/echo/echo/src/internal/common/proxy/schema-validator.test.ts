@@ -81,6 +81,13 @@ describe('schema-validator', () => {
       }
     });
 
+    test('resolves a property to one schema however often it is asked', () => {
+      const schema = Schema.Struct({ object: Schema.Struct({ field: Schema.Number }) });
+      expect(SchemaValidator.getPropertySchema(schema, ['object'])).toBe(
+        SchemaValidator.getPropertySchema(schema, ['object']),
+      );
+    });
+
     test('preserves annotations', () => {
       const annotationId = 'test.annotation.foo';
       const annotationValue = 'bar';
