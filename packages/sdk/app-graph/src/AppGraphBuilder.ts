@@ -308,6 +308,8 @@ const makeStore = (
     onExpand: (id, relation) => hooks.onExpand(id, Graph.relationKey(relation)),
     onRemoveNode: hooks.onRemoveNode,
   });
+  // Connectors read node atoms between writes, so the builder keeps them pinned for its lifetime.
+  const release = Graph.retain(graph);
 
   return {
     graph,
@@ -325,6 +327,7 @@ const makeStore = (
         ._model.outgoing(id)
         .map(({ source, target, type }) => ({ source, target, relation: type })),
     constructNode: (node) => graph._constructNode(node),
+    dispose: release,
   };
 };
 

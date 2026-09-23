@@ -243,14 +243,17 @@ const writeHeapSnapshot = async (target: Attached, file: string): Promise<boolea
 };
 
 /**
- * A file stem for a realm, unique within one directory: two dedicated workers running one bundle
- * share a name, and sanitizing can map distinct names onto one stem.
+ * A file stem for a realm, unique among the stems already in `used`: two dedicated workers running one
+ * bundle share a name, and sanitizing can map distinct names onto one stem.
  */
-export const uniqueStem = (name: string, used: Map<string, number>): string => {
-  const stem = name.replace(/[^\w.-]/g, '_');
-  const count = used.get(stem) ?? 0;
-  used.set(stem, count + 1);
-  return count > 0 ? `${stem}-${count}` : stem;
+export const uniqueStem = (name: string, used: Set<string>): string => {
+  const stem = name.replace(/[^\w.-]/g, '_') || 'realm';
+  let candidate = stem;
+  for (let count = 1; used.has(candidate); count++) {
+    candidate = `${stem}-${count}`;
+  }
+  used.add(candidate);
+  return candidate;
 };
 
 export type RealmSnapshot = { name: string; kind: TargetKind; file?: string; bytes?: number };
@@ -315,7 +318,7 @@ export const takeMemorySnapshot = async ({
   }
 
   const realms: RealmSnapshot[] = [];
-  const used = new Map<string, number>();
+  const used = new Set<string>();
   for (const target of targets) {
     const file = path.join(dir, `${uniqueStem(target.name, used)}.heapsnapshot`);
     if (await writeHeapSnapshot(target, file)) {

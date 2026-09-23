@@ -4,9 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseDetailedDump } from './snapshot.ts';
-
-const size = (bytes: number) => ({ effective_size: { value: bytes.toString(16) } });
+import { parseDetailedDump, uniqueStem } from './snapshot.ts';
 
 describe('parseDetailedDump', () => {
   test('subtracts cross-tree ownership views and shared-backed nodes from the private sum', ({ expect }) => {
@@ -49,3 +47,13 @@ describe('parseDetailedDump', () => {
     expect(process.unattributedBytes).toBe(40);
   });
 });
+
+describe('uniqueStem', () => {
+  test('never returns a stem already used, whatever the names', ({ expect }) => {
+    const used = new Set<string>();
+    const stems = ['worker', 'worker', 'worker-1', 'worker/a', 'worker_a', ''].map((name) => uniqueStem(name, used));
+    expect(stems).toEqual(['worker', 'worker-1', 'worker-1-1', 'worker_a', 'worker_a-1', 'realm']);
+  });
+});
+
+const size = (bytes: number) => ({ effective_size: { value: bytes.toString(16) } });
