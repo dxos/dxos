@@ -17,6 +17,9 @@ implementation: `IdentityContract.ManagerService`, `SpacesContract.ManagerServic
 alongside them. Each contract owns the interfaces its tags are typed against, so depending on a
 service no longer means depending on the class that implements it.
 
+The whole space subsystem is one namespace: `Spaces` now covers the transport-level space and its
+manager, the data spaces above it, and the archive format — there is no `Space` or `SpaceExport`.
+
 Two namespaces could not take their obvious name: `Worker` collides with
 `@dxos/worker-framework/Worker`, so the runtime is `WorkerRuntime`; `Platform` collides with the
 `Platform` message type from `@dxos/protocols`, so the probe is `PlatformInfo`.

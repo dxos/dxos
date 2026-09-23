@@ -124,7 +124,7 @@ tier 3  aggregation   ServiceStack          (layer-specs, client-services-stack)
 tier 2  domain        Identity  Spaces  Space  Invitations  Devtools  Agents
                       Devices   System  Diagnostics  Logging  Network
                          │
-tier 1  support       Metadata  Pipeline  SpaceExport  Storage  Replication  Auth
+tier 1  support       Metadata  Pipeline  Storage  Replication  Auth
                          │
 tier 0  kernel        Tags  Events  StackReadiness  SqliteStorage  Platform  Migrations
 ```

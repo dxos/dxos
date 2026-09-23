@@ -28,12 +28,12 @@ src/
   PlatformInfo.ts                                                      (tier 0)
   migrations/              -- SQL assets, so a directory                (tier 0)
 
-  Metadata.ts  Pipeline.ts  SpaceExport.ts  Storage.ts                 (tier 1)
+  Metadata.ts  Pipeline.ts  Storage.ts                                 (tier 1)
   Replication.ts           -- EdgeFeedReplicator, credentials document (tier 1)
   Auth.ts                  -- createAuthProvider, TrustedKeySet…       (tier 1)
   Identity.ts              -- the Identity aggregate only              (tier 1)
 
-  IdentityManager.ts  Space.ts  Spaces.ts  Invitations.ts              (tier 2)
+  IdentityManager.ts  Spaces.ts  Invitations.ts                        (tier 2)
   Devices.ts  Devtools.ts  Diagnostics.ts  Agents.ts
   Logging.ts  Network.ts  System.ts
 
@@ -145,7 +145,8 @@ pattern.
 
 | namespace                                                                                                             | internal module                                            |
 | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `Agents` `Devtools` `Diagnostics` `Invitations` `Metadata` `Space` `SpaceExport` `Spaces` `Storage` `System` `Worker` | the packlet of the same name                               |
+| `Agents` `Devtools` `Diagnostics` `Invitations` `Metadata` `Storage` `System` `Worker`                                | the packlet of the same name                               |
+| `Spaces`                                                                                                              | `internal/space/`, `internal/spaces/` and `internal/space-export/` together |
 | `IdentityManager`                                                                                                     | `internal/identity/` (`Identity` is the aggregate, tier 1) |
 | `ServiceStack`                                                                                                        | `internal/services/`                                       |
 | `Auth` `CredentialsDocument` `Events` `Identity` `PlatformInfo` `Readiness` `Replication` `SqliteStorage` `Tags`      | already top-level from stages 1–3                          |

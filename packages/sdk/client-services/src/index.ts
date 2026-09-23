@@ -21,8 +21,6 @@ export * as PlatformInfo from './PlatformInfo.ts';
 export * as Readiness from './Readiness.ts';
 export * as Replication from './Replication.ts';
 export * as ServiceStack from './ServiceStack.ts';
-export * as Space from './Space.ts';
-export * as SpaceExport from './SpaceExport.ts';
 export * as Spaces from './Spaces.ts';
 export * as SqliteStorage from './SqliteStorage.ts';
 export * as Storage from './Storage.ts';
