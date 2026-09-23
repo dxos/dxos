@@ -274,12 +274,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-        const parentNode = Option.getOrUndefined(get(appGraph.graph.node(parentId)));
-        const parentCollection =
-          parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
-        const container = AppNode.getContainer(parentNode);
-        const linkedFrom =
-          container && ContainerModel.isLink(container, get(Obj.parentAtom(object))) ? container : undefined;
+        const container = AppNode.getContainer(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
         return Effect.succeed(
           constructObjectActions({
@@ -288,8 +283,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             deletable,
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
-            parentCollection,
-            linkedFrom,
+            container,
+            parent: container ? get(Obj.parentAtom(object)) : undefined,
           }),
         );
       },
@@ -339,21 +334,24 @@ const constructObjectActions = ({
   deletable = true,
   navigable = false,
   shareableLinkOrigin,
-  parentCollection,
-  linkedFrom,
+  container,
+  parent,
 }: {
   object: Obj.Unknown;
   nodeId: string;
   shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
-  parentCollection?: Collection.Collection;
-  linkedFrom?: ContainerModel.Container;
+  container?: ContainerModel.Container;
+  parent?: Obj.Unknown;
 }) => {
   const db = Obj.getDatabase(object);
   invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
+  const linkedFrom = container && ContainerModel.isLink(container, parent) ? container : undefined;
+  const parentCollection =
+    container && Obj.instanceOf(Collection.Collection, container.object) ? container.object : undefined;
 
   const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
