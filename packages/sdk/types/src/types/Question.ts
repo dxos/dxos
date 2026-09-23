@@ -11,20 +11,15 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as Task from './Task.ts';
 
-/**
- * One pre-baked answer an asker offers. `title` is the key — it is what a reader clicks and what
- * lands in {@link Question.selectedAnswer} — so an option carries no id of its own: a question with
- * two options reading the same is a badly written question, not a shape to model around.
- */
-export const AnswerOption = Schema.Struct({
-  title: Schema.String.annotate({ title: 'Title' }),
-  /** Expanded rationale, shown under the option. */
-  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
-}).annotate({ title: 'Answer Option' });
+/** @deprecated Use {@link Task.AnswerOption}. */
+export const AnswerOption = Task.AnswerOption;
 export type AnswerOption = Schema.Schema.Type<typeof AnswerOption>;
 
 /**
  * A question an agent put to a person, attached to the task it blocks.
+ *
+ * @deprecated Questions are now {@link Task.QuestionEntry} / {@link Task.AnswerEntry} items in the
+ * task's `history`; this type is removed once callers move over.
  *
  * An object rather than a message because it outlives the turn that asked it: the task points at it
  * as an artifact, and the agent that resumes reads the answer back off it.
