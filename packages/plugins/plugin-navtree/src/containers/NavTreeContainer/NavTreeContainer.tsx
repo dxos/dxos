@@ -47,7 +47,6 @@ const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, dispo
   );
 };
 
-/** Resolves a drop: a reorder among siblings rearranges, anything else lands in the target or its parent. */
 const resolveDrop = (
   graph: AppGraph.ReadableGraph,
   { source, target, instruction }: { source: TreeData; target: TreeData; instruction: Instruction },
@@ -271,11 +270,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
                 void sourceNode.properties.onRearrange?.(nextItems);
                 break;
               }
-              case 'transfer': {
-                if (destination) {
-                  void destination.properties.onTransferStart?.(sourceNode, migrationIndex);
-                  void sourceParent?.properties.onTransferEnd?.(sourceNode, destination);
-                }
+              case 'move': {
+                void destination?.properties.onMove?.(sourceNode, sourceParent, migrationIndex);
                 break;
               }
               case 'link': {

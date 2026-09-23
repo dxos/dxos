@@ -225,11 +225,11 @@ feat F-4: Drag and Drop
     when: drop instruction is rearrange
     then: onRearrange callback on the parent node is called with the new order
   req F-4.4:
-    when: drop instruction is copy
-    then: onCopy callback on the target node is called
+    when: the source's parent and the target share a move scope
+    then: onMove callback on the target is called with the source's parent
   req F-4.5:
-    when: drop instruction is transfer
-    then: onTransferStart and onTransferEnd callbacks are called on source and target parents
+    when: the drop crosses a move scope and the target accepts links
+    then: onLink callback on the target is called and the source's parent is left alone
   req F-4.6:
     when: target node reports blockInstruction for an instruction type
     then: that instruction is blocked and the drop is not applied

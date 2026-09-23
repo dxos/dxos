@@ -77,8 +77,8 @@ export const isSectionObjectsExtension = (extensionId: string, typename: string)
   return id === objectsId || id.endsWith(`.${objectsId}`);
 };
 
-export const createTypeSectionExtension = (
-  type: Type.AnyEntity,
+export const createTypeSectionExtension = <T extends Type.AnyObj>(
+  type: T,
   options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
@@ -120,7 +120,7 @@ export const createTypeSectionExtension = (
      * The list each section object stands for; an object dropped onto its row joins that list. Without
      * it a section object only accepts objects of its own type, as reorders.
      */
-    container?: (object: Obj.Unknown) => ContainerModel.Container;
+    container?: (object: Type.InstanceType<T>) => ContainerModel.Container;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -146,8 +146,8 @@ export const createTypeSectionExtension = (
   const sectionSegments = [...groupSegments, sectionSegment];
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
-  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
-    const objects = get(space.db.query(query).atom) as Obj.Unknown[];
+  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Type.InstanceType<T>[] => {
+    const objects = get(space.db.query(query).atom) as Type.InstanceType<T>[];
     if (objects.length === 0) {
       return [];
     }
@@ -161,17 +161,21 @@ export const createTypeSectionExtension = (
       .filter((id): id is string => id !== undefined);
     // Objects not in the stored order follow in query order.
     return inferObjectOrder(
-      Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
+      Object.fromEntries(objects.map((object): [string, Type.InstanceType<T>] => [object.id, object])),
       order,
     );
   };
 
   const { container } = options;
-  // Same-type objects reorder between rows; anything else joins a row's list by dropping onto it.
-  const blockListInstruction = (source: TreeData, instruction: AppNode.Instruction) =>
-    canDropSameType(source) ? instruction.type === 'make-child' : instruction.type !== 'make-child';
+  const isJoin = (instruction: AppNode.Instruction) => instruction.type === 'make-child';
+  const blocksSameTypeJoin = (source: TreeData, instruction: AppNode.Instruction) =>
+    canDropSameType(source) && isJoin(instruction);
+  const blocksOtherReorder = (source: TreeData, instruction: AppNode.Instruction) =>
+    !canDropSameType(source) && !isJoin(instruction);
+  const blockInstruction = (source: TreeData, instruction: AppNode.Instruction) =>
+    blocksSameTypeJoin(source, instruction) || blocksOtherReorder(source, instruction);
 
-  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
+  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) => {
     const onRearrange = makeSectionRearrangeCallback(space, typename);
     return orderedObjects
       .map((object) =>
@@ -181,7 +185,7 @@ export const createTypeSectionExtension = (
           object,
           onRearrange,
           ...(container
-            ? { container: container(object), canDrop: AppNode.CAN_DROP_OBJECT, blockInstruction: blockListInstruction }
+            ? { container: container(object), canDrop: AppNode.CAN_DROP_OBJECT, blockInstruction }
             : { canDrop: canDropSameType }),
         }),
       )

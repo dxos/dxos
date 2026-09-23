@@ -15,10 +15,13 @@ export type NavTreeItemGraphNode = AppGraphNode.Node<
       acceptPersistenceClass: Set<string>;
       acceptPersistenceKey: Set<string>;
       onRearrange: (nextOrder: unknown[]) => MaybePromise<void>;
-      onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
-      onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
       /** Parents sharing a scope move items between them; a drop from outside it links instead. */
-      transferScope: string;
+      moveScope: string;
+      onMove: (
+        activeNode: NavTreeItemGraphNode,
+        sourceParent: NavTreeItemGraphNode | undefined,
+        index?: number,
+      ) => MaybePromise<void>;
       onLink: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
     }
   >

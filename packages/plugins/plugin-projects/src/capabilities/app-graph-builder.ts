@@ -42,8 +42,7 @@ export default Capability.makeModule(
       urlKey: 'project',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
-      // The section only lists projects.
-      container: (project) => artifacts(project as Project.Project),
+      container: artifacts,
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -256,7 +255,6 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
-/** A project's artifacts, as a container. */
 export const artifacts = (project: Project.Project): ContainerModel.Container =>
   ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
 
@@ -348,9 +346,7 @@ export const createProjectArtifactsActionExtension = () =>
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       const container = artifacts(project);
       const onRearrange = AppNode.makeRearrangeCallback(container);
-      // Artifacts only reorder among themselves; other objects link by dropping onto the project row.
-      const canDrop = ({ item }: { item: any }) =>
-        Obj.isObject(item?.data) && ContainerModel.includes(container, item.data);
+      const canDrop = AppNode.canDropMemberOf(container);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true, onRearrange, canDrop }))

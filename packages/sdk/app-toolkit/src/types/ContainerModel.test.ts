@@ -89,7 +89,6 @@ describe('add', () => {
   });
 });
 
-/** A type collections accept. */
 const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
   Schema.Struct({ name: Schema.String }).pipe(CollectionItemAnnotation.set(true)),
 );

@@ -85,11 +85,12 @@ describe('collection partials: transfer', () => {
   });
 
   const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
-    const node = { data: doc } as any;
-    AppNode.buildCollectionPartials(to, db).onTransferStart(node);
-    AppNode.buildCollectionPartials(from, db).onTransferEnd(node, {
-      properties: AppNode.buildCollectionPartials(to, db),
-    } as any);
+    AppNode.buildCollectionPartials(to, db).onMove(
+      { data: doc } as any,
+      {
+        properties: AppNode.buildCollectionPartials(from, db),
+      } as any,
+    );
   };
 
   test('dragging between collections re-parents the object', async ({ expect }) => {

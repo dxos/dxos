@@ -46,7 +46,6 @@ const refs = (container: Container): Ref.Ref<Obj.Unknown>[] => {
   return value;
 };
 
-/** The entity a ref names, whether it is addressed locally or space-qualified. */
 const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
   const eid = EID.tryParse(ref.uri);
   return eid ? EID.getEntityId(eid) : undefined;
@@ -120,10 +119,6 @@ export const move = ({
   }
 };
 
-//
-// Collections.
-//
-
 type AddProps = {
   object: Obj.Unknown;
   /** The object's parent; absent, the object files at the space root. */
@@ -158,7 +153,6 @@ export const isCollectionItem = (object: Obj.Unknown): boolean => {
   return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
 };
 
-/** Collections move children among themselves; a drop from anywhere else links. */
 const MOVE_SCOPE = 'collection';
 
 /** A collection's list of objects. */

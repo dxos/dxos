@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -74,6 +75,12 @@ const isTypeAvailable = (typenames: ReadonlySet<string>, object: Obj.Unknown): b
   const typename = Obj.getTypename(object);
   // No typename at all is not an unavailable type — leave those to the renderers.
   return !typename || typenames.has(typename);
+};
+
+const liveParentOf = (get: Atom.AtomContext, object: Obj.Unknown): Obj.Unknown | undefined => {
+  const db = Obj.getDatabase(object);
+  const [parent] = db ? get(db.query(Query.select(Filter.id(object.id)).parent()).atom) : [];
+  return Obj.isObject(parent) ? parent : undefined;
 };
 
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
@@ -284,11 +291,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const parentCollection =
           parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
         const container = AppNode.getContainer(parentNode);
-        // A query, so the actions follow the parent once it loads rather than keeping a first empty read.
-        const db = Obj.getDatabase(object);
-        const [parent] =
-          container && db ? get(db.query(Query.select(Filter.id(object.id)).parent()).atom) : [undefined];
-        const linkedFrom = container && ContainerModel.isLink(container, parent) ? container : undefined;
+        const linkedFrom = container && ContainerModel.isLink(container, liveParentOf(get, object)) ? container : undefined;
 
         return Effect.succeed(
           constructObjectActions({
@@ -357,7 +360,6 @@ const constructObjectActions = ({
   deletable?: boolean;
   navigable?: boolean;
   parentCollection?: Collection.Collection;
-  /** The container listing the object without owning it. */
   linkedFrom?: ContainerModel.Container;
 }) => {
   const db = Obj.getDatabase(object);

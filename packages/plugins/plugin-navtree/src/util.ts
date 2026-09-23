@@ -19,13 +19,8 @@ export const getParent = (
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
-export type DropOperation = 'transfer' | 'link' | 'reject';
+export type DropOperation = 'move' | 'link' | 'reject';
 
-/**
- * What dropping `source` into `destination` does. A move (`transfer`) stays inside one transfer scope,
- * where the source's parent and the destination can keep each other consistent; a drop that crosses
- * scopes links, so the source keeps the item.
- */
 export const resolveDropOperation = ({
   source,
   sourceParent,
@@ -47,9 +42,9 @@ export const resolveDropOperation = ({
     return 'reject';
   }
 
-  const scope = destination.properties.transferScope;
-  if (scope && sourceParent?.properties.transferScope === scope && destination.properties.onTransferStart) {
-    return 'transfer';
+  const scope = destination.properties.moveScope;
+  if (scope && sourceParent?.properties.moveScope === scope && destination.properties.onMove) {
+    return 'move';
   }
   return destination.properties.onLink ? 'link' : 'reject';
 };

@@ -92,6 +92,14 @@ export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
   Obj.isObject(source.item.data) &&
   ContainerModel.isCollectionItem(source.item.data);
 
+/** Accepts only objects the container already lists, so its rows can reorder but not take new members. */
+export const canDropMemberOf =
+  (container: ContainerModel.Container) =>
+  (source: TreeData): boolean =>
+    AppGraphNode.isGraphNode(source.item) &&
+    Obj.isObject(source.item.data) &&
+    ContainerModel.includes(container, source.item.data);
+
 //
 // Module-level caches.
 //
@@ -110,36 +118,26 @@ export const makeRearrangeCallback = createFactory(
   containerKey,
 );
 
-//
-// Containers.
-//
-
 /** Node property on a branch whose children are a container's list. */
 export const CONTAINER_PROPERTY = 'container';
 
 export const getContainer = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
   node?.properties[CONTAINER_PROPERTY];
 
-/** Drop handling for a node showing a container's list: a drop from its move scope moves, any other links. */
-const buildContainerPartials = (container: ContainerModel.Container, db: Database.Database) => {
-  const link = (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
-    ContainerModel.link({ container, object: child.data, index });
-
-  return {
-    acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-    acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
-    transferScope: container.moveScope,
-    onTransferStart: link,
-    onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) => {
-      const to = getContainer(destination);
-      if (to) {
-        ContainerModel.move({ object: child.data, from: container, to });
-      }
-    },
-    onLink: link,
-    [CONTAINER_PROPERTY]: container,
-  };
-};
+const buildContainerPartials = (container: ContainerModel.Container, db: Database.Database) => ({
+  acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+  acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+  moveScope: container.moveScope,
+  onMove: (child: AppGraphNode.Node<Obj.Unknown>, sourceParent: AppGraphNode.Node | undefined, index?: number) => {
+    const from = getContainer(sourceParent);
+    if (from) {
+      ContainerModel.move({ object: child.data, from, to: container, index });
+    }
+  },
+  onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+    ContainerModel.link({ container, object: child.data, index }),
+  [CONTAINER_PROPERTY]: container,
+});
 
 export const getContainerPartials = (container: ContainerModel.Container, db: Database.Database) => {
   const key = containerKey(container);
