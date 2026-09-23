@@ -266,6 +266,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
             const insertIndex = instruction.type === 'reorder-below' ? targetIndex + 1 : targetIndex;
             const migrationIndex = instruction.type === 'make-child' ? undefined : insertIndex;
+            AppGraphBuilder.expedite(builder);
             switch (operation) {
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
@@ -285,7 +286,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
                 break;
               }
             }
-            AppGraphBuilder.flushSync(builder);
           }
         },
       });

@@ -346,9 +346,9 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 export {
   addExtension,
   destroy,
+  expedite,
   explore,
   flush,
-  flushSync,
   release,
   removeExtension,
   setRetention,

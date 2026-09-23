@@ -247,6 +247,8 @@ export class GraphBuilder<
   readonly _connectorPreviousArgs = new Map<string, Arg[]>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
+  /** Set by {@link expedite} until the current task ends. */
+  _expedited = false;
   _retentions: readonly Retention.Retention[] = [];
   _unsubscribeRetention?: CleanupFn;
   _collectedAskKey?: string;
@@ -339,6 +341,10 @@ export class GraphBuilder<
   }
 
   _scheduleDirtyFlush(): void {
+    if (this._expedited) {
+      void Promise.resolve().then(() => this._flushDirtyConnectors());
+      return;
+    }
     if (!this._flushScheduled) {
       this._flushScheduled = true;
       this._flushPromise = this._schedule(() => {
@@ -757,8 +763,16 @@ export const flush = async (builder: Any): Promise<void> => {
   await builder._collectPromise;
 };
 
-/** Applies pending connector updates now, so a change the user just made renders in the same frame. */
-export const flushSync = (builder: Any): void => builder._flushDirtyConnectors();
+/**
+ * Until the current task ends, connector updates flush on a microtask rather than through the scheduler,
+ * so a change the user just made reaches the graph before the next paint.
+ */
+export const expedite = (builder: Any): void => {
+  builder._expedited = true;
+  setTimeout(() => {
+    builder._expedited = false;
+  });
+};
 
 /**
  * Unloads the nodes and everything the builder remembers about them: expansion subscriptions and the
