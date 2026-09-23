@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: the mailbox label-filter fix is unrelated to the AiService DecisionModel migration
 '@dxos/echo-query': patch
 '@dxos/plugin-inbox': patch
 ---
