@@ -128,6 +128,9 @@ export type AnswerOption = Schema.Schema.Type<typeof AnswerOption>;
 const makeChangeEntry = <E extends 'created' | 'updated'>(event: E) =>
   Schema.Struct({
     ...HistoryEntryBase,
+    // Optional here only: change entries were logged before entries carried ids, and a required id
+    // would fail every task holding one. Nothing refers to a change entry by id.
+    id: Schema.optional(HistoryEntryBase.id),
     event: Schema.Literal(event).annotate({ title: 'Event' }),
     description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
   }).annotate({ title: event === 'created' ? 'Created Entry' : 'Updated Entry' });

@@ -404,6 +404,26 @@ const seedTree = () =>
     return { root, child, grandchild, sibling };
   });
 
+describe('legacy history', () => {
+  it.effect('loads change entries logged before entries carried ids', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({
+          title: 'Draft launch email',
+          history: [{ date: '2026-08-01T09:00:00.000Z', event: 'created', description: 'Task created.' }],
+        }),
+      );
+      yield* Database.flush();
+
+      Task.setStatus(task, 'started');
+      yield* Database.flush();
+
+      expect(changes(task).map(({ event }) => event)).toEqual(['created', 'updated']);
+      expect(changes(task)[0].id).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('questions', () => {
   it.effect('pairs an answer with the question it names', () =>
     Effect.gen(function* () {
