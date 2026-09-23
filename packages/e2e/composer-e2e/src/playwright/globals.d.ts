@@ -40,6 +40,16 @@ declare global {
 
   /** The client/ECHO debug hook, mounted at the end of `client.initialize()`. */
   var dxos: { spaces?: () => DebugSpace[] } | undefined;
+
+  /**
+   * The extension APIs, narrowed to what the extension spec drives from an extension page. Declared
+   * here rather than via `@types/chrome`: three members do not earn a dependency.
+   */
+  var chrome: {
+    storage: { sync: { set: (items: Record<string, unknown>) => Promise<void> } };
+    tabs: { query: (query: { url: string }) => Promise<Array<{ id?: number }>> };
+    runtime: { sendMessage: (message: unknown) => Promise<unknown> };
+  };
 }
 
 export {};
