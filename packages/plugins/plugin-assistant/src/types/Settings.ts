@@ -71,7 +71,7 @@ export const Settings = Schema.Struct({
     Schema.Boolean.annotate({
       title: 'Code mode (experimental)',
       description:
-        'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs with access to your workspace data, so enable it only for trusted content. Applies to agents started after the change.',
+        'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin, so enable it only for trusted content. Applies to agents started after the change.',
     }),
   ),
   tracePanelDebug: Schema.optional(
