@@ -180,7 +180,11 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
         // An empty rail still paints a border and still insets the prose by its width.
         this.#rail.toggleAttribute('data-empty', entries.length === 0);
         this.#rows = [];
+        const collapsed = (options.variant ?? 'full') === 'stats';
         for (const entry of entries) {
+          // A section whose one file row repeats its totals shows them once, on the file; the
+          // collapsed rail has no file rows, so there it keeps them.
+          const ownCounts = collapsed || entry.files.length !== 1;
           this.#rows.push({
             from: entry.from,
             element: this.#addRow({
@@ -188,9 +192,9 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
               level: entry.level,
               from: entry.from,
               text: entry.title,
-              added: entry.added,
-              removed: entry.removed,
-              label: entryLabel(entry),
+              added: ownCounts ? entry.added : 0,
+              removed: ownCounts ? entry.removed : 0,
+              label: entryLabel(entry, ownCounts),
             }),
           });
 
@@ -291,12 +295,12 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
 ];
 
 /** Accessible name for a rail button, from the outline rather than from whatever the variant shows. */
-const entryLabel = (entry: WalkthroughEntry): string => {
+const entryLabel = (entry: WalkthroughEntry, ownCounts: boolean): string => {
   const parts = [entry.title || 'Untitled section'];
   if (entry.files.length > 0) {
     parts.push(entry.files.map((file) => file.name).join(', '));
   }
-  const announced = counts(entry);
+  const announced = ownCounts ? counts(entry) : '';
   if (announced.length > 0) {
     parts.push(announced);
   }

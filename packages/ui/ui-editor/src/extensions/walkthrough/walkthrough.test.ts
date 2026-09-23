@@ -403,8 +403,71 @@ describe('walkthroughSidebar', () => {
     const label = rail.querySelector('button')?.getAttribute('aria-label');
     view.destroy();
 
-    // The row renders `+1` alone, so `-0` would be announced to a reader who cannot see it.
-    expect(label).to.eq('Additions only — a.ts — +1');
+    // The one file row below carries the counts, so the section's name does not repeat them.
+    expect(label).to.eq('Additions only — a.ts');
+  });
+
+  test('leaves the counts to the file row when a section has exactly one file', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: [
+          '## One file',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,2 +1,2 @@',
+          ' keep();',
+          '-old();',
+          '+new();',
+          '```',
+          '',
+        ].join('\n'),
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const counts = Array.from(rail.querySelectorAll('button')).map((row) =>
+      Array.from(row.querySelectorAll('.cm-walkthrough-added, .cm-walkthrough-removed')).map(
+        (count) => count.textContent,
+      ),
+    );
+    view.destroy();
+
+    // The section row is bare; only the file row states `+1 -1`.
+    expect(counts).to.deep.eq([[], ['+1', '-1']]);
+  });
+
+  test('keeps the section total when the files below it do not repeat it', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: [
+          '## Two files',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+one();',
+          '```',
+          '',
+          '```diff file=src/b.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+two();',
+          '```',
+          '',
+        ].join('\n'),
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const section = rail.querySelector('.cm-walkthrough-entry');
+    const total = section?.querySelector('.cm-walkthrough-added')?.textContent;
+    view.destroy();
+
+    expect(total).to.eq('+2');
   });
 });
 
