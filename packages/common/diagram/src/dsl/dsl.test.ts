@@ -164,10 +164,67 @@ describe('dsl diagnostics', () => {
     expect(source.slice(ranges.get('A/box')!.from, ranges.get('A/box')!.to)).toEqual('rect box 0,0 10x10');
   });
 
+  //
+  // Recovered nodes can hold one number where the grammar wants two. Every one of these threw a
+  // TypeError out of `parse` before the readers were guarded, which would have broken the promise
+  // that `parse` reports rather than throws.
+  //
+  for (const [name, source] of Object.entries({
+    'half a point': 'object A @ 0, {\n  rect b 0,0 1x1\n}\n',
+    'half an element point': 'object A @ 0,0 {\n  rect b 0, 1x1\n}\n',
+    'half a range': 'object A @ 0,0 {\n  arc a 0,0 5 90..\n}\n',
+    'half a move': 'move A @ 1,\n',
+    'half a line point': 'object A @ 0,0 {\n  line l 0,0 10,\n}\n',
+  })) {
+    test(`an incomplete ${name} reports instead of throwing`, ({ expect }) => {
+      const { problems } = parse(source);
+      expect(problems.length).toBeGreaterThan(0);
+    });
+  }
+
   test('a syntax error is located', ({ expect }) => {
     const { problems } = parse('object A @ 0,0 {\n  rect box 0,0\n}\n');
     expect(problems.length).toBeGreaterThan(0);
     expect(problems[0].to).toBeGreaterThan(problems[0].from);
+  });
+});
+
+describe('dsl round-trip hazards', () => {
+  test('an upsert without @ keeps the position the object already had', ({ expect }) => {
+    const { scene } = parseScene('object A @ 10,20 {\n  rect b 0,0 1x1\n}\n\nobject A {\n  rect b 0,0 2x2\n}\n');
+    // `WorldObject.origin` says "omit on upsert to keep the current position".
+    expect(scene.objects[0].origin).toEqual({ x: 10, y: 20 });
+    expect(scene.objects[0].elements[0]).toMatchObject({ w: 2, h: 2 });
+  });
+
+  test('a ref whose id cannot lex bare round-trips quoted', ({ expect }) => {
+    // Mermaid ids may start with a digit, so `1st/box` is reachable from a real dialect.
+    const scene: Scene.Scene = {
+      objects: [{ id: 'edges', origin: { x: 0, y: 0 }, elements: [{ kind: 'arrow', id: 'e', from: '1st/box' }] }],
+    };
+    const text = print(scene);
+    expect(text).toContain('"1st/box"');
+    expect(parse(text).problems).toEqual([]);
+    expect(toScene(parse(text).commands)).toEqual(scene);
+  });
+
+  test('exponent notation survives the round trip', ({ expect }) => {
+    // `String(1e-7)` is "1e-7", which the grammar had to learn to read back.
+    const scene: Scene.Scene = {
+      objects: [
+        { id: 'A', origin: { x: 1e-7, y: 1e21 }, elements: [{ kind: 'rect', id: 'b', x: 0, y: 0, w: 1, h: 1 }] },
+      ],
+    };
+    const text = print(scene);
+    expect(parse(text).problems).toEqual([]);
+    expect(toScene(parse(text).commands)).toEqual(scene);
+  });
+
+  test('a non-finite coordinate is refused rather than printed unreadably', ({ expect }) => {
+    const scene: Scene.Scene = {
+      objects: [{ id: 'A', origin: { x: Number.NaN, y: 0 }, elements: [] }],
+    };
+    expect(() => print(scene)).toThrow(TypeError);
   });
 });
 

@@ -22,10 +22,12 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Draw> = DrawingOper
   Operation.withHandler(
     Effect.fn(function* ({ drawing, source }) {
       const { canvas, variant } = yield* resolveVariant(drawing);
-      // Parse reports rather than throws, so a source with one bad line still draws the rest and
-      // the agent gets both halves of the story: what failed to parse, and how the rest looks.
       const { commands, problems } = Dsl.parse(source);
-      const { upserted, removed } = variant.builder.apply(canvas, commands);
+      // Nothing is applied while an error stands. A partial apply would still replace the objects
+      // the bad statements name — an element dropped for an invalid attribute would silently lose
+      // that attribute on the canvas — while the result told the agent the statement was skipped.
+      const failed = problems.some(({ severity }) => severity === 'error');
+      const { upserted, removed } = failed ? { upserted: [], removed: 0 } : variant.builder.apply(canvas, commands);
       const { scene, unmanaged } = variant.builder.read(canvas);
       const { diagnostics } = Diagnostics.analyze(scene.objects);
       return {

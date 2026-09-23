@@ -89,5 +89,12 @@ export const OBJECT_ATTRS: readonly AttrSpec[] = [
 /** An id that needs no quoting: a bare word that is not reserved. */
 export const BARE_ID = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
-/** A ref as `Scene.formatRef` spells it: `element`, `object/element`, either with `#port`. */
+/** A ref that needs no quoting: every segment is a bare word. */
 export const BARE_REF = /^[A-Za-z_][A-Za-z0-9_-]*(\/[A-Za-z_][A-Za-z0-9_-]*)?(#[A-Za-z_][A-Za-z0-9_-]*)?$/;
+
+/**
+ * A structurally valid ref — `[object/]element[#port]`, as `Scene.parseRef` reads it, whose ids may
+ * not contain `/` or `#`. Separate from {@link BARE_REF} because quoting exists to carry a ref
+ * whose ids cannot lex bare (`1st/box` from a numeric node id), which is well-formed all the same.
+ */
+export const REF_SHAPE = /^[^/#]+(\/[^/#]+)?(#[^/#]+)?$/;

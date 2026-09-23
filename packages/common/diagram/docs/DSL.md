@@ -211,7 +211,7 @@ everything that touches an editor lives behind the `./extension` subpath.
 ## Round trip
 
 `print(parse(text))` is the identity on any canonically-formatted document, and the corpus in
-`src/dsl/__tests__` asserts it — including the `BASIC` fixture from `src/testing.ts` compiled
+`src/dsl/dsl.test.ts` asserts it — including the `BASIC` fixture from `src/testing.ts` compiled
 through `MermaidEngine` and printed, which is the shape the converter emits.
 
 Canonical form: two-space indent, one element per line, a blank line between objects, attributes in

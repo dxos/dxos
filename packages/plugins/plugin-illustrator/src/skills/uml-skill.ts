@@ -127,11 +127,14 @@ const make = () =>
           elements, \`move <id> @ <x>,<y>\`, \`remove object <id>\`,
           \`remove elements <objectId> <elementId>…\`.
 
-        Read \`problems\` in the result first — each carries a line and column, and any \`error\`
-        means that statement was skipped. Then read \`diagnostics\` exactly as for generation.
+        Read \`problems\` in the result first — each carries a line and column, and a single
+        \`error\` means nothing was applied at all. Then read \`diagnostics\` exactly as for
+        generation.
 
         When asked for the diagram source rather than a canvas rendering (e.g. to embed in a
-        markdown document), return the same mermaid classDiagram in a fenced mermaid block.
+        markdown document), return a mermaid classDiagram in a fenced mermaid block — that is the
+        portable form and needs no coordinates. If the DSL is what was asked for, by name or by
+        asking for a \`diagram\` fenced block or positioned source, return the DSL instead.
       `,
     }),
   });

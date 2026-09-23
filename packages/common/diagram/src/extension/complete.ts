@@ -5,6 +5,7 @@
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
+import { type SyntaxNode } from '@lezer/common';
 
 import { ELEMENT_ATTRS, ELEMENT_KINDS, type ElementKind, OBJECT_ATTRS, STATEMENT_KEYWORDS } from '../dsl/vocabulary.ts';
 
@@ -30,34 +31,42 @@ const enclosingKind = (context: CompletionContext, pos: number): ElementKind | u
   return undefined;
 };
 
+/** Node names from the cursor out to the document, so a position is classified by where it sits. */
+const ancestorsOf = (context: CompletionContext, pos: number): string[] => {
+  const names: string[] = [];
+  for (let node: SyntaxNode | null = syntaxTree(context.state).resolveInner(pos, -1); node; node = node.parent) {
+    names.push(node.name);
+  }
+  return names;
+};
+
 const source = (context: CompletionContext): CompletionResult | null => {
   const word = context.matchBefore(/[\w-]*/);
   if (!word || (word.from === word.to && !context.explicit)) {
     return null;
   }
 
-  const inBody = syntaxTree(context.state).resolveInner(context.pos, -1).name !== 'Document';
-  if (!inBody) {
-    return {
-      from: word.from,
-      options: STATEMENT_KEYWORDS.map((label) => ({ label, type: 'keyword' })),
-    };
+  const ancestors = ancestorsOf(context, context.pos);
+  // Outside any declaration only a statement can start.
+  if (!ancestors.includes('ObjectDecl') && !ancestors.includes('ElementsDecl')) {
+    return { from: word.from, options: STATEMENT_KEYWORDS.map((label) => ({ label, type: 'keyword' })) };
   }
 
+  // A `Body` holds elements and nothing else, so an empty position in one wants a kind; inside an
+  // element it wants that kind's attributes, and in the header it wants the object's.
   const kind = enclosingKind(context, context.pos);
-  const attrs = kind ? ELEMENT_ATTRS[kind] : OBJECT_ATTRS;
+  if (!kind && ancestors.includes('Body')) {
+    return { from: word.from, options: ELEMENT_KINDS.map((label) => ({ label, type: 'keyword' })) };
+  }
+
   return {
     from: word.from,
-    options: [
-      ...attrs.map(({ name, type }) => ({
-        label: name,
-        type: 'property',
-        detail: type === 'enum' ? undefined : type,
-        apply: `${name}=`,
-      })),
-      // Only an element body takes a new element, and only there is the kind list useful.
-      ...(kind ? ELEMENT_KINDS.map((label) => ({ label, type: 'keyword' })) : []),
-    ],
+    options: (kind ? ELEMENT_ATTRS[kind] : OBJECT_ATTRS).map(({ name, type }) => ({
+      label: name,
+      type: 'property',
+      detail: type === 'enum' ? undefined : type,
+      apply: `${name}=`,
+    })),
   };
 };
 

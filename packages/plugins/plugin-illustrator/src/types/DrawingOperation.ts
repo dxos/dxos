@@ -108,7 +108,7 @@ export const Draw = Operation.make({
       }),
     ).annotate({
       description:
-        'Syntax and schema problems in the source, with 1-based line/column. Any `error` means that statement was skipped — fix it and draw again.',
+        'Syntax and schema problems in the source, with 1-based line/column. A single `error` leaves the drawing untouched — fix it and draw again.',
     }),
     diagnostics: Schema.Array(Diagnostics.Diagnostic).annotate({
       description:

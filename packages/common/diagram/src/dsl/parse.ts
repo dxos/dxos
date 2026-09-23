@@ -13,7 +13,14 @@ import type { SyntaxNode } from '@lezer/common';
 
 import * as Scene from '../scene.ts';
 import { parser } from './gen/diagram.ts';
-import { type AttrSpec, BARE_REF, ELEMENT_ATTRS, ELEMENT_KINDS, type ElementKind, OBJECT_ATTRS } from './vocabulary.ts';
+import {
+  type AttrSpec,
+  ELEMENT_ATTRS,
+  ELEMENT_KINDS,
+  type ElementKind,
+  OBJECT_ATTRS,
+  REF_SHAPE,
+} from './vocabulary.ts';
 
 export type Problem = {
   severity: 'error' | 'warning';
@@ -95,20 +102,24 @@ export const parse = (text: string): ParseResult => {
 
   const readNumber = (node: SyntaxNode): number => Number.parseFloat(slice(node));
 
-  const readPoint = (node: SyntaxNode): Scene.Point => {
+  // Error recovery can leave a `Point` or `Range` holding one number instead of two, so every
+  // reader returns undefined rather than indexing past the end — `parse` reports problems, and a
+  // reader that threw would take the whole document down with the line being typed.
+  const readPoint = (node: SyntaxNode): Scene.Point | undefined => {
     const [x, y] = childrenOf(node).filter((child) => child.name === 'Number');
-    return { x: readNumber(x), y: readNumber(y) };
+    return x && y ? { x: readNumber(x), y: readNumber(y) } : undefined;
   };
 
   // `100x50`; `x` appears only as the separator, so a negative extent needs no special case.
-  const readSize = (node: SyntaxNode): { w: number; h: number } => {
+  const readSize = (node: SyntaxNode): { w: number; h: number } | undefined => {
     const [w, h] = slice(node).split('x');
-    return { w: Number.parseFloat(w), h: Number.parseFloat(h) };
+    const [width, height] = [Number.parseFloat(w), Number.parseFloat(h)];
+    return Number.isNaN(width) || Number.isNaN(height) ? undefined : { w: width, h: height };
   };
 
-  const readRange = (node: SyntaxNode): { startAngle: number; endAngle: number } => {
+  const readRange = (node: SyntaxNode): { startAngle: number; endAngle: number } | undefined => {
     const [start, end] = childrenOf(node).filter((child) => child.name === 'Number');
-    return { startAngle: readNumber(start), endAngle: readNumber(end) };
+    return start && end ? { startAngle: readNumber(start), endAngle: readNumber(end) } : undefined;
   };
 
   //
@@ -209,15 +220,25 @@ export const parse = (text: string): ParseResult => {
         return { point: readPoint(child) };
       case 'Ref': {
         const raw = slice(child);
-        if (!BARE_REF.test(raw)) {
-          report(child, `"${raw}" is not a ref; write element, object/element, or either with #port.`);
+        // An id the grammar cannot lex bare is written quoted, so the printer can round-trip a ref
+        // like `1st/box` that a dialect produced from a numeric node id.
+        const ref = raw.startsWith('"') ? unquote(raw) : raw;
+        if (!REF_SHAPE.test(ref)) {
+          report(child, `"${ref}" is not a ref; write element, object/element, or either with #port.`);
         }
-        return { ref: raw };
+        return { ref };
       }
       default:
         return {};
     }
   };
+
+  /** Point list with the incomplete ones dropped; the syntax error is already reported. */
+  const readPoints = (nodes: SyntaxNode[]): Scene.Point[] =>
+    nodes.flatMap((node) => {
+      const point = readPoint(node);
+      return point ? [point] : [];
+    });
 
   const readElement = (node: SyntaxNode): Scene.Element | undefined => {
     const shape = node.firstChild;
@@ -253,16 +274,17 @@ export const parse = (text: string): ParseResult => {
       case 'diamond':
       case 'triangle': {
         const sizeNode = parts.find((part) => part.name === 'Size');
-        if (!sizeNode || points.length === 0) {
+        const origin = points[0] && readPoint(points[0]);
+        const size = sizeNode && readSize(sizeNode);
+        if (!origin || !size) {
           return undefined;
         }
-        const { x, y } = readPoint(points[0]);
         return {
           kind,
           id,
-          x,
-          y,
-          ...readSize(sizeNode),
+          x: origin.x,
+          y: origin.y,
+          ...size,
           ...optional('rotation', numberAttr(attrs, 'rotation')),
           ...optional('text', text),
           ...optional('corners', enumAttr(attrs, 'corners', Scene.Corners.literals)),
@@ -272,41 +294,50 @@ export const parse = (text: string): ParseResult => {
 
       case 'circle': {
         const radius = parts.find((part) => part.name === 'Number');
-        if (!radius || points.length === 0) {
+        const centre = points[0] && readPoint(points[0]);
+        if (!radius || !centre) {
           return undefined;
         }
-        const { x, y } = readPoint(points[0]);
-        return { kind, id, cx: x, cy: y, r: readNumber(radius), ...optional('text', text), ...style };
+        return {
+          kind,
+          id,
+          cx: centre.x,
+          cy: centre.y,
+          r: readNumber(radius),
+          ...optional('text', text),
+          ...style,
+        };
       }
 
       case 'line':
         return {
           kind,
           id,
-          points: points.map(readPoint),
+          points: readPoints(points),
           ...optional('closed', booleanAttr(attrs, 'closed')),
           ...style,
         };
 
       case 'curve':
-        return { kind, id, points: points.map(readPoint), ...style };
+        return { kind, id, points: readPoints(points), ...style };
 
       case 'arc': {
         const radius = parts.find((part) => part.name === 'Number');
-        const range = parts.find((part) => part.name === 'Range');
-        if (!radius || !range || points.length === 0) {
+        const rangeNode = parts.find((part) => part.name === 'Range');
+        const centre = points[0] && readPoint(points[0]);
+        const range = rangeNode && readRange(rangeNode);
+        if (!radius || !centre || !range) {
           return undefined;
         }
-        const { x, y } = readPoint(points[0]);
-        return { kind, id, cx: x, cy: y, r: readNumber(radius), ...readRange(range), ...style };
+        return { kind, id, cx: centre.x, cy: centre.y, r: readNumber(radius), ...range, ...style };
       }
 
       case 'text': {
-        if (points.length === 0 || text === undefined) {
+        const at = points[0] && readPoint(points[0]);
+        if (!at || text === undefined) {
           return undefined;
         }
-        const { x, y } = readPoint(points[0]);
-        return { kind, id, x, y, text, ...optional('w', numberAttr(attrs, 'w')), ...style };
+        return { kind, id, x: at.x, y: at.y, text, ...optional('w', numberAttr(attrs, 'w')), ...style };
       }
 
       case 'arrow': {
@@ -329,16 +360,17 @@ export const parse = (text: string): ParseResult => {
 
       case 'portal': {
         const sizeNode = parts.find((part) => part.name === 'Size');
-        if (!sizeNode || points.length === 0) {
+        const origin = points[0] && readPoint(points[0]);
+        const size = sizeNode && readSize(sizeNode);
+        if (!origin || !size) {
           return undefined;
         }
-        const { x, y } = readPoint(points[0]);
         const ref = stringAttr(attrs, 'ref');
         if (ref === undefined) {
           report(shape, `portal "${id}" needs ref="<dxn>": it is the drawing shown inside the frame.`);
           return undefined;
         }
-        return { kind, id, x, y, ...readSize(sizeNode), ref, ...optional('text', text), ...style };
+        return { kind, id, x: origin.x, y: origin.y, ...size, ref, ...optional('text', text), ...style };
       }
     }
   };
@@ -418,8 +450,9 @@ export const parse = (text: string): ParseResult => {
 
       case 'MoveStmt': {
         const point = statement.getChild('Origin')?.getChild('Point');
-        if (ids.length > 0 && point) {
-          commands.push({ op: 'move-object', objectId: readId(ids[0]), origin: readPoint(point) });
+        const origin = point && readPoint(point);
+        if (ids.length > 0 && origin) {
+          commands.push({ op: 'move-object', objectId: readId(ids[0]), origin });
         }
         break;
       }
@@ -457,7 +490,14 @@ export const toScene = (commands: readonly Scene.Command[]): Scene.Scene => {
         if (at === -1) {
           objects.push(command.object);
         } else {
-          objects[at] = command.object;
+          // `WorldObject.origin` is documented as "omit on upsert to keep the current position",
+          // which is also what the canvas builder does — diverging here would give the bench and
+          // the linter a different scene than the drawing actually holds.
+          const { origin } = objects[at];
+          objects[at] =
+            command.object.origin === undefined && origin !== undefined
+              ? { ...command.object, origin }
+              : command.object;
         }
         break;
       }

@@ -9,12 +9,22 @@
 //
 
 import type * as Scene from '../scene.ts';
-import { BARE_ID, ELEMENT_ATTRS, OBJECT_ATTRS, RESERVED } from './vocabulary.ts';
+import { BARE_ID, BARE_REF, ELEMENT_ATTRS, OBJECT_ATTRS, RESERVED } from './vocabulary.ts';
 
 const ESCAPES: Record<string, string> = { '\\': '\\\\', '"': '\\"', '\n': '\\n', '\t': '\\t', '\r': '\\r' };
 
-/** Shortest form that reads back: integers keep no trailing zeros, negatives keep their sign. */
-export const formatNumber = (value: number): string => String(value);
+/**
+ * Shortest form that reads back: integers keep no trailing zeros, negatives keep their sign, and
+ * the exponent notation `String` switches to outside ~1e-7..1e21 is spelled as-is, which the
+ * grammar accepts. `NaN` and `Infinity` have no readable form at all, so they are refused here
+ * rather than silently producing a document that cannot be parsed.
+ */
+export const formatNumber = (value: number): string => {
+  if (!Number.isFinite(value)) {
+    throw new TypeError(`A scene coordinate must be finite; got ${value}.`);
+  }
+  return String(value);
+};
 
 export const formatString = (value: string): string =>
   `"${value.replace(/[\\"\n\t\r]/g, (character) => ESCAPES[character] ?? character)}"`;
@@ -26,9 +36,16 @@ const formatPoint = ({ x, y }: Scene.Point): string => `${formatNumber(x)},${for
 
 const formatSize = (w: number, h: number): string => `${formatNumber(w)}x${formatNumber(h)}`;
 
+/**
+ * Quoted unless every id in it is a bare word: a dialect may build a ref from a node id the
+ * grammar cannot lex, such as mermaid's `1st` becoming `1st/box`, and an unquoted one would make
+ * the printed scene fail to parse.
+ */
+const formatRef = (ref: string): string => (BARE_REF.test(ref) && !RESERVED.has(ref) ? ref : formatString(ref));
+
 /** `_` is the end the schema leaves unset; a bound end prints as its ref, a free one as a point. */
 const formatEndpoint = (ref: string | undefined, point: Scene.Point | undefined): string =>
-  ref !== undefined ? ref : point !== undefined ? formatPoint(point) : '_';
+  ref !== undefined ? formatRef(ref) : point !== undefined ? formatPoint(point) : '_';
 
 type AttrValue = string | number | boolean;
 

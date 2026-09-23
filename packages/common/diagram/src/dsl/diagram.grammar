@@ -70,7 +70,8 @@ Endpoint { Point | Ref | Unbound }
 Unbound { kw<"_"> }
 
 // `element`, `object/element`, either with `#port` — the spelling `Scene.formatRef` emits.
-Ref { name }
+// Quoted when an id in it cannot lex bare (a dialect may produce `1st/box` from a numeric node id).
+Ref { name | String }
 
 // Every attribute is `name=value`, with no bare flags: after `->` a bare word would otherwise be
 // ambiguous between a ref endpoint and a flag, which LR(1) cannot settle, and `closed=true` is
@@ -112,9 +113,14 @@ kw<term> { @specialize[@name={term}]<name, term> }
   name { nameStart nameChar* ("/" nameStart nameChar*)? ("#" nameStart nameChar*)? }
 
   digits { @digit+ }
-  number { "-"? digits ("." digits)? }
+  // The exponent is accepted because the printer emits `String(value)`, which switches to
+  // exponent notation outside roughly 1e-7..1e21 — without it, printing such a scene would
+  // produce text this grammar rejects.
+  exponent { $[eE] $[+\-]? digits }
+  decimal { "-"? digits ("." digits)? exponent? }
+  number { decimal }
   // `100x50`, longer than the `100` a bare number would match, so the tokenizer prefers it.
-  size { "-"? digits ("." digits)? "x" "-"? digits ("." digits)? }
+  size { decimal "x" decimal }
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
