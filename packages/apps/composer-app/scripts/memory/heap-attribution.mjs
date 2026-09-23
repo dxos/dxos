@@ -22,6 +22,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { readHeapSnapshot } from './read-heap-snapshot.mjs';
+
 /**
  * Names that identify a container rather than what it holds.
  *
@@ -55,10 +57,15 @@ const isOpaque = (name) => OPAQUE.has(name) || name.startsWith('system /') || na
 const VLQ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const VLQ_INDEX = new Map([...VLQ].map((character, index) => [character, index]));
 
-/** Decodes one sourcemap `mappings` string into per-generated-line segment lists. */
+/**
+ * Decodes one sourcemap `mappings` string into per-generated-line segment lists of
+ * `[generatedColumn, sourceIndex, sourceLine, nameIndex]`; `nameIndex` is -1 where the segment has none.
+ */
 const decodeMappings = (mappings) => {
   const lines = [];
   let sourceIndex = 0;
+  let sourceLine = 0;
+  let nameIndex = 0;
   for (const raw of mappings.split(';')) {
     const segments = [];
     let generatedColumn = 0;
@@ -88,7 +95,11 @@ const decodeMappings = (mappings) => {
       generatedColumn += values[0] ?? 0;
       if (values.length >= 4) {
         sourceIndex += values[1];
-        segments.push([generatedColumn, sourceIndex]);
+        sourceLine += values[2];
+        if (values.length >= 5) {
+          nameIndex += values[4];
+        }
+        segments.push([generatedColumn, sourceIndex, sourceLine, values.length >= 5 ? nameIndex : -1]);
       }
     }
     segments.sort((a, b) => a[0] - b[0]);
@@ -98,13 +109,14 @@ const decodeMappings = (mappings) => {
 };
 
 /**
- * Maps a position in a built chunk back to the package that wrote it.
+ * Maps a position in a built chunk back to the source that wrote it: `{ package, source, line, name }`,
+ * with a 1-based source line and the original identifier where the map records one.
  *
  * Positional rather than proportional: a chunk holds dozens of packages, so
  * splitting it by source weight would smear one plugin's allocations across all
  * of them.
  */
-export const createResolver = (distDir) => {
+export const createFrameResolver = (distDir) => {
   const cache = new Map();
   const load = (script) => {
     const base = script.split('/').pop()?.split('?')[0];
@@ -117,7 +129,12 @@ export const createResolver = (distDir) => {
       if (existsSync(mapFile)) {
         try {
           const map = JSON.parse(readFileSync(mapFile, 'utf8'));
-          entry = { lines: decodeMappings(map.mappings ?? ''), packages: (map.sources ?? []).map(packageOf) };
+          entry = {
+            lines: decodeMappings(map.mappings ?? ''),
+            sources: map.sources ?? [],
+            packages: (map.sources ?? []).map(packageOf),
+            names: map.names ?? [],
+          };
         } catch {
           entry = null;
         }
@@ -134,14 +151,29 @@ export const createResolver = (distDir) => {
     // V8 reports 1-based lines here and sourcemaps are 0-based.
     const segments = entry.lines[Math.max(0, line - 1)] ?? entry.lines[line] ?? [];
     let found = null;
-    for (const [generatedColumn, sourceIndex] of segments) {
-      if (generatedColumn > column) {
+    for (const segment of segments) {
+      if (segment[0] > column) {
         break;
       }
-      found = sourceIndex;
+      found = segment;
     }
-    return found === null ? null : (entry.packages[found] ?? null);
+    if (!found) {
+      return null;
+    }
+    const [, sourceIndex, sourceLine, nameIndex] = found;
+    return {
+      package: entry.packages[sourceIndex] ?? null,
+      source: (entry.sources[sourceIndex] ?? '').replace(/^(\.\.\/)+/, ''),
+      line: sourceLine + 1,
+      name: nameIndex >= 0 ? entry.names[nameIndex] : undefined,
+    };
   };
+};
+
+/** {@link createFrameResolver}, reduced to the package. */
+export const createResolver = (distDir) => {
+  const resolve = createFrameResolver(distDir);
+  return (script, line, column) => resolve(script, line, column)?.package ?? null;
 };
 
 /**
@@ -382,9 +414,8 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop()
     process.exit(1);
   }
   try {
-    process.stdout.write(JSON.stringify(attribute(JSON.parse(readFileSync(file, 'utf8')), { distDir })));
+    process.stdout.write(JSON.stringify(attribute(readHeapSnapshot(file), { distDir })));
   } catch (error) {
-    // A snapshot past V8's string cap cannot be read this way at any heap size.
     console.error(`${file}: ${error.message}`);
     process.exit(2);
   }
