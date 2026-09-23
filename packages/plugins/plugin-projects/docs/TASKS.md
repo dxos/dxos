@@ -984,3 +984,20 @@ the hierarchical list, which is #12787.
       `MarkdownView` now, so a URL in a description is a link. `#nnn` there is
       still inert: that decoration is a CodeMirror extension and this path is
       react-markdown (tracked with the `#nnn` item above).
+
+### Tracked 2026-09-23 (user) — task surfaces
+
+- [ ] **Stored ECHO object for a pull request, with an article** — a durable PR
+      type (alongside `Repo`/`Project.repo`) so a pull request is a first-class
+      object a project's work can reference, plus the article that renders it.
+      Today `#nnn` is only a markdown decoration resolving to a GitHub URL;
+      nothing in the space holds the PR's title, state, branch or checks.
+- [ ] **Sort/filter tasks from a project** — a filter textbox with labels in the
+      `TaskSetArticle`/`ProjectArticle` toolbar, modelled on
+      `plugin-inbox`'s `MailboxFilter` (`containers/MailboxArticle/MailboxFilter.tsx` + `mailbox-search.ts`): free text plus label chips narrowing the list, with
+      the sort order alongside it.
+- [ ] **Navigate to a task's article** — a row (list, chat checklist, gantt lane)
+      opens the task in its own article rather than only selecting it in place.
+- [ ] **Create/edit a task inline** — editing happens in the row itself instead of
+      the `TaskList.Edit` strip at the bottom of the panel; the strip's create
+      case becomes an inline new row.
