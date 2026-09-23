@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 5,
+    "why": 5,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "Goes from the core fix (re-check the binding after the await) to its mechanical consequence (the regression test), matching the diff's own logic-then-test structure.",
+      "why": "Explains the constraint directly: the Blob read is the one await on the path, so disposal during it leaves 'duplex' stale, which is exactly what the added source comment says.",
+      "load": "Each term (duplex, the await, the torn-down stream) is introduced before it's used again, so it reads in one pass without backtracking.",
+      "trust": "Both cited line ranges are exactly right against the patch (ts hunk is lines 119-130, test hunk's added block is lines 81-96), and the closure/duplex claim tracks the code's own inline comment rather than inventing motive."
+    }
+  },
+  "B": {
+    "order": 5,
+    "why": 4,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "Same core-then-test structure as the other document, building correctly from the fix to the regression test.",
+      "why": "Gives the same await/disposal constraint, but the extra paragraph ('Before this change, duplex.push(data) ran unconditionally...') mostly re-narrates what the diff hunk itself already shows rather than adding new causal information.",
+      "load": "Readable, but the redundant 'before this change' paragraph repeating the opening summary adds a bit of re-reading without new content.",
+      "trust": "Both cited line ranges are off from the actual patch hunks (states 115-131 for a hunk that is really 119-130, and 81-97 for an added test block that actually ends at line 96), which is exactly the kind of unsourced number the rubric flags."
+    }
+  }
+}

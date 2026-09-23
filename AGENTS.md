@@ -274,6 +274,9 @@ Deeper conventions:
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
   skill.
 - Do not use deprecated functions if an alternative is available.
+- Prose a human reads — PR bodies, commit messages, walkthroughs, design docs, review
+  comments, long chat replies → `readable-prose` skill. Review is the bottleneck; write for
+  one pass.
 
 ## Git & PR workflow
 
