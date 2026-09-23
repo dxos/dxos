@@ -3230,22 +3230,58 @@ importers:
 
   packages/common/diagram:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.20.3
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
+      '@codemirror/lint':
+        specifier: 'catalog:'
+        version: 6.9.7
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.1
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
       '@dagrejs/dagre':
         specifier: 'catalog:'
         version: 3.1.1
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@lezer/common':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
+      '@lezer/lr':
+        specifier: ^1.4.10
+        version: 1.4.10
       elkjs:
         specifier: 'catalog:'
         version: 0.12.0
     devDependencies:
+      '@lezer/generator':
+        specifier: 'catalog:'
+        version: 1.8.0
+      '@uiw/codemirror-theme-vscode':
+        specifier: 'catalog:'
+        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.1)(@codemirror/view@6.43.9)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
 
   packages/common/display-name:
     devDependencies:
@@ -66338,7 +66374,7 @@ snapshots:
 
   vite@7.3.5(@types/node@22.10.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0):
     dependencies:
-      esbuild: 0.28.0
+      esbuild: 0.28.1
       fdir: 6.5.0(picomatch@4.0.5)
       picomatch: 4.0.5
       postcss: 8.5.12
