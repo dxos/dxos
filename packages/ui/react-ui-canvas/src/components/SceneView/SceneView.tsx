@@ -98,7 +98,7 @@ const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
 const NAVIGATION_SETTLE_MS = 150;
-/** Grid cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
+/** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 1;
 /** Zoom factor of one toolbar step. */
 const ZOOM_STEP = 1.25;
@@ -154,7 +154,7 @@ export type SceneViewProps = ThemedClassName<{
   atoms?: SceneViewAtoms;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
-  /** Least gap between the scene's frame and each viewport edge when fitting, in whole grid cells. */
+  /** Least gap between the scene's frame and each viewport edge when fitting, in whole major cells. */
   margin?: number;
   /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
   liveDepth?: number;
@@ -201,8 +201,9 @@ export const SceneView = ({
   const selectedPoint = useAtomValue(atoms.point);
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
-  // The fit's margin is in grid cells, so it stays a whole number of visible cells at any grid size.
-  const inset = margin * grid;
+  // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
+  // so a fit puts the same gap around the scene whatever the zoom.
+  const inset = margin * grid * MAJOR_GRID_RATIO;
 
   const drag = useAtomValue(atoms.drag);
   const undoState = useAtomValue(atoms.undo);
