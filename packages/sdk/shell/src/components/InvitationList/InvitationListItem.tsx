@@ -11,7 +11,17 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import { Avatar, type AvatarContentProps, Button, IconButton, SystemIconButton, type ThemedClassName, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  type AvatarContentProps,
+  Button,
+  IconButton,
+  SystemIconButton,
+  type ThemedClassName,
+  Tooltip,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';

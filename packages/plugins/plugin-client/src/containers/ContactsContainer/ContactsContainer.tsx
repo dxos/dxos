@@ -34,7 +34,7 @@ export const ContactsContainer = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('contacts.label')} description={t('contacts.description')}>
-            {contacts.length > 1 && (
+            {(contacts.length > 1 || filter !== '') && (
               <Field.Root>
                 <Field.Input
                   placeholder={t('contacts-search.placeholder')}

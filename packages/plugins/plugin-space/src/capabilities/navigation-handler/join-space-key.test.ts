@@ -14,8 +14,14 @@ describe('readJoinSpaceKey', () => {
     expect(readJoinSpaceKey(new URL(`https://x/?spaceKey=${key.toHex()}`), 'spaceKey')?.equals(key)).toBe(true);
   });
 
+  test('reads a 65-byte space key', () => {
+    const key = PublicKey.from(crypto.getRandomValues(new Uint8Array(65)));
+    expect(readJoinSpaceKey(new URL(`https://x/?spaceKey=${key.toHex()}`), 'spaceKey')?.equals(key)).toBe(true);
+  });
+
   test('ignores missing and malformed values', () => {
     expect(readJoinSpaceKey(new URL('https://x/'), 'spaceKey')).toBeUndefined();
     expect(readJoinSpaceKey(new URL('https://x/?spaceKey=nope'), 'spaceKey')).toBeUndefined();
+    expect(readJoinSpaceKey(new URL('https://x/?spaceKey=abc'), 'spaceKey')).toBeUndefined();
   });
 });

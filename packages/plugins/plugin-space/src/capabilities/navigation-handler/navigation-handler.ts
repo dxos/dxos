@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -12,6 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HaloServicesLayer } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -53,24 +55,49 @@ export default Capability.makeModule(
       return Option.isSome(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServicesLayer)));
     });
 
+    const reportFailure = (error: unknown) =>
+      Effect.gen(function* () {
+        log.warn('navigation handler failed', { error });
+        const toastKeyPrefix = JoinByKeyError.is(error) ? 'join-by-key-failed-toast' : 'navigation-failed-toast';
+        yield* Operation.invoke(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/navigation-failed`,
+          title: [`${toastKeyPrefix}.title`, { ns: meta.profile.key }],
+          description: [`${toastKeyPrefix}.description`, { ns: meta.profile.key }],
+          icon: 'ph--warning--regular',
+        }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
+      });
+
+    const joinByKey = (spaceKey: PublicKey) =>
+      Effect.gen(function* () {
+        if (!(yield* hasLocalIdentity)) {
+          return;
+        }
+
+        log('space join-by-key received via navigation');
+        const existing = client.spaces.get().find((space) => space.key.equals(spaceKey));
+        // Its own fiber so a join that lands after the timeout still opens the space; the param stays
+        // until then so a reload can retry.
+        const join = yield* Effect.forkDetach(
+          (existing ? Effect.succeed(existing) : Effect.tryPromise(() => client.spaces.joinBySpaceKey(spaceKey))).pipe(
+            Effect.tap(() => Effect.sync(() => removeQueryParam(joinSpaceKeyProp))),
+            Effect.flatMap((space) => Operation.invoke(SpaceOperation.Open, { space })),
+          ),
+        );
+        const joined = yield* Fiber.join(join).pipe(
+          Effect.timeoutOption(JOIN_BY_KEY_TIMEOUT),
+          Effect.catch((cause) => Effect.fail(new JoinByKeyError({ cause }))),
+        );
+        if (Option.isNone(joined)) {
+          return yield* Effect.fail(new JoinByKeyError({ context: { timeout: JOIN_BY_KEY_TIMEOUT } }));
+        }
+      }).pipe(Effect.catch(reportFailure));
+
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
         const joinSpaceKey = readJoinSpaceKey(url, joinSpaceKeyProp);
         if (joinSpaceKey) {
-          if (!(yield* hasLocalIdentity)) {
-            return;
-          }
-
-          log('space join-by-key received via navigation');
-          removeQueryParam(joinSpaceKeyProp);
-          const existing = client.spaces.get().find((space) => space.key.equals(joinSpaceKey));
-          const space =
-            existing ??
-            (yield* Effect.tryPromise(() => client.spaces.joinBySpaceKey(joinSpaceKey)).pipe(
-              Effect.timeout(JOIN_BY_KEY_TIMEOUT),
-              Effect.catch((cause) => Effect.fail(new JoinByKeyError({ cause }))),
-            ));
-          yield* Operation.invoke(SpaceOperation.Open, { space });
+          // Detached because URL projection waits on every handler, and a join waits on a member coming online.
+          yield* Effect.forkDetach(joinByKey(joinSpaceKey));
           return;
         }
 
@@ -87,18 +114,7 @@ export default Capability.makeModule(
         removeQueryParam(invitationProp);
         yield* Operation.invoke(SpaceOperation.Join, { invitationCode });
       }).pipe(
-        Effect.catch((error) =>
-          Effect.gen(function* () {
-            log.warn('navigation handler failed', { error });
-            const toastKeyPrefix = JoinByKeyError.is(error) ? 'join-by-key-failed-toast' : 'navigation-failed-toast';
-            yield* Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}/navigation-failed`,
-              title: [`${toastKeyPrefix}.title`, { ns: meta.profile.key }],
-              description: [`${toastKeyPrefix}.description`, { ns: meta.profile.key }],
-              icon: 'ph--warning--regular',
-            }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
-          }),
-        ),
+        Effect.catch(reportFailure),
         Effect.provideService(Capability.Service, capabilities),
         Effect.provideService(Operation.Service, operationService),
       );

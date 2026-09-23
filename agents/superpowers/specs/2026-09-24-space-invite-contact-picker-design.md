@@ -115,8 +115,15 @@ that lets a user send a signed message to another user addressed only by their i
 - `AddMembers` sends the notice after admission; the join link stays as a fallback.
 
 The relay is a generic user-to-user message channel; space invitation notices are its first use.
-Open questions for phase 2: delivery when the recipient is offline (store-and-forward TTL), spam /
-rate limiting, and whether the payload is end-to-end encrypted to the recipient's key.
+Phase 2 requirements (the phase 2 design settles the mechanisms):
+
+- **Authenticity.** The recipient verifies the notice's signature over `{ spaceKey, from, role, sentAt }`
+  and accepts it only when the verified signer is `from`. A notice is only a prompt: joining still
+  requires the admission credential the host wrote, so a forged notice can cause at most a failed join.
+- **Abuse controls.** The relay enforces per-sender and per-recipient quotas and a store-and-forward
+  TTL, and deduplicates identical notices; the client collapses repeated notices for one space.
+- **Confidentiality.** The payload is encrypted to the recipient's identity key, so the relay learns
+  only the sender and an opaque recipient address, never which space the recipient is invited to.
 
 ## Out of scope
 

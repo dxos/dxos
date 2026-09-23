@@ -17,7 +17,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddMembers> = SpaceOp
     Effect.fnUntraced(function* ({ space, identityKeys, role }) {
       const result = yield* Effect.promise(() => admitContacts(space, [...identityKeys], role));
       const { createJoinUrl } = yield* Capability.get(SpaceOperationConfig);
-      return { joinUrl: createJoinUrl(space.key), ...result };
+      // A link only helps someone who was admitted.
+      return { joinUrl: result.admitted.length > 0 ? createJoinUrl(space.key) : '', ...result };
     }),
   ),
 );
