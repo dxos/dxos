@@ -39,7 +39,7 @@ export const startAllocationSampling = async (targets: Attached[]): Promise<Allo
     stop: async (dir) => {
       mkdirSync(dir, { recursive: true });
       const files: string[] = [];
-      const used = new Map<string, number>();
+      const used = new Set<string>();
       for (const target of sampled) {
         const result = await target.cdp.trySend<{ profile: unknown }>('HeapProfiler.stopSampling');
         if (!result?.profile) {
