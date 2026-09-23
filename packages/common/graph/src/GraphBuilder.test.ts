@@ -132,6 +132,50 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/c']);
   });
 
+  test("an update to a connector's output lands on a microtask, its first output on the scheduler", async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => get(state).map((id) => ({ id }))),
+    });
+
+    children(GraphNode.RootId);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal([]);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a', 'root/b']);
+
+    registry.set(state, ['b', 'a']);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
+  });
+
+  test('an update flush stops at the frame budget and leaves the rest to the scheduler', async () => {
+    const { registry, builder, children } = setup();
+    let flushed = 0;
+    builder._frameBudget = () => ({ hasTime: () => flushed < 1, spend: () => flushed++ });
+    const first = Atom.make(['a']).pipe(Atom.keepAlive);
+    const second = Atom.make(['b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, [
+      { id: 'children', connector: connector((get) => get(first).map((id) => ({ id }))) },
+      { id: 'siblings', relation: 'sibling', connector: connector((get) => get(second).map((id) => ({ id }))) },
+    ]);
+
+    children(GraphNode.RootId);
+    children(GraphNode.RootId, 'sibling');
+    await GraphBuilder.flush(builder);
+
+    registry.set(first, ['c']);
+    registry.set(second, ['d']);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/c']);
+    expect(children(GraphNode.RootId, 'sibling')).to.deep.equal(['root/b']);
+
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId, 'sibling')).to.deep.equal(['root/d']);
+  });
+
   test('an unrelated node changing leaves a connector alone', async () => {
     const { registry, builder, model, children } = setup();
     let runs = 0;

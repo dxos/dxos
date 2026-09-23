@@ -11,6 +11,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
@@ -47,6 +48,7 @@ export default Capability.makeModule(
       deck: { levels: [{ key: 'project' }, { key: 'task' }] },
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
+      dropInto: artifacts,
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -316,6 +318,9 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
+export const artifacts = (project: Project.Project): ContainerModel.Container =>
+  ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
+
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
 
@@ -349,8 +354,9 @@ export const createProjectArtifactsExtension = () =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
         : Option.none(),
-    connector: ({ project, space }) =>
-      Effect.succeed([
+    connector: ({ project, space }) => {
+      const db = Obj.getDatabase(project);
+      return Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
         // would pull @dxos/client into this plugin's dependencies for a value it only passes through.
         AppGraphNode.make({
@@ -371,9 +377,11 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
+            ...(db ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
-      ]),
+      ]);
+    },
   });
 
 /**

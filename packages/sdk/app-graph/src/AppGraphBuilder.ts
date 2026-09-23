@@ -17,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position, isNonNullable } from '@dxos/util';
 
-import { scheduleTask, yieldOrContinue } from '#scheduler';
+import { frameBudget, scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './AppGraph.ts';
 import * as Node from './AppGraphNode.ts';
@@ -261,6 +261,10 @@ export class GraphBuilder extends Builder.GraphBuilder<
 
   override _yield(): Promise<void> {
     return yieldOrContinue('idle');
+  }
+
+  override _frameBudget(): Builder.FrameBudget | undefined {
+    return frameBudget;
   }
 
   override _onReleaseRelation(target: { id: string; relation: string }): void {

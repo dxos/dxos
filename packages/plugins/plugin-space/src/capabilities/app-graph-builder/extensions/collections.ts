@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -120,7 +119,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? AppNode.getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
+          ? AppNode.getListPartials(ContainerModel.collection(rootCollection), space.db)
           : undefined;
 
         return Effect.succeed([
@@ -185,10 +184,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 object,
                 navigable: true,
                 deck: collectionDeck(object, ephemeralState.navigableCollections),
-                canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
-                onRearrange: collectionRef?.target
-                  ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
-                  : undefined,
               }),
             )
             .filter(isNonNullable),
@@ -249,8 +244,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   db,
                   navigable: true,
                   deck: collectionDeck(object, ephemeralState.navigableCollections),
-                  canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
-                  onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
                 }),
             )
             .filter(isNonNullable),
@@ -281,9 +274,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-        const parentNode = Option.getOrUndefined(AppGraph.getNode(appGraph.graph, parentId));
-        const parentCollection =
-          parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
+        const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
         return Effect.succeed(
           constructObjectActions({
@@ -292,7 +283,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             deletable,
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
-            parentCollection,
+            container,
+            parent: container ? get(Obj.parentAtom(object)) : undefined,
           }),
         );
       },
@@ -342,20 +334,24 @@ const constructObjectActions = ({
   deletable = true,
   navigable = false,
   shareableLinkOrigin,
-  parentCollection,
+  container,
+  parent,
 }: {
   object: Obj.Unknown;
   nodeId: string;
   shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
-  parentCollection?: Collection.Collection;
+  container?: ContainerModel.Container;
+  parent?: Obj.Unknown;
 }) => {
   const db = Obj.getDatabase(object);
   invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
-  const linkedFrom = parentCollection && !Obj.isOwnedBy(object, parentCollection) ? parentCollection : undefined;
+  const linkedFrom = container && ContainerModel.isLink(container, parent) ? container : undefined;
+  const parentCollection =
+    container && Obj.instanceOf(Collection.Collection, container.object) ? container.object : undefined;
 
   const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
@@ -405,13 +401,13 @@ const constructObjectActions = ({
             },
           }),
           AppGraphNode.makeAction({
-            id: 'removeFromCollection',
-            data: () => Effect.sync(() => CollectionModel.unlink({ object, from: linkedFrom })),
+            id: 'removeFromContainer',
+            data: () => Effect.sync(() => ContainerModel.unlink({ container: linkedFrom, object })),
             properties: {
-              label: REMOVE_FROM_COLLECTION_LABEL,
+              label: linkedFrom.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
               icon: 'ph--minus-circle--regular',
               disposition: 'list-item',
-              testId: 'spacePlugin.removeFromCollection',
+              testId: 'spacePlugin.removeFromContainer',
             },
           }),
         ]
