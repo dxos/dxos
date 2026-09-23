@@ -11,6 +11,7 @@ export default defineConfig({
     // module cannot also be the module the worker loads.
     WorkerSandboxEntry: 'src/WorkerSandboxEntry.ts',
     WorkerSandboxBrowserWorker: 'src/WorkerSandboxBrowserWorker.ts',
+    WorkerSandboxBrowserEntry: 'src/WorkerSandboxBrowserEntry.ts',
   },
   test: {
     node: true,

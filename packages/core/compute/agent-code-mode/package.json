@@ -28,6 +28,11 @@
       "source": "./src/WorkerSandboxBrowserWorker.ts",
       "types": "./dist/types/src/WorkerSandboxBrowserWorker.d.ts",
       "import": "./dist/lib/WorkerSandboxBrowserWorker.mjs"
+    },
+    "./browser-worker-entry": {
+      "source": "./src/WorkerSandboxBrowserEntry.ts",
+      "types": "./dist/types/src/WorkerSandboxBrowserEntry.d.ts",
+      "import": "./dist/lib/WorkerSandboxBrowserEntry.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
