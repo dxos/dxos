@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { MakeTurnProducer } from '@dxos/agent-runtime';
 import type { AiService } from '@dxos/ai';
 
 export interface AssistantPluginOptions {
@@ -12,4 +13,10 @@ export interface AssistantPluginOptions {
    * the curated set, which must not advertise a type it cannot yet do anything useful with.
    */
   experimentalTypes?: boolean;
+
+  /**
+   * Turn engine used when the user enables `Settings.codeMode`; injected by the host because the
+   * code-mode package is not published. Without it the setting has no effect.
+   */
+  codeModeTurnProducer?: MakeTurnProducer;
 }

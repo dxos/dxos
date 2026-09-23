@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
@@ -182,11 +185,17 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
  *
  * NOTE: Keep alphabetically sorted.
  */
+// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in.
+const codeModeTurnProducer: MakeTurnProducer = (options) =>
+  Effect.promise(() => import('@dxos/agent-code-mode')).pipe(
+    Effect.flatMap(({ makeCodeModeTurnProducer }) => makeCodeModeTurnProducer()(options)),
+  );
+
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make(),
+    AssistantPlugin.make({ codeModeTurnProducer }),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),

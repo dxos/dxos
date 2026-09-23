@@ -67,6 +67,13 @@ export const Settings = Schema.Struct({
     }),
   ),
   modelDefaults: Schema.optional(ModelDefaults.annotate({ title: 'Model defaults' })),
+  codeMode: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Code mode (experimental)',
+      description:
+        'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. Applies to agents started after the change.',
+    }),
+  ),
   tracePanelDebug: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Trace panel debug',
