@@ -88,7 +88,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
     .filter((space): space is ContactSpace => space !== undefined);
 
   return (
-    <Listbox.Item id={identityKey.toHex()} data-testid='contact-list.item'>
+    <Listbox.Item classNames='p-3 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
       <Listbox.ItemContent
         icon={
           <Avatar.Root labelId={labelId}>
