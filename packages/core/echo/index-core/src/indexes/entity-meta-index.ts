@@ -169,9 +169,6 @@ const buildSourceCondition = (
   return sql.or(conditions);
 };
 
-// SQLite caps bound variables (conventionally 999); chunk well below it, matching the FTS index.
-const QUERY_CHUNK_SIZE = 500;
-
 /**
  * Window over a queue-scoped read: which rows, in what order, and how many.
  *
@@ -273,12 +270,12 @@ export class EntityMetaIndex implements Index {
           return [];
         }
         const sql = this.#sql;
-        // Chunked to stay under SQLite's bound-variable limit — an initial index of a fresh
-        // clone can present thousands of keys in one batch, and a thrown query here would skip
-        // detection for the whole batch with no retry.
+        // Chunked against the bound-variable budget — an initial index of a fresh clone can
+        // present thousands of keys in one batch, and a thrown query here would skip convergence
+        // detection for the whole batch with no retry. Distinct keys so a repeated one cannot
+        // straddle two chunks and duplicate its row.
         const results: EntityMeta[] = [];
-        for (let offset = 0; offset < convergenceKeys.length; offset += QUERY_CHUNK_SIZE) {
-          const chunk = convergenceKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
+        for (const chunk of chunkArray([...new Set(convergenceKeys)])) {
           const rows =
             yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('convergenceKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
           results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
@@ -392,10 +389,10 @@ export class EntityMetaIndex implements Index {
         }
         const sql = this.#sql;
         const column = endpoint === 'source' ? 'source' : 'target';
-        // A relation carries one value in this column, so chunks partition the matches and the
-        // results concatenate without duplicates.
+        // A relation carries one value in this column and the anchors are distinct, so chunks
+        // partition the matches and the results concatenate without duplicates.
         const results: EntityMeta[] = [];
-        for (const chunk of chunkArray(anchorDxns)) {
+        for (const chunk of chunkArray([...new Set(anchorDxns)])) {
           const rows =
             yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(column, chunk)}`;
           results.push(...rows);
@@ -658,14 +655,15 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        // Both lists bind one variable per element, so each chunk takes half the budget; a row
-        // matches exactly one pair of chunks, so the results concatenate without duplicates.
+        // Both lists bind one variable per element, so each chunk takes half the budget; the ids
+        // are distinct, so a row matches exactly one pair of chunks and the results concatenate
+        // without duplicates.
         const chunkSize = chunkSizeForBoundVariables(2);
         const results: EntityMeta[] = [];
-        for (const spaceIds of chunkArray(query.spaceIds, chunkSize)) {
-          for (const objectIds of chunkArray(query.objectIds, chunkSize)) {
+        for (const spaceIdChunk of chunkArray([...new Set(query.spaceIds)], chunkSize)) {
+          for (const objectIdChunk of chunkArray([...new Set(query.objectIds)], chunkSize)) {
             const rows =
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND ${sql.in('objectId', objectIds)}`;
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIdChunk)} AND ${sql.in('objectId', objectIdChunk)}`;
             for (const row of rows) {
               results.push({ ...row, deleted: !!row.deleted });
             }
