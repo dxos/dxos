@@ -40,4 +40,12 @@ export type ObjectAction<T> = {
 export type Invocation = {
   operation: import('@dxos/compute').Operation.Definition.Any;
   input: unknown;
+  /**
+   * Picks the text to place on the clipboard out of the operation's output.
+   *
+   * The host opens the clipboard write inside the click and fills it once the output arrives:
+   * WebKit (Safari, the desktop webview) rejects a write that starts after the gesture has been
+   * lost to an await, so an operation handler cannot copy for itself.
+   */
+  clipboard?: (output: unknown) => string | undefined;
 };

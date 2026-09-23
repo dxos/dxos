@@ -66,10 +66,9 @@ export const DelegateTaskToChat = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 /**
- * Renders one task as a self-contained prompt for an external coding agent and copies it to the
- * clipboard — the task's content, its addresses (task, task set, project, space), and what the
- * project is about, so a session started from it can reach the live objects rather than work from a
- * transcription.
+ * Renders one task as a self-contained prompt for an external coding agent — the task's content, its
+ * addresses (task, task set, project, space), and what the project is about, so a session started
+ * from it can reach the live objects rather than work from a transcription.
  *
  * The prompt tells the agent to assign itself to the task first, which is what makes the handoff
  * visible in the app: the row shows `started` and an assistant assignee the moment the agent picks
@@ -79,16 +78,15 @@ export const CopyTaskPrompt = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.copyTaskPrompt'),
     name: 'Copy Task Prompt',
-    description:
-      'Builds an agent prompt for a task (content, addresses, project context) and copies it to the clipboard.',
+    description: 'Builds an agent prompt for a task (content, addresses, project context) and returns it.',
     icon: 'ph--clipboard-text--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task).annotate({ description: 'The task to write a prompt for.' }),
   }),
-  // Returned as well as copied: a host with no clipboard (a headless client, an agent calling the
-  // verb) still gets the prompt, and the copy is the UI affordance on top of it.
+  // Returned rather than copied: the clipboard write needs the user's click, which only the UI host
+  // holds (see the `copy-prompt` task action), and a headless caller wants the text itself.
   output: Schema.Struct({
     prompt: Schema.String,
   }),

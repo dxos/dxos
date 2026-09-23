@@ -315,6 +315,9 @@ export const Sections: Story = {
 /** The contributed action's label, as written in `capabilities/task-action.ts`. */
 const TASK_ACTION_LABEL = 'Assign to agent';
 
+/** The copy action's label, as written in `capabilities/task-action.ts`. */
+const COPY_PROMPT_LABEL = 'Copy prompt';
+
 /**
  * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
  * row shows it, and running it invokes the operation that opens a chat carrying the task.
@@ -365,6 +368,61 @@ export const TaskAction: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The row's `Copy prompt` starts its clipboard write inside the click that chose it.
+ *
+ * WebKit (Safari, the desktop webview) rejects a write that begins after the gesture has been lost
+ * to an await, and the prompt takes several to render; Chromium does not enforce this, so the story
+ * asserts the invariant itself: the write must be issued while the selecting event is still being
+ * dispatched (`window.event` is only set during dispatch).
+ */
+export const CopyPrompt: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { task } = await seedContent();
+
+    const writes: { duringEvent: boolean; text: Promise<string> }[] = [];
+    const clipboard = navigator.clipboard;
+    const { write, writeText } = clipboard;
+    // Recorded rather than performed: a headless page holds no clipboard permission, so a real write
+    // never settles.
+    clipboard.write = async (items) => {
+      const [item] = items;
+      writes.push({
+        duringEvent: Reflect.get(window, 'event') !== undefined,
+        text: item.getType('text/plain').then((blob) => blob.text()),
+      });
+    };
+    clipboard.writeText = async (text) => {
+      writes.push({ duringEvent: Reflect.get(window, 'event') !== undefined, text: Promise.resolve(text) });
+    };
+
+    try {
+      await showTab(canvas, 'tasks');
+      const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+      const row = title.closest('[data-testid="taskList.item"]');
+      await expect(row).toBeTruthy();
+      await userEvent.click(
+        await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+      );
+      await userEvent.click(await screen.findByText(COPY_PROMPT_LABEL, undefined, { timeout: 10_000 }));
+
+      await waitFor(() => expect(writes).toHaveLength(1), { timeout: 10_000 });
+      const [copied] = writes;
+      await expect(copied.duringEvent).toBe(true);
+
+      // The text that lands is the rendered prompt, addressed to the task the row belongs to.
+      const text = await copied.text;
+      await expect(text).toContain(TASK_TITLE);
+      await expect(text).toContain(Obj.getURI(task));
+    } finally {
+      clipboard.write = write;
+      clipboard.writeText = writeText;
+    }
   },
 };
 

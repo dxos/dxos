@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { type Task, TaskSet } from '@dxos/types';
 import { concat } from '@dxos/util';
 
@@ -33,17 +32,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CopyTaskPrompt> = P
       const task = yield* Database.load(taskRef);
       const project = findProject(task);
       const context = project ? yield* projectContext(project) : undefined;
-      const prompt = renderPrompt({ task, project, context });
-
-      // Best-effort, and never fatal: the prompt is the operation's result, so a host with no
-      // clipboard (a headless client, an agent calling the verb) still gets it.
-      if (globalThis.navigator?.clipboard) {
-        yield* Effect.tryPromise(() => navigator.clipboard.writeText(prompt)).pipe(
-          Effect.catchCause((cause) => Effect.sync(() => log.warn('clipboard write failed', { cause }))),
-        );
-      }
-
-      return { prompt };
+      return { prompt: renderPrompt({ task, project, context }) };
     }),
   ),
 );

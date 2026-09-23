@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
@@ -29,8 +30,16 @@ export default Capability.makeModule(
         label: 'Copy prompt',
         icon: 'ph--clipboard-text--regular',
         // Applies to every task for the same reason as the action above: any task can be handed to
-        // an agent outside the app, and the operation copies what it renders.
-        createInvocations: (task) => [{ operation: ProjectOperation.CopyTaskPrompt, input: { task: Ref.make(task) } }],
+        // an agent outside the app. The host copies what the operation renders, since only the host
+        // holds the click the clipboard write needs.
+        createInvocations: (task) => [
+          {
+            operation: ProjectOperation.CopyTaskPrompt,
+            input: { task: Ref.make(task) },
+            clipboard: (output) =>
+              Schema.is(ProjectOperation.CopyTaskPrompt.output)(output) ? output.prompt : undefined,
+          },
+        ],
       },
     ]);
   }),
