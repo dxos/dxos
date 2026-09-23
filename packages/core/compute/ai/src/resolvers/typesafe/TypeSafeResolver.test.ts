@@ -10,6 +10,7 @@ import * as AiError from 'effect/unstable/ai/AiError';
 import * as Decision from 'effect/unstable/ai/Decision';
 import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -131,6 +132,25 @@ describe('TypeSafe resolver', () => {
     );
 
     expect(exit._tag).toBe('Failure');
+  });
+
+  test('a stalled endpoint fails the decision instead of hanging it', async ({ expect }) => {
+    const stalled = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make(() => Effect.never),
+    );
+    const error = await EffectEx.runPromise(
+      TypeSafeResolver.makeDecisionModel('jev-latest', {
+        apiKey: Effect.succeed(Redacted.make('key')),
+        timeout: '20 millis',
+      }).pipe(
+        Effect.flatMap((model) => model.decide(Urgency, { input: OUTAGE })),
+        Effect.flip,
+        Effect.provide(stalled),
+      ),
+    );
+
+    expect(AiError.isAiError(error) && error.reason._tag).toBe('InternalProviderError');
   });
 });
 

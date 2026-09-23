@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Redacted from 'effect/Redacted';
@@ -162,7 +163,11 @@ export type Options<R = never> = {
   readonly apiKey: Effect.Effect<Redacted.Redacted<string>, AiError.AiError, R>;
   /** Read per call, so a changed endpoint applies without rebuilding the model. */
   readonly endpoint?: () => string;
+  /** How long one call may take; a stalled endpoint otherwise holds every decision waiting on it. */
+  readonly timeout?: Duration.Input;
 };
+
+export const DEFAULT_TIMEOUT: Duration.Input = '30 seconds';
 
 const MODULE = 'TypeSafe';
 
@@ -185,7 +190,7 @@ const fromHttpClientError = (error: HttpClientError.HttpClientError): AiError.Ai
 /** A `DecisionModel` answering through System One's `backend` model. */
 export const makeDecisionModel = <R = never>(
   backend: string,
-  { apiKey, endpoint = () => DEFAULT_ENDPOINT }: Options<R>,
+  { apiKey, endpoint = () => DEFAULT_ENDPOINT, timeout = DEFAULT_TIMEOUT }: Options<R>,
 ): Effect.Effect<DecisionModel.DecisionModel, never, HttpClient.HttpClient | R> =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
@@ -209,6 +214,13 @@ export const makeDecisionModel = <R = never>(
             Effect.flatMap(HttpClientResponse.filterStatusOk),
             Effect.flatMap((response) => response.json),
             Effect.mapError(fromHttpClientError),
+            Effect.timeoutOrElse({
+              duration: timeout,
+              orElse: () =>
+                Effect.fail(
+                  aiError(new AiError.InternalProviderError({ description: 'System One did not answer in time' })),
+                ),
+            }),
           );
           // A 200 proves nothing about the body, so the payload is validated rather than asserted.
           const body = yield* Schema.decodeUnknownEffect(EvaluateResponse)(json).pipe(
