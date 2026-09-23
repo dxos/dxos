@@ -12,6 +12,7 @@
 // the result as something you can hand-tune, diff and review. See `docs/DSL.md`.
 //
 
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
 import * as MermaidEngine from '../mermaid-engine.ts';
@@ -61,15 +62,18 @@ export const SOURCES: readonly Source[] = [umlSource, mermaidSource, mermaidLaye
 /** The language a source string is written in, or undefined when nothing claims it. */
 export const detect = (source: string): Source | undefined => SOURCES.find(({ detect }) => detect(source));
 
-export class UnknownSourceError extends Error {
-  constructor(id: string) {
-    super(`Unknown source language "${id}"; known: ${SOURCES.map(({ id }) => id).join(', ')}.`);
+const known = () => SOURCES.map(({ id }) => id).join(', ');
+
+/** Tagged so the failure channel stays discriminated rather than collapsing into bare `Error`. */
+export class UnknownSourceError extends Data.TaggedError('DiagramUnknownSource')<{ id: string }> {
+  override get message(): string {
+    return `Unknown source language "${this.id}"; known: ${known()}.`;
   }
 }
 
-export class UndetectedSourceError extends Error {
-  constructor() {
-    super('Could not tell what language this is; pass one of: ' + SOURCES.map(({ id }) => id).join(', ') + '.');
+export class UndetectedSourceError extends Data.TaggedError('DiagramUndetectedSource')<{}> {
+  override get message(): string {
+    return `Could not tell what language this is; pass one of: ${known()}.`;
   }
 }
 
@@ -86,7 +90,9 @@ export const convert = (
   Effect.gen(function* () {
     const language = source === undefined ? detect(text) : SOURCES.find(({ id }) => id === source);
     if (!language) {
-      return yield* Effect.fail(source === undefined ? new UndetectedSourceError() : new UnknownSourceError(source));
+      return yield* Effect.fail(
+        source === undefined ? new UndetectedSourceError() : new UnknownSourceError({ id: source }),
+      );
     }
     return printCommands(yield* language.compile(text));
   });
