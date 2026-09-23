@@ -7,15 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
-  Attention,
   useArticleKeyboardNavigation,
   useAttention,
   useSelection,
@@ -129,54 +127,22 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     [move],
   );
 
-  // A row opens the task as its own plank, the way a mailbox row opens its message: the `task` rung
-  // of the host's deck chain names the plank, so reading down the list reuses one plank rather than
-  // stacking one per click. `attendableId` is the host's node — the project's inside its Tasks tab.
-  const { invokePromise } = useOperationInvoker();
+  // A row opens its task through the shared reading gesture: the companion beside the list where the
+  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
+  // the host's node — the project's inside its Tasks tab.
   const currentId = useSelection(attendableId, 'single');
+  const openDetail = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: detail === 'companion' ? 'task' : undefined,
+  });
   const handleOpen = useCallback(
-    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => {
-      // Escape clears the row rather than leaving it current with nothing open: the list reads its
-      // selection back from the host, so a stale id would keep the row highlighted.
-      if (!task) {
-        void invokePromise(LayoutOperation.Select, { contextId: attendableId, subject: { mode: 'single' } });
-        return;
-      }
-
-      void invokePromise(LayoutOperation.Select, {
-        contextId: attendableId,
-        subject: { mode: 'single', id: task.id },
-      });
-
-      // The companion reads the selection published above, so opening it is all this has left to do.
-      // Meta/ctrl click still asks for a plank of its own — a reader comparing two tasks needs both.
-      if (detail === 'companion' && !meta) {
-        void invokePromise(LayoutOperation.UpdateCompanion, {
-          subject: Attention.linkedSegment('task'),
-          anchor: attendableId,
-        });
-        return;
-      }
-
-      // Meta/ctrl click asks for a plank of its own, so it opens without a level and keeps whatever
-      // is already there.
-      void invokePromise(LayoutOperation.Open, {
-        subject: [`${attendableId}/${task.id}`],
-        ...(meta ? {} : { root: attendableId, level: 'task' }),
-        pivotId: attendableId,
-        disposition: 'add',
-        navigation: 'immediate',
-      });
-    },
-    [attendableId, detail, invokePromise],
+    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
+    [openDetail],
   );
 
-  const handleNavigate = useCallback(
-    (taskId: string) => handleOpen(tasks.find(({ id }) => id === taskId)),
-    [tasks, handleOpen],
-  );
-
-  useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: handleNavigate });
+  useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: openDetail });
 
   const descriptionExtensions = useMarkdownExtensions(taskSet);
   const descriptionComponents = useDescriptionComponents();

@@ -282,7 +282,10 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
               description: grid ? 'col-start-[title] -col-end-2' : 'col-start-2',
               date: grid ? 'col-start-[-2] -col-end-1' : 'col-start-3',
             }}
-            classNames={mx('min-w-0 row-start-3', grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full')}
+            classNames={mx(
+              'min-w-0 pt-2 row-start-3',
+              grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full',
+            )}
           />
         )}
         {/* The description is held open with no blur to commit it, so the pane needs to say
@@ -295,7 +298,7 @@ export const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             nothing to cancel, and two dead controls on an empty row read as a form to fill in
             rather than a place to type. */}
         {(current || draft.trim().length > 0) && (
-          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] justify-self-end p-0 bg-transparent'>
+          <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] justify-end p-0 bg-transparent'>
             {/* Only when editing an existing task: the create row has nothing to set an estimate or
                 priority on until it is saved. */}
             {task && showEstimates && <TaskEstimateControl task={task} />}
