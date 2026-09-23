@@ -190,6 +190,8 @@ SceneLayer.displayName = 'SceneLayer';
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
 const Markers = ({ id, unit }: { id: string; unit: number }) => {
   const size = 6 * unit;
+  // An arrowhead has to read as a direction at a glance, so it carries twice the weight of an end dot.
+  const arrow = 2 * size;
   const ends = ['start', 'end'] as const;
   return (
     <>
@@ -200,8 +202,8 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           viewBox='0 0 10 10'
           refX={9}
           refY={5}
-          markerWidth={size}
-          markerHeight={size}
+          markerWidth={arrow}
+          markerHeight={arrow}
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
