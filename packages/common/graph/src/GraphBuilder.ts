@@ -254,12 +254,8 @@ export class GraphBuilder<
   readonly _expansions = new Map<string, Set<string>>();
   /** The expanded connectors; a dirty one is read only when flushed. */
   readonly _tracker: ConnectorTracker<ConnectorEntry<Arg>[]>;
-  /** Last-flushed node IDs per connector key, used for edge removal on update. */
-  readonly _connectorPrevious = new Map<string, string[]>();
-  /** All inline-descendant IDs per connector key, used to remove stale inline nodes on update. */
-  readonly _connectorPreviousInlineIds = new Map<string, string[]>();
-  /** Last-flushed node args per connector key, used for change detection. */
-  readonly _connectorPreviousArgs = new Map<string, Arg[]>();
+  /** What each connector key last wrote into the store; a key without an entry has never flushed. */
+  readonly _flushed = new Map<string, Flushed<Arg>>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
   /** Whether a flush of updates to connectors already in the store is queued. */
@@ -297,7 +293,7 @@ export class GraphBuilder<
     this._tracker = new ConnectorTracker({
       registry: this._registry,
       read: (get, key) => this._readConnectors(get, key),
-      onDirty: (key) => this._scheduleDirtyFlush(this._connectorPrevious.has(key)),
+      onDirty: (key) => this._scheduleDirtyFlush(this._flushed.has(key)),
     });
     this._store = store(
       {
@@ -334,21 +330,19 @@ export class GraphBuilder<
   }
 
   /** Apply a set of node changes for a single connector key. */
-  _applyConnectorUpdate(key: string, nodes: Arg[], previous: string[]): void {
+  _applyConnectorUpdate(key: string, nodes: Arg[]): void {
     const { id, relation } = relationFromConnectorKey(key);
+    const previous = this._flushed.get(key);
     const ids = nodes.map((node) => node.id);
+    const inline = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
+    this._flushed.set(key, { ids, args: nodes, inline });
+
     // Set membership throughout: a connector returning n nodes makes every `includes` here a scan
     // over n, and this runs on each of its updates.
     const current = new Set(ids);
-    const removed = previous.filter((previousId) => !current.has(previousId));
-    this._connectorPrevious.set(key, ids);
-    this._connectorPreviousArgs.set(key, nodes);
-
-    const currentInlineIds = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
-    const currentInline = new Set(currentInlineIds);
-    const previousInlineIds = this._connectorPreviousInlineIds.get(key) ?? [];
-    const staleInlineIds = previousInlineIds.filter((previousId) => !currentInline.has(previousId));
-    this._connectorPreviousInlineIds.set(key, currentInlineIds);
+    const removed = (previous?.ids ?? []).filter((previousId) => !current.has(previousId));
+    const currentInline = new Set(inline);
+    const staleInlineIds = (previous?.inline ?? []).filter((previousId) => !currentInline.has(previousId));
 
     this._store.removeNodes(staleInlineIds, true);
     this._store.removeEdges(
@@ -376,7 +370,7 @@ export class GraphBuilder<
         this._updateScheduled = true;
         this._updatePromise = Promise.resolve().then(() => {
           this._updateScheduled = false;
-          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key), this._frameBudget());
+          this._flushDirtyConnectors((key) => this._flushed.has(key), this._frameBudget());
           if (this._tracker.dirty.size > 0) {
             this._scheduleDirtyFlush(false);
           }
@@ -405,24 +399,22 @@ export class GraphBuilder<
       }
 
       // Read outside the store batch: a batch serves node reads from before its writes.
-      const updates: { key: string; nodes: Arg[]; previous: string[] }[] = [];
+      const updates: { key: string; nodes: Arg[] }[] = [];
       for (const key of keys) {
         if (budget && !budget.hasTime()) {
           break;
         }
         spend(budget, () => {
           // A read that throws skips the key: diffing an empty output would remove its nodes.
-          const update = contain({ key }, () => this._pull(key));
-          if (update) {
-            updates.push(update);
+          const nodes = contain({ key }, () => this._pull(key));
+          if (nodes) {
+            updates.push({ key, nodes });
           }
         });
       }
 
       const apply = () =>
-        updates.forEach(({ key, nodes, previous }) =>
-          contain({ key }, () => this._applyConnectorUpdate(key, nodes, previous)),
-        );
+        updates.forEach(({ key, nodes }) => contain({ key }, () => this._applyConnectorUpdate(key, nodes)));
       // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
       spend(budget, () => (this._store.batch ? this._store.batch(apply) : apply()));
     }
@@ -431,7 +423,7 @@ export class GraphBuilder<
   }
 
   /** Reads a connector and returns its output if it differs from what was last flushed. */
-  _pull(key: string): { key: string; nodes: Arg[]; previous: string[] } | undefined {
+  _pull(key: string): Arg[] | undefined {
     const entries = this._tracker.read(key);
     const { id, relation } = relationFromConnectorKey(key);
     const extensions = this.getExtensions();
@@ -444,17 +436,19 @@ export class GraphBuilder<
         ]) ?? [],
     );
 
-    const previous = this._connectorPrevious.get(key) ?? [];
+    const previous = this._flushed.get(key);
     const ids = nodes.map((node) => node.id);
-    if (ids.length === previous.length && ids.every((nodeId, index) => nodeId === previous[index])) {
-      const previousArgs = this._connectorPreviousArgs.get(key);
-      if (previousArgs && this._unchanged(previousArgs, nodes)) {
-        return undefined;
-      }
+    if (
+      previous &&
+      ids.length === previous.ids.length &&
+      ids.every((nodeId, index) => nodeId === previous.ids[index]) &&
+      this._unchanged(previous.args, nodes)
+    ) {
+      return undefined;
     }
 
     log('update', { id, relation, ids });
-    return { key, nodes, previous };
+    return nodes;
   }
 
   _collectOnOwnTask(): void {
@@ -492,13 +486,8 @@ export class GraphBuilder<
   }
 
   *_connectorStates(): Iterable<Retention.ConnectorState> {
-    for (const [key, outputs] of this._connectorPrevious) {
-      yield {
-        key,
-        source: relationFromConnectorKey(key).id,
-        outputs,
-        inline: this._connectorPreviousInlineIds.get(key) ?? [],
-      };
+    for (const [key, { ids, inline }] of this._flushed) {
+      yield { key, source: relationFromConnectorKey(key).id, outputs: ids, inline };
     }
   }
 
@@ -755,9 +744,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
   for (const state of [...builder._connectorStates()]) {
     if (Retention.tornDown(released, state)) {
-      builder._connectorPrevious.delete(state.key);
-      builder._connectorPreviousArgs.delete(state.key);
-      builder._connectorPreviousInlineIds.delete(state.key);
+      builder._flushed.delete(state.key);
       builder._onReleaseRelation(relationFromConnectorKey(state.key));
     }
   }
@@ -885,6 +872,9 @@ type ArgOf<B> = B extends GraphBuilder<any, infer Arg, any, any, any> ? Arg : ne
 type RelationOf<B> = B extends GraphBuilder<any, any, infer Rel, any, any> ? Rel : never;
 type MetaOf<B> = B extends GraphBuilder<any, any, any, infer Meta, any> ? Meta : never;
 type ExtensionOf<B> = Extension<NodeOf<B>, ArgOf<B>, RelationOf<B>, MetaOf<B>>;
+
+/** What a connector key last wrote: its node ids and args, and every inline descendant's id. */
+type Flushed<Arg> = { ids: string[]; args: Arg[]; inline: string[] };
 
 /** A node a connector produced, with the extension that produced it. */
 type ConnectorEntry<Arg> = { extensionId: string; node: Arg };

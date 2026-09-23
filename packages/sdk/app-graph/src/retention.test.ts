@@ -71,7 +71,7 @@ const counts = ({ registry, builder, graph }: ReturnType<typeof setup>) => {
     modelNodes: internal._model.nodes.length,
     modelEdges: internal._model.edges.length,
     expansions: builder._expansions.size,
-    connectors: builder._connectorPrevious.size,
+    connectors: builder._flushed.size,
     expanded: internal._expanded.size,
     relations: internal._relations.size,
   };
