@@ -64,7 +64,6 @@ import {
   isPortalNode,
 } from '../../model/types.ts';
 import {
-  animateCamera,
   boundsCenter,
   cameraTransform,
   coverage,
@@ -92,12 +91,11 @@ import { GridComponent } from '../Grid/index.ts';
 import { Palette, toolForKey } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { useSceneCamera } from './useSceneCamera.ts';
 
 const AUTO_ENTER = 0.85;
 const AUTO_EXIT = 0.3;
 const AUTO_DRILL_MS = 150;
-/** Quiet time after the last wheel step before the canvas takes pointer events again. */
-const NAVIGATION_SETTLE_MS = 150;
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 1;
 /** Zoom factor of one toolbar step. */
@@ -270,64 +268,18 @@ export const SceneView = ({
   // Camera.
   //
 
-  const setCamera = useCallback(
-    (next: Camera | ((camera: Camera) => Camera)) => {
-      registry.set(atoms.camera, typeof next === 'function' ? next(registry.get(atoms.camera)) : next);
-    },
-    [registry, atoms.camera],
-  );
-
-  // Clears the ref as well: a cancelled frame never runs the completion callback that would.
-  const cancelRef = useRef<() => void>(undefined);
-  // The portal a drill-in is zooming into; it renders as the plain child scene until the root swaps.
-  const [opening, setOpening] = useState<ElementId>();
-  // While the camera moves on its own (wheel zoom or pan, an animation) the canvas ignores the pointer:
-  // nothing under it is where it will be, so hover and presses would land on passing content.
-  const [navigating, setNavigating] = useState(false);
-  const navigatingRef = useRef(false);
-  const settleRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const setNavigation = useCallback(
-    (active: boolean) => {
-      clearTimeout(settleRef.current);
-      settleRef.current = undefined;
-      if (navigatingRef.current !== active) {
-        navigatingRef.current = active;
-        setNavigating(active);
-        if (active) {
-          registry.set(atoms.hover, undefined);
-        }
-      }
-    },
-    [registry, atoms.hover],
-  );
-  /** Navigation that ends on its own: stays active until no wheel step arrives for a beat. */
-  const touchNavigation = useCallback(() => {
-    setNavigation(true);
-    settleRef.current = setTimeout(() => setNavigation(false), NAVIGATION_SETTLE_MS);
-  }, [setNavigation]);
-  useEffect(() => () => clearTimeout(settleRef.current), []);
-
-  const cancelAnimation = useCallback(() => {
-    if (cancelRef.current) {
-      cancelRef.current();
-      cancelRef.current = undefined;
-      setNavigation(false);
-    }
-    setOpening(undefined);
-  }, [setNavigation]);
-
-  const animateTo = useCallback(
-    (target: Camera, done?: () => void) => {
-      cancelAnimation();
-      setNavigation(true);
-      cancelRef.current = animateCamera(registry.get(atoms.camera), target, viewport, setCamera, () => {
-        cancelRef.current = undefined;
-        setNavigation(false);
-        done?.();
-      });
-    },
-    [registry, atoms.camera, viewport, setCamera, cancelAnimation, setNavigation],
-  );
+  const {
+    setCamera,
+    animateTo,
+    cancelAnimation,
+    navigating,
+    isNavigating,
+    isAnimating,
+    setNavigation,
+    touchNavigation,
+    opening,
+    setOpening,
+  } = useSceneCamera(registry, atoms, viewport);
 
   // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
   // effect, so the fit lands before the first paint instead of one frame after it.
@@ -500,7 +452,7 @@ export const SceneView = ({
   // yields to its parent. Arrival is the history entry for this path, so a child capped at 1:1 (or a frame
   // that shrinks under a stationary camera) is measured against itself rather than an absolute coverage.
   useEffect(() => {
-    if (cancelRef.current || drag || viewport.width === 0) {
+    if (isAnimating() || drag || viewport.width === 0) {
       return;
     }
     const timer = setTimeout(() => {
@@ -933,7 +885,7 @@ export const SceneView = ({
     (event: React.PointerEvent) => {
       const current = registry.get(atoms.drag);
       if (!current) {
-        if (!navigatingRef.current) {
+        if (!isNavigating()) {
           updateHover(toScene(event));
         }
         return;
