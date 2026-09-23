@@ -75,6 +75,7 @@ export default Capability.makeModule(
         unsubscribe();
         unsubscribeRetention();
         AppGraphBuilder.setRetention(builder, []);
+        AppGraphBuilder.destroy(builder);
         AppGraph.dispose(builder.graph);
       }),
     );
