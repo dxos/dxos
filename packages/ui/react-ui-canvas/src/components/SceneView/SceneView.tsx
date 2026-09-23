@@ -84,7 +84,7 @@ import { ControlFrame, type LinkEnd, handlePoint } from '../ControlFrame/Control
 import { GridComponent } from '../Grid/index.ts';
 import { Palette, toolForKey } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
-import { ActionToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { ActionToolbar, DebugToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 
@@ -1515,8 +1515,7 @@ export const SceneView = ({
       {showToolbar && (
         <>
           <NavigationToolbar classNames='absolute top-2 left-2' actions={toolbarActions}>
-            {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
-            {path.length - 1}
+            depth {path.length - 1}
           </NavigationToolbar>
           <ActionToolbar
             classNames='absolute top-2 right-2'
@@ -1524,6 +1523,9 @@ export const SceneView = ({
             nodes={nodeRegistry}
             capabilities={capabilities}
           />
+          <DebugToolbar classNames='absolute bottom-2 left-2'>
+            {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
+          </DebugToolbar>
         </>
       )}
       {showPalette && (

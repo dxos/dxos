@@ -211,9 +211,9 @@ const childScene = (id: SceneId, name: string, elementId: (suffix: string) => st
     case 'cycle':
       return (
         builder
-          .ellipse(elementId('n1'), { x: scale(-2), y: scale(-4), width: scale(4), height: scale(4) }, '1')
-          .ellipse(elementId('n2'), { x: scale(8), y: scale(2), width: scale(4), height: scale(4) }, '2')
-          .ellipse(elementId('n3'), { x: scale(-14), y: scale(2), width: scale(4), height: scale(4) }, '3')
+          .ellipse(elementId('n1'), { x: scale(-2), y: scale(-10), width: scale(4), height: scale(4) }, '1')
+          .ellipse(elementId('n2'), { x: scale(-2), y: scale(6), width: scale(4), height: scale(4) }, '2')
+          .ellipse(elementId('n3'), { x: scale(-14), y: scale(-2), width: scale(4), height: scale(4) }, '3')
           // Routed rather than drawn: the ring is the one arrangement where a stored control point has to be
           // re-placed every time a node moves.
           .smart(elementId('e12'), elementId('n1'), elementId('n2'))

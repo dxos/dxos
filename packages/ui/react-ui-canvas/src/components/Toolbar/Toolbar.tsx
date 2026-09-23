@@ -4,9 +4,9 @@
 
 //
 // The optional editor toolbars (decision 5): every button is an action the view exposes, so a host may
-// render these bars, its own, or none; the palette stays a separate component. They are two bars rather
-// than one so where a control sits says what it does: `NavigationToolbar` reports where the view is
-// (the path it has drilled to, its zoom and depth) and `ActionToolbar` changes the scene.
+// render these bars, its own, or none; the palette stays a separate component. They are separate bars so
+// where a control sits says what it does: `NavigationToolbar` says where the view is in the scene tree,
+// `ActionToolbar` changes the scene, and `DebugToolbar` reports the camera's own numbers.
 //
 
 import React from 'react';
@@ -48,11 +48,15 @@ export type ToolbarActions = {
   layout?: () => void;
 };
 
-const barClasses = 'w-fit gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+// A bar floats over the canvas, so it takes half the view at most and scrolls what does not fit; the
+// toolbar's own layout supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
+const barClasses = 'w-fit max-w-[50%] gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+
+const readoutClasses = 'text-description font-mono text-sm whitespace-nowrap';
 
 export type NavigationToolbarProps = ThemedClassName<{
   actions: ToolbarActions;
-  /** Trailing status, e.g. the zoom and depth readout. */
+  /** Trailing status, e.g. the depth readout. */
   children?: React.ReactNode;
 }>;
 
@@ -73,11 +77,20 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
       {children && (
         <>
           <NaturalToolbar.Separator variant='line' />
-          <NaturalToolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
-            {children}
-          </NaturalToolbar.Text>
+          <NaturalToolbar.Text classNames={readoutClasses}>{children}</NaturalToolbar.Text>
         </>
       )}
+    </NaturalToolbar.Root>
+  );
+};
+
+export type DebugToolbarProps = ThemedClassName<{ children?: React.ReactNode }>;
+
+/** The camera's own numbers, away from the controls: nothing here acts on the scene. */
+export const DebugToolbar = ({ classNames, children }: DebugToolbarProps) => {
+  return (
+    <NaturalToolbar.Root density='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
+      <NaturalToolbar.Text classNames={readoutClasses}>{children}</NaturalToolbar.Text>
     </NaturalToolbar.Root>
   );
 };

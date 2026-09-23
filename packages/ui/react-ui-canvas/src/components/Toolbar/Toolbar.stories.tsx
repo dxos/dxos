@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { freehandCapabilities } from '../../model/projection.ts';
 import { defaultNodeRegistry } from '../../model/registry.ts';
 import { type NodeType } from '../../model/types.ts';
-import { ActionToolbar, NavigationToolbar, type ToolbarActions } from './Toolbar.tsx';
+import { ActionToolbar, DebugToolbar, NavigationToolbar, type ToolbarActions } from './Toolbar.tsx';
 
 /** The bar over a fake view: every action appends to a log so each button is seen to fire. */
 const DefaultStory = () => {
@@ -45,11 +45,12 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-2 p-2'>
       <div className='flex justify-between gap-2'>
-        <NavigationToolbar actions={actions}>
-          {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
-        </NavigationToolbar>
+        <NavigationToolbar actions={actions}>depth {actions.path.length - 1}</NavigationToolbar>
         <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
       </div>
+      <DebugToolbar>
+        {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
+      </DebugToolbar>
       <pre className='text-xs text-description'>{log.join('\n')}</pre>
     </div>
   );
