@@ -183,5 +183,13 @@ before), not reasoned about from the source.
 - [x] `scene--logic`: the switches drive the gates. Verified end to end in Chromium — two switches
       through the AND and the OR light the beacon — which is what confirms the `Switch` half of the
       gesture fix above; the e2e harness carries it as a third test.
+- [ ] Implement `text-to-image` against HeyGen. It is a stub today — `VoidOutput` and an `exec` that
+      throws `Not implemented` — so the `plugins` and `image-gen` circuits wire an edge to a `result`
+      output that does not exist and the graph says so (`output does not exist on node:
+    [text-to-image] -> result`). A real implementation settles the output schema the edge needs. The
+      same fault is in the old editor; `chat` likewise has no `exec`, which is the console's
+      `No compute function for node type: chat`.
+- [ ] `scene--plugins`: the Text node renders as an empty box — no header, icon or run control — where
+      the editor draws it normally; its rendered text content is the empty string.
 - [ ] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
       audio, voice), same treatment.
