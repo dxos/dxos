@@ -4,7 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
 import { fromPublicKey } from '@dxos/protocols/buf';
 import { type Contact, ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -28,6 +28,7 @@ export const createContactFixtures = ({
   const contacts = contactNames.map((displayName, index) =>
     create(ContactSchema, {
       identityKey: fromPublicKey(PublicKey.random()),
+      did: IdentityDid.random(),
       profile: create(ProfileDocumentSchema, { displayName }),
       commonSpaces: spaces.slice(0, (index % spaces.length) + 1).map((space) => fromPublicKey(space.key)),
     }),

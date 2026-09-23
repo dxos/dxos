@@ -186,6 +186,8 @@ export const translations = [
         'unnamed-space.label': 'Untitled space',
         'copy-key.label': 'Copy identity key',
         'identity-key.label': 'Identity key',
+        'identity-did.label': 'Identity DID',
+        'copy-did.label': 'Copy DID',
         'contact-picker.placeholder': 'Choose people',
         'contact-picker-search.placeholder': 'Search contacts…',
         'contact-picker-empty.message': 'No matching contacts.',

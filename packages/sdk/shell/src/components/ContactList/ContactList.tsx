@@ -93,6 +93,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
         icon={
           <Avatar.Root labelId={labelId}>
             <Avatar.Content
+              size={8}
               hue={profileString(contact, 'hue') ?? fallback.hue}
               fallback={profileString(contact, 'emoji') ?? fallback.emoji}
             />
@@ -104,16 +105,16 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
               {displayName}
             </span>
             <div className='flex items-center gap-1 text-sm text-description'>
-              <Tooltip.Trigger asChild content={t('identity-key.label')}>
-                <span className='font-mono truncate'>{identityKey.truncate()}</span>
+              <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
+                <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
               </Tooltip.Trigger>
               <SystemIconButton.Clipboard
                 iconOnly
                 density='sm'
                 variant='ghost'
                 size={4}
-                value={identityKey.toHex()}
-                label={t('copy-key.label')}
+                value={contact.did ?? identityKey.toHex()}
+                label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
               />
             </div>
           </div>

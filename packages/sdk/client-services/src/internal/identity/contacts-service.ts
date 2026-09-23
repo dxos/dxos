@@ -8,7 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type MemberInfo } from '@dxos/credentials';
+import { type MemberInfo, createDidFromIdentityKey } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
@@ -34,7 +34,7 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
   ) {}
 
   ['ContactsService.getContacts'](): Effect.Effect<ContactBook, Error> {
-    return Effect.sync(() => this.#getContacts());
+    return Effect.promise(() => this.#getContacts());
   }
 
   ['ContactsService.queryContacts'](): EffectStream.Stream<ContactBook, Error> {
@@ -44,7 +44,7 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
       const pushUpdateTask = new UpdateScheduler(
         ctx,
         async () => {
-          void emit.single(this.#getContacts());
+          void emit.single(await this.#getContacts());
         },
         { maxFrequency: 2 },
       );
@@ -71,7 +71,7 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
     });
   }
 
-  #getContacts(): ContactBook {
+  async #getContacts(): Promise<ContactBook> {
     const identity = this._identityManager.identity;
     if (identity == null) {
       return buf.create(ContactBookSchema, { contacts: [] });
@@ -99,6 +99,12 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
         }
         return acc;
       }, new ComplexMap<PublicKey, Contact>(PublicKey.hash));
+    // Derived here (and cached by key) so clients can show the DID without hashing each key themselves.
+    await Promise.all(
+      [...contacts.entries()].map(async ([identityKey, contact]) => {
+        contact.did = await createDidFromIdentityKey(identityKey);
+      }),
+    );
     return buf.create(ContactBookSchema, { contacts: [...contacts.values()] });
   }
 }

@@ -106,7 +106,8 @@ describe('ContactBook', () => {
       expect(client1.halo.contacts.get().length).to.eq(0);
       await inviteMember(space, client2);
       const contacts = await waitForContactBookSize(client1, 1);
-      expectInContactBook(contacts, client2);
+      const contact = expectInContactBook(contacts, client2);
+      expect(contact.did).to.eq(client2.halo.identity.get()?.did);
     });
 
     test('same contact in multiple spaces', async () => {
