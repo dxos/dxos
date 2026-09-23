@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -30,7 +30,7 @@ export const AddMailbox = Operation.make({
     object: Obj.Unknown,
     // The database comes from the invocation's space id, never from the input; absent, the mailbox
     // is filed at the space root.
-    target: Schema.optional(Type.getSchema(Collection.Collection)),
+    target: Schema.optional(Obj.Unknown),
   }),
   output: Schema.Struct({
     id: Schema.String,

@@ -162,10 +162,10 @@ export const AddObject = Operation.make({
     // target collection that way; in-process callers keep passing the live entity. Absent, the
     // object is filed at the space root of the database the runtime resolved from the space id —
     // a database is never an input, since it cannot cross a process boundary.
-    target: Schema.optional(
-      Schema.Union([Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection)]),
-    ).annotate({
-      description: 'The collection to add to, or a reference to it. Omit to file at the space root.',
+    target: Schema.optional(Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)])).annotate({
+      description:
+        'The parent of the object, or a reference to it. A collection files it; any other object ' +
+        'files it itself, so the object is only persisted. Omit to file at the space root.',
     }),
   }),
   output: Schema.Struct({
@@ -297,8 +297,11 @@ export const OpenObjectForm = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
-      description: 'The database or collection to create in.',
+    target: Schema.Union([Database.Database, Obj.Unknown]).annotate({
+      description:
+        'Where the object is created and what its parent is. A database means the space root; a ' +
+        'collection files it; any other object, such as a project taking it into its artifacts, ' +
+        'files it itself.',
     }),
     mode: Schema.optional(
       Schema.Literals(['draft', 'live']).annotate({

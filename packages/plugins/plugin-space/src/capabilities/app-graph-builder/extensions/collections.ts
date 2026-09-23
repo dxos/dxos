@@ -13,14 +13,16 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Entity, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, type Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,6 +38,8 @@ import {
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
+  REMOVE_FROM_COLLECTION_LABEL,
+  SHOW_ORIGINAL_LABEL,
 } from './shared.ts';
 
 //
@@ -167,16 +171,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed([]);
         }
 
-        const rawRefs = collection.objects ?? [];
         const available = getAvailableTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
-
-        const objects = rawRefs
-          .map((ref: any) => {
-            get(Obj.atom(ref));
-            return ref.target;
-          })
-          .filter(isNonNullable)
-          .filter((object: Obj.Unknown) => isTypeAvailable(available, object));
+        const objects = get(space.db.query(Query.select(Filter.entity(collection)).reference('objects')).atom).filter(
+          (object: Obj.Unknown) => isTypeAvailable(available, object),
+        );
 
         return Effect.succeed(
           objects
@@ -236,17 +234,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
-        const collectionSnapshot = get(Obj.atom(collection));
-        const refs = collectionSnapshot.objects ?? [];
         const available = db ? getAvailableTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
-
-        const objects = refs
-          .map((ref: any) => {
-            get(Obj.atom(ref));
-            return ref.target;
-          })
-          .filter(isNonNullable)
-          .filter((object: Obj.Unknown) => !available || isTypeAvailable(available, object));
+        const members = db ? get(db.query(Query.select(Filter.entity(collection)).reference('objects')).atom) : [];
+        const objects = members.filter((object: Obj.Unknown) => !available || isTypeAvailable(available, object));
 
         return Effect.succeed(
           objects
@@ -365,6 +355,7 @@ const constructObjectActions = ({
   invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
+  const linkedFrom = parentCollection && !Obj.isOwnedBy(object, parentCollection) ? parentCollection : undefined;
 
   const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
@@ -392,22 +383,56 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    AppGraphNode.makeAction({
-      id: SpaceOperation.RemoveObjects.meta.key,
-      data: () =>
-        Operation.invoke(
-          SpaceOperation.RemoveObjects,
-          { objects: [object], target: parentCollection },
-          { spaceId: Obj.getDatabase(object)?.spaceId },
-        ),
-      properties: {
-        label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
-        icon: 'ph--trash--regular',
-        disposition: 'list-item',
-        disabled: !deletable,
-        testId: 'spacePlugin.deleteObject',
-      },
-    }),
+    ...(linkedFrom
+      ? [
+          AppGraphNode.makeAction({
+            id: 'showOriginal',
+            data: () =>
+              Effect.gen(function* () {
+                const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+                  query: { uri: Obj.getURI(object) },
+                });
+                const target = targets[0];
+                if (target) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [target.path], navigation: 'immediate' });
+                }
+              }),
+            properties: {
+              label: SHOW_ORIGINAL_LABEL,
+              icon: 'ph--arrow-square-out--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.showOriginal',
+            },
+          }),
+          AppGraphNode.makeAction({
+            id: 'removeFromCollection',
+            data: () => Effect.sync(() => CollectionModel.unlink({ object, from: linkedFrom })),
+            properties: {
+              label: REMOVE_FROM_COLLECTION_LABEL,
+              icon: 'ph--minus-circle--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.removeFromCollection',
+            },
+          }),
+        ]
+      : [
+          AppGraphNode.makeAction({
+            id: SpaceOperation.RemoveObjects.meta.key,
+            data: () =>
+              Operation.invoke(
+                SpaceOperation.RemoveObjects,
+                { objects: [object], target: parentCollection },
+                { spaceId: Obj.getDatabase(object)?.spaceId },
+              ),
+            properties: {
+              label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
+              icon: 'ph--trash--regular',
+              disposition: 'list-item',
+              disabled: !deletable,
+              testId: 'spacePlugin.deleteObject',
+            },
+          }),
+        ]),
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
           AppGraphNode.makeAction({

@@ -87,3 +87,88 @@ describe('add', () => {
     expect(Obj.getDatabase(hidden)).toBeDefined();
   });
 });
+
+describe('ownership', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const createDatabase = () => builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
+
+  test('the first collection to reference an object becomes its parent', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const first = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const second = db.add(Collection.make({ objects: [] }));
+    Obj.update(second, (second) => {
+      second.objects.push(Ref.make(person));
+    });
+    await db.flush();
+
+    expect(Obj.getParent(person)?.id).toBe(first.id);
+  });
+
+  test('moving from the owning collection hands ownership to the destination', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const from = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const to = db.add(Collection.make({ objects: [] }));
+    CollectionModel.move({ object: person, from, to });
+    await db.flush();
+
+    expect(from.objects).toHaveLength(0);
+    expect(to.objects).toHaveLength(1);
+    expect(Obj.getParent(person)?.id).toBe(to.id);
+  });
+
+  test('moving a linked object moves the link and leaves ownership alone', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
+    Obj.update(linked, (linked) => {
+      linked.objects.push(Ref.make(person));
+    });
+    const elsewhere = db.add(Collection.make({ objects: [] }));
+    CollectionModel.move({ object: person, from: linked, to: elsewhere });
+    await db.flush();
+
+    expect(Obj.getParent(person)?.id).toBe(owner.id);
+    expect(linked.objects).toHaveLength(0);
+    expect(elsewhere.objects).toHaveLength(1);
+  });
+
+  test('unlinking drops the reference and leaves the object and its parent', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(person)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
+    Obj.update(linked, (linked) => {
+      linked.objects.push(Ref.make(person));
+    });
+    CollectionModel.unlink({ object: person, from: linked });
+    await db.flush();
+
+    expect(linked.objects).toHaveLength(0);
+    expect(Obj.getParent(person)?.id).toBe(owner.id);
+  });
+
+  test('a target that is not a collection persists the object without filing it', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const person = Obj.make(TestSchema.Person, { name: 'alice' });
+    // Stands in for a project.
+    const target = db.add(Obj.make(TestSchema.Person, { name: 'target' }));
+    await CollectionModel.add({ object: person, target }).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
+    await db.flush();
+
+    expect(Obj.getDatabase(person)).toBeDefined();
+    const results = await db.query(CollectionModel.containing(person)).run();
+    expect(results).toEqual([]);
+  });
+});

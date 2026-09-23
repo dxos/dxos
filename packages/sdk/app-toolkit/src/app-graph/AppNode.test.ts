@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Annotation, type Database, DXN, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import * as AppNode from './AppNode.ts';
@@ -66,3 +66,58 @@ describe('makeObject', () => {
 
 const iconAtom = (db: Database.Database, object: Obj.Unknown) =>
   Atom.make((get) => AppNode.makeObject({ get, db, object })?.properties.icon);
+
+describe('collection partials: transfer', () => {
+  let testBuilder: EchoTestBuilder;
+  let db: Database.Database;
+
+  beforeEach(async () => {
+    testBuilder = await new EchoTestBuilder().open();
+    ({ db } = (await testBuilder.createDatabase({ types: [Collection.Collection, Doc] })) as {
+      db: Database.Database;
+    });
+  });
+
+  afterEach(async () => {
+    await testBuilder.close();
+  });
+
+  const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
+    const node = { data: doc } as any;
+    AppNode.buildCollectionPartials(to, db).onTransferStart(node);
+    AppNode.buildCollectionPartials(from, db).onTransferEnd(node, { data: to } as any);
+  };
+
+  test('dragging between collections re-parents the object', async ({ expect }) => {
+    const doc = db.add(Obj.make(Doc, { name: 'doc' }));
+    const from = db.add(Collection.make({ objects: [Ref.make(doc)] }));
+    const to = db.add(Collection.make({ objects: [] }));
+    await db.flush();
+    expect(Obj.getParent(doc)?.id).toBe(from.id);
+
+    drop(doc, from, to);
+    await db.flush();
+
+    expect(Obj.getParent(doc)?.id).toBe(to.id);
+    expect(from.objects).toHaveLength(0);
+    expect(to.objects).toHaveLength(1);
+  });
+
+  test('dragging a linked object moves the link and leaves ownership where it is', async ({ expect }) => {
+    const doc = db.add(Obj.make(Doc, { name: 'doc' }));
+    const owner = db.add(Collection.make({ objects: [Ref.make(doc)] }));
+    const linked = db.add(Collection.make({ objects: [] }));
+    Obj.update(linked, (linked) => {
+      linked.objects.push(Ref.make(doc));
+    });
+    const to = db.add(Collection.make({ objects: [] }));
+    await db.flush();
+
+    drop(doc, linked, to);
+    await db.flush();
+
+    expect(Obj.getParent(doc)?.id).toBe(owner.id);
+    expect(linked.objects).toHaveLength(0);
+    expect(to.objects).toHaveLength(1);
+  });
+});

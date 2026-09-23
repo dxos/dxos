@@ -178,11 +178,11 @@ describe('Annotation.SetParent', () => {
   class Container extends Type.makeObject<Container>(DXN.make('com.example.type.container', '0.1.0'))(
     Schema.Struct({
       /** Owned. */
-      body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set(true))),
+      body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set())),
       /** Owned, ordered. */
-      sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set(true)),
+      sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set()),
       /** Owned, nested inside a plain struct. */
-      backend: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set(true)) })),
+      backend: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set()) })),
       /** NOT owned — a plain reference. */
       linked: Schema.optional(Ref.Ref(Body)),
     }),

@@ -17,7 +17,7 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -400,21 +400,7 @@ export const createProjectArtifactsActionExtension = () =>
         return Effect.succeed([]);
       }
 
-      // Subscribe to the project itself: the children are its ref array, so a new artifact changes no
-      // query this connector would otherwise re-run on.
-      get(Obj.atom(project));
-      const ids = project.artifacts.flatMap((ref) => {
-        const uri = EID.tryParse(ref.uri);
-        const entityId = uri && EID.getEntityId(uri);
-        return entityId ? [entityId] : [];
-      });
-      if (ids.length === 0) {
-        return Effect.succeed([]);
-      }
-
-      // Query rather than read `ref.target`: on a cold load the targets are not in memory yet, and a
-      // sync read would leave the branch permanently empty.
-      const objects = get(db.query(Query.select(Filter.id(...ids))).atom);
+      const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
@@ -433,7 +419,7 @@ export const createProjectArtifactsActionExtension = () =>
               }
 
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
-                target: db,
+                target: project,
                 targetNodeId: nodeId,
               });
               // Dismissed dialog: nothing was created, so there is nothing to link.

@@ -10,13 +10,15 @@ import * as Option from 'effect/Option';
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
-import * as AppNode from '../app-graph/AppNode.ts';
 import { AppAnnotation } from '../echo/index.ts';
 
 type AddProps = {
   object: Obj.Unknown;
-  target?: Collection.Collection;
+  /** The object's parent; absent, the object files at the space root. */
+  target?: Obj.Unknown;
 };
 
 /**
@@ -35,12 +37,81 @@ const isHidden = (object: Obj.Unknown): boolean => {
   return type ? Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)) : false;
 };
 
+/** Returns true when the object is eligible to live inside a collection. */
+export const isCollectionItem = (object: Obj.Unknown): boolean => {
+  if (Obj.instanceOf(Collection.Collection, object)) {
+    return true;
+  }
+  const type = Obj.getType(object);
+  if (!type) {
+    return false;
+  }
+  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+};
+
+/** The entity a ref names, whether it is addressed locally or space-qualified. */
+const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
+  const eid = EID.tryParse(ref.uri);
+  return eid ? EID.getEntityId(eid) : undefined;
+};
+
+const indexOf = (collection: Collection.Collection, object: Obj.Unknown): number =>
+  collection.objects.findIndex((ref) => refEntityId(ref) === object.id);
+
+type MoveProps = {
+  object: Obj.Unknown;
+  from?: Collection.Collection;
+  to: Collection.Collection;
+  /** Position in the destination; appended when absent. */
+  index?: number;
+};
+
+/** Moves an object between collections; ownership follows only when `from` owned it. */
+export const move = ({ object, from, to, index }: MoveProps): void => {
+  if (from?.id === to.id) {
+    return;
+  }
+  const owned = Obj.isOwnedBy(object, from);
+  const objectRef = Ref.make(object);
+  Obj.update(to, (to) => {
+    if (indexOf(to, object) === -1) {
+      if (index === undefined) {
+        to.objects.push(objectRef);
+      } else {
+        to.objects.splice(index, 0, objectRef);
+      }
+    }
+  });
+  if (from) {
+    Obj.update(from, (from) => {
+      const idx = indexOf(from, object);
+      if (idx > -1) {
+        from.objects.splice(idx, 1);
+      }
+    });
+  }
+  if (owned) {
+    Obj.setParent(object, to);
+  }
+};
+
+/** Drops the object's ref from the collection, leaving the object and its parent alone. */
+export const unlink = ({ object, from }: { object: Obj.Unknown; from: Collection.Collection }): void => {
+  Obj.update(from, (from) => {
+    const idx = indexOf(from, object);
+    if (idx > -1) {
+      from.objects.splice(idx, 1);
+    }
+  });
+};
+
+/** A target that is not a collection files the object itself, so there is nothing to file here. */
+const filesItself = (target: Obj.Unknown | undefined): boolean =>
+  target !== undefined && !Collection.isCollection(target);
+
 export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);
-  // Hidden objects are implementation details reached through a ref on their owner (e.g. a
-  // sketch's canvas, a game's variant state). Collection membership is what the navtree renders,
-  // so filing one would surface it as a sibling of the object that owns it.
-  if (isHidden(object)) {
+  if (isHidden(object) || filesItself(target)) {
     if (!Obj.getDatabase(object)) {
       yield* Database.add(object);
     }
@@ -51,7 +122,7 @@ export const add = Effect.fn(function* ({ object, target }: AddProps) {
     Obj.update(target, (target) => {
       target.objects.push(objectRef);
     });
-  } else if (!AppNode.isCollectionItem(object)) {
+  } else if (!isCollectionItem(object)) {
     yield* Database.add(object);
   } else {
     const objects = yield* Database.query(Query.type(SpaceProperties)).run;
