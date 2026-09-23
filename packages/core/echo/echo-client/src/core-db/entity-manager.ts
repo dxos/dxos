@@ -1768,6 +1768,27 @@ export class EntityManager implements IDatabaseBinding {
     });
   }
 
+  /**
+   * Rebinds an object to the document a root update pointed it at, once the host can produce it.
+   *
+   * A rebind onto an unavailable document is skipped rather than awaited, so the object keeps its
+   * previous binding and nothing else would revisit the link.
+   */
+  #rebindWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle.once('available', () => {
+      if (this.#isStale(generation) || !this._objects.has(objectId)) {
+        return;
+      }
+      // The directory may have re-pointed the object in the meantime; binding it to a superseded
+      // document would restore content the space no longer links.
+      if (this._getLinkedDocumentUrl(objectId) !== handle.url) {
+        return;
+      }
+      this._rebindObjects(handle, [objectId]);
+      this._markObjectAvailable(objectId);
+    });
+  }
+
   private async _loadHandleForObject(
     handle: DocHandleProxy<DatabaseDirectory>,
     objectId: string,
@@ -1901,6 +1922,9 @@ export class EntityManager implements IDatabaseBinding {
             automergeUrl: newObjectDocUrl.toString(),
           });
           this._onObjectUnavailable({ objectId: object.id });
+          // Skipping leaves the object on its previous document, so without this the replacement is
+          // picked up only by whatever root update happens to come next.
+          this.#rebindWhenAvailable(newDocHandle, object.id, this.#generation);
           continue;
         }
         newDocHandle.doc();
