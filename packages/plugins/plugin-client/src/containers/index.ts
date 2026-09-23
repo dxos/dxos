@@ -8,6 +8,7 @@ export { type RecoveryCodeDialogProps } from './RecoveryCodeDialog/index.ts';
 export { type ResetDialogProps } from './ResetDialog/index.ts';
 
 export const AccountContainer: ComponentType<any> = lazy(() => import('./AccountContainer/index.ts'));
+export const ContactsContainer: ComponentType<any> = lazy(() => import('./ContactsContainer/index.ts'));
 export const DevicesContainer: ComponentType<any> = lazy(() => import('./DevicesContainer/index.ts'));
 export const InvitationsContainer: ComponentType<any> = lazy(() => import('./InvitationsContainer/index.ts'));
 export const UsageContainer: ComponentType<any> = lazy(() => import('./UsageContainer/index.ts'));

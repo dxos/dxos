@@ -24,6 +24,9 @@ const pluginTranslations = [
         'create-device-invitation.label': 'Create code',
         'qr-code.description':
           'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
+        'contacts.label': 'Contacts',
+        'contacts.description': 'People you share at least one space with.',
+        'contacts-search.placeholder': 'Search contacts…',
         'security.label': 'Security',
         'account-panel.label': 'Account',
         'invitations-panel.label': 'Invitations',
