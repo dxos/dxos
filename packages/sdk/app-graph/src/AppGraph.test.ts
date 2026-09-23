@@ -352,11 +352,13 @@ describe('Graph', () => {
     const nodeKey = graph.node(exampleId(1));
 
     let node: Option.Option<Node.Node> = Option.none();
-    // Read first: a bare subscription does not build a derived atom, so it would never fire.
-    registry.get(nodeKey);
-    const cancel = registry.subscribe(nodeKey, (n) => {
-      node = n;
-    });
+    const cancel = registry.subscribe(
+      nodeKey,
+      (n) => {
+        node = n;
+      },
+      { immediate: true },
+    );
     onTestFinished(() => cancel());
 
     expect(node).toEqual(Option.none());

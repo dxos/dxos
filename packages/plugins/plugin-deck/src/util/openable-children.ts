@@ -27,20 +27,15 @@ export const firstOpenableChild = (
   timeoutMs: number,
 ): Effect.Effect<string | undefined> =>
   Effect.callback<string>((resume) => {
-    const [present] = openableChildren(graph, id);
-    if (present) {
-      resume(Effect.succeed(present));
-      return;
-    }
-
-    // Read first: a subscription alone does not build a derived atom, so it would never fire.
-    const children = graph.connections(id, 'child');
-    registry.get(children);
-    const unsubscribe = registry.subscribe(children, () => {
-      const [first] = openableChildren(graph, id);
-      if (first) {
-        resume(Effect.succeed(first));
-      }
-    });
+    const unsubscribe = registry.subscribe(
+      graph.connections(id, 'child'),
+      () => {
+        const [first] = openableChildren(graph, id);
+        if (first) {
+          resume(Effect.succeed(first));
+        }
+      },
+      { immediate: true },
+    );
     return Effect.sync(unsubscribe);
   }).pipe(Effect.timeoutOrElse({ duration: `${timeoutMs} millis`, orElse: () => Effect.succeed(undefined) }));
