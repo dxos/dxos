@@ -11,6 +11,20 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { UNSET_ICON } from './status-icons.ts';
+
+/**
+ * The glyph per event, keyed by the `Task.Event` the entry records — a table rather than a ternary,
+ * so a new event kind is one line here instead of a condition to find in the markup.
+ */
+const EVENT_ICONS: Record<Task.Event, string> = {
+  created: 'ph--plus--regular',
+  updated: 'ph--pencil-simple--regular',
+};
+
+/** Falls back to the unset glyph: an entry written by an older schema still renders as a row. */
+const eventIcon = (event: Task.Event): string => EVENT_ICONS[event] ?? UNSET_ICON;
+
 export type TaskHistoryProps = ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
   /** Entries to show, newest first; the rest are left to a surface with room for them. */
@@ -40,23 +54,23 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       aria-label={t('task-history.label')}
       data-testid='taskList.history'
       className={mx(
-        'grid grid-cols-[min-content_1fr_min-content] items-baseline gap-x-1.5 gap-y-0.5 text-sm text-subdued',
+        'grid grid-cols-[min-content_1fr_min-content] items-baseline gap-x-1.5 gap-y-0.5 text-sm text-description',
         classNames,
       )}
     >
       {visible.map((entry, index) => (
         // A subgrid spanning the log's three tracks: the entry keeps its `listitem` semantics while
         // its cells sit on the shared columns rather than on tracks of its own.
-        <div
-          key={`${entry.date}-${index}`}
-          role='listitem'
-          className='grid grid-cols-subgrid col-span-3 items-baseline'
-        >
-          <Icon icon={entry.event === 'created' ? 'ph--plus--regular' : 'ph--pencil-simple--regular'} size={3} />
-          <span className='truncate'>{entry.description ?? entry.event}</span>
+        // `items-start`, since a wrapped description makes the row taller than one line: centring
+        // would then float the glyph and the time against the middle of the paragraph.
+        <div key={`${entry.date}-${index}`} role='listitem' className='grid grid-cols-subgrid col-span-3 items-start'>
+          <Icon icon={eventIcon(entry.event)} />
+          {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
+              time column is fixed, so the description takes the height it needs. */}
+          <span className='min-w-0'>{entry.description ?? entry.event}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
               to cite; the exact timestamp stays on the entry for a surface that needs it. */}
-          <span className='whitespace-nowrap tabular-nums'>{formatRelative(entry.date)}</span>
+          <span className='whitespace-nowrap tabular-nums text-right border'>{formatRelative(entry.date)}</span>
         </div>
       ))}
     </div>
