@@ -4,7 +4,7 @@
 
 import React, { type Ref } from 'react';
 
-import { type Database, type Filter, type Tag } from '@dxos/echo';
+import { type Database, type Tag } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -16,8 +16,6 @@ export type TaskFilterProps = {
   tags: Tag.Map;
   value: string;
   onChange: (value: string) => void;
-  /** The editor's own parse, so the filter is not rebuilt per keystroke by the consumer. */
-  onFilterChange: (filter: Filter.Any | undefined) => void;
   onClear: () => void;
   editorRef?: Ref<EditorController>;
 };
@@ -26,7 +24,7 @@ export type TaskFilterProps = {
  * Filter row for a task list's toolbar — the query editor plus a clear button, as the mailbox
  * toolbar composes `MailboxFilter`. No save action: a task set has no saved views to file one in.
  */
-export const TaskFilter = ({ db, tags, value, onChange, onFilterChange, onClear, editorRef }: TaskFilterProps) => {
+export const TaskFilter = ({ db, tags, value, onChange, onClear, editorRef }: TaskFilterProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
     <>
@@ -36,7 +34,6 @@ export const TaskFilter = ({ db, tags, value, onChange, onFilterChange, onClear,
         tags={tags}
         value={value}
         onChange={onChange}
-        onFilterChange={({ filter }) => onFilterChange(filter)}
         ref={editorRef}
       />
       <IconButton

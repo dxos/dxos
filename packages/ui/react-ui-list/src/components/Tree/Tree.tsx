@@ -490,6 +490,12 @@ export const Tree = <T extends { id: string } = any>({
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
+      // A modified activation is the pointer's to report: the machine moves focus first, and
+      // following it here would select (and open) the row a heartbeat before the meta-click says it
+      // wanted a second view of it instead.
+      if (recentModifiers().meta) {
+        return;
+      }
       // Only the row's own focus selects — the arrows, or a click on the row. Focus landing on a
       // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
       // following it selected the row the reader was about to act on: a delete briefly swapped the
@@ -505,7 +511,7 @@ export const Tree = <T extends { id: string } = any>({
         onSelectNode(entry, { ...NO_MODIFIERS, current: true });
       }
     },
-    [selectionFollowsFocus, selected, byValue, onSelectNode],
+    [selectionFollowsFocus, selected, byValue, onSelectNode, recentModifiers],
   );
 
   const handleSelectionChange = useCallback(

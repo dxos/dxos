@@ -11,6 +11,7 @@ import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
@@ -59,13 +60,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // reader edits, its parse is what the list is narrowed by. Held per mount — a filter is a glance,
   // not a property of the set.
   const [filterText, setFilterText] = useState('');
-  const [filter, setFilter] = useState<Filter.Any | undefined>(undefined);
   const tags = useTagMap(db);
+  // Parsed here rather than taken from the editor's own callback: the parse then re-runs when the
+  // tag registry changes (a `#tag` typed before its tag loaded resolves on arrival), and a query
+  // that does not parse is a query that matches nothing rather than one that matches everything.
+  const filter = useMemo(() => {
+    const text = filterText.trim();
+    if (text.length === 0) {
+      return undefined;
+    }
+    return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
+  }, [filterText, tags]);
   const tasks = useFilteredTasks(allTasks, filter);
   const handleClearFilter = useCallback(() => {
     filterEditorRef.current?.setText('');
     setFilterText('');
-    setFilter(undefined);
   }, []);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
@@ -178,7 +187,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       tags={tags}
       value={filterText}
       onChange={setFilterText}
-      onFilterChange={setFilter}
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
     />
@@ -299,11 +307,10 @@ const useFilteredTasks = (tasks: readonly Task.Task[], filter: Filter.Any | unde
       Atom.make((get): readonly Task.Task[] => {
         // Subscribed per task, so an edit that changes whether a row matches re-runs the filter
         // without a whole-list subscription.
-        tasks.forEach((task) => {
-          get(Obj.atomProperty(task, 'title'));
-          get(Obj.atomProperty(task, 'description'));
-          get(Obj.atomProperty(task, 'status'));
-        });
+        // The whole object, not the fields the text search reads: a filter can name any property
+        // (`status:`, `priority:`) or the task's tags, and a property-level subscription would miss
+        // every term but the ones listed here.
+        tasks.forEach((task) => get(Obj.atom(task)));
         return filterTasks(tasks, filter);
       }),
     [tasks, filter],
