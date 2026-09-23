@@ -49,7 +49,7 @@ import { translationKey } from '#translations';
 import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
 import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
-import { TaskTreeContent } from './TaskTreeContent.tsx';
+import { type TaskSelectModifiers, TaskTreeContent } from './TaskTreeContent.tsx';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
@@ -94,7 +94,7 @@ type TaskListContextValue = {
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
-  onTaskSelect?: (task: Task.Task | undefined) => void;
+  onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */
   onTaskCheck?: (task: Task.Task) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
@@ -197,7 +197,7 @@ type TaskListRootProps = PropsWithChildren<{
    * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
    * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
    */
-  onTaskSelect?: (task: Task.Task | undefined) => void;
+  onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   /**
    * Enables the gutter checkbox, called with the row toggled. The host owns the set — this list is
    * embedded in surfaces whose toolbars read the same selection — so nothing is tracked here.
@@ -257,9 +257,9 @@ const TaskListRoot = ({
 
   // Passing `undefined` clears the selection — what `Escape` on a row and the edit pane's buttons do.
   const handleSelect = useCallback(
-    (task: Task.Task | undefined) => {
+    (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => {
       setSelectedState(task?.id);
-      onTaskSelect?.(task);
+      onTaskSelect?.(task, modifiers);
     },
     [onTaskSelect],
   );

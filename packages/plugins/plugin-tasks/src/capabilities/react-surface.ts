@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Outline, RemoteSession, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
+import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import {
@@ -18,6 +18,7 @@ import {
   OutlineCard,
   QuickEntryDialog,
   RemoteSessionCard,
+  TaskArticle,
   TaskSetArticle,
 } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
@@ -72,6 +73,13 @@ export default Capability.makeModule(() =>
           taskSet,
           toolbar: false,
         }),
+      }),
+      Surface.create({
+        // A single task's detail: the plank a row opens, reused as the reader moves down a list.
+        id: 'article.task',
+        filter: AppSurface.object(AppSurface.Article, Task.Task),
+        component: TaskArticle,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'article.taskSet',

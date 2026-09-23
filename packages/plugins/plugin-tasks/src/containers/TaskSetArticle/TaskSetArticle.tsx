@@ -7,13 +7,19 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Field, Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import {
+  useArticleKeyboardNavigation,
+  useAttention,
+  useSelection,
+  useSelectionActions,
+} from '@dxos/react-ui-attention';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
+import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -91,6 +97,41 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [move],
   );
 
+  // A row opens the task as its own plank, the way a mailbox row opens its message: the `task` rung
+  // of the host's deck chain names the plank, so reading down the list reuses one plank rather than
+  // stacking one per click. `attendableId` is the host's node — the project's inside its Tasks tab.
+  const { invokePromise } = useOperationInvoker();
+  const currentId = useSelection(attendableId, 'single');
+  const handleOpen = useCallback(
+    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => {
+      if (!task) {
+        return;
+      }
+
+      void invokePromise(LayoutOperation.Select, {
+        contextId: attendableId,
+        subject: { mode: 'single', id: task.id },
+      });
+      // Meta/ctrl click asks for a plank of its own, so it opens without a level and keeps whatever
+      // is already there.
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${attendableId}/${task.id}`],
+        ...(meta ? {} : { root: attendableId, level: 'task' }),
+        pivotId: attendableId,
+        disposition: 'add',
+        navigation: 'immediate',
+      });
+    },
+    [attendableId, invokePromise],
+  );
+
+  const handleNavigate = useCallback(
+    (taskId: string) => handleOpen(tasks.find(({ id }) => id === taskId)),
+    [tasks, handleOpen],
+  );
+
+  useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: handleNavigate });
+
   const descriptionExtensions = useMarkdownExtensions(taskSet);
   const descriptionComponents = useDescriptionComponents();
 
@@ -105,9 +146,11 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       checked={checked}
       getTaskActions={getTaskActions}
       onTaskCheck={onTaskCheck}
+      selected={currentId}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskMove={handleMove}
+      onTaskSelect={handleOpen}
     >
       <TaskList.Viewport>
         <TaskList.Content classNames='dx-document border' />
