@@ -165,5 +165,8 @@ before), not reasoned about from the source.
       padded scene bounds so it sits small in a corner where the editor centres it; the dashed scene
       frame draws where the editor shows none; the editor's one grouped horizontal toolbar against the
       corner toolbar plus the vertical palette rail; ports drawn at rest against hover-only.
-- [ ] The remaining `scene` stories (beacon, logic, control, template, gpt, plugins, artifact,
-      image-gen, audio, voice), same treatment.
+- [x] `scene--logic`: the switches drive the gates. Verified end to end in Chromium — two switches
+      through the AND and the OR light the beacon — which is what confirms the `Switch` half of the
+      gesture fix above; the e2e harness carries it as a third test.
+- [ ] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
+      audio, voice), same treatment.
