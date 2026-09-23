@@ -777,7 +777,12 @@ export const WithArtifacts: Story = {
 
 /** Each artifact kind opens its own preview: the pull request's summary, the image, the video, the question. */
 export const TestArtifactPreviews: Story = {
-  ...WithArtifacts,
+  render: ArtifactsStory,
+  args: {
+    seed: seedArtifacts,
+    showGroupLabels: false,
+    showDescription: true,
+  },
   play: async ({ canvasElement }) => {
     const findTag = (label: string) =>
       [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"] .col-\\[chips\\] *')].find(
