@@ -381,6 +381,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.rootChanged;
   }
 
+  get linksAdded() {
+    return this._entityManager.linksAdded;
+  }
+
   // ── Resource lifecycle ──────────────────────────────────────────────────
 
   @synchronized
@@ -1056,6 +1060,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {
     return this._entityManager.areStrongDepsSatisfied(core);
+  }
+
+  areStrongDepsResolved(core: Parameters<EntityManager['areStrongDepsResolved']>[0]) {
+    return this._entityManager.areStrongDepsResolved(core);
   }
 
   getDocumentHeads() {

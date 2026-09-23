@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
@@ -196,7 +197,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         throw new Error('expected external cursor');
       }
       return binding;
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FetchHttpClient.layer));
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), FetchHttpClient.layer)));
 
   test('full flow: GetTrelloBoards (discovery) → bind selection → SyncTrelloBoard syncs only chosen boards', async ({
     expect,

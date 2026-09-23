@@ -10,7 +10,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectIdentityResponse, type LegacyInspectIdentityResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
+import { AdminApiError, adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 export const inspect = Command.make(
   'inspect',
@@ -19,7 +19,7 @@ export const inspect = Command.make(
     const result = yield* adminRequest<InspectIdentityResponse | LegacyInspectIdentityResponse>(
       'GET',
       `/admin/identities/${identityKey}`,
-    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

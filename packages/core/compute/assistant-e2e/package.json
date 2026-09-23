@@ -24,6 +24,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

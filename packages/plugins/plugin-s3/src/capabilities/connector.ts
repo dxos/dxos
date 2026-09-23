@@ -13,6 +13,7 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants.ts';
+import { S3Error } from '../errors.ts';
 
 // Every field is `NonEmptyString`, not `String`: the dialog closes before `onSubmit` runs, so a
 // failure raised there lands after unmount and is never shown. Rejecting empty in the schema keeps
@@ -98,20 +99,22 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
     onValidate: ({ values }) =>
       Effect.gen(function* () {
         if (!values.bucket.trim()) {
-          return yield* Effect.fail(new Error('Enter the bucket name.'));
+          return yield* Effect.fail(new S3Error({ message: 'Enter the bucket name.' }));
         }
         const host = composeHost(values);
         if (!host) {
-          return yield* Effect.fail(new Error('Enter the endpoint, e.g. abc123.r2.cloudflarestorage.com'));
+          return yield* Effect.fail(
+            new S3Error({ message: 'Enter the endpoint, e.g. abc123.r2.cloudflarestorage.com' }),
+          );
         }
         if (!/^[a-z0-9.-]+(:\d+)?$/.test(host)) {
-          return yield* Effect.fail(new Error(`Not a valid bucket host: ${host}`));
+          return yield* Effect.fail(new S3Error({ message: `Not a valid bucket host: ${host}` }));
         }
         if (!values.accessKeyId.trim()) {
-          return yield* Effect.fail(new Error('Enter the access key ID.'));
+          return yield* Effect.fail(new S3Error({ message: 'Enter the access key ID.' }));
         }
         if (!values.secretAccessKey.trim()) {
-          return yield* Effect.fail(new Error('Enter the secret access key.'));
+          return yield* Effect.fail(new S3Error({ message: 'Enter the secret access key.' }));
         }
       }),
 

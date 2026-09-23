@@ -16,13 +16,6 @@ enum Groceries {
 }
 
 test.describe('Basic test', () => {
-  // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. Every test here runs a two-peer
-  //   invitation in `beforeEach`, and a controlled comparison measured this suite failing at the same
-  //   rate as composer's collaboration tests with the same signature (the shell's auth-code input
-  //   disabled at `connectingSpaceInvitation`) — the production-edge stall, not this app. Trunk still
-  //   records every first-attempt failure. Do not copy this pattern without a tracked issue.
-  test.describe.configure({ retries: 2 });
-
   let host: AppManager;
   let guest: AppManager;
 

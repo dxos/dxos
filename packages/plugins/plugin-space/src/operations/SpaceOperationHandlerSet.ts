@@ -44,5 +44,4 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.RestoreObjects.pipe(Operation.lazyHandler(() => import('./restore-objects.ts'))),
   SpaceOperation.Share.pipe(Operation.lazyHandler(() => import('./share.ts'))),
   SpaceOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
-  SpaceOperation.WaitForObject.pipe(Operation.lazyHandler(() => import('./wait-for-object.ts'))),
 ]);

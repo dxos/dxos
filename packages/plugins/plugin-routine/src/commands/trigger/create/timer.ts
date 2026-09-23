@@ -16,6 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 
+import { RoutineCommandError } from '../../errors.ts';
 import { Cron, Enabled, Input } from '../options.ts';
 import { printTrigger, promptForSchemaInput, selectFunction } from '../util.ts';
 
@@ -40,7 +41,7 @@ export const timer = Command.make(
       const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
-        return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
       }
 
       const cron = yield* Option.match(options.cron, {

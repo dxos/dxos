@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, yieldOrContinue } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -61,9 +61,26 @@ export type IndexQueryProviderProps = {
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+  /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
+  queryTimeout?: number;
+  /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
+  hydrationTimeout?: number;
 };
 
+/**
+ * Budget for the host's index response, and for that alone: it is cleared the moment the host
+ * answers, so a query that timed out here genuinely means the index never responded.
+ */
 const QUERY_SERVICE_TIMEOUT = 20_000;
+
+/**
+ * Budget for hydrating ONE index hit into a live object. Hydration reaches document loading, which
+ * waits on replication and so has no bound of its own; without this the one-shot budget above was
+ * being spent on it, and a single unavailable document failed the whole query as an "index query"
+ * timeout. A hit that exceeds it is dropped (reactive queries re-hydrate it once its document
+ * arrives, via {@link ObjectLoader.updateEvent}) rather than taking the other hits down with it.
+ */
+const RECORD_HYDRATION_TIMEOUT = 10_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -76,6 +93,8 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       runtime: this._params.runtime,
       objectLoader: this._params.objectLoader,
       graph: this._params.graph,
+      queryTimeout: this._params.queryTimeout,
+      hydrationTimeout: this._params.hydrationTimeout,
     });
   }
 }
@@ -85,6 +104,10 @@ export type IndexQuerySourceProps = {
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+  /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
+  queryTimeout?: number;
+  /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
+  hydrationTimeout?: number;
 };
 
 /**
@@ -125,6 +148,9 @@ export class IndexQuerySource implements QuerySource {
   /** True while {@link _hydrateLoop} is running, so concurrent triggers coalesce instead of racing. */
   private _hydrating = false;
 
+  /** Whether the reactive stream has answered: its first response hydrated, or the stream failed. */
+  private _answered = false;
+
   /** Set when a new trigger arrives mid-pass, causing {@link _hydrateLoop} to run one more iteration. */
   private _hydratePending = false;
 
@@ -140,6 +166,7 @@ export class IndexQuerySource implements QuerySource {
 
   close(): void {
     this._open = false;
+    this._answered = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -158,6 +185,14 @@ export class IndexQuerySource implements QuerySource {
   /** Index results are produced asynchronously from the host query stream. */
   isSynchronous(): boolean {
     return false;
+  }
+
+  isPending(): boolean {
+    // A query the index does not serve has nothing outstanding here.
+    if (this._query === undefined || !queryTargetsSpacesOrFeeds(this._query)) {
+      return false;
+    }
+    return !this._answered;
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
@@ -185,6 +220,7 @@ export class IndexQuerySource implements QuerySource {
     void this._hydrationCtx?.dispose().catch(() => {});
     this._hydrationCtx = undefined;
     this._results = [];
+    this._answered = false;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -225,9 +261,11 @@ export class IndexQuerySource implements QuerySource {
 
     // The one-shot query must resolve/reject within a bounded window; the effect stream is
     // otherwise lazy and would hang if the host never responds.
+    const queryTimeout = this._params.queryTimeout ?? QUERY_SERVICE_TIMEOUT;
+    const hydrationTimeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
     const timeout = setTimeout(() => {
-      settle(() => reject(new TimeoutError(QUERY_SERVICE_TIMEOUT, 'index query')));
-    }, QUERY_SERVICE_TIMEOUT);
+      settle(() => reject(new TimeoutError(queryTimeout, 'index query')));
+    }, queryTimeout);
 
     cleanup = subscribeStream(
       this._params.runtime,
@@ -244,7 +282,22 @@ export class IndexQuerySource implements QuerySource {
               if (settled) {
                 return;
               }
-              const results = await this._mapRecords(new Context(), queryId, query, start, response.results ?? []);
+              // The host has answered, so the index-query budget is spent; hydration below is
+              // bounded per record and must not be charged to it — doing so reported a stalled
+              // document as an "index query" timeout, naming the wrong subsystem.
+              clearTimeout(timeout);
+              const { results, stalled } = await this._mapRecords(
+                new Context(),
+                queryId,
+                query,
+                start,
+                response.results ?? [],
+              );
+              if (stalled.length > 0) {
+                // A one-shot caller gets no second pass, so a short result would read as the whole
+                // set; fail instead, naming the objects that did not load.
+                throw new TimeoutError(hydrationTimeout, _describeStall(stalled, response.results?.length ?? 0));
+              }
               settle(() => resolve(results));
             } catch (err: any) {
               settle(() => reject(err));
@@ -256,6 +309,18 @@ export class IndexQuerySource implements QuerySource {
         },
       },
     );
+  }
+
+  /**
+   * Reports the current query as answered-with-nothing, so a subscriber waiting on this source stops
+   * waiting. Ignored once the query has been replaced or closed.
+   */
+  private _fail(queryId: number | undefined): void {
+    if (queryId === undefined || this._reactiveQueryId !== queryId) {
+      return;
+    }
+    this._answered = true;
+    this.changed.emit();
   }
 
   /** Reactive query: pushes results on every host response and remembers the raw records. */
@@ -285,12 +350,16 @@ export class IndexQuerySource implements QuerySource {
             this._scheduleHydrate();
           } catch (err: any) {
             log.catch(err);
+            this._fail(queryId);
           }
         },
         onError: (err) => {
           if (err != null && !(err instanceof RpcClosedError)) {
             log.catch(err);
           }
+          // Nothing more is coming on this stream; a subscriber waiting for the index must not wait
+          // for it forever.
+          this._fail(queryId);
         },
       },
     );
@@ -338,12 +407,15 @@ export class IndexQuerySource implements QuerySource {
   /** Hydrate the latest remembered records, set `_results`, and emit — repeating while triggers arrive. */
   private async _hydrateLoop(): Promise<void> {
     this._hydrating = true;
+    // The query the pass that throws was hydrating, which a replacement installed meanwhile is not.
+    let passQueryId: number | undefined;
     try {
       do {
         this._hydratePending = false;
 
         const query = this._query;
         const queryId = this._reactiveQueryId;
+        passQueryId = queryId;
         if (!this._open || query == null || queryId == null) {
           break;
         }
@@ -351,7 +423,12 @@ export class IndexQuerySource implements QuerySource {
 
         const ctx = new Context();
         this._hydrationCtx = ctx;
-        const results = await this._mapRecords(ctx, queryId, query, Date.now(), records);
+        const { results, stalled } = await this._mapRecords(ctx, queryId, query, Date.now(), records);
+        if (stalled.length > 0) {
+          // Non-fatal here: a reactive query re-hydrates these once their documents arrive
+          // (see `_onObjectsUpdated`), so the pass publishes what it has.
+          log.warn('index hits did not hydrate within the budget', { queryId, stalled });
+        }
 
         // Dropped if the source closed (or was re-opened with a new query) during hydration; a pass
         // queued for the new query still runs.
@@ -360,23 +437,33 @@ export class IndexQuerySource implements QuerySource {
         }
 
         this._results = results;
+        this._answered = true;
         this.changed.emit();
       } while (this._hydratePending);
     } catch (err: any) {
       log.catch(err);
+      this._fail(passQueryId);
     } finally {
       this._hydrating = false;
+      // A trigger that arrived while the failed pass was running, which nothing else would serve.
+      if (this._hydratePending && this._open) {
+        this._scheduleHydrate();
+      }
     }
   }
 
-  /** Hydrate raw host records into query entries, dropping objects that fail to load or validate. */
+  /**
+   * Hydrate raw host records into query entries, dropping objects that fail to load or validate, and
+   * reporting separately the ids whose hydration outran {@link RECORD_HYDRATION_TIMEOUT} — a stall is
+   * not a miss, and each caller answers it differently.
+   */
   private async _mapRecords(
     ctx: Context,
     queryId: number,
     query: QueryAST.Query,
     start: number,
     records: readonly QueryService.QueryResult[],
-  ): Promise<SourceEntry[]> {
+  ): Promise<{ results: SourceEntry[]; stalled: string[] }> {
     log('queryIndex raw results', {
       queryId,
       query: Query.pretty(Query.fromAst(query)),
@@ -385,16 +472,15 @@ export class IndexQuerySource implements QuerySource {
 
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
-    const processedResults: (SourceEntry | null)[] = [];
+    const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
     for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
       processedResults.push(
-        ...(await Promise.all(
-          chunk.map((result) => this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle)),
-        )),
+        ...(await Promise.all(chunk.map((result) => this._hydrateRecord(ctx, start, result, hydratedIntoFeedHandle)))),
       );
     }
-    const results = processedResults.filter(isNonNullable);
+    const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
+    const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
     if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
@@ -420,9 +506,38 @@ export class IndexQuerySource implements QuerySource {
       query: Query.pretty(Query.fromAst(query)),
       fetchedFromIndex: records.length,
       loaded: results.length,
+      stalled: stalled.length,
     });
 
-    return results;
+    return { results, stalled };
+  }
+
+  /**
+   * Hydrate one record under a bounded budget. Hydration reaches document loading, which waits on
+   * replication and never settles while a document is unavailable; left unbounded it held the
+   * caller's whole query open for as long as the index-query budget allowed.
+   */
+  private async _hydrateRecord(
+    ctx: Context,
+    start: number,
+    result: QueryService.QueryResult,
+    hydratedIntoFeedHandle: Set<string>,
+  ): Promise<SourceEntry | null | typeof STALLED> {
+    const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
+    const hydration = this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle);
+    // The abandoned hydration may still reject after the race has settled, which would surface as an
+    // unhandled rejection; the real outcome is already taken below.
+    hydration.catch(() => {});
+    // Compared by identity so a TimeoutError thrown from within hydration is not mistaken for ours.
+    const expired = new TimeoutError(timeout, 'index hit hydration');
+    try {
+      return await asyncTimeout(hydration, timeout, expired);
+    } catch (err) {
+      if (err === expired) {
+        return STALLED;
+      }
+      throw err;
+    }
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -591,8 +706,9 @@ export class IndexQuerySource implements QuerySource {
    * Hydrate an index hit via disk-only load; skip objects whose strong deps
    * are permanently unavailable.
    *
-   * The load is awaited to completion rather than time-boxed: every path through it settles, so a
-   * budget here could only convert a slow load into a dropped object the caller is never told about.
+   * The load does not settle while the object's document is unavailable (see
+   * `query-api-stall.test.ts`), so the caller time-boxes it in {@link _hydrateRecord} rather than
+   * here — a budget on this one step could only drop the object silently.
    */
   private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
     const spaceId = SpaceId.make(result.spaceId);
@@ -609,6 +725,13 @@ export class IndexQuerySource implements QuerySource {
     this._streamCleanup = undefined;
   }
 }
+
+/** Marks a record whose hydration outran its budget, as distinct from one that hydrated to nothing. */
+const STALLED = Symbol('stalled');
+
+/** Names the stalled objects in the error a one-shot caller sees, rather than just the elapsed time. */
+const _describeStall = (stalled: readonly string[], total: number): string =>
+  `index query result hydration (${stalled.length} of ${total} objects did not load: ${stalled.slice(0, 5).join(', ')}${stalled.length > 5 ? ', …' : ''})`;
 
 /**
  * Used for logging.

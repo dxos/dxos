@@ -2,14 +2,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
+import { BaseError, messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
+
+import { SpaceOperationError } from './errors.ts';
+
+/** The caller's draft did not match the named schema, or the schema was not found. */
+export class InvalidDraftError extends BaseError.extend('InvalidDraftError', 'Invalid draft.') {}
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOperation.AddObject.pipe(
   Operation.withHandler(
@@ -22,23 +28,23 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // so there is no second database to reconcile against and no service to override.
       const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
-      // The space id names the database, so the target has to live in it: one from another space
-      // would take the reference there while the object persists here, and a detached one would
-      // take it nowhere at all — either way the two halves of the write come apart.
+      // The space id names the database, so the target has to live in it.
       if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
-        return yield* Effect.fail(new Error(`Target collection does not belong to space ${db.spaceId}.`));
+        return yield* Effect.fail(
+          new SpaceOperationError({ message: `Target collection does not belong to space ${db.spaceId}.` }),
+        );
       }
 
       // The union's two branches: a live entity passes through, a description is instantiated.
       const object = Obj.isObject(input.object) ? input.object : yield* instantiate(db, input.object);
 
-      // An instantiated draft is detached, and the branch of `CollectionModel.add` that files into
+      // An instantiated draft is detached, and the branch of `ContainerModel.add` that files into
       // a collection only pushes a ref — so without this the object is never persisted and that
       // ref dangles. A live entity arrives already in a database.
       if (!Obj.getDatabase(object)) {
         yield* Database.add(object);
       }
-      yield* CollectionModel.add({ object, target });
+      yield* ContainerModel.add({ object, target });
 
       return {
         id: Obj.getURI(object),
@@ -62,10 +68,10 @@ const instantiate = Effect.fnUntraced(function* (db: Database.Database, draft: S
   );
   const schema = types.find((type) => Type.getTypename(type) === typename);
   if (!schema) {
-    return yield* Effect.fail(new Error(`Schema not found: ${typename}`));
+    return yield* Effect.fail(new InvalidDraftError({ message: `Schema not found: ${typename}` }));
   }
   if (!Type.isObject(schema)) {
-    return yield* Effect.fail(new Error(`Schema is not an object schema: ${typename}`));
+    return yield* Effect.fail(new InvalidDraftError({ message: `Schema is not an object schema: ${typename}` }));
   }
   // A draft is caller input, so a validation throw is a failure with the message the caller needs,
   // not a defect that reaches a remote host as an opaque server error.
@@ -78,6 +84,7 @@ const instantiate = Effect.fnUntraced(function* (db: Database.Database, draft: S
           EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : recurse(value),
         ),
       ),
-    catch: (error) => new Error(`Invalid draft for ${typename}: ${error instanceof Error ? error.message : error}`),
+    catch: (error) =>
+      new InvalidDraftError({ message: `Invalid draft for ${typename}: ${messageOf(error)}`, cause: error }),
   });
 });

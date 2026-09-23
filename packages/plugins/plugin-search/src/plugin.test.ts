@@ -13,6 +13,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Client } from '@dxos/client';
 import { DXN, Key } from '@dxos/echo';
@@ -59,12 +60,12 @@ describe('SearchPlugin', () => {
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
     const registry = harness.get(Capabilities.AtomRegistry);
-    AppGraph.expandSync(builder.graph, GraphNode.RootId, 'child');
+    AppGraph.expandSync(builder.graph, GraphNode.RootId, AppNode.companion);
     await AppGraphBuilder.flush(builder);
 
     expect(client.initialized).toBe(false);
     const companion = registry
-      .get(builder.graph.connections(GraphNode.RootId, 'child'))
+      .get(builder.graph.connections(GraphNode.RootId, AppNode.companion))
       .find((node) => node.id.endsWith(Attention.linkedSegment('search')));
     expect(companion).toBeDefined();
     expect(companion?.data).toBeNull();

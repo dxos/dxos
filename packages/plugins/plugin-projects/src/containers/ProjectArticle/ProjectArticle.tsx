@@ -23,7 +23,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -86,6 +86,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
+  // `md` is the breakpoint plugin-deck calls "not mobile": below it the deck shows one plank at a
+  // time, so a companion beside the project would be a pane the reader cannot see.
+  const [isNotMobile] = useMediaQuery('md');
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -158,6 +161,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       void invokePromise(LayoutOperation.Open, {
         subject: [getProjectChatPath(db.spaceId, subject.id, chat.id)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
@@ -175,6 +179,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       void invokePromise(LayoutOperation.Open, {
         subject: [GraphPath.getObjectPathFromObject(object)],
         pivotId: attendableId,
+        disposition: 'add',
         navigation: 'immediate',
       });
     },
@@ -193,15 +198,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, updateProject, db],
   );
 
-  // The create dialog places the object in the space; the ref array is what makes it this project's,
-  // so the link is written here. A dismissed dialog returns nothing and leaves the project untouched.
   const handleAddArtifact = useCallback(async () => {
     if (!db) {
       return;
     }
 
     const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
-      target: db,
+      target: subject,
       targetNodeId: attendableId,
       navigable: false,
     });
@@ -212,7 +215,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     updateProject((project) => {
       project.artifacts = [...project.artifacts, ref];
     });
-  }, [db, attendableId, invokePromise, updateProject]);
+  }, [db, subject, attendableId, invokePromise, updateProject]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>) => {
@@ -308,7 +311,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             >
               <Splitter.Panel position='start'>
                 {/* TODO(burdon): Inline component for more control? */}
-                <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+                {/* A wide viewport opens the task in this project's `~task` companion, so the ledger
+                    stays in front of the reader; a narrow one has no room beside the plank, so the
+                    task opens as a plank of its own there. */}
+                <Surface.Surface
+                  type={AppSurface.Section}
+                  data={{ subject: taskSet, attendableId, detail: isNotMobile ? 'companion' : 'plank' }}
+                  limit={1}
+                />
               </Splitter.Panel>
               <Splitter.Handle />
               <Splitter.Panel position='end'>

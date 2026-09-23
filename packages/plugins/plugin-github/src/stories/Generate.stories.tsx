@@ -99,8 +99,12 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
       });
       const { text } = await EffectEx.runPromise(
         LanguageModel.generateText({ prompt: `${SYSTEM_PROMPT}\n\n---\n\n${prompt}` }).pipe(
-          Effect.provide(AiService.model(MODEL).pipe(Layer.orDie)),
-          Effect.provide(AiServiceTestingPreset('edge-remote').pipe(Layer.orDie)),
+          Effect.provide(
+            Layer.provideMerge(
+              AiService.languageModel(MODEL).pipe(Layer.orDie),
+              AiServiceTestingPreset('edge-remote').pipe(Layer.orDie),
+            ),
+          ),
         ),
       );
 
@@ -142,7 +146,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
         )}
       </div>
       {error ? (
-        <div className='p-4 text-sm text-error'>{error}</div>
+        <div className='p-4 text-sm text-error-text'>{error}</div>
       ) : (
         <div ref={parentRef} className='dx-fill overflow-auto' />
       )}

@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { type StageRow, type TargetKind } from './types.ts';
+import { type HeapReading, type StageRow, type TargetKind } from './types.ts';
 
 /** Repo-root-relative, alongside the startup harness's rows. */
 export const reportDir = (workspaceRoot: string): string => path.join(workspaceRoot, 'test-results', 'perf');
@@ -112,6 +112,54 @@ const maxByRealm = <T>(
 };
 
 /**
+ * Which library a wasm memory belongs to, from the module name the probe recorded.
+ *
+ * Semantic rather than keyed by the module itself: a per-module column would mint a new permanent
+ * PostHog series whenever a bundle or a wasm file is renamed, the mistake `REALM_SUFFIX` exists to
+ * avoid. Four buckets are stable across those renames because they name libraries.
+ *
+ * SUBDUCTION IS TESTED FIRST, and the order is load-bearing: its module ships as
+ * `automerge_subduction_wasm_bg.wasm`, so an automerge-first match would report every byte of
+ * subduction as automerge — the same trap the network collector has with analytics hosts that sit
+ * under an edge subdomain.
+ */
+const wasmLibrary = (module: string): 'Sqlite' | 'Subduction' | 'Automerge' | 'Other' => {
+  if (/sqlite/i.test(module)) {
+    return 'Sqlite';
+  }
+  if (/subduction/i.test(module)) {
+    return 'Subduction';
+  }
+  if (/automerge/i.test(module)) {
+    return 'Automerge';
+  }
+  return 'Other';
+};
+
+/** Per-realm wasm bytes split by library, zero-filled so a series never gaps. */
+const wasmByLibrary = (readings: readonly HeapReading[]): Record<string, number> => {
+  const columns: Record<string, number> = {};
+  for (const suffix of Object.values(REALM_SUFFIX)) {
+    for (const library of ['Automerge', 'Subduction', 'Sqlite', 'Other'] as const) {
+      columns[`wasm${library}Bytes${suffix}`] = 0;
+    }
+  }
+  for (const reading of readings) {
+    let attributed = 0;
+    for (const [module, bytes] of Object.entries<number>(reading.wasmByModule ?? {})) {
+      columns[`wasm${wasmLibrary(module)}Bytes${REALM_SUFFIX[reading.kind]}`] += bytes;
+      attributed += bytes;
+    }
+    // Whatever the module map does not account for lands in Other, so the four columns partition
+    // `wasmBytes` even when the map is absent or incomplete — a realm running a probe that predates
+    // per-module attribution reports bytes with no map at all, and without this the libraries would
+    // sum to zero against a non-zero total and the partition this file documents would be false.
+    columns[`wasmOtherBytes${REALM_SUFFIX[reading.kind]}`] += Math.max(0, (reading.wasmBytes ?? 0) - attributed);
+  }
+  return columns;
+};
+
+/**
  * Maps one stage row to its PostHog event, refusing the rows that must not be trended.
  *
  * Throws rather than returning undefined: both refusals are caller errors, and a silent skip here
@@ -151,6 +199,89 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
     (realm) => realm.kind,
     (realm) => realm.maxMs,
   );
+  // The integrity column for the drift probe, and the one the lag columns were missing: a p95 of
+  // zero is either a responsive realm or a probe that produced nothing, and until this was
+  // published the two were indistinguishable — every worker lag column read zero for weeks.
+  const lagSamplesByRealm = byRealm(
+    'lagSamples',
+    row.responsiveness.lagByRealm,
+    (realm) => realm.kind,
+    (realm) => realm.count,
+  );
+
+  // Wasm linear memory, which no heap column counts. Summed per kind like the heap columns, so
+  // `wasmBytesWorker` is every worker's wasm rather than one target's.
+  const wasmByRealm = byRealm(
+    'wasmBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.wasmBytes ?? 0,
+  );
+  // Typed-array and wasm backing stores, which V8 reports beside the heap and the harness has
+  // always collected. Published because automerge moves its documents as `Uint8Array`s, so a realm
+  // can grow by hundreds of megabytes with `heapUsedBytes` flat.
+  const backingByRealm = byRealm(
+    'heapBackingBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.backingBytes ?? 0,
+  );
+
+  // Backing WITHOUT wasm, which is the disjoint quantity: `backingStorageSize` counts wasm linear
+  // memory and `ArrayBuffer`s alike, so stacking it beside `wasmBytes` double counts every wasm
+  // byte. Floored at zero — the two readings are taken in the same evaluation but a realm that
+  // grew a memory between them would otherwise draw a negative segment.
+  const backingNonWasmByRealm = byRealm(
+    'heapBackingNonWasmBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => Math.max(0, (reading.backingBytes ?? 0) - (reading.wasmBytes ?? 0)),
+  );
+  // Blink-side objects — DOM nodes, listeners, the document — attributed to the realm holding
+  // them. Disjoint from the V8 heap and collected all along without being published.
+  const embedderByRealm = byRealm(
+    'embedderBytes',
+    row.heap,
+    (reading) => reading.kind,
+    (reading) => reading.embedderBytes ?? 0,
+  );
+
+  const rpcCallsByRealm = byRealm(
+    'rpcCalls',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.calls,
+  );
+  const rpcQueueWaitP95ByRealm = maxByRealm(
+    'rpcQueueWaitP95Ms',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.queueWaitP95Ms,
+  );
+  const rpcQueueWaitMaxByRealm = maxByRealm(
+    'rpcQueueWaitMaxMs',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.queueWaitMaxMs,
+  );
+  const rpcServiceMaxByRealm = maxByRealm(
+    'rpcServiceMaxMs',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.serviceMaxMs,
+  );
+  const rpcRoundTripP95ByRealm = maxByRealm(
+    'rpcRoundTripP95Ms',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.roundTripP95Ms,
+  );
+  const rpcRoundTripMaxByRealm = maxByRealm(
+    'rpcRoundTripMaxMs',
+    row.rpc,
+    (realm) => realm.kind,
+    (realm) => realm.roundTripMaxMs,
+  );
 
   // The workers rollup, so the headline "did the workers get busier" is one series rather than a
   // sum computed in every query that asks. The tab needs none: `cpuMsTab` is already a column.
@@ -180,9 +311,42 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
 
       ...(row.cpuMsByRealm ? { cpuMsWorkers, ...cpuByRealm } : {}),
 
-      peakRssBytes: row.peakRssBytes,
+      appFootprintBytes: row.appFootprintBytes,
+      // Beside the app's own figure rather than folded into it: Chrome's browser, GPU and service
+      // processes are ~218 MB that has nothing to do with the app, and hiding them in the total is
+      // what made the quantity this replaces unusable.
+      chromeFootprintBytes: row.footprint.reduce(
+        (total, reading) => total + (reading.process === 'Renderer' ? 0 : reading.bytes),
+        0,
+      ),
+      // The integrity column for the two footprints, the role `sqliteRealms` plays for disk: the
+      // memory-infra dump can fail or be pre-empted by another trace, and a failed read yields no
+      // processes — which sums to zero bytes and is otherwise indistinguishable from an app that
+      // holds no memory. Zero processes means the row's footprints are absent, not measured.
+      footprintProcesses: row.footprint.length,
       heapUsedTotalBytes: row.heapUsedTotalBytes,
       ...heapByRealm,
+      ...backingByRealm,
+      ...backingNonWasmByRealm,
+      ...embedderByRealm,
+      ...wasmByRealm,
+      ...wasmByLibrary(row.heap),
+      // EXCLUSIVE memory only, so the total is exact. A `SharedArrayBuffer`-backed memory is
+      // visible in every realm it was posted to, and nothing in the probe's readings identifies
+      // one allocation across realms — so a deduplicated total cannot be computed here at all.
+      // Taking the largest realm's shared subtotal as the union was wrong whenever two realms hold
+      // DIFFERENT shared memories: 2 MB in one and 3 MB in another is 5 MB, not 3 MB.
+      wasmBytesTotal: row.heap.reduce(
+        (total, reading) => total + (reading.wasmBytes ?? 0) - (reading.wasmSharedBytes ?? 0),
+        0,
+      ),
+      // The shared subtotal, summed over realms and therefore an UPPER bound rather than a union:
+      // read it beside `wasmBytesTotal` rather than adding the two. Zero in this app today, which
+      // is why the total above is currently exact for the whole of wasm.
+      wasmSharedBytesSum: row.heap.reduce((total, reading) => total + (reading.wasmSharedBytes ?? 0), 0),
+      // Published so a zero byte count is readable as "nothing instrumented" rather than "no wasm",
+      // the same role `sqliteRealms` plays below.
+      wasmRealms: row.heap.filter((reading) => reading.wasmBytes !== undefined).length,
       domNodes: row.domNodes,
       domListeners: row.domListeners,
 
@@ -203,12 +367,30 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       // Published so a zero byte count is readable as "nothing instrumented" rather than "no I/O".
       sqliteRealms: row.disk.realms,
 
+      ...rpcCallsByRealm,
+      ...rpcQueueWaitP95ByRealm,
+      ...rpcQueueWaitMaxByRealm,
+      ...rpcServiceMaxByRealm,
+      ...rpcRoundTripP95ByRealm,
+      ...rpcRoundTripMaxByRealm,
+      // The pairs that say whether a percentile above covers the whole stage: each middleware keeps
+      // a bounded sample ring, so a call count above its OWN sample count means the percentiles
+      // describe the stage's tail. Served and issued are counted separately because they are
+      // different rings — summing them let 100 client samples hide a truncated server ring of 100
+      // against 140 served calls.
+      rpcCallsTotal: row.rpc.reduce((total, realm) => total + realm.calls, 0),
+      rpcSamples: row.rpc.reduce((total, realm) => total + realm.samples, 0),
+      rpcClientCallsTotal: row.rpc.reduce((total, realm) => total + realm.clientCalls, 0),
+      rpcClientSamples: row.rpc.reduce((total, realm) => total + realm.clientSamples, 0),
+      rpcRealms: row.rpc.length,
+
       longTaskMaxMs: row.responsiveness.longTaskMaxMs,
       tbtMs: row.responsiveness.tbtMs,
       lagP95Ms: row.responsiveness.lagP95Ms,
       lagMaxMs: row.responsiveness.lagMaxMs,
       ...lagP95ByRealm,
       ...lagMaxByRealm,
+      ...lagSamplesByRealm,
       realms: row.heap.length,
 
       servingMode: row.comparability.servingMode,
@@ -216,6 +398,9 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       profileState: row.comparability.profileState,
       settleMs: row.comparability.settleMs,
       instruments: row.comparability.instruments,
+      ...(row.comparability.snapshotStages?.length
+        ? { snapshotStages: row.comparability.snapshotStages.join(',') }
+        : {}),
     },
   };
 };

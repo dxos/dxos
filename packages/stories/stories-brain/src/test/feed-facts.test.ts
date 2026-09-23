@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
@@ -62,9 +63,12 @@ describe.skipIf(!fixtureExists())('runFactPipeline over a mailbox feed fixture (
         const facts = yield* store.query({});
         return { run, facts };
       }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(FactStoreLive.layerMemory),
-        Effect.provide(OllamaAiServiceLayer),
+        Effect.provide(
+          Database.layer(db).pipe(
+            Layer.provideMerge(FactStoreLive.layerMemory),
+            Layer.provideMerge(OllamaAiServiceLayer),
+          ),
+        ),
         EffectEx.runAndForwardErrors,
       );
 

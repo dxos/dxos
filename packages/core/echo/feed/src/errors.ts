@@ -30,3 +30,6 @@ export class SyncAppendPositionMismatchError extends BaseError.extend('SyncAppen
     });
   }
 }
+
+/** Feed operation failed. The underlying failure, where there is one, is the `cause`. */
+export class FeedOperationError extends BaseError.extend('FeedOperationError', 'Feed operation failed.') {}

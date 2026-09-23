@@ -47,6 +47,7 @@ const reportBody = (
   severity: report.severity,
   area: report.area,
   version: report.version,
+  labels: report.labels,
   ...extra,
   posthog: observability.support.sessionContext(),
 });

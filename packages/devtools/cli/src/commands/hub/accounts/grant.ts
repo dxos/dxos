@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { type GetAccountResponse } from '@dxos/protocols';
 
-import { formatHubError, hubApiRequest } from '../util.ts';
+import { HubApiError, formatHubError, hubApiRequest } from '../util.ts';
 
 export const grant = Command.make(
   'grant',
@@ -21,7 +21,7 @@ export const grant = Command.make(
   Effect.fn(function* ({ identityDid, count }) {
     const result = yield* hubApiRequest<GetAccountResponse>('POST', `/api/account/${identityDid}/invitations/grant`, {
       body: { count },
-    }).pipe(Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))));
+    }).pipe(Effect.catch((error) => Effect.fail(new HubApiError({ message: formatHubError(error), cause: error }))));
 
     yield* Console.log(`Granted ${count} invitations. Account now has ${result.invitationsRemaining} remaining.`);
   }),

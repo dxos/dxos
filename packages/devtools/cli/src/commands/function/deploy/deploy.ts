@@ -21,6 +21,7 @@ import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
+import { CliError } from '../../../util/errors.ts';
 import { bundle } from './bundle.ts';
 import { DATA_TYPES, upsertComposerScript } from './echo.ts';
 import { parseOptions } from './options.ts';
@@ -60,11 +61,11 @@ export const deploy = Command.make(
 
     const identity = client.halo.identity.get();
     if (!identity) {
-      return yield* Effect.fail(new Error('Identity not available'));
+      return yield* Effect.fail(new CliError({ message: 'Identity not available' }));
     }
 
     if (!existsSync(options.entryPoint)) {
-      return yield* Effect.fail(new Error(`File not found: ${options.entryPoint}`));
+      return yield* Effect.fail(new CliError({ message: `File not found: ${options.entryPoint}` }));
     }
 
     const artifact = yield* bundle({ entryPoint: resolve(options.entryPoint) });

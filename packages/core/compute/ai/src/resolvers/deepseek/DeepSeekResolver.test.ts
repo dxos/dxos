@@ -46,7 +46,7 @@ const ClientLayer = ChatCompletionsAdapter.clientLayer({
 const ResolverLayer = DeepSeekResolver.make().pipe(Layer.provide(ClientLayer));
 
 const modelLayer = (options?: { thinking?: boolean }) =>
-  AiService.model(FLASH, { provider: Provider.edge.id, ...options }).pipe(
+  AiService.languageModel(FLASH, { provider: Provider.edge.id, ...options }).pipe(
     Layer.provide(AiModelResolver.buildAiService),
     Layer.provide(ResolverLayer),
   );
@@ -138,8 +138,7 @@ describe('DeepSeekResolver', () => {
         log.info('tools', { text: response.text, toolCalls: response.toolCalls.length });
         expect(response.toolCalls.length).toBeGreaterThan(0);
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(modelLayer({ thinking: false })),
+      Effect.provide(Layer.provideMerge(CalculatorLayer, modelLayer({ thinking: false }))),
     ),
     { timeout: 180_000, tags: ['manual'] },
   );

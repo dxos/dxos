@@ -18,7 +18,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -26,6 +26,7 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { findObject, toolInvocations } from '../../assertions.ts';
+import { EvalRunError } from '../../errors.ts';
 import { OPENING_PROMPT, SKILL_KEY, evaluateHandOff, seed } from './scenario.ts';
 import { startWorkerSpecServer } from './worker-spec-server.ts';
 
@@ -48,7 +49,7 @@ describe('weather MCP hand-off', () => {
 
       await using harness = await createComposerTestApp({
         plugins: [
-          ClientPlugin.make({ types: [...WeatherSpace().schemas, Collection.Collection] }),
+          ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
           AssistantPlugin.make({
             aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
               // Step three: the configuring write, as the task text tells the session to make it.
@@ -94,7 +95,9 @@ describe('weather MCP hand-off', () => {
 
           const skill = yield* findObject(Skill.Skill, (candidate) => Obj.getMeta(candidate).key === SKILL_KEY);
           if (!skill) {
-            return yield* Effect.fail(new Error('The template did not seed the Weather MCP skill.'));
+            return yield* Effect.fail(
+              new EvalRunError({ message: 'The template did not seed the Weather MCP skill.' }),
+            );
           }
           expect(skill.mcpServers).toEqual([]);
           target.skill = Obj.getURI(skill);

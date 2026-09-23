@@ -16,6 +16,7 @@ import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
 import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { type RpcPort } from './rpc.ts';
@@ -27,15 +28,14 @@ const HANDSHAKE_RETRY_INTERVAL = Duration.millis(50);
 
 /**
  * Effect RPC protocols over a {@link RpcPort} — a transport-agnostic, reliable, ordered,
- * binary message channel. The wire format comes from the ambient `RpcSerialization`, which must
- * be a binary one (e.g. `RpcSerialization.layerSchemaBinary`) because a port carries bytes.
+ * binary message channel. Envelopes and payloads are both SchemaBinary-encoded; the envelope
+ * parser and the payload codec come from one {@link RpcSerialization} so the two ends agree.
  */
 
 /**
- * Wire format the `layer*` helpers supply, so both ends of a port agree without the caller
- * choosing: a port carries bytes, and both peers are built from this same version.
+ * Each port message is a whole frame from a connected peer, so frames are not size-limited.
  */
-const BINARY_SERIALIZATION = RpcSerialization.layerSchemaBinary();
+const layerSerialization = RpcSerialization.layerSchemaBinary({ maxFrameSize: 'unbounded' });
 
 const subscribePort = (port: RpcPort) =>
   Effect.gen(function* () {
@@ -51,14 +51,37 @@ const subscribePort = (port: RpcPort) =>
     return queue;
   });
 
-const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void, Error> =>
+/**
+ * Decodes port messages, dropping any frame that fails to decode.
+ */
+const makeFrameDecoder = <Message>(
+  serialization: RpcSerialization.RpcSerialization['Service'],
+  side: 'client' | 'server',
+): ((frame: Uint8Array) => ReadonlyArray<Message>) => {
+  let parser = serialization.makeUnsafe();
+  return (frame) => {
+    try {
+      return parser.decode(frame) as ReadonlyArray<Message>;
+    } catch (cause) {
+      // A SchemaBinary parser rejects every call after its first failure.
+      parser = serialization.makeUnsafe();
+      log.warn('rpc-port: failed to decode frame', { side, cause });
+      return [];
+    }
+  };
+};
+
+/** The underlying {@link RpcPort} rejected a frame. */
+export class RpcPortError extends BaseError.extend('RpcPortError', 'Failed to send an RPC frame.') {}
+
+const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void, RpcPortError> =>
   frame === undefined || typeof frame === 'string'
     ? Effect.die(new Error('rpc-port protocol requires binary frames'))
-    : // Copy the frame: binary encoders reuse their output buffer, but RpcPort.send may be
-      // asynchronous (e.g. postMessage) and read the bytes after the encoder has overwritten them.
+    : // Copy the frame: SchemaBinary returns views into a shared arena that later encodes overwrite,
+      // but RpcPort.send may be asynchronous (e.g. postMessage) and read the bytes afterwards.
       Effect.tryPromise({
         try: async () => port.send(frame.slice()),
-        catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        catch: (cause) => new RpcPortError({ cause }),
       });
 
 /**
@@ -70,11 +93,13 @@ const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effec
  */
 export const makeProtocolRpcPortClient = (
   port: RpcPort,
-): Effect.Effect<RpcClient.Protocol['Service'], never, Scope.Scope | RpcSerialization.RpcSerialization> =>
-  Effect.flatMap(RpcSerialization.RpcSerialization, (serialization) =>
-    RpcClient.Protocol.make(
+): Effect.Effect<RpcClient.Protocol['Service'], never, Scope.Scope> =>
+  Effect.gen(function* () {
+    const serialization = yield* RpcSerialization.RpcSerialization;
+    return yield* RpcClient.Protocol.make(
       Effect.fnUntraced(function* (writeResponse) {
-        const parser = serialization.makeUnsafe();
+        const encoder = serialization.makeUnsafe();
+        const decodeFrame = makeFrameDecoder<RpcMessage.FromServerEncoded>(serialization, 'client');
         const queue = yield* subscribePort(port);
 
         /**
@@ -96,23 +121,15 @@ export const makeProtocolRpcPortClient = (
               pending.push(response);
               return Effect.void;
             }
+            const clientId = boundClientId;
             const backlog = pending.splice(0);
-            return Effect.forEach([...backlog, response], (message) => writeResponse(boundClientId!, message), {
+            return Effect.forEach([...backlog, response], (message) => writeResponse(clientId, message), {
               discard: true,
             });
           });
 
-        const decodeFrame = (frame: Uint8Array) =>
-          Effect.try({
-            try: () => parser.decode(frame) as ReadonlyArray<RpcMessage.FromServerEncoded>,
-            catch: (cause) => {
-              log.warn('rpc-port client: failed to decode frame', { cause });
-              return [] as ReadonlyArray<RpcMessage.FromServerEncoded>;
-            },
-          }).pipe(Effect.catch(Effect.succeed));
-
         const send = (request: RpcMessage.FromClientEncoded): Effect.Effect<void, RpcClientError.RpcClientError> =>
-          Effect.suspend(() => sendFrame(port, parser.encode(request))).pipe(
+          Effect.suspend(() => sendFrame(port, encoder.encode(request))).pipe(
             Effect.mapError(
               (cause) =>
                 // v4 types `reason` as a structured union rather than a string tag; a transport
@@ -136,7 +153,7 @@ export const makeProtocolRpcPortClient = (
             if (Option.isNone(frame)) {
               continue;
             }
-            for (const response of yield* decodeFrame(frame.value)) {
+            for (const response of decodeFrame(frame.value)) {
               if (response._tag === 'Pong') {
                 connected = true;
               } else {
@@ -147,8 +164,7 @@ export const makeProtocolRpcPortClient = (
         }).pipe(Effect.orDie);
 
         yield* Queue.take(queue).pipe(
-          Effect.flatMap(decodeFrame),
-          Effect.flatMap((responses) => Effect.forEach(responses, deliver, { discard: true })),
+          Effect.flatMap((frame) => Effect.forEach(decodeFrame(frame), deliver, { discard: true })),
           Effect.forever,
           Effect.orDie,
           Effect.interruptible,
@@ -165,11 +181,11 @@ export const makeProtocolRpcPortClient = (
           codecFor: serialization.codecFor,
         };
       }),
-    ),
-  );
+    );
+  }).pipe(Effect.provide(layerSerialization));
 
 export const layerProtocolRpcPortClient = (port: RpcPort): Layer.Layer<RpcClient.Protocol> =>
-  Layer.effect(RpcClient.Protocol, makeProtocolRpcPortClient(port)).pipe(Layer.provide(BINARY_SERIALIZATION));
+  Layer.effect(RpcClient.Protocol, makeProtocolRpcPortClient(port));
 
 /**
  * Server-side effect-rpc protocol over an {@link RpcPort}.
@@ -177,11 +193,13 @@ export const layerProtocolRpcPortClient = (port: RpcPort): Layer.Layer<RpcClient
  */
 export const makeProtocolRpcPortServer = (
   port: RpcPort,
-): Effect.Effect<RpcServer.Protocol['Service'], never, Scope.Scope | RpcSerialization.RpcSerialization> =>
-  Effect.flatMap(RpcSerialization.RpcSerialization, (serialization) =>
-    RpcServer.Protocol.make(
+): Effect.Effect<RpcServer.Protocol['Service'], never, Scope.Scope> =>
+  Effect.gen(function* () {
+    const serialization = yield* RpcSerialization.RpcSerialization;
+    return yield* RpcServer.Protocol.make(
       Effect.fnUntraced(function* (writeRequest) {
-        const parser = serialization.makeUnsafe();
+        const encoder = serialization.makeUnsafe();
+        const decodeFrame = makeFrameDecoder<RpcMessage.FromClientEncoded>(serialization, 'server');
         const queue = yield* subscribePort(port);
         const disconnects = yield* Queue.make<number>();
         const clientId = 0;
@@ -204,22 +222,13 @@ export const makeProtocolRpcPortServer = (
         const encodeFrame = (response: RpcMessage.FromServerEncoded): Uint8Array | string | undefined => {
           const defect = unknownTagDefect(response);
           return defect === undefined
-            ? parser.encode(response)
-            : parser.encode({ ...response, exit: encodeDie(Exit.die(defect)) });
+            ? encoder.encode(response)
+            : encoder.encode({ ...response, exit: encodeDie(Exit.die(defect)) });
         };
 
         yield* Queue.take(queue).pipe(
           Effect.flatMap((frame) =>
-            Effect.try({
-              try: () => parser.decode(frame) as ReadonlyArray<RpcMessage.FromClientEncoded>,
-              catch: (cause) => {
-                log.warn('rpc-port server: failed to decode frame', { cause });
-                return [] as ReadonlyArray<RpcMessage.FromClientEncoded>;
-              },
-            }).pipe(Effect.catch(Effect.succeed)),
-          ),
-          Effect.flatMap((requests) =>
-            Effect.forEach(requests, (request) => writeRequest(clientId, request), { discard: true }),
+            Effect.forEach(decodeFrame(frame), (request) => writeRequest(clientId, request), { discard: true }),
           ),
           Effect.forever,
           Effect.interruptible,
@@ -236,12 +245,13 @@ export const makeProtocolRpcPortServer = (
           supportsAck: true,
           supportsTransferables: false,
           supportsSpanPropagation: false,
-          supportsNotifications: false,
+          // The port is duplex, so server-originated requests reach the client.
+          supportsNotifications: true,
           codecFor: serialization.codecFor,
         };
       }),
-    ),
-  );
+    );
+  }).pipe(Effect.provide(layerSerialization));
 
 export const layerProtocolRpcPortServer = (port: RpcPort): Layer.Layer<RpcServer.Protocol> =>
-  Layer.effect(RpcServer.Protocol, makeProtocolRpcPortServer(port)).pipe(Layer.provide(BINARY_SERIALIZATION));
+  Layer.effect(RpcServer.Protocol, makeProtocolRpcPortServer(port));

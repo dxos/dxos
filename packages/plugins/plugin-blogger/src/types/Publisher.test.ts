@@ -15,7 +15,7 @@ describe('Publisher contract', () => {
   });
 
   test('PublisherError carries a message', () => {
-    const error = new Publisher.PublisherError('nope');
+    const error = new Publisher.PublisherError({ message: 'nope' });
     expect(error.message).toBe('nope');
   });
 });

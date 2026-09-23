@@ -16,6 +16,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { TestBuilder, waitForSpace } from '@dxos/client/testing';
 import { Filter, Obj, Query } from '@dxos/echo';
@@ -76,6 +77,31 @@ const startLagProbe = () => {
   };
 };
 
+/**
+ * Documents held on the proxy thread and on the host, summed over `spaces`. `stats()` walks every
+ * linked document to count objects, so `host` is the residency right after that walk; `hostLeases`
+ * is what the host is holding for someone, which the walk does not change. Leases are counted for
+ * the host as a whole rather than per space, so that one is read, not summed.
+ */
+const countDocuments = async (spaces: { db: Space['db'] }[]) => {
+  let tab = 0;
+  let host = 0;
+  let hostLeases = 0;
+  for (const space of spaces) {
+    const { loaded } = await space.db.stats();
+    tab += loaded.client.documents;
+    host += loaded.host.documents;
+    hostLeases = loaded.host.leases;
+  }
+  const counts = { tab, host, hostLeases };
+  log.info('documents', counts);
+  return counts;
+};
+
+/** Idle time after the spaces open and before the first query, for what the tab loads on its own. */
+const SETTLE_MS = Number(process.env.SYNC_LAG_SETTLE_MS ?? 0);
+const RESIDENCY_WAIT_MS = Number(process.env.SYNC_LAG_RESIDENCY_WAIT_MS ?? 0);
+
 const makeObject = (index: number) =>
   Obj.make(TestSchema.Expando, {
     name: `object-${index}`,
@@ -120,10 +146,13 @@ describe('sync main-thread lag', { timeout: 300_000, tags: ['manual'] }, () => {
     await Promise.all(performInvitation({ host: host.halo, guest: guest.halo }));
     const joinedAt = performance.now();
 
+    const spaces = await Promise.all(
+      spaceKeys.map((key) => waitForSpace(guest, key, { ready: true, timeout: 60_000 })),
+    );
+    const documentsOnOpen = await countDocuments(spaces);
+    await sleep(SETTLE_MS);
+    const documentsAfterSettle = await countDocuments(spaces);
     const check = async () => {
-      const spaces = await Promise.all(
-        spaceKeys.map((key) => waitForSpace(guest, key, { ready: true, timeout: 60_000 })),
-      );
       const counts = await Promise.all(
         spaces.map(async (space) => (await space.db.query(Query.select(Filter.type(TestSchema.Expando))).run()).length),
       );
@@ -138,10 +167,13 @@ describe('sync main-thread lag', { timeout: 300_000, tags: ['manual'] }, () => {
       await sleep(200);
     }
     const report = probe.stop();
+    const documentsAfterQuery = await countDocuments(spaces);
+    await sleep(RESIDENCY_WAIT_MS);
+    const documentsAfterIdle = await countDocuments(spaces);
     log.info('synced', { counts, joinMs: Math.round(joinedAt - (performance.now() - report.wallMs)), ...report });
     // Print regardless of log filters so the number is visible in the vitest output.
     console.log(
-      `SYNC_LAG_REPORT ${JSON.stringify({ spaces: SPACES, objectsPerSpace: OBJECTS_PER_SPACE, counts, ...report })}`,
+      `SYNC_LAG_REPORT ${JSON.stringify({ spaces: SPACES, objectsPerSpace: OBJECTS_PER_SPACE, counts, documentsOnOpen, documentsAfterSettle, documentsAfterQuery, documentsAfterIdle, ...report })}`,
     );
 
     // Replication paces delivery here, so the remaining gaps are the tab's own per-slice work.
@@ -183,11 +215,14 @@ describe('sync main-thread lag', { timeout: 300_000, tags: ['manual'] }, () => {
     await reloaded.initialize();
     await reloaded.addTypes([TestSchema.Expando]);
     const initializedAt = performance.now();
+    const spaces = await Promise.all(
+      spaceKeys.map((key) => waitForSpace(reloaded, key, { ready: true, timeout: 60_000 })),
+    );
+    const documentsOnOpen = await countDocuments(spaces);
+    await sleep(SETTLE_MS);
+    const documentsAfterSettle = await countDocuments(spaces);
     let counts: number[] = [];
     while (true) {
-      const spaces = await Promise.all(
-        spaceKeys.map((key) => waitForSpace(reloaded, key, { ready: true, timeout: 60_000 })),
-      );
       counts = await Promise.all(
         spaces.map(async (space) => (await space.db.query(Query.select(Filter.type(TestSchema.Expando))).run()).length),
       );
@@ -197,8 +232,11 @@ describe('sync main-thread lag', { timeout: 300_000, tags: ['manual'] }, () => {
       await sleep(100);
     }
     const report = probe.stop();
+    const documentsAfterQuery = await countDocuments(spaces);
+    await sleep(RESIDENCY_WAIT_MS);
+    const documentsAfterIdle = await countDocuments(spaces);
     console.log(
-      `SYNC_LAG_REPORT reload ${JSON.stringify({ spaces: SPACES, objectsPerSpace: OBJECTS_PER_SPACE, counts, initializeMs: Math.round(initializedAt - (performance.now() - report.wallMs)), ...report })}`,
+      `SYNC_LAG_REPORT reload ${JSON.stringify({ spaces: SPACES, objectsPerSpace: OBJECTS_PER_SPACE, counts, documentsOnOpen, documentsAfterSettle, documentsAfterQuery, documentsAfterIdle, initializeMs: Math.round(initializedAt - (performance.now() - report.wallMs)), ...report })}`,
     );
 
     // Loading every document from storage happens on this thread too, and in the browser that is the

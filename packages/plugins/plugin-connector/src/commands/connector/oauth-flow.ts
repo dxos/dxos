@@ -12,6 +12,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type AccessToken } from '@dxos/link';
 import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
 
+import { ConnectorCommandError } from '../errors.ts';
 import { type OAuthPreset } from './util.ts';
 
 // TODO(wittjosiah): Migrate the CLI `connector add` OAuth path off the hard-coded
@@ -117,13 +118,15 @@ export const createFetchOAuthInitiator = (): OAuthInitiator => ({
       const body = (yield* response.json) as EdgeEnvelope<InitiateOAuthFlowResponse>;
 
       if (!body.success) {
-        return yield* Effect.fail(new Error(`OAuth initiation failed: ${body.error?.message || 'Unknown error'}`));
+        return yield* Effect.fail(
+          new ConnectorCommandError({ message: `OAuth initiation failed: ${body.error?.message || 'Unknown error'}` }),
+        );
       }
 
       return body.data.authUrl;
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.catch((error) => Effect.fail(new Error(`OAuth initiation failed: ${error}`))),
+      Effect.catch((error) => Effect.fail(new ConnectorCommandError({ message: `OAuth initiation failed: ${error}` }))),
     ),
 });
 
@@ -176,7 +179,7 @@ export const performOAuthFlow = Effect.fn(function* (
 
     // TypeScript type narrowing for discriminated union.
     if (oauthResult.success === false) {
-      return yield* Effect.fail(new Error(`OAuth flow failed: ${oauthResult.reason}`));
+      return yield* Effect.fail(new ConnectorCommandError({ message: `OAuth flow failed: ${oauthResult.reason}` }));
     }
 
     Obj.update(accessToken, (accessToken) => {

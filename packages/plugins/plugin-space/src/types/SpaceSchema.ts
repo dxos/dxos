@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj } from '@dxos/echo';
+import { Annotation, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -87,11 +87,6 @@ export type PluginState = {
   viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
 
   /**
-   * Object that was linked to directly but not found and is being awaited.
-   */
-  awaiting: string | undefined;
-
-  /**
    * Cached space names, used when spaces are closed or loading.
    */
   spaceNames: Record<string, string>;
@@ -151,8 +146,8 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    /** The collection to file into; absent files at the space root of `db`. */
-    target?: Collection.Collection;
+    /** The created object's parent; absent files at the space root of `db`. */
+    target?: Obj.Unknown;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;

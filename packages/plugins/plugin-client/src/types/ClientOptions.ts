@@ -86,7 +86,7 @@ export type ClientPluginOptions = ClientOptions & {
    * Called when spaces are ready.
    * Plugin context is provided so capabilities are accessible.
    */
-  onSpacesReady?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
+  onSpacesAvailable?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 
   /**
    * Called when the client is reset.

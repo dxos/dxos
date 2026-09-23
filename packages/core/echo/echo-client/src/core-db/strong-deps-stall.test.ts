@@ -279,6 +279,8 @@ describe('Query pipeline strong-dependency stalls', () => {
       newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.url);
     });
 
+    // Ask for the main object; its document loads, its dependency's never arrives.
+    db.getObjectCoreById(mainObjectId);
     await sleep(200);
 
     // Main object is materialized locally but its schema dep is unreachable.
@@ -288,6 +290,81 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
     expect(results.some((object) => object.id === mainObjectId)).toBe(false);
+  });
+
+  // The same unsatisfied-dependency state, asked the two ways a caller actually asks.
+  //
+  // `Ref.peek` — what a listing walks, e.g. `TaskSet.loadTasks` -> `loadRefs` -> `Database.peek` —
+  // resolves through `db.getObjectById`, which gates on `isBodyAvailable` alone. `Database.load`,
+  // what a write verb calls to turn a ref into an object, resolves through a `Filter.id` query,
+  // and every query source gates on `areStrongDepsSatisfied`.
+  //
+  // So the object is listed with full fields and cannot be loaded, permanently and per-object:
+  // `org.dxos.operation.tasks.list` returns the task, `tasks.update` fails `EntityNotFoundError`
+  // for the same id, and its siblings in the same set are fine. A caller has no way to tell that
+  // the row it was handed is unusable.
+  test('an object with unavailable strong deps is visible to the working-set read but not loadable by ref', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const mainObjectId = EntityId.random();
+    const depObjectId = EntityId.random();
+
+    const mainDocHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [mainObjectId]: {
+          meta: { keys: [] },
+          data: { title: 'main' },
+          system: {
+            kind: 'object',
+            type: { '/': EID.make({ entityId: depObjectId }) },
+          },
+        },
+      },
+    });
+
+    // The dependency is advertised by the space root but its chunks live on a peer that is never
+    // connected, so the probe completes negative and the deps never become satisfied.
+    const sourceBuilder = new EchoTestBuilder();
+    await openAndClose(sourceBuilder);
+    const sourcePeer = await sourceBuilder.createPeer();
+    const orphanDepHandle = await sourcePeer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [depObjectId]: {
+          meta: { keys: [] },
+          data: { name: 'unreachable-dep' },
+          system: { kind: 'object' },
+        },
+      },
+    });
+
+    const spaceRootHandle = db.getSpaceRootDocHandle();
+    spaceRootHandle.change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
+      newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.url);
+    });
+
+    db.getObjectCoreById(mainObjectId);
+    await sleep(200);
+
+    const core = db.getObjectCoreById(mainObjectId, { load: false });
+    expect(core).toBeDefined();
+    expect(db.areStrongDepsSatisfied(core!)).toBe(false);
+
+    // The read a listing performs: present, with its data.
+    const listed = db.getObjectById(mainObjectId);
+    expect(listed).toBeDefined();
+    expect((listed as any).title).toEqual('main');
+
+    // The read a write verb performs, on the same id in the same database.
+    const byRef = await asyncTimeout(db.makeRef(EID.make({ entityId: mainObjectId })).tryLoad(), 2000);
+    expect(byRef, 'an object a listing returns must be loadable by its own reference').toBeDefined();
   });
 
   // A prior `diskOnly` probe marks an id unavailable while the object is transient; after local

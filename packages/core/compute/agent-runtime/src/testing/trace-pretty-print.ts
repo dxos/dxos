@@ -41,7 +41,7 @@ export const traceSinkPrettyLayer = (): Layer.Layer<Trace.TraceSink> =>
 export const traceFeedPrettyPrintSubscription = Effect.gen(function* () {
   const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
   const queryResult = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed));
-  const seen = new Set(queryResult.runSync().map((message) => message.id));
+  const seen = new Set((yield* Effect.promise(() => queryResult.run())).map((message) => message.id));
 
   return queryResult.subscribe((result) => {
     for (const message of result.results) {

@@ -9,6 +9,7 @@ import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { PluginManagerError } from './plugin-manager/errors.ts';
 import type * as Plugin from './plugin.ts';
 
 /**
@@ -68,8 +69,8 @@ export type PluginsState = {
  */
 const NULL_PROVIDER: PluginProvider = {
   listPlugins: () => Effect.succeed([] as readonly Plugin.Meta[]),
-  listVersions: () => Effect.fail(new Error('No plugin registry provider configured')),
-  getPlugin: () => Effect.fail(new Error('No plugin registry provider configured')),
+  listVersions: () => Effect.fail(new PluginManagerError({ message: 'No plugin registry provider configured' })),
+  getPlugin: () => Effect.fail(new PluginManagerError({ message: 'No plugin registry provider configured' })),
 };
 
 /**

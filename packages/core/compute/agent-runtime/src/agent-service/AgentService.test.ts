@@ -911,8 +911,7 @@ describe('Agent Service (control plane)', () => {
           expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
         );
       },
-      Effect.provide(TestLayer()),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer(), Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans)))),
       TestHelpers.provideTestContext,
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },

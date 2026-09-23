@@ -15,6 +15,7 @@ import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 
+import { ConnectorCommandError } from '../errors.ts';
 import { performOAuthFlow } from './oauth.ts';
 import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util.ts';
 
@@ -64,11 +65,11 @@ export const add = Command.make(
       } else {
         // Custom token mode from command line
         const sourceValue = yield* Option.match(source, {
-          onNone: () => Effect.fail(new Error('Source is required')),
+          onNone: () => Effect.fail(new ConnectorCommandError({ message: 'Source is required' })),
           onSome: (value) => Effect.succeed(value),
         });
         const tokenValue = yield* Option.match(token, {
-          onNone: () => Effect.fail(new Error('Token is required when specifying source')),
+          onNone: () => Effect.fail(new ConnectorCommandError({ message: 'Token is required when specifying source' })),
           onSome: (value) => Effect.succeed(value),
         });
         const customTokenData = {
@@ -100,7 +101,7 @@ const selectPresetInteractively = Effect.fn(function* () {
 
   const preset = OAUTH_PRESETS.find((p) => p.label === selectedLabel);
   if (!preset) {
-    return yield* Effect.fail(new Error(`Preset not found: ${selectedLabel}`));
+    return yield* Effect.fail(new ConnectorCommandError({ message: `Preset not found: ${selectedLabel}` }));
   }
   return preset;
 });
@@ -125,7 +126,9 @@ const resolvePresetFromCommandLine = (presetValue: string): Effect.Effect<OAuthP
   const preset = OAUTH_PRESETS.find((p) => p.label.toLowerCase() === presetValue.toLowerCase());
   if (!preset) {
     return Effect.fail(
-      new Error(`Preset not found: ${presetValue}. Available presets: ${OAUTH_PRESETS.map((p) => p.label).join(', ')}`),
+      new ConnectorCommandError({
+        message: `Preset not found: ${presetValue}. Available presets: ${OAUTH_PRESETS.map((p) => p.label).join(', ')}`,
+      }),
     );
   }
   return Effect.succeed(preset);
@@ -150,7 +153,9 @@ const addCustomToken = Effect.fn(function* (
   json: boolean,
 ) {
   if (!data.source || !data.token) {
-    return yield* Effect.fail(new Error('Source and token are required for custom tokens'));
+    return yield* Effect.fail(
+      new ConnectorCommandError({ message: 'Source and token are required for custom tokens' }),
+    );
   }
 
   const accessToken = Obj.make(AccessToken.AccessToken, {

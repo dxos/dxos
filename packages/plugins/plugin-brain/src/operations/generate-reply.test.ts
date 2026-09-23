@@ -44,19 +44,22 @@ const ALICE_FACT: RDF.Fact = {
 /** Stub `AiService` returning a canned body while capturing prompts for grounding assertions. */
 const capturingAiService = (text: string): { layer: Layer.Layer<AiService.AiService>; prompts: string[] } => {
   const prompts: string[] = [];
-  const layer = Layer.succeed(AiService.AiService, {
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: (options: { prompt: string }) =>
-          Effect.sync(() => {
-            prompts.push(String(options.prompt));
-            return { text, content: [] };
-          }),
-        generateObject: () => Effect.succeed({ value: {}, content: [] }),
-        streamText: () => Stream.empty,
-        // Test stub: the LanguageModel surface is wider than the three methods exercised here.
-      } as any),
-  });
+  const layer = Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: (options: { prompt: string }) =>
+            Effect.sync(() => {
+              prompts.push(String(options.prompt));
+              return { text, content: [] };
+            }),
+          generateObject: () => Effect.succeed({ value: {}, content: [] }),
+          streamText: () => Stream.empty,
+          // Test stub: the LanguageModel surface is wider than the three methods exercised here.
+        } as any),
+    }),
+  );
   return { layer, prompts };
 };
 
@@ -90,7 +93,11 @@ describe('generateReply', () => {
         const store = yield* FactStore;
         yield* store.putFacts([ALICE_FACT]);
         return yield* generateReply({ mailbox, message: thread[0] });
-      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStoreLive.layerMemory), Effect.provide(ai.layer)),
+      }).pipe(
+        Effect.provide(
+          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+        ),
+      ),
     );
 
     expect(result.subject).toBe('Re: Q2 report');
@@ -115,9 +122,9 @@ describe('generateReply', () => {
     const ai = capturingAiService('Sure, ask away.');
     const result = await EffectEx.runPromise(
       generateReply({ mailbox, message }).pipe(
-        Effect.provide(Database.layer(db)),
-        Effect.provide(FactStoreLive.layerMemory),
-        Effect.provide(ai.layer),
+        Effect.provide(
+          Database.layer(db).pipe(Layer.provideMerge(FactStoreLive.layerMemory), Layer.provideMerge(ai.layer)),
+        ),
       ),
     );
 

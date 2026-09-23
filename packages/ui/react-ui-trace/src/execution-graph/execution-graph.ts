@@ -478,16 +478,28 @@ export const deriveInFlightActivityLine = (
 };
 
 const collectDescendantPids = (messages: readonly Trace.Message[], rootPid: string): Set<string> => {
+  // Indexed first so the walk costs one pass over the messages rather than one per tree level.
+  const childPidsByParent = new Map<string, Set<string>>();
+  for (const message of messages) {
+    const { pid, parentPid } = message.meta;
+    if (!pid || !parentPid) {
+      continue;
+    }
+    let children = childPidsByParent.get(parentPid);
+    if (!children) {
+      children = new Set();
+      childPidsByParent.set(parentPid, children);
+    }
+    children.add(pid);
+  }
+
   const pids = new Set([rootPid]);
-  let expanded = true;
-  while (expanded) {
-    expanded = false;
-    for (const message of messages) {
-      const pid = message.meta.pid;
-      const parentPid = message.meta.parentPid;
-      if (pid && parentPid && pids.has(parentPid) && !pids.has(pid)) {
-        pids.add(pid);
-        expanded = true;
+  const pending = [rootPid];
+  while (pending.length > 0) {
+    for (const childPid of childPidsByParent.get(pending.pop()!) ?? []) {
+      if (!pids.has(childPid)) {
+        pids.add(childPid);
+        pending.push(childPid);
       }
     }
   }
@@ -567,6 +579,10 @@ const isCollapsibleSpan = (span: Span, parent: Span | null, collapseCompletedSpa
  * subtrees (depth-first), then its remaining events. Active-process running rows are inserted
  * at the end of each matching span block — not appended after the entire tree.
  */
+/** Branch tips as a commit's parent list; a branch with no commit yet contributes nothing. */
+const parentIds = (...tips: (Commit | undefined)[]): string[] =>
+  Array.dedupe(tips.filter((tip) => tip !== undefined).map((tip) => tip.id));
+
 const spanTreeToCommits = (
   root: Span,
   activeProcesses: readonly Process.Info[],
@@ -621,7 +637,7 @@ const spanTreeToCommits = (
   // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
   const beginCommitIdBySpan = new Map<string, string>();
 
-  // Selector that returns "the most recent commit in this span's structural context".
+  // The parents for "the most recent commit in this span's structural context".
   //
   // The walk is structural (pid/parentPid), not topological: at each ancestor, we prefer
   //   1) the last commit on that span's own branch, then
@@ -633,17 +649,19 @@ const spanTreeToCommits = (
   // to A.begin — not to whatever unrelated commit happens to be the latest on main.
   // This keeps fork edges visually attached to the correct span even when sibling top-level
   // spans (different pids) overlap in time on main.
-  const lastInSpanContext = (span: Span | null): CommitSelector => {
+  const lastInSpanContext = (span: Span | null): string[] => {
     if (!span || span.id === ROOT_SPAN_ID) {
-      return CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last()));
+      return parentIds(builder.tipOf(MAIN_BRANCH));
     }
-    const ownBranch = branchOf(span);
+    const ownTip = builder.tipOf(branchOf(span));
+    if (ownTip) {
+      return parentIds(ownTip);
+    }
     const beginId = beginCommitIdBySpan.get(span.id);
-    return CommitSelector.firstOf(
-      CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
-      beginId ? CommitSelector.id(beginId) : CommitSelector.filter(() => false),
-      lastInSpanContext(findParentSpan(span)),
-    );
+    if (beginId && builder.hasCommit(beginId)) {
+      return [beginId];
+    }
+    return lastInSpanContext(findParentSpan(span));
   };
 
   const lastCommitIdBySpan = new Map<string, string>();
@@ -671,12 +689,7 @@ const spanTreeToCommits = (
         branch: process.pid,
         // Falls back to the tail of main: a completed request collapses onto main, leaving the
         // agent's own branch empty, and a parentless spinner draws as a second, disconnected root.
-        parents: builder.computeParents(
-          CommitSelector.firstOf(
-            CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
-            CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
-          ),
-        ),
+        parents: parentIds(builder.firstTipOf(process.pid, MAIN_BRANCH)),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,
         message: 'Generating...',
@@ -688,9 +701,7 @@ const spanTreeToCommits = (
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
-        parents: builder.computeParents(
-          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
-        ),
+        parents: parentIds(builder.tipOf(process.pid)),
         icon: ICONS.processRunning.icon,
         level: ICONS.processRunning.level,
         message: 'Running...',
@@ -746,19 +757,19 @@ const spanTreeToCommits = (
     if (span.id === ROOT_SPAN_ID) {
       // Root-level events (no pid) attach sequentially to main.
       branch = MAIN_BRANCH;
-      parents = builder.computeParents(lastInSpanContext(null));
+      parents = lastInSpanContext(null);
     } else if (collapsible) {
       // Only the end event reaches here for collapsible spans.
       // Anchor to the parent span's structural context so the fork attaches to the parent
       // — not to a sibling span's commit that happens to be the latest on the shared ancestor.
       branch = parentBranch;
-      parents = builder.computeParents(lastInSpanContext(parentSpan));
+      parents = lastInSpanContext(parentSpan);
     } else if (isBeginEvent) {
       // Begin commit, anchored to the parent's structural context. A nested sub-span stays on the
       // parent lane (only its middle events fork). A concurrent child process forks onto its own
       // branch from this first event so it gets its own lane immediately.
       branch = isProcessBoundary ? ownBranch : parentBranch;
-      parents = builder.computeParents(lastInSpanContext(parentSpan));
+      parents = lastInSpanContext(parentSpan);
     } else if (isEndEvent) {
       // End commit: continues the parent branch chronologically and merges in own-branch work.
       //
@@ -773,18 +784,13 @@ const spanTreeToCommits = (
       // to main) would otherwise gain commits after its own merge and never re-collapse — leaving a
       // dangling lane after the child finishes.
       branch = isProcessBoundary ? MAIN_BRANCH : parentBranch;
-      parents = builder.computeParents(
-        CommitSelector.unionAll(
-          CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last())),
-          CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
-        ),
-      );
+      parents = parentIds(builder.tipOf(branch), builder.tipOf(ownBranch));
     } else {
       // Middle event: continue the span's own branch; fall back to span's own context so the
       // first middle event of a span forks from the span's begin commit, not from a sibling's
       // commit on an ancestor branch.
       branch = ownBranch;
-      parents = builder.computeParents(lastInSpanContext(span));
+      parents = lastInSpanContext(span);
     }
 
     const commitIndex = globalIndex++;
@@ -1010,26 +1016,58 @@ export const CommitSelector = {
     }),
 };
 
+/**
+ * Accumulates the commit list. Every lookup the graph makes while building — the tip of a branch,
+ * a commit by id — is served from an index, because each is asked once per commit and a scan would
+ * make the whole build quadratic in the history.
+ */
 class GraphBuilder {
   #commits: Commit[] = [];
   #branches = new Set<string>();
-
-  findCommits(selector: CommitSelector): Commit[] {
-    return selector.select(this.#commits);
-  }
+  #indexById = new Map<string, number>();
+  #tipIndexByBranch = new Map<string, number>();
 
   hasBranch(branch: string): boolean {
     return this.#branches.has(branch);
   }
 
+  hasCommit(commitId: string): boolean {
+    return this.#indexById.has(commitId);
+  }
+
+  /** The most recent commit on a branch, or undefined while the branch has none. */
+  tipOf(branch: string | Falsy): Commit | undefined {
+    if (!branch) {
+      return undefined;
+    }
+    const index = this.#tipIndexByBranch.get(branch);
+    return index === undefined ? undefined : this.#commits[index];
+  }
+
+  /** The most recent commit on the first of `branches` that has one. */
+  firstTipOf(...branches: (string | Falsy)[]): Commit | undefined {
+    for (const branch of branches) {
+      const tip = this.tipOf(branch);
+      if (tip) {
+        return tip;
+      }
+    }
+    return undefined;
+  }
+
   addCommit(commit: Commit) {
     this.addBranch(commit.branch);
-    this.#commits.push(commit);
+    const index = this.#commits.push(commit) - 1;
+    // Duplicate ids survive until `doctor` drops them, and it keeps the first — so does this index.
+    if (!this.#indexById.has(commit.id)) {
+      this.#indexById.set(commit.id, index);
+    }
+    this.#tipIndexByBranch.set(commit.branch, index);
   }
 
   addTag(commitId: string, tag: string) {
-    const index = this.#commits.findIndex((commit) => commit.id === commitId);
-    if (index < 0) {
+    const index = this.#indexById.get(commitId);
+    if (index === undefined) {
       return;
     }
     const commit = this.#commits[index]!;
@@ -1037,13 +1075,6 @@ class GraphBuilder {
       return;
     }
     this.#commits[index] = { ...commit, tags: [...(commit.tags ?? []), tag] };
-  }
-
-  /**
-   * Computes parents — picks first matching commit's id.
-   */
-  computeParents(selector: CommitSelector): string[] {
-    return Array.dedupe(selector.select(this.#commits).map((commit) => commit.id));
   }
 
   addBranch(branch: string) {
@@ -1054,16 +1085,23 @@ class GraphBuilder {
    * Removes duplicate commits and dangling parents.
    */
   doctor() {
+    const seen = new Set<string>();
     this.#commits = pipe(
       this.#commits,
-      Array.dedupeWith((a, b) => a.id === b.id),
+      Array.filter((commit) => {
+        if (seen.has(commit.id)) {
+          return false;
+        }
+        seen.add(commit.id);
+        return true;
+      }),
       Array.map(
         Struct.evolve({
-          parents: (parents) =>
-            parents ? Array.filter(parents, (id) => this.#commits.some((commit) => commit.id === id)) : undefined,
+          parents: (parents) => (parents ? Array.filter(parents, (id) => seen.has(id)) : undefined),
         }),
       ),
     );
+    this.#reindex();
   }
 
   build() {
@@ -1072,5 +1110,16 @@ class GraphBuilder {
       commits: this.#commits,
       branches: [...this.#branches],
     };
+  }
+
+  #reindex() {
+    this.#indexById.clear();
+    this.#tipIndexByBranch.clear();
+    this.#commits.forEach((commit, index) => {
+      if (!this.#indexById.has(commit.id)) {
+        this.#indexById.set(commit.id, index);
+      }
+      this.#tipIndexByBranch.set(commit.branch, index);
+    });
   }
 }

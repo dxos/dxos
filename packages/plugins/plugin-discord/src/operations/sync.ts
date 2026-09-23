@@ -5,6 +5,7 @@
 import { DiscordREST } from 'dfx';
 import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -218,7 +219,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 newestId = messages[messages.length - 1].id;
 
                 return { pulled: { added: mapped.length } };
-              }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayerFromToken(accessToken.token))),
+              }).pipe(
+                Effect.provide(Layer.provideMerge(Database.layer(db), makeDiscordLayerFromToken(accessToken.token))),
+              ),
             );
 
             if (outcome._tag === 'Success') {

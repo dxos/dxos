@@ -44,9 +44,10 @@ export type DiffBlocksOptions = {
   highlight?: boolean;
   /**
    * Offers a comment button on each hovered line of a diff that names its file; called with the line
-   * the reader picked. Absent means no button.
+   * the reader picked and the button that was pressed, so a composer can be floated at that line.
+   * Absent means no button.
    */
-  onLineComment?: (target: DiffLineTarget) => void;
+  onLineComment?: (target: DiffLineTarget, anchor: HTMLElement) => void;
 };
 
 /** A single line of a rendered diff, as a review comment addresses it. */
@@ -401,7 +402,7 @@ class DiffBlockWidget extends WidgetType {
     button.addEventListener('mousedown', (event) => event.preventDefault());
     button.addEventListener('click', (event) => {
       event.stopPropagation();
-      onLineComment({ file, side, line, text });
+      onLineComment({ file, side, line, text }, button);
     });
     // Prepended so highlighting, which replaces the cell's text content, is applied after and must keep it.
     cell.prepend(button);

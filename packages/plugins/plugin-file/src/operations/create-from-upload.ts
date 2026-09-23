@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Ref } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { File } from '@dxos/types';
 
 import { FileLimits, FileOperation } from '#types';
@@ -13,18 +14,16 @@ import { FileLimits, FileOperation } from '#types';
 import { NoBackendError, resolveActiveStorage } from './create.ts';
 
 /** Raised when the named upload cannot be adopted — never uploaded, already consumed, or expired. */
-export class UploadNotFoundError extends Error {
+export class UploadNotFoundError extends BaseError.extend('UploadNotFoundError') {
   constructor(public readonly uploadId: string) {
-    super(`No completed upload ${uploadId}. Upload the bytes to the signed URL before creating the file.`);
-    this.name = 'UploadNotFoundError';
+    super({ message: `No completed upload ${uploadId}. Upload the bytes to the signed URL before creating the file.` });
   }
 }
 
 /** Raised when the bytes that arrived are not of a type this plugin accepts. */
-export class UnsupportedUploadTypeError extends Error {
+export class UnsupportedUploadTypeError extends BaseError.extend('UnsupportedUploadTypeError') {
   constructor(public readonly type: string) {
-    super(`Uploaded content has an unsupported type: ${type}`);
-    this.name = 'UnsupportedUploadTypeError';
+    super({ message: `Uploaded content has an unsupported type: ${type}` });
   }
 }
 
@@ -39,7 +38,7 @@ const handler: Operation.WithHandler<typeof FileOperation.CreateFromUpload> = Fi
         // `not-found` is the adoptable-upload miss; every other reason is a misconfigured backend,
         // which is the same condition `resolveActiveStorage` reports and should not be dressed up
         // as a missing upload.
-        Effect.catchTag('BlobNotAvailableError', (error) =>
+        Effect.catchTag('BlobNotAvailableError', (error): Effect.Effect<never, NoBackendError | UploadNotFoundError> =>
           error.context.reason === 'not-found'
             ? Effect.fail(new UploadNotFoundError(uploadId))
             : Effect.fail(new NoBackendError()),

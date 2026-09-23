@@ -40,6 +40,12 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    */
   isSynchronous(): boolean;
 
+  /**
+   * Whether a source serving the current query has yet to answer, so {@link getResults} is only the
+   * part of the result the sources that have answered know about.
+   */
+  hasPendingSources(): boolean;
+
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
 

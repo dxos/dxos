@@ -191,7 +191,7 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
           size={6}
-          classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-500' : 'text-success-text'))}
+          classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}
         />
       </div>
       <div className='truncate overflow-hidden items-center'>{children}</div>

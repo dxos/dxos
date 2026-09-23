@@ -19,7 +19,9 @@ import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
+import { type DeckSpec } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
+import * as ContainerModel from '../types/ContainerModel.ts';
 
 /** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
 export const makeSectionRearrangeCallback = AppNode.createFactory(
@@ -63,8 +65,21 @@ export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
  *
  * Pass `createObject` to add a "+" action on the section header automatically.
  */
-export const createTypeSectionExtension = (
-  type: Type.AnyEntity,
+/** The id a type section gives the extension producing its objects. */
+const sectionObjectsId = (typename: string): string => `${typename}.sectionObjects`;
+
+/**
+ * Whether a registered extension produces the objects of `typename`'s type section. Registration may
+ * qualify the id with the contributing module (`<module>.<id>`) and the extension part (`<id>/connector`).
+ */
+export const isSectionObjectsExtension = (extensionId: string, typename: string): boolean => {
+  const [id] = extensionId.split('/');
+  const objectsId = sectionObjectsId(typename);
+  return id === objectsId || id.endsWith(`.${objectsId}`);
+};
+
+export const createTypeSectionExtension = <T extends Type.AnyObj>(
+  type: T,
   options: {
     /** Position hint for the section in the sidebar. */
     position?: Position.Position;
@@ -94,15 +109,26 @@ export const createTypeSectionExtension = (
     urlKey: string;
     /**
      * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
-     * for a section that is worth linking to in its own right. Omit and the section stays a bare container:
-     * only its objects are addressable, which is the default because `urlKey` alone cannot describe the
-     * node sitting *at* its own path.
+     * for a section that is worth linking to in its own right; it also names the section node. Omit and the
+     * section stays a bare container named by its typename: only its objects are addressable.
      *
      * Opting in splits the section into two extensions — one owning the section node, one owning its
-     * objects — since a node is stamped from its producing extension's binding, and the two need different
-     * ones. The objects are then materialized on expand rather than inline.
+     * objects — since each extension carries one binding and the two need different ones. The objects are
+     * then materialized on expand rather than inline.
      */
     sectionUrlKey?: string;
+    /**
+     * The container an object dropped onto a section object's row joins. Without it a section object
+     * only accepts objects of its own type, as reorders.
+     */
+    dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
+    /**
+     * How the deck behaves when one of this section's objects is its root — the same answer
+     * {@link AppAnnotation.DeckAnnotation} gives, for a type that cannot carry it: the annotation lives
+     * in `@dxos/app-toolkit`, which a type defined below it (`@dxos/types`, `@dxos/compute`) cannot
+     * import. A type that can annotate itself should, so the answer travels with the type.
+     */
+    deck?: DeckSpec.DeckSpec;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -121,12 +147,15 @@ export const createTypeSectionExtension = (
     Obj.isObject(source.item.data) &&
     Obj.getTypename(source.item.data) === typename;
 
+  /** The section node's own segment: its URL key when it has one, so the key addresses it directly. */
+  const sectionSegment = options.sectionUrlKey ?? typename;
+  const groupSegments = options.groupSegment ? [options.groupSegment] : [];
   /** Node-id segments from the space down to the section node — the section's own path. */
-  const sectionSegments = options.groupSegment ? [options.groupSegment, typename] : [typename];
+  const sectionSegments = [...groupSegments, sectionSegment];
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
-  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
-    const objects = get(space.db.query(query).atom) as Obj.Unknown[];
+  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Type.InstanceType<T>[] => {
+    const objects = get(space.db.query(query).atom) as Type.InstanceType<T>[];
     if (objects.length === 0) {
       return [];
     }
@@ -140,17 +169,28 @@ export const createTypeSectionExtension = (
       .filter((id): id is string => id !== undefined);
     // Objects not in the stored order follow in query order.
     return inferObjectOrder(
-      Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
+      Object.fromEntries(objects.map((object): [string, Type.InstanceType<T>] => [object.id, object])),
       order,
     );
   };
 
-  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
-    const onRearrange = makeSectionRearrangeCallback(space, typename);
-    return orderedObjects
-      .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
+  const { dropInto } = options;
+  // A row takes other types onto itself and reorders among its own type.
+  const blockInstruction = (source: TreeData, instruction: AppNode.Instruction): boolean =>
+    canDropSameType(source) === (instruction.type === 'make-child');
+
+  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Type.InstanceType<T>[]) =>
+    orderedObjects
+      .map((object) =>
+        AppNode.makeObject({
+          get,
+          db: space.db,
+          object,
+          deck: options.deck,
+          ...(dropInto ? { dropInto: dropInto(object), blockInstruction } : {}),
+        }),
+      )
       .filter((node): node is NonNullable<typeof node> => node !== null);
-  };
 
   /** Matches this type's section node (the parent the objects and the create action hang off). */
   const whenSection = (node: AppGraphNode.Node): Option.Option<Space> => {
@@ -165,7 +205,7 @@ export const createTypeSectionExtension = (
   // container and only its objects get a URL.
   const sectionExtension = AppGraphBuilder.createExtension({
     id: typename,
-    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: sectionSegments } : undefined,
+    url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: groupSegments } : undefined,
     match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       if (queryOrderedObjects(space, get).length === 0) {
@@ -188,7 +228,7 @@ export const createTypeSectionExtension = (
 
       return Effect.succeed([
         AppGraphNode.make({
-          id: typename,
+          id: sectionSegment,
           type: typename,
           data: options.sectionUrlKey ? (typeEntity ?? null) : null,
           properties: {
@@ -198,6 +238,8 @@ export const createTypeSectionExtension = (
             role: 'branch',
             draggable: false,
             droppable: false,
+            canDrop: canDropSameType,
+            onRearrange: makeSectionRearrangeCallback(space, typename),
             space,
             testId,
             ...(options.position ? { position: options.position } : {}),
@@ -210,7 +252,7 @@ export const createTypeSectionExtension = (
   // The section's objects — always a separate extension so each object gets its own item binding
   // (keyed by urlKey) independent of how the section node itself is addressed.
   const objectsExtension = AppGraphBuilder.createExtension({
-    id: `${typename}.sectionObjects`,
+    id: sectionObjectsId(typename),
     url: { key: options.urlKey, kind: 'item', path: sectionSegments },
     match: whenSection,
     connector: (space, get) => Effect.succeed(buildObjectNodes(space, get, queryOrderedObjects(space, get))),

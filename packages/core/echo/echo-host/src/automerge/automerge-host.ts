@@ -27,13 +27,13 @@ import {
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
+import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
+import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -54,10 +54,11 @@ import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
-import { type HandleQueryState, getHandleState } from './handle-state.ts';
+import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
+import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -86,9 +87,9 @@ export type AutomergeHostProps = {
   useSubduction?: boolean;
 
   /**
-   * Residency policy for loaded documents. Defaults suit a long-lived process; a host whose
-   * invocations are shorter than {@link EVICT_IDLE_DELAY} (a Worker) or whose budget is tighter
-   * than {@link MIN_RESIDENT_DOCUMENTS} documents should set its own.
+   * Residency policy for loaded documents. The default evicts a released document after
+   * {@link EVICT_IDLE_DELAY} and keeps no floor; a host whose invocations are shorter than the delay
+   * (a Worker) should set its own.
    */
   residency?: {
     /** How long a document stays resident after its last lease is disposed. */
@@ -146,6 +147,42 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
+ * Passes after which non-convergence is reported at `error` rather than `warn`: at a ~10s poll this
+ * is ~15min of a pair making no progress, which no in-flight replication explains.
+ */
+const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
+
+/**
+ * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
+ *
+ * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
+ * against every connection — so its cost scales with the corpus, and there is no cheaper scoped
+ * variant to reach for ({@link resyncDocument} is the per-document lever). Measured in a browser
+ * trace of a ~800-document profile: one kick fanned out to ~7.6k probes over ~12s of worker time,
+ * i.e. ~15ms per resident document once the per-connection fan-out is amortised in.
+ *
+ * Used as the *minimum interval between kicks*, so a new fan-out does not start before the previous
+ * one has plausibly drained. The kick walks only resident entries, so its cost shrinks with the
+ * interval when residency is capped below the corpus. Deliberately not a larger
+ * multiple: the kick is also the recovery path for a denied-then-allowed share policy, and delaying
+ * it past the fan-out itself would trade a real stall for a bound nobody is hitting.
+ */
+const SHARE_POLICY_KICK_MS_PER_DOCUMENT = 15;
+
+/**
+ * Floor for the share-policy throttle. Below this the kick is cheap enough that throttling only
+ * adds recovery latency — a small repo should stay as responsive as it was before the throttle.
+ */
+const SHARE_POLICY_KICK_MIN_INTERVAL_MS = 1_000;
+
+/**
+ * Ceiling for the share-policy throttle. A corpus large enough to exceed this is past the point
+ * where the repo-wide kick is a sensible recovery mechanism at all; capping keeps a pathological
+ * profile from stalling recovery outright.
+ */
+const SHARE_POLICY_KICK_MAX_INTERVAL_MS = 30_000;
+
+/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -170,16 +207,11 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
 
 /**
  * How long a document stays resident after its last lease is disposed. Long enough to span the gap
- * between two passes over the same working set (indexing then querying it), because re-faulting a
- * document allocates automerge memory the runtime never gives back.
+ * between two passes over the same working set (indexing then querying it), which would otherwise
+ * load each document twice. Nothing stays past it: an evicted document's Automerge memory is reused by
+ * the next one loaded.
  */
 const EVICT_IDLE_DELAY = 30_000;
-
-/**
- * How many released documents stay resident regardless of age. Keeps the hot working set loaded on a
- * host whose whole session is shorter than {@link EVICT_IDLE_DELAY}.
- */
-const MIN_RESIDENT_DOCUMENTS = 256;
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -223,6 +255,9 @@ export class AutomergeHost extends Resource {
    */
   public readonly documentsSaved = new Event();
 
+  /** Fired per document whose heads a save advanced — what a reader of that document must catch up on. */
+  public readonly documentHeadsChanged = new Event<{ documentId: DocumentId; heads: Heads }>();
+
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
   private _onHeadsChangedTask?: DeferredTask;
 
@@ -246,6 +281,29 @@ export class AutomergeHost extends Resource {
    * making no progress is otherwise indistinguishable from idle polling in the logs.
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
+
+  /**
+   * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
+   *
+   * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
+   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
+   * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
+   * rather than a plain "already tried" flag so that a genuine change on either side (the peer
+   * advanced, or we committed again) re-opens the retry.
+   *
+   * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
+   * unambiguous, and cleanup compares the ids stored on each entry instead.
+   */
+  private _divergedResyncHeads = new Map<
+    string,
+    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
+  >();
+
+  /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
+  private _sharePolicyKickNextAllowedAt = 0;
+
+  /** Whether a trailing share-policy kick is parked at {@link _sharePolicyKickNextAllowedAt}. */
+  private _sharePolicyKickParked = false;
 
   /**
    * Documents requested by remote peers.
@@ -291,7 +349,7 @@ export class AutomergeHost extends Resource {
       },
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
       evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
-      minResidentDocuments: residency?.minResidentDocuments ?? MIN_RESIDENT_DOCUMENTS,
+      minResidentDocuments: residency?.minResidentDocuments,
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;
@@ -309,6 +367,8 @@ export class AutomergeHost extends Resource {
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
+      // Re-announcing under Subduction binds a second connection to the peer, stranding the rounds pending on the first.
+      onConnectionAuthScopeChanged: useSubduction ? () => this._sharePolicyChangedTask?.schedule() : 'reannounce-peer',
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
@@ -407,14 +467,23 @@ export class AutomergeHost extends Resource {
       });
     }
 
+    // Here, and awaited: the Repo constructs its engine without loading any tree, and nothing can
+    // attach a document or start a sync round until `open()` returns, so a rewrite the migrations
+    // make lands before the engine's in-memory view of that tree exists.
+    await this._runSubductionMigrations();
+
+    // An auth-scope change and a transport reset both re-announce a peer that never left, and
+    // dropping its collection state costs a diff over every document in the collection (DX-1275).
     let updatingAuthScope = false;
+    const peerLifecycleSuppressed = (peerId: PeerId): boolean =>
+      updatingAuthScope || this._echoNetworkAdapter.isTransportResetting(peerId);
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
       this._ctx,
-      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
+      ((e: PeerCandidatePayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerConnected(e.peerId)) as any,
     );
     Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
       this._ctx,
-      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
+      ((e: PeerDisconnectedPayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerDisconnected(e.peerId)) as any,
     );
 
     this._collectionSynchronizer.peerCollectionStateUpdated.on(
@@ -451,6 +520,34 @@ export class AutomergeHost extends Resource {
     });
 
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
+      // Throttled by parking one trailing run at the deadline rather than waiting in here:
+      // `DeferredTask` clears its scheduled flag before running this callback, so a `schedule()`
+      // landing during a wait here queues a second run, which would fan out again for requests the
+      // first run already covered. While the trailing run is parked every schedule returns through
+      // this branch, so a burst costs one fan-out. Leading edge is immediate — a kick after a quiet
+      // period pays nothing, which keeps the deny→allow recovery path prompt.
+      const waitMs = this._sharePolicyKickNextAllowedAt - Date.now();
+      if (waitMs > 0) {
+        if (!this._sharePolicyKickParked) {
+          this._sharePolicyKickParked = true;
+          log('share policy kick throttled', { waitMs, loadedDocs: this.loadedDocsCount });
+          scheduleTask(
+            this._ctx,
+            () => {
+              this._sharePolicyKickParked = false;
+              this._sharePolicyChangedTask?.schedule();
+            },
+            waitMs,
+          );
+        }
+        return;
+      }
+      this._sharePolicyKickNextAllowedAt =
+        Date.now() +
+        Math.min(
+          SHARE_POLICY_KICK_MAX_INTERVAL_MS,
+          Math.max(SHARE_POLICY_KICK_MIN_INTERVAL_MS, this.loadedDocsCount * SHARE_POLICY_KICK_MS_PER_DOCUMENT),
+        );
       log('share policy changed');
       this._repo.shareConfigChanged();
     });
@@ -506,6 +603,21 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
+   * Contained: a failed migration is logged and the host opens on the records as stored, since
+   * every migration is a repair of data the host can already read. Only stored records are
+   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
+   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
+   */
+  private async _runSubductionMigrations(): Promise<void> {
+    try {
+      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
+    } catch (err) {
+      log.error('subduction migrations failed; continuing on the stored records', { err });
+    }
+  }
+
+  /**
    * Creates automerge_chunks and automerge_heads tables if they do not exist.
    * Must be called (via RuntimeProvider.runPromise) before opening the host.
    */
@@ -552,6 +664,11 @@ export class AutomergeHost extends Resource {
       }
     }
     return counted.size;
+  }
+
+  /** The Repo's Subduction engine, for storage-level inspection (tests, devtools). */
+  get subduction(): Promise<Subduction> {
+    return this._repo.subduction;
   }
 
   get storage(): SqliteStorageAdapter {
@@ -678,7 +795,7 @@ export class AutomergeHost extends Resource {
     lease: DocumentLease<T>,
     opts?: LoadDocOptions,
   ): Promise<DocumentLease<T> | null> {
-    if (lease.state === 'ready') {
+    if (lease.loaded) {
       return lease;
     }
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
@@ -749,7 +866,7 @@ export class AutomergeHost extends Resource {
    */
   private _waitForReady<T>(progress: DocumentProgress<T>, signal?: AbortSignal): Promise<DocHandle<T>> {
     const peeked = progress.peek();
-    if (peeked.state === 'ready') {
+    if (peeked.state === 'ready' && isLoaded(peeked)) {
       return Promise.resolve(peeked.handle);
     }
     if (peeked.state === 'failed') {
@@ -757,7 +874,7 @@ export class AutomergeHost extends Resource {
     }
     return new Promise<DocHandle<T>>((resolve, reject) => {
       const unsubscribe = progress.subscribe((state) => {
-        if (state.state === 'ready') {
+        if (state.state === 'ready' && isLoaded(state)) {
           unsubscribe();
           resolve(state.handle);
         } else if (state.state === 'failed') {
@@ -841,6 +958,13 @@ export class AutomergeHost extends Resource {
     this._headsUpdates.delete(documentId);
     for (const requested of this._documentsRequested.values()) {
       requested.delete(documentId);
+    }
+    // A removed document never converges, so neither of the other cleanups (convergence of its
+    // collection, or its peer disconnecting) is guaranteed to reach its entry.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.documentId === documentId) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
     }
   }
 
@@ -1338,6 +1462,14 @@ export class AutomergeHost extends Resource {
 
   async clearLocalCollectionState(collectionId: string): Promise<void> {
     this._collectionSynchronizer.clearLocalCollectionState(collectionId);
+    // With no local state `_handleCollectionSync` returns before its convergence cleanup, so a
+    // cleared collection's entries would otherwise outlive it and suppress the first resync if it
+    // is registered again.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.collectionId === collectionId) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1367,6 +1499,13 @@ export class AutomergeHost extends Resource {
         this._nonConvergingSyncPasses.delete(syncKey);
       }
     }
+    // A reconnect is a fresh chance for the push that did not land, so the resync budget resets
+    // with the connection.
+    for (const [resyncKey, entry] of this._divergedResyncHeads) {
+      if (entry.peerId === peerId) {
+        this._divergedResyncHeads.delete(resyncKey);
+      }
+    }
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
@@ -1390,6 +1529,11 @@ export class AutomergeHost extends Resource {
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
+      for (const [resyncKey, entry] of this._divergedResyncHeads) {
+        if (entry.collectionId === collectionId && entry.peerId === peerId) {
+          this._divergedResyncHeads.delete(resyncKey);
+        }
+      }
       return;
     }
 
@@ -1398,27 +1542,39 @@ export class AutomergeHost extends Resource {
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
-      log.warn('collection sync not converging', {
+      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
+      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
+      // got a handle" when the document is resident and the remote holds a headless fragment for it.
+      const stuck = [...different, ...missingOnRemote];
+      const context = {
         collectionId,
         peerId,
         passes,
         missingOnLocal,
         missingOnRemote,
         different,
-        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
         // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the diverged document's storage or policy activity.
+        // searched for the stuck document's storage or policy activity.
         sedimentreeIds: Object.fromEntries(
-          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
         ),
         handleStates: Object.fromEntries(
-          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
         ),
-      });
+      };
+      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
+      // the call site, so an alias loses its file and line.
+      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
+        log.error('collection sync not converging', context);
+      } else {
+        log.warn('collection sync not converging', context);
+      }
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
+    const differentSet = new Set(different);
 
     if (toReplicate.length === 0) {
       return;
@@ -1441,24 +1597,74 @@ export class AutomergeHost extends Resource {
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
+
+    // Whether this pass has anything left for the classical share policy to act on. Only a pass
+    // consisting entirely of diverged documents whose resync is already spent has nothing: for
+    // those the policy is provably a no-op (`shareConfigChanged` revives only `all-failed` /
+    // `no-peers` entries, and a diverged-but-settled entry is neither), while re-arming it
+    // re-probes every document against every connection. The answering peer reports heads for
+    // each, and Subduction persists a `remote-heads` record the first time it hears a document's
+    // heads from a peer; with edge coming back under a new Subduction identity after every restart,
+    // each restart turned the next probe into one fresh row per document. That is the storage
+    // growth this branch used to drive.
+    //
+    // A pass that *issues* a resync still schedules it, so first-pass behaviour is unchanged and
+    // only the repeating tail is dropped.
+    let sharePolicyCanHelp = false;
+
     for (const documentId of toReplicate) {
       // `findWithProgress` resolves from the existing query for an already-`ready` document and
-      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
-      // document reaching here gets no retry from either — the diff simply repeats next pass.
-      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
-        // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-        // so at warn level it floods the console without indicating a real fault.
-        log.verbose('diverged document has no subduction retry path', {
-          collectionId,
-          peerId,
-          documentId,
-          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-        });
+      // `_documentsToSync` feeds a share policy Subduction does not consult, so neither moves a
+      // diverged document, resident or not. `resyncDocument` is the lever for a resident one: it
+      // clears the heal state and marks the entry never-synced, so Subduction opens a fresh
+      // bidirectional round (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) —
+      // which is what delivers a local commit the peer never received. An evicted one needs no
+      // lever: `_leaseUntilSettled` below faults it in and `SubductionSource.attach` gives it a
+      // fresh never-synced entry.
+      if (this._useSubduction && differentSet.has(documentId)) {
+        if (isDocumentLoaded(this._repo, documentId as DocumentId)) {
+          const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
+          // Both sides' heads: a round already spent against this exact pair cannot do better, but
+          // either side advancing means the situation changed and is worth another.
+          const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
+          if (this._divergedResyncHeads.get(resyncKey)?.heads !== heads) {
+            this._divergedResyncHeads.set(resyncKey, {
+              collectionId,
+              peerId,
+              documentId: documentId as DocumentId,
+              heads,
+            });
+            log('resyncing diverged document', {
+              collectionId,
+              peerId,
+              documentId,
+              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+              localHeads: localState.documents[documentId],
+              remoteHeads: remoteState.documents[documentId],
+            });
+            this.resyncDocument(documentId as DocumentId);
+            sharePolicyCanHelp = true;
+          } else {
+            // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+            // so at warn level it floods the console without indicating a real fault.
+            log.verbose('diverged document already resynced at these heads', {
+              collectionId,
+              peerId,
+              documentId,
+              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+            });
+          }
+        }
+      } else {
+        sharePolicyCanHelp = true;
       }
       this._documentsToSync.add(documentId);
       this._leaseUntilSettled(documentId as DocumentId);
     }
-    this._sharePolicyChangedTask!.schedule();
+
+    if (sharePolicyCanHelp) {
+      this._sharePolicyChangedTask!.schedule();
+    }
   }
 
   /**
@@ -1501,6 +1707,10 @@ export class AutomergeHost extends Resource {
   }
 
   private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {
+    for (const [documentId, heads] of docHeads) {
+      this.documentHeadsChanged.emit({ documentId, heads });
+    }
+
     const collectionsChanged = new Set<CollectionId>();
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {

@@ -154,18 +154,33 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
+    // Idempotent: results are cached and shared per query, so a caller releasing twice would
+    // otherwise stop the query under every other subscriber and leave the count negative.
+    let subscribed = true;
     const unsubscribe = () => {
+      if (!subscribed) {
+        log.warn('query unsubscribed twice', { query: Query.pretty(this._query) });
+        return;
+      }
+      subscribed = false;
       log('unsubscribe', { query: Query.pretty(this._query), active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
     };
 
-    // Fire the initial event synchronously when authoritative results are already available: either
-    // a source can produce them synchronously, or this (cached/reused) result already computed them
-    // during a prior subscription. Only defer when an async-only query has no results yet (e.g. a
-    // fresh feed query served by the index), so subscribers don't observe a spurious empty snapshot.
-    if (callback && opts?.fire && (this._queryContext.isSynchronous() || this._objectCache !== undefined)) {
+    // Fire the initial event synchronously when there is something true to report: every source has
+    // answered, this (cached/reused) result was already computed during a prior subscription, or the
+    // working set already holds matches. An empty snapshot from a query the index has not answered
+    // yet is deferred: a subscriber that creates a default object when it sees none would otherwise
+    // act on an answer that was never given.
+    if (
+      callback &&
+      opts?.fire &&
+      (!this._queryContext.hasPendingSources() ||
+        this._objectCache !== undefined ||
+        (this._queryContext.isSynchronous() && this._queryContext.getResults().length > 0))
+    ) {
       try {
         callback(this);
       } catch (err) {

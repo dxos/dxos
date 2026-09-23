@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Format } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 
 import { Place } from './Place.ts';
 
@@ -100,25 +101,32 @@ export interface RoutingService {
 }
 
 /** Thrown by a `RoutingService` when its credentials are not configured. */
-export class MissingApiKeyError extends Error {
+export class MissingApiKeyError extends BaseError.extend('RoutingMissingApiKeyError') {
   constructor(public readonly serviceId: string) {
-    super(`Missing API key for routing service: ${serviceId}`);
-    this.name = 'MissingApiKeyError';
+    super({ message: `Missing API key for routing service: ${serviceId}` });
   }
 }
 
 /** Thrown when a waypoint name cannot be resolved to coordinates. */
-export class GeocodeError extends Error {
+export class GeocodeError extends BaseError.extend('GeocodeError') {
   constructor(public readonly location: string) {
-    super(`Could not find location: ${location}`);
-    this.name = 'GeocodeError';
+    super({ message: `Could not find location: ${location}` });
   }
 }
 
 /** Thrown when route computation fails. */
-export class RouteError extends Error {
+export class RouteError extends BaseError.extend('RouteError') {
   constructor(message: string) {
-    super(message);
-    this.name = 'RouteError';
+    super({ message });
   }
 }
+
+/** Any failure a `RoutingService` raises. */
+export type Failure = MissingApiKeyError | GeocodeError | RouteError;
+
+/**
+ * Every routing failure, for a boundary that passes them through. Matched by name rather than
+ * `instanceof`, for the reason given at {@link BookingSearch.isFailure}.
+ */
+export const isFailure = (error: unknown): error is Failure =>
+  MissingApiKeyError.is(error) || GeocodeError.is(error) || RouteError.is(error);

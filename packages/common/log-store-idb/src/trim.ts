@@ -14,13 +14,12 @@ export const trimJsonlToSize = (lines: readonly string[], maxSize: number): stri
     return '';
   }
 
-  const sizes = lines.map((line) => byteLengthUtf8(line));
-
-  // Walk newest -> oldest, accumulating until next addition would exceed maxSize.
+  // Walk newest -> oldest, accumulating until the next addition would exceed maxSize.
+  // Lines are measured on the way so a small cap never measures the whole history.
   let total = 0;
   let firstIncludedIndex = lines.length;
   for (let index = lines.length - 1; index >= 0; index--) {
-    const lineBytes = sizes[index];
+    const lineBytes = byteLengthUtf8(lines[index]!);
     const sepBytes = total === 0 ? 0 : 1;
     if (total + lineBytes + sepBytes > maxSize) {
       break;
@@ -35,13 +34,32 @@ export const trimJsonlToSize = (lines: readonly string[], maxSize: number): stri
   return lines.slice(firstIncludedIndex).join('\n');
 };
 
-const utf8Encoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : undefined;
-
-/** UTF-8 byte length of a string (used by eviction and trim). */
+/**
+ * UTF-8 byte length of a string, counted without encoding it.
+ *
+ * `TextEncoder.encode(value).length` allocates twice — the binding copies the string into
+ * its own heap, then allocates the output array — and both die on the next line. Callers
+ * measure megabytes at a time, so the count runs in JS instead.
+ */
 export const byteLengthUtf8 = (value: string): number => {
-  if (utf8Encoder) {
-    return utf8Encoder.encode(value).length;
+  let bytes = 0;
+  for (let index = 0; index < value.length; index++) {
+    const code = value.charCodeAt(index);
+    if (code < 0x80) {
+      bytes += 1;
+    } else if (code < 0x800) {
+      bytes += 2;
+    } else if (code >= 0xd800 && code <= 0xdbff && index + 1 < value.length) {
+      const low = value.charCodeAt(index + 1);
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        bytes += 4;
+        index++;
+      } else {
+        bytes += 3; // Unpaired high surrogate; TextEncoder substitutes U+FFFD.
+      }
+    } else {
+      bytes += 3; // Includes a trailing or unpaired surrogate, also U+FFFD.
+    }
   }
-  // Fallback: assume 1 byte per char (good enough for ASCII-heavy log lines).
-  return value.length;
+  return bytes;
 };

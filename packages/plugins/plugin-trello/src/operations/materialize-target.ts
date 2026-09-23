@@ -10,6 +10,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { TrelloOperation } from '#types';
 
+import { TrelloSyncError } from './errors.ts';
 import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync.ts';
 
 /**
@@ -25,7 +26,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.MaterializeTrelloTar
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         if (!remoteTarget) {
           // Trello is a multi-target connector; a board selection is always present.
-          return yield* Effect.fail(new Error('Trello materializeTarget requires a remote board selection.'));
+          return yield* Effect.fail(
+            new TrelloSyncError({ message: 'Trello materializeTarget requires a remote board selection.' }),
+          );
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired

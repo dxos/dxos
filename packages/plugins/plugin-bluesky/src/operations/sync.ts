@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -33,8 +34,9 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
           // and resolves the user's PDS once. Public XRPC reads (e.g.
           // `getAuthorFeed`) only need HttpClient and ignore the layer.
           syncBinding({ client, binding }).pipe(
-            Effect.provide(BlueskyApi.fromAccessToken(binding.spec.source, client)),
-            Effect.provide(FetchHttpClient.layer),
+            Effect.provide(
+              Layer.provideMerge(BlueskyApi.fromAccessToken(binding.spec.source, client), FetchHttpClient.layer),
+            ),
           ),
       });
       return { appended: outputs.reduce((total, output) => total + output.appended, 0) };

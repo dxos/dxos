@@ -22,6 +22,7 @@ import { trim } from '@dxos/util';
 import { InboxOperation, Mailbox } from '#types';
 
 import { renderMarkdown } from '../util/index.ts';
+import { InboxOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(
@@ -76,7 +77,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         );
 
         if (!selectedTag) {
-          return yield* Effect.fail(new Error(`Tag not found: ${selectedTagLabel}`));
+          return yield* Effect.fail(new InboxOperationError({ message: `Tag not found: ${selectedTagLabel}` }));
         }
 
         log.info('selected tag', { tagId: Obj.getURI(selectedTag), tagLabel: selectedTag.label });
@@ -86,18 +87,18 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         // queue/feed ID, so we locate the feed via the mailbox object.
         const messageEchoId = EID.tryParse((message as any)['@uri']);
         if (!messageEchoId) {
-          return yield* Effect.fail(new Error('Message does not have a valid DXN'));
+          return yield* Effect.fail(new InboxOperationError({ message: 'Message does not have a valid DXN' }));
         }
 
         const mailboxes = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
         if (mailboxes.length === 0) {
-          return yield* Effect.fail(new Error('No mailbox found in database'));
+          return yield* Effect.fail(new InboxOperationError({ message: 'No mailbox found in database' }));
         }
 
         // Use the first mailbox whose feed exists.
         const mailbox = mailboxes.find((mb) => mb.feed?.target != null);
         if (!mailbox) {
-          return yield* Effect.fail(new Error('No mailbox with a feed found'));
+          return yield* Effect.fail(new InboxOperationError({ message: 'No mailbox with a feed found' }));
         }
 
         const feed = mailbox.feed!.target as Feed.Feed;
@@ -121,7 +122,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

@@ -12,19 +12,17 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
-// `Effect.tryPromise` needs an `Error`, and a rejection is not guaranteed to be one.
-const toError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
-
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
-  updateIndexes: () => Promise<void>;
+  updateIndexes: (request: DataService.UpdateIndexesRequest) => Promise<void>;
   getSpaceStats: (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   runGarbageCollection: (
     spaceId: SpaceId,
@@ -52,7 +50,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
-  private readonly '_updateIndexes': () => Promise<void>;
+  private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
     spaceId: SpaceId,
@@ -125,7 +123,7 @@ export class DataServiceImpl implements DataService.Handlers {
           await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
         }
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -138,7 +136,7 @@ export class DataServiceImpl implements DataService.Handlers {
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -153,7 +151,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
         await synchronizer.update(Context.default(), request.updates);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -162,7 +160,7 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._automergeHost.flush(Context.default(), request);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -182,7 +180,7 @@ export class DataServiceImpl implements DataService.Handlers {
           },
         };
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -193,7 +191,7 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -202,16 +200,16 @@ export class DataServiceImpl implements DataService.Handlers {
       try: async () => {
         await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
-  ['DataService.updateIndexes'](): Effect.Effect<void, Error> {
+  ['DataService.updateIndexes'](request: DataService.UpdateIndexesRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
-        await this._updateIndexes();
+        await this._updateIndexes(request);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -221,7 +219,7 @@ export class DataServiceImpl implements DataService.Handlers {
         invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
         return this._getSpaceStats(request.spaceId);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 
@@ -233,7 +231,7 @@ export class DataServiceImpl implements DataService.Handlers {
         invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
         return this._runGarbageCollection(request.spaceId, request);
       },
-      catch: toError,
+      catch: toServiceError,
     });
   }
 

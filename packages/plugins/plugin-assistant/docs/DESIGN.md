@@ -296,7 +296,7 @@ scriptedAiService([
 ]);
 ```
 
-`scriptedAiService` shares one cached model across `AiService.model()` calls, so sessions in
+`scriptedAiService` shares one cached model across `AiService.languageModel()` calls, so sessions in
 separate processes consume the same routes. The single-list form is unchanged (a single
 match-all route).
 

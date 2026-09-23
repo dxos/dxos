@@ -6,9 +6,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join, resolve, sep } from 'node:path';
 import { beforeAll, describe, test } from 'vitest';
 
-import { analyze, errors } from './diagnostics.ts';
-import * as MermaidEngine from './mermaid-engine.ts';
-import type * as Scene from './scene.ts';
+import { Diagnostics, MermaidEngine, type Scene } from '@dxos/diagram';
 
 //
 // Tier 1 over the committed diagram corpus (`docs/diagrams/*.mmd`): every diagram must render
@@ -48,14 +46,14 @@ describe.skipIf(!MANUAL).each(corpus)('corpus: %s', (_name, source) => {
   }, 300_000);
 
   test('renders with no hard defects', ({ expect }) => {
-    const report = analyze(objects);
+    const report = Diagnostics.analyze(objects);
 
-    expect(errors(report).map(({ message }) => message)).toEqual([]);
+    expect(Diagnostics.errors(report).map(({ message }) => message)).toEqual([]);
     expect(report.metrics.nodes).toBeGreaterThan(0);
   });
 
   test('soft metrics', ({ expect }) => {
-    const { crossings, bends } = analyze(objects).metrics;
+    const { crossings, bends } = Diagnostics.analyze(objects).metrics;
 
     expect({ crossings, bends }).toMatchSnapshot();
   });

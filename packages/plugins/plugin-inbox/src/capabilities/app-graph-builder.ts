@@ -23,7 +23,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
-import { kebabize } from '@dxos/util';
+import { Position, kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
@@ -324,6 +324,25 @@ export default Capability.makeModule(
         },
       }),
 
+      // A "Message" companion on every mailbox: the slot a row's detail opens into where the deck has
+      // room beside the list, so reading a message keeps the mailbox in front of the reader. One
+      // fixed slot — which message it shows is the list's own selection, read by the surface.
+      AppGraphBuilder.createExtension({
+        id: 'mailboxMessageCompanion',
+        relation: AppNode.companion,
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'message',
+              label: ['message-companion.label', { ns: meta.profile.key }],
+              icon: 'ph--envelope-open--regular',
+              data: 'message',
+              position: Position.first,
+            }),
+          ]),
+      }),
+
       // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of the
       // mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key even
       // though messages aren't enumerated in the nav tree. Each node's data is the message Echo object
@@ -331,7 +350,13 @@ export default Capability.makeModule(
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
       AppGraphBuilder.createExtension({
         id: 'mailboxMessages',
-        url: { key: 'message', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
+        // Deeper than a mailbox (`mail`), including a mailbox's views and the messages under them.
+        url: {
+          key: 'message',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()],
+          minDepth: 2,
+        },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -430,7 +455,12 @@ export default Capability.makeModule(
       // deep-link shape.
       AppGraphBuilder.createExtension({
         id: 'calendarEvents',
-        url: { key: 'event', kind: 'item', path: [GraphPath.GroupSegments.communications, calendarTypename] },
+        url: {
+          key: 'event',
+          kind: 'item',
+          path: [GraphPath.GroupSegments.communications, calendarTypename],
+          minDepth: 2,
+        },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {
           const db = Obj.getDatabase(calendar);

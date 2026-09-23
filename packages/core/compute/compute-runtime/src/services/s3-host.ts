@@ -52,8 +52,12 @@ export const createS3Host = ({
 
     const credential = await EffectEx.runPromise(
       Credential.CredentialsService.getCredential({ service: host }).pipe(
-        Effect.provide(credentialsLayerFromDatabase().pipe(Layer.provide(Database.layer(db)))),
-        Effect.provide(accessTokenResolver),
+        Effect.provide(
+          Layer.provideMerge(
+            credentialsLayerFromDatabase().pipe(Layer.provide(Database.layer(db))),
+            accessTokenResolver,
+          ),
+        ),
         // `getCredential` dies rather than failing when no token matches; an absent credential is
         // the ordinary case for a public bucket, so it resolves to `undefined` instead of throwing.
         Effect.catchDefect(() => Effect.succeed<Credential.ServiceCredential | undefined>(undefined)),

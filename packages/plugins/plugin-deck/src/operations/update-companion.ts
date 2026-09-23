@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       const subject = input.subject;
       if (subject === null) {
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
-        const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId, deck.active);
+        const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { companionPlanks }),
         );

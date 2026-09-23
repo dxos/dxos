@@ -32,7 +32,7 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index adfddd9b3926510604274217c42f97f104e119a3..840b9b859d0d9265a69d324ed9848ba443afab7a 100644
+index adfddd9b3926510604274217c42f97f104e119a3..97cb7fe9a148b1c8e5f51a5c4ff5b9fc80a9c4fd 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
 @@ -157,6 +157,18 @@ export class Repo extends EventEmitter {
@@ -69,6 +69,56 @@ index adfddd9b3926510604274217c42f97f104e119a3..840b9b859d0d9265a69d324ed9848ba4
      /** Returns a list of all connected peer ids */
      get peers() {
          return this.synchronizer.peers;
+@@ -492,6 +512,12 @@ export class Repo extends EventEmitter {
+     // ability to not create a doc handle if we abort while loading. Once the DocHandle
+     // was running the abort signal didn't have much effect
+     _options) {
++        // DXOS patch: a bare document id whose query exists resolves to it directly. Parsing
++        // checksum-validates the id (base58check, two SHA-256 passes), and callers look documents up
++        // by id far more often than they open new ones.
++        if (typeof id === "string" && this.#queries[id]) {
++            return this.#queries[id];
++        }
+         const parsed = isValidAutomergeUrl(id)
+             ? parseAutomergeUrl(id)
+             : {
+diff --git a/dist/StorageSource.js b/dist/StorageSource.js
+index 2701ebc492066feba0d05cf556a3d8473312bc39..b359189739a660d354633bb0b7239b4270b31742 100644
+--- a/dist/StorageSource.js
++++ b/dist/StorageSource.js
+@@ -11,6 +11,8 @@ export class StorageSource {
+     #storage;
+     #saveDebounceRate;
+     #saveFns = {};
++    /** The handle each save listener is attached to, so {@link detach} can remove it. */
++    #handles = {};
+     #log = makeLogger("automerge-repo:storage-source");
+     constructor(storage, saveDebounceRate, { priority = 1 } = {}) {
+         this.#storage = storage;
+@@ -22,6 +24,7 @@ export class StorageSource {
+         const saveFn = this.#makeSaveFn(handle.documentId);
+         // Attach throttled save listener
+         handle.on("heads-changed", saveFn);
++        this.#handles[handle.documentId] = handle;
+         // If the handle already has data (e.g. from create/import), persist it
+         // immediately rather than waiting for a future heads-changed event.
+         if (Automerge.getHeads(handle.fullDoc()).length > 0) {
+@@ -57,7 +60,15 @@ export class StorageSource {
+         });
+     }
+     detach(documentId) {
++        // A detached handle can still receive changes (a source that kept a reference to it), and a
++        // listener left on it would persist that stale copy over the document's next load.
++        const saveFn = this.#saveFns[documentId];
++        const handle = this.#handles[documentId];
++        if (saveFn && handle) {
++            handle.off("heads-changed", saveFn);
++        }
+         delete this.#saveFns[documentId];
++        delete this.#handles[documentId];
+     }
+     shareConfigChanged() { }
+     #makeSaveFn(documentId) {
 diff --git a/dist/index.d.ts b/dist/index.d.ts
 index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e088b80025 100644
 --- a/dist/index.d.ts
@@ -89,6 +139,52 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WebSocketEndpoint, WorkerWebSocketEndpoint, type ManagedTransport, type WebSocketEndpointInterface, type WorkerWebSocketEndpointOptions, } from "./subduction/websocket-endpoint.js";
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
+diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0fd313f619 100644
+--- a/dist/storage/StorageSubsystem.js
++++ b/dist/storage/StorageSubsystem.js
+@@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
+ import { keyHash, headsHash } from "./keyHash.js";
+ import * as Uuid from "uuid";
+ import { EventEmitter } from "eventemitter3";
+-import { encodeHeads } from "../AutomergeUrl.js";
+ import { SavedHeads } from "./SavedHeads.js";
+ /**
+  * The storage subsystem is responsible for saving and loading Automerge documents to and from
+@@ -158,6 +157,22 @@ export class StorageSubsystem extends EventEmitter {
+         // Don't bother saving if the document hasn't changed
+         if (!this.#shouldSave(documentId, doc))
+             return;
++        // A document behind what is stored — a handle that outlived its eviction, or a throttled
++        // save that lost a race with a newer one — must not compact: `#saveTotal` deletes every
++        // chunk it did not write, which would drop the newer history. Its own history is appended
++        // instead, so a later load merges both, and the stored heads are left as they are.
++        const storedHeads = this.#storedHeads.lastSavedHeads(documentId).value;
++        if (storedHeads && !A.hasHeads(doc, storedHeads)) {
++            this.#log.warn(`document ${documentId} is behind storage; appending its history without compacting`);
++            const binary = A.save(doc);
++            const key = [documentId, "incremental", keyHash(binary)];
++            await this.#storageAdapter.save(key, binary);
++            if (!this.#chunkInfos.has(documentId)) {
++                this.#chunkInfos.set(documentId, []);
++            }
++            this.#chunkInfos.get(documentId).push({ key, type: "incremental", size: binary.length });
++            return;
++        }
+         const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
+         if (this.#shouldCompact(sourceChunks)) {
+             await this.#saveTotal(documentId, doc, sourceChunks);
+@@ -271,7 +286,9 @@ export class StorageSubsystem extends EventEmitter {
+             return true;
+         }
+         const newHeads = A.getHeads(doc);
+-        if (headsAreSame(encodeHeads(newHeads), encodeHeads(oldHeads))) {
++        // DXOS patch: compared as stored. Encoding maps each hash to a unique string, so the answer is
++        // the same, without two base58check encodes per head for every document a flush checks.
++        if (headsAreSame(newHeads, oldHeads)) {
+             // the document hasn't changed
+             return false;
+         }
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
 index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..826676a1b2ea406a000f874d429b11e3ff0caa98 100644
 --- a/dist/subduction/AdapterConnections.d.ts
@@ -114,7 +210,7 @@ index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..826676a1b2ea406a000f874d429b11e3
      isConnected(): boolean;
      generation(): number;
 diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
-index 40f525a6be944be10dd5e707c73f6af48d7ffde1..8f49c6c91b5af46e3d4924674ced0034e99d2c63 100644
+index 40f525a6be944be10dd5e707c73f6af48d7ffde1..873e9e29828867d7c6263cc8c714f52750a0d9bb 100644
 --- a/dist/subduction/AdapterConnections.js
 +++ b/dist/subduction/AdapterConnections.js
 @@ -1,15 +1,19 @@
@@ -138,7 +234,7 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..8f49c6c91b5af46e3d4924674ced0034
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -32,6 +36,7 @@ export class AdapterConnections {
+@@ -32,17 +36,44 @@ export class AdapterConnections {
      shutdown() {
          this.#isShutdown = true;
          this.#onChangeCallback = null;
@@ -146,12 +242,68 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..8f49c6c91b5af46e3d4924674ced0034
      }
      // ── Adapter management ──────────────────────────────────────────────
      addAdapter(adapter, serviceName, role) {
-@@ -54,15 +59,14 @@ export class AdapterConnections {
+         this.#adapters.push(adapter);
++        // DXOS patch: the current connection attempt per repo peer, dropped once it is released.
++        const attempts = new Map();
+         adapter.on("peer-candidate", ({ peerId }) => {
+             if (this.#isShutdown)
+                 return;
+             // Increment synchronously so isConnecting() returns true
+             // before the async handshake begins.
+             this.#pendingTransports++;
+-            void this.#startTransport(adapter, serviceName, peerId, role);
++            const previous = attempts.get(peerId);
++            const attempt = {
++                lost: false,
++                subductionPeerId: null,
++                disconnecting: undefined,
++                // A reconnecting peer binds the same subduction PeerId, so the lost connection goes first.
++                after: previous?.lost ? previous.handshake.then(() => previous.disconnecting) : undefined,
++            };
++            attempts.set(peerId, attempt);
++            attempt.handshake = this.#startTransport(adapter, serviceName, peerId, role, attempt, attempts);
++            void attempt.handshake.then(() => {
++                if (attempt.subductionPeerId === null)
++                    this.#release(attempts, peerId, attempt);
++            });
++        });
++        // DXOS patch: the transport's disconnect callback leaves the connection registered in
++        // subduction_core with its requests pending until they time out; `disconnectFromPeer` removes it
++        // and settles them, so a round in flight to a lost peer finishes against the others.
++        adapter.on("peer-disconnected", ({ peerId }) => {
++            const attempt = attempts.get(peerId);
++            if (this.#isShutdown || attempt === undefined || attempt.lost)
++                return;
++            attempt.lost = true;
++            if (attempt.subductionPeerId !== null)
++                this.#disconnect(attempts, peerId, attempt);
+         });
+         void this.#watchAdapter(adapter);
+         adapter.connect(this.#localPeerId);
+@@ -53,15 +84,36 @@ export class AdapterConnections {
+             this.#onChangeCallback?.();
          }
      }
-     async #startTransport(adapter, serviceName, peerId, role) {
+-    async #startTransport(adapter, serviceName, peerId, role) {
++    #disconnect(attempts, peerId, attempt) {
++        attempt.disconnecting = (async () => {
++            try {
++                await (await this.#subduction).disconnectFromPeer(attempt.subductionPeerId);
++            }
++            catch (e) {
++                this.#log("disconnectFromPeer failed for %s: %O", peerId, e);
++            }
++            this.#release(attempts, peerId, attempt);
++        })();
++    }
++    #release(attempts, peerId, attempt) {
++        if (attempts.get(peerId) === attempt)
++            attempts.delete(peerId);
++    }
++    async #startTransport(adapter, serviceName, peerId, role, attempt, attempts) {
 +        let subductionPeerId = null;
          try {
++            await attempt.after;
              const subduction = await this.#subduction;
              const transport = new NetworkAdapterTransport(adapter, this.#localPeerId, peerId);
 -            if (role === "accept") {
@@ -159,15 +311,19 @@ index 40f525a6be944be10dd5e707c73f6af48d7ffde1..8f49c6c91b5af46e3d4924674ced0034
 -            }
 -            else {
 -                await subduction.connectTransport(transport, serviceName);
--            }
 +            subductionPeerId =
 +                role === "accept"
 +                    ? await subduction.acceptTransport(transport, serviceName)
 +                    : await subduction.connectTransport(transport, serviceName);
++            attempt.subductionPeerId = subductionPeerId;
++            if (attempt.lost) {
++                // The peer left while the handshake was in flight.
++                this.#disconnect(attempts, peerId, attempt);
++                subductionPeerId = null;
+             }
          }
          catch {
-             // Transport connection failed (e.g. peer disconnected during handshake)
-@@ -72,6 +76,23 @@ export class AdapterConnections {
+@@ -72,6 +124,23 @@ export class AdapterConnections {
              this.#generation++;
              this.#onChangeCallback?.();
          }

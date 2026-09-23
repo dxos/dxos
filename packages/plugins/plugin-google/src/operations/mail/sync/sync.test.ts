@@ -243,8 +243,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     const result = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withDeletedMessages([deletedId], dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withDeletedMessages([deletedId], dataset))),
       ),
     );
 
@@ -423,8 +422,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     // a committed page is durable.
     const exit = await EffectEx.runPromise(
       Effect.exit(runGoogleSync({ binding: Ref.make(binding) })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterMessages(18, dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterMessages(18, dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -858,8 +856,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     };
     const exit = await EffectEx.runPromise(
       Effect.exit(runGoogleSync({ binding: Ref.make(binding), now })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterMessages(10, run2Dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterMessages(10, run2Dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -903,8 +900,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     const result = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withDeletedMessages([deletedId], dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withDeletedMessages([deletedId], dataset))),
       ),
     );
 

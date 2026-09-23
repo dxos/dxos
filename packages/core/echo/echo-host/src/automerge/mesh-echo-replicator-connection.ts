@@ -40,6 +40,8 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
   private _remotePeerId: string | null = null;
   private _isEnabled = false;
+  /** Set once the teleport extension is destroyed, after which no write can reach the remote. */
+  #closed = false;
 
   constructor(private readonly _params: MeshReplicatorConnectionProps) {
     super();
@@ -54,7 +56,13 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
     this.writable = new WritableStream<AutomergeProtocolMessage>({
       write: async (message: AutomergeProtocolMessage, controller) => {
-        invariant(this._isEnabled, 'Writing to a disabled connection');
+        // A closed or disabled connection has no live extension behind it, so the message is dropped
+        // rather than thrown at a fire-and-forget caller.
+        if (this.#closed || !this._isEnabled) {
+          log('dropping message for an inactive connection', { peerId: this._remotePeerId, type: message.type });
+          return;
+        }
+
         try {
           logSendSync(message);
           await this.replicatorExtension.sendSyncMessage(create(SyncMessageSchema, { payload: cbor.encode(message) }));
@@ -96,7 +104,12 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
           readableStreamController.enqueue(message);
         },
         onClose: async () => {
-          this._disconnectIfEnabled();
+          this.#closed = true;
+          // A disabled connection must be retired too, or it stays queued for promotion and the
+          // network adapter later writes to its destroyed extension (DX-1279).
+          if (this._remotePeerId != null) {
+            this._params.onRemoteDisconnected();
+          }
         },
       },
     ]);
@@ -115,6 +128,10 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
   get isEnabled() {
     return this._isEnabled;
+  }
+
+  get isClosed(): boolean {
+    return this.#closed;
   }
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {

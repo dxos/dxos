@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
@@ -74,7 +74,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         const [results, containing] = yield* Effect.all(
           [
             Database.query(Query.select(filter)).run,
-            current ? Database.query(CollectionModel.containing(current)).run : Effect.succeed([]),
+            current ? Database.query(ContainerModel.containing(current)).run : Effect.succeed([]),
           ],
           { concurrency: 'unbounded' },
         );

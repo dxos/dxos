@@ -18,10 +18,15 @@ export const BooleanField = ({
   presentation,
   getValue,
   onValueChange,
+  onBlur,
 }: FormFieldRendererProps<boolean>) => {
+  // A toggle is a commit: the switch never blurs, so it commits itself.
   const handleChange = useCallback<NonNullable<SwitchProps['onCheckedChange']>>(
-    (value) => onValueChange?.(type, value),
-    [type, onValueChange],
+    (value) => {
+      onValueChange(type, value);
+      onBlur();
+    },
+    [type, onValueChange, onBlur],
   );
   const value = getValue();
   if (presentationFor(presentation).isStatic) {

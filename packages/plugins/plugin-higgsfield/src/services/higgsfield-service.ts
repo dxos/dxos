@@ -118,9 +118,9 @@ const durationBody = (model: string, duration?: number): { duration?: number } =
     return {};
   }
   if (family && !family.seconds.includes(duration)) {
-    throw new GenerationService.GenerationError(
-      `${model} produces clips of ${family.seconds.join(' or ')} seconds, not ${duration}.`,
-    );
+    throw new GenerationService.GenerationError({
+      message: `${model} produces clips of ${family.seconds.join(' or ')} seconds, not ${duration}.`,
+    });
   }
   return { duration };
 };
@@ -185,18 +185,20 @@ export const makeHiggsfieldVideoService = (
   enqueue: async (request, { apiKey, signal, load }) => {
     const config = decodeVideoConfig(request);
     if (!load) {
-      throw new GenerationService.GenerationError('The reference image cannot be loaded here.');
+      throw new GenerationService.GenerationError({ message: 'The reference image cannot be loaded here.' });
     }
     const reference = await load(config.imageArtifact);
     if (reference.kind !== 'image') {
-      throw new GenerationService.GenerationError('The reference artifact must be an image.');
+      throw new GenerationService.GenerationError({ message: 'The reference artifact must be an image.' });
     }
     const cover = reference.cover ? await load(reference.cover) : undefined;
     if (!cover?.url) {
-      throw new GenerationService.GenerationError('The reference image has no produced cover to animate.');
+      throw new GenerationService.GenerationError({ message: 'The reference image has no produced cover to animate.' });
     }
     if (cover.contentType && !cover.contentType.startsWith('image/')) {
-      throw new GenerationService.GenerationError(`The reference cover is ${cover.contentType}, not an image.`);
+      throw new GenerationService.GenerationError({
+        message: `The reference cover is ${cover.contentType}, not an image.`,
+      });
     }
     // The same normalization the provider applies at submit, so the duration check sees the path
     // the API will.

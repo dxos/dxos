@@ -19,6 +19,8 @@ import { incrementSemverPatch } from '@dxos/edge-compute';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
+import { CliError } from '../../../util/errors.ts';
+
 export const DATA_TYPES: Type.AnyEntity[] = [
   Operation.PersistentOperation,
   Script.Script,
@@ -44,7 +46,7 @@ export const loadFunctionObject: (
   const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Operation.PersistentOperation)).run());
   const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
   if (!functionObject) {
-    return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
+    return yield* Effect.fail(new CliError({ message: `Function ECHO object not found for ${functionId}` }));
   }
 
   return functionObject;

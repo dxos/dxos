@@ -77,16 +77,38 @@ describe('bindDataChannel', () => {
     dispose();
   });
 
+  test('delivers a blob frame and the frame after it in arrival order', async () => {
+    const { channel } = setup({ readyState: 'open' });
+    const received: string[] = [];
+    const decoder = new TextDecoder();
+    const stream = {
+      readable: new ReadableStream<Uint8Array>(),
+      writable: new WritableStream<Uint8Array>({
+        write: (chunk) => {
+          received.push(decoder.decode(chunk));
+        },
+      }),
+    };
+    const dispose = bindDataChannel(channel as any, stream, handlers());
+
+    channel.onmessage!({ data: new Blob(['first']) } as any);
+    channel.onmessage!({ data: new TextEncoder().encode('second').buffer } as any);
+
+    await expect.poll(() => received).toEqual(['first', 'second']);
+    dispose();
+  });
+
   test('drops a blob still being read when the channel is disposed', async () => {
     const { channel, stream } = setup({ readyState: 'open' });
     const dispose = bindDataChannel(channel as any, stream, handlers());
 
     // `Blob.arrayBuffer` is the one await on the inbound path; disposal during it leaves nothing
     // to push to, and pushing anyway threw.
-    let release: (value: ArrayBuffer) => void;
+    let release: ((value: ArrayBuffer) => void) | undefined;
     const blob = { arrayBuffer: () => new Promise<ArrayBuffer>((resolve) => (release = resolve)) };
     Object.setPrototypeOf(blob, Blob.prototype);
     const delivered = channel.onmessage!({ data: blob } as any) as unknown as Promise<void>;
+    await expect.poll(() => release).toBeDefined();
 
     dispose();
     release!(new Uint8Array([1, 2, 3]).buffer);

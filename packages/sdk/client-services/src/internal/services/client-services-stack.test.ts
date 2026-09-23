@@ -1,0 +1,179 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
+import { rmSync } from 'node:fs';
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
+
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
+import { type ClientServices, makeServicesFromRpc } from '@dxos/client-protocol';
+import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { verifyPresentation } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
+import { failedInvariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
+import { MemorySignalManagerContext } from '@dxos/messaging';
+import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { isNode } from '@dxos/util';
+
+import { createMockCredential, createServiceHost } from '../testing/index.ts';
+
+/**
+ * Bridges a host's effect-rpc {@link ClientServices} handlers to the Promise/`Stream` shaped
+ * {@link ClientServices} surface the assertions consume, in-process (no wire hop). The scope closing
+ * the bridge is torn down when the test finishes.
+ */
+const makeProxyServices = async (host: ReturnType<typeof createServiceHost>): Promise<Partial<ClientServices>> => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const rpc = await EffectEx.runPromise(host.rpc.pipe(Scope.provide(scope)));
+  return makeServicesFromRpc(rpc, EffectContext.empty());
+};
+
+describe('ClientServicesLayer', () => {
+  const dataRoot = '/tmp/dxos/client-services/service-host/storage';
+
+  afterEach(async () => {
+    // Clean up.
+    isNode() && rmSync(dataRoot, { recursive: true, force: true });
+  });
+
+  test('open and close', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open(new Context());
+    await host.close(Context.default());
+  });
+
+  test('queryCredentials', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open(new Context());
+    onTestFinished(() => host.close(Context.default()));
+    const services = await makeProxyServices(host);
+
+    await services.IdentityService!.createIdentity({});
+    const space = await services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
+
+    const stream = services.SpacesService!.queryCredentials({
+      spaceKey: toPublicKey(space.spaceKey) ?? failedInvariant(),
+    });
+    const [done, tick] = latch({ count: 3 });
+    stream.subscribe((credential) => {
+      tick();
+      // console.log(credential);
+    });
+    onTestFinished(() => stream.close());
+
+    await done();
+  });
+
+  test('write and query credentials', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open(new Context());
+    onTestFinished(() => host.close(Context.default()));
+    const services = await makeProxyServices(host);
+
+    await services.IdentityService!.createIdentity({});
+
+    const testCredential = await createMockCredential({
+      signer: host.keyring,
+      issuer: host.identityManager.identity!.deviceKey,
+    });
+
+    // Test if Identity exposes haloSpace key.
+    const haloSpace = new Trigger<PublicKey>();
+    services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
+      const spaceKey = toPublicKey(identity?.spaceKey);
+      if (spaceKey) {
+        haloSpace.wake(spaceKey);
+      }
+    });
+
+    await services.SpacesService?.writeCredentials({
+      spaceKey: await haloSpace.wait(),
+      credentials: [testCredential],
+    });
+
+    const credentials = services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
+    const queriedCredential = new Trigger<Credential>();
+    credentials.subscribe((credential) => {
+      if (toPublicKey(credential.subject?.id)?.equals(requirePublicKey(testCredential.subject?.id))) {
+        queriedCredential.wake(credential);
+      }
+    });
+    onTestFinished(() => credentials.close());
+
+    await queriedCredential.wait();
+  });
+
+  test('sign presentation', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open(new Context());
+    onTestFinished(() => host.close(Context.default()));
+    const services = await makeProxyServices(host);
+
+    await services.IdentityService!.createIdentity({});
+
+    const testCredential = await createMockCredential({
+      signer: host.keyring,
+      issuer: host.identityManager.identity!.deviceKey,
+    });
+
+    const nonce = new Uint8Array([0, 0, 0, 0]);
+
+    const presentation = await services.IdentityService!.signPresentation({
+      presentation: buf.create(PresentationSchema, {
+        credentials: [testCredential],
+      }),
+      nonce,
+    });
+
+    expect(presentation.proofs?.[0].nonce).to.deep.equal(nonce);
+    expect(await verifyPresentation(presentation)).to.deep.equal({
+      kind: 'pass',
+    });
+  });
+
+  test('storage reset', async () => {
+    const config = new Config({
+      runtime: { client: { storage: { persistent: true, dataRoot } } },
+    });
+    {
+      const host = createServiceHost(config, new MemorySignalManagerContext());
+      await host.open(new Context());
+      const services = await makeProxyServices(host);
+
+      await services.IdentityService?.createIdentity({});
+
+      await asyncTimeout(host.reset(), 1000);
+      await host.close(Context.default());
+    }
+
+    {
+      const host = createServiceHost(config, new MemorySignalManagerContext());
+      await host.open(new Context());
+      const services = await makeProxyServices(host);
+      const trigger = new Trigger<Identity>();
+
+      const stream = services.IdentityService?.queryIdentity();
+      await stream?.waitUntilReady();
+
+      stream?.subscribe((identity) => {
+        if (identity.identity) {
+          trigger.wake(identity.identity);
+        }
+      });
+      await expect(asyncTimeout(trigger.wait(), 200)).rejects.toBeInstanceOf(Error);
+      await stream?.close();
+      await host.close(Context.default());
+    }
+  });
+});

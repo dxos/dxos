@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
+import { PipelineError } from '../errors.ts';
 import * as Pipeline from '../Pipeline.ts';
 import * as Stage from '../Stage.ts';
 import { renderBenchmark, runBenchmark } from './benchmark.ts';
@@ -76,7 +77,7 @@ describe('benchmark framework', () => {
           { name: 'ok', config: { fail: false } },
           { name: 'bad', config: { fail: true } },
         ],
-        program: (config) => (config.fail ? Effect.fail(new Error('boom')) : Effect.succeed(42)),
+        program: (config) => (config.fail ? Effect.fail(new PipelineError({ message: 'boom' })) : Effect.succeed(42)),
         evaluate: (_config, output) => Effect.succeed({ answer: output }),
       }),
     );

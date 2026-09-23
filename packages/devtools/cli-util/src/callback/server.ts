@@ -17,6 +17,7 @@ import { getPort } from 'get-port-please';
 import { openBrowser } from '#platform';
 
 import { CommandConfig } from '../services/index.ts';
+import { PlatformError } from '../util/errors.ts';
 
 /** Default timeout for a full browser round-trip. */
 export const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
@@ -158,15 +159,17 @@ export const startLocalCallbackServer = (
           }
           const result = yield* Ref.get(outcome);
           return yield* Option.match(result, {
-            onNone: () => Effect.fail(new Error('Callback received but no result.')),
+            onNone: () => Effect.fail(new PlatformError({ message: 'Callback received but no result.' })),
             onSome: (value) =>
               value.success
                 ? Effect.succeed(value.params)
-                : Effect.fail(new Error(`Callback reported a failure: ${value.reason}`)),
+                : Effect.fail(new PlatformError({ message: `Callback reported a failure: ${value.reason}` })),
           });
         }),
         Effect.sleep(`${timeoutMs} millis`).pipe(
-          Effect.flatMap(() => Effect.fail(new Error('Timed out waiting for the browser callback.'))),
+          Effect.flatMap(() =>
+            Effect.fail(new PlatformError({ message: 'Timed out waiting for the browser callback.' })),
+          ),
         ),
       );
 

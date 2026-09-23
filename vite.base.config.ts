@@ -481,6 +481,18 @@ export type WorkerdOptions = {
   setupFiles?: string[];
   timeout?: number;
   plugins?: Plugin[];
+  /**
+   * Extra miniflare configuration merged over the defaults, for a binding the runtime only
+   * provides when it is declared — `workerLoaders`, KV, R2. Compatibility date and flags stay
+   * under their own options, so passing them here has no effect.
+   */
+  miniflare?: Record<string, unknown>;
+  /**
+   * Entry module of the worker under test, which `SELF` dispatches to. It runs in the SAME isolate
+   * as the tests, so a test reaches it through ordinary module state — which is what makes `SELF`
+   * usable as an outbound target for code the test itself is driving.
+   */
+  main?: string;
 };
 
 export type StorybookOptions = {
@@ -592,7 +604,8 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
-        instances: [{ browser: 'chromium' }],
+        // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
+        instances: [{ browser: process.env.DX_STORYBOOK_BROWSER || 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
@@ -736,6 +749,8 @@ const createWorkerdProject = ({
   setupFiles = [],
   timeout,
   plugins = [],
+  miniflare = {},
+  main,
 }: WorkerdOptions = {}) =>
   defineProject({
     plugins: [
@@ -750,7 +765,10 @@ const createWorkerdProject = ({
       // fail for every `vite build`. A dynamic import stays an `import()` the bundler preserves,
       // and vite awaits promise-valued entries in the plugins array.
       import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
-        cloudflareTest({ miniflare: { compatibilityDate, compatibilityFlags } }),
+        cloudflareTest({
+          ...(main !== undefined ? { main } : {}),
+          miniflare: { ...miniflare, compatibilityDate, compatibilityFlags },
+        }),
       ),
     ],
     test: {

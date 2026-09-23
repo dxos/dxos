@@ -39,9 +39,16 @@ export type Comparability = {
    *
    * The profiler runs in both modes — measured at +2.6% on the whole flow, below the run-to-run
    * noise — so that worker CPU is trended rather than diagnose-only. The screencast is what makes
-   * `diagnose` timings incomparable: it costs +45%.
+   * `diagnose` timings incomparable: it costs +45%. Allocation sampling runs only on request.
    */
-  instruments: 'profiler' | 'profiler+screencast';
+  instruments: `profiler${'' | '+screencast'}${'' | '+allocations'}`;
+  /**
+   * Stages after which a memory snapshot was taken, if any.
+   *
+   * A snapshot runs after its stage's row is complete, so that row is unaffected; every LATER
+   * stage inherits the allocator pages the snapshot committed in the realm it serialized.
+   */
+  snapshotStages?: string[];
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */
@@ -57,6 +64,42 @@ export type HeapReading = {
   /** Present on targets that report it; covers typed-array/wasm backing stores. */
   backingBytes?: number;
   embedderBytes?: number;
+  /**
+   * Wasm linear memory this realm holds, from `@dxos/util`'s instantiation probe.
+   *
+   * Its own reading because no JS-heap figure counts it: `usedBytes` is the V8 heap, and a wasm
+   * module's linear memory lives outside it. Before this, the only instrument that saw automerge's
+   * and SQLite's memory at all was the footprint of the renderer processes, which cannot say
+   * which realm holds it — a dedicated worker shares its creator's renderer.
+   *
+   * Absent when the realm published no probe, which is a different fact from holding no wasm —
+   * `wasmInstances` is what tells them apart.
+   */
+  wasmBytes?: number;
+  /**
+   * The subset of `wasmBytes` backed by a `SharedArrayBuffer`.
+   *
+   * One shared memory is visible in every realm it was posted to, so a cross-realm total that adds
+   * `wasmBytes` counts that allocation once per realm. `wasmBytesTotal` subtracts this.
+   */
+  wasmSharedBytes?: number;
+  wasmInstances?: number;
+  /** Bytes per creating script. NDJSON only — a module-keyed PostHog column would mint a series per bundle rename. */
+  wasmByModule?: Record<string, number>;
+};
+
+/**
+ * One browser process's private footprint, from a memory-infra dump.
+ *
+ * Private rather than resident: RSS counts the shared pages a process maps, so RSS summed over
+ * Chrome's process tree multi-counts and is not a quantity. Footprints are disjoint, so the
+ * renderers' can be added.
+ */
+export type FootprintReading = {
+  pid: number;
+  /** Chrome's own process name: `Browser`, `GPU Process`, `Renderer`, `Service: …`. */
+  process: string;
+  bytes: number;
 };
 
 /**
@@ -121,6 +164,38 @@ export type RealmLag = {
   maxMs: number;
   /** Samples over the floor. Zero means the realm was responsive, not that the probe was missing. */
   count: number;
+};
+
+/**
+ * One realm's RPC timings over the stage, from the app's own timing middleware.
+ *
+ * The counterpart to `RealmLag` measured from real traffic rather than a synthetic timer:
+ * `queueWait` is how long a request sat before this realm's event loop picked it up, which is
+ * exactly what a blocked loop does to everything waiting on it. `service` is what the handler then
+ * cost, and `roundTrip` — recorded in the realm that ISSUED the call — is the total the caller
+ * waited, which the other two cannot add up to because they do not include the transport.
+ */
+export type RealmRpc = {
+  kind: TargetKind;
+  name: string;
+  /** Requests this realm SERVED during the stage, from the running total's difference. */
+  calls: number;
+  queueWaitP95Ms: number;
+  queueWaitMaxMs: number;
+  serviceMaxMs: number;
+  /** Requests this realm ISSUED during the stage. */
+  clientCalls: number;
+  roundTripP95Ms: number;
+  roundTripMaxMs: number;
+  /**
+   * Samples the percentiles were taken over.
+   *
+   * The integrity pair with `calls`: the middleware keeps a bounded ring, so a stage that served
+   * more calls than the ring holds reports a percentile over its tail rather than over all of it,
+   * and `calls > samples` is the only thing that says so.
+   */
+  samples: number;
+  clientSamples: number;
 };
 
 /**
@@ -247,8 +322,10 @@ export type StageRow = {
 
   heap: HeapReading[];
   heapUsedTotalBytes: number;
-  /** Peak RSS across the browser process tree during the stage. The headline memory number. */
-  peakRssBytes: number;
+  /** Private footprint of every browser process at the stage's end. Empty if the read failed. */
+  footprint: FootprintReading[];
+  /** Footprint of the renderers, which is the app. The headline memory number. */
+  appFootprintBytes: number;
   domNodes: number;
   domListeners: number;
   domDocuments: number;
@@ -256,6 +333,8 @@ export type StageRow = {
   network: NetworkMetrics;
   /** SQLite's VFS-level disk I/O for this stage. Zeroes on node, which has no JS VFS. */
   disk: DiskMetrics;
+  /** RPC queue wait, service and round trip per realm. Empty when no realm published the counters. */
+  rpc: RealmRpc[];
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;

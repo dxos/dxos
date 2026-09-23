@@ -20,9 +20,9 @@ const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'org.dxos.type.example';
 const CHILD_RELATION_KEY = Graph.relationKey('child');
-const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Node.childRelation('inbound'));
+const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Graph.inverseRelation(Node.child));
 const ACTIONS_RELATION_KEY = Graph.relationKey('action');
-const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Node.actionRelation('inbound'));
+const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Graph.inverseRelation(Node.action));
 
 describe('Graph', () => {
   test('getGraph', () => {
@@ -317,7 +317,7 @@ describe('Graph', () => {
     const targetEdges = registry.get(graph.edges(exampleId(2)));
     expect(targetEdges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
     expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([exampleId(1)]);
-    const reverseConnections = registry.get(graph.connections(exampleId(2), Node.actionRelation('inbound')));
+    const reverseConnections = registry.get(graph.connections(exampleId(2), Graph.inverseRelation(Node.action)));
     expect(reverseConnections.map(({ id }) => id)).toEqual([exampleId(1)]);
   });
 
@@ -620,7 +620,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'test2',
-        relation: Node.childRelation('inbound'),
+        relation: Graph.inverseRelation(Node.child),
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -637,7 +637,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'action',
-        relation: Node.actionRelation('inbound'),
+        relation: Graph.inverseRelation(Node.action),
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -860,7 +860,7 @@ describe('Graph', () => {
     expect(expandCalls).to.deep.equal([]);
 
     Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });
-    expect(expandCalls).to.deep.equal([[childId, Node.childRelation()]]);
+    expect(expandCalls).to.deep.equal([[childId, Node.child]]);
   });
   test('waitForPath curried', async () => {
     const graph = Graph.make();

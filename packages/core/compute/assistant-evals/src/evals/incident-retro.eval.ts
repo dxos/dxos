@@ -14,7 +14,7 @@ import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { IncidentSpace } from '@dxos/plugin-debug/sample';
+import * as IncidentSpace from '@dxos/plugin-debug/IncidentSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
@@ -25,6 +25,7 @@ import { type Actor, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';
+import { EvalRunError } from '../errors.ts';
 import { judge } from '../judge.ts';
 import { createEvalRunner } from '../runner.ts';
 import * as Scorer from '../Scorer.ts';
@@ -266,13 +267,13 @@ const task = createEvalRunner({
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(spaceId);
       if (!space) {
-        return yield* Effect.fail(new Error(`Space not found: ${spaceId}`));
+        return yield* Effect.fail(new EvalRunError({ message: `Space not found: ${spaceId}` }));
       }
-      yield* SampleSpace.applyTo(IncidentSpace(), space);
+      yield* SampleSpace.applyTo(IncidentSpace.make(), space);
 
       const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
       if (!project?.taskSet) {
-        return yield* Effect.fail(new Error('The template did not produce the project.'));
+        return yield* Effect.fail(new EvalRunError({ message: 'The template did not produce the project.' }));
       }
       const taskSet = yield* Database.load(project.taskSet);
       const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));

@@ -337,8 +337,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     // the initial backward (newest-first) walk.
     const exit = await EffectEx.runPromise(
       Effect.exit(runJmapSync({ connection: Ref.make(connection) })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterEmails(10, dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterEmails(10, dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -649,8 +648,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     };
     const exit = await EffectEx.runPromise(
       Effect.exit(runJmapSync({ connection: Ref.make(connection), now })).pipe(
-        Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterEmails(10, run2Dataset)),
+        Effect.provide(Layer.provideMerge(ambientSyncServices(db), withFaultAfterEmails(10, run2Dataset))),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);

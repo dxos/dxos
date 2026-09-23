@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -89,7 +90,7 @@ export default JmapOperation.JmapSend.pipe(
         // draft to match the copy that will sync down.
         sentTag: { ...SystemTags.systemTagKey('sent'), label: SystemTags.SystemTag.sent.label },
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(JmapCredentials.fromConnection(connectionRef))),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, JmapCredentials.fromConnection(connectionRef)))),
   ),
   Operation.opaqueHandler,
 );

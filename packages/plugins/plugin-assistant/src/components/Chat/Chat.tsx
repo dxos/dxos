@@ -716,7 +716,9 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-          <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+          {/* The same surface and border as the prompt below, so the two read as one shell. Sized to
+              its rows up to five tasks plus the edit strip; only a longer list scrolls. */}
+          <ChatTaskList classNames='shrink-0 max-h-[calc(6*2rem+1px)] dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
@@ -742,7 +744,7 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+  const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
   const { t } = useTranslation(meta.profile.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
@@ -779,17 +781,35 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     Task.update(task, patch);
   }, []);
 
-  // Delete is a contributed action rather than fixed chrome, matching `TaskSetArticle`: a row shows
-  // one trailing affordance whatever ends up on the list.
+  // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
+  // delegation, status), so the row asks for the work the way the reader would, by ordinal — the
+  // number the row shows, and the one `/task:run` and the agent's selectors resolve.
+  const handleExecute = useCallback(
+    (task: Task.Task) => {
+      const ordinal = tasks.findIndex(({ id }) => id === task.id) + 1;
+      event.emit({ type: 'submit', text: t('execute-task.prompt', { ordinal }) });
+    },
+    [tasks, event, t],
+  );
+
+  // Contributed actions rather than fixed chrome, matching `TaskSetArticle`: two items, so the row
+  // shows one overflow menu rather than a bare delete button.
   const getTaskActions = useCallback(
     (task: Task.Task) => [
+      createMenuAction(`execute-${task.id}`, () => handleExecute(task), {
+        label: t('execute-task.label'),
+        icon: 'ph--play--regular',
+        // A finished task has nothing left to implement.
+        disabled: task.status === 'done' || task.status === 'cancelled',
+        testId: 'tasks.task.execute',
+      }),
       createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
         label: t('delete-task.label'),
-        icon: 'ph--x--regular',
+        icon: 'ph--trash--regular',
         testId: 'tasks.task.delete',
       }),
     ],
-    [handleDelete, t],
+    [handleExecute, handleDelete, t],
   );
 
   if (!chat) {
@@ -799,6 +819,8 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <TaskList.Root
       tasks={tasks}
+      // The clicked row is highlighted, and the edit strip below edits it rather than creating.
+      selectable
       showGroupLabels={false}
       showOrdinals
       showEstimates

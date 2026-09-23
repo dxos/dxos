@@ -5,6 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -161,7 +162,7 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
  * services run at different URLs and are never both available from the same base URL.
  */
 /** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
-export type EdgeAiService = 'anthropic' | 'deepseek';
+export type EdgeAiService = 'anthropic' | 'deepseek' | 'typesafe';
 
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
@@ -734,8 +735,7 @@ export class EdgeHttpClient extends BaseHttpClient {
       HttpClient.execute(HttpClientRequest.make(_args.method as any)(url.toString())),
       withLogging,
       withRetryConfig,
-      Effect.provide(FetchHttpClient.layer),
-      Effect.provide(HttpConfig.default),
+      Effect.provide(Layer.provideMerge(FetchHttpClient.layer, HttpConfig.default)),
       Effect.withSpan('EdgeHttpClient'),
       EffectEx.runAndForwardErrors,
     ) as T;
@@ -794,9 +794,23 @@ export class EdgeHttpClient extends BaseHttpClient {
     );
   }
 
-  /** Terminates the process and clears its durable storage on the host. */
-  public async terminateProcess(ctx: Context, spaceId: SpaceId, pid: string): Promise<void> {
-    await this._call(ctx, new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl), {
+  /**
+   * Terminates the process and clears its durable storage on the host.
+   *
+   * `idempotencyKey` travels as a query parameter rather than a body: the route is a DELETE, and a
+   * body there is not reliably forwarded.
+   */
+  public async terminateProcess(
+    ctx: Context,
+    spaceId: SpaceId,
+    pid: string,
+    options?: { idempotencyKey?: ProcessProtocol.IdempotencyKey },
+  ): Promise<void> {
+    const url = new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl);
+    if (options?.idempotencyKey !== undefined) {
+      url.searchParams.set('idempotencyKey', options.idempotencyKey);
+    }
+    await this._call(ctx, url, {
       method: 'DELETE',
       auth: true,
     });

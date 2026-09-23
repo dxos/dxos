@@ -80,7 +80,7 @@ export const Debug = ({ columns = 1, title, classNames }: DebugProps) => {
             id,
             label: label ?? id,
             unit,
-            classNames: alarm ? (value) => alarm(value) && 'text-error' : undefined,
+            classNames: alarm ? (value) => alarm(value) && 'text-error-text' : undefined,
           }))}
           values={values}
         />

@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -11,6 +12,7 @@ import { Button, Panel, ScrollArea, ScrollContainer, Toolbar, useInterval } from
 import { type ScrollController } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { defaultOptions } from './timeline-options.ts';
 import { type Commit, Timeline, TimelineProps } from './Timeline.tsx';
 
 random.seed(1);
@@ -130,11 +132,13 @@ const generateCommits = (n: number): Pick<TimelineProps, 'commits' | 'branches'>
   return { commits, branches };
 };
 
-const DefaultStory = (props: TimelineProps) => {
+const DefaultStory = (props: Omit<TimelineProps, 'scroller'>) => {
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+
   return (
     <ScrollArea.Root>
-      <ScrollArea.Viewport>
-        <Timeline {...props} />
+      <ScrollArea.Viewport ref={setViewport}>
+        <Timeline {...props} scroller={viewport} />
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -142,10 +146,9 @@ const DefaultStory = (props: TimelineProps) => {
 
 const meta = {
   title: 'ui/react-ui-trace/Timeline',
-  component: Timeline,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
-} satisfies Meta<typeof Timeline>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -250,6 +253,86 @@ export const Compact: Story = {
   args: { ...generateCommits(100), compact: true },
 };
 
+/** A history far longer than any viewport; only the rows in view are in the DOM. */
+const LARGE_HISTORY_LENGTH = 5_000;
+
+const generateLargeHistory = (): Pick<TimelineProps, 'commits' | 'branches'> => {
+  const branches = ['main', 'worker'];
+  const commits: Commit[] = [];
+  for (let index = 0; index < LARGE_HISTORY_LENGTH; index++) {
+    const branch = index % 20 < 4 ? 'worker' : 'main';
+    commits.push({
+      id: `commit-${index}`,
+      branch,
+      message: `Commit ${index}`,
+      parents: index > 0 ? [`commit-${index - 1}`] : [],
+    });
+  }
+
+  return { commits, branches };
+};
+
+const mountedRows = (canvasElement: HTMLElement) => canvasElement.querySelectorAll<HTMLElement>('[role="listitem"]');
+
+export const Large: Story = {
+  args: { ...generateLargeHistory(), showTimestamp: true },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
+
+    const rows = mountedRows(canvasElement);
+    // Windowed: a viewport's worth of rows plus the overscan, never the whole history.
+    await expect(rows.length).toBeLessThan(LARGE_HISTORY_LENGTH / 10);
+    // Rows are exactly `lineHeight` tall, which is what makes the declared extent exact.
+    for (const row of rows) {
+      await expect(row.getBoundingClientRect().height).toBe(defaultOptions.lineHeight);
+    }
+  },
+};
+
+/**
+ * Windowing must not cost the graph: a row deep in the history still draws every lane crossing it,
+ * because the spans it reads are computed over the whole history, not over the mounted rows.
+ */
+export const Branching: Story = {
+  args: generateLargeHistory(),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
+
+    // Jump to the end, so every mounted row was windowed in rather than rendered at mount.
+    const timeline = canvasElement.querySelector<HTMLElement>('[tabindex="0"]');
+    timeline?.focus();
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await waitFor(() =>
+      expect(canvasElement.querySelector(`[data-commit-index="${LARGE_HISTORY_LENGTH - 1}"]`)).not.toBeNull(),
+    );
+
+    const rows = [...mountedRows(canvasElement)];
+    // Each row carries its own node, and a connector for every lane that runs through it.
+    const nodesPerRow = rows.map((row) => row.querySelectorAll('svg circle').length);
+    await expect(Math.min(...nodesPerRow)).toBeGreaterThan(0);
+    // Somewhere in the window a second lane is open, so its through-line is drawn beside the node.
+    const connectorsPerRow = rows.map((row) => row.querySelectorAll('svg path').length);
+    await expect(Math.max(...connectorsPerRow)).toBeGreaterThan(1);
+  },
+};
+
+export const Keyboard: Story = {
+  args: generateLargeHistory(),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(mountedRows(canvasElement).length).toBeGreaterThan(0));
+
+    // The last row is thousands of rows down, so it is only reachable if the move scrolls to it.
+    const timeline = canvasElement.querySelector<HTMLElement>('[tabindex="0"]');
+    await expect(timeline).not.toBeNull();
+    timeline?.focus();
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+
+    const lastRow = () => canvasElement.querySelector(`[data-commit-index="${LARGE_HISTORY_LENGTH - 1}"]`);
+    await waitFor(() => expect(lastRow()).not.toBeNull());
+    await waitFor(() => expect(lastRow()?.getAttribute('aria-current')).toBe('true'));
+  },
+};
+
 export const Streaming: Story = {
   render: () => {
     const [branches, setBranches] = useState<string[]>(['main']);
@@ -295,6 +378,7 @@ export const Streaming: Story = {
     );
 
     const scrollerRef = useRef<ScrollController>(null);
+    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
     return (
       <Panel.Root>
@@ -309,8 +393,8 @@ export const Streaming: Story = {
         <Panel.Content>
           <ScrollContainer.Root pin ref={scrollerRef}>
             <ScrollContainer.Content thin>
-              <ScrollContainer.Viewport>
-                <Timeline branches={branches} commits={commits} showTimestamp />
+              <ScrollContainer.Viewport ref={setViewport}>
+                <Timeline branches={branches} commits={commits} showTimestamp scroller={viewport} />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
             </ScrollContainer.Content>

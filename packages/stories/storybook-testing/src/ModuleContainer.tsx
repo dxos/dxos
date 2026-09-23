@@ -9,9 +9,9 @@ import React, { type FC, useEffect, useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
 import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
@@ -143,7 +143,7 @@ const describeBinding = (value: unknown): string => {
  * or an unregistered subject type instead of staring at a blank cell.
  */
 const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> }) => (
-  <div className='grid place-items-center p-2 text-xs text-warning'>
+  <div className='grid place-items-center p-2 text-xs text-warning-text'>
     <div className='grid gap-1 rounded-sm border border-dashed border-separator p-2 font-mono'>
       <div className='font-medium'>⚠ No surface matched this binding</div>
       <div>role: {role}</div>
@@ -227,7 +227,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
     : [];
   useEffect(() => {
     for (const path of objectPaths) {
-      NotFound.expandPath(graph, path);
+      AppGraph.expandPath(graph, path);
     }
   }, [graph, JSON.stringify(objectPaths)]);
 

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj } from '@dxos/echo';
@@ -64,7 +65,7 @@ describe('resolver', () => {
         expect(yield* resolve(Organization.Organization, { email: 'someone@other.com' })).not.toBeDefined();
         expect(yield* resolve(Person.Person, { email: 'alice@dxos.org' })).toBeDefined();
         expect(yield* resolve(Person.Person, { email: 'bob@dxos.org' })).not.toBeDefined();
-      }).pipe(Effect.provide(Live), Effect.provide(Database.layer(db))),
+      }).pipe(Effect.provide(Layer.provideMerge(Live, Database.layer(db)))),
     );
   });
 });

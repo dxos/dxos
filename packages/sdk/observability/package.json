@@ -126,6 +126,7 @@
   "devDependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@types/js-yaml": "catalog:"
   },

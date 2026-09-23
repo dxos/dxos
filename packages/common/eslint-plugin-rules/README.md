@@ -22,6 +22,7 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 | `no-bare-dot-imports` | No bare `.` or `..` specifiers | error | yes |
 | `no-effect-run-promise` | `EffectEx.runPromise` from `@dxos/effect` over `Effect.runPromise` | error | no |
 | `no-empty-promise-catch` | `.catch()` is passed a handler | error | yes |
+| `no-similar-sibling-files` | No sibling source files whose names differ only by case, `-`/`_`, or a plural suffix (`Space.ts` + `Spaces.ts`) | error | no |
 | `consistent-update-param` | The callback param of `Obj.update()` / `Relation.update()` / `Entity.update()` matches the object argument's name | warn | yes |
 | `translation-key-format` | `dot.kebab-case` translation keys with the required suffix, defined in the namespace's translations | warn | yes |
 | `header` | Copyright header | warn | yes |

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -43,7 +44,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = Li
           description: team.description ?? undefined,
         }));
         return { targets };
-      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromConnection(connection)));
+      }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), LinearApi.fromConnection(connection))));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

@@ -113,6 +113,63 @@ const showCaption = async (text, subtitle) => {
   );
 };
 
+/**
+ * Key HUD — a chip naming the keystroke, shown for as long as the key's effect takes to land, so a
+ * recording of a shortcut carries what was pressed. Without it a palette simply appears and the
+ * video proves nothing about the binding.
+ */
+const KEYS_ID = '__demo_keys__';
+
+const KEY_SYMBOLS = {
+  Meta: '\u2318',
+  Control: 'Ctrl',
+  Shift: '\u21e7',
+  Alt: '\u2325',
+  Enter: '\u21b5',
+  Escape: 'Esc',
+  ArrowUp: '\u2191',
+  ArrowDown: '\u2193',
+  ArrowLeft: '\u2190',
+  ArrowRight: '\u2192',
+  Backspace: '\u232b',
+  Tab: '\u21e5',
+};
+
+/** `Meta+Shift+KeyK` (Playwright's chord syntax) rendered the way a shortcut list would show it. */
+const keyLabel = (key) =>
+  key
+    .split('+')
+    .map((part) => KEY_SYMBOLS[part] ?? part.replace(/^(Key|Digit)/, ''))
+    .join(' ');
+
+const showKeys = async (key, holdMs) => {
+  await page.evaluate(
+    ({ id, label, holdMs }) => {
+      document.getElementById(id)?.remove();
+      const chip = document.createElement('div');
+      chip.id = id;
+      chip.style.cssText = [
+        'position:fixed',
+        'top:16px',
+        'right:16px',
+        'z-index:2147483647',
+        'padding:10px 16px',
+        'border-radius:10px',
+        'background:rgba(17,17,17,0.92)',
+        'border:1px solid rgba(255,255,255,0.25)',
+        'color:#fff',
+        'font:600 20px/1 ui-monospace,SFMono-Regular,monospace',
+        'letter-spacing:2px',
+        'pointer-events:none',
+      ].join(';');
+      chip.textContent = label;
+      document.body.appendChild(chip);
+      setTimeout(() => document.getElementById(id)?.remove(), holdMs);
+    },
+    { id: KEYS_ID, label: keyLabel(key), holdMs },
+  );
+};
+
 const locator = (command) =>
   command.text ? page.getByText(command.text, { exact: !!command.exact }) : page.locator(command.selector);
 
@@ -148,8 +205,17 @@ const handlers = {
       .pressSequentially(command.value, { delay: command.delay ?? 60 });
     return {};
   },
+  /** The HUD goes up first so the chip and the key's effect share frames. */
   press: async (command) => {
+    const hold = command.hud === false ? 0 : (command.hold ?? 1_600);
+    if (hold) {
+      await showKeys(command.key, hold);
+    }
     await page.keyboard.press(command.key);
+    return {};
+  },
+  keys: async (command) => {
+    await showKeys(command.key, command.hold ?? 1_600);
     return {};
   },
   hover: async (command) => {

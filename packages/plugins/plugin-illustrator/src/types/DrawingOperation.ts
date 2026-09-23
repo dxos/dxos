@@ -8,10 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { Diagnostics, Scene } from '@dxos/diagram';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-
-import { Diagnostics, Scene } from '#model';
 
 import * as Drawing from './Drawing.ts';
 
@@ -72,6 +71,49 @@ export const Edit = Operation.make({
     ...SceneOutput,
     upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
     removed: Schema.Number.annotate({ description: 'Number of shapes removed.' }),
+  }),
+  services: [Capability.Service, Database.Service],
+});
+
+export const Draw = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.draw'),
+    name: 'Draw Diagram',
+    description:
+      'Applies a diagram written in the native text DSL, where you choose every coordinate. Use this to author a diagram precisely, or to hand-edit one that `generate` laid out; use `generate` instead when you want the layout done for you.',
+    icon: 'ph--code--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to draw into.' }),
+    source: Schema.String.annotate({
+      description: [
+        'Diagram DSL. Statements are `object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { <element>* }`,',
+        '`elements <objectId> { … }`, `move <id> @ <x>,<y>`, `remove object <id>`, `remove elements <id> <ids…>`.',
+        'An element is `<kind> <id> <geometry> ["label"] <name=value>*` where kind is rect/ellipse/diamond/triangle',
+        '(`x,y WxH`), circle (`cx,cy r`), line/curve (two or more `x,y`), arc (`cx,cy r a0..a1`), text (`x,y "s"`),',
+        'arrow (`<end> -> <end>`, each end a ref like `Obj/elem#port`, a point, or `_`), or portal (`x,y WxH ref="<dxn>"`).',
+      ].join(' '),
+    }),
+  }),
+  output: Schema.Struct({
+    ...SceneOutput,
+    upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
+    removed: Schema.Number.annotate({ description: 'Number of shapes removed.' }),
+    problems: Schema.Array(
+      Schema.Struct({
+        severity: Schema.Literals(['error', 'warning']),
+        message: Schema.String,
+        line: Schema.Number,
+        column: Schema.Number,
+      }),
+    ).annotate({
+      description:
+        'Syntax and schema problems in the source, with 1-based line/column. A single `error` leaves the drawing untouched — fix it and draw again.',
+    }),
+    diagnostics: Schema.Array(Diagnostics.Diagnostic).annotate({
+      description:
+        'Layout report over the resulting scene. Fix every `error` (overlap, connector through a node, label overflow) by moving or resizing the offending elements and drawing again.',
+    }),
   }),
   services: [Capability.Service, Database.Service],
 });

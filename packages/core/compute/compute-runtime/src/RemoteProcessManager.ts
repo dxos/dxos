@@ -85,13 +85,25 @@ export interface EventPage {
   readonly snapshot: Snapshot;
 }
 
+/**
+ * Deduplication token for a command that may be delivered more than once.
+ *
+ * A queued client (`RemoteCommandQueue`) retries a command whose acknowledgement it never saw, so
+ * without it a redelivered spawn would start a second process and a redelivered input would be
+ * applied twice. A host that does not implement deduplication simply ignores the field, which is why
+ * it is optional: the at-most-once guarantee is the host's to give.
+ */
+export interface Idempotent {
+  readonly idempotencyKey?: string;
+}
+
 /** Addresses one process. Every verb is space-scoped because processes are per-space on the host. */
 export interface ProcessTarget {
   readonly spaceId: SpaceId;
   readonly pid: Process.ID;
 }
 
-export interface SpawnRequest {
+export interface SpawnRequest extends Idempotent {
   readonly spaceId: SpaceId;
   /** `Process.Process.key` of a process the host hosts; a definition cannot cross the wire. */
   readonly key: string;
@@ -134,7 +146,7 @@ export interface Control {
   status(target: ProcessTarget): Effect.Effect<Snapshot>;
 
   /** Submit an input already encoded via the process definition's input schema. */
-  submitInput(target: ProcessTarget & { readonly input: unknown }): Effect.Effect<void>;
+  submitInput(target: ProcessTarget & Idempotent & { readonly input: unknown }): Effect.Effect<void>;
 
   /**
    * Build a client for the process's declared RPC group. The host serves the group as
@@ -145,7 +157,7 @@ export interface Control {
     target: ProcessTarget & { readonly group: RpcGroup.RpcGroup<Rpcs> },
   ): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope>;
 
-  terminate(target: ProcessTarget): Effect.Effect<void>;
+  terminate(target: ProcessTarget & Idempotent): Effect.Effect<void>;
 
   /**
    * Read the process's outputs and ephemeral trace at or after `cursor`. Cursor-based rather than
@@ -227,6 +239,12 @@ export interface SpawnOptions<_Input = unknown, _Output = unknown, _Rpcs extends
   readonly target?: URI.URI;
   readonly notify?: Operation.NotifyOptions;
   readonly annotations?: Annotation.Dictionary;
+  /**
+   * Deduplication token for this spawn (see {@link Idempotent}). A caller that re-issues the same
+   * spawn under the same key — a retry, a reload, a second click — gets the process already spawned
+   * or already queued rather than a second one.
+   */
+  readonly idempotencyKey?: string;
 }
 
 /** {@link Manager.list} filters — `ListRequest` plus the one filter the host does not index. */
@@ -282,6 +300,7 @@ export const makeControlVerbs = (
       target,
       notify,
       annotations: extraAnnotations,
+      idempotencyKey,
     }: SpawnOptions<_Input, _Output, _Rpcs>) =>
       Effect.gen(function* () {
         const annotations = Annotation.buildDictionary((dictionary) => {
@@ -302,6 +321,7 @@ export const makeControlVerbs = (
           ...(name !== undefined ? { name } : {}),
           ...(parentProcessId !== undefined ? { parentPid: parentProcessId } : {}),
           ...(environment !== undefined ? { environment } : {}),
+          ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
           annotations,
         });
         log('remote process spawned', { pid: info.pid, key: info.key });

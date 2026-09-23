@@ -51,6 +51,8 @@ export class TerraObject extends Type.makeObject<TerraObject>(DXN.make('org.dxos
 ) {}
 
 export type MakeProps = {
+  /** Minted when omitted; a fixture supplies one so anything seeded off the id is reproducible. */
+  id?: Obj.ID;
   kind: Kind;
   name?: string;
   speed: number;

@@ -235,7 +235,14 @@ export interface MultiTag<T, S extends string = any>
   readonly arity: 'multi';
 }
 
-export type AnyTag = Tag<any, any> | MultiTag<any, any>;
+/**
+ * Either arity of capability tag. One interface rather than a union of the two tag types: in a
+ * constraint position `missingEffectContext` reads the union as an Effect and reports one
+ * constituent's identifier as a missing service.
+ */
+export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, any>, InterfaceDef<any> {
+  readonly arity: Arity;
+}
 
 /**
  * Compile-time error surfaced when the service type is omitted from the curried factory form.

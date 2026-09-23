@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -41,8 +42,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.fromConnection(connectionRef, client)),
-        Effect.provide(FetchHttpClient.layer),
+        Effect.provide(Layer.provideMerge(BlueskyApi.fromConnection(connectionRef, client), FetchHttpClient.layer)),
         Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });

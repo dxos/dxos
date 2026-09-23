@@ -14,7 +14,12 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { SyncAppendPositionMismatchError, SyncRpcTimeoutError, SyncSpaceDeletedError } from './errors.ts';
+import {
+  FeedOperationError,
+  SyncAppendPositionMismatchError,
+  SyncRpcTimeoutError,
+  SyncSpaceDeletedError,
+} from './errors.ts';
 import type { FeedStore } from './feed-store.ts';
 
 /** Default timeout for feed sync RPCs awaiting an edge response. */
@@ -671,11 +676,13 @@ export class SyncClient {
 
   #expectResponse<T>(requestId: string, message: ProtocolMessage, expectedTag: string): Effect.Effect<T, Error, never> {
     if (message._tag === 'Error') {
-      return Effect.fail(new Error(message.message));
+      return Effect.fail(new FeedOperationError({ message: message.message }));
     }
     const requestIdMsg = 'requestId' in message ? String(message.requestId) : undefined;
     if (message._tag !== expectedTag || requestIdMsg !== requestId) {
-      return Effect.fail(new Error(`Unexpected message: expected ${expectedTag} with requestId ${requestId}`));
+      return Effect.fail(
+        new FeedOperationError({ message: `Unexpected message: expected ${expectedTag} with requestId ${requestId}` }),
+      );
     }
     return Effect.succeed(message as T);
   }

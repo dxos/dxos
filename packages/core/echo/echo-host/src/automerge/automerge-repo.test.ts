@@ -1041,6 +1041,7 @@ const createTeleportTestPeer = async (
     },
     onCollectionStateQueried: () => {},
     onCollectionStateReceived: () => {},
+    onConnectionAuthScopeChanged: 'reannounce-peer',
   });
   const repo = new Repo({
     peerId: options?.peerId as PeerId,

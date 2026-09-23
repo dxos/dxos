@@ -8,13 +8,13 @@ import * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { DocHandleProxy } from './doc-handle-proxy.ts';
+import { RepoClosedError } from '../errors.ts';
+import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
@@ -77,6 +77,15 @@ export class RepoProxy extends Resource {
   private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   /**
+   * Documents the host has taken a write for since a disk flush last took them: the only ones a disk
+   * flush can find unsaved on this client's behalf.
+   */
+  private readonly _unflushedIds = new Set<DocumentId>();
+
+  /** Disk flushes under way; a concurrent one waits for them, since one may carry its writes. */
+  private readonly _diskFlushes = new Set<Promise<void>>();
+
+  /**
    * Document ids that should be subscribed to.
    */
   private readonly _pendingAddIds = new Set<DocumentId>();
@@ -129,6 +138,7 @@ export class RepoProxy extends Resource {
   #draining = false;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+  private _lastSaveStateKey = '';
 
   constructor(
     private _dataService: DataService.Client,
@@ -182,6 +192,10 @@ export class RepoProxy extends Resource {
     return true;
   }
 
+  /**
+   * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
+   * a caller whose work is abandonable should treat this as the client going away.
+   */
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
@@ -202,13 +216,21 @@ export class RepoProxy extends Resource {
   }
 
   /**
-   * Waits until every pending document creation and update has been handed to the host.
+   * Waits until every pending document creation and update has been handed to the host, and with
+   * `disk`, until the host has saved the documents this client wrote.
    *
    * Throws if a batch could not be sent. `_sendUpdates` re-queues a failed batch for the next pass,
    * but a short-lived writer (a server-side ECHO client in a worker invocation) is disposed as soon
    * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
    */
-  async flush(): Promise<void> {
+  async flush({ disk = false }: { disk?: boolean } = {}): Promise<void> {
+    await this._sendPending();
+    if (disk) {
+      await this._saveWritten();
+    }
+  }
+
+  private async _sendPending(): Promise<void> {
     await this.flushCreations();
     // Wait for all updates to be sent, retrying a failed batch before giving up on it.
     for (let attempt = 1; ; attempt++) {
@@ -227,6 +249,34 @@ export class RepoProxy extends Resource {
       // A dropped subscription is replaced only after the scheduled backoff, so a shorter sleep
       // burns every attempt against a subscription known to be gone.
       await sleep(FLUSH_RETRY_DELAY_MS * attempt + (this._isReconnecting ? this._resubscribeDelay : 0));
+    }
+  }
+
+  /**
+   * Has the host save the documents this client wrote since the last disk flush. The host checks every
+   * document it is given, so the set is kept to what changed.
+   */
+  private async _saveWritten(): Promise<void> {
+    for (;;) {
+      const inFlight = [...this._diskFlushes];
+      const documentIds = [...this._unflushedIds];
+      this._unflushedIds.clear();
+      if (documentIds.length > 0) {
+        const saved = runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
+          timeout: RPC_TIMEOUT,
+        }).catch((err) => {
+          documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
+          throw err;
+        });
+        this._diskFlushes.add(saved);
+        void saved.finally(() => this._diskFlushes.delete(saved)).catch(() => {});
+        await saved;
+      }
+      // A failed flush returned its documents, which may include this caller's writes: take them again.
+      const settled = await Promise.allSettled(inFlight);
+      if (settled.every((result) => result.status === 'fulfilled')) {
+        return;
+      }
     }
   }
 
@@ -258,9 +308,11 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob = this._createSendUpdatesJob();
     // TODO(dmaretskyi): Set proper space id.
     this._subscribe();
+    this._pageEvents('addEventListener');
   }
 
   protected override async _close(): Promise<void> {
+    this._pageEvents('removeEventListener');
     await this._sendUpdatesJob?.join();
     this._sendUpdatesJob = undefined;
     for (const handle of Object.values(this._handles)) {
@@ -275,6 +327,22 @@ export class RepoProxy extends Resource {
     this._failedCreations.clear();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
+  }
+
+  /**
+   * A batch throttled to {@link MAX_UPDATE_FREQ} would not survive the page going away; sending it
+   * as the page hides reaches the worker, which outlives the tab, within the handler's microtasks.
+   */
+  private readonly _onPageHide = () => {
+    this._sendUpdatesJob?.forceTrigger();
+  };
+
+  /** Registers or unregisters {@link _onPageHide} where a page exists; a worker or Node has no such event. */
+  private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
+    const fn = Reflect.get(globalThis, method);
+    if (typeof fn === 'function') {
+      fn.call(globalThis, 'pagehide', this._onPageHide);
+    }
   }
 
   /**
@@ -398,6 +466,10 @@ export class RepoProxy extends Resource {
     /** The documentId of the handle to look up or create. */
     documentId: DocumentId;
   }): DocHandleProxy<T> {
+    // Before the cache, so a cached hit cannot escape the contract `find` documents: once closing
+    // has begun the handle can never reach the host, whether or not it was loaded earlier.
+    this.#requireOpen(documentId);
+
     // If we have the handle cached, return it
     const cached = this._handles[documentId];
     if (cached) {
@@ -413,11 +485,28 @@ export class RepoProxy extends Resource {
     return this._loadHandle<T>({ documentId });
   }
 
-  private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+  /**
+   * `isOpen` rather than the lifecycle state alone: `Resource` holds that at OPEN for the whole of
+   * `close()`, and only `isOpen` also accounts for the close already being under way. The update job
+   * is checked too, since it is the only route a handle has to the host and `_close` drops it.
+   *
+   * @throws {RepoClosedError}
+   */
+  #requireOpen(documentId?: DocumentId): UpdateScheduler {
+    if (!this.isOpen || !this._sendUpdatesJob) {
+      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+    }
+    return this._sendUpdatesJob;
+  }
 
-    // TODO(burdon): Called even if not mutations.
-    const onChange = () => {
+  /** @throws {RepoClosedError} */
+  private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
+    const sendUpdatesJob = this.#requireOpen(documentId);
+
+    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
+      if (patchInfo.source !== 'change') {
+        return;
+      }
       log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
@@ -444,13 +533,14 @@ export class RepoProxy extends Resource {
     this._pendingRemoveIds.delete(documentId);
     this._deferredReleaseIds.delete(documentId);
     this._pendingAddIds.add(documentId);
-    this._sendUpdatesJob!.trigger();
+    sendUpdatesJob.trigger();
 
     return handle;
   }
 
+  /** @throws {RepoClosedError} */
   private _createHandle<T>({ initialValue }: { initialValue?: T }): DocHandleProxy<T> {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    this.#requireOpen();
 
     const update = () => {
       // Called only when documentId is known (after onChange check or after creation).
@@ -459,10 +549,8 @@ export class RepoProxy extends Resource {
       this._emitSaveStateEvent();
     };
 
-    // TODO(burdon): Called even if not mutations.
-    const onChange = () => {
-      // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
-      if (handle.documentId == null) {
+    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
+      if (handle.documentId == null || patchInfo.source !== 'change') {
         return;
       }
 
@@ -510,6 +598,7 @@ export class RepoProxy extends Resource {
               return;
             }
             handle._setDocumentId(documentId);
+            this._unflushedIds.add(documentId);
             this._pendingAddIds.add(documentId);
             this._handles[documentId] = handle;
             update();
@@ -594,7 +683,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -607,6 +696,13 @@ export class RepoProxy extends Resource {
     // update once the network delivers.
     if (requesting) {
       handle._markRequesting();
+    }
+
+    // The host has no bytes and nothing to fetch them from, so the handle is failed rather than
+    // left waiting; bytes that turn up later (replication catching up) still take it to `'ready'`.
+    if (unavailable) {
+      log.warn('host cannot produce document', { documentId, spaceId: this._spaceId });
+      handle._markUnavailable(documentId);
     }
 
     if (mutation) {
@@ -649,15 +745,18 @@ export class RepoProxy extends Resource {
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
-      await runServiceCall(
-        this._runtime,
-        this._dataService['DataService.updateSubscription']({
-          subscriptionId: this._subscriptionId,
-          addIds,
-          removeIds,
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
+      // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
+      if (addIds.length > 0 || removeIds.length > 0) {
+        await runServiceCall(
+          this._runtime,
+          this._dataService['DataService.updateSubscription']({
+            subscriptionId: this._subscriptionId,
+            addIds,
+            removeIds,
+          }),
+          { timeout: RPC_TIMEOUT },
+        );
+      }
 
       const updates: DataService.DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
@@ -684,6 +783,7 @@ export class RepoProxy extends Resource {
           this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
           { timeout: RPC_TIMEOUT },
         );
+        updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }
@@ -731,6 +831,11 @@ export class RepoProxy extends Resource {
 
   private _emitSaveStateEvent(): void {
     const unsavedDocuments = Array.from(this._pendingUpdateIds);
+    const key = unsavedDocuments.join(',');
+    if (key === this._lastSaveStateKey) {
+      return;
+    }
+    this._lastSaveStateKey = key;
     this.saveStateChanged.emit({ unsavedDocuments });
   }
 }

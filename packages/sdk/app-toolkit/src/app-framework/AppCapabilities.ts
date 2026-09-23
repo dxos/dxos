@@ -15,12 +15,14 @@ import type { OpaqueToolkit } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
+import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Type } from '@dxos/echo';
+import type * as Retention$ from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
@@ -162,6 +164,16 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
+/** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
+export type AppGraphRetention = Retention$.Retention<AppGraphNode$.RelationInput>;
+
+/**
+ * @category Capability
+ */
+export const AppGraphRetention = Capability$.make<AppGraphRetention>()(
+  'org.dxos.app-framework.capability.appGraphRetention',
+);
+
 export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free
@@ -265,27 +277,31 @@ export type PluginAsset = Readonly<{
 export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
 
 /**
- * A themed sample space a plugin offers, for filling a space with demonstrable content.
+ * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
+ * the content to write once the space exists.
  *
- * `apply` is a bound closure rather than the definition itself: a consumer needs only "put this
- * content in that space", and handing it the definition would drag the builder, its phase map and
- * Effect into every picker that lists one. Build the entry with `SampleSpace.preset`.
+ * Build one with `SampleSpace.makeTemplate`.
  */
-export type SampleSpace = Readonly<{
-  /** Stable id, namespaced by the owning plugin. */
+export type SpaceTemplate = Readonly<{
+  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
   id: string;
-  /** Name for the picker. */
+  /** Name for the picker, and the default space name when the template is chosen. */
   label: string;
-  /** One line on what the space contains. */
+  /** One line on what the template creates. */
   description?: string;
-  /** Registers the content's types on the client, then writes it into `space`. */
+  /** An `iconValues` name, as space properties carry. */
+  icon?: string;
+  hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  hidden?: boolean;
+  /** Registers the content's types on the client, then writes it into the new space. */
   apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
 }>;
 
 /**
  * @category Capability
  */
-export const SampleSpace = Capability$.make<SampleSpace>()('org.dxos.app-framework.capability.sampleSpace');
+export const SpaceTemplate = Capability$.make<SpaceTemplate>()('org.dxos.app-framework.capability.spaceTemplate');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
@@ -442,7 +458,7 @@ export type ProgressMonitor = Progress.TaskHandle;
  */
 export type ProgressRegistry = Readonly<{
   /** Aggregate snapshot of all active providers. */
-  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  snapshotAtom: Atom.Atom<Progress.Snapshot>;
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
   /**
@@ -453,7 +469,7 @@ export type ProgressRegistry = Readonly<{
   /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
   cancel: (name: string) => void;
   /** Non-reactive read of the current snapshot. */
-  snapshot: () => Progress.ProgressSnapshot;
+  snapshot: () => Progress.Snapshot;
 }>;
 
 /**

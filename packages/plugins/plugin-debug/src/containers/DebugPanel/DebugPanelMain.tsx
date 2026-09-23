@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import type * as AppGraph from '@dxos/app-graph/AppGraph';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { DebugNodes } from '#types';
+import { DebugNodes, DebugSurface } from '#types';
 
 import { useDebugPanelContext } from './DebugPanelContext.ts';
 
@@ -25,8 +25,15 @@ const KEEP_MOUNTED: ReadonlySet<unknown> = new Set([DebugNodes.Console, DebugNod
  */
 export const DebugPanelMain = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { contextId, nodeId } = useDebugPanelContext();
+  const { contextId, nodeId, select } = useDebugPanelContext();
   const { graph } = useAppGraph();
+  const handleNavigate = useCallback(
+    (target: string) => {
+      AppGraph.expandPath(graph, target);
+      select(target);
+    },
+    [graph, select],
+  );
   const node = useNode(graph, nodeId);
   const keepMounted = node !== undefined && KEEP_MOUNTED.has(node.data);
   const [visited, setVisited] = useState<string[]>([]);
@@ -48,10 +55,24 @@ export const DebugPanelMain = () => {
   return (
     <>
       {mounted.map((id) => (
-        <DebugPanelPage key={id} graph={graph} contextId={contextId} nodeId={id} hidden={id !== nodeId} />
+        <DebugPanelPage
+          key={id}
+          graph={graph}
+          contextId={contextId}
+          nodeId={id}
+          hidden={id !== nodeId}
+          onNavigate={handleNavigate}
+        />
       ))}
       {!mounted.includes(nodeId) && (
-        <DebugPanelPage key={nodeId} graph={graph} contextId={contextId} nodeId={nodeId} hidden={false} />
+        <DebugPanelPage
+          key={nodeId}
+          graph={graph}
+          contextId={contextId}
+          nodeId={nodeId}
+          hidden={false}
+          onNavigate={handleNavigate}
+        />
       )}
     </>
   );
@@ -64,15 +85,23 @@ type DebugPanelPageProps = {
   contextId: string;
   nodeId: string;
   hidden: boolean;
+  onNavigate: (nodeId: string) => void;
 };
 
 /** One tool's article surface; the `div` is its show/hide element, not layout. */
-const DebugPanelPage = ({ graph, contextId, nodeId, hidden }: DebugPanelPageProps) => {
+const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugPanelPageProps) => {
   const { t } = useTranslation(meta.profile.key);
   const node = useNode(graph, nodeId);
-  const data = useMemo<AppSurface.ArticleData | undefined>(
-    () => node && { attendableId: `${contextId}/${nodeId}`, nodeId, subject: node.data, properties: node.properties },
-    [node, contextId, nodeId],
+  const data = useMemo<DebugSurface.PageData | undefined>(
+    () =>
+      node && {
+        attendableId: `${contextId}/${nodeId}`,
+        nodeId,
+        subject: node.data,
+        properties: node.properties,
+        onNavigate,
+      },
+    [node, contextId, nodeId, onNavigate],
   );
   if (!data) {
     // A persisted id that no longer resolves (a plugin disabled) shows the empty state rather than nothing.
@@ -81,7 +110,7 @@ const DebugPanelPage = ({ graph, contextId, nodeId, hidden }: DebugPanelPageProp
 
   return (
     <div role='none' className='dx-expand' hidden={hidden}>
-      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+      <Surface.Surface type={DebugSurface.Page} data={data} limit={1} />
     </div>
   );
 };

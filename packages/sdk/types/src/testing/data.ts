@@ -547,7 +547,7 @@ export const seedTestData = async (space: Space) => {
   ];
 
   for (const object of objects) {
-    if (!space.db.query(Filter.id(object.id)).runSync()[0]) {
+    if (!(await space.db.query(Filter.id(object.id)).run())[0]) {
       space.db.add(object);
     }
   }

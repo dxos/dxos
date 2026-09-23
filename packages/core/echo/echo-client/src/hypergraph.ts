@@ -244,8 +244,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return undefined; // Unsupported URI kind.
       },
 
-      resolveLegacy: async (uri) => {
-        const obj = await this._resolveAsync(uri, context);
+      resolveLegacy: async (uri, options) => {
+        const obj = await this._resolveAsync(uri, context, options);
         return obj ? materializeStoredSchema(obj) : undefined;
       },
 
@@ -604,6 +604,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private async _resolveAsync(
     uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
+    options?: Ref.LoadOptions,
   ): Promise<Entity.Unknown | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
@@ -641,7 +642,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (1) Search space automerge docs first.
-        const obj = await this._resolveDatabaseObjectAsync(context.space, echoUri);
+        const obj = await this._resolveDatabaseObjectAsync(context.space, echoUri, options);
         if (obj) {
           status = 'resolved';
           return obj;
@@ -728,13 +729,21 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return undefined;
   }
 
-  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
+  private async _resolveDatabaseObjectAsync(
+    spaceId: SpaceId,
+    objectId: EntityId,
+    options?: Ref.LoadOptions,
+  ): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
     }
-    const [obj] = await db.query(Query.select(Filter.id(objectId)).from(db, { includeFeeds: true })).run();
-    if (obj) {
+    const select = Query.select(Filter.id(objectId));
+    const scoped = options?.deleted === 'include' ? select.options({ deleted: 'include' }) : select;
+    const [obj] = await db.query(scoped.from(db, { includeFeeds: true })).run();
+    // A merged-away loser is a redirect, not a tombstone to hand back, so it follows the chain even
+    // when the caller asked for deleted entities.
+    if (obj && !(isEchoObject(obj) && getObjectCore(obj).getMergedInto() != null)) {
       return obj;
     }
     return await this._followMergeRedirectAsync(db, objectId);

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import { Diagnostics, MermaidEngine, Uml } from '@dxos/diagram';
 
-import { Diagnostics, MermaidEngine, Uml } from '#model';
 import { DrawingOperation, IllustratorError } from '#types';
 import { resolveVariant } from '#util';
 

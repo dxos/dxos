@@ -375,7 +375,9 @@ export class GraphExecutor {
         return yield* Effect.fail(NotExecuted);
       }
       if (output.values[prop] == null) {
-        throw new Error(`No output for node: property ${prop} on node ${nodeId}: ${JSON.stringify(output)}`);
+        throw new ComputeNodeError({
+          message: `No output for node: property ${prop} on node ${nodeId}: ${JSON.stringify(output)}`,
+        });
       }
 
       const value = yield* ValueBag.get(output, prop);
@@ -400,7 +402,7 @@ export class GraphExecutor {
       if (this._computeCache.has(nodeId)) {
         const result = yield* this._computeCache.get(nodeId)!;
         if (!ValueBag.isValueBag(result)) {
-          throw new Error(`Output is not a value bag: ${JSON.stringify(result)}`);
+          throw new ComputeNodeError({ message: `Output is not a value bag: ${JSON.stringify(result)}` });
         }
 
         return result;
@@ -413,7 +415,7 @@ export class GraphExecutor {
         // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
         const nodeSpec = yield* Effect.promise(() => this._computeNodeResolver(node.graphNode));
         if (nodeSpec.exec == null) {
-          throw new Error(`No compute function for node type: ${node.graphNode.type}`);
+          throw new ComputeNodeError({ message: `No compute function for node type: ${node.graphNode.type}` });
         }
 
         yield* Trace.write(ComputeBeginEvent, {

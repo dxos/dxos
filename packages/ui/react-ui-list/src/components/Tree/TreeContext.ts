@@ -11,6 +11,7 @@ import { type Label } from '@dxos/react-ui';
 import { type Density } from '@dxos/ui-types';
 
 import { type TreeData } from './tree-data.ts';
+import { type DropKind } from './TreeDropIndicator.tsx';
 
 // Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and hook exported beside one force a full page reload on every edit.
@@ -107,7 +108,16 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
 }>;
 
 /** Keys held for a row activation; `meta` covers ctrl on non-Mac keyboards. */
-export type SelectModifiers = { option: boolean; shift: boolean; meta: boolean };
+export type SelectModifiers = {
+  option: boolean;
+  shift: boolean;
+  meta: boolean;
+  /** Activated from the keyboard (Enter) rather than the pointer, so a consumer can move focus on. */
+  keyboard?: boolean;
+};
+
+/** A row activation: the keys it was made with, and the selection the row takes from it. */
+export type RowActivation = SelectModifiers & { current: boolean };
 
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
@@ -123,8 +133,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
-  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /** Whether a childless row can be dropped onto to adopt the dragged item. */
   leavesAcceptChildren?: boolean;
   /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
@@ -136,15 +146,12 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
   focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
-  selectNode: (node: TreeNodeEntry<T>, modifiers: SelectModifiers, current?: boolean) => void;
+  selectNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
+  canSelect?: (params: { item: T; path: string[] }) => boolean;
   /** In `multiple` mode a plain click selects the row alone and a meta-click toggles it. */
   selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
-  /** Branch values currently running their conceal animation before the close commits. */
-  closingValues: ReadonlySet<string>;
-  /** Commits the model close for a branch once its conceal animation ends. */
-  commitClose: (node: TreeNodeEntry) => void;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);

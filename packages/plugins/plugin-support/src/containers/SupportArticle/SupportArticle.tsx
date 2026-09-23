@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Button, Column, Field, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -13,47 +14,48 @@ import { Support } from '#types';
 
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
-export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) => {
+export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const [ticket] = useObject(subject);
 
   const handleSetTitle = useCallback(
     (value: string) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.title = value;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const handleSetBody = useCallback(
     (value: string) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.body = value;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const handleSetResolution = useCallback(
     (value: string) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.resolution = value;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const handleStatus = useCallback(
     (status: Support.TicketStatus) => {
-      Obj.update(ticket, (ticket) => {
-        const mutable = ticket as Obj.Mutable<typeof ticket>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         mutable.status = status;
       });
     },
-    [ticket],
+    [subject],
   );
 
   const status = ticket.status ?? 'open';

@@ -5,7 +5,7 @@
 /**
  * Imports a Gmail Takeout `.mbox` file into an ECHO space export (`.dx.json`), out of band.
  *
- * File in → file out: no live client or space is contacted. `SampleSpace` builds a space containing
+ * File in → file out: no live client or space is contacted. `SpaceTemplate` builds a space containing
  * a Mailbox whose append-only feed holds one Message per email, then exports it to a single JSON
  * archive. Drop the archive into Composer (it imports via `client.spaces.import(...)`) to get the
  * mailbox as real, synced data.

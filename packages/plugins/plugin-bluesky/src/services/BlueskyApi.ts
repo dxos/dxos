@@ -25,6 +25,7 @@ import { type AccessToken, Connection } from '@dxos/link';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants.ts';
 import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors.ts';
+import { BlueskySyncError } from '../operations/errors.ts';
 
 //
 // Schemas
@@ -375,7 +376,7 @@ const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.D
     }
     const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
     if (!edgeBaseUrl) {
-      return yield* Effect.fail(new Error('EDGE services not configured.'));
+      return yield* Effect.fail(new BlueskySyncError({ message: 'EDGE services not configured.' }));
     }
     const pdsBaseUrl = yield* resolvePds(handle);
     return {

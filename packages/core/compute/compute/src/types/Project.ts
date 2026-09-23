@@ -34,27 +34,26 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
     /** Owned agent instructions (created at the plugin layer; parented by `SetParent`). */
     instructions: Schema.optional(
-      Ref.Ref(Instructions.Instructions).pipe(
-        Annotation.SetParent.set(true),
-        Annotation.FormInlineAnnotation.set(true),
-      ),
+      Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(), Annotation.FormInlineAnnotation.set(true)),
     ),
 
-    /** Artifacts (documents, outliners, tables, ...) the project owns, in order. */
-    // TODO(burdon): Change to Collection?
-    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Artifacts (documents, outliners, tables, ...), in order. */
+    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+      Annotation.SetParent.set({ override: false }),
+      Annotation.FormInputAnnotation.set(false),
+    ),
 
     /** Routines the project owns, in order, parented so they cascade-delete with it. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
 
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
-    outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set(true))),
+    outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set())),
 
     /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */
-    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).pipe(Annotation.SetParent.set(true))),
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).pipe(Annotation.SetParent.set())),
 
     /**
      * Source repository this project's work lands in. Independent of `taskSet`: a project that

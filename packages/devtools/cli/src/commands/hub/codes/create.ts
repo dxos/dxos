@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { type AdminCreateInvitationCodesResponse } from '@dxos/protocols';
 
-import { formatHubError, hubApiRequest } from '../util.ts';
+import { HubApiError, formatHubError, hubApiRequest } from '../util.ts';
 
 export const create = Command.make(
   'create',
@@ -28,7 +28,7 @@ export const create = Command.make(
       body.note = note.value;
     }
     const result = yield* hubApiRequest<AdminCreateInvitationCodesResponse>('POST', '/api/code', { body }).pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))),
+      Effect.catch((error) => Effect.fail(new HubApiError({ message: formatHubError(error), cause: error }))),
     );
     yield* Console.log(`Created ${result.codes.length} invitation code(s):`);
     for (const code of result.codes) {

@@ -448,22 +448,24 @@ describe('streamed parallel tool calls', () => {
     Effect.fn(function* (_) {
       const parts = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
         Stream.runCollect,
-        Effect.provide(ParallelToolkitLayer),
         Effect.provide(
-          serveSseStream([
-            toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '' }),
-            '',
-            toolCallDelta(0, { arguments: '{"x":1}' }),
-            '',
-            toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '' }),
-            '',
-            toolCallDelta(1, { arguments: '{"y":2}' }),
-            '',
-            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
-            '',
-            'data: [DONE]',
-            '',
-          ]),
+          Layer.provideMerge(
+            ParallelToolkitLayer,
+            serveSseStream([
+              toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '' }),
+              '',
+              toolCallDelta(0, { arguments: '{"x":1}' }),
+              '',
+              toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '' }),
+              '',
+              toolCallDelta(1, { arguments: '{"y":2}' }),
+              '',
+              chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+              '',
+              'data: [DONE]',
+              '',
+            ]),
+          ),
         ),
       );
 
@@ -491,29 +493,31 @@ describe('streamed parallel tool calls', () => {
     Effect.fn(function* (_) {
       const parts = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
         Stream.runCollect,
-        Effect.provide(ParallelToolkitLayer),
         Effect.provide(
-          serveSseStream([
-            chunk({
-              choices: [
-                {
-                  index: 0,
-                  delta: {
-                    tool_calls: [
-                      { index: 0, id: 'call_a', type: 'function', function: { name: 'alpha', arguments: '{"x":1}' } },
-                      { index: 1, id: 'call_b', type: 'function', function: { name: 'beta', arguments: '{"y":2}' } },
-                    ],
+          Layer.provideMerge(
+            ParallelToolkitLayer,
+            serveSseStream([
+              chunk({
+                choices: [
+                  {
+                    index: 0,
+                    delta: {
+                      tool_calls: [
+                        { index: 0, id: 'call_a', type: 'function', function: { name: 'alpha', arguments: '{"x":1}' } },
+                        { index: 1, id: 'call_b', type: 'function', function: { name: 'beta', arguments: '{"y":2}' } },
+                      ],
+                    },
+                    finish_reason: null,
                   },
-                  finish_reason: null,
-                },
-              ],
-            }),
-            '',
-            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
-            '',
-            'data: [DONE]',
-            '',
-          ]),
+                ],
+              }),
+              '',
+              chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+              '',
+              'data: [DONE]',
+              '',
+            ]),
+          ),
         ),
       );
 
@@ -535,26 +539,28 @@ describe('streamed parallel tool calls', () => {
     Effect.fn(function* (_) {
       const parts = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
         Stream.runCollect,
-        Effect.provide(ParallelToolkitLayer),
         Effect.provide(
-          serveSseStream([
-            chunk({ choices: [{ index: 0, delta: { reasoning_content: 'I need both' }, finish_reason: null }] }),
-            '',
-            chunk({ choices: [{ index: 0, delta: { reasoning_content: ' values.' }, finish_reason: null }] }),
-            '',
-            toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '' }),
-            '',
-            toolCallDelta(0, { arguments: '{"x":1}' }),
-            '',
-            toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '' }),
-            '',
-            toolCallDelta(1, { arguments: '{"y":2}' }),
-            '',
-            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
-            '',
-            'data: [DONE]',
-            '',
-          ]),
+          Layer.provideMerge(
+            ParallelToolkitLayer,
+            serveSseStream([
+              chunk({ choices: [{ index: 0, delta: { reasoning_content: 'I need both' }, finish_reason: null }] }),
+              '',
+              chunk({ choices: [{ index: 0, delta: { reasoning_content: ' values.' }, finish_reason: null }] }),
+              '',
+              toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '' }),
+              '',
+              toolCallDelta(0, { arguments: '{"x":1}' }),
+              '',
+              toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '' }),
+              '',
+              toolCallDelta(1, { arguments: '{"y":2}' }),
+              '',
+              chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+              '',
+              'data: [DONE]',
+              '',
+            ]),
+          ),
         ),
       );
 
@@ -587,18 +593,20 @@ describe('streamed parallel tool calls', () => {
       const blocks = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
         AiParser.parseResponse(),
         Stream.runCollect,
-        Effect.provide(ParallelToolkitLayer),
         Effect.provide(
-          serveSseStream([
-            toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '{"x":1}' }),
-            '',
-            toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '{"y":2}' }),
-            '',
-            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
-            '',
-            'data: [DONE]',
-            '',
-          ]),
+          Layer.provideMerge(
+            ParallelToolkitLayer,
+            serveSseStream([
+              toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '{"x":1}' }),
+              '',
+              toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '{"y":2}' }),
+              '',
+              chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+              '',
+              'data: [DONE]',
+              '',
+            ]),
+          ),
         ),
       );
 

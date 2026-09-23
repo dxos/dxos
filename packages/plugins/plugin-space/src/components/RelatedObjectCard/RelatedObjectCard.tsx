@@ -6,7 +6,8 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Entity } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 
@@ -21,6 +22,7 @@ export type RelatedObjectCardProps = {
 export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCardProps) => {
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
+  useObject(Obj.isObject(subject) ? subject : undefined);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.

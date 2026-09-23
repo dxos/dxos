@@ -58,6 +58,15 @@ describe('devtools graph extension', () => {
     expect(ids).toContain(GraphNode.qualifyId(devtoolsNodeId, Devtools.nodeId(Devtools.Client.id)));
   });
 
+  test('getNodePath names the node the tree builds', async ({ expect }) => {
+    const { expand, getNode, devtoolsNodeId } = await setup();
+    expect(Devtools.getNodePath(Devtools.id)).toBe(devtoolsNodeId);
+    await expand(Devtools.getNodePath(Devtools.Echo.id));
+    for (const id of [Devtools.AppGraph, Devtools.Echo.id, Devtools.Echo.Space, Devtools.Echo.Feeds]) {
+      expect(getNode(Devtools.getNodePath(id))).not.toBeNull();
+    }
+  });
+
   test('devtools pages have no URL representation', async ({ expect }) => {
     const { builder, devtoolsNodeId } = await setup();
     const pageId = GraphNode.qualifyId(devtoolsNodeId, Devtools.nodeId(Devtools.AppGraph));

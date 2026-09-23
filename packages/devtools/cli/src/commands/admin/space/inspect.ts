@@ -10,7 +10,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectSpaceResponse, type LegacyInspectSpaceResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
+import { AdminApiError, adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 const printSection = function* (title: string, lines: string[]) {
   yield* Console.log(`\n  ${title}`);
@@ -26,7 +26,7 @@ export const inspect = Command.make(
     const result = yield* adminRequest<InspectSpaceResponse | LegacyInspectSpaceResponse>(
       'GET',
       `/admin/spaces/${spaceId}`,
-    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

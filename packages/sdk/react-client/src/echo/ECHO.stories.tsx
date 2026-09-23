@@ -1,0 +1,133 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import { Config } from '@dxos/client';
+import { Filter, Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { random } from '@dxos/random';
+import { Button, Toolbar } from '@dxos/react-ui';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { DataTypes } from '@dxos/schema';
+import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+
+import { useClient } from '../client/index.ts';
+import { withClientProvider } from '../testing/index.ts';
+
+random.seed(1);
+
+// TODO(burdon): Evolve dxos/random to support this directly.
+const generator = random as any as ValueGenerator;
+
+const DefaultStory = () => {
+  const [events, setEvents] = useState<{ type: string; duration: number }[]>([]);
+  const client = useClient();
+  const space = client.spaces.get().at(0);
+
+  const test = async (type: string, fn: () => Promise<void> | void) => {
+    const t = performance.now();
+    await fn();
+    setEvents([...events, { type, duration: performance.now() - t }]);
+  };
+
+  const handleReset = async () => {
+    await client.reset();
+    window.location.reload();
+  };
+
+  const handleReload = async () => {
+    window.location.reload();
+  };
+
+  const handleCreate = async () => {
+    await test('create', async () => {
+      invariant(space);
+      space.db.add(Obj.make(TestSchema.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
+    });
+  };
+
+  const handleCreateFactory = async () => {
+    await test('create-objects', async () => {
+      invariant(space);
+      const createObjects = createObjectFactory(space.db, generator);
+      await createObjects([{ type: TestSchema.Organization, count: 1_000 }]);
+    });
+  };
+
+  const handleFlush = async () => {
+    await test('flush', async () => {
+      invariant(space);
+      await space.db.flush({ indexes: true });
+    });
+  };
+
+  const handleQuery = async () => {
+    await test('query', async () => {
+      invariant(space);
+      await space.db.query(Filter.everything()).run();
+    });
+  };
+
+  const data = {
+    space: space?.id,
+    spaces: client.spaces.get().map((space) => space.db.toJSON()),
+    events,
+  };
+
+  return (
+    <div className='flex flex-col w-full'>
+      <Toolbar.Root>
+        <Button onClick={handleReset}>Reset</Button>
+        <Button onClick={handleReload}>Reload</Button>
+        <Button onClick={handleCreate}>Create</Button>
+        <Button onClick={handleCreateFactory}>Create 1000</Button>
+        <Button onClick={handleFlush}>Flush</Button>
+        <Button onClick={handleQuery}>Query</Button>
+      </Toolbar.Root>
+      <Syntax.Root data={data}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
+    </div>
+  );
+};
+
+const meta = {
+  title: 'sdk/react-client/ECHO',
+  render: DefaultStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({
+      createIdentity: true,
+      config: new Config({
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+            },
+            // enableVectorIndexing: true,
+          },
+        },
+      }),
+      types: [...DataTypes, TestSchema.Organization],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

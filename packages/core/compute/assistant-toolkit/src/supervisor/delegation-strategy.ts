@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { ToolkitError } from '../errors.ts';
 import { RunInstructions } from '../operations/index.ts';
 import { DelegationSkill } from '../skills/index.ts';
 
@@ -32,7 +33,7 @@ const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Err
     const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
     if (!EntityId.isValid(candidate)) {
       // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
-      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
+      return yield* Effect.fail(new ToolkitError({ message: `Invalid artifact id: ${id}` }));
     }
     const { db } = yield* Database.Service;
     return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));

@@ -14,8 +14,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import type * as Operation from '@dxos/compute/Operation';
+import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 import { getDebugPortController } from '@dxos/react-client/devtools';
+
+import { DebugOperationError } from '../../operations/errors.ts';
 
 /**
  * The debug console's command set — the introspection surface an agent uses over the debug port
@@ -34,6 +37,12 @@ export type DebugCliOptions = {
 
 const normalizeKey = (key: unknown): string => String(key).replace(/^dxn:/, '');
 
+/**
+ * The Linear label the PostHog feedback submissions sync under; console-filed issues carry it too
+ * so both sources land in one triage view.
+ */
+const REPORT_LABEL = 'Composer Feedback Form';
+
 const findDefinition = Effect.fn(function* (key: string) {
   const capabilities = (yield* Plugin.Service).capabilities;
   const wanted = normalizeKey(key);
@@ -43,7 +52,7 @@ const findDefinition = Effect.fn(function* (key: string) {
       return definition;
     }
   }
-  return yield* Effect.fail(new Error(`Unknown operation: ${key} (try "ops").`));
+  return yield* Effect.fail(new DebugOperationError({ message: `Unknown operation: ${key} (try "ops").` }));
 });
 
 const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceId?: SpaceId) {
@@ -54,7 +63,7 @@ const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceI
     invoker.invokePromise(definition as Operation.Definition.Any, input as never, spaceId ? { spaceId } : undefined),
   );
   if (error) {
-    return yield* Effect.fail(error instanceof Error ? error : new Error(String(error)));
+    return yield* Effect.fail(error instanceof BaseError ? error : DebugOperationError.wrap()(error));
   }
   return data;
 });
@@ -216,9 +225,13 @@ const makeCommand = (options: DebugCliOptions = {}) => {
         Flag.optional,
         Flag.withDescription('"High priority" | "Medium priority" | "Low priority".'),
       ),
+      label: Flag.String('label').pipe(
+        Flag.optional,
+        Flag.withDescription(`Linear label; defaults to "${REPORT_LABEL}".`),
+      ),
       noLogs: Flag.Boolean('no-logs').pipe(Flag.withDefault(false), Flag.withDescription('Skip the debug log dump.')),
     },
-    ({ title, body, type, severity, noLogs }) =>
+    ({ title, body, type, severity, label, noLogs }) =>
       Effect.gen(function* () {
         const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', {
           report: {
@@ -226,6 +239,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
             body: body._tag === 'Some' ? body.value : '',
             ...(type._tag === 'Some' ? { type: type.value } : {}),
             ...(severity._tag === 'Some' ? { severity: severity.value } : {}),
+            labels: [label._tag === 'Some' ? label.value : REPORT_LABEL],
             includeLogs: !noLogs,
           },
         });

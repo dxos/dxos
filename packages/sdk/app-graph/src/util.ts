@@ -42,7 +42,7 @@ export const secondaryParts = (key: string): string[] => key.split(SECONDARY);
  * Normalize a relation input to a full Relation object.
  */
 export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation =>
-  relation == null ? Node.childRelation() : typeof relation === 'string' ? Node.relation(relation) : relation;
+  relation == null ? Node.child : typeof relation === 'string' ? Node.relation(relation) : relation;
 
 /**
  * Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index).

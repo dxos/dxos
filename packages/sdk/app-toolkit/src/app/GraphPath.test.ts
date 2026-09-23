@@ -3,10 +3,12 @@
 //
 
 import * as Option from 'effect/Option';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { Key } from '@dxos/echo';
+import { Key, Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 
 import * as GraphPath from './GraphPath.ts';
@@ -115,6 +117,34 @@ describe('GraphPath', () => {
 
     test('yields nothing for a path naming no object', ({ expect }) => {
       expect(GraphPath.tryGetEidCandidates(graph, `root/${spaceId}/system/database`)).toEqual([]);
+    });
+  });
+
+  describe('getObjectPathFromObject', () => {
+    let builder: EchoTestBuilder;
+
+    beforeEach(async () => {
+      builder = await new EchoTestBuilder().open();
+    });
+
+    afterEach(async () => {
+      await builder.close();
+    });
+
+    test('keys a static type by its typename', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
+      expect(GraphPath.getObjectPathFromObject(person)).toBe(
+        GraphPath.getObjectPath(db.spaceId, GraphPath.getTypeSlug(TestSchema.Person), person.id),
+      );
+    });
+
+    test('keys a stored type by its entity id, as the database subtree does', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const schema = await db.addType(TestSchema.Person);
+      const person = db.add(Obj.make(schema, { name: 'alice' }));
+      expect(GraphPath.getTypeSlug(schema)).toBe(schema.id);
+      expect(GraphPath.getObjectPathFromObject(person)).toBe(GraphPath.getObjectPath(db.spaceId, schema.id, person.id));
     });
   });
 });

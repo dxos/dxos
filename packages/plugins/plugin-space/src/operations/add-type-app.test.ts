@@ -32,7 +32,7 @@ describe('SpaceOperation.AddType in the app', () => {
 
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
     const space = await client.spaces.create();
     await space.waitUntilReady();
 

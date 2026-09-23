@@ -19,10 +19,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const { workspace } = yield* currentNavigation();
 
       const active = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
-      const displaced = yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
-      if (displaced) {
-        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: displaced });
-      }
+      // No intent: the write focuses whichever plank attention falls to.
+      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
     }),
   ),
 );

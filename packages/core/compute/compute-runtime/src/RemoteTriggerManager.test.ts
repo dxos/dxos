@@ -20,8 +20,9 @@ describe('RemoteTriggerManager', () => {
     });
     const result = await EffectEx.runPromise(
       program.pipe(
-        Effect.provide(RemoteTriggerManager.layerNoop),
-        Effect.provide(Layer.succeed(Registry.AtomRegistry, registry)),
+        Effect.provide(
+          Layer.provideMerge(RemoteTriggerManager.layerNoop, Layer.succeed(Registry.AtomRegistry, registry)),
+        ),
       ),
     );
     expect(result).toEqual([]);

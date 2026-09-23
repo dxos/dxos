@@ -13,7 +13,7 @@ import { AppCapabilities } from '../../app-framework/index.ts';
 
 // Stable fallbacks so the hooks degrade to "no progress" when the ProgressRegistry host is absent
 // (e.g., a storybook, a test, or a minimal app config) rather than throwing.
-const emptySnapshotAtom = Atom.make<Progress.ProgressSnapshot>({ updatedAt: '', tasks: [] });
+const emptySnapshotAtom = Atom.make<Progress.Snapshot>({ updatedAt: '', tasks: [] });
 const noMonitorAtom = Atom.make<Progress.TaskProgress | undefined>(undefined);
 
 /** All active progress providers (aggregate). */

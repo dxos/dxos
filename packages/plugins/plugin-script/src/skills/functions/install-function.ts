@@ -11,6 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
 import { InstallFunction } from './definitions.ts';
+import { FunctionError } from './errors.ts';
 
 export default InstallFunction.pipe(
   Operation.withHandler(
@@ -21,12 +22,12 @@ export default InstallFunction.pipe(
 
       const fn = deployed.findLast((entry) => Obj.getMeta(entry).key === key);
       if (!fn) {
-        return yield* Effect.fail(new Error(`No deployed function found with key: ${key}`));
+        return yield* Effect.fail(new FunctionError({ message: `No deployed function found with key: ${key}` }));
       }
 
       const space = client.spaces.get()[0];
       if (!space) {
-        return yield* Effect.fail(new Error('No space available'));
+        return yield* Effect.fail(new FunctionError({ message: 'No space available' }));
       }
 
       yield* Effect.promise(() => client.addTypes([Operation.PersistentOperation]));

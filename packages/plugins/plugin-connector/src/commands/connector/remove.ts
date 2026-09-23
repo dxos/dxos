@@ -16,6 +16,7 @@ import { Database, Filter, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
 
+import { ConnectorCommandError } from '../errors.ts';
 import { printConnectionRemoved } from './util.ts';
 
 export const remove = Command.make(
@@ -39,7 +40,7 @@ export const remove = Command.make(
             const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
 
             if (connections.length === 0) {
-              return yield* Effect.fail(new Error('No connections found to remove'));
+              return yield* Effect.fail(new ConnectorCommandError({ message: 'No connections found to remove' }));
             }
 
             const choices = connections.map((connection) => ({

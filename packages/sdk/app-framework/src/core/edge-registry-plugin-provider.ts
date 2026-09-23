@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
 import { type PluginView } from '@dxos/protocols';
 
+import { PluginManagerError } from './plugin-manager/errors.ts';
 import type * as Plugin from './plugin.ts';
 import * as Registry from './registry.ts';
 
@@ -46,6 +48,9 @@ const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
  * `listVersions` is served directly from the `releases` array inlined on each
  * entry — no separate endpoint is needed.
  */
+/** The plugin registry behind EDGE did not answer, or answered with something unusable. */
+export class RegistryError extends BaseError.extend('RegistryError', 'Plugin registry request failed.') {}
+
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Plugin.Meta[] = [];
@@ -53,10 +58,10 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
 
   constructor(private readonly _client: EdgeHttpClient) {}
 
-  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], RegistryError> {
     return Effect.tryPromise({
       try: () => this._client.getRegistryPlugins(Context.default()),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      catch: RegistryError.wrap(),
     }).pipe(
       Effect.map((body) => {
         this.#cachedEntries = body.plugins;
@@ -70,7 +75,7 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {
     const entry = this.#cachedEntries.find((candidate) => candidate.profile.key === id);
     if (!entry) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
+      return Effect.fail(new PluginManagerError({ message: `Plugin not found in catalog: ${id}` }));
     }
     // Releases are already `PluginRelease`-shaped on the wire view; serve them directly.
     return Effect.succeed(entry.releases);
@@ -79,11 +84,13 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error> {
     const plugin = this.#cachedPlugins.find((candidate) => candidate.profile.key === id);
     if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
+      return Effect.fail(new PluginManagerError({ message: `Plugin not found in catalog: ${id}` }));
     }
     if (version && version !== plugin.release?.version) {
       return Effect.fail(
-        new Error(`Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`),
+        new PluginManagerError({
+          message: `Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`,
+        }),
       );
     }
     return Effect.succeed(plugin);

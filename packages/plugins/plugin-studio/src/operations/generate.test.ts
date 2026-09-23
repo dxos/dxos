@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -114,8 +115,7 @@ describe('generate', () => {
   ) =>
     generateHandler.handler({ artifact: Ref.make(artifact), provider, config, variant }).pipe(
       Effect.provideService(Capability.Service, capabilityService(...services)),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(configuredCredentialsLayer(creds)),
+      Effect.provide(Layer.provideMerge(Database.layer(db), configuredCredentialsLayer(creds))),
       // opaqueHandler erases the context; the layers above satisfy it at runtime.
       (effect) => effect as Effect.Effect<{ count: number }, unknown, never>,
       EffectEx.runPromise,

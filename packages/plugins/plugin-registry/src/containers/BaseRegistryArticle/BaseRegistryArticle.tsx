@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
@@ -77,6 +77,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
+    const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
@@ -164,6 +165,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                   failuresById={failuresById}
                   deviceOnlyIds={deviceOnlyIds}
                   onClick={handleClick}
+                  readOnly={settingsSync === undefined}
                   onChange={handleChange}
                   onInstall={onInstall}
                   onUpdate={onUpdate}

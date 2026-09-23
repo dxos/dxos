@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Accordion, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -269,8 +269,10 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
           <Icon icon={icon} size={4} classNames='shrink-0' />
-          <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
-          {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
+          <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
+          {failed > 0 && (
+            <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+          )}
         </span>
       </TogglePanel.Header>
       {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
@@ -317,7 +319,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
                 hover={detail}
                 icon={entry.icon}
                 data-testid={`assistant.tool-${entry.kind}`}
-                classNames={mx('text-sm', entry.error !== undefined && 'text-error')}
+                classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
               >
                 {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
                 <span className='flex items-center h-(--dx-control-sm) min-w-0'>
@@ -354,6 +356,9 @@ const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: 
   );
 };
 
+/** Longer than this, JSON rendering truncates a string, so a text field is shown as text instead. */
+const MAX_JSON_STRING_LENGTH = 128;
+
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
     {/* No horizontal padding of its own: the containing body already insets by `trim-sm`, and a
@@ -371,13 +376,46 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
         onCopy={() => JSON.stringify(data)}
       />
     </div>
-    <JsonHighlighter
-      data={data}
-      // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
-      // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
-      scroll='horizontal'
-      classNames='text-xs bg-transparent'
-      replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
-    />
+    {multilineFields(data)?.map(([key, value], _, fields) => (
+      <div key={key} className='flex flex-col'>
+        {fields.length > 1 && <span className='text-xs text-description'>{key}</span>}
+        <SyntaxHighlighter
+          language={key === 'code' ? 'js' : 'text'}
+          scroll='horizontal'
+          classNames='text-xs bg-transparent'
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    )) ?? (
+      <JsonHighlighter
+        data={data}
+        // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
+        // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
+        scroll='horizontal'
+        classNames='text-xs bg-transparent'
+        replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: MAX_JSON_STRING_LENGTH }}
+      />
+    )}
   </div>
 );
+
+/**
+ * The entries of a record whose fields are all strings, when one spans lines or runs long — a
+ * code-mode `eval`'s `code` and `output`. JSON would escape every newline onto one line and cut the
+ * string short, so these render as the text they are.
+ */
+const multilineFields = (data: unknown): [string, string][] | undefined => {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return undefined;
+  }
+  const entries = Object.entries(data);
+  const strings = entries.flatMap(([key, value]): [string, string][] =>
+    typeof value === 'string' ? [[key, value]] : [],
+  );
+  return strings.length > 0 &&
+    strings.length === entries.length &&
+    strings.some(([, value]) => value.includes('\n') || value.length > MAX_JSON_STRING_LENGTH)
+    ? strings
+    : undefined;
+};

@@ -20,11 +20,16 @@ on:
         required: false
         default: false
 
-      e2e:
-        type: boolean
-        description: 'Run the e2e tests'
+      only:
+        type: choice
+        description: 'Run only this group of jobs'
         required: false
-        default: false
+        default: all
+        options:
+          - all
+          - check
+          - test
+          - e2e
 
 permissions:
   contents: read
@@ -55,6 +60,8 @@ concurrency:
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
+    # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
+    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
     permissions:
       contents: read
       packages: read
@@ -68,7 +75,7 @@ jobs:
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
 
@@ -123,6 +130,12 @@ jobs:
 
           - name: Check public packages are published
             run: pnpm run check-packages-published
+
+          # Both sides of the spec <-> `.mdl` QA binding. In stage 1 because it needs no build and
+          # because the failure it catches — a renamed test leaving a flow claiming coverage it no
+          # longer has — is cheapest to report before anything compiles.
+          - name: Check e2e tests are bound to QA flows
+            run: node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
 
       # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
       # declares an implicit input to every task, and neither restores it on a hard cancellation.
@@ -183,6 +196,7 @@ jobs:
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead.
   boot-budget:
+    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
     permissions:
       contents: read
       packages: read
@@ -324,6 +338,7 @@ jobs:
   # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
   # suites can provoke looks identical to an assertion failure from the outside).
   memory:
+    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
     permissions:
       contents: read
       packages: read
@@ -380,6 +395,7 @@ jobs:
   # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
   # default bail drops a failing cell's remaining targets, hiding what they cost.
   test:
+    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
     strategy:
       fail-fast: false
       matrix:
@@ -469,73 +485,13 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-  # Bundles once and publishes to the moon remote cache, so the cells hydrate the artifacts instead of
-  # each rebuilding the graph. Concurrent cells cannot hit each other's cache writes, which is why this
-  # has to be a job they all depend on.
-  e2e-bundle:
-    if: >-
-      startsWith(github.ref, 'refs/heads/main') ||
-      startsWith(github.ref, 'refs/heads/changeset-release/') ||
-      startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 30
-    env:
-      # Must stay IDENTICAL to the `e2e` job's: moon hashes the AMBIENT value of any env var a task
-      # lists in `inputs`, so jobs that disagree hash `bundle-e2e` differently and never share the
-      # warmed entry. The edge/telemetry/PWA vars live in the task `env`s instead (`tag-e2e.yml`,
-      # `bundle-e2e`), where consistent absence from the ambient environment keeps hashes agreeing
-      # with nothing to keep in sync. Scoped per job because at workflow level it would also move
-      # the hashes of `test`, `storybook`, `workerd` and `cli`.
-      DX_ENVIRONMENT: ci
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          filter: blob:none
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.depot/actions/setup
-
-      - name: Resolve affected scope
-        uses: ./.depot/actions/affected
-        with:
-          all: ${{ inputs.e2e }}
-
-      # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
-      # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
-      # set that needs warming and stays correct as suites are added — the other e2e suites serve from
-      # source (`vite dev` / `storybook dev`) and need library builds, not bundles. `:bundle` by contrast
-      # built all eleven apps, so every e2e runner also hydrated the docs, cli, storybook-react,
-      # testbench-app, composer-crx, devtools-extension, examples and tasks closures — including docs'
-      # typedoc tasks, which cost more to download than composer's bundle costs to build. Warming
-      # `bundle` instead would warm a hash the e2e closure never waits on.
-      - name: Bundle
-        run: moon run :bundle-e2e
-
   # Sharded browser × cell, three cells per browser: a cell costs ~160s of fixed setup against
   # ~450-590s of test work, so more cells buy less than they cost. Cells are `moon exec --job`, so moon
   # packs whichever targets it assigns and no target list is hand-maintained. `--on-failure continue`
   # because moon's default bail drops a failing cell's remaining targets, hiding what they cost. The
   # shape, and the alternatives measured against it, are in `.agents/projects/ci/DESIGN.md`.
   e2e:
-    # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
-    # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
-    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source branch name, set only
-    # on pull_request events) to catch the changesets/action PR branch (changeset-release/<base>).
-    needs: e2e-bundle
-    if: >-
-      startsWith(github.ref, 'refs/heads/main') ||
-      startsWith(github.ref, 'refs/heads/changeset-release/') ||
-      startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+    if: ${{ inputs.only != 'check' && inputs.only != 'test' }}
     strategy:
       fail-fast: false
       matrix:
@@ -554,7 +510,8 @@ jobs:
     # cancels the job and proves nothing.
     timeout-minutes: 50
     env:
-      # Must stay IDENTICAL to `e2e-bundle`'s block above, which explains why.
+      # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
+      # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
@@ -579,12 +536,9 @@ jobs:
       - name: Resolve affected scope
         uses: ./.depot/actions/affected
         with:
-          all: ${{ inputs.e2e }}
+          all: ${{ github.event_name == 'workflow_dispatch' }}
 
-      # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
-      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block (Depot merges each unit's env
-      # and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
-      # `moon exec` with no targets, which exits 1 in a non-TTY rather than running nothing green.
+      # Depot merges each parallel unit's env and step outputs back on join, so `steps.shard` survives.
       - parallel:
           # Only this cell's browser — the other two engines' downloads are dead weight here.
           - name: Install Playwright
@@ -599,17 +553,16 @@ jobs:
           - name: Clean stale test results
             run: rm -rf test-results
 
-          # The pool list is computed, not globbed: `:e2e` would match composer-app too, and only
-          # `moon query` honours MQL negation (`moon exec --query` ignores it). Empty is fatal — a bad
-          # query would otherwise run nothing and report green.
+          # moon ignores MQL negation in `moon query tasks` and `moon exec --query`, so composer-app is
+          # filtered in node.
           - name: Select shard targets
             id: shard
             run: |
               if [ "${{ matrix.shard }}" = "composer" ]; then
-                targets=composer-app:e2e
+                targets=composer-e2e:e2e
               else
-                targets=$(moon query tasks "task=e2e && project!=composer-app" |
-                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).sort().map((project)=>project+':e2e').join(' ')))")
+                targets=$(moon query tasks "task=e2e" |
+                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().map((project)=>project+':e2e').join(' ')))")
               fi
               [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
@@ -618,10 +571,9 @@ jobs:
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit and
-          # reports green without executing a test. Unlike MOON_CACHE=off, this leaves the cached
-          # bundle/build dependencies alone.
-          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+          # and reports green without executing a test.
+          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -629,7 +581,18 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
-            --concurrency=1
+
+      # Trends every test's outcome in PostHog; the event contract and the gate are documented in
+      # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
+      # having, and the `composer` shard alone because the `rest` cells write unrelated packages'
+      # reports to the same directory.
+      - name: Publish results
+        if: >-
+          ${{ always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') &&
+          matrix.shard == 'composer' }}
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: node packages/e2e/composer-e2e/scripts/publish-results.mjs
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
@@ -643,11 +606,12 @@ jobs:
   # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
+    # The Changesets PR's `github.ref` is refs/pull/N/merge, so only `github.head_ref` matches it.
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.only == 'all'
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

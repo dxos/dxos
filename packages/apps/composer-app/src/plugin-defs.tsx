@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
@@ -10,6 +13,7 @@ import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
 import * as BookmarksPlugin from '@dxos/plugin-bookmarks/BookmarksPlugin';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
@@ -175,6 +179,24 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Deduped: a mobile labs build lists transcription in both sets.
     .filter((key, index, keys) => keys.indexOf(key) === index);
 
+// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in;
+// a chunk that fails to load degrades to the standard producer rather than failing the agent.
+const codeModeTurnProducer: MakeTurnProducer = (options) =>
+  Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
+    Effect.matchEffect({
+      // The Effect dialect hands the model the repo's own ECHO API (live objects, `Ref.make`), which
+      // pins evaluation to the in-process sandbox — see the `codeMode` setting's warning.
+      onSuccess: ({ EffectDialect, makeCodeModeTurnProducer }) =>
+        makeCodeModeTurnProducer({ dialect: EffectDialect })(options),
+      onFailure: (error) =>
+        Effect.logWarning('code mode unavailable; using the standard turn producer', error).pipe(
+          // Already loaded by the agent service that calls this, so the import resolves from cache.
+          Effect.andThen(Effect.promise(() => import('@dxos/agent-runtime'))),
+          Effect.flatMap(({ makeAiSessionTurnProducer }) => makeAiSessionTurnProducer(options)),
+        ),
+    }),
+  );
+
 /**
  * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
@@ -185,10 +207,11 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make(),
+    AssistantPlugin.make({ codeModeTurnProducer }),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),
+    CanvasPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudePlugin.make(),

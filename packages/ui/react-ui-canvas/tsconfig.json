@@ -15,10 +15,31 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/diagram"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import * as BookingSearch from './BookingSearch.ts';
+import * as Routing from './Routing.ts';
 
 describe('BookingSearch', () => {
   test('decodes a flight query', ({ expect }) => {
@@ -40,5 +41,22 @@ describe('BookingSearch', () => {
     const error = new BookingSearch.MissingApiKeyError('duffel');
     expect(error.serviceId).toBe('duffel');
     expect(error).toBeInstanceOf(Error);
+  });
+
+  test('isFailure matches every booking failure and nothing else', ({ expect }) => {
+    expect(BookingSearch.isFailure(new BookingSearch.MissingApiKeyError('duffel'))).toBe(true);
+    expect(BookingSearch.isFailure(new BookingSearch.BookingProviderError('duffel', 'past departure'))).toBe(true);
+    expect(BookingSearch.isFailure(new Error('boom'))).toBe(false);
+    expect(BookingSearch.isFailure('boom')).toBe(false);
+  });
+
+  test('a booking key failure is not a routing key failure', ({ expect }) => {
+    // Both classes are called `MissingApiKeyError`, and `BaseError.is` compares names, so they
+    // would match each other if they shared a tag.
+    const booking = new BookingSearch.MissingApiKeyError('duffel');
+    const routing = new Routing.MissingApiKeyError('mapbox');
+    expect(Routing.isFailure(booking)).toBe(false);
+    expect(BookingSearch.isFailure(routing)).toBe(false);
+    expect(booking.name).not.toBe(routing.name);
   });
 });

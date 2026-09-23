@@ -10,6 +10,7 @@ import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { toDate } from '@dxos/protocols/buf';
 import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { PlatformError } from './errors.ts';
 import * as FormBuilder from './form-builder.ts';
 
 export type FormatSpaceOptions = {
@@ -42,7 +43,7 @@ const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =
   Effect.tryPromise(run).pipe(
     Effect.timeoutOrElse({
       duration: Duration.seconds(READ_TIMEOUT_SECONDS),
-      orElse: () => Effect.fail(new Error(`${label} timed out`)),
+      orElse: () => Effect.fail(new PlatformError({ message: `${label} timed out` })),
     }),
     Effect.catch(() => Effect.succeed(fallback)),
   );
@@ -65,7 +66,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
     yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
       Effect.timeoutOrElse({
         duration: Duration.seconds(waitSeconds),
-        orElse: () => Effect.fail(new Error('waitUntilReady timed out')),
+        orElse: () => Effect.fail(new PlatformError({ message: 'waitUntilReady timed out' })),
       }),
       Effect.catch(() => Effect.void),
     );

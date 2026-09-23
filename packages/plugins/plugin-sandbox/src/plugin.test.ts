@@ -37,7 +37,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
     const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     await harness.runPromise(
       Effect.gen(function* () {

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -35,14 +36,16 @@ describe('Cursor.layer', () => {
       return yield* Cursor.Service;
     }).pipe(
       Effect.provide(
-        Cursor.layer({
-          cursor,
-          foreignKeySource: 'test',
-          maxKey: 0,
-          stats: { newMessages: 0 },
-        }),
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            foreignKeySource: 'test',
+            maxKey: 0,
+            stats: { newMessages: 0 },
+          }),
+          Database.layer(db),
+        ),
       ),
-      Effect.provide(Database.layer(db)),
       EffectEx.runAndForwardErrors,
     );
 
@@ -67,8 +70,12 @@ describe('Cursor.layer', () => {
 
     await EffectEx.runPromise(
       Cursor.commit([makeUnit(50), makeUnit(40)]).pipe(
-        Effect.provide(Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } })),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          Layer.provideMerge(
+            Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } }),
+            Database.layer(db),
+          ),
+        ),
       ),
     );
 
@@ -93,17 +100,19 @@ describe('Cursor.layer', () => {
     await EffectEx.runPromise(
       Cursor.commit([makeUnit(50), makeUnit(40)]).pipe(
         Effect.provide(
-          Cursor.layer({
-            cursor,
-            feed,
-            foreignKeySource: 'test',
-            maxKey: 0,
-            minKey: 0,
-            trackRange: true,
-            stats: { newMessages: 0 },
-          }),
+          Layer.provideMerge(
+            Cursor.layer({
+              cursor,
+              feed,
+              foreignKeySource: 'test',
+              maxKey: 0,
+              minKey: 0,
+              trackRange: true,
+              stats: { newMessages: 0 },
+            }),
+            Database.layer(db),
+          ),
         ),
-        Effect.provide(Database.layer(db)),
       ),
     );
 
@@ -113,17 +122,19 @@ describe('Cursor.layer', () => {
     await EffectEx.runPromise(
       Cursor.commit([makeUnit(60), makeUnit(70)]).pipe(
         Effect.provide(
-          Cursor.layer({
-            cursor,
-            feed,
-            foreignKeySource: 'test',
-            maxKey: Cursor.parseKey(cursor.max),
-            minKey: Cursor.parseKey(cursor.min),
-            trackRange: true,
-            stats: { newMessages: 0 },
-          }),
+          Layer.provideMerge(
+            Cursor.layer({
+              cursor,
+              feed,
+              foreignKeySource: 'test',
+              maxKey: Cursor.parseKey(cursor.max),
+              minKey: Cursor.parseKey(cursor.min),
+              trackRange: true,
+              stats: { newMessages: 0 },
+            }),
+            Database.layer(db),
+          ),
         ),
-        Effect.provide(Database.layer(db)),
       ),
     );
 
@@ -166,17 +177,19 @@ describe('Cursor.layer', () => {
         return (yield* Cursor.Service).extent;
       }).pipe(
         Effect.provide(
-          Cursor.layer({
-            cursor,
-            feed,
-            foreignKeySource: 'test',
-            maxKey: 100,
-            minKey: 50,
-            trackRange: true,
-            stats: { newMessages: 0 },
-          }),
+          Layer.provideMerge(
+            Cursor.layer({
+              cursor,
+              feed,
+              foreignKeySource: 'test',
+              maxKey: 100,
+              minKey: 50,
+              trackRange: true,
+              stats: { newMessages: 0 },
+            }),
+            Database.layer(db),
+          ),
         ),
-        Effect.provide(Database.layer(db)),
         EffectEx.runAndForwardErrors,
       );
 
@@ -242,7 +255,7 @@ describe('Cursor.layer', () => {
           Stream.runDrain,
         );
         return { seedHasHigh: state.dedupSet.has('id-100'), boundaryDropped: output.length === 0 };
-      }).pipe(Effect.provide(layer), Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+      }).pipe(Effect.provide(Layer.provideMerge(layer, Database.layer(db))), EffectEx.runAndForwardErrors);
 
       expect(seedHasHigh).toBe(true);
       expect(boundaryDropped).toBe(true);
@@ -275,17 +288,19 @@ describe('Cursor.layer', () => {
           return output.length === 0;
         }).pipe(
           Effect.provide(
-            Cursor.layer({
-              cursor,
-              feed,
-              foreignKeySource: 'test',
-              maxKey: 100,
-              minKey,
-              trackRange,
-              stats: { newMessages: 0 },
-            }),
+            Layer.provideMerge(
+              Cursor.layer({
+                cursor,
+                feed,
+                foreignKeySource: 'test',
+                maxKey: 100,
+                minKey,
+                trackRange,
+                stats: { newMessages: 0 },
+              }),
+              Database.layer(db),
+            ),
           ),
-          Effect.provide(Database.layer(db)),
           EffectEx.runAndForwardErrors,
         );
 
@@ -412,20 +427,22 @@ describe('foreignIndex (reconcileFilter)', () => {
       return yield* Cursor.Service;
     }).pipe(
       Effect.provide(
-        Cursor.layer({
-          cursor,
-          feed,
-          foreignKeySource: 'test',
-          maxKey: 0,
-          // Resolve only the two messages the reconcile targets, not the whole feed.
-          reconcileFilter: Filter.foreignKeys(Expando.Expando, [
-            { source: 'test', id: 'id-10' },
-            { source: 'test', id: 'id-30' },
-          ]),
-          stats: { newMessages: 0 },
-        }),
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 0,
+            // Resolve only the two messages the reconcile targets, not the whole feed.
+            reconcileFilter: Filter.foreignKeys(Expando.Expando, [
+              { source: 'test', id: 'id-10' },
+              { source: 'test', id: 'id-30' },
+            ]),
+            stats: { newMessages: 0 },
+          }),
+          Database.layer(db),
+        ),
       ),
-      Effect.provide(Database.layer(db)),
       EffectEx.runAndForwardErrors,
     );
 
@@ -445,8 +462,12 @@ describe('foreignIndex (reconcileFilter)', () => {
     const state = await Effect.gen(function* () {
       return yield* Cursor.Service;
     }).pipe(
-      Effect.provide(Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } })),
-      Effect.provide(Database.layer(db)),
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } }),
+          Database.layer(db),
+        ),
+      ),
       EffectEx.runAndForwardErrors,
     );
 
@@ -483,17 +504,19 @@ describe('commit with objectless units', () => {
     await EffectEx.runPromise(
       Cursor.commit([retagUnit]).pipe(
         Effect.provide(
-          Cursor.layer({
-            cursor,
-            feed,
-            foreignKeySource: 'test',
-            maxKey: 100,
-            minKey: 0,
-            trackRange: true,
-            stats: { newMessages: 0 },
-          }),
+          Layer.provideMerge(
+            Cursor.layer({
+              cursor,
+              feed,
+              foreignKeySource: 'test',
+              maxKey: 100,
+              minKey: 0,
+              trackRange: true,
+              stats: { newMessages: 0 },
+            }),
+            Database.layer(db),
+          ),
         ),
-        Effect.provide(Database.layer(db)),
       ),
     );
 
@@ -524,17 +547,19 @@ describe('commit with objectless units', () => {
     await EffectEx.runPromise(
       Cursor.commit([appendUnit, retagUnit]).pipe(
         Effect.provide(
-          Cursor.layer({
-            cursor,
-            feed,
-            foreignKeySource: 'test',
-            maxKey: 0,
-            minKey: 0,
-            trackRange: true,
-            stats: { newMessages: 0 },
-          }),
+          Layer.provideMerge(
+            Cursor.layer({
+              cursor,
+              feed,
+              foreignKeySource: 'test',
+              maxKey: 0,
+              minKey: 0,
+              trackRange: true,
+              stats: { newMessages: 0 },
+            }),
+            Database.layer(db),
+          ),
         ),
-        Effect.provide(Database.layer(db)),
       ),
     );
 

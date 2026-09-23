@@ -41,6 +41,7 @@ export enum LogProcessorType {
   CONSOLE = 'console',
   BROWSER = 'browser',
   DEBUG = 'debug',
+  NOOP = 'noop',
 }
 
 /**
