@@ -1,0 +1,297 @@
+Repository: dxos/dxos
+Pull request: #13149
+Title: plugin-navtree: fix graph key binding scopes and stop re-registering unchanged bindings
+
+Diff:
+
+diff --git a/.changeset/navtree-hotkey-reconcile.md b/.changeset/navtree-hotkey-reconcile.md
+new file mode 100644
+index 00000000..dc173f04
+--- /dev/null
++++ b/.changeset/navtree-hotkey-reconcile.md
+@@ -0,0 +1,5 @@
++---
++'@dxos/react-focus': patch
++---
++
++Graph action key bindings in navtree register under their parent node's scope, so per-object shortcuts such as presenter's `shift+meta+p` fire when that object is attended. Before, the scope repeated every path prefix and never became active. A graph update no longer re-registers bindings whose hotkey and label are unchanged. The shared hotkey store allows the same hotkey on several commands without warning, because Zag's conflict check ignores scopes. Navtree's keyboard module is excluded from node and workerd, where there is no `document`.
+diff --git a/packages/plugins/plugin-navtree/moon.yml b/packages/plugins/plugin-navtree/moon.yml
+index 335ab850..bc394ab1 100644
+--- a/packages/plugins/plugin-navtree/moon.yml
++++ b/packages/plugins/plugin-navtree/moon.yml
+@@ -4,6 +4,7 @@ tags:
+   - composer-plugin
+   - ts-vite-build
+   - ts-test
++  - ts-test-browser
+   - ts-test-storybook
+   - pack
+   - storybook
+diff --git a/packages/plugins/plugin-navtree/src/capabilities/index.ts b/packages/plugins/plugin-navtree/src/capabilities/index.ts
+index 3fabc196..ed838801 100644
+--- a/packages/plugins/plugin-navtree/src/capabilities/index.ts
++++ b/packages/plugins/plugin-navtree/src/capabilities/index.ts
+@@ -40,7 +40,8 @@ export const Expose = Capability.inlineModule(
+ );
+ export const Keyboard = Capability.lazyModule(
+   'Keyboard',
+-  { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [] },
++  // Listens on `document`, which node and workerd lack.
++  { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [], environments: [] },
+   () => import('./keyboard.ts'),
+ );
+ export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+diff --git a/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts b/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts
+index ba0a942a..8f89470a 100644
+--- a/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts
++++ b/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts
+@@ -3,6 +3,7 @@
+ //
+ 
+ import * as Effect from 'effect/Effect';
++import * as Option from 'effect/Option';
+ 
+ import * as Capabilities from '@dxos/app-framework/Capabilities';
+ import * as Capability from '@dxos/app-framework/Capability';
+@@ -44,18 +45,29 @@ export default Capability.makeModule(
+       }
+ 
+       if (shortcut && AppGraphNode.isAction(node)) {
+-        const scope = path.slice(0, -1).join('/');
+-        const id = `${scope}:${node.id}`;
++        // The parent's id is already the full scope path.
++        const parentId = path.at(-2) ?? GraphNode.RootId;
++        const id = `${parentId}:${node.id}`;
+         seen.add(id);
+-        // Unregister first: the store warns on a duplicate id rather than replacing, and this
+-        // re-runs on every graph change.
++        // This re-runs on every graph change, and each store mutation notifies every subscriber.
++        const existing = hotkeyStore.getState().commands.get(id);
++        if (existing?.hotkey === shortcut && JSON.stringify(existing.label) === JSON.stringify(node.properties.label)) {
++          return;
++        }
++
+         hotkeyStore.unregister(id);
+         hotkeyStore.register({
+           id,
+           hotkey: shortcut,
+-          scopes: [scope],
++          scopes: [parentId],
+           label: node.properties.label,
+-          action: () => void runAction(invoker, pluginContext, node, { parent: node, caller: KEY_BINDING }),
++          // Resolved when fired, since an unchanged binding keeps the closure it was registered with.
++          action: () => {
++            const current = Option.getOrUndefined(AppGraph.getNode(graph, node.id));
++            if (current && AppGraphNode.isAction(current)) {
++              void runAction(invoker, pluginContext, current, { parent: current, caller: KEY_BINDING });
++            }
++          },
+           // Bindings came from graph actions, which fired everywhere; Ark excludes text fields
+           // unless a command opts in.
+           options: { enableOnFormTags: true, enableOnContentEditable: true },
+diff --git a/packages/plugins/plugin-navtree/src/plugin.browser.test.ts b/packages/plugins/plugin-navtree/src/plugin.browser.test.ts
+new file mode 100644
+index 00000000..98f11753
+--- /dev/null
++++ b/packages/plugins/plugin-navtree/src/plugin.browser.test.ts
+@@ -0,0 +1,159 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import * as Effect from 'effect/Effect';
++import * as Atom from 'effect/unstable/reactivity/Atom';
++import { describe, test, vi } from 'vitest';
++
++import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
++import * as Capability from '@dxos/app-framework/Capability';
++import * as Plugin from '@dxos/app-framework/Plugin';
++import * as AppGraph from '@dxos/app-graph/AppGraph';
++import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
++import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
++import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
++import { DXN } from '@dxos/echo';
++import * as GraphNode from '@dxos/graph/GraphNode';
++import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
++import { createComposerTestApp } from '@dxos/plugin-testing/harness';
++import { hotkeyStore, setHotkeyScope } from '@dxos/react-focus/store';
++
++import { NavTreePlugin } from '#plugin';
++
++const OBJECT_SEGMENT = 'object';
++const OBJECT_TYPE = 'example.com.type.object';
++
++describe('NavTreePlugin', () => {
++  test('graph actions register hotkeys scoped to their parent node', async ({ expect }) => {
++    const fired: string[] = [];
++    const version = Atom.make(1);
++    await using harness = await createComposerTestApp({
++      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
++    });
++
++    const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
++    const { graph } = builder;
++    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
++    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
++    await AppGraphBuilder.flush(builder);
++    AppGraph.expandSync(graph, objectId, 'action');
++    await AppGraphBuilder.flush(builder);
++
++    await expect.poll(() => findBinding('Present')?.scopes, { timeout: 2_000 }).toEqual([objectId]);
++
++    setHotkeyScope(objectId);
++    press('P');
++    await expect.poll(() => fired).toEqual(['present 1']);
++  });
++
++  test('a graph update re-registers only changed bindings, and a kept binding runs the current action', async ({
++    expect,
++  }) => {
++    const fired: string[] = [];
++    const version = Atom.make(1);
++    await using harness = await createComposerTestApp({
++      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
++    });
++
++    const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
++    const { graph } = builder;
++    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
++    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
++    await AppGraphBuilder.flush(builder);
++    AppGraph.expandSync(graph, objectId, 'action');
++    await AppGraphBuilder.flush(builder);
++    await expect.poll(() => findBinding('Present'), { timeout: 2_000 }).toBeDefined();
++
++    const register = vi.spyOn(hotkeyStore, 'register');
++    try {
++      harness.registry.set(version, 2);
++      await AppGraphBuilder.flush(builder);
++      // The new binding shows the sync ran; the unchanged one must not have been re-registered.
++      await expect.poll(() => findBinding('Rename'), { timeout: 2_000 }).toBeDefined();
++      expect(register.mock.calls.map(([command]) => [command].flat()[0]?.label)).toEqual(['Rename']);
++    } finally {
++      register.mockRestore();
++    }
++
++    setHotkeyScope(objectId);
++    press('P');
++    await expect.poll(() => fired).toEqual(['present 2']);
++  });
++});
++
++/**
++ * A layout, and a root child with a key-bound action as an object node in a space would have.
++ * Moving `version` past 1 rebuilds that action and adds a second binding.
++ */
++const makeHostPlugin = (fired: string[], version: Atom.Writable<number>) =>
++  Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.host'), name: 'Host' })).pipe(
++    Plugin.addModule({
++      id: 'layout',
++      provides: [AppCapabilities.Layout],
++      activatesOn: ActivationEvents.Startup,
++      activate: () =>
++        Effect.succeed(
++          Capability.contribute(
++            AppCapabilities.Layout,
++            Atom.make<AppCapabilities.Layout>({
++              mode: 'test',
++              dialogOpen: false,
++              sidebarOpen: false,
++              complementarySidebarOpen: false,
++              workspace: GraphNode.RootId,
++              active: [],
++              inactive: [],
++              scrollIntoView: undefined,
++            }),
++          ),
++        ),
++    }),
++    Plugin.addModule({
++      id: 'appGraphBuilder',
++      provides: [AppCapabilities.AppGraphBuilder],
++      activatesOn: ActivationEvents.Startup,
++      activate: () =>
++        Effect.gen(function* () {
++          const children = yield* AppGraphBuilder.createExtension({
++            id: 'object',
++            match: GraphNodeMatcher.whenRoot,
++            connector: () => Effect.succeed([{ id: OBJECT_SEGMENT, type: OBJECT_TYPE, data: null }]),
++          });
++          const actions = yield* AppGraphBuilder.createExtension({
++            id: 'objectActions',
++            match: GraphNodeMatcher.whenNodeType(OBJECT_TYPE),
++            actions: (_node, get) => {
++              const current = get(version);
++              return Effect.succeed([
++                AppGraphNode.makeAction({
++                  id: 'present',
++                  data: () => Effect.sync(() => void fired.push(`present ${current}`)),
++                  properties: { label: 'Present', keyBinding: 'shift+meta+p' },
++                }),
++                ...(current > 1
++                  ? [
++                      AppGraphNode.makeAction({
++                        id: 'rename',
++                        data: () => Effect.sync(() => void fired.push('rename')),
++                        properties: { label: 'Rename', keyBinding: 'shift+F6' },
++                      }),
++                    ]
++                  : []),
++              ]);
++            },
++          });
++          return Capability.contribute(AppCapabilities.AppGraphBuilder, [...children, ...actions]);
++        }),
++    }),
++    Plugin.make,
++  );
++
++const press = (key: string) =>
++  document.body.dispatchEvent(
++    new KeyboardEvent('keydown', { key, shiftKey: true, metaKey: true, bubbles: true, cancelable: true }),
++  );
++
++// Bindings sync on a 500 ms debounce after the graph changes.
++const findBinding = (label: string) =>
++  [...hotkeyStore.getState().commands.values()].find((command) => command.label === label);
+diff --git a/packages/plugins/plugin-navtree/vite.config.ts b/packages/plugins/plugin-navtree/vite.config.ts
+index f3da8bff..682bb185 100644
+--- a/packages/plugins/plugin-navtree/vite.config.ts
++++ b/packages/plugins/plugin-navtree/vite.config.ts
+@@ -22,5 +22,5 @@ export default defineConfig({
+     types: 'src/types/index.ts',
+   },
+   jsx: 'react',
+-  test: { node: true, storybook: true },
++  test: { node: true, browser: 'chromium', storybook: true },
+ });
+diff --git a/packages/ui/react-primitives/react-focus/src/hotkey-store.ts b/packages/ui/react-primitives/react-focus/src/hotkey-store.ts
+index 97cd927a..1c6e8c24 100644
+--- a/packages/ui/react-primitives/react-focus/src/hotkey-store.ts
++++ b/packages/ui/react-primitives/react-focus/src/hotkey-store.ts
+@@ -20,7 +20,10 @@ export type { CommandDefinition, HotkeyCommand, HotkeyOptions, HotkeyStore, Pars
+  * split the registry in two — bindings registered from an Effect capability would never see the
+  * ones registered from a component. Everything here defaults to this instance instead.
+  */
+-export const hotkeyStore: HotkeyStore = createHotkeyStore();
++export const hotkeyStore: HotkeyStore = createHotkeyStore({
++  // Zag's conflict check ignores scopes, so N per-object bindings sharing a hotkey would warn N²/2 times.
++  conflictBehavior: 'allow',
++});
+ 
+ /** Start listening. The React hooks do this themselves; a non-React caller has to say so. */
+ export const initHotkeys = (target: Document | ShadowRoot = document): void => {
+diff --git a/packages/ui/react-primitives/react-focus/src/hotkeys.test.tsx b/packages/ui/react-primitives/react-focus/src/hotkeys.test.tsx
+index e1e13d9f..2e4cd359 100644
+--- a/packages/ui/react-primitives/react-focus/src/hotkeys.test.tsx
++++ b/packages/ui/react-primitives/react-focus/src/hotkeys.test.tsx
+@@ -170,8 +170,7 @@ describe('hotkey scopes', () => {
+     setHotkeyScope('root/plank-1', store);
+     press('d');
+     // Both, not one: the path-scan this replaced fired only the most specific match, so asserting
+-    // the pair is what catches a regression back to it. `conflictBehavior: 'warn'` surfaces the
+-    // collision that the old scan would have hidden.
++    // the pair is what catches a regression back to it.
+     expect(fired).toEqual(['root', 'plank']);
+   });
+ });

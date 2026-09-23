@@ -687,11 +687,12 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * The path this query actually takes, which is `memory` whenever the planner declined to compile
-   * — either the mode is `memory` or the plan reads `@meta`. Resolved once the plan is.
+   * The path this query takes, which is `memory` whenever the planner declines to compile — either
+   * the configured mode is `memory` or the plan reads `@meta`. Known before the first execution,
+   * because the caller gating on indexing has to ask which store the query will read.
    */
   get mode(): QueryExecutorMode {
-    return this._plan.steps.some((step) => step._tag === 'SqlStep') ? 'sql' : 'memory';
+    return this.#planner.compiles(this._plan) ? 'sql' : 'memory';
   }
 
   getResults(): QueryService.QueryResult[] {

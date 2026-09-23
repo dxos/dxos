@@ -2,7 +2,8 @@
 
 A walkthrough is ONE markdown document whose prose, headings and ```diff fences read as a single
 narrative — the shape Graphite's pull-request walkthroughs have. `diffBlocks()` renders the fences;
-`walkthroughSidebar()` navigates them.
+`walkthroughSidebar()` navigates them, on two levels: a row per section, and beneath it one row per
+file that section touches, each scrolling to what it names.
 
 ## Why this is not `@codemirror/merge`
 

@@ -501,20 +501,22 @@ What landed, and where it departs from the proposal above.
   consumer that needs it; until then the compiler imports the index fragments it shares
   (`buildSourceCondition`, `buildTypeDxnCondition`, `buildQueueWindow`, `buildFtsCondition`) from
   `index-core`.
-- **Backfill is a fresh cursor set, not cursor retirement.** `objectData` is a dependent index
-  named `objectData1` in `IndexEngine.update`, run before `fts6`; on an upgraded database its
-  cursors are empty, so every document and feed block is re-presented through it and
-  `objectMeta`'s normalized id columns fill in the same pass. The reverse-reference index name
-  bumped `reverseRef2` to `reverseRef3` for `propPathNormalized`, with tracker migration 0004
-  dropping the orphaned rows. `IndexEngine.update` reads the source once and writes `objectMeta`
-  once for all three dependent indexes when their cursor sets agree (the steady state); only while
-  one index lags, as during this backfill, does each diff against its own cursors in its own pass.
-- **The query gate** is `QueryServiceProps.hasCompleteBodies`; `QueryServiceImpl` awaits
-  `updateIndexes()` before a query's first execution while it is false and caches `true` once seen.
-- **The in-memory path is deleted.** It went once both benchmark runs were recorded (the `memory`
-  column in `BENCHMARKS.md` comes from `c5294281`). `QueryExecutor` now depends only on the
-  `SqlClient` runtime: it compiles the plan, runs the statement and diffs the rows for `changed`,
-  with no `IndexEngine`, `AutomergeHost` or `SpaceStateManager` dependency.
+- **Backfill is per store, by different means.** `objectSnapshot` is the store the compiler reads
+  (there is no `objectData`); `INDEX_NAMES` carries `objectSnapshot`, `reverseRef3` and `fts7`. The
+  reverse-reference index name bumped `reverseRef2` to `reverseRef3` for `propPathNormalized`, with
+  tracker migration `0006_retire_reverse_ref2_cursors` dropping the orphaned rows, so its rows
+  re-present once and fill the column. `objectMeta` is written by the primary pass, whose cursors no
+  migration resets, so its normalized id columns are filled by entity-meta migration
+  `0009_backfill_normalized_ids` instead — a cursor reset would not reach them.
+- **The query gate** is `QueryServiceProps.hasCompleteSnapshots`; `QueryServiceImpl` awaits
+  `updateIndexes()` before a compiled query's first execution while it is false and caches `true`
+  once seen. A memory-path query is not gated on it, since it loads the documents itself.
+- **The in-memory path stays.** It remains the default: `QueryExecutor` still holds `IndexEngine`,
+  `AutomergeHost` and `SpaceStateManager`, `resolveQueryExecutorMode` defaults to `memory`, and a
+  plan the compiler declines runs step by step whatever the mode says. The compiled path is one
+  `QueryPlan.SqlStep` that `QueryPlanner.compilePlan` emits in place of the steps it absorbs, run
+  through the same step loop as any other step. (The `memory` column in `BENCHMARKS.md` comes from
+  `c5294281`.)
 - **Three-valued logic** was the one class of bug the differential test found: `NOT (json_type(b, p)
 = 'text' AND ...)` is `NULL` for a missing property, and a `NULL` predicate drops the row where
   the matcher's `!==` keeps it. Every type test is `COALESCE(json_type(...), 'missing')` for this

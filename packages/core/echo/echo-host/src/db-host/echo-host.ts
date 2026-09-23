@@ -81,7 +81,17 @@ const FTS_FLUSH_MAX_DELAY_MS = 10_000;
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
  */
-export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+export type IndexRunReason =
+  | 'open'
+  | 'feed-blocks'
+  | 'documents-saved'
+  | 'batch-continuation'
+  | 'rpc-update-indexes'
+  | 'feed-scoped-query'
+  | 'epoch';
+
+/** Requests that drive the indexer directly, as opposed to the events that schedule it. */
+export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 'feed-scoped-query' | 'epoch'>;
 
 import { type QueryExecutorMode } from '../query/index.ts';
 
@@ -170,6 +180,8 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
+  private _indexInputsChanged = true;
+
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
@@ -235,7 +247,9 @@ export class EchoHost extends Resource {
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      updateIndexes: () => this.updateIndexes(),
+      // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
+      // decides a query must await indexing before its first result.
+      updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: queryExecutor,
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
     });
@@ -245,7 +259,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
-      updateIndexes: (request) => this.updateIndexes(request),
+      updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
@@ -440,17 +454,27 @@ export class EchoHost extends Resource {
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
    */
-  async updateIndexes({ secondaryIndexes = false }: { secondaryIndexes?: boolean } = {}): Promise<void> {
+  async updateIndexes({
+    secondaryIndexes = false,
+    reason,
+  }: { secondaryIndexes?: boolean; reason?: IndexRequestReason } = {}): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
-    do {
-      this.#noteIndexRunReason('rpc-update-indexes');
+    // A pass in flight re-arms the flag when it schedules a continuation, so the check repeats.
+    while (this._indexInputsChanged || !this._indexesUpToDate) {
+      if (reason) {
+        this.#noteIndexRunReason(reason);
+      }
       await this._updateIndexes.runBlocking();
       if (this._ctx.disposed) {
         return;
       }
-    } while (!this._indexesUpToDate);
+    }
+    await this._updateIndexes.join();
+    if (this._indexInputsChanged || !this._indexesUpToDate) {
+      return this.updateIndexes({ secondaryIndexes, reason });
+    }
 
     if (secondaryIndexes) {
       await this.updateSecondaryIndexes();
@@ -1142,6 +1166,7 @@ export class EchoHost extends Resource {
   }
 
   #scheduleIndexRun(reason: IndexRunReason): void {
+    this._indexInputsChanged = true;
     this.#noteIndexRunReason(reason);
     this._updateIndexes.schedule();
   }
@@ -1198,6 +1223,8 @@ export class EchoHost extends Resource {
     // parenting those on `this._ctx` is an unbounded leak.
     const passCtx = this._ctx.derive();
     try {
+      // Cleared before the pass reads, so a change landing mid-pass re-arms the next request.
+      this._indexInputsChanged = false;
       // Drained here rather than inside the pass so the span can report what triggered it.
       await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
     } finally {

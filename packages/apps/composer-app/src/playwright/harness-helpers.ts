@@ -11,6 +11,11 @@ import { fileURLToPath } from 'node:url';
 import type * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import type * as Capability from '@dxos/app-framework/Capability';
 
+// 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a
+// page served over IPv6 loopback. Declared here rather than imported from `@dxos/composer-e2e`,
+// whose `e2e` task depends on this app's bundle — the import would close that into a cycle.
+export const INITIAL_URL = 'http://127.0.0.1:4173';
+
 // `__dirname` is not defined in ESM; derive from `import.meta.url`.
 export const here = path.dirname(fileURLToPath(import.meta.url));
 

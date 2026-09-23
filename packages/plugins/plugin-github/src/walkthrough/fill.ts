@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { isGeneratedFile } from './generated.ts';
 import { type PatchFile, type PatchHunk, hunkOverlaps, hunkRange, parsePatch, renderHunks } from './patch.ts';
 
 /** A diff fence the model emitted, located in the walkthrough body. */
@@ -22,8 +23,10 @@ export type WalkthroughFill = {
   body: string;
   /** Hunks no fence claimed, in patch order — what the appended section covers. */
   missed: { path: string; hunks: PatchHunk[] }[];
-  /** Files the patch changed without changing any line: renames, mode changes, binaries. */
+  /** Files the patch changed without changing any line: renames and mode changes. */
   textless: string[];
+  /** Machine-written or binary files, named in the appendix rather than rendered. */
+  generated: string[];
   /** Fences naming a file the patch does not contain; left in place with a note. */
   unresolved: string[];
   /** Hunks the body accounts for, over the patch's total. */
@@ -120,6 +123,10 @@ const buildFence = (fence: string, attributes: Record<string, string>, contents:
 export const fillWalkthrough = (body: string, patch: string): WalkthroughFill => {
   const files = parsePatch(patch);
   const byPath = new Map(files.map((file) => [file.path, file]));
+  // Established before the fences are filled: a fence naming a lockfile would otherwise render it,
+  // which is the one thing the appendix exists to avoid.
+  const generated = files.filter((file) => isGeneratedFile(file)).map((file) => file.path);
+  const generatedPaths = new Set(generated);
   const used = new Set<PatchHunk>();
   const unresolved: string[] = [];
 
@@ -152,6 +159,12 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
       continue;
     }
 
+    // The prose keeps its sentence, the fence goes: the appendix names the file, and rendering a
+    // lockfile's hunks costs more of the reader than the sentence pointing at it is worth.
+    if (generatedPaths.has(path)) {
+      continue;
+    }
+
     // A rename, a mode change or a binary file has no hunks; there is nothing to splice, and an
     // empty fence would render as a bare code block. NOT `unresolved`: the patch does contain this
     // file, and `textless` already reports it — counting it as missing would say both at once.
@@ -175,17 +188,26 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
 
   const missed = files
     .map((file) => ({ path: file.path, hunks: file.hunks.filter((hunk) => !used.has(hunk)) }))
-    .filter((file) => file.hunks.length > 0);
+    // A generated file is named in the appendix, never rendered: a lockfile's hunks are longer than
+    // the walkthrough and nobody reads them.
+    .filter((file) => file.hunks.length > 0 && !generatedPaths.has(file.path));
   // A rename, a mode change or a binary file has no hunks to show, but the reader still has to learn
   // it changed — counting it nowhere would report full coverage of a pull request nobody saw.
-  const textless = files.filter((file) => file.hunks.length === 0).map((file) => file.path);
-  const total = files.reduce((count, file) => count + file.hunks.length, 0);
-  const appendix = renderMissed(missed, textless);
+  const textless = files
+    .filter((file) => file.hunks.length === 0 && !generatedPaths.has(file.path))
+    .map((file) => file.path);
+  // Generated hunks leave the denominator as well as `missed`: counting them would report a
+  // walkthrough as covering half a change when it covered all of the part worth reading.
+  const total = files
+    .filter((file) => !generatedPaths.has(file.path))
+    .reduce((count, file) => count + file.hunks.length, 0);
+  const appendix = renderMissed(missed, textless, generated);
 
   return {
     body: appendix ? filled.trimEnd() + '\n' + appendix : filled,
     missed,
     textless,
+    generated,
     unresolved,
     covered: used.size,
     total,
@@ -193,8 +215,12 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
 };
 
 /** The trailing section: everything the walkthrough did not account for, so the diff stays whole. */
-const renderMissed = (missed: { path: string; hunks: PatchHunk[] }[], textless: string[]): string => {
-  if (missed.length === 0 && textless.length === 0) {
+const renderMissed = (
+  missed: { path: string; hunks: PatchHunk[] }[],
+  textless: string[],
+  generated: string[],
+): string => {
+  if (missed.length === 0 && textless.length === 0 && generated.length === 0) {
     return '';
   }
 
@@ -210,7 +236,10 @@ const renderMissed = (missed: { path: string; hunks: PatchHunk[] }[], textless: 
     lines.push(buildFence('```', { file: file.path, lines: hunkRange(file.hunks) ?? '' }, renderHunks(file.hunks)), '');
   }
   if (textless.length > 0) {
-    lines.push(`Changed with no lines to show (renamed, mode-only or binary): ${textless.join(', ')}.`, '');
+    lines.push(`Changed with no lines to show (renamed or mode-only): ${textless.join(', ')}.`, '');
+  }
+  if (generated.length > 0) {
+    lines.push(`Generated or binary, not shown: ${generated.join(', ')}.`, '');
   }
 
   return lines.join('\n');

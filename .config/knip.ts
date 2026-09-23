@@ -392,6 +392,9 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
 const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
   // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
   'packages/core/compute/mcp-server': ['sharp'],
+  // `scripts/{generate,judge}-walkthrough.ts` call the model to run the walkthrough evals by hand.
+  // Neither ships with the package nor runs in CI, and the SDK is already in the workspace store.
+  'packages/plugins/plugin-github': ['@anthropic-ai/sdk'],
 };
 
 /**

@@ -18,8 +18,8 @@ export {
   buildQueueWindow,
   buildSourceCondition,
   buildTypeDxnCondition,
-  localEntityId,
 } from './indexes/entity-meta-index.ts';
+export { localEntityId } from './entity-ids.ts';
 export {
   type Referrer,
   type ReverseRef,

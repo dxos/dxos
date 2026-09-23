@@ -106,12 +106,19 @@ export class QueryPlanner {
     query: QueryAST.Query,
   ): Effect.Effect<QueryPlan.Plan, QueryError | SqlError.SqlError, SqlClient.SqlClient> {
     const plan = this.createPlan(query);
-    // `objectSnapshot` drops `@meta` for document rows, so a plan reading it cannot be compiled and
-    // runs step by step whatever the mode says.
-    if (this._options.executor !== 'sql' || planReadsObjectMeta(plan)) {
+    if (!this.compiles(plan)) {
       return Effect.succeed(plan);
     }
     return Effect.map(compileToSql(plan), (compiled) => compiled.plan);
+  }
+
+  /**
+   * Whether {@link compilePlan} will compile this plan, answerable before the statement is built so
+   * a caller can tell which store the query will read. `objectSnapshot` drops `@meta` for document
+   * rows, so a plan reading it runs step by step whatever the mode says.
+   */
+  compiles(plan: QueryPlan.Plan): boolean {
+    return this._options.executor === 'sql' && !planReadsObjectMeta(plan);
   }
 
   /**

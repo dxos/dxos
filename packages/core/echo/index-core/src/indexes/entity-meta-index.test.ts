@@ -14,6 +14,7 @@ import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
 import { IndexTracker } from '../index-tracker.ts';
+import { backfillNormalizedIds } from '../migrations/entity-meta/0009_backfill_normalized_ids.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
 
@@ -30,6 +31,45 @@ const TestLayer = SqliteClient.layer({
 }).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('EntityMetaIndex', () => {
+  // 0008 adds the normalized id columns without filling them, and the primary pass only rewrites a
+  // row when its object next changes — so the backfill is what keeps the compiled query path, which
+  // joins through these columns, from silently missing pre-upgrade objects.
+  it.effect('backfills the normalized id columns for rows written before they existed', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const index = new EntityMetaIndex(sql);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const otherSpaceId = SpaceId.random();
+      const parentId = EntityId.random();
+      const crossSpaceParentId = EntityId.random();
+      const localRecordId = 9001;
+      const crossSpaceRecordId = 9002;
+
+      // A row as it stood before 0008: the EID columns are set, the normalized ones are not.
+      for (const [recordId, parent, parentSpaceId] of [
+        [localRecordId, parentId, spaceId],
+        [crossSpaceRecordId, crossSpaceParentId, otherSpaceId],
+      ] as const) {
+        yield* sql`INSERT INTO objectMeta (recordId, spaceId, objectId, documentId, queueId, queueNamespace, entityKind, typeDXN, deleted, version, parent, parentId, sourceId, targetId)
+          VALUES (${recordId}, ${spaceId}, ${EntityId.random()}, ${'doc'}, ${''}, ${''}, ${'object'}, ${TYPE_PERSON.toString()}, 0, 1,
+            ${EID.make({ spaceId: parentSpaceId, entityId: parent })}, NULL, NULL, NULL)`;
+      }
+
+      yield* backfillNormalizedIds;
+
+      const rows = yield* sql<{ recordId: number; parentId: string | null }>`
+        SELECT recordId, parentId FROM objectMeta WHERE recordId IN (${localRecordId}, ${crossSpaceRecordId}) ORDER BY recordId`;
+      // A local reference is normalized to its bare id; a cross-space one stays NULL, which is what
+      // keeps the compiler's same-space joins from colliding on an id from another space.
+      expect(rows).toEqual([
+        { recordId: localRecordId, parentId },
+        { recordId: crossSpaceRecordId, parentId: null },
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should match versioned types when queried by versionless type', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex(yield* SqlClient.SqlClient);

@@ -25,7 +25,7 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types/
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
 import * as queryInternal from './internal/Query/index.ts';
-import type { Ref } from './internal/Ref/ref.ts';
+import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
 import type * as Obj from './Obj.ts';
 import type * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
@@ -469,7 +469,12 @@ export const resolve: {
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
- * Loads an object reference.
+ * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks
+ * for it.
+ *
+ * The options parameter means this cannot be passed point-free where the caller supplies a second
+ * argument — `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
+ * iteratee index would land on `options`.
  *
  * Catching not found error:
  *
@@ -478,15 +483,14 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
-  function* (ref) {
-    const object = yield* Effect.promise(() => ref.tryLoad());
+export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, Error.EntityNotFoundError, never> =
+  Effect.fn('Database.load')(function* (ref, options) {
+    const object = yield* Effect.promise(() => ref.tryLoad(options));
     if (!object) {
       return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
-  },
-);
+  });
 
 /**
  * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —

@@ -82,9 +82,6 @@
       "path": "../../core/compute/agent-claude"
     },
     {
-      "path": "../../core/echo/echo-host"
-    },
-    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -446,9 +443,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/shell"
     },
     {
       "path": "../../sdk/worker-framework"

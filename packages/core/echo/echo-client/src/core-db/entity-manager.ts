@@ -46,7 +46,7 @@ import {
   type SaveStateChangedEvent,
   toDocumentId,
 } from '../automerge/index.ts';
-import { EchoClientError } from '../errors.ts';
+import { DocumentUnavailableError, EchoClientError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -1511,7 +1511,17 @@ export class EntityManager implements IDatabaseBinding {
       throw new Error('Database opened with no rootUrl');
     }
 
-    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
+    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl).catch((err) => {
+      // Named here because the caller only knows it failed to open the space: every read and write
+      // in it fails, and which document is missing is the whole diagnosis.
+      throw DocumentUnavailableError.is(err)
+        ? new EchoClientError({
+            message: 'Space root document is not available.',
+            context: { spaceId: this._spaceId, rootUrl: spaceState.rootUrl },
+            cause: err,
+          })
+        : err;
+    });
     const doc = existingDocHandle.doc();
     invariant(doc);
     invariant(doc.version === SpaceDocVersion.CURRENT);
@@ -1740,6 +1750,45 @@ export class EntityManager implements IDatabaseBinding {
     });
   }
 
+  /**
+   * Creates the object's core once a document the host could not produce is finally delivered.
+   *
+   * The object stays bound to this handle, so every load path short-circuits on it and nothing
+   * would notice the delivery; the handle's `available` event is the only signal, since the waiter
+   * that would otherwise carry it is holding a rejected `whenReady`.
+   */
+  #recoverWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle.once('available', () => {
+      // The wait outlives the space that started it, so a handle re-bound elsewhere — or a closed
+      // manager — must not recreate an evicted object.
+      if (this.#isStale(generation) || this._objectDocumentHandles.get(objectId) !== handle) {
+        return;
+      }
+      this._onObjectDocumentLoaded({ handle, objectId });
+    });
+  }
+
+  /**
+   * Rebinds an object to the document a root update pointed it at, once the host can produce it.
+   *
+   * A rebind onto an unavailable document is skipped rather than awaited, so the object keeps its
+   * previous binding and nothing else would revisit the link.
+   */
+  #rebindWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle.once('available', () => {
+      if (this.#isStale(generation) || !this._objects.has(objectId)) {
+        return;
+      }
+      // The directory may have re-pointed the object in the meantime; binding it to a superseded
+      // document would restore content the space no longer links.
+      if (this._getLinkedDocumentUrl(objectId) !== handle.url) {
+        return;
+      }
+      this._rebindObjects(handle, [objectId]);
+      this._markObjectAvailable(objectId);
+    });
+  }
+
   private async _loadHandleForObject(
     handle: DocHandleProxy<DatabaseDirectory>,
     objectId: string,
@@ -1765,6 +1814,7 @@ export class EntityManager implements IDatabaseBinding {
           this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
           log('object document unavailable on disk', { objectId, docUrl: handle.url });
           this._onObjectUnavailable({ handle, objectId });
+          this.#recoverWhenAvailable(handle, objectId, generation);
           handle
             .whenReady()
             .then(() => {
@@ -1775,6 +1825,8 @@ export class EntityManager implements IDatabaseBinding {
               }
               this._onObjectDocumentLoaded({ handle, objectId });
             })
+            // Already rejected where the host reported the document unavailable; the recovery
+            // armed above is what carries that case.
             .catch((err) => log.verbose('background network wait failed', { objectId, err }));
           return;
         }
@@ -1798,6 +1850,15 @@ export class EntityManager implements IDatabaseBinding {
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       if (this.#isStale(generation)) {
         log('lifetime ended while a document was loading, abandoning load', { objectId, err });
+        return;
+      }
+      if (DocumentUnavailableError.is(err)) {
+        // Terminal for now, so the retry below would spin: the host has said it cannot produce this
+        // document. Recovery is armed rather than retried — the object stays bound to this handle,
+        // so nothing would start a fresh load once the bytes do arrive.
+        log.warn('object document is not available on the host', { objectId, automergeUrl: handle.url });
+        this._onObjectUnavailable({ handle, objectId });
+        this.#recoverWhenAvailable(handle, objectId, generation);
         return;
       }
       log.warn('failed to load a document, retrying', {
@@ -1848,7 +1909,24 @@ export class EntityManager implements IDatabaseBinding {
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.whenReady();
+        try {
+          await newDocHandle.whenReady();
+        } catch (err) {
+          if (!DocumentUnavailableError.is(err)) {
+            throw err;
+          }
+          // One object the host cannot produce must not abandon the rest of the rebind, which is
+          // what stops the space's remaining objects from ever seeing this root update.
+          log.warn('object document is not available on the host, skipping rebind', {
+            objectId: object.id,
+            automergeUrl: newObjectDocUrl.toString(),
+          });
+          this._onObjectUnavailable({ objectId: object.id });
+          // Skipping leaves the object on its previous document, so without this the replacement is
+          // picked up only by whatever root update happens to come next.
+          this.#rebindWhenAvailable(newDocHandle, object.id, this.#generation);
+          continue;
+        }
         newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {

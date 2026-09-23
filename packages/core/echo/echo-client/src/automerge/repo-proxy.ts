@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { DocHandleProxy } from './doc-handle-proxy.ts';
+import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
@@ -129,6 +129,7 @@ export class RepoProxy extends Resource {
   #draining = false;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+  private _lastSaveStateKey = '';
 
   constructor(
     private _dataService: DataService.Client,
@@ -434,8 +435,10 @@ export class RepoProxy extends Resource {
   private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    // TODO(burdon): Called even if not mutations.
-    const onChange = () => {
+    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
+      if (patchInfo.source !== 'change') {
+        return;
+      }
       log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
@@ -477,10 +480,8 @@ export class RepoProxy extends Resource {
       this._emitSaveStateEvent();
     };
 
-    // TODO(burdon): Called even if not mutations.
-    const onChange = () => {
-      // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
-      if (handle.documentId == null) {
+    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
+      if (handle.documentId == null || patchInfo.source !== 'change') {
         return;
       }
 
@@ -612,7 +613,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -625,6 +626,13 @@ export class RepoProxy extends Resource {
     // update once the network delivers.
     if (requesting) {
       handle._markRequesting();
+    }
+
+    // The host has no bytes and nothing to fetch them from, so the handle is failed rather than
+    // left waiting; bytes that turn up later (replication catching up) still take it to `'ready'`.
+    if (unavailable) {
+      log.warn('host cannot produce document', { documentId, spaceId: this._spaceId });
+      handle._markUnavailable(documentId);
     }
 
     if (mutation) {
@@ -752,6 +760,11 @@ export class RepoProxy extends Resource {
 
   private _emitSaveStateEvent(): void {
     const unsavedDocuments = Array.from(this._pendingUpdateIds);
+    const key = unsavedDocuments.join(',');
+    if (key === this._lastSaveStateKey) {
+      return;
+    }
+    this._lastSaveStateKey = key;
     this.saveStateChanged.emit({ unsavedDocuments });
   }
 }

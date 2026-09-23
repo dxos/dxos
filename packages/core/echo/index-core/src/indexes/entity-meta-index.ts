@@ -19,6 +19,7 @@ import {
 } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
+import { localEntityId } from '../entity-ids.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
 import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
 import type { IndexerObject } from './interface.ts';
@@ -59,25 +60,6 @@ const _escapeLikePrefix = (prefix: string) => {
   // See: https://www.sqlite.org/lang_expr.html#like
   const escaped = prefix.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
   return `${escaped}:%`;
-};
-
-/**
- * Bare entity id of a reference that is local to `spaceId`; `null` for a cross-space reference,
- * a non-entity URI, or no reference. Feeds `objectMeta.parentId`/`sourceId`/`targetId`.
- */
-export const localEntityId = (uri: unknown, spaceId: SpaceId): string | null => {
-  if (typeof uri !== 'string') {
-    return null;
-  }
-  const eid = EID.tryParse(uri);
-  if (!eid) {
-    return null;
-  }
-  const referencedSpaceId = EID.getSpaceId(eid);
-  if (referencedSpaceId !== undefined && referencedSpaceId !== spaceId) {
-    return null;
-  }
-  return EID.getEntityId(eid) ?? null;
 };
 
 /**

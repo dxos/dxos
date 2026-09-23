@@ -3,13 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type DiffLayout,
+  type DiffLineTarget,
   type ThemeExtensionsOptions,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -20,6 +21,9 @@ import {
   walkthroughTheme,
 } from '@dxos/ui-editor';
 
+import { translations } from '#translations';
+
+import { LineCommentPopover } from '../components/CommentComposer/index.ts';
 import { WALKTHROUGH } from './walkthrough-fixture.ts';
 
 /**
@@ -36,14 +40,30 @@ type StoryArgs = {
   text: string;
   layout?: DiffLayout;
   sidebar?: 'full' | 'stats' | 'none';
+  /** Offer the hover comment button on each diff line, and float the composer at the line picked. */
+  comments?: boolean;
 };
 
 /**
  * A walkthrough is ONE markdown document: the ```diff fences are block widgets inside it, not a
  * separate diff view the prose is wrapped around.
  */
-const DefaultStory = ({ text, layout, sidebar = 'full' }: StoryArgs) => {
+const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) => {
   const { themeMode } = useThemeContext();
+  const [target, setTarget] = useState<DiffLineTarget>();
+  const [comment, setComment] = useState('');
+  const anchorRef = useRef<HTMLElement | null>(null);
+
+  const handleLineComment = useCallback((next: DiffLineTarget, anchor: HTMLElement) => {
+    anchorRef.current = anchor;
+    setTarget(next);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    setTarget(undefined);
+    anchorRef.current = null;
+  }, []);
+
   const extensions = useMemo(
     () => [
       createThemeExtensions({ themeMode, slots: walkthroughSlots }),
@@ -51,21 +71,34 @@ const DefaultStory = ({ text, layout, sidebar = 'full' }: StoryArgs) => {
       createMarkdownExtensions(),
       decorateMarkdown(),
       walkthroughTheme(),
-      diffBlocks({ layout }),
+      diffBlocks({ layout, ...(comments ? { onLineComment: handleLineComment } : {}) }),
       sidebar === 'none' ? [] : walkthroughSidebar({ variant: sidebar }),
     ],
-    [themeMode, layout, sidebar],
+    [themeMode, layout, sidebar, comments, handleLineComment],
   );
   const { parentRef } = useTextEditor({ initialValue: text, extensions }, [extensions]);
 
-  return <div ref={parentRef} className='dx-fill overflow-auto' />;
+  return (
+    <>
+      <div ref={parentRef} className='dx-fill overflow-auto' />
+      <LineCommentPopover
+        open={!!target}
+        anchorRef={anchorRef}
+        target={target}
+        value={comment}
+        onValueChange={setComment}
+        onSubmit={handleCancel}
+        onCancel={handleCancel}
+      />
+    </>
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-github/stories/Walkthrough',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: { layout: 'fullscreen', controls: { disable: true } },
+  parameters: { layout: 'fullscreen', controls: { disable: true }, translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -90,4 +123,9 @@ export const Inline: Story = {
 /** No rail, so the chunks are the only thing the document adds to plain markdown. */
 export const Chunks: Story = {
   args: { text: WALKTHROUGH, sidebar: 'none' },
+};
+
+/** The comment composer floats at the diff line it addresses, not in a band above the document. */
+export const LineComment: Story = {
+  args: { text: WALKTHROUGH, comments: true, sidebar: 'none' },
 };

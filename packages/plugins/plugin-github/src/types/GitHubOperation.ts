@@ -15,6 +15,7 @@ import { Database, DXN, Obj, Ref } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as PageAction from '@dxos/plugin-crx/PageAction';
 import { PullRequest } from '@dxos/types';
 
 import * as Walkthrough from './Walkthrough.ts';
@@ -124,6 +125,31 @@ export const ImportPullRequest = Operation.make({
 }).pipe(Operation.visible, Operation.mutation('write'));
 
 /**
+ * Import the pull request the browser extension is looking at, named by the page's own URL.
+ *
+ * Separate from {@link ImportPullRequest} because the extension bridge invokes every page action
+ * with the fixed `{ snapshot, target }` shape and reads an `{ id }` back. Nothing is extracted from
+ * the page: the URL in the snapshot's source names the pull request, and GitHub is the authority on
+ * everything else.
+ */
+export const ImportPullRequestFromSnapshot = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.importPullRequestFromSnapshot'),
+    name: 'Open pull request in Composer',
+    description: "Import the pull request a browser page shows, named by that page's URL.",
+    icon: 'ph--git-pull-request--regular',
+  },
+  input: Schema.Struct({
+    snapshot: PageAction.Snapshot,
+    target: Database.Database.annotate({ description: 'The database to add the pull request to.' }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+  }),
+  types: [PullRequest.PullRequest],
+}).pipe(Operation.mutation('write'));
+
+/**
  * Generate a walkthrough of a pull request: one markdown document narrating the change in reading
  * order, with its diff chunks spliced in from the patch itself.
  *
@@ -156,12 +182,18 @@ export const GenerateWalkthrough = Operation.make({
   services: [Trace.TraceService, AiService.AiService],
 }).pipe(Operation.visible);
 
-/** Submit an approving review on a pull request, as the space's GitHub connection. */
+/**
+ * Submit an approving review on a pull request, as the space's GitHub connection.
+ *
+ * Falls back to a marked conversation comment where GitHub refuses the review — the author's own
+ * pull request, or a token with no review permission — so the approval is still recorded and still
+ * detectable by an agent deciding whether the pull request is good to land.
+ */
 export const SubmitPullRequestApproval = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.submitPullRequestApproval'),
     name: 'Submit Pull Request Approval',
-    description: 'Submit an approving review on a pull request.',
+    description: 'Submit an approving review on a pull request, or record the approval as a comment.',
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
@@ -170,7 +202,13 @@ export const SubmitPullRequestApproval = Operation.make({
     body: Schema.String.pipe(Schema.optional),
   }),
   output: Schema.Struct({
-    reviewId: Schema.Number,
+    /** Set where the approving review was accepted. */
+    reviewId: Schema.Number.pipe(Schema.optional),
+    /** Set instead where the approval was recorded as a comment. */
+    commentId: Schema.Number.pipe(Schema.optional),
+    url: Schema.String.pipe(Schema.optional),
+    /** Whether the approval is a comment rather than a review. */
+    commented: Schema.Boolean,
   }),
   types: [PullRequest.PullRequest],
 });
