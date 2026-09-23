@@ -145,8 +145,8 @@ export const createStaticTreeModel = <T extends { id: string }>(
     stateAtom,
     item: (id: string) => itemFamily(id),
     itemProps: (path: string[]) => itemPropsFamily(Path.create(...path)),
-    itemOpen: (path: string[]) => itemOpenFamily(path),
-    itemCurrent: (path: string[]) => itemCurrentFamily(path),
+    itemOpen: (path: string[]) => itemOpenFamily([...path]),
+    itemCurrent: (path: string[]) => itemCurrentFamily([...path]),
     refresh: (set) => {
       itemMap.clear();
       childIdsMap.clear();

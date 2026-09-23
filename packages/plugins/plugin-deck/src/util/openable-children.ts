@@ -32,7 +32,13 @@ export const firstOpenableChild = (
       () => {
         const [first] = openableChildren(graph, id);
         if (first) {
-          resume(Effect.succeed(first));
+          // The returned cleanup only runs on interruption; this runs after `subscribe` returns.
+          resume(
+            Effect.sync(() => {
+              unsubscribe();
+              return first;
+            }),
+          );
         }
       },
       { immediate: true },
