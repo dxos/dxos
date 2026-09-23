@@ -27,7 +27,8 @@ feat F-2: Decision model in the space
 
   req F-2.1: An AiModelResolver serves `ai.typesafe.model.jev.latest` via AiService.decisionModel in every space.
   req F-2.2: The key is read per call, so connecting or disconnecting takes effect on the next question.
-  req F-2.3: A space with no key connected fails the decision with an AiError (AuthenticationError, MissingKey), never a defect.
+  req F-2.3: With the endpoint override set and no key connected, the decision fails with an AiError (AuthenticationError, MissingKey), never a defect.
+  req F-2.4: Unless overridden, calls go through EDGE `/ai/generate/typesafe`: with no key connected EDGE answers on the platform key, and a connected key rides as `X-BYOK`.
 ```
 
 ## Acceptance
@@ -38,8 +39,13 @@ scenario T-1: A pasted key reaches the model
   when: the user pastes a valid API key into the TypeSafe connector
   then: an operation asking AiService.decisionModel resolves and answers
 
-scenario T-2: No key is a failed decision, not a crash
-  given: a space with no TypeSafe connection
+scenario T-2: No key answers through EDGE on the platform key
+  given: a space with no TypeSafe connection and no endpoint override
+  when: an operation asking AiService.decisionModel runs
+  then: the call reaches EDGE `/ai/generate/typesafe` without `X-BYOK` and answers
+
+scenario T-3: A direct endpoint with no key is a failed decision, not a crash
+  given: a space with no TypeSafe connection and the endpoint override set
   when: an operation asking AiService.decisionModel runs
   then: it fails with an AiError naming the missing typesafe.ai credential, and the space slice stays up
 ```
