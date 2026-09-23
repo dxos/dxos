@@ -29,6 +29,14 @@ export type TaskHistoryProps = ThemedClassName<{
   entries: readonly Task.HistoryEntry[];
   /** Entries to show, newest first; the rest are left to a surface with room for them. */
   limit?: number;
+  /**
+   * Lay the log out on the host's own columns (`grid-cols-subgrid`), so an entry's glyph sits under
+   * the host's leading icon and its text under the host's text. The host must place this across the
+   * tracks it wants inherited. Off by default: a log rendered away from a grid has none to inherit.
+   */
+  subgrid?: boolean;
+  /** Cell placement per entry, when `subgrid` — the host names its own tracks. */
+  cells?: { icon?: string; description?: string; date?: string };
 }>;
 
 /**
@@ -37,7 +45,7 @@ export type TaskHistoryProps = ThemedClassName<{
  * Each entry already carries the human-readable record of what happened, so a line is that sentence
  * plus when it happened and who did it — the pane adds no interpretation of its own.
  */
-export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps) => {
+export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: TaskHistoryProps) => {
   const { t } = useTranslation(translationKey);
   // Newest first, without mutating the task's own array (append-only, oldest first).
   const visible = useMemo(() => [...entries].reverse().slice(0, limit), [entries, limit]);
@@ -54,7 +62,10 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       aria-label={t('task-history.label')}
       data-testid='taskList.history'
       className={mx(
-        'grid grid-cols-[min-content_1fr_min-content] items-baseline gap-x-1.5 gap-y-1 text-sm text-description',
+        'grid items-baseline gap-y-1 text-sm text-description',
+        // The host's tracks, so the log's columns are the host's columns rather than a second set
+        // that happens to look similar.
+        subgrid ? 'grid-cols-subgrid' : 'grid-cols-[min-content_1fr_min-content]',
         classNames,
       )}
     >
@@ -63,17 +74,23 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
         // its cells sit on the shared columns rather than on tracks of its own.
         // `items-start`, since a wrapped description makes the row taller than one line: centring
         // would then float the glyph and the time against the middle of the paragraph.
-        <div key={`${entry.date}-${index}`} role='listitem' className='grid grid-cols-subgrid col-span-3 items-start'>
+        <div
+          key={`${entry.date}-${index}`}
+          role='listitem'
+          className={mx('grid grid-cols-subgrid items-start', subgrid ? 'col-span-full' : 'col-span-3')}
+        >
           {/* One line box tall, with the glyph centred inside it: the row aligns to the top so a
               wrapped description does not float the glyph down the paragraph, which would otherwise
               pin the glyph to the text's ascender rather than to the middle of its first line. */}
-          <Icon icon={eventIcon(entry.event)} classNames='block h-[1lh] self-start' />
+          <Icon icon={eventIcon(entry.event)} classNames={mx('block h-[1lh] self-start', cells?.icon)} />
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
               time column is fixed, so the description takes the height it needs. */}
-          <span className='min-w-0'>{entry.description ?? entry.event}</span>
+          <span className={mx('min-w-0', cells?.description)}>{entry.description ?? entry.event}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
               to cite; the exact timestamp stays on the entry for a surface that needs it. */}
-          <span className='whitespace-nowrap tabular-nums text-right'>{formatRelative(entry.date)}</span>
+          <span className={mx('whitespace-nowrap tabular-nums text-right', cells?.date)}>
+            {formatRelative(entry.date)}
+          </span>
         </div>
       ))}
     </div>

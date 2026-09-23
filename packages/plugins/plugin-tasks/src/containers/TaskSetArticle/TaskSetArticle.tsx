@@ -208,7 +208,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
         createOnly
         showDescription
         descriptionExtensions={descriptionExtensions}
-        classNames='dx-document bg-input-surface border-t border-separator p-2'
+        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there, and a
+        // fourth line would double it.
+        classNames='dx-document bg-input-surface border-x border-t border-separator rounded-t-md p-2'
         placeholder={t('task-create.placeholder')}
       />
     </TaskList.Root>

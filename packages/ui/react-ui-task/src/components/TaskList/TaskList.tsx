@@ -1038,7 +1038,17 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         {current && current.history && current.history.length > 0 && (
           <TaskHistory
             entries={current.history}
-            classNames={mx('min-w-0 row-start-3 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+            // On the pane's own tracks: an entry's glyph then sits in the same column as the pane's
+            // leading icon and its text under the title, rather than in a nested grid of its own
+            // that starts where the title does.
+            subgrid
+            cells={{
+              // Centred in its track, as the pane's own leading icon is, so the two sit on one axis.
+              icon: mx('justify-self-center', grid ? 'col-[status]' : 'col-start-1'),
+              description: grid ? 'col-start-[title] -col-end-2' : 'col-start-2',
+              date: grid ? 'col-start-[-2] -col-end-1' : 'col-start-3',
+            }}
+            classNames={mx('min-w-0 row-start-3', grid ? 'col-start-[tree-row-start] -col-end-1' : 'col-span-full')}
           />
         )}
         {/* The description is held open with no blur to commit it, so the pane needs to say
