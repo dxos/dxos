@@ -54,7 +54,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       aria-label={t('task-history.label')}
       data-testid='taskList.history'
       className={mx(
-        'grid grid-cols-[min-content_1fr_min-content] items-baseline gap-x-1.5 gap-y-0.5 text-sm text-description',
+        'grid grid-cols-[min-content_1fr_min-content] items-baseline gap-x-1.5 gap-y-1 text-sm text-description',
         classNames,
       )}
     >

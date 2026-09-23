@@ -959,7 +959,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         // description, history. Auto-placement drops a cell into whatever track is free, which put
         // the description in the icon column whenever the toolbar was absent.
         className={mx(
-          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto]',
+          // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
+          // repeated on every cell that might start a row, and is missed by whichever one is added next.
+          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto] gap-y-2',
           !grid && 'grid-cols-[2rem_1fr_min-content]',
           className,
         )}
@@ -1036,7 +1038,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         {current && current.history && current.history.length > 0 && (
           <TaskHistory
             entries={current.history}
-            classNames={mx('min-w-0 mt-2 row-start-3 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+            classNames={mx('min-w-0 row-start-3 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
           />
         )}
         {/* The description is held open with no blur to commit it, so the pane needs to say
