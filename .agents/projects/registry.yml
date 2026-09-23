@@ -24,8 +24,8 @@ projects:
     summary: 'Infinite, multi-depth canvas: scenes (ECHO objects) contain cells (rect, link, nested scene) positioned in scene-local coordinates; zooming into a scene cell drills to the child scene. Hybrid SVG/canvas + HTML islands; react-ui-canvas-editor becomes a first consumer.'
     tasks: .agents/projects/plugin-canvas/TASKS.md
     design: packages/ui/react-ui-canvas/docs/DESIGN.md
-    prs: [13249]
-    resume: 'Phase 0 done (AUDIT.md, RESEARCH.md, DESIGN.md rev 4 incl. §6b mobile columns). PR #13249 (2026-09-20, branch claude/infinite-canvas-depth-7e0949-ojem5i, mirrored to claude/infinite-canvas-depth-7e0949): PR 0 extracts @dxos/diagram and adds ports/portal/index to the DSL; BLOCKED on the first npm publish of @dxos/diagram (check-packages-published). Phase 1 engine stacked on the same branch: react-ui-canvas/src/scene/ (types, order, camera, hit, ports, route, store, freehand projection, SceneView + layers + control frame + palette), Freehand, Nested, Constrained and Dynamic stories smoke-tested headlessly; spike deleted. NEXT: user review of the stories in local storybook; land #13249 once @dxos/diagram is published; then phase 2 (text/object cells via Surface, ortho routing, undo, mobile columns).'
+    prs: [13249, 13254]
+    resume: 'PR #13249 MERGED. PR #13254 OPEN (branch claude/infinite-canvas-depth-7e0949-ojem5i, preview https://pr-13254-composer-dev.dxos.workers.dev): phases 1-4 (engine, editor parity, canvas-compute on the engine, ECHO persistence + the plugin switch) plus phase 5 post-M4 fixes, all measured in Chromium. Phase 6 in progress: walking the ui/react-ui-canvas-compute/scene stories, starting with scene--transform (shape content centred; controls fire their operation), covered by the new react-ui-canvas-compute:e2e harness. A sub-agent session works the text DSL (lezer grammar over MDL, mermaid import) off this branch. NEXT: the remaining scene stories; then M5 (retire react-ui-canvas-editor) and smart routing phase 2; rewrite the changeset before landing.'
   - name: plugin-markdown
     status: active
     user: burdon

@@ -128,3 +128,19 @@ were wrong in ways only a measurement showed.
       segment joins them, rounded by `splinePath`. Nothing is stored, so the route follows the nodes.
 - [ ] Smart routing proper: avoid crossing the nodes it connects and other nodes in the way (phase 2,
       over `@dxos/diagram`'s `ortho-router`).
+
+## Phase 6: compute scene stories (started 2026-09-23, PR #13254)
+
+The `ui/react-ui-canvas-compute/scene` stories, walked one at a time. Each fix is measured in
+Chromium against the story itself (`react-ui-canvas-compute:e2e`, a harness the package did not have
+before), not reasoned about from the source.
+
+- [x] `scene--transform`: a shape component fills its node. `computeNodeView` rendered the component
+      straight into the engine's node frame, which is not a flex container — the editor's frame body
+      (`styles.frameContainer`) was, and every component was written against it, so `grow` was inert
+      and the content sat at the top. Wrapped in `dx-fullscreen flex`.
+- [x] `scene--transform`: a click on an interactive control runs its operation. The node frame takes a
+      pointer press as select-and-drag and captures the pointer, so the `click` never arrived; the four
+      shapes with a control (`RNG`, `Switch`, `Audio`, `GptRealtime`) now stop the gesture.
+- [ ] The remaining `scene` stories (beacon, logic, control, template, gpt, plugins, artifact,
+      image-gen, audio, voice), same treatment.
