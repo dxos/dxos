@@ -46,6 +46,14 @@ class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
  */
 const BUILT_ENTRY = new URL('../dist/lib/WorkerSandboxEntry.mjs', import.meta.url);
 
+/**
+ * A record keyed by a pattern: its JSON schema carries a non-empty `patternProperties` key, which the
+ * worker's JSON-schema round trip cannot rebuild. Composer registers types like it.
+ */
+class Tagged extends Type.makeObject<Tagged>(DXN.make('com.example.type.tagged', '0.1.0'))(
+  Schema.Struct({ tags: Schema.Record(Schema.String.check(Schema.isPattern(/^[a-z]+$/)), Schema.String) }),
+) {}
+
 const Score = Operation.make({
   meta: { key: DXN.make('com.example.operation.score'), name: 'Score' },
   input: Schema.Struct({ title: Schema.String }),
@@ -124,6 +132,21 @@ describe('worker sandbox', () => {
 
     const tasks = await db.query(Filter.type(Task)).run();
     expect(tasks.map((task) => task.title)).toEqual(['Review the PR']);
+  }, 60_000);
+
+  test('runs even when a registered type cannot be rebuilt in the worker', async () => {
+    const { db, runWith } = await setup();
+    db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
+    await db.flush();
+    // `Tagged` is registered on the host but cannot cross; every other type must still be usable.
+    const output = await runWith(
+      EffectDialect,
+      `
+      const tasks = yield* Database.query(Filter.type(types['${TASK_TYPENAME}'])).run;
+      yield* print('tasks', tasks.length, 'tagged', typeof types['com.example.type.tagged']);
+    `,
+    );
+    expect(output).toEqual('tasks 1 tagged undefined');
   }, 60_000);
 
   test('reports a throw in the worker as output rather than failing the turn', async () => {
@@ -222,7 +245,7 @@ const setup = async () => {
   await builder.open();
   onTestFinished(async () => void (await builder.close()));
 
-  const peer = await builder.createPeer({ types: [Task, Person] });
+  const peer = await builder.createPeer({ types: [Task, Person, Tagged] });
   const db = await peer.createDatabase();
 
   const makeSandbox = (entry: URL) =>

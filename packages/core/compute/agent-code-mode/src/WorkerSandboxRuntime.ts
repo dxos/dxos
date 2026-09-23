@@ -17,6 +17,7 @@ import { Database, JsonSchema, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
@@ -75,12 +76,20 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     // Rebuilt through the effect schema rather than by `makeObjectFromJsonSchema`, which returns a
     // STORED schema entity — one the registry holds but `Type.isObject` rejects, so `make` would not
     // find a type to construct from.
+    //
+    // One at a time: the JSON-schema round trip does not cover every schema (a record keyed by a
+    // pattern, for one), and a type the worker cannot rebuild must cost only that type — not every
+    // evaluation in a workspace that happens to register it.
+    const types = init.types.flatMap(({ typename, version, jsonSchema }) => {
+      try {
+        return [Type.makeObject(DXN.make(typename, version))(JsonSchema.toEffectSchema(jsonSchema))];
+      } catch (error) {
+        log.warn('code-mode worker cannot rebuild type; it is unavailable to the sandbox', { typename, error });
+        return [];
+      }
+    });
     yield* Effect.promise(async () => {
-      await echo.graph.registry.add(
-        init.types.map(({ typename, version, jsonSchema }) =>
-          Type.makeObject(DXN.make(typename, version))(JsonSchema.toEffectSchema(jsonSchema)),
-        ),
-      );
+      await echo.graph.registry.add(types);
     });
 
     const db = echo.constructDatabase({
