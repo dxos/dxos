@@ -79,7 +79,7 @@ export type Edges = Record<string, string[]>;
 export type GraphKindType = 'readable' | 'expandable' | 'writable';
 
 /**
- * A node's atom stays mounted while the node is in the graph. The other accessors are views that a
+ * While the graph is retained, a node's atom stays mounted as long as the node is in it. The other accessors are views that a
  * bare `registry.subscribe` never computes, so it never fires: pass `{ immediate: true }`.
  */
 export interface BaseGraph extends Pipeable.Pipeable {
@@ -217,7 +217,7 @@ export const getGraph = (node: Node.Node): Graph => {
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  * @internal
  */
-export class GraphImpl implements WritableGraph, Disposable {
+export class GraphImpl implements WritableGraph {
   readonly [GraphTypeId]: GraphTypeId = GraphTypeId;
   readonly [GraphKind] = 'writable' as const;
 
@@ -237,12 +237,11 @@ export class GraphImpl implements WritableGraph, Disposable {
   readonly _registry: Registry.AtomRegistry;
 
   /**
-   * One mount per node while it is in the graph, so a node's atom keeps one identity and its
-   * dependents stay wired for as long as the node exists. Released by {@link release} and by
-   * disposing the graph.
+   * One mount per node while the graph is retained, so a node's atom keeps one identity and its
+   * dependents stay wired. Undefined while nothing retains the graph; see {@link retain}.
    * @internal
    */
-  readonly _pins = new Map<string, CleanupFn>();
+  _pins?: Map<string, CleanupFn>;
   readonly _expanded = new Set<string>();
   /** Relation keys a node has held, so an emptied relation still reports an empty list. */
   readonly _relations = new Map<string, Set<string>>();
@@ -418,14 +417,26 @@ export class GraphImpl implements WritableGraph, Disposable {
   _setNode(id: string, node: Option.Option<Node.Node>): void {
     this._model.setNode({ id, data: Option.getOrUndefined(node) });
     // After the write, so the atom is computed with the value rather than with `none`.
-    if (!this._pins.has(id)) {
+    if (this._pins && !this._pins.has(id)) {
       this._pins.set(id, this._registry.mount(this._node(id)));
     }
   }
 
-  [Symbol.dispose](): void {
-    this._pins.forEach((unpin) => unpin());
-    this._pins.clear();
+  /** @internal */
+  _retain(): CleanupFn {
+    invariant(!this._pins, 'Graph is already retained.');
+    const pins = new Map<string, CleanupFn>();
+    for (const { id } of this._model.nodes) {
+      pins.set(id, this._registry.mount(this._node(id)));
+    }
+    this._pins = pins;
+    return () => {
+      if (this._pins !== pins) {
+        return;
+      }
+      pins.forEach((unpin) => unpin());
+      this._pins = undefined;
+    };
   }
 
   /** @internal */
@@ -472,9 +483,10 @@ export const make = (params?: GraphProps): Graph => {
 };
 
 /**
- * Releases the node atoms the graph keeps mounted in its registry. Call once the graph is no longer used.
+ * Pins the graph's nodes in its registry, including nodes added later, until the returned function
+ * is called. A graph has one holder at a time.
  */
-export const dispose = (graph: BaseGraph): void => getInternal(graph)[Symbol.dispose]();
+export const retain = (graph: BaseGraph): CleanupFn => getInternal(graph)._retain();
 
 /**
  * Convert the graph to a JSON object.
@@ -769,8 +781,8 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
   const internal = getInternal(graph);
   internal._model.batch(() => {
     for (const id of ids) {
-      internal._pins.get(id)?.();
-      internal._pins.delete(id);
+      internal._pins?.get(id)?.();
+      internal._pins?.delete(id);
       internal._relations.delete(id);
     }
 

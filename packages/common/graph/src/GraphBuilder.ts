@@ -134,6 +134,8 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   release(ids: readonly string[]): void;
   /** The edges leaving `id`, read without subscribing. */
   outgoing(id: string): readonly Edge[];
+  /** Releases what the store holds on the builder's behalf; called by {@link destroy}. */
+  dispose?(): void;
 }
 
 /**
@@ -820,6 +822,7 @@ export const setRetention = <B extends Any>(
 export const destroy = (builder: Any): void => {
   builder._subscriptions.forEach((forNode) => forNode.forEach((unsubscribe) => unsubscribe()));
   builder._subscriptions.clear();
+  builder._store.dispose?.();
 };
 
 /**

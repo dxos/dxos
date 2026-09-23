@@ -126,16 +126,16 @@ describe('retention', () => {
     expect(registry.getNodes().size).to.be.lessThan(pinned);
   });
 
-  test('disposing the graph releases every node atom it pinned', async () => {
+  test('destroying the builder releases every node atom it pinned', async () => {
     const harness = setup();
-    const { registry, graph } = harness;
+    const { registry, builder, graph } = harness;
     await visit(harness, GraphNode.RootId);
     await visit(harness, `${GraphNode.RootId}/w0`);
     await settle();
     const child = `${GraphNode.RootId}/w0/c0`;
     expect(registry.getNodes().has(graph.node(child))).to.be.true;
 
-    Graph.dispose(graph);
+    GraphBuilder.destroy(builder);
     await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
   });

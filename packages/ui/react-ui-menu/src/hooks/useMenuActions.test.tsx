@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { cleanup, render, screen } from '@testing-library/react';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import React, { StrictMode } from 'react';
+import React, { StrictMode, Suspense, use, useState } from 'react';
 import { afterEach, describe, test } from 'vitest';
 import { cdp } from 'vitest/browser';
 
@@ -172,7 +172,7 @@ describe('useMenuBuilder', () => {
     cleanup();
   });
 
-  test('once unmounted and collected, leaves nothing in the registry', async ({ expect }) => {
+  test('once unmounted, leaves nothing in the registry', async ({ expect }) => {
     const registry = Registry.make();
     const renderToolbar = (label: string) => (
       <StrictMode>
@@ -188,13 +188,21 @@ describe('useMenuBuilder', () => {
     expect(screen.getByTestId('item-0').textContent).toBe('three');
 
     unmount();
-    // StrictMode discards a render per update, whose graph and contributions only a finalizer releases.
-    await expect
-      .poll(async () => {
-        await cdp().send('HeapProfiler.collectGarbage');
-        return registry.getNodes().size;
-      })
-      .toBe(0);
+    await expect.poll(() => collectedSize(registry)).toBe(0);
+  });
+
+  test('a render that never commits leaves nothing in the registry', async ({ expect }) => {
+    const registry = Registry.make();
+    render(
+      <RegistryContext.Provider value={registry}>
+        <Suspense fallback={null}>
+          <Toolbar label='one' />
+          <Suspend />
+        </Suspense>
+      </RegistryContext.Provider>,
+    );
+    expect(screen.queryByTestId('item-0')).toBeNull();
+    await expect.poll(() => collectedSize(registry)).toBe(0);
   });
 
   test('renders when its dependencies change on every render', ({ expect }) => {
@@ -218,13 +226,26 @@ describe('useMenuBuilder', () => {
   });
 });
 
+/** Its action closes over component state, as a real menu's does, so the graph can reach the fiber. */
 const Toolbar = ({ label }: { label: string }) => {
+  const [, setClicks] = useState(0);
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .action('act', { label }, () => {})
+        .action('act', { label }, () => setClicks((clicks) => clicks + 1))
         .build(),
     [label],
   );
   return <Consumer menu={menu} />;
 };
+
+/** Registry size once garbage is collected, which releases the atoms a graph model owns. */
+const collectedSize = async (registry: Registry.AtomRegistry) => {
+  await cdp().send('HeapProfiler.collectGarbage');
+  return registry.getNodes().size;
+};
+
+const never = new Promise<never>(() => {});
+
+/** Suspends forever, so the boundary it sits in never commits. */
+const Suspend = () => use(never);

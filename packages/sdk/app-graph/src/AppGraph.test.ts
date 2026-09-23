@@ -879,6 +879,23 @@ describe('Graph', () => {
 });
 
 describe('registry lifetime', () => {
+  test('a graph pins its nodes only while retained', async () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} });
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(false);
+
+    const release = Graph.retain(graph);
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} });
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(true);
+    expect(registry.getNodes().has(graph.node(exampleId(2)))).toBe(true);
+
+    release();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(false);
+    expect(registry.getNodes().has(graph.node(exampleId(2)))).toBe(false);
+  });
+
   test('readers leave nothing in the registry once they unsubscribe', async () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
