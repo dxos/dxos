@@ -77,10 +77,13 @@ export class RepoProxy extends Resource {
   private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   /**
-   * Documents the host has taken a write for since {@link takeUnflushed} last ran: the only ones a
-   * disk flush can find unsaved on this client's behalf.
+   * Documents the host has taken a write for since a disk flush last took them: the only ones a disk
+   * flush can find unsaved on this client's behalf.
    */
   private readonly _unflushedIds = new Set<DocumentId>();
+
+  /** Disk flushes under way; a concurrent one waits for them, since one may carry its writes. */
+  private readonly _diskFlushes = new Set<Promise<void>>();
 
   /**
    * Document ids that should be subscribed to.
@@ -209,13 +212,21 @@ export class RepoProxy extends Resource {
   }
 
   /**
-   * Waits until every pending document creation and update has been handed to the host.
+   * Waits until every pending document creation and update has been handed to the host, and with
+   * `disk`, until the host has saved the documents this client wrote.
    *
    * Throws if a batch could not be sent. `_sendUpdates` re-queues a failed batch for the next pass,
    * but a short-lived writer (a server-side ECHO client in a worker invocation) is disposed as soon
    * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
    */
-  async flush(): Promise<void> {
+  async flush({ disk = false }: { disk?: boolean } = {}): Promise<void> {
+    await this._sendPending();
+    if (disk) {
+      await this._saveWritten();
+    }
+  }
+
+  private async _sendPending(): Promise<void> {
     await this.flushCreations();
     // Wait for all updates to be sent, retrying a failed batch before giving up on it.
     for (let attempt = 1; ; attempt++) {
@@ -237,15 +248,32 @@ export class RepoProxy extends Resource {
     }
   }
 
-  /** Documents written since the last call, for a disk flush; {@link restoreUnflushed} returns them if it fails. */
-  takeUnflushed(): DocumentId[] {
-    const documentIds = [...this._unflushedIds];
-    this._unflushedIds.clear();
-    return documentIds;
-  }
-
-  restoreUnflushed(documentIds: DocumentId[]): void {
-    documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
+  /**
+   * Has the host save the documents this client wrote since the last disk flush. The host checks every
+   * document it is given, so the set is kept to what changed.
+   */
+  private async _saveWritten(): Promise<void> {
+    for (;;) {
+      const inFlight = [...this._diskFlushes];
+      const documentIds = [...this._unflushedIds];
+      this._unflushedIds.clear();
+      if (documentIds.length > 0) {
+        const saved = runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
+          timeout: RPC_TIMEOUT,
+        }).catch((err) => {
+          documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
+          throw err;
+        });
+        this._diskFlushes.add(saved);
+        void saved.finally(() => this._diskFlushes.delete(saved)).catch(() => {});
+        await saved;
+      }
+      // A failed flush returned its documents, which may include this caller's writes: take them again.
+      const settled = await Promise.allSettled(inFlight);
+      if (settled.every((result) => result.status === 'fulfilled')) {
+        return;
+      }
+    }
   }
 
   /**

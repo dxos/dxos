@@ -120,9 +120,6 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _runtime: EffectContext.Context<never>;
   readonly _repoProxy: RepoProxy;
 
-  /** Disk flushes under way; a concurrent flush waits for them, since one may carry its writes. */
-  private readonly _diskFlushes = new Set<Promise<void>>();
-
   // ── Object storage ──────────────────────────────────────────────────────
   /**
    * Loaded cores, held weakly: a space holds what the caller has open rather than everything it has
@@ -877,8 +874,7 @@ export class EntityManager implements IDatabaseBinding {
     log('flush', { disk, indexes, secondaryIndexes, updates });
     await this._waitForPendingCreations();
     if (disk) {
-      await this._repoProxy.flush();
-      await this._flushToDisk();
+      await this._repoProxy.flush({ disk: true });
     }
 
     if (indexes || secondaryIndexes) {
@@ -887,33 +883,6 @@ export class EntityManager implements IDatabaseBinding {
 
     if (updates) {
       await this._updateScheduler.runBlocking();
-    }
-  }
-
-  /**
-   * Has the host save the documents this client wrote since the last disk flush. The host checks every
-   * document it is given, so the set is kept to what changed.
-   */
-  private async _flushToDisk(): Promise<void> {
-    for (;;) {
-      const inFlight = [...this._diskFlushes];
-      const documentIds = this._repoProxy.takeUnflushed();
-      if (documentIds.length > 0) {
-        const flushed = runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
-          timeout: RPC_TIMEOUT,
-        }).catch((err) => {
-          this._repoProxy.restoreUnflushed(documentIds);
-          throw err;
-        });
-        this._diskFlushes.add(flushed);
-        void flushed.finally(() => this._diskFlushes.delete(flushed)).catch(() => {});
-        await flushed;
-      }
-      // A failed flush returned its documents, which may include this caller's writes: take them again.
-      const settled = await Promise.allSettled(inFlight);
-      if (settled.every((result) => result.status === 'fulfilled')) {
-        return;
-      }
     }
   }
 

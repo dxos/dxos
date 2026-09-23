@@ -391,21 +391,26 @@ describe('RepoProxy', () => {
     }
   });
 
-  test('a disk flush takes only the documents written since the last one', async () => {
-    const { dataService } = await setup();
+  test('a disk flush saves only the documents written since the last one', async () => {
+    let recorder: FlushRecordingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (recorder = new FlushRecordingDataService(props)));
+    invariant(recorder);
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
     type TestDoc = { text?: string };
     const first = clientRepo.create<TestDoc>();
     const second = clientRepo.create<TestDoc>();
-    await clientRepo.flush();
-    expect(new Set(clientRepo.takeUnflushed())).toEqual(new Set([first.documentId, second.documentId]));
+    await clientRepo.flush({ disk: true });
+    expect(new Set(recorder.flushed.at(-1))).toEqual(new Set([first.documentId, second.documentId]));
 
     first.change((doc: TestDoc) => (doc.text = 'changed'));
-    await clientRepo.flush();
-    expect(clientRepo.takeUnflushed()).toEqual([first.documentId]);
-    expect(clientRepo.takeUnflushed()).toEqual([]);
+    await clientRepo.flush({ disk: true });
+    expect(recorder.flushed.at(-1)).toEqual([first.documentId]);
+
+    const flushes = recorder.flushed.length;
+    await clientRepo.flush({ disk: true });
+    expect(recorder.flushed.length).toBe(flushes);
   });
 
   test('client and host make changes simultaneously', async () => {
@@ -674,6 +679,16 @@ class RefusingDataService extends DataServiceImpl {
     return this.refuse
       ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
       : super['DataService.createDocument'](request);
+  }
+}
+
+/** Records the documents each disk flush asks the host to save. */
+class FlushRecordingDataService extends DataServiceImpl {
+  readonly 'flushed': string[][] = [];
+
+  override ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {
+    this.flushed.push([...(request.documentIds ?? [])]);
+    return super['DataService.flush'](request);
   }
 }
 
