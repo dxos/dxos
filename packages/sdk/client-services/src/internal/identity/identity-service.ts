@@ -29,20 +29,20 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityService } from '@dxos/protocols/rpc';
 
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import * as Tags from '../../Tags.ts';
-import { type DataSpaceManager } from '../spaces/index.ts';
-import { type CreateIdentityOptions, type IdentityManager } from './identity-manager.ts';
+import { type CreateIdentityOptions } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
 export class IdentityServiceImpl extends Resource implements IdentityService.Handlers {
   'constructor'(
-    private readonly _identityManager: IdentityManager,
+    private readonly _identityManager: IdentityContract.Manager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
     private readonly _keyring: KeyringApi,
-    private readonly _dataSpaceManager: DataSpaceManager,
+    private readonly _dataSpaceManager: SpacesContract.Manager,
     private readonly _wipeStorage: () => Promise<void>,
     private readonly _createIdentity: (params: CreateIdentityOptions, ctx?: Context) => Promise<Identity>,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
@@ -232,11 +232,11 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 export const IdentityServiceLayer = Layer.effect(
   IdentityService.Tag,
   Effect.gen(function* () {
-    const identityManager = yield* Tags.IdentityManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
-    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
-    const identityLifecycle = yield* Tags.IdentityLifecycleService;
+    const dataSpaceManager = yield* SpacesContract.ManagerService;
+    const identityLifecycle = yield* IdentityContract.LifecycleService;
     const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
     // The stack's own SQLite runtime: the wipe runs under the live stack rather than the reset
     // chain, which tears it down.

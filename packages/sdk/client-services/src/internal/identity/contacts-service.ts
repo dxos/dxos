@@ -21,17 +21,16 @@ import {
 import { ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
-import * as Tags from '../../Tags.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager } from '../spaces/index.ts';
-import { type IdentityManager } from './identity-manager.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
   'constructor'(
-    private readonly _identityManager: IdentityManager,
+    private readonly _identityManager: IdentityContract.Manager,
     private readonly _spaceManager: SpaceManager,
-    private readonly _dataSpaceManagerProvider: () => Promise<DataSpaceManager>,
+    private readonly _dataSpaceManagerProvider: () => Promise<SpacesContract.Manager>,
   ) {}
 
   ['ContactsService.getContacts'](): Effect.Effect<ContactBook, Error> {
@@ -107,9 +106,9 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
 export const ContactsServiceLayer = Layer.effect(
   ContactsService.Tag,
   Effect.gen(function* () {
-    const identityManager = yield* Tags.IdentityManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
     const spaceManager = yield* SpaceManagerService;
-    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const dataSpaceManager = yield* SpacesContract.ManagerService;
     const readiness = yield* Readiness.StackReadinessService;
     return new ContactsServiceImpl(identityManager, spaceManager, () =>
       readiness.initialized.wait().then(() => dataSpaceManager),

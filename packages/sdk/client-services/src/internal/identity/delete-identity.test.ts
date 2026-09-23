@@ -153,8 +153,9 @@ describe('IdentityService.deleteIdentity', () => {
     await deleteIdentity();
 
     // A disposed context runs new `onDispose` callbacks immediately, which would tear the next
-    // identity's credential subscription down as it is registered.
-    expect(serviceContext.identityManager['_ctx'].disposed).to.be.false;
+    // identity's credential subscription down as it is registered — leaving it without a HALO anchor.
+    const next = await createIdentity();
+    expect(next.spaceKey).to.exist;
   });
 
   test('removes the automerge documents, hypercore files, feeds, index tables and keys', async () => {

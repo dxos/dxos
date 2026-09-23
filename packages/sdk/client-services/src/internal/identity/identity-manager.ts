@@ -56,10 +56,10 @@ import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import * as Auth from '../../Auth.ts';
+import * as IdentityContract from '../../contracts/identity.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
 import * as Events from '../../Events.ts';
 import { Identity } from '../../Identity.ts';
-import * as Tags from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
 
@@ -124,7 +124,7 @@ export type IdentityProvider = () => Identity;
  * Builds an {@link IdentityProvider} from an {@link IdentityManager}.
  */
 export const identityProviderFromManager =
-  (identityManager: IdentityManager): IdentityProvider =>
+  (identityManager: IdentityContract.Manager): IdentityContract.Provider =>
   () =>
     identityManager.identity ?? failUndefined();
 
@@ -601,12 +601,12 @@ export type IdentityManagerLayerOptions = Pick<
 export const IdentityManagerLayer = (
   options: IdentityManagerLayerOptions = {},
 ): Layer.Layer<
-  Tags.IdentityManagerService,
+  IdentityContract.ManagerService,
   never,
   Hook.Controller | IMetadataStoreService | KeyringApiService | HypercoreStoreService | SpaceManagerService
 > =>
   Layer.effect(
-    Tags.IdentityManagerService,
+    IdentityContract.ManagerService,
     Effect.gen(function* () {
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;

@@ -43,8 +43,8 @@ import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
+import * as IdentityContract from '../../contracts/identity.ts';
 import { type Identity } from '../../Identity.ts';
-import * as Tags from '../../Tags.ts';
 import { type JoinIdentityProps } from './identity-manager.ts';
 
 /**
@@ -352,14 +352,14 @@ const decodeCredential = (credentialBase64: string): Credential =>
 export const EdgeIdentityRecoveryManagerLayer = (): Layer.Layer<
   EdgeIdentityRecoveryManagerService,
   never,
-  KeyringApiService | Tags.IdentityManagerService
+  KeyringApiService | IdentityContract.ManagerService
 > =>
   Layer.effect(
     EdgeIdentityRecoveryManagerService,
     Effect.gen(function* () {
       const keyring = yield* KeyringApiService;
       const edgeClient = yield* Effect.serviceOption(EdgeHttpClientService);
-      const identityManager = yield* Tags.IdentityManagerService;
+      const identityManager = yield* IdentityContract.ManagerService;
       return new EdgeIdentityRecoveryManager(
         keyring,
         Option.getOrUndefined(edgeClient),

@@ -23,11 +23,12 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import * as Tags from '../../Tags.ts';
 import { type IdentityProvider } from '../identity/index.ts';
-import { type DataSpaceManager } from '../spaces/index.ts';
+
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
 const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;
@@ -54,7 +55,7 @@ export class EdgeAgentManager extends Resource {
   constructor(
     private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
-    private readonly _dataSpaceManager: DataSpaceManager,
+    private readonly _dataSpaceManager: SpacesContract.Manager,
     private readonly _identityProvider: IdentityProvider,
   ) {
     super();
@@ -221,13 +222,13 @@ export const EdgeAgentManagerLayer = (
 ): Layer.Layer<
   EdgeAgentManagerService,
   never,
-  Hook.Controller | Tags.DataSpaceManagerService | Tags.IdentityProviderService
+  Hook.Controller | SpacesContract.ManagerService | IdentityContract.ProviderService
 > =>
   Layer.effect(
     EdgeAgentManagerService,
     Effect.gen(function* () {
-      const dataSpaceManager = yield* Tags.DataSpaceManagerService;
-      const identityProvider = yield* Tags.IdentityProviderService;
+      const dataSpaceManager = yield* SpacesContract.ManagerService;
+      const identityProvider = yield* IdentityContract.ProviderService;
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
       const edgeAgentManager = new EdgeAgentManager(
         options.edgeFeatures,

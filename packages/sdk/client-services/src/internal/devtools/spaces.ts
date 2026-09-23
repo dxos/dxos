@@ -18,9 +18,9 @@ import {
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
+import * as SpacesContract from '../../contracts/spaces.ts';
 import { type IMetadataStore } from '../metadata/index.ts';
 import { type Space, type SpaceManager } from '../space/index.ts';
-import { type DataSpaceManager } from '../spaces/index.ts';
 
 export const subscribeToSpaces = (
   {
@@ -31,7 +31,7 @@ export const subscribeToSpaces = (
   }: {
     spaceManager: SpaceManager;
     metadataStore: IMetadataStore;
-    dataSpaceManager: DataSpaceManager;
+    dataSpaceManager: SpacesContract.Manager;
     initialized: Trigger;
   },
   { spaceKeys = [] }: DevtoolsHost.SubscribeToSpacesRequest,

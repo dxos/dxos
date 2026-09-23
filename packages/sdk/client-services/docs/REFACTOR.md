@@ -21,7 +21,7 @@ current shape. This file proposes the target and the order to get there.
 src/
   index.ts                 -- export * as Foo from './Foo.ts'
   errors.ts
-  Tags.ts                  -- every Context tag + its interface type   (tier 0)
+  contracts/               -- per-subsystem interfaces + their tags     (tier 0)
   Events.ts                -- lifecycle Hooks                          (tier 0)
   Readiness.ts             -- StackReadiness                           (tier 0)
   SqliteStorage.ts                                                     (tier 0)
@@ -46,17 +46,25 @@ src/
 Tier rule: a module may import strictly lower tiers only. `Tags.ts` imports
 nothing from the package.
 
-## Why `Tags.ts` rather than a tag per module
+## Why contract modules rather than a tag per implementation
 
 The measurement in §2.2 of the graph doc is the argument: 3 of the 4 residual
 domain cycles exist because declaring a dependency on a peer requires importing
-that peer's implementation. Effect's own guidance is that a tag is an _interface_
-— putting the 18 tags plus their interface types in one leaf makes "module A
-depends on service B" expressible without an implementation edge, and is what
-takes the graph from a 2-cycle to acyclic.
+that peer's implementation. Effect's own guidance is that a tag is an _interface_,
+so a tag typed against a class is the dependency, not a way around it.
 
-`Tags.ts` stays cheap because it holds interfaces and `Context.Service` classes
-only; every class body stays in its own module.
+Two things follow, and both matter:
+
+1. **The interface has to be real.** Typing the tag against the implementation
+   through a type-only import removes the emitted `require` and nothing else —
+   the service type is still the class, with its whole public surface. Worse, a
+   checker that measures runtime edges then reports the graph as acyclic, so the
+   cycle survives *and* stops being visible.
+2. **The grouping is by subsystem, not by kind.** One file of "all the tags" is
+   the same mistake as one file of "all the events": to see what the identity
+   subsystem promises you would have to visit three files and filter each. A
+   contract module holds one subsystem's interfaces and the tags that carry them,
+   and is the thing a consumer depends on.
 
 ## Stages
 
@@ -91,23 +99,41 @@ Effect: largest SCC 11 → 4. No behaviour change; imports only.
 Effect: largest SCC 4 → 2 (`identity ↔ spaces`), then 2 → none once Stage 3
 lands the tags.
 
-### Stage 3 — tag/implementation split — **done**
+### Stage 3 — subsystem contracts — **done**
 
-Only the tags whose consumers sit _beside or below_ the implementation need to
-move — measured, that is six of the eighteen: `IdentityManagerService`,
-`IdentityProviderService`, `IdentityLifecycleService`, `InvitationsManagerService`,
-`DataSpaceManagerService` and `SigningContextProviderService`. They go to
-`src/Tags.ts`, which references each implementation through a **type-only**
-import: the tag keeps its exact service type without a hand-written interface,
-and the import is erased on emit so it carries no runtime edge. Each
-implementation module now imports its own tag from `Tags.ts`, which is the only
-direction that remains at runtime.
+A tag typed against an implementation class keeps the dependency and erases only the import that
+would show it. `Context.Service<ManagerService, DataSpaceManager>` makes every consumer of the tag
+depend on the manager's whole class, structurally, while a runtime-edge check reports the graph as
+acyclic — the worst of both, because the cycle is still there and nothing points at it.
 
-The other twelve tags stay next to their implementations, because every consumer
-already sits above them.
+So the tags moved into **subsystem contract modules** under `src/contracts/`, grouped by subsystem
+rather than by kind, each owning the interfaces its tags are typed against:
 
-Effect: **acyclic** — 57 edges down to 33, largest SCC 11 → 1.
-`dependency-graph.mjs --check` now exits 0 and is wired up as `client-services:graph`.
+| contract | interfaces | tags |
+| --- | --- | --- |
+| `contracts/identity.ts` | `Manager`, `Provider`, `Lifecycle`, `JoinIdentityProps`, `CreateIdentityOptions` | `ManagerService`, `ProviderService`, `LifecycleService` |
+| `contracts/spaces.ts` | `Manager`, `SigningContext`, `SigningContextProvider`, the space option types | `ManagerService`, `SigningContextProviderService` |
+| `contracts/invitations.ts` | `Manager` | `ManagerService` |
+
+`contracts/invitation-protocol.ts` moved here whole: it was already a pure interface module.
+
+**A contract may not import an implementation**, and `dependency-graph.mjs --check` enforces that on
+type edges, not just runtime ones — otherwise the checker certifies exactly what the type-only trick
+hides. The one declared exception is `DataSpace`, named in `ALLOWED_AGGREGATES`.
+
+Why that exception: `DataSpace` is an aggregate its consumers use as a rich object — ~20 members
+across `key`, `inner`, `spaceState`, `protocol`, `notarizationPlugin`, `presence` and the rest — so
+an interface over it would be a transcription of the class, not an abstraction, and would drag in
+five more types to state. The same reasoning keeps `Identity` concrete. Managers are services with
+verb-like surfaces, so they get real interfaces; aggregates stay concrete.
+
+Writing the interfaces was also how the real surfaces came to light: the compiler found members the
+measurement had missed, because it only saw `yield*`-bound consumers and not constructor-injected
+ones — `stateUpdate`, `updateProfile`, `updateDeviceProfile`, `deleteIdentity` on the identity
+manager, and eleven more on the invitations manager.
+
+Effect: **acyclic** — 57 edges down to 33, largest SCC 11 → 1, and the dependency the tags were
+carrying is gone rather than hidden.
 
 ### Stage 4 — namespace modules — **done**
 

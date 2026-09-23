@@ -61,9 +61,9 @@ import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
-import * as Tags from '../../Tags.ts';
-import { type IdentityManager } from '../identity/index.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -73,17 +73,16 @@ import {
   writeSerializedSpaceArchive,
 } from '../space-export/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager } from './data-space-manager.ts';
 import { type DataSpace } from './data-space.ts';
 
 /** Reads the space as the buf message the service returns. */
 
 export class SpacesServiceImpl implements SpacesService.Handlers {
   'constructor'(
-    private readonly _identityManager: IdentityManager,
+    private readonly _identityManager: IdentityContract.Manager,
     private readonly _spaceManager: SpaceManager,
     private readonly _echoHost: EchoHost,
-    private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
+    private readonly _getDataSpaceManager: Provider<Promise<SpacesContract.Manager>>,
   ) {}
 
   ['SpacesService.createSpace'](request: SpacesService.CreateSpaceRequest): Effect.Effect<Space, BaseError> {
@@ -603,18 +602,18 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 export const SpacesServiceLayer: Layer.Layer<
   SpacesService.Tag,
   never,
-  | Tags.IdentityManagerService
+  | IdentityContract.ManagerService
   | SpaceManagerService
   | EchoHostService
-  | Tags.DataSpaceManagerService
+  | SpacesContract.ManagerService
   | Readiness.StackReadinessService
 > = Layer.effect(
   SpacesService.Tag,
   Effect.gen(function* () {
-    const identityManager = yield* Tags.IdentityManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
     const spaceManager = yield* SpaceManagerService;
     const echoHost = yield* EchoHostService;
-    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const dataSpaceManager = yield* SpacesContract.ManagerService;
     const readiness = yield* Readiness.StackReadinessService;
     return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () =>
       readiness.initialized.wait().then(() => dataSpaceManager),

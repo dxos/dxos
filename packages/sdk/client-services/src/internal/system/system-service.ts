@@ -21,9 +21,10 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Events from '../../Events.ts';
 import * as PlatformInfo from '../../PlatformInfo.ts';
-import * as Tags from '../../Tags.ts';
 import { type Diagnostics, createDiagnosticsFromRouter } from '../diagnostics/index.ts';
 
 export type SystemServiceOptions = {
@@ -179,8 +180,8 @@ export const SystemServiceLayer: Layer.Layer<
   | RpcRouter.RpcRouter
   | ConfigService
   | Hook.Controller
-  | Tags.IdentityManagerService
-  | Tags.DataSpaceManagerService
+  | IdentityContract.ManagerService
+  | SpacesContract.ManagerService
   | SwarmNetworkManagerService
 > = Layer.effect(
   SystemService.Tag,
@@ -189,7 +190,7 @@ export const SystemServiceLayer: Layer.Layer<
     const controller = yield* Hook.Controller;
     const router = yield* RpcRouter.RpcRouter;
     const stack = yield* Effect.context<
-      Tags.IdentityManagerService | Tags.DataSpaceManagerService | SwarmNetworkManagerService
+      IdentityContract.ManagerService | SpacesContract.ManagerService | SwarmNetworkManagerService
     >();
     const service = new SystemServiceImpl({
       config: () => config,

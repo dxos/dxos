@@ -18,9 +18,9 @@ import { type TransportFactory } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 
+import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import * as Tags from '../../Tags.ts';
 import { type IdentityManagerProps, identityProviderFromManager } from '../identity/index.ts';
 import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
@@ -90,12 +90,12 @@ export const registerReplicator = <Self>(
   );
 
 /**
- * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
+ * Provides the {@link IdentityProviderService} from the resolved {@link IdentityContract.Manager}.
  */
 export const identityProviderLayer = Layer.effect(
-  Tags.IdentityProviderService,
+  IdentityContract.ProviderService,
   Effect.gen(function* () {
-    const identityManager = yield* Tags.IdentityManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
     return identityProviderFromManager(identityManager);
   }),
 );
@@ -168,14 +168,14 @@ export const echoHostLayer = (options: { useSubduction?: boolean }) =>
 
       // Points back down the stack, like the feed sync handlers above: the identity manager anchors
       // the HALO space on a root document and needs the open host to do it.
-      const identityManager = yield* Tags.IdentityManagerService;
+      const identityManager = yield* IdentityContract.ManagerService;
       yield* Effect.promise(() => identityManager.setEchoHost(echoHost));
     }),
   ).pipe(
     Layer.provideMerge(
       Layer.unwrap(
         Effect.gen(function* () {
-          const identityManager = yield* Tags.IdentityManagerService;
+          const identityManager = yield* IdentityContract.ManagerService;
           const spaceManager = yield* SpaceManagerService;
           return EchoHostLayer({
             peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),

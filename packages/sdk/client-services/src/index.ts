@@ -5,6 +5,9 @@
 // Every export is a namespace; the implementations live in `internal/`, which is not exported.
 
 export * as Agents from './Agents.ts';
+export * as IdentityContract from './contracts/identity.ts';
+export * as InvitationsContract from './contracts/invitations.ts';
+export * as SpacesContract from './contracts/spaces.ts';
 export * as Auth from './Auth.ts';
 export * as CredentialsDocument from './CredentialsDocument.ts';
 export * as Devtools from './Devtools.ts';
@@ -24,5 +27,4 @@ export * as Spaces from './Spaces.ts';
 export * as SqliteStorage from './SqliteStorage.ts';
 export * as Storage from './Storage.ts';
 export * as System from './System.ts';
-export * as Tags from './Tags.ts';
 export * as WorkerRuntime from './WorkerRuntime.ts';

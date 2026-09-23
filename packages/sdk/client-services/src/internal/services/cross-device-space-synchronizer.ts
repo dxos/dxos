@@ -14,10 +14,9 @@ import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import * as Tags from '../../Tags.ts';
-import { DataSpaceManager } from '../spaces/index.ts';
 
 /**
  * Replicates cross-device space membership and deletion credentials from the halo space.
@@ -37,7 +36,7 @@ export class CrossDeviceSpaceSynchronizerService extends EffectContext.Service<
 class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSpaceSynchronizer {
   private _identity?: Identity;
 
-  constructor(private readonly dataSpaceManager: DataSpaceManager) {
+  constructor(private readonly dataSpaceManager: SpacesContract.Manager) {
     super();
   }
 
@@ -121,8 +120,9 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
 /**
  * Creates a dormant {@link CrossDeviceSpaceSynchronizer} bound to the given data space manager.
  */
-export const createCrossDeviceSpaceSynchronizer = (dataSpaceManager: DataSpaceManager): CrossDeviceSpaceSynchronizer =>
-  new CrossDeviceSpaceSynchronizerImpl(dataSpaceManager);
+export const createCrossDeviceSpaceSynchronizer = (
+  dataSpaceManager: SpacesContract.Manager,
+): CrossDeviceSpaceSynchronizer => new CrossDeviceSpaceSynchronizerImpl(dataSpaceManager);
 
 /**
  * Effect Layer constructing a dormant {@link CrossDeviceSpaceSynchronizer}.
@@ -130,11 +130,11 @@ export const createCrossDeviceSpaceSynchronizer = (dataSpaceManager: DataSpaceMa
 export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
   CrossDeviceSpaceSynchronizerService,
   never,
-  Hook.Controller | Tags.DataSpaceManagerService
+  Hook.Controller | SpacesContract.ManagerService
 > = Layer.effect(
   CrossDeviceSpaceSynchronizerService,
   Effect.gen(function* () {
-    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const dataSpaceManager = yield* SpacesContract.ManagerService;
     const synchronizer = createCrossDeviceSpaceSynchronizer(dataSpaceManager);
 
     const ctx = yield* EffectEx.contextFromScope();

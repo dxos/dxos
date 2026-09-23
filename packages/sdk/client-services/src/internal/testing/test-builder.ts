@@ -45,17 +45,19 @@ import { StorageType } from '@dxos/random-access-storage';
 import { RpcRouter } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as InvitationsContract from '../../contracts/invitations.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
 import * as Readiness from '../../Readiness.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import * as Tags from '../../Tags.ts';
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerService,
 } from '../identity/identity-recovery-manager.ts';
-import { type CreateIdentityOptions, type IdentityManager } from '../identity/index.ts';
+import { type CreateIdentityOptions } from '../identity/index.ts';
 import {
   InvitationsHandler,
   InvitationsHandlerService,
@@ -91,8 +93,8 @@ export type ServiceContextOptions = {
 const EXPOSED_TAGS = [
   RpcRouter.RpcRouter,
   Readiness.StackReadinessService,
-  Tags.IdentityManagerService,
-  Tags.IdentityLifecycleService,
+  IdentityContract.ManagerService,
+  IdentityContract.LifecycleService,
   SpaceManagerService,
   IMetadataStoreService,
   EdgeIdentityRecoveryManagerService,
@@ -100,10 +102,10 @@ const EXPOSED_TAGS = [
   HypercoreStoreService,
   EchoHostService,
   InvitationsHandlerService,
-  Tags.InvitationsManagerService,
+  InvitationsContract.ManagerService,
   SwarmNetworkManagerService,
   SignalManagerService,
-  Tags.DataSpaceManagerService,
+  SpacesContract.ManagerService,
   EdgeAgentManagerService,
 ] as const;
 
@@ -170,8 +172,8 @@ export class ServiceContext {
     return this.#get(Readiness.StackReadinessService).initialized;
   }
 
-  get identityManager(): IdentityManager {
-    return this.#get(Tags.IdentityManagerService);
+  get identityManager(): IdentityContract.Manager {
+    return this.#get(IdentityContract.ManagerService);
   }
 
   get spaceManager(): SpaceManager {
@@ -202,8 +204,8 @@ export class ServiceContext {
     return this.#get(InvitationsHandlerService);
   }
 
-  get invitationsManager(): InvitationsManager {
-    return this.#get(Tags.InvitationsManagerService);
+  get invitationsManager(): InvitationsContract.Manager {
+    return this.#get(InvitationsContract.ManagerService);
   }
 
   get networkManager(): SwarmNetworkManager {
@@ -214,8 +216,8 @@ export class ServiceContext {
     return this.#get(SignalManagerService);
   }
 
-  get dataSpaceManager(): DataSpaceManager | undefined {
-    return this.#services && EffectContext.getUnsafe(this.#services, Tags.DataSpaceManagerService);
+  get dataSpaceManager(): SpacesContract.Manager | undefined {
+    return this.#services && EffectContext.getUnsafe(this.#services, SpacesContract.ManagerService);
   }
 
   get edgeAgentManager(): EdgeAgentManager | undefined {
@@ -311,7 +313,7 @@ export class ServiceContext {
   }
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
-    return this.#get(Tags.IdentityLifecycleService).createIdentity(params, ctx ?? this.#ctx);
+    return this.#get(IdentityContract.LifecycleService).createIdentity(params, ctx ?? this.#ctx);
   }
 
   // The stack proves nothing about which tags are built, so the lookup is unsafe by construction:
@@ -391,11 +393,11 @@ export type TestPeerProps = {
   keyring?: SqliteKeyring;
   networkManager?: SwarmNetworkManager;
   spaceManager?: SpaceManager;
-  dataSpaceManager?: DataSpaceManager;
+  dataSpaceManager?: SpacesContract.Manager;
   signingContext?: SigningContext;
   echoHost?: EchoHost;
   meshEchoReplicator?: MeshEchoReplicator;
-  invitationsManager?: InvitationsManager;
+  invitationsManager?: InvitationsContract.Manager;
 };
 
 export class TestPeer {
@@ -463,7 +465,7 @@ export class TestPeer {
     return (this._props.meshEchoReplicator ??= new MeshEchoReplicator());
   }
 
-  get dataSpaceManager(): DataSpaceManager {
+  get dataSpaceManager(): SpacesContract.Manager {
     return (this._props.dataSpaceManager ??= new DataSpaceManager({
       spaceManager: this.spaceManager,
       metadataStore: this.metadataStore,

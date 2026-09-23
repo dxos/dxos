@@ -9,10 +9,10 @@ import { type Context } from '@dxos/context';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import * as Tags from '../../Tags.ts';
-import { type CreateIdentityOptions, type IdentityManager, type JoinIdentityProps } from './identity-manager.ts';
+import { type CreateIdentityOptions, type JoinIdentityProps } from './identity-manager.ts';
 import { EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
 /**
@@ -28,13 +28,13 @@ export interface IdentityLifecycle {
 }
 
 export const IdentityLifecycleLayer: Layer.Layer<
-  Tags.IdentityLifecycleService,
+  IdentityContract.LifecycleService,
   never,
-  Hook.Controller | Tags.IdentityManagerService | EdgeIdentityRecoveryManagerService
+  Hook.Controller | IdentityContract.ManagerService | EdgeIdentityRecoveryManagerService
 > = Layer.effect(
-  Tags.IdentityLifecycleService,
+  IdentityContract.LifecycleService,
   Effect.gen(function* () {
-    const identityManager = yield* Tags.IdentityManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
     const ctx = yield* EffectEx.contextFromScope();
@@ -66,7 +66,7 @@ const createIdentityLifecycle = ({
   ctx: defaultCtx,
   runtime,
 }: {
-  identityManager: IdentityManager;
+  identityManager: IdentityContract.Manager;
   ctx: Context;
   runtime: RuntimeProvider.RuntimeProvider<Hook.Controller>;
 }): IdentityLifecycle => {

@@ -74,26 +74,24 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
-  MembershipPolicy,
   type ProfileDocument,
   SpaceDeletedSchema,
-  type SpaceMember_Role,
   SpaceMember_Role as SpaceMemberRole,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
-import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import * as Auth from '../../Auth.ts';
+import * as IdentityContract from '../../contracts/identity.ts';
+import * as InvitationsContract from '../../contracts/invitations.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import * as Tags from '../../Tags.ts';
-import { type InvitationsManager } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import {
   AuthStatus,
@@ -146,47 +144,12 @@ export const createSigningContextProvider =
  * Effect Layer providing {@link SigningContextProvider} from {@link IdentityProviderService}.
  */
 export const SigningContextProviderLayer = Layer.effect(
-  Tags.SigningContextProviderService,
+  SpacesContract.SigningContextProviderService,
   Effect.gen(function* () {
-    const identityProvider = yield* Tags.IdentityProviderService;
+    const identityProvider = yield* IdentityContract.ProviderService;
     return createSigningContextProvider(identityProvider);
   }),
 );
-
-export type AcceptSpaceOptions = {
-  spaceKey: PublicKey;
-  genesisFeedKey: PublicKey;
-
-  /** From the admitting `SpaceMember` credential; absent for a space still on its control feed. */
-  spaceRootUrl?: string;
-
-  /**
-   * Latest known timeframe for the control pipeline.
-   * We will try to catch up to this timeframe before starting the data pipeline.
-   */
-  controlTimeframe?: Timeframe;
-
-  /**
-   * Latest known timeframe for the data pipeline.
-   * We will try to catch up to this timeframe before initializing the database.
-   */
-  dataTimeframe?: Timeframe;
-
-  /** Tags assigned to the space member. */
-  tags?: string[];
-};
-
-export type AdmitMemberOptions = {
-  spaceKey: PublicKey;
-  identityKey: PublicKey;
-  role: SpaceMember_Role;
-  profile?: ProfileDocument;
-  delegationCredentialId?: PublicKey;
-  tags?: string[];
-
-  /** Successor to `genesisFeedKey`: what lets the admitted member replicate from this credential alone. */
-  spaceRootUrl?: string;
-};
 
 export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
@@ -195,7 +158,7 @@ export type DataSpaceManagerProps = {
   signingContextProvider: SigningContextProvider;
   hypercoreStore: HypercoreStore<FeedMessage>;
   echoHost: EchoHost;
-  invitationsManager: InvitationsManager;
+  invitationsManager: InvitationsContract.Manager;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
@@ -220,20 +183,6 @@ export type DataSpaceManagerRuntimeProps = {
    * Off by default — a space then keeps its key-derived id and its control feed, as before.
    */
   automergeCredentials?: boolean;
-};
-
-export type CreateSpaceOptions = {
-  /**
-   * Anchor the space on a space root document, taking its id from that document instead of from the
-   * space key. Defaults to the `automergeCredentials` runtime flag, which is off — so a space is
-   * key-derived unless the flag opts in. Ignored for an imported space, which brings its own root.
-   */
-  useSpaceRootDocument?: boolean;
-
-  rootUrl?: AutomergeUrl;
-  documents?: Record<DocumentId, Uint8Array>;
-  tags?: string[];
-  membershipPolicy?: MembershipPolicy;
 };
 
 /** Backoff bounds for retrying an anchor that is waiting on replication or an unassigned directory. */
@@ -267,7 +216,7 @@ export class DataSpaceManager extends Resource {
   private readonly _signingContextProvider: SigningContextProvider;
   private readonly _hypercoreStore: HypercoreStore<FeedMessage>;
   private readonly _echoHost: EchoHost;
-  private readonly _invitationsManager: InvitationsManager;
+  private readonly _invitationsManager: InvitationsContract.Manager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
   private readonly _edgeFeatures?: Runtime_Client_EdgeFeatures = undefined;
@@ -393,7 +342,7 @@ export class DataSpaceManager extends Resource {
    */
   @synchronized
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
-  async createSpace(ctx: Context, options: CreateSpaceOptions = {}): Promise<DataSpace> {
+  async createSpace(ctx: Context, options: SpacesContract.CreateSpaceOptions = {}): Promise<DataSpace> {
     assertArgument(
       !!options.rootUrl === !!options.documents,
       'options',
@@ -520,7 +469,7 @@ export class DataSpaceManager extends Resource {
   // TODO(burdon): Rename join space.
   @synchronized
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
-  async acceptSpace(ctx: Context, opts: AcceptSpaceOptions): Promise<DataSpace> {
+  async acceptSpace(ctx: Context, opts: SpacesContract.AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
@@ -797,7 +746,7 @@ export class DataSpaceManager extends Resource {
     this.updated.emit();
   }
 
-  async admitMember(options: AdmitMemberOptions): Promise<Credential> {
+  async admitMember(options: SpacesContract.AdmitMemberOptions): Promise<Credential> {
     const space = this._spaceManager.spaces.get(options.spaceKey);
     invariant(space);
 
@@ -1183,27 +1132,27 @@ export type DataSpaceManagerLayerOptions = Pick<DataSpaceManagerProps, 'runtimeP
 export const DataSpaceManagerLayer = (
   options: DataSpaceManagerLayerOptions = {},
 ): Layer.Layer<
-  Tags.DataSpaceManagerService,
+  SpacesContract.ManagerService,
   never,
   | Hook.Controller
   | SpaceManagerService
   | IMetadataStoreService
   | KeyringApiService
-  | Tags.SigningContextProviderService
+  | SpacesContract.SigningContextProviderService
   | HypercoreStoreService
   | EchoHostService
-  | Tags.InvitationsManagerService
+  | InvitationsContract.ManagerService
 > =>
   Layer.effect(
-    Tags.DataSpaceManagerService,
+    SpacesContract.ManagerService,
     Effect.gen(function* () {
       const spaceManager = yield* SpaceManagerService;
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;
-      const signingContextProvider = yield* Tags.SigningContextProviderService;
+      const signingContextProvider = yield* SpacesContract.SigningContextProviderService;
       const hypercoreStore = yield* HypercoreStoreService;
       const echoHost = yield* EchoHostService;
-      const invitationsManager = yield* Tags.InvitationsManagerService;
+      const invitationsManager = yield* InvitationsContract.ManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
       const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);

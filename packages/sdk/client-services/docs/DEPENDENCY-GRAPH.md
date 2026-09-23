@@ -154,3 +154,11 @@ row is the tree as it stands; `--check` exits 0.
 
 Type-only imports are excluded from the edge counts: they are erased on emit and
 cannot form a runtime cycle. Pass `--types` to include them.
+
+That exclusion is safe only because the contract rule is checked separately. A tag
+typed against an implementation class keeps the dependency while erasing the
+import that shows it, so a runtime-edge count alone would certify exactly what
+that hides. `--check` therefore also fails when a module under `src/contracts/`
+imports anything from `src/internal/`, on type edges as well as runtime ones —
+with `DataSpace` as the one declared exception, for the reason given in
+[`REFACTOR.md`](./REFACTOR.md) §Stage 3.

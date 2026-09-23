@@ -21,14 +21,13 @@ import {
 import { InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import * as Tags from '../../Tags.ts';
-import { type InvitationsManager } from './invitations-manager.ts';
+import * as InvitationsContract from '../../contracts/invitations.ts';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService.Handlers {
-  'constructor'(private readonly _invitationsManager: InvitationsManager) {}
+  'constructor'(private readonly _invitationsManager: InvitationsContract.Manager) {}
 
   // TODO(burdon): Guest/host label.
   'getLoggingContext'() {
@@ -182,5 +181,8 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
 
 export const InvitationsServiceLayer = Layer.effect(
   InvitationsService.Tag,
-  Effect.map(Tags.InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
+  Effect.map(
+    InvitationsContract.ManagerService,
+    (invitationsManager) => new InvitationsServiceImpl(invitationsManager),
+  ),
 );

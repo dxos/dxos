@@ -29,11 +29,10 @@ import {
 import { DevtoolsHost } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
+import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
-import * as Tags from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager } from '../spaces/index.ts';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds.ts';
 import { subscribeToKeyringKeys } from './keys.ts';
 import { subscribeToMetadata } from './metadata.ts';
@@ -51,7 +50,7 @@ export type DevtoolsServiceProps = {
   hypercoreStore: HypercoreStore<any>;
   spaceManager: SpaceManager;
   metadataStore: IMetadataStore;
-  dataSpaceManager: DataSpaceManager;
+  dataSpaceManager: SpacesContract.Manager;
   initialized: Trigger;
   signalManager: SignalManager;
   networkManager: SwarmNetworkManager;
@@ -272,7 +271,7 @@ const devtoolsImplLayer: Layer.Layer<
   | HypercoreStoreService
   | SpaceManagerService
   | IMetadataStoreService
-  | Tags.DataSpaceManagerService
+  | SpacesContract.ManagerService
   | Readiness.StackReadinessService
   | SignalManagerService
   | SwarmNetworkManagerService
@@ -286,7 +285,7 @@ const devtoolsImplLayer: Layer.Layer<
     const hypercoreStore = yield* HypercoreStoreService;
     const spaceManager = yield* SpaceManagerService;
     const metadataStore = yield* IMetadataStoreService;
-    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const dataSpaceManager = yield* SpacesContract.ManagerService;
     const readiness = yield* Readiness.StackReadinessService;
     const signalManager = yield* SignalManagerService;
     const networkManager = yield* SwarmNetworkManagerService;

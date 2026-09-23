@@ -45,13 +45,14 @@ import {
   SpaceAdmissionRequestSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
-import { type DataSpaceManager, type SigningContext } from '../spaces/index.ts';
-import { type InvitationProtocol } from './invitation-protocol.ts';
+import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
+import { type SigningContext } from '../spaces/index.ts';
 import { computeExpirationTime, toSpaceMemberRole } from './utils.ts';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
-    private readonly _spaceManager: DataSpaceManager,
+    private readonly _spaceManager: SpacesContract.Manager,
     private readonly _signingContext: SigningContext,
     private readonly _keyring: KeyringApi,
     private readonly _spaceKey?: PublicKey,

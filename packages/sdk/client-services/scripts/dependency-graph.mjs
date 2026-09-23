@@ -99,6 +99,26 @@ for (const node of nodes.toSorted()) {
 }
 console.log(`\n# ${nodes.length} modules, ${total} edges`);
 
+// A contract module may not depend on an implementation, on type edges as well as runtime ones:
+// a tag typed against an implementation class keeps the dependency while erasing the import that
+// would show it, so checking only runtime edges would certify exactly what the trick hides.
+const contractsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'contracts');
+const ALLOWED_AGGREGATES = ['internal/spaces/data-space.ts'];
+const violations = [];
+for (const path of walk(contractsDir)) {
+  if (!path.endsWith('.ts')) {
+    continue;
+  }
+  for (const [, spec] of readFileSync(path, 'utf8').matchAll(/from '(\.[^']+)'/g)) {
+    const target = relative(join(contractsDir, '..'), normalize(join(dirname(path), spec)));
+    if (target.startsWith(`internal${sep}`) && !ALLOWED_AGGREGATES.includes(target.split(sep).join('/'))) {
+      violations.push(`  ${relative(contractsDir, path)} -> ${target}`);
+    }
+  }
+}
+console.log('\n# Contracts depending on implementations');
+console.log(violations.length ? violations.join('\n') : '  none beyond the declared aggregates');
+
 const cycles = components.filter((component) => component.length > 1);
 console.log('\n# Cycles');
 for (const cycle of cycles) {
@@ -107,4 +127,4 @@ for (const cycle of cycles) {
 if (cycles.length === 0) {
   console.log('  none');
 }
-process.exit(process.argv.includes('--check') && cycles.length > 0 ? 1 : 0);
+process.exit(process.argv.includes('--check') && (cycles.length > 0 || violations.length > 0) ? 1 : 0);

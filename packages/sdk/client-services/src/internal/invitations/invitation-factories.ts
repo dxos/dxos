@@ -11,9 +11,11 @@ import { KeyringApiService } from '@dxos/keyring';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import * as Tags from '../../Tags.ts';
+import * as IdentityContract from '../../contracts/identity.ts';
+import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
+import * as InvitationsContract from '../../contracts/invitations.ts';
+import * as SpacesContract from '../../contracts/spaces.ts';
 import { DeviceInvitationProtocol } from './device-invitation-protocol.ts';
-import { type InvitationProtocol } from './invitation-protocol.ts';
 import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 
 /**
@@ -23,20 +25,20 @@ import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 export const InvitationFactoriesLayer: Layer.Layer<
   never,
   never,
-  | Tags.InvitationsManagerService
-  | Tags.IdentityManagerService
-  | Tags.IdentityLifecycleService
+  | InvitationsContract.ManagerService
+  | IdentityContract.ManagerService
+  | IdentityContract.LifecycleService
   | KeyringApiService
-  | Tags.DataSpaceManagerService
-  | Tags.SigningContextProviderService
+  | SpacesContract.ManagerService
+  | SpacesContract.SigningContextProviderService
 > = Layer.effectDiscard(
   Effect.gen(function* () {
-    const invitationsManager = yield* Tags.InvitationsManagerService;
-    const identityManager = yield* Tags.IdentityManagerService;
-    const identityLifecycle = yield* Tags.IdentityLifecycleService;
+    const invitationsManager = yield* InvitationsContract.ManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
+    const identityLifecycle = yield* IdentityContract.LifecycleService;
     const keyring = yield* KeyringApiService;
-    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
-    const signingContextProvider = yield* Tags.SigningContextProviderService;
+    const dataSpaceManager = yield* SpacesContract.ManagerService;
+    const signingContextProvider = yield* SpacesContract.SigningContextProviderService;
 
     const factories = new Map<Invitation_Kind, (invitation: Partial<Invitation>) => InvitationProtocol>([
       [

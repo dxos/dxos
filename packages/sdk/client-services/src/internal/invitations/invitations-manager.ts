@@ -31,10 +31,10 @@ import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/creden
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
+import type { InvitationProtocol } from '../../contracts/invitation-protocol.ts';
+import * as InvitationsContract from '../../contracts/invitations.ts';
 import * as Events from '../../Events.ts';
-import * as Tags from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
-import type { InvitationProtocol } from './invitation-protocol.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
 /**
@@ -402,12 +402,12 @@ export class InvitationsManager {
  * {@link InvitationsManager.setInvitationHandlerFactory} after composition.
  */
 export const InvitationsManagerLayer = (): Layer.Layer<
-  Tags.InvitationsManagerService,
+  InvitationsContract.ManagerService,
   never,
   Hook.Controller | InvitationsHandlerService | IMetadataStoreService
 > =>
   Layer.effect(
-    Tags.InvitationsManagerService,
+    InvitationsContract.ManagerService,
     Effect.gen(function* () {
       const invitationsHandler = yield* InvitationsHandlerService;
       const metadataStore = yield* IMetadataStoreService;

@@ -24,12 +24,11 @@ import {
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { DevicesService } from '@dxos/protocols/rpc';
 
-import * as Tags from '../../Tags.ts';
-import { type IdentityManager } from '../identity/index.ts';
+import * as IdentityContract from '../../contracts/identity.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(
-    private readonly _identityManager: IdentityManager,
+    private readonly _identityManager: IdentityContract.Manager,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
@@ -126,7 +125,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
 export const DevicesServiceLayer = Layer.effect(
   DevicesService.Tag,
   Effect.gen(function* () {
-    const identityManager = yield* Tags.IdentityManagerService;
+    const identityManager = yield* IdentityContract.ManagerService;
     // Edge connection is absent in the non-edge stack, so resolve it optionally.
     const edgeConnection = Option.getOrUndefined(yield* Effect.serviceOption(EdgeConnectionService));
     return new DevicesServiceImpl(identityManager, edgeConnection);
