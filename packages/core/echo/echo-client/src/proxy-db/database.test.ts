@@ -709,6 +709,23 @@ describe('Database', () => {
     });
   });
 
+  test('a parent atom follows the parent edge', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const task = db.add(Obj.make(TestSchema.Task, { title: 'x' }));
+    const first = db.add(Obj.make(TestSchema.Person, { name: 'first', tasks: [Ref.make(task)] }));
+    const second = db.add(Obj.make(TestSchema.Person, { name: 'second', tasks: [Ref.make(task)] }));
+    Obj.setParent(task, first);
+    await db.flush();
+
+    const registry = AtomRegistry.make();
+    const atom = Obj.parentAtom(task);
+    registry.subscribe(atom, () => {});
+    expect(registry.get(atom)?.id).toBe(first.id);
+
+    Obj.setParent(task, second);
+    await expect.poll(() => registry.get(atom)?.id).toBe(second.id);
+  });
+
   test('a property traversal returns targets in array order', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
     const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));

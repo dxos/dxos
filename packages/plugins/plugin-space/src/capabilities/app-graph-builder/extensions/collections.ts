@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -75,12 +74,6 @@ const isTypeAvailable = (typenames: ReadonlySet<string>, object: Obj.Unknown): b
   const typename = Obj.getTypename(object);
   // No typename at all is not an unavailable type — leave those to the renderers.
   return !typename || typenames.has(typename);
-};
-
-const liveParentOf = (get: Atom.AtomContext, object: Obj.Unknown): Obj.Unknown | undefined => {
-  const db = Obj.getDatabase(object);
-  const [parent] = db ? get(db.query(Query.select(Filter.id(object.id)).parent()).atom) : [];
-  return Obj.isObject(parent) ? parent : undefined;
 };
 
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
@@ -291,7 +284,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const parentCollection =
           parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
         const container = AppNode.getContainer(parentNode);
-        const linkedFrom = container && ContainerModel.isLink(container, liveParentOf(get, object)) ? container : undefined;
+        const linkedFrom =
+          container && ContainerModel.isLink(container, get(Obj.parentAtom(object))) ? container : undefined;
 
         return Effect.succeed(
           constructObjectActions({
