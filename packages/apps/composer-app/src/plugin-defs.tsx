@@ -184,7 +184,10 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
 const codeModeTurnProducer: MakeTurnProducer = (options) =>
   Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
     Effect.matchEffect({
-      onSuccess: ({ makeCodeModeTurnProducer }) => makeCodeModeTurnProducer()(options),
+      // The Effect dialect hands the model the repo's own ECHO API (live objects, `Ref.make`), which
+      // pins evaluation to the in-process sandbox — see the `codeMode` setting's warning.
+      onSuccess: ({ EffectDialect, makeCodeModeTurnProducer }) =>
+        makeCodeModeTurnProducer({ dialect: EffectDialect })(options),
       onFailure: (error) =>
         Effect.logWarning('code mode unavailable; using the standard turn producer', error).pipe(
           // Already loaded by the agent service that calls this, so the import resolves from cache.

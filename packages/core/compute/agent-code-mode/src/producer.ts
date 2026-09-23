@@ -20,6 +20,7 @@ import type { ContentBlock, Message } from '@dxos/types';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
 import { makeEvalToolkit } from './eval-tool.ts';
+import { describeFields } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -196,7 +197,7 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
       typename: Type.getTypename(type) ?? '',
       // The same `fields` record the sandbox's bound type carries, which is what the model would
       // otherwise go looking for.
-      fields: Object.keys(('fields' in type && type.fields) || {}),
+      fields: describeFields(('fields' in type && type.fields) || {}),
     }))
     .filter(({ typename }) => typename.length > 0);
 });

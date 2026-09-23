@@ -28,11 +28,22 @@ export type SandboxOperation = {
   readonly invoke: (input: unknown) => Effect.Effect<unknown>;
 };
 
+/** One field of a registered type, as the model is told about it. */
+export type SandboxField = {
+  readonly name: string;
+  /** TypeScript-like label, e.g. `string`, `"open" | "done"`, `Ref<org.dxos.type.text>`. */
+  readonly type: string;
+  readonly optional: boolean;
+};
+
 /** A type the workspace has registered, as the model is told about it. */
 export type SandboxType = {
   readonly typename: string;
-  /** Field names, so the model never has to introspect a schema to find out what it may write. */
-  readonly fields: readonly string[];
+  /**
+   * Fields with their types, so the model never has to introspect a schema to find out what it may
+   * write — least of all that a field holds a reference, which a name alone does not say.
+   */
+  readonly fields: readonly SandboxField[];
 };
 
 /** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
@@ -81,10 +92,14 @@ export const renderTypes = (types: readonly SandboxType[]): string =>
     : trim`
       ### Types
 
-      Every registered type and its fields. This is the whole schema — do not introspect it further.
+      Every registered type and its fields (\`?\` marks an optional field). This is the whole schema —
+      do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
+      the object or its id.
 
-      ${types.map(({ typename, fields }) => `- \`${typename}\` — ${fields.join(', ')}`).join('\n')}
+      ${types.map(({ typename, fields }) => `- \`${typename}\` — ${fields.map(renderField).join(', ')}`).join('\n')}
     `;
+
+const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;
 
 /** One operation's line in the API reference, `call` rendering the dialect's own call syntax. */
 export const renderOperation = (operation: SandboxOperation, call: (name: string) => string): string => trim`
