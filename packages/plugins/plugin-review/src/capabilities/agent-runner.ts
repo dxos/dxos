@@ -255,7 +255,10 @@ export default Capability.makeModule(
           const response = yield* LanguageModel.generateText({ prompt, toolkit }).pipe(
             Effect.scoped,
             Effect.provide(
-              Layer.provideMerge(AiService.model(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)), toolkitLayer),
+              Layer.provideMerge(
+                AiService.languageModel(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)),
+                toolkitLayer,
+              ),
             ),
           );
 

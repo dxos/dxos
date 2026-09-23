@@ -145,6 +145,38 @@ rule import-as-namespace-is-all-or-nothing: A namespace module's directive, file
   severity: warn
 ```
 
+```mdl
+rule errors-extend-base-error: Error classes are defined with `BaseError.extend`, never by subclassing `Error` or a tagged-error factory
+  A domain error is `class FooError extends BaseError.extend('FooError',
+  'Default message') {}` from `@dxos/errors`, optionally specializing the
+  constructor to require its context (`constructor(context: { status: number })
+  { super({ context }); }`). That base supplies what the rest of the stack
+  relies on: a `_tag` getter so `Effect.catchTag` still discriminates, a
+  structured `context` folded into the message, a static `is` that matches by
+  name so an error rebuilt from the wire still matches, and a static `wrap` for
+  `catch`/`mapError`. A bare `extends Error` has none of these, and
+  `Data.TaggedError` / `Schema.TaggedError` split the codebase into two error
+  idioms whose `is`/`wrap`/`context` callers cannot rely on — raise the
+  `BaseError` with `Effect.fail(new FooError(...))` instead of `yield*`. Flag a
+  class declaration (exported or not) that `extends Error`, `extends
+  Data.Error`, `extends Data.TaggedError(...)`, `extends
+  Schema.TaggedError<...>(...)`, or any other built-in `Error` subclass
+  (`TypeError`, `RangeError`, …); flag `BaseError.extend` whose name argument
+  differs from the class name, and a class that subclasses an existing
+  `BaseError.extend` class under a new name (its `is` then no longer matches
+  its parent — define a sibling instead). NOT violations: `@dxos/errors`
+  itself (`packages/common/errors/**`); a `Schema.TaggedError` that is the
+  declared error schema of an `@effect/rpc` / `Rpc.make` / MCP tool contract,
+  where a serializable schema is required; ambient `.d.ts` typings of
+  third-party modules; and a throwaway class local to a `*.test.ts` file.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: \bclass\s+\w+(<[^>]*>)?\s+extends\b
+  severity: error
+```
+
 ## Appendix
 
 ```mdl

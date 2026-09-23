@@ -6,7 +6,7 @@ import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Rpc } from '@dxos/client-protocol';
-import { type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { ServiceStack } from '@dxos/client-services';
 import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -88,7 +88,7 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ServiceContext {
+  createClientServicesHost(runtimeProps?: ServiceStack.ServiceContextRuntimeProps): ServiceContext {
     const services = new ServiceContext({ config: this.config, runtimeProps, ...this.networking });
     this._ctx.onDispose(() => services.destroy());
     return services;

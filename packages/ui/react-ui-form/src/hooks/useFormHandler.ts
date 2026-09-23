@@ -318,21 +318,27 @@ export const useFormHandler = <T extends AnyProperties>({
     [source, overrides, validate, onValuesChanged],
   );
 
-  const onBlur = useCallback(
-    async (path: (string | number)[]) => {
-      const jsonPath = SchemaEx.createJsonPath(path);
+  // A blur commits the field. The validation and auto-save run in an effect, after the render that carries the
+  // change, so a control that changes and blurs in one handler (a switch, a select, a picker) commits the value it
+  // just set rather than the one rendered before it.
+  const [committing, setCommitting] = useState(false);
+  const onBlur = useCallback((path: (string | number)[]) => {
+    const jsonPath = SchemaEx.createJsonPath(path);
 
-      // TODO(burdon): Check value has changed from original.
-      setTouched((touched) => ({ ...touched, [jsonPath]: true }));
-      const isValid = validate(values);
-
-      // Auto-save when a field is blurred and is valid.
-      if (Object.keys(changed).length > 0 && isValid && autoSave) {
-        await onSave?.(values as T, { changed, isValid });
-      }
-    },
-    [validate, values, changed, autoSave, onSave],
-  );
+    // TODO(burdon): Check value has changed from original.
+    setTouched((touched) => ({ ...touched, [jsonPath]: true }));
+    setCommitting(true);
+  }, []);
+  useEffect(() => {
+    if (!committing) {
+      return;
+    }
+    setCommitting(false);
+    const isValid = validate(values);
+    if (Object.keys(changed).length > 0 && isValid && autoSave) {
+      void onSave?.(values as T, { changed, isValid });
+    }
+  }, [committing, validate, values, changed, autoSave, onSave]);
 
   return useMemo<FormHandler<T>>(
     () => ({

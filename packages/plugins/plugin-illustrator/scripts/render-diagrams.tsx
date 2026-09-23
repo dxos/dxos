@@ -6,11 +6,12 @@
 // Renders the diagram corpus (`docs/diagrams/*.mmd`) headlessly through the SVG variant, writing a
 // standalone `.svg` beside each source, and prints the Tier-1 report per diagram. With
 // `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
-// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard]` (vite-node; bun cannot load elkjs).
+// Passing `.mmd` paths renders just those files instead of the corpus.
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (vite-node; bun cannot load elkjs).
 //
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -59,10 +60,19 @@ const toSvg = (objects: readonly Scene.WorldObject[]): string => {
     .replace('<defs>', `<style>${STYLE}</style><defs>`);
 };
 
-const sources = readdirSync(DIAGRAMS)
-  .filter((file) => file.endsWith('.mmd'))
-  .sort()
-  .map((file) => ({ name: basename(file, '.mmd'), source: readFileSync(join(DIAGRAMS, file), 'utf8') }));
+const files = process.argv.slice(2).filter((arg) => arg.endsWith('.mmd'));
+const paths =
+  files.length > 0
+    ? files.map((file) => resolve(file))
+    : readdirSync(DIAGRAMS)
+        .filter((file) => file.endsWith('.mmd'))
+        .sort()
+        .map((file) => join(DIAGRAMS, file));
+const sources = paths.map((path) => ({
+  name: basename(path, '.mmd'),
+  source: readFileSync(path, 'utf8'),
+  svgPath: path.replace(/\.mmd$/, '.svg'),
+}));
 
 if (process.argv.includes('--scoreboard')) {
   const rows: Record<string, Record<string, string>> = {};
@@ -81,10 +91,10 @@ if (process.argv.includes('--scoreboard')) {
   console.table(rows);
 } else {
   let failed = false;
-  for (const { name, source } of sources) {
+  for (const { name, source, svgPath } of sources) {
     const objects = objectsOf(await MermaidEngine.compile(source));
     const report = Diagnostics.analyze(objects);
-    writeFileSync(join(DIAGRAMS, `${name}.svg`), toSvg(objects));
+    writeFileSync(svgPath, toSvg(objects));
     const { crossings, bends, nodes, connectors } = report.metrics;
     console.log(`${name}: ${nodes} nodes, ${connectors} connectors, ${crossings} crossings, ${bends} bends`);
     for (const diagnostic of report.diagnostics) {
