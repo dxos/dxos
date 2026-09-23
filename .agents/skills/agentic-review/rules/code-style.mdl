@@ -173,7 +173,7 @@ rule errors-extend-base-error: Error classes are defined with `BaseError.extend`
   files:
     - packages/**/*.ts
     - packages/**/*.tsx
-  grep: extends (Error|TypeError|RangeError|SyntaxError|Data\.Error|Data\.TaggedError|Schema\.TaggedError|BaseError\.extend|\w+Error)\b
+  grep: \bclass\s+\w+(<[^>]*>)?\s+extends\b
   severity: error
 ```
 
