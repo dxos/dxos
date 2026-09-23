@@ -67,6 +67,7 @@ export const useMenuActions = (
     AppGraph.addEdges(newGraph, menuGraphProps.edges);
     return newGraph;
   }, [registry, menuGraphProps]);
+  useEffect(() => () => AppGraph.dispose(graph), [graph]);
 
   const items: MenuItemsAccessor = useCallback(
     (group?: MenuItemGroup) => {

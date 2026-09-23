@@ -9,7 +9,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Event, Trigger } from '@dxos/async';
+import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { AtomEx } from '@dxos/effect';
 import * as GraphModel from '@dxos/graph/GraphModel';
@@ -79,8 +79,8 @@ export type Edges = Record<string, string[]>;
 export type GraphKindType = 'readable' | 'expandable' | 'writable';
 
 /**
- * The atom accessors are derived views that a bare `registry.subscribe` never builds, so it never
- * fires: read the atom first or pass `{ immediate: true }`.
+ * A node's atom stays mounted while the node is in the graph. The other accessors are views that a
+ * bare `registry.subscribe` never computes, so it never fires: pass `{ immediate: true }`.
  */
 export interface BaseGraph extends Pipeable.Pipeable {
   readonly [GraphTypeId]: GraphTypeId;
@@ -217,7 +217,7 @@ export const getGraph = (node: Node.Node): Graph => {
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  * @internal
  */
-export class GraphImpl implements WritableGraph {
+export class GraphImpl implements WritableGraph, Disposable {
   readonly [GraphTypeId]: GraphTypeId = GraphTypeId;
   readonly [GraphKind] = 'writable' as const;
 
@@ -235,6 +235,14 @@ export class GraphImpl implements WritableGraph {
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.AtomRegistry;
+
+  /**
+   * One mount per node while it is in the graph, so a node's atom keeps one identity and its
+   * dependents stay wired for as long as the node exists. Released by {@link release} and by
+   * disposing the graph.
+   * @internal
+   */
+  readonly _pins = new Map<string, CleanupFn>();
   readonly _expanded = new Set<string>();
   /** Relation keys a node has held, so an emptied relation still reports an empty list. */
   readonly _relations = new Map<string, Set<string>>();
@@ -409,6 +417,15 @@ export class GraphImpl implements WritableGraph {
    */
   _setNode(id: string, node: Option.Option<Node.Node>): void {
     this._model.setNode({ id, data: Option.getOrUndefined(node) });
+    // After the write, so the atom is computed with the value rather than with `none`.
+    if (!this._pins.has(id)) {
+      this._pins.set(id, this._registry.mount(this._node(id)));
+    }
+  }
+
+  [Symbol.dispose](): void {
+    this._pins.forEach((unpin) => unpin());
+    this._pins.clear();
   }
 
   /** @internal */
@@ -453,6 +470,11 @@ export const getInternal = (graph: BaseGraph): GraphImpl => {
 export const make = (params?: GraphProps): Graph => {
   return new GraphImpl(params);
 };
+
+/**
+ * Releases the node atoms the graph keeps mounted in its registry. Call once the graph is no longer used.
+ */
+export const dispose = (graph: BaseGraph): void => getInternal(graph)[Symbol.dispose]();
 
 /**
  * Convert the graph to a JSON object.
@@ -747,6 +769,8 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
   const internal = getInternal(graph);
   internal._model.batch(() => {
     for (const id of ids) {
+      internal._pins.get(id)?.();
+      internal._pins.delete(id);
       internal._relations.delete(id);
     }
 

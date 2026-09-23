@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -69,6 +69,14 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
     AppGraph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
   }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);
+  useEffect(
+    () => () => {
+      if (graph) {
+        AppGraph.dispose(graph);
+      }
+    },
+    [graph],
+  );
 
   // Read the group's children (reuse / connect entries) as the menu content.
   const menuActions = useGraphMenuActions(graph, ConnectorAuth.GROUP_ID);

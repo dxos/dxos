@@ -105,18 +105,39 @@ describe('retention', () => {
     expect(counts(harness).registryNodes).to.equal(idle);
   });
 
-  test('a node atom nothing reads leaves the registry, and reads back the node', async () => {
+  test('a node atom is pinned for as long as the node is in the graph', async () => {
     const harness = setup();
-    const { registry, graph } = harness;
+    const { registry, builder, graph } = harness;
     await visit(harness, GraphNode.RootId);
     const root = `${GraphNode.RootId}/w0`;
     await visit(harness, root);
     await settle();
 
+    // No subscriber anywhere, yet the node atoms stay in the registry: the graph mounts them.
     const child = `${root}/c0`;
-    expect(registry.getNodes().has(graph.node(child))).to.be.false;
+    const pinned = registry.getNodes().size;
+    expect(registry.getNodes().has(graph.node(child))).to.be.true;
 
-    expect(Option.getOrUndefined(registry.get(graph.node(child)))?.id).to.equal(child);
+    // Releasing the subgraph cancels the mounts; the registry drops the atoms.
+    const internal = Graph.getInternal(graph);
+    GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
+    await settle();
+    expect(registry.getNodes().has(graph.node(child))).to.be.false;
+    expect(registry.getNodes().size).to.be.lessThan(pinned);
+  });
+
+  test('disposing the graph releases every node atom it pinned', async () => {
+    const harness = setup();
+    const { registry, graph } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, `${GraphNode.RootId}/w0`);
+    await settle();
+    const child = `${GraphNode.RootId}/w0/c0`;
+    expect(registry.getNodes().has(graph.node(child))).to.be.true;
+
+    Graph.dispose(graph);
+    await settle();
+    expect(registry.getNodes().has(graph.node(child))).to.be.false;
   });
 
   test('the graph itself does grow with every node ever materialized', async () => {

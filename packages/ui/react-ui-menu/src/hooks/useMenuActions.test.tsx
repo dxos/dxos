@@ -169,7 +169,7 @@ describe('useMenuBuilder', () => {
     cleanup();
   });
 
-  test('once unmounted, leaves only what its graphs own until they are collected', async ({ expect }) => {
+  test('once unmounted, leaves nothing in the registry that no mount holds', async ({ expect }) => {
     const registry = Registry.make();
     const renderToolbar = (label: string) => (
       <StrictMode>
@@ -185,11 +185,13 @@ describe('useMenuBuilder', () => {
     expect(screen.getByTestId('item-0').textContent).toBe('three');
 
     unmount();
-    // The registry drops unmounted nodes on its scheduler, not synchronously.
-    await new Promise((resolve) => setTimeout(resolve));
-    // An owned atom stays mounted until its owner is collected; no other node may remain.
-    const unowned = [...registry.getNodes().values()].filter((node) => node.listeners.size === 0);
-    expect(unowned).toHaveLength(0);
+    // Removal runs on the registry's scheduler. What remains is held by a mount: owned atoms, and the
+    // pins of graphs StrictMode discarded without a cleanup (development only).
+    await expect
+      .poll(() =>
+        [...registry.getNodes().values()].filter((node) => node.listeners.size === 0 && node.children.size === 0),
+      )
+      .toHaveLength(0);
   });
 
   test('renders when its dependencies change on every render', ({ expect }) => {
