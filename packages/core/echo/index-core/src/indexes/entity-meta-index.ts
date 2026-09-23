@@ -20,7 +20,7 @@ import {
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
-import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
+import { chunkArray, chunkSizeForBoundVariables } from '../utils.ts';
 import type { IndexerObject } from './interface.ts';
 import type { Index } from './interface.ts';
 
@@ -615,8 +615,7 @@ export class EntityMetaIndex implements Index {
           rows.forEach((row) => recordIds.add(row.recordId));
         }
 
-        // Two bound variables per object; keep chunks under the SQLite limit.
-        for (const chunk of chunkArray(query.objects, Math.floor(SQL_CHUNK_SIZE / 2))) {
+        for (const chunk of chunkArray(query.objects, chunkSizeForBoundVariables(2))) {
           const conditions = chunk.map(
             (object) => sql`(documentId = ${object.documentId} AND objectId = ${object.objectId})`,
           );
@@ -655,12 +654,20 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)} AND ${sql.in('objectId', query.objectIds)}`;
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        // Both lists bind one variable per element, so each chunk takes half the budget; a row
+        // matches exactly one pair of chunks, so the results concatenate without duplicates.
+        const chunkSize = chunkSizeForBoundVariables(2);
+        const results: EntityMeta[] = [];
+        for (const spaceIds of chunkArray(query.spaceIds, chunkSize)) {
+          for (const objectIds of chunkArray(query.objectIds, chunkSize)) {
+            const rows =
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND ${sql.in('objectId', objectIds)}`;
+            for (const row of rows) {
+              results.push({ ...row, deleted: !!row.deleted });
+            }
+          }
+        }
+        return results;
       }),
   );
 
@@ -756,15 +763,23 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        const parentDzns = query.parentIds.map((id) => EID.make({ entityId: id }));
-        const parentDxns = parentDzns;
-        const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
+        // Each parent id binds twice (as a DXN and as a queue id) and each space id once, so a
+        // third of the budget per list keeps the statement whole.
+        const chunkSize = chunkSizeForBoundVariables(3);
+        // A row can match one chunk by `parent` and another by `queueId`, so it is deduplicated.
+        const byRecordId = new Map<number, EntityMeta>();
+        for (const spaceIds of chunkArray(query.spaceId, chunkSize)) {
+          for (const parentIds of chunkArray(query.parentIds, chunkSize)) {
+            const parentDxns = parentIds.map((id) => EID.make({ entityId: id }));
+            const rows =
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', parentIds)})`;
+            for (const row of rows) {
+              byRecordId.set(row.recordId, { ...row, deleted: !!row.deleted });
+            }
+          }
+        }
 
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        return [...byRecordId.values()];
       }),
   );
 }
