@@ -12,6 +12,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
+import { AtomEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 
@@ -119,10 +120,7 @@ export abstract class AbstractGraphModel<
 
   constructor({ registry, graph, change }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
-    this.#version = Atom.make(0);
-    // Priming before any subscriber attaches; a first read of an observed-but-uninitialized atom
-    // notifies in addition to the write that follows it.
-    this.#registry.get(this.#version);
+    this.#version = AtomEx.makeOwned(this, this.#registry, Atom.make(0));
     this.#graph = EffectGraph.beginMutation(EffectGraph.directed<Slot<Node>, Edge>());
     this.#change = change;
     this.#mirror = change ? graph : undefined;
@@ -403,8 +401,6 @@ export abstract class AbstractGraphModel<
       cb(this, this.graph);
     }
 
-    // Read first: a subscription alone does not build the atom, so it would never fire.
-    this.#registry.get(this.#version);
     return this.#registry.subscribe(this.#version, () => cb(this, this.graph));
   }
 

@@ -6,6 +6,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -397,18 +399,35 @@ describe('Graph', () => {
 });
 
 describe('version', () => {
-  test('the snapshot tracks writes made after the unobserved version atom was dropped', async ({ expect }) => {
+  test('counts every change while unobserved', async ({ expect }) => {
     const registry = Registry.make();
     const graph = new GraphModel.GraphModel<TestNode>({ registry });
     graph.addNode({ id: 'a', value: 'a' });
-    graph.addNode({ id: 'b', value: 'b' });
-    expect(graph.nodes.map((node) => node.id)).toEqual(['a', 'b']);
+    const version = registry.get(graph.version);
 
     // The registry drops unobserved nodes on its scheduler, not synchronously.
     await new Promise((resolve) => setTimeout(resolve));
-    expect(registry.getNodes().has(graph.version)).toBe(false);
+    graph.addNode({ id: 'b', value: 'b' });
+    expect(registry.get(graph.version)).toBe(version + 1);
+    expect(graph.nodes.map((node) => node.id)).toEqual(['a', 'b']);
+  });
 
-    graph.addNode({ id: 'c', value: 'c' });
-    expect(graph.nodes.map((node) => node.id)).toEqual(['a', 'b', 'c']);
+  test('leaves the registry once the model is collected', { timeout: 20_000 }, async ({ expect }) => {
+    setFlagsFromString('--expose_gc');
+    const gc: () => void = runInNewContext('gc');
+    const registry = Registry.make();
+    const version = new GraphModel.GraphModel<TestNode>({ registry }).version;
+    expect(registry.getNodes().has(version)).toBe(true);
+
+    await expect
+      .poll(
+        async () => {
+          gc();
+          await new Promise((resolve) => setTimeout(resolve));
+          return registry.getNodes().has(version);
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(false);
   });
 });

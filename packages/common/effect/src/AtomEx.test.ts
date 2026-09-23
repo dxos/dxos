@@ -41,4 +41,18 @@ describe('AtomEx.makeRegistry', () => {
   });
 });
 
+describe('AtomEx.makeOwned', () => {
+  test('keeps the atom and its value while the owner is alive', async ({ expect }) => {
+    const registry = AtomEx.makeRegistry({ idleTTL: Duration.zero });
+    const owner = {};
+    const atom = AtomEx.makeOwned(owner, registry, Atom.make(0));
+
+    registry.set(atom, 1);
+    await wait(TTL);
+    expect(registry.getNodes().has(atom)).toBe(true);
+    expect(registry.get(atom)).toBe(1);
+    expect(owner).toBeDefined();
+  });
+});
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

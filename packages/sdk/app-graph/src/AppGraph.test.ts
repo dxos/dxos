@@ -877,15 +877,15 @@ describe('Graph', () => {
 });
 
 describe('registry lifetime', () => {
-  test('a graph leaves nothing in the registry once its readers unsubscribe', async () => {
+  test('readers leave nothing in the registry once they unsubscribe', async () => {
     const registry = Registry.make();
-    const before = registry.getNodes().size;
     const graph = Graph.make({ registry });
     Graph.addNodes(graph, [
       { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} },
       { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} },
     ]);
     Graph.addEdges(graph, [{ source: GraphNode.RootId, target: exampleId(1), relation: 'child' }]);
+    const before = registry.getNodes().size;
     const unsubscribe = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), () => {});
     expect(registry.get(graph.connections(GraphNode.RootId, 'child')).map((node) => node.id)).toEqual([exampleId(1)]);
 

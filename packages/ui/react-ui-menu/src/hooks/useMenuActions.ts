@@ -5,10 +5,11 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { type DependencyList, useCallback, useContext, useEffect, useMemo } from 'react';
+import { type DependencyList, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { AtomEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
 
@@ -35,24 +36,13 @@ const DEFAULT_PRIORITY = 100;
 
 const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
 
-const makeContributions = (): Atom.Writable<MenuItemsMap> => {
-  let value: MenuItemsMap = new Map();
-  return Atom.writable(
-    () => value,
-    (ctx, next: MenuItemsMap) => {
-      value = next;
-      ctx.setSelf(next);
-    },
-  );
-};
-
 /** A `MenuActions` over a given accessor, for sources that are not an action graph (tests, fixtures). */
 export const makeMenuActions = ({
   items,
   ...options
 }: { items: MenuItemsAccessor } & MenuActionsOptions): MenuActions => ({
   items,
-  contributions: makeContributions(),
+  contributions: Atom.make<MenuItemsMap>(new Map()),
   ...options,
 });
 
@@ -86,7 +76,12 @@ export const useMenuActions = (
     [graph],
   );
 
-  const contributions = useMemo(makeContributions, []);
+  // Held by the component through the ref, so the contributions last as long as it is mounted.
+  const owner = useRef({});
+  const contributions = useMemo(
+    () => AtomEx.makeOwned(owner.current, registry, Atom.make<MenuItemsMap>(new Map())),
+    [registry],
+  );
 
   const { onAction, caller, iconSize } = options;
   return useMemo(

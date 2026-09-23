@@ -13,6 +13,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
+import { AtomEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -254,14 +255,7 @@ export class GraphBuilder<
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
-  _extensionsValue: Record<string, Extension<Node, Arg, Rel, Meta>> = Record.empty();
-  readonly _extensions = Atom.writable(
-    () => this._extensionsValue,
-    (ctx, value: Record<string, Extension<Node, Arg, Rel, Meta>>) => {
-      this._extensionsValue = value;
-      ctx.setSelf(value);
-    },
-  ).pipe(withLabel('graph-builder:extensions'));
+  readonly _extensions: Atom.Writable<Record<string, Extension<Node, Arg, Rel, Meta>>>;
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -271,6 +265,13 @@ export class GraphBuilder<
 
   constructor({ registry, store, relationKey, inline, decorateNode, unchanged }: Props<Node, Arg, Rel, Meta, G>) {
     this._registry = registry ?? Registry.make();
+    this._extensions = AtomEx.makeOwned(
+      this,
+      this._registry,
+      Atom.make<Record<string, Extension<Node, Arg, Rel, Meta>>>(Record.empty()).pipe(
+        withLabel('graph-builder:extensions'),
+      ),
+    );
     this._relationKey = relationKey;
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
@@ -294,7 +295,7 @@ export class GraphBuilder<
 
   /** Read the currently registered extensions synchronously. */
   getExtensions(): Record<string, Extension<Node, Arg, Rel, Meta>> {
-    return this._extensionsValue;
+    return this._registry.get(this._extensions);
   }
 
   /** Every inline descendant of `node`, at every depth. */
