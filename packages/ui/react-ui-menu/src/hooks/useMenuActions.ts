@@ -35,10 +35,6 @@ const DEFAULT_PRIORITY = 100;
 
 const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
 
-/**
- * A menu's contributions, held by the atom itself rather than by the registry, so the atom needs no
- * `keepAlive` or mount: a recreated atom reads the same map back.
- */
 const makeContributions = (): Atom.Writable<MenuItemsMap> => {
   let value: MenuItemsMap = new Map();
   return Atom.writable(

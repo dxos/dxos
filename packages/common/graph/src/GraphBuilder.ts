@@ -254,9 +254,7 @@ export class GraphBuilder<
   _collectPromise: Promise<void> = Promise.resolve();
   /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
-  /** Registered extensions keyed by extension ID; the source of truth {@link _extensions} reads. */
   _extensionsValue: Record<string, Extension<Node, Arg, Rel, Meta>> = Record.empty();
-  // Not `keepAlive`, which a registry never drops: a recreated atom reads the builder's record.
   readonly _extensions = Atom.writable(
     () => this._extensionsValue,
     (ctx, value: Record<string, Extension<Node, Arg, Rel, Meta>>) => {

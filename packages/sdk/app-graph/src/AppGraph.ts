@@ -79,10 +79,8 @@ export type Edges = Record<string, string[]>;
 export type GraphKindType = 'readable' | 'expandable' | 'writable';
 
 /**
- * The atom accessors below return derived views over the graph's model, held by the registry only
- * while something reads them. Read one before a bare `registry.subscribe`, or pass
- * `{ immediate: true }`: the registry does not build an atom a bare subscription observes, so it
- * would never fire. `useAtomValue` does both.
+ * The atom accessors are derived views that a bare `registry.subscribe` never builds, so it never
+ * fires: read the atom first or pass `{ immediate: true }`.
  */
 export interface BaseGraph extends Pipeable.Pipeable {
   readonly [GraphTypeId]: GraphTypeId;

@@ -404,7 +404,7 @@ describe('version', () => {
     graph.addNode({ id: 'b', value: 'b' });
     expect(graph.nodes.map((node) => node.id)).toEqual(['a', 'b']);
 
-    // Unobserved, the version atom is dropped on the registry's scheduler and restarts at 0.
+    // The registry drops unobserved nodes on its scheduler, not synchronously.
     await new Promise((resolve) => setTimeout(resolve));
     expect(registry.getNodes().has(graph.version)).toBe(false);
 

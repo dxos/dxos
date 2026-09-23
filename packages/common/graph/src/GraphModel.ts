@@ -108,7 +108,6 @@ export abstract class AbstractGraphModel<
   readonly #id?: string;
 
   #graph: EffectGraph.MutableDirectedGraph<Slot<Node>, Edge>;
-  /** Cleared when a batch commits a change; see {@link AbstractGraphModel.graph}. */
   #snapshot?: Data<Node, Edge>;
   #depth = 0;
   #dirty = false;
@@ -120,8 +119,6 @@ export abstract class AbstractGraphModel<
 
   constructor({ registry, graph, change }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
-    // A change signal rather than state, so not `keepAlive`: dropped while unobserved, it restarts at
-    // 0 and nothing that could compare against the old count is still alive.
     this.#version = Atom.make(0);
     // Priming before any subscriber attaches; a first read of an observed-but-uninitialized atom
     // notifies in addition to the write that follows it.
@@ -406,6 +403,8 @@ export abstract class AbstractGraphModel<
       cb(this, this.graph);
     }
 
+    // Read first: a subscription alone does not build the atom, so it would never fire.
+    this.#registry.get(this.#version);
     return this.#registry.subscribe(this.#version, () => cb(this, this.graph));
   }
 
@@ -1102,7 +1101,6 @@ export class GraphModel<
   Edge extends GraphEdge.Any = GraphEdge.Any,
 > extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>> {
   override copy(graph?: Partial<Data<Node, Edge>>): GraphModel<Node, Edge> {
-    // A detached snapshot: nothing reads it through this model's registry.
     return new GraphModel<Node, Edge>({ graph });
   }
 }

@@ -67,9 +67,6 @@ export const createStaticTreeModel = <T extends { id: string }>(
   };
   index(root);
 
-  // No atom here is `keepAlive`: a registry never drops a keep-alive node, so every model rebuilt in
-  // the app registry left all of its atoms behind. Written state lives in the model's own maps
-  // instead, which a dropped-and-recreated atom reads back, and which go with the model.
   const states = new Map<string, TreeNodeState>();
   const stateAtoms = new Map<string, Atom.Writable<TreeNodeState>>();
   const stateAtom = (path: string[]): Atom.Writable<TreeNodeState> => {
@@ -134,10 +131,10 @@ export const createStaticTreeModel = <T extends { id: string }>(
     }),
   );
 
-  // Keyed by the joined path; the empty key is the root's empty path, which `Path.parts` would not restore.
-  const pathOf = (key: string): string[] => (key === '' ? [] : Path.parts(key));
-  const itemOpenFamily = Atom.family((key: string) => Atom.make((get) => get(stateAtom(pathOf(key))).open));
-  const itemCurrentFamily = Atom.family((key: string) => Atom.make((get) => get(stateAtom(pathOf(key))).current));
+  const itemOpenFamily = Atom.family((path: readonly string[]) => Atom.make((get) => get(stateAtom([...path])).open));
+  const itemCurrentFamily = Atom.family((path: readonly string[]) =>
+    Atom.make((get) => get(stateAtom([...path])).current),
+  );
 
   const childIdsAtom = (parentId?: string) => childIdsFamily(parentId ?? root.id);
 
@@ -148,8 +145,8 @@ export const createStaticTreeModel = <T extends { id: string }>(
     stateAtom,
     item: (id: string) => itemFamily(id),
     itemProps: (path: string[]) => itemPropsFamily(Path.create(...path)),
-    itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
-    itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
+    itemOpen: (path: string[]) => itemOpenFamily(path),
+    itemCurrent: (path: string[]) => itemCurrentFamily(path),
     refresh: (set) => {
       itemMap.clear();
       childIdsMap.clear();

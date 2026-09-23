@@ -101,8 +101,7 @@ describe('retention', () => {
 
     // View atoms mounted above the graph (a rendered row's subscriptions) are reclaimed on unmount:
     // `Atom.family` memoizes weakly, and the registry drops a node once it has no listener and no
-    // dependents, cascading to its parents. The graph's own node atoms are in that pool too: they
-    // are views over the model, which still holds the nodes.
+    // dependents, cascading to its parents.
     expect(counts(harness).registryNodes).to.equal(idle);
   });
 
@@ -114,11 +113,9 @@ describe('retention', () => {
     await visit(harness, root);
     await settle();
 
-    // Nothing holds the atom, so the registry has dropped it.
     const child = `${root}/c0`;
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
 
-    // The model still holds the node; a read rebuilds the atom from it.
     expect(Option.getOrUndefined(registry.get(graph.node(child)))?.id).to.equal(child);
   });
 

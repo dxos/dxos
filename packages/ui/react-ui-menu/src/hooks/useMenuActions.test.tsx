@@ -169,17 +169,6 @@ describe('useMenuBuilder', () => {
     cleanup();
   });
 
-  const Toolbar = ({ label }: { label: string }) => {
-    const menu = useMenuBuilder(
-      () =>
-        MenuBuilder.make()
-          .action('act', { label }, () => {})
-          .build(),
-      [label],
-    );
-    return <Consumer menu={menu} />;
-  };
-
   test('releases every graph it built from the registry once unmounted', async ({ expect }) => {
     const registry = Registry.make();
     const before = registry.getNodes().size;
@@ -203,7 +192,6 @@ describe('useMenuBuilder', () => {
   });
 
   test('renders when its dependencies change on every render', ({ expect }) => {
-    // A fresh deps array each render, as a toolbar passing an inline object or callback produces.
     const Unstable = () => {
       const menu = useMenuBuilder(
         () =>
@@ -223,3 +211,14 @@ describe('useMenuBuilder', () => {
     expect(screen.getByTestId('item-0').textContent).toBe('act');
   });
 });
+
+const Toolbar = ({ label }: { label: string }) => {
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action('act', { label }, () => {})
+        .build(),
+    [label],
+  );
+  return <Consumer menu={menu} />;
+};
