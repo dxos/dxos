@@ -117,6 +117,7 @@ export const AddMembers = Operation.make({
     description: 'Admit known contacts to a space by identity key.',
     icon: 'ph--user-plus--regular',
   },
+  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
     identityKeys: Schema.Array(Schema.String),
