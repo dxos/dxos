@@ -144,6 +144,53 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
     cancels.forEach((cancel) => cancel());
   });
 
+  test('burst: invalidations before a flush', async () => {
+    // A sync burst: the dependency changes BURST times in one task, as a batch of replicated ECHO
+    // changes would, before the builder gets to flush. The burst is timed on its own because it is the
+    // part that runs inside the change event.
+    const BURST = 50;
+    let recomputes = 0;
+    const state = Atom.make(0).pipe(Atom.keepAlive);
+    const { registry, builder, graph } = setup((node) =>
+      Atom.make((get) => {
+        recomputes++;
+        const offset = get(state);
+        return Option.match(get(node), {
+          onNone: () => [],
+          onSome: (source) =>
+            (source.id === ROOT ? nodeArgs(PARENTS, 'p') : nodeArgs(CHILDREN, 'c')).map((node) => ({
+              ...node,
+              data: node.data + offset,
+            })),
+        });
+      }),
+    );
+    Graph.expandSync(graph, ROOT, 'child');
+    await GraphBuilder.flush(builder);
+    for (const parent of nodeArgs(PARENTS, 'p')) {
+      Graph.expandSync(graph, `${ROOT}/${parent.id}`, 'child');
+    }
+    await GraphBuilder.flush(builder);
+
+    let burst = Infinity;
+    let perBurst = 0;
+    await measure(
+      `burst of ${BURST} over ${PARENTS + 1} connectors, then flush`,
+      `${BURST} sets + 1 flush`,
+      async () => {
+        recomputes = 0;
+        const started = performance.now();
+        for (let index = 0; index < BURST; index++) {
+          registry.set(state, registry.get(state) + 1);
+        }
+        burst = Math.min(burst, performance.now() - started);
+        await GraphBuilder.flush(builder);
+        perBurst = recomputes;
+      },
+    );
+    results.push({ name: `  of which the ${BURST} sets`, ms: burst, unit: `${perBurst} connector recomputes` });
+  });
+
   test('expand: a two-level tree', async () => {
     await measure(
       `expand ${PARENTS}x${CHILDREN} tree`,
