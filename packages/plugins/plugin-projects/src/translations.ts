@@ -49,6 +49,8 @@ export const translations = [
         'no-task-set.message': 'This project has no task set yet.',
         'artifacts.label': 'Artifacts',
         'artifacts-empty.message': 'This project has no artifacts yet.',
+        'task-companion.label': 'Task',
+        'no-task-selected.message': 'Select a task.',
         'chats.label': 'Sessions',
         'chats-empty.message': 'This project has no sessions yet.',
         'outline.label': 'Notes',

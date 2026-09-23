@@ -73,7 +73,7 @@ export namespace Surface {
   export const useMetrics = useSurfaceMetrics;
   export const clearMetrics = () => surfaceMetrics.clear();
   export type Mounted = MountedSurface;
-  /** The surfaces mounted right now (dev builds), without subscribing. */
+  /** The surfaces mounted right now (dev builds, or under a profiler provider), without subscribing. */
   export const getMounted = getMountedSurfaces;
   /** The mounted surfaces, updated on mount and unmount. */
   export const useMounted = useMountedSurfaces;
