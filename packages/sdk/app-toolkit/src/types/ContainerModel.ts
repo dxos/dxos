@@ -110,16 +110,19 @@ export const unlink = ({ container, object }: Omit<LinkProps, 'index'>): void =>
 
 /** Puts `objects` in the given order across the slots they hold, leaving every other entry in place. */
 export const reorder = ({ container, objects }: { container: Container; objects: readonly Obj.Unknown[] }): void => {
-  const ids = new Set(objects.map((object) => object.id));
+  // The caller's view can lag the list; a reorder never changes which objects the list holds.
+  const listed = new Set(refs(container).map(refEntityId));
+  const ordered = objects.filter((object) => listed.has(object.id));
+  const ids = new Set(ordered.map((object) => object.id));
   Obj.update(container.object, (mutable: any) => {
     const list: Ref.Ref<Obj.Unknown>[] = mutable[container.property];
     let next = 0;
-    for (let index = 0; index < list.length && next < objects.length; index++) {
+    for (let index = 0; index < list.length && next < ordered.length; index++) {
       const id = refEntityId(list[index]);
       if (id === undefined || !ids.has(id)) {
         continue;
       }
-      const object = objects[next++];
+      const object = ordered[next++];
       if (id !== object.id) {
         list.splice(index, 1, Ref.make(object));
       }

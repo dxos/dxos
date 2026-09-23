@@ -45,6 +45,12 @@ describe('resolveDropKind', () => {
     expect(resolveDropKind({ source: item, sourceParent, destination: sourceParent })).toBe('reject');
   });
 
+  test('rejects a drop onto another row for the same object', ({ expect }) => {
+    const source = { ...item, data: { id: 'object' } };
+    const destination = { ...parent('elsewhere/object'), data: { id: 'object' } };
+    expect(resolveDropKind({ source, sourceParent: parent('from'), destination })).toBe('reject');
+  });
+
   test('rejects a drop from another space', ({ expect }) => {
     const destination = parent('to', { acceptPersistenceKey: new Set(['other']) });
     expect(resolveDropKind({ source: item, sourceParent: parent('from'), destination })).toBe('reject');

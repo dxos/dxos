@@ -33,6 +33,8 @@ export const resolveDropKind = ({
   if (
     !destination ||
     destination.id === sourceParent?.id ||
+    // Node ids are qualified by path, so another row for the same object has a different id.
+    (destination.data?.id !== undefined && destination.data.id === source.data?.id) ||
     !persistenceClass ||
     !persistenceKey ||
     !destination.properties.acceptPersistenceClass?.has(persistenceClass) ||

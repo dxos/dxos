@@ -196,6 +196,16 @@ describe('ownership', () => {
     expect(collection.objects.map((ref) => ref.peek()?.id)).toEqual([c.id, hidden.id, a.id, b.id]);
   });
 
+  test('reordering ignores objects the list no longer holds', async ({ expect }) => {
+    const { db } = await createDatabase();
+    const [a, removed, c] = ['a', 'removed', 'c'].map((name) => db.add(Obj.make(Item, { name })));
+    const collection = db.add(Collection.make({ objects: [a, c].map((item) => Ref.make(item)) }));
+    ContainerModel.reorder({ container: ContainerModel.collection(collection), objects: [removed, c, a] });
+    await db.flush();
+
+    expect(collection.objects.map((ref) => ref.peek()?.id)).toEqual([c.id, a.id]);
+  });
+
   test('linking lists the object once and leaves its parent', async ({ expect }) => {
     const { db } = await createDatabase();
     const person = db.add(Obj.make(Item, { name: 'alice' }));
