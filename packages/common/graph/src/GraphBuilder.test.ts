@@ -68,7 +68,10 @@ describe('GraphBuilder', () => {
     const { builder, children } = setup();
     GraphBuilder.addExtension(builder, { id: 'children', connector: connector([{ id: 'a/b' }]) });
 
-    expect(() => children(GraphNode.RootId)).to.throw(/must not contain/);
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    expect(children(GraphNode.RootId)).to.deep.equal([]);
   });
 
   test('extensions on the same relation are applied in position order', async () => {
@@ -157,23 +160,60 @@ describe('GraphBuilder', () => {
     builder._frameBudget = () => ({ hasTime: () => flushed < 1, spend: () => flushed++ });
     const first = Atom.make(['a']).pipe(Atom.keepAlive);
     const second = Atom.make(['b']).pipe(Atom.keepAlive);
+    let secondRuns = 0;
     GraphBuilder.addExtension(builder, [
       { id: 'children', connector: connector((get) => get(first).map((id) => ({ id }))) },
-      { id: 'siblings', relation: 'sibling', connector: connector((get) => get(second).map((id) => ({ id }))) },
+      {
+        id: 'siblings',
+        relation: 'sibling',
+        connector: connector((get) => {
+          secondRuns++;
+          return get(second).map((id) => ({ id }));
+        }),
+      },
     ]);
 
     children(GraphNode.RootId);
     children(GraphNode.RootId, 'sibling');
     await GraphBuilder.flush(builder);
 
+    const runs = secondRuns;
     registry.set(first, ['c']);
     registry.set(second, ['d']);
     await Promise.resolve();
     expect(children(GraphNode.RootId)).to.deep.equal(['root/c']);
     expect(children(GraphNode.RootId, 'sibling')).to.deep.equal(['root/b']);
+    // Past the budget the connector is not merely unapplied but unread.
+    expect(secondRuns).to.equal(runs);
 
     await GraphBuilder.flush(builder);
     expect(children(GraphNode.RootId, 'sibling')).to.deep.equal(['root/d']);
+  });
+
+  test('invalidations mark a connector dirty, and the flush reads it once', async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(0).pipe(Atom.keepAlive);
+    let runs = 0;
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => {
+        runs++;
+        return [{ id: `a${get(state)}` }];
+      }),
+    });
+
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    const before = runs;
+
+    for (let index = 1; index <= 10; index++) {
+      registry.set(state, index);
+    }
+    expect(runs).to.equal(before);
+
+    await GraphBuilder.flush(builder);
+    expect(runs).to.equal(before + 1);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a10']);
   });
 
   test('an unrelated node changing leaves a connector alone', async () => {
