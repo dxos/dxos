@@ -810,7 +810,8 @@ export const TestArtifactPreviews: Story = {
       await waitFor(async () => expect(preview()).toBeNull());
     };
 
-    await open('react-ui-task: render task artifacts', 'artifact-preview.pullRequest');
+    // The pull request's tag is its `#number` pill; the preview names it by its full reference.
+    await open('#12752', 'artifact-preview.pullRequest');
     await open('label-v2.png', 'artifact-preview.image');
     await open('roast-timelapse.webm', 'artifact-preview.video');
     await open('Which roast should launch first?', 'artifact-preview.question.option');

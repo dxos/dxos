@@ -40,7 +40,7 @@ import {
   executeMenuAction,
   fallbackIcon,
 } from '@dxos/react-ui-menu';
-import { type Actor, Question, RemoteSession, Task } from '@dxos/types';
+import { type Actor, PullRequest, Question, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -749,9 +749,13 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
  * the tag carries no `button` role either: a role promising keyboard activation that a
  * non-focusable element cannot deliver is worse than none. A question is answered from its card in
  * the conversation, which is keyboard-operable throughout.
+ *
+ * A {@link PullRequest.PullRequest} renders as its `#number` pill — the form a PR link takes in
+ * markdown — so a row reads the same as the text that references it.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const tagRef = useRef<HTMLSpanElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
   const question = Obj.instanceOf(Question.Question, artifact);
   // Keyed on the URI string, not the object: `useCardHover` cancels its timer whenever `open`
@@ -759,18 +763,37 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   // means any re-render inside the hover delay swallows the hover.
   const uri = Obj.getURI(artifact);
   const openCard = useCallback(() => {
-    const trigger = tagRef.current;
+    const trigger = tagRef.current ?? buttonRef.current;
     trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
   }, [uri, label]);
   const { start: startHover, cancel: cancelHover } = useCardHover(openCard, question);
   const handleClick = useCallback(
-    (event: MouseEvent<HTMLSpanElement>) => {
+    (event: MouseEvent<HTMLElement>) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
       openCard();
     },
     [openCard],
   );
+
+  if (PullRequest.instanceOf(artifact)) {
+    return (
+      <IconButton
+        ref={buttonRef}
+        variant='tag'
+        density='sm'
+        // The anchor chip's outlined look (`.dx-tag--anchor`), so the pill matches a PR link in a description.
+        classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
+        icon='ph--git-pull-request--regular'
+        iconClassNames={pullRequestStateStyle[artifact.state]}
+        label={`#${artifact.number}`}
+        // No tab stop of its own, for the same reason the plain tag has none.
+        tabIndex={-1}
+        noTooltip
+        onClick={handleClick}
+      />
+    );
+  }
 
   return (
     <Tag
@@ -787,6 +810,14 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 };
 
 ArtifactTag.displayName = 'TaskList.ArtifactTag';
+
+/** GitHub's own state colours, so the icon reads as open, merged or closed at a glance. */
+const pullRequestStateStyle: Record<PullRequest.State, string> = {
+  open: 'text-green-500',
+  merged: 'text-violet-500',
+  closed: 'text-red-500',
+  draft: 'text-description',
+};
 
 //
 // Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
