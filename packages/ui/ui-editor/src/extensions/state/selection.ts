@@ -72,6 +72,15 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
  * creep upwards by the fraction of the line that was originally scrolled past.
  */
 export const restoreEditorState = (view: EditorView, state: EditorSelectionState) => {
+  // An editor that does not scroll itself — auto-height, embedded in a form or a card — has no
+  // position to restore, and CodeMirror would satisfy the request by scrolling an ANCESTOR instead:
+  // the host's own scroller jumps to put the editor's first line at its top, on every mount. Only
+  // an editor with its own overflow can honour the anchor.
+  const { scrollHeight, clientHeight } = view.scrollDOM;
+  if (scrollHeight <= clientHeight + 1) {
+    return;
+  }
+
   view.dispatch(createEditorStateTransaction(state));
   const { scrollTo, scrollOffset } = state;
   if (scrollTo != null && scrollOffset) {

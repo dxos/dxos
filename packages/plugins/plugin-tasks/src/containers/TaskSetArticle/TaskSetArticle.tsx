@@ -14,6 +14,7 @@ import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
+  Attention,
   useArticleKeyboardNavigation,
   useAttention,
   useSelection,
@@ -31,7 +32,14 @@ import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from 
 import { filterTasks } from '../../util/index.ts';
 import { TaskFilter } from './TaskFilter.tsx';
 
-export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
+export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
+  /**
+   * Where a row opens its task. `'plank'` (the default) opens it beside the list, reusing the host's
+   * `task` deck level; `'companion'` opens the host's `~task` companion instead, which keeps the
+   * host itself in front of the reader. A host offers `'companion'` only where it contributes one.
+   */
+  detail?: 'plank' | 'companion';
+};
 
 /**
  * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
@@ -40,7 +48,7 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
  * are what keep the array, the refs and `parentTask` consistent.
  */
-export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
+export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
@@ -127,6 +135,17 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
         contextId: attendableId,
         subject: { mode: 'single', id: task.id },
       });
+
+      // The companion reads the selection published above, so opening it is all this has left to do.
+      // Meta/ctrl click still asks for a plank of its own — a reader comparing two tasks needs both.
+      if (detail === 'companion' && !meta) {
+        void invokePromise(LayoutOperation.UpdateCompanion, {
+          subject: Attention.linkedSegment('task'),
+          anchor: attendableId,
+        });
+        return;
+      }
+
       // Meta/ctrl click asks for a plank of its own, so it opens without a level and keeps whatever
       // is already there.
       void invokePromise(LayoutOperation.Open, {
@@ -137,7 +156,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
         navigation: 'immediate',
       });
     },
-    [attendableId, invokePromise],
+    [attendableId, detail, invokePromise],
   );
 
   const handleNavigate = useCallback(
@@ -182,17 +201,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       <TaskList.Viewport>
         <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
-      <div className='p-2 pt-0'>
-        {/* Create-only: the detail is the task plank a row opens, so the pane stays the add row
-            rather than turning into an editor the moment a row is selected. */}
-        <TaskList.Edit
-          createOnly
-          showDescription
-          descriptionExtensions={descriptionExtensions}
-          classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
-          placeholder={t('task-create.placeholder')}
-        />
-      </div>
+      {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
+          than turning into an editor the moment a row is selected. Full width, edge to edge — it is
+          the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
+      <TaskList.Edit
+        createOnly
+        showDescription
+        descriptionExtensions={descriptionExtensions}
+        classNames='dx-document bg-input-surface border-t border-separator p-2'
+        placeholder={t('task-create.placeholder')}
+      />
     </TaskList.Root>
   );
 

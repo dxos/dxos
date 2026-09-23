@@ -22,6 +22,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Task } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
@@ -64,6 +65,7 @@ export default Capability.makeModule(
     const artifactsExtensions = yield* createProjectArtifactsExtension();
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const taskExtensions = yield* createProjectTasksExtension();
+    const taskCompanionExtensions = yield* createProjectTaskCompanionExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
@@ -73,6 +75,7 @@ export default Capability.makeModule(
       ...artifactsExtensions,
       ...artifactsActionExtensions,
       ...taskExtensions,
+      ...taskCompanionExtensions,
       ...mailboxExtensions,
     ]);
   }),
@@ -221,6 +224,28 @@ export const createProjectChatsChildrenExtension = () =>
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },
+  });
+
+/**
+ * A "Task" companion on every project row: the slot the ledger's selected task opens into, so reading
+ * a task keeps the project in front of the reader rather than navigating over it. One fixed slot —
+ * which task it shows is the ledger's selection, read by the surface.
+ */
+export const createProjectTaskCompanionExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectTaskCompanion',
+    relation: AppNode.companion,
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeCompanion({
+          variant: 'task',
+          label: ['task-companion.label', { ns: meta.profile.key }],
+          icon: 'ph--check-circle--regular',
+          data: 'task',
+          position: Position.first,
+        }),
+      ]),
   });
 
 /**

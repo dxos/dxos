@@ -32,6 +32,13 @@ import { Journal } from '#types';
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
   Role.make('org.dxos.role.section');
 
+/**
+ * The section role, typed for an embedded task set: the host says where a row opens its task, since
+ * only the host knows whether it contributes a companion to open into.
+ */
+const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { detail?: 'plank' | 'companion' }>> =
+  Role.make('org.dxos.role.section');
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -83,12 +90,17 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'article.taskSet',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
-          AppSurface.object(AppSurface.Section, TaskSet.TaskSet),
-        ),
+        filter: AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      // Embedded in a host (the project's Tasks tab), which also says where a row opens its task:
+      // only the host knows whether it contributes a companion to open into.
+      Surface.create({
+        id: 'section.taskSet',
+        filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
+        component: TaskSetArticle,
+        props: ({ role, data: { subject, attendableId, detail } }) => ({ role, subject, attendableId, detail }),
       }),
       Surface.create({
         id: 'card.outline',
