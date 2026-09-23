@@ -123,10 +123,14 @@ C '{"op":"screenshot","name":"01-registry.png"}'
 C '{"op":"stop"}'          # closes the context — this is what writes the video
 ```
 
-Ops: `goto` `click` `fill` `type` `press` `hover` `drag` `waitFor` `text` `count` `eval` `caption`
-`clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
+Ops: `goto` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval`
+`caption` `clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
+
+`press` also flashes a key chip in the top-right (`⌘ ⇧ K`), so a recording of a shortcut shows what
+was pressed — pass `"hud": false` to suppress it, or `keys` to raise the chip for a gesture the
+driver did not perform. The chip is the proof; without it a palette just appears.
 
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.

@@ -1,0 +1,26 @@
+{
+  "13115-retry-count": {
+    "A": "v3-selective",
+    "B": "v1-baseline",
+    "C": "v2-readable",
+    "D": "v4-evidence"
+  },
+  "13149-navtree-bindings": {
+    "A": "v4-evidence",
+    "B": "v2-readable",
+    "C": "v1-baseline",
+    "D": "v3-selective"
+  },
+  "13150-database-service": {
+    "A": "v1-baseline",
+    "B": "v2-readable",
+    "C": "v3-selective",
+    "D": "v4-evidence"
+  },
+  "13153-datachannel-guard": {
+    "A": "v4-evidence",
+    "B": "v3-selective",
+    "C": "v1-baseline",
+    "D": "v2-readable"
+  }
+}

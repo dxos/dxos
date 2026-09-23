@@ -107,6 +107,19 @@ export const id = (...ids: EntityId[]): Any => {
 };
 
 /**
+ * Filter by the id of an entity already in hand, keeping its type for the rest of the chain.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.entity(task)).reference('watchers'));
+ * ```
+ */
+export const entity: {
+  <T extends Entity.Unknown>(entity: T): Filter<T>;
+  <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Filter<T>;
+} = (entity: Entity.Unknown | Entity.Snapshot): Filter<any> => id(entity.id);
+
+/**
  * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).
  * Input is case-insensitive.
  *
