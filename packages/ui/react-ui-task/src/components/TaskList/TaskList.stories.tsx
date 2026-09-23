@@ -43,7 +43,7 @@ const seedFlat = (): Task.Task[] => [
       'Created this task',
       'Assigned to Rich',
       'Status changed from todo to started',
-      'Status changed from started to done',
+      random.lorem.paragraph(),
     ),
   }),
   Task.make({

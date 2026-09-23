@@ -998,7 +998,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             // description left to auto-place would take the cell it vacates and fall into the icon
             // column — a field one word wide. It runs to the row's end: the toolbar sits on the
             // title line only.
-            className={mx('flex min-w-0 mt-2 row-start-2 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+            className={mx('flex min-w-0 row-start-2 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts

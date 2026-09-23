@@ -64,13 +64,16 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
         // `items-start`, since a wrapped description makes the row taller than one line: centring
         // would then float the glyph and the time against the middle of the paragraph.
         <div key={`${entry.date}-${index}`} role='listitem' className='grid grid-cols-subgrid col-span-3 items-start'>
-          <Icon icon={eventIcon(entry.event)} />
+          {/* One line box tall, with the glyph centred inside it: the row aligns to the top so a
+              wrapped description does not float the glyph down the paragraph, which would otherwise
+              pin the glyph to the text's ascender rather than to the middle of its first line. */}
+          <Icon icon={eventIcon(entry.event)} classNames='block h-[1lh] self-start' />
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
               time column is fixed, so the description takes the height it needs. */}
           <span className='min-w-0'>{entry.description ?? entry.event}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
               to cite; the exact timestamp stays on the entry for a surface that needs it. */}
-          <span className='whitespace-nowrap tabular-nums text-right border'>{formatRelative(entry.date)}</span>
+          <span className='whitespace-nowrap tabular-nums text-right'>{formatRelative(entry.date)}</span>
         </div>
       ))}
     </div>
