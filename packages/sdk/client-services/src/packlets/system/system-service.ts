@@ -49,6 +49,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
   readonly #status = MulticastObservable.from(this.#statusChanged, SystemStatus.INACTIVE);
   readonly #options: SystemServiceOptions;
   #resetting = false;
+  #resetFiber: Fiber.Fiber<void> | undefined;
 
   'constructor'(options: SystemServiceOptions) {
     this.#options = options;
@@ -92,9 +93,14 @@ export class SystemServiceImpl implements SystemService.Handlers {
     // Detached from the request fiber: `Closing` above closes the RPC route this very call is
     // served on, which would interrupt the chain before it ever wipes storage. Joining keeps the
     // caller's timing — the join is interrupted, the chain is not.
-    return Effect.gen(function* () {
-      const fiber = yield* Effect.forkDetach(chain);
-      yield* Fiber.join(fiber);
+    //
+    // Single-flight over that fiber, because the RPC server dispatches concurrently and a detached
+    // chain no longer dies with its caller: a second `reset` would otherwise emit the whole
+    // `Closing`/`WipingStorage`/`Reset` sequence again, against a stack the first one already tore
+    // down. The fork and the assignment share one synchronous step, so no caller observes the gap.
+    return Effect.gen({ self: this }, function* () {
+      this.#resetFiber ??= yield* Effect.forkDetach(chain);
+      yield* Fiber.join(this.#resetFiber);
     });
   }
 

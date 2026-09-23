@@ -99,4 +99,15 @@ describe('SystemService', () => {
     systemService.setStatus(SystemStatus.ACTIVE);
     expect(systemService.status).to.equal(SystemStatus.INACTIVE);
   });
+
+  test('concurrent resets run the chain once', async () => {
+    // The chain is detached, so without a single-flight gate a second caller would tear down and
+    // wipe a stack the first one has already closed.
+    await Promise.all([
+      EffectEx.runPromise(systemService['SystemService.reset']()),
+      EffectEx.runPromise(systemService['SystemService.reset']()),
+      EffectEx.runPromise(systemService['SystemService.reset']()),
+    ]);
+    expect(steps).to.deep.equal(['close', 'wipe', 'reset']);
+  });
 });
