@@ -170,6 +170,19 @@ test.describe('SceneView', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
+  test('the line tool draws nothing when a press on a node never moves', async () => {
+    const links = await scene.linkCount();
+    await scene.focus();
+    await page.keyboard.press('l');
+    // A press and release on the same point is a click, not a gesture: it must not stand in for a drag
+    // that reached nothing, which would plant a node under the pointer and link to it.
+    const box = await scene.box(scene.node('scene:root/a'));
+    const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await scene.drag(at, at);
+    expect(await scene.linkCount()).toBe(links);
+    expect(await scene.nodeCount()).toBe(4);
+  });
+
   test('the toolbar zooms, creates at the centre and deletes the selection', async () => {
     // The fit zoom follows the fixture's bounds, so the step is read against it rather than named.
     const fitted = await scene.zoom();

@@ -18,7 +18,7 @@ import {
   isPortalNode,
 } from '../../model/types.ts';
 import { coverage, enterPortal, exitPortal, fitBounds, portalFrame, portalScale } from '../../utils/camera.ts';
-import { sceneBounds } from '../../utils/hit.ts';
+import { contentBounds, sceneBounds } from '../../utils/hit.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 
@@ -96,9 +96,8 @@ export const useSceneNavigation = ({
 
   const frameOf = useCallback(
     (scenePath: SceneId[], current: Scene): Bounds => {
-      const derived = sceneBounds(current);
       const portal = portalTo(scenePath[scenePath.length - 2], current.id);
-      return portal ? portalFrame(portal, derived) : derived;
+      return portal ? portalFrame(portal, contentBounds(current)) : sceneBounds(current);
     },
     [portalTo],
   );
@@ -130,7 +129,9 @@ export const useSceneNavigation = ({
       const parent = scenes[path[index]];
       const child = scenes[sceneId];
       const portal = parent && child ? portalTo(parent.id, sceneId) : undefined;
-      return portal && child ? accumulated * portalScale(portal, portalFrame(portal, sceneBounds(child))) : accumulated;
+      return portal && child
+        ? accumulated * portalScale(portal, portalFrame(portal, contentBounds(child)))
+        : accumulated;
     }, 1);
     return camera.zoom / scale;
   }, [path, scenes, portalTo, camera.zoom]);
@@ -155,7 +156,7 @@ export const useSceneNavigation = ({
       select([]);
       registry.set(atoms.hover, undefined);
       registry.set(atoms.editing, undefined);
-      const childBounds = portalFrame(portal, sceneBounds(child));
+      const childBounds = portalFrame(portal, contentBounds(child));
       const swap = (next: Camera) => {
         const entered = enterPortal(next, portal, childBounds);
         registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
@@ -211,7 +212,7 @@ export const useSceneNavigation = ({
         }
         // The level being left exits through the frame it was entered with, so the camera lands where
         // the drill-in took it from however the child was edited in between.
-        exited = exitPortal(exited, portal, level === 0 ? bounds : portalFrame(portal, sceneBounds(child)));
+        exited = exitPortal(exited, portal, level === 0 ? bounds : portalFrame(portal, contentBounds(child)));
         next = next.slice(0, -1);
       }
       registry.set(atoms.path, next);

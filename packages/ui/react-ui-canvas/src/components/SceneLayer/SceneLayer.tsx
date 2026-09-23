@@ -29,7 +29,7 @@ import {
   linkMarkers,
 } from '../../model/types.ts';
 import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
-import { sceneBounds } from '../../utils/hit.ts';
+import { contentBounds } from '../../utils/hit.ts';
 import { sortByZ } from '../../utils/order.ts';
 import { type PartEditing, type PartKey } from '../../utils/parts.ts';
 import { type LinkGeometry, linkGeometry } from '../../utils/route.ts';
@@ -359,7 +359,7 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
   const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
   // Being entered, the portal is already the child scene on the canvas: live, and without the tile tint.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
-  const bounds = useMemo(() => (child ? portalFrame(node, sceneBounds(child)) : undefined), [node, child]);
+  const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
   return (
     <div className={mx('dx-fullscreen', tier === 'dot' && 'bg-primary-500/40')}>
       {tier === 'preview' && child && (

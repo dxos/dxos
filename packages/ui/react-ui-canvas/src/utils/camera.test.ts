@@ -4,7 +4,7 @@
 
 import { type ExpectStatic, describe, test } from 'vitest';
 
-import { type Bounds, type Camera, type PortalNode } from '../model/types.ts';
+import { type Bounds, type Camera, type PortalNode, type Scene } from '../model/types.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,
@@ -13,10 +13,12 @@ import {
   exitPortal,
   fitBounds,
   portalFrame,
+  portalScale,
   sceneToScreen,
   screenToScene,
   zoomAt,
 } from './camera.ts';
+import { contentBounds, sceneBounds } from './hit.ts';
 
 const viewport = { width: 800, height: 600 };
 
@@ -128,5 +130,29 @@ describe('camera', () => {
     // would miss the parent's lines.
     const large = portalFrame(portal, { x: 0, y: 0, width: 2400, height: 600 });
     expect([large.width, large.height]).toEqual([7680, 4800]);
+  });
+
+  test('a small child in a small portal is framed by its content, not by the editing floor', ({ expect }) => {
+    // A portal small enough that the default extent does not fit four of it across: framed by the floor
+    // the child would need sixteen and so draw a quarter of the size, for content it does not have.
+    const tile: PortalNode = {
+      type: 'scene',
+      id: 'p',
+      z: 'A',
+      center: { x: 0, y: 0 },
+      size: { width: 256, height: 160 },
+      scene: 'c',
+    };
+    const scene: Scene = {
+      id: 'c',
+      nodes: { a: { type: 'rect', id: 'a', z: 'A', center: { x: 0, y: 0 }, size: { width: 128, height: 128 } } },
+      links: {},
+    };
+    const framed = portalFrame(tile, contentBounds(scene));
+    const floored = portalFrame(tile, sceneBounds(scene));
+    expect([framed.width, framed.height]).toEqual([1024, 640]);
+    expect([floored.width, floored.height]).toEqual([4096, 2560]);
+    // The child therefore draws four times the size in the same tile.
+    expect(portalScale(tile, framed) / portalScale(tile, floored)).toBe(4);
   });
 });
