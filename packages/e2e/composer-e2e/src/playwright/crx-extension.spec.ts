@@ -38,24 +38,6 @@ const PAGE_ACTION_RUN = 'composer-crx:page-action:run';
 
 type InvokeAck = { ok: boolean; objectId?: string; error?: string };
 
-/**
- * A GitHub pull request page, stubbed at the HTTP boundary so the tab is cheap and deterministic
- * while its URL stays the real one — which is what the action's `urlPatterns` are matched against.
- */
-const stubPullRequestPage = (context: BrowserContext) =>
-  context.route(PULL_REQUEST_URL, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'text/html',
-      body: '<!doctype html><html><head><title>chore: release 1.0.0 by github-actions[bot] · Pull Request #1 · dxos/dxos</title></head><body><h1>chore: release 1.0.0</h1></body></html>',
-    }),
-  );
-
-/** Everything the extension needs to know about this run, written as the options page writes it. */
-const configureExtension = async (page: Page) => {
-  await page.evaluate(async (urls) => chrome.storage.sync.set({ 'composer-urls': urls }), [APP_URL_PATTERN]);
-};
-
 test.describe('Extension', () => {
   test.skip(({ browserName }) => browserName !== 'chromium', 'extensions load in chromium only');
   // Skipped rather than failed when the extension has not been built: this suite's other specs do not
@@ -173,3 +155,21 @@ test.describe('Extension', () => {
     }
   });
 });
+
+/**
+ * A GitHub pull request page, stubbed at the HTTP boundary so the tab is cheap and deterministic
+ * while its URL stays the real one — which is what the action's `urlPatterns` are matched against.
+ */
+const stubPullRequestPage = (context: BrowserContext) =>
+  context.route(PULL_REQUEST_URL, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: '<!doctype html><html><head><title>chore: release 1.0.0 by github-actions[bot] · Pull Request #1 · dxos/dxos</title></head><body><h1>chore: release 1.0.0</h1></body></html>',
+    }),
+  );
+
+/** Everything the extension needs to know about this run, written as the options page writes it. */
+const configureExtension = async (page: Page) => {
+  await page.evaluate(async (urls) => chrome.storage.sync.set({ 'composer-urls': urls }), [APP_URL_PATTERN]);
+};

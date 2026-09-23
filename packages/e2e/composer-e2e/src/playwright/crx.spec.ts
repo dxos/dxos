@@ -41,34 +41,6 @@ type Descriptor = { id: string; operation: string; urlPatterns: string[]; contex
 type ListAck = { ok: boolean; actions?: Descriptor[]; error?: string };
 type InvokeAck = { ok: boolean; objectId?: string; error?: string };
 
-/**
- * Round-trip one CustomEvent pair, correlating on `id` the way the content script's `requestFromPage`
- * does. Rejects rather than hangs when the page never answers, so a missing listener fails as itself.
- */
-const request = <T>(page: Page, event: string, ackEvent: string, detail: Record<string, unknown>): Promise<T> =>
-  page.evaluate(
-    ([event, ackEvent, detail]) =>
-      new Promise((resolve, reject) => {
-        const id = `e2e-${Math.random().toString(36).slice(2)}`;
-        const timeout = setTimeout(() => {
-          window.removeEventListener(ackEvent as string, onAck);
-          reject(new Error(`no ack for ${event as string}`));
-        }, 60_000);
-        const onAck = (ack: Event) => {
-          const payload = (ack as CustomEvent).detail;
-          if (payload?.id !== id) {
-            return;
-          }
-          clearTimeout(timeout);
-          window.removeEventListener(ackEvent as string, onAck);
-          resolve(payload);
-        };
-        window.addEventListener(ackEvent as string, onAck);
-        window.dispatchEvent(new CustomEvent(event as string, { detail: { version: 1, id, ...(detail as object) } }));
-      }),
-    [event, ackEvent, detail] as const,
-  ) as Promise<T>;
-
 test.describe('Extension page actions', () => {
   let host: AppManager;
   let github: GitHubHttpMock;
@@ -166,3 +138,31 @@ test.describe('Extension page actions', () => {
     expect(again.objectId).toBe(ack.objectId);
   });
 });
+
+/**
+ * Round-trip one CustomEvent pair, correlating on `id` the way the content script's `requestFromPage`
+ * does. Rejects rather than hangs when the page never answers, so a missing listener fails as itself.
+ */
+const request = <T>(page: Page, event: string, ackEvent: string, detail: Record<string, unknown>): Promise<T> =>
+  page.evaluate(
+    ([event, ackEvent, detail]) =>
+      new Promise((resolve, reject) => {
+        const id = `e2e-${Math.random().toString(36).slice(2)}`;
+        const timeout = setTimeout(() => {
+          window.removeEventListener(ackEvent as string, onAck);
+          reject(new Error(`no ack for ${event as string}`));
+        }, 60_000);
+        const onAck = (ack: Event) => {
+          const payload = (ack as CustomEvent).detail;
+          if (payload?.id !== id) {
+            return;
+          }
+          clearTimeout(timeout);
+          window.removeEventListener(ackEvent as string, onAck);
+          resolve(payload);
+        };
+        window.addEventListener(ackEvent as string, onAck);
+        window.dispatchEvent(new CustomEvent(event as string, { detail: { version: 1, id, ...(detail as object) } }));
+      }),
+    [event, ackEvent, detail] as const,
+  ) as Promise<T>;
