@@ -18,7 +18,8 @@ export const DEFAULT_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 export const DEFAULT_MODEL = 'jev-latest';
 
 export type Options = {
-  readonly apiKey: Redacted.Redacted<string>;
+  /** Omitted when a proxy authenticates the call upstream (e.g. EDGE with its platform key). */
+  readonly apiKey?: Redacted.Redacted<string>;
   readonly endpoint?: string;
   readonly model?: string;
   /** Injected in tests; defaults to the platform's `fetch`. */
@@ -43,7 +44,7 @@ export const make = ({
             method: 'POST',
             signal,
             headers: {
-              'Authorization': `Bearer ${Redacted.value(apiKey)}`,
+              ...(apiKey ? { Authorization: `Bearer ${Redacted.value(apiKey)}` } : {}),
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ model, state, questions }),
