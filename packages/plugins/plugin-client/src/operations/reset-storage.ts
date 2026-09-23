@@ -18,6 +18,7 @@ const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
         blockAlign: 'start',
         props: {
           mode: data.mode ?? 'reset-storage',
+          invitationCode: data.invitationCode,
         },
       });
     }),

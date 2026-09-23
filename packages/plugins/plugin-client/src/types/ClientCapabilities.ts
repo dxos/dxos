@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -33,6 +34,15 @@ export const SchemaRegistered = Capability.makeSingleton<true>()(`${meta.profile
 export const Migration = Capability.make<Migration$.Migration[]>()(`${meta.profile.key}.capability.migration`);
 export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheType>>()(
   `${meta.profile.key}.capability.accountCache`,
+);
+/**
+ * Runs after the local identity is deleted in place, before the flow that brings in the next one.
+ * `target` names that flow — `deviceInvitation` or `recoverIdentity` — and is absent for a plain
+ * logout, which leaves the app with no identity for a contributor (e.g. onboarding) to resolve.
+ */
+export type OnIdentityDeleted = (params: { target?: string }) => Effect.Effect<void, Error>;
+export const OnIdentityDeleted = Capability.make<OnIdentityDeleted>()(
+  `${meta.profile.key}.capability.onIdentityDeleted`,
 );
 export const HubHttpClient = Capability.makeSingleton<HubHttpClient$>()(`${meta.profile.key}.capability.hubHttpClient`);
 

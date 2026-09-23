@@ -102,22 +102,37 @@ test.describe('Basic tests', () => {
     );
 
     test('logout', { tag: ['@QA-5'] }, async () => {
-      // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
-      // plugin manager + identity creation) consistently runs ~8-11s, which
-      // doesn't fit the default 60s test timeout comfortably alongside setup.
-      test.slow();
-
       await host.createSpace();
       await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      const previousWorkspace = host.workspaceId;
+      const document = await host.markDocument();
 
       await host.openUserDevices();
       await host.logout();
-      // Wait for the reset to complete and attempt to reload.
-      await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
-      // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
-      // 30s gives ~3x headroom over the observed worst case.
-      // After reset the exemplar space is re-seeded alongside the default space.
+
+      // The identity is deleted in place and a fresh one boots into its own default space.
+      await host.waitForNewIdentityWorkspace(previousWorkspace);
       await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+      await expect(host.deck.plank().locator.getByText('README')).toBeVisible({ timeout: 30_000 });
+      await host.expectSameDocument(document);
+    });
+
+    test('recover identity', { tag: ['@QA-5'] }, async () => {
+      // Recovery re-admits the device through EDGE, which then replicates the identity's spaces back.
+      test.setTimeout(180_000);
+
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      await host.openUserSecurity();
+      const recoveryCode = await host.createRecoveryCode();
+      const document = await host.markDocument();
+
+      await host.showUserDevices();
+      await host.recoverIdentity(recoveryCode);
+
+      // The same identity comes back in place, spaces and all.
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 120_000 });
+      await host.expectSameDocument(document);
     });
   });
 });

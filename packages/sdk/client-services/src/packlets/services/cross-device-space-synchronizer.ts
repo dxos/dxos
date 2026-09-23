@@ -141,6 +141,9 @@ export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
     yield* Hook.on(
       DataSpacesAvailable,
       Effect.fn('CrossDeviceSpaceSynchronizer.onDataSpacesAvailable')(function* ({ identity }) {
+        // Rebound on every identity: after an in-place deletion the next one arrives while this is
+        // still open on the deleted identity's HALO, which would never admit the new one's spaces.
+        yield* Effect.promise(async () => synchronizer.close?.());
         synchronizer.setIdentity(identity);
         yield* Effect.promise(async () => synchronizer.open?.(ctx));
       }),

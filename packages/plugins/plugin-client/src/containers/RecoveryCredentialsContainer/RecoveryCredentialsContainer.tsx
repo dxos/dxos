@@ -81,6 +81,7 @@ export const RecoveryCredentialsContainer = () => {
                 icon='ph--receipt--duotone'
                 variant='default'
                 onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
+                data-testid='recoveryCredentials.createRecoveryCode'
               />
             </Form.Field>
           </Form.FieldSet>

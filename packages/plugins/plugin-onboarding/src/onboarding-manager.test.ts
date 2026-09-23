@@ -67,9 +67,35 @@ describe('OnboardingManager', () => {
     expect(calls).toEqual([
       expect.objectContaining({
         key: String(ClientOperation.ResetStorage.meta.key),
-        input: { mode: 'join-new-identity' },
+        input: { mode: 'join-new-identity', invitationCode: 'test-code' },
       }),
     ]);
+  });
+
+  test('a logout with auth disabled brings up a fresh identity in place', async ({ expect }) => {
+    const { manager, getCalls } = await createManager({ identity: true });
+    await manager.onIdentityDeleted();
+
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(1);
+  });
+
+  test('a logout with auth enabled returns to the welcome screen', async ({ expect }) => {
+    const { manager, calls, getCalls } = await createManager({ identity: true, hubUrl: 'https://hub.example.com' });
+    await manager.onIdentityDeleted();
+
+    const dialogSubjects = calls
+      .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
+      .map((call) => (call.input as { subject?: string }).subject);
+    expect(dialogSubjects).toContain(WELCOME_SCREEN);
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+  });
+
+  test('a deletion that hands over to a join or recovery flow is left to it', async ({ expect }) => {
+    const { manager, calls } = await createManager({ identity: true });
+    await manager.onIdentityDeleted({ target: 'deviceInvitation' });
+    await manager.onIdentityDeleted({ target: 'recoverIdentity' });
+
+    expect(calls).toEqual([]);
   });
 
   test('url-driven signup with an already-registered email creates no identity', async ({ expect }) => {

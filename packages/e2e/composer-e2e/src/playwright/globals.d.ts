@@ -38,6 +38,9 @@ declare global {
     };
   };
 
+  /** Set by the suite, not the app: survives only as long as the document it was set on. */
+  var e2eDocumentTag: string | undefined;
+
   /** The client/ECHO debug hook, mounted at the end of `client.initialize()`. */
   var dxos: { spaces?: () => DebugSpace[] } | undefined;
 

@@ -3,12 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { usePluginManager } from '@dxos/app-framework/ui';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -17,21 +15,13 @@ import { translations } from '#translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog.tsx';
 
-const DefaultStory = (props: Omit<ResetDialogProps, 'capabilityManager'>) => {
-  const manager = usePluginManager();
-
-  return (
-    <Dialog.Root open>
-      <Dialog.Overlay>
-        <ResetDialog
-          capabilityManager={manager.capabilities}
-          onReset={() => Effect.sync(() => console.log('reset'))}
-          {...props}
-        />
-      </Dialog.Overlay>
-    </Dialog.Root>
-  );
-};
+const DefaultStory = (props: ResetDialogProps) => (
+  <Dialog.Root open>
+    <Dialog.Overlay>
+      <ResetDialog {...props} />
+    </Dialog.Overlay>
+  </Dialog.Root>
+);
 
 const meta = {
   title: 'plugins/plugin-client/containers/ResetDialog',

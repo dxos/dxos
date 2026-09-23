@@ -138,6 +138,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['security.label', { ns: meta.profile.key }],
                 icon: 'ph--key--regular',
+                testId: 'clientPlugin.security',
               },
             }),
           ];
