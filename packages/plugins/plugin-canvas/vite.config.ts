@@ -8,6 +8,8 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     Canvas: 'src/types/Canvas.ts',
+    CanvasCapabilities: 'src/types/CanvasCapabilities.ts',
+    Settings: 'src/types/Settings.ts',
     CanvasPlugin: 'src/CanvasPlugin.ts',
     plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',

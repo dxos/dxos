@@ -9,8 +9,7 @@ import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Field, IconButton, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
