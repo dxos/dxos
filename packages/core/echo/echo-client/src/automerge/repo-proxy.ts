@@ -613,7 +613,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -626,6 +626,13 @@ export class RepoProxy extends Resource {
     // update once the network delivers.
     if (requesting) {
       handle._markRequesting();
+    }
+
+    // The host has no bytes and nothing to fetch them from, so the handle is failed rather than
+    // left waiting; bytes that turn up later (replication catching up) still take it to `'ready'`.
+    if (unavailable) {
+      log.warn('host cannot produce document', { documentId, spaceId: this._spaceId });
+      handle._markUnavailable(documentId);
     }
 
     if (mutation) {
