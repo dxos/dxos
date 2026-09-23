@@ -165,6 +165,9 @@ catalogs:
     '@effect/ai-openai':
       specifier: 4.0.0-rc.117
       version: 4.0.0-rc.117
+    '@effect/ai-typesafe':
+      specifier: 4.0.0-rc.117
+      version: 4.0.0-rc.117
     '@effect/atom-react':
       specifier: 4.0.0-rc.117
       version: 4.0.0-rc.117
@@ -7506,18 +7509,6 @@ importers:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  packages/experimental/ai-typesafe:
-    dependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
-      effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
-
   packages/experimental/discord-bot:
     dependencies:
       '@dxos/config':
@@ -12158,9 +12149,6 @@ importers:
 
   packages/plugins/plugin-labeler:
     dependencies:
-      '@dxos/ai-typesafe':
-        specifier: workspace:*
-        version: link:../../experimental/ai-typesafe
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -17735,9 +17723,6 @@ importers:
 
   packages/plugins/plugin-typesafe:
     dependencies:
-      '@dxos/ai-typesafe':
-        specifier: workspace:*
-        version: link:../../experimental/ai-typesafe
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -17774,12 +17759,12 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai-typesafe':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
@@ -26872,6 +26857,11 @@ packages:
 
   '@effect/ai-openai@4.0.0-rc.117':
     resolution: {integrity: sha512-EGQtI0Y8B/PgEQ3ObZ8RYfIwTL5f5gXegO386aoskR4S5XrDr42mJk+7gJ/86SQ1mc38eYD4zEHz8f4Q3RkUgg==}
+    peerDependencies:
+      effect: 4.0.0-rc.117
+
+  '@effect/ai-typesafe@4.0.0-rc.117':
+    resolution: {integrity: sha512-/cjCfCXEXS+vGDL8TUiYdPRwCDtyJyRiLe5+Z4IAOJgSnMebfSR4eHOhNstpZpW19wksM+BdFiZV3VNZI6g3pA==}
     peerDependencies:
       effect: 4.0.0-rc.117
 
@@ -48230,6 +48220,10 @@ snapshots:
       effect: 4.0.0-rc.117
 
   '@effect/ai-openai@4.0.0-rc.117(effect@4.0.0-rc.117)':
+    dependencies:
+      effect: 4.0.0-rc.117
+
+  '@effect/ai-typesafe@4.0.0-rc.117(effect@4.0.0-rc.117)':
     dependencies:
       effect: 4.0.0-rc.117
 

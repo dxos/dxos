@@ -9,14 +9,14 @@ import * as Struct from 'effect/Struct';
 
 export const Settings = Schema.Struct({
   /**
-   * Calls System One directly at this URL instead of through EDGE — for a self-hosted or regional
-   * endpoint reachable from the browser. Unset routes through EDGE, which also works without a
-   * connected key.
+   * Calls System One directly at this base URL (e.g. `https://api.typesafe.ai/v1`) instead of
+   * through EDGE — for a self-hosted or regional endpoint that sends CORS headers. Unset routes
+   * through EDGE, which also works without a connected key.
    */
-  endpoint: Schema.optional(
+  apiUrl: Schema.optional(
     Schema.String.annotate({
-      title: 'API endpoint',
-      description: 'Direct System One endpoint. Leave empty to route through EDGE.',
+      title: 'API base URL',
+      description: 'Direct System One base URL. Leave empty to route through EDGE.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

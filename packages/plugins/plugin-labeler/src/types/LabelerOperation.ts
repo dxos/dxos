@@ -5,8 +5,8 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
-import { DecisionModel } from '@dxos/ai-typesafe';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';

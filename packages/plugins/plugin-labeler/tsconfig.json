@@ -43,9 +43,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../experimental/ai-typesafe"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

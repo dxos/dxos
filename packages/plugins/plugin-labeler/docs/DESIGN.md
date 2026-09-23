@@ -8,17 +8,19 @@ tokenizer to salvage `{...}` spans out of prose, and index-drift normalisation
 (`plugin-inbox/src/operations/classify/classify-mailbox.ts`). The categories are also fixed in the
 prompt, so a user's own labels play no part.
 
-A decision model removes both problems. The questions are a schema, so there is nothing to parse and
-nothing to salvage; and a `Choice` takes its options at call time, so the user's own tags are the
-vocabulary.
+A decision model (`effect/unstable/ai/DecisionModel`) removes both problems. The questions are a
+`Decision` definition, so there is nothing to parse and nothing to salvage; and a `classify` takes its
+labels at call time, so the user's own tags are the vocabulary.
 
 ## What it asks
 
 One call per message, three questions answered independently:
 
-- `Noul` — does this ask the recipient for a reply, a decision, or an action?
-- `Choice` — which of the space's user tags fits? Criteria are the tag labels the user wrote.
-- `Score` — how soon does this need dealing with, on `Routine / Timely / Urgent`?
+- `probability` — does this ask the recipient for a reply, a decision, or an action?
+- `classify` — which of the space's user tags fits? Criteria are the tag labels the user wrote, plus
+  `none`: a classification needs two labels, and without an out a one-tag space would file every
+  message under it.
+- `rate` — how soon does this need dealing with, on `Routine / Timely / Urgent`?
 
 The state is the sender, the subject and a snippet — never the full body.
 

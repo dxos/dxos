@@ -2,84 +2,97 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as TypeSafeClient from '@effect/ai-typesafe/TypeSafeClient';
+import * as TypeSafeDecisionModel from '@effect/ai-typesafe/TypeSafeDecisionModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
-import * as Redacted from 'effect/Redacted';
+import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { DecisionError, DecisionModel, TypeSafeClient } from '@dxos/ai-typesafe';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
+import * as Header from '@dxos/compute/Header';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TypeSafeCapabilities } from '#types';
 
-import { TYPESAFE_SOURCE } from '../constants.ts';
-import { MissingCredentialError } from '../errors.ts';
-import { EDGE_SENTINEL_ENDPOINT, makeEdgeFetch } from './edge-fetch.ts';
+import { TYPESAFE_MODEL, TYPESAFE_SOURCE } from '../constants.ts';
+
+/** Host stripped by {@link EdgeAiHttpClient}; only the `/v1/...` path reaches EDGE. */
+const EDGE_SENTINEL_API_URL = 'http://edge.internal/v1';
+
+/** The space's connected key, if any. Absence is an ordinary state, so lookup failures read as none. */
+const connectedApiKey = Effect.gen(function* () {
+  const credentials = yield* Credential.CredentialsService;
+  const matches = yield* Effect.tryPromise(() => credentials.queryCredentials({ service: TYPESAFE_SOURCE })).pipe(
+    Effect.orElseSucceed((): Credential.ServiceCredential[] => []),
+  );
+  return matches.find((credential) => credential.apiKey)?.apiKey;
+});
 
 /**
- * The API key the connector stored. `getApiKeyValue` resolves a server-custodied token too, and
- * signals absence as a defect; a space with nothing connected is an ordinary state, so it becomes a
- * typed failure the caller can act on.
+ * Calls System One directly with the connected key as a bearer token. Without one the vendor
+ * answers 401, which surfaces as an `AiError` the caller can report.
  */
-const apiKey = Credential.getApiKeyValue({ service: TYPESAFE_SOURCE }).pipe(
-  Effect.catchCause((cause) => Effect.fail(new MissingCredentialError({ cause }))),
-);
+const directHttpClient: Layer.Layer<HttpClient.HttpClient, never, Credential.CredentialsService> = Layer.effect(
+  HttpClient.HttpClient,
+  Effect.gen(function* () {
+    const client = yield* HttpClient.HttpClient;
+    const context = yield* Effect.context<Credential.CredentialsService>();
+    return HttpClient.mapRequestEffect(client, (request) =>
+      connectedApiKey.pipe(
+        Effect.map((apiKey) => (apiKey ? HttpClientRequest.bearerToken(request, apiKey) : request)),
+        Effect.provide(context),
+      ),
+    );
+  }),
+).pipe(Layer.provide(FetchHttpClient.layer));
 
 /**
- * The endpoint to call directly, if any. The vendor URL was the previous default and is still in
- * persisted settings, but a browser cannot call it (no CORS), so it routes through EDGE like unset.
+ * The provider stack for one call. Through EDGE (no `apiUrl`) a connected key rides as `X-BYOK` and
+ * EDGE otherwise uses its platform key; an `apiUrl` bypasses EDGE and needs the key.
  */
-const directEndpoint = (endpoint: string | undefined): string | undefined =>
-  endpoint && endpoint.trim().length > 0 && endpoint !== TypeSafeClient.DEFAULT_ENDPOINT ? endpoint : undefined;
-
-/**
- * Builds the client for one call. With no endpoint override the call goes through EDGE, where a
- * connected key is optional; an override is called directly, so it needs the key.
- */
-const makeClient = (
-  endpoint: string | undefined,
+export const providerLayer = (
+  apiUrl: string | undefined,
   getEdgeClient: () => EdgeHttpClient,
-): Effect.Effect<DecisionModel.Service, MissingCredentialError, Credential.CredentialsService> =>
-  endpoint
-    ? apiKey.pipe(Effect.map((key) => TypeSafeClient.make({ apiKey: Redacted.make(key), endpoint })))
-    : Effect.option(apiKey).pipe(
-        Effect.map((key) =>
-          TypeSafeClient.make({
-            endpoint: EDGE_SENTINEL_ENDPOINT,
-            fetch: makeEdgeFetch(getEdgeClient, Option.getOrUndefined(key)),
-          }),
-        ),
-      );
+): Layer.Layer<DecisionModel.DecisionModel, never, Credential.CredentialsService> =>
+  TypeSafeDecisionModel.layer({ model: TYPESAFE_MODEL }).pipe(
+    Layer.provide(TypeSafeClient.layer({ apiUrl: apiUrl ?? EDGE_SENTINEL_API_URL })),
+    Layer.provide(
+      apiUrl
+        ? directHttpClient
+        : Header.byokLayer(TYPESAFE_SOURCE).pipe(
+            Layer.provide(EdgeAiHttpClient.layer(getEdgeClient, { service: 'typesafe' })),
+          ),
+    ),
+  );
 
 /**
- * The decision model.
- *
- * The key is resolved per call rather than captured when the slice materialises, so connecting
- * TypeSafe takes effect on the next question instead of after a restart — and disconnecting it
- * falls back to the platform key rather than a client that still authenticates as the user.
+ * The decision model. The provider stack is built per call, so a settings change or a key connected
+ * mid-session takes effect on the next question without restarting the space slice.
  */
 const decisionModelLayer = (
-  endpoint: () => string | undefined,
+  apiUrl: () => string | undefined,
   getEdgeClient: () => EdgeHttpClient,
 ): Layer.Layer<DecisionModel.DecisionModel, never, Credential.CredentialsService> =>
   Layer.effect(
     DecisionModel.DecisionModel,
     Effect.gen(function* () {
-      // Captured so `evaluate` can resolve the credential without the caller providing the service.
+      // Captured so `decide` can resolve the credential without the caller providing the service.
       const context = yield* Effect.context<Credential.CredentialsService>();
-      return DecisionModel.make({
-        evaluate: (request) =>
-          makeClient(endpoint(), getEdgeClient).pipe(
-            Effect.mapError((error) => new DecisionError({ source: TYPESAFE_SOURCE }, { cause: error })),
-            Effect.flatMap((client) => client.evaluate(request)),
+      return DecisionModel.DecisionModel.of({
+        [DecisionModel.TypeId]: DecisionModel.TypeId,
+        decide: (definition, options) =>
+          DecisionModel.decide(definition, options).pipe(
+            Effect.provide(providerLayer(apiUrl(), getEdgeClient)),
             Effect.provide(context),
           ),
       });
@@ -113,8 +126,11 @@ export default Capability.makeModule(
         requires: [Credential.CredentialsService],
         provides: [DecisionModel.DecisionModel],
       },
-      // Read at call time, so changing the endpoint in settings does not need a restart.
-      () => decisionModelLayer(() => directEndpoint(registry.get(settingsAtom).endpoint), getEdgeClient),
+      () =>
+        decisionModelLayer(() => {
+          const apiUrl = registry.get(settingsAtom).apiUrl?.trim();
+          return apiUrl && apiUrl.length > 0 ? apiUrl : undefined;
+        }, getEdgeClient),
     );
 
     return Capability.contribute(Capabilities.LayerSpec, DecisionModelSpec);

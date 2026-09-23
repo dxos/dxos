@@ -43,12 +43,6 @@
       "path": "../../core/mesh/edge-client"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../experimental/ai-typesafe"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

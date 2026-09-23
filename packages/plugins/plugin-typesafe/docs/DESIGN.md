@@ -2,9 +2,10 @@
 
 ## Why
 
-`@dxos/ai-typesafe` is a client for a decision model: it answers typed questions about a state
-instead of generating text. To be usable from a Composer operation it needs two things the package
-itself cannot supply — a key the user owns, and a place in the layer stack.
+Effect ships a decision model (`effect/unstable/ai/DecisionModel`) and a TypeSafe provider for it
+(`@effect/ai-typesafe`): it answers typed decisions about an input instead of generating text. To be
+usable from a Composer operation it needs two things the provider cannot supply — a route the
+browser can reach with a key, and a place in the layer stack.
 
 This plugin is that seam and nothing else. It has no surfaces, no schema, and no operations: a
 plugin that wants decisions depends on `DecisionModel`, not on this plugin.
@@ -23,16 +24,20 @@ holds a platform key and meters usage per account, so TypeSafe works with nothin
 the user connects is a space credential like every other provider key: `CredentialsService`
 resolves it and it rides as `X-BYOK`, which EDGE forwards unbilled.
 
+**Effect's provider, EDGE's transport.** `@effect/ai-typesafe` is built on `HttpClient`, so it sits on
+the same stack as the Anthropic and DeepSeek resolvers: `EdgeAiHttpClient` re-targets the request
+onto the proxy and `Header.byokLayer` adds the connected key. Nothing TypeSafe-specific is
+implemented here.
+
 **Resolve the key per call, not at slice materialisation.** Capturing it when the space slice is
 built means a user who connects TypeSafe mid-session keeps being billed on the platform key until
 something restarts the slice, and a user who disconnects keeps authenticating with a captured key.
 Per call is one query against an in-memory credential set, which is not worth optimising away for
 either of those bugs.
 
-**A direct endpoint needs a key.** With the `endpoint` setting the call bypasses EDGE, so there is
-no platform key; a space with none connected fails with a `DecisionError` (cause
-`MissingCredentialError`) the caller can surface, rather than dying inside the layer and taking the
-slice with it.
+**A direct `apiUrl` needs a key.** It bypasses EDGE, so there is no platform key; the connected key
+is sent as a bearer token and, without one, the vendor's 401 surfaces as an `AiError` the caller can
+report rather than dying inside the layer and taking the slice with it.
 
 **Space affinity.** Credentials are per space, so the model is too. An application-affinity model
 would have to choose a space's key arbitrarily.
@@ -44,9 +49,10 @@ preflight with a 400, so a fetch from Composer fails before it leaves the tab �
 every origin tried, including `null`. This is not a sandbox artefact: the vendor simply does not
 support browser callers.
 
-So the call is routed through EDGE, like the AI providers. The `endpoint` setting remains for a
-self-hosted or regional endpoint that does send CORS headers; the vendor URL — the previous default,
-still present in persisted settings — is treated as unset, since it can never work from a browser.
+So the call is routed through EDGE, like the AI providers. The `apiUrl` setting remains for a
+self-hosted or regional endpoint that does send CORS headers. It replaced an `endpoint` setting whose
+default was the vendor URL; the old key is dropped on decode, so persisted settings route through
+EDGE.
 
 ## Not in scope
 

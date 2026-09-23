@@ -4,9 +4,10 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { DecisionModel } from '@dxos/ai-typesafe';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -19,37 +20,65 @@ import { LabelerOperationHandlerSet } from '#operations';
 import { LabelerOperation } from '#types';
 
 /**
- * Canned answers keyed by subject. The model itself is exercised live in `@dxos/ai-typesafe`; what
- * needs pinning here is the other half — that an answer becomes the right tag on the right message,
- * and that a re-run asks about nothing.
+ * Canned answers keyed by subject. The TypeSafe provider is Effect's own; what needs pinning here is
+ * the other half — that an answer becomes the right tag on the right message, and that a re-run asks
+ * about nothing.
  */
-// The choice key is the tag's URI (labels are not unique), so the fixture learns it when the space
+// The label key is the tag's URI (labels are not unique), so the fixture learns it when the space
 // is seeded rather than hard-coding a label.
 let billingTagUri = '';
 
-const ANSWERS = (): Record<string, Record<string, DecisionModel.Answer>> => ({
-  'Can you approve the invoice today?': {
-    needsReply: { type: 'noul', noul: 0.95 },
-    urgency: { type: 'score', score: 1.9, confidence: 0.9 },
-    label: { type: 'choice', choice: billingTagUri, confidence: 0.9 },
-  },
-  'July newsletter': {
-    needsReply: { type: 'noul', noul: 0.05 },
-    urgency: { type: 'score', score: 0.1, confidence: 0.9 },
-    // Below the threshold, so nothing is applied rather than a guess.
-    label: { type: 'choice', choice: billingTagUri, confidence: 0.2 },
-  },
+type Canned = { needsReply: number; rating: number; label: string; confidence: number };
+
+const ANSWERS = (): Record<string, Canned> => ({
+  'Can you approve the invoice today?': { needsReply: 0.95, rating: 1.9, label: billingTagUri, confidence: 0.9 },
+  // Below the threshold, so nothing is applied rather than a guess.
+  'July newsletter': { needsReply: 0.05, rating: 0.1, label: billingTagUri, confidence: 0.2 },
 });
 
 const SUBJECTS = ['Can you approve the invoice today?', 'July newsletter'];
 
-const decisionModelLayer = DecisionModel.layer({
-  evaluate: (request) =>
-    Effect.sync(() => {
-      const subject = String((request.state as { subject?: string }).subject);
-      return { answers: ANSWERS()[subject] ?? {} };
-    }),
-});
+/** All probability mass on one option; `DecisionModel` rejects a distribution that does not sum to 1. */
+const certain = (options: readonly string[], chosen: string) =>
+  Object.fromEntries(options.map((option) => [option, option === chosen ? 1 : 0]));
+
+const decisionModelLayer = Layer.effect(
+  DecisionModel.DecisionModel,
+  DecisionModel.make({
+    decide: ({ state, decisions }) =>
+      Effect.sync(() => {
+        const subject = typeof state === 'object' && state !== null && 'subject' in state ? String(state.subject) : '';
+        const canned = ANSWERS()[subject];
+        const answers: Record<string, DecisionModel.ProviderAnswer> = {};
+        for (const [key, decision] of Object.entries(decisions)) {
+          switch (decision._tag) {
+            case 'Probability':
+              answers[key] = { _tag: 'Probability', probability: canned.needsReply };
+              break;
+            case 'Rate': {
+              const level = decision.criteria[Math.round(canned.rating)];
+              answers[key] = {
+                _tag: 'Rate',
+                rating: canned.rating,
+                probabilities: certain(decision.criteria, level),
+                confidence: 0.9,
+              };
+              break;
+            }
+            case 'Classify':
+              answers[key] = {
+                _tag: 'Classify',
+                label: canned.label,
+                probabilities: certain(Object.keys(decision.criteria), canned.label),
+                confidence: canned.confidence,
+              };
+              break;
+          }
+        }
+        return { answers, usage: { inputTokens: undefined, outputTokens: undefined } };
+      }),
+  }),
+);
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: LabelerOperationHandlerSet,

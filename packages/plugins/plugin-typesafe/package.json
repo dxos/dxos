@@ -81,7 +81,6 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@dxos/ai-typesafe": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -94,8 +93,8 @@
     "@dxos/link": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai-typesafe": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

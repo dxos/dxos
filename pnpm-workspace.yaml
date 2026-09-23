@@ -93,6 +93,7 @@ catalog:
   '@effect-rx/rx-react': ^0.42.4
   '@effect/ai-anthropic': 4.0.0-rc.117
   '@effect/ai-openai': 4.0.0-rc.117
+  '@effect/ai-typesafe': 4.0.0-rc.117
   '@effect/atom-react': 4.0.0-rc.117
   '@effect/language-service': ^0.86.4
   '@effect/opentelemetry': 4.0.0-rc.117
