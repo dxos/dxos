@@ -20,9 +20,11 @@ const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${g
 /**
  * A level's line opacity from its on-screen spacing alone: faint at the finest drawn spacing, a step
  * darker per fourfold. A level then fades in as the view zooms rather than popping, and a scene swap
- * that keeps every spacing (drilling through a grid-aligned portal) keeps every line as it was.
+ * that keeps every spacing (drilling through a grid-aligned portal) keeps every line as it was. The
+ * step is small and the ceiling low: the grid is a guide under the diagram, so the coarse levels in
+ * particular must not read as content.
  */
-const levelOpacity = (size: number, min: number) => Math.min(0.25, 0.05 + (0.05 * Math.log(size / min)) / Math.log(4));
+const levelOpacity = (size: number, min: number) => Math.min(0.12, 0.04 + (0.02 * Math.log(size / min)) / Math.log(4));
 
 export type GridProps = ThemedClassName<{
   size?: number;

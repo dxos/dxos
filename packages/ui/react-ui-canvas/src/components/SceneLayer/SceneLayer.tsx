@@ -256,7 +256,7 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
   return (
     <div
       className={mx(
-        'absolute box-border border-2 overflow-hidden',
+        'absolute box-border border-4 overflow-hidden',
         ...frameClasses(node, selected, hovered),
         interactive && !node.locked && 'cursor-grab',
         ghost && 'opacity-50 border-dashed pointer-events-none',
@@ -374,11 +374,11 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
         child &&
         bounds && (
           // The nested layer is read-only: only the root scene receives handlers.
-          // Pulled out by the frame's `border-2`, so the child's origin is the node's corner as
-          // `portalTransform` and `enterPortal` assume; inside the padding box it sat two units in and
+          // Pulled out by the frame's border, so the child's origin is the node's corner as
+          // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
           // the scene jumped by that at the drill-in swap.
           <div
-            className='absolute -top-0.5 -left-0.5 pointer-events-none'
+            className='absolute -top-1 -left-1 pointer-events-none'
             style={{ transform: portalTransform(node, bounds), transformOrigin: '0 0' }}
           >
             <SceneLayer
