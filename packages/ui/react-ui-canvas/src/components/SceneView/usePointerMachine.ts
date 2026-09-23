@@ -715,12 +715,16 @@ export const usePointerMachine = ({
         break;
       }
       case 'link': {
+        // A press that never moved is a click, not a link: with a link tool selected, pressing a shape
+        // and releasing on it draws nothing rather than a link to a node the gesture never reached.
+        // Read from the raw gesture, since settling has already snapped the landing point away from it.
+        if (raw.kind === 'link' && raw.to.x === raw.from.x && raw.to.y === raw.from.y) {
+          break;
+        }
         let target = current.target;
         if (!target && isPointEndpoint(current.source)) {
-          // A free-ended link that never reached a node ends free too; a click without a drag draws nothing.
-          if (current.to.x !== current.from.x || current.to.y !== current.from.y) {
-            target = { point: current.to };
-          }
+          // A free-ended link that never reached a node ends free too.
+          target = { point: current.to };
         } else if (!target && capabilities.create) {
           // Dropping a port drag on empty canvas creates a rectangle there and links to it (canvas-editor
           // behaviour); its top-left is what snaps, so the edges land on the grid.

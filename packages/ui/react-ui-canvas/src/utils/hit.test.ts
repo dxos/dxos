@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type BuiltinNode, MAJOR_GRID, type Scene } from '../model/types.ts';
-import { DEFAULT_EXTENT, boundsFromPoints, hitTest, nodesIntersecting, sceneBounds } from './hit.ts';
+import { DEFAULT_EXTENT, boundsFromPoints, contentBounds, hitTest, nodesIntersecting, sceneBounds } from './hit.ts';
 
 const nodes: Record<string, BuiltinNode> = {
   a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
@@ -69,5 +69,15 @@ describe('hit', () => {
       width: 3008,
       height: 1088,
     });
+  });
+
+  test('contentBounds frames the content alone, and the floor only when there is none', ({ expect }) => {
+    // The same scene seen two ways: on its own it gets the editing surface, in a portal its own content.
+    const near: Scene = { id: 'near', nodes: { a: nodes.a }, links: {} };
+    expect(sceneBounds(near)).toEqual(DEFAULT_EXTENT);
+    // The node's 50..150 box, padded by a major cell and grown to the grid.
+    expect(contentBounds(near)).toEqual({ x: -64, y: -64, width: 320, height: 320 });
+    // Nothing to frame, so the floor is the frame rather than a degenerate box.
+    expect(contentBounds({ id: 'empty', nodes: {}, links: {} })).toEqual(DEFAULT_EXTENT);
   });
 });
