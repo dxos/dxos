@@ -35,6 +35,7 @@ import {
   checkpointWal,
 } from './opfs-pragmas.ts';
 import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
+import { decodeRow } from './row-decode.ts';
 import { instrumentVfs } from './vfs-metrics.ts';
 
 export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
@@ -167,7 +168,7 @@ export const makeOpfs = (
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
                 columns = columns ?? sqlite3.column_names(stmt);
-                const row = sqlite3.row(stmt);
+                const row = decodeRow(sqlite3, stmt, sql);
                 if (rowMode === 'object') {
                   const obj: Record<string, unknown> = {};
                   for (let index = 0; index < columns!.length; index++) {
@@ -215,7 +216,7 @@ export const makeOpfs = (
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
                 columns = columns ?? sqlite3.column_names(stmt);
-                const row = sqlite3.row(stmt);
+                const row = decodeRow(sqlite3, stmt, sql);
                 const obj: Record<string, unknown> = {};
                 for (let index = 0; index < columns!.length; index++) {
                   obj[columns![index]] = row[index];
