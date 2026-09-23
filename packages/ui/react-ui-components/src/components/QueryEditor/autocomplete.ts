@@ -3,7 +3,7 @@
 //
 
 import { type Database, type Tag, Type } from '@dxos/echo';
-import { QueryDSL } from '@dxos/echo-query';
+import { QueryDSL, formatTag } from '@dxos/echo-query';
 import { type GetMenuContext } from '@dxos/react-ui-editor';
 
 export type CompletionOptions = {
@@ -16,7 +16,7 @@ export type CompletionOptions = {
  * range, `#` included, and inserts the item verbatim — so an unprefixed label would silently drop the
  * `#` and leave text that no longer parses as a tag.
  */
-const tagCompletions = (tags: Tag.Map): string[] => Object.values(tags).map((tag) => `#${tag.label}`);
+const tagCompletions = (tags: Tag.Map): string[] => Object.values(tags).map((tag) => formatTag(tag.label));
 
 /**
  * Whether the caret sits in a tag the user is still typing: a `#` at the start of the current word,

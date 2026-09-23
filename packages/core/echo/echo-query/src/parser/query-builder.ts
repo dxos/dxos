@@ -14,6 +14,27 @@ import { QueryDSL } from './gen/index.ts';
 export type BuildResult = { filter?: Filter.Any; name?: string };
 
 /**
+ * The `#tag` token for a tag label. The grammar's `Tag` token admits only `[a-zA-Z0-9_-]`, so every
+ * other run of characters becomes one `-` — otherwise `#Needs reply` parses as tag `needs` plus text.
+ */
+export const formatTag = (label: string): string =>
+  '#' +
+  label
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+/** The key and tag a `#tag` token names, matched against each label's {@link formatTag} form. */
+export const findTagByToken = (
+  tags: Tag.Map | undefined,
+  token: string,
+): { key: string; tag: Tag.Map[string] } | undefined => {
+  const normalized = token.toLowerCase();
+  const entry = Object.entries(tags ?? {}).find(([, tag]) => formatTag(tag.label).toLowerCase() === normalized);
+  return entry && { key: entry[0], tag: entry[1] };
+};
+
+/**
  * Stateless query builder that parses DSL trees into filters.
  *
  * NOTE: QueryBuilder was largely developed using Claude Sonnet 4.5 (in Windsurf)..
@@ -473,9 +494,8 @@ export class QueryBuilder {
    */
   private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any | undefined {
     invariant(this._tags);
-    const str = this._getNodeText(cursor, input).slice(1).toLowerCase();
-    const [key] = Object.entries(this._tags!).find(([, value]) => value.label.toLowerCase() === str) ?? [];
-    return key ? Filter.tag(key) : undefined;
+    const match = findTagByToken(this._tags, this._getNodeText(cursor, input));
+    return match ? Filter.tag(match.key) : undefined;
   }
 
   /**
