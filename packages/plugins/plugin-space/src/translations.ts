@@ -256,6 +256,8 @@ export const translations = [
         'members.description': 'Current space members and pending invitations.',
         'members.label': 'Members',
         'invitations.label': 'Invitations',
+        'add-known-people.label': 'Add people you know',
+        'add-members-failed-toast.title': 'Some people could not be added',
         'space-invitation.description': 'Manage invitations to the space.',
         'qr-code.description': 'Share this QR code, or copy the URL and share it with the person you want to invite.',
         'locked-space.description': 'This space is locked, unlock it to invite new members.',

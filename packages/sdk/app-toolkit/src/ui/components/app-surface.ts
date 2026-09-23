@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
 import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -628,6 +628,18 @@ export type NavtreeItemEndData<Subject = unknown> = {
 
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
 export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
+
+/** Data for the contact-picker slot on a space's members article. */
+export type ContactPickerData = {
+  space: Space;
+  onAdd: (
+    identityKeys: string[],
+    role: SpaceMember_Role,
+  ) => Promise<{ joinUrl: string; failed: readonly { key: string; error: string }[] }>;
+};
+
+/** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
+export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
 
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');

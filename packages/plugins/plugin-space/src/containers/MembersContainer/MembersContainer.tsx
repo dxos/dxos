@@ -5,13 +5,14 @@
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { useSpaceInvitations } from '@dxos/react-client/echo';
+import { type SpaceMember_Role, useSpaceInvitations } from '@dxos/react-client/echo';
 import {
   type CancellableInvitationObservable,
   type Invitation,
@@ -119,6 +120,26 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
     [t, space, target, invokePromise],
   );
 
+  const contactPickerData = useMemo(
+    (): AppSurface.ContactPickerData => ({
+      space,
+      onAdd: async (identityKeys: string[], role: SpaceMember_Role) => {
+        const { data } = await invokePromise(SpaceOperation.AddMembers, { space, identityKeys, role });
+        const result = data ?? { joinUrl: '', failed: identityKeys.map((key) => ({ key, error: 'failed' })) };
+        if (result.failed.length > 0) {
+          await invokePromise(LayoutOperation.AddToast, {
+            id: `${meta.profile.key}/add-members-failed`,
+            title: ['add-members-failed-toast.title', { ns: meta.profile.key }],
+            icon: 'ph--warning--regular',
+          });
+        }
+
+        return result;
+      },
+    }),
+    [space, invokePromise],
+  );
+
   const [selectedInvitation, setSelectedInvitation] = useState<CancellableInvitationObservable | null>(null);
   const handleSend = (event: { type: 'selectInvitation'; invitation: CancellableInvitationObservable }) => {
     setSelectedInvitation(event.invitation);
@@ -137,6 +158,10 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('members.label')}</h3>
                   <SpaceMemberList spaceKey={space.key} includeSelf />
+                </div>
+                <div role='group' className='min-w-0'>
+                  <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
+                  <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
                 </div>
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
