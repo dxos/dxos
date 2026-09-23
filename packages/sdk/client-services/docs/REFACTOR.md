@@ -25,8 +25,8 @@ src/
   Events.ts                -- lifecycle Hooks                          (tier 0)
   Readiness.ts             -- StackReadiness                           (tier 0)
   SqliteStorage.ts                                                     (tier 0)
-  Platform.ts                                                          (tier 0)
-  Migrations.ts                                                        (tier 0)
+  PlatformInfo.ts                                                      (tier 0)
+  migrations/              -- SQL assets, so a directory                (tier 0)
 
   Metadata.ts  Pipeline.ts  SpaceExport.ts  Storage.ts                 (tier 1)
   Replication.ts           -- EdgeFeedReplicator, credentials document (tier 1)
@@ -71,8 +71,8 @@ Move out of `packlets/services/`, unchanged:
 | `services/events.ts`          | `src/Events.ts`        |
 | `services/stack-readiness.ts` | `src/Readiness.ts`     |
 | `services/sqlite-storage.ts`  | `src/SqliteStorage.ts` |
-| `services/platform.ts`        | `src/Platform.ts`      |
-| `packlets/migrations/`        | `src/Migrations.ts`    |
+| `services/platform.ts`        | `src/PlatformInfo.ts`  |
+| `packlets/migrations/`        | `src/migrations/`      |
 
 Effect: largest SCC 11 → 4. No behaviour change; imports only.
 
@@ -93,11 +93,21 @@ lands the tags.
 
 ### Stage 3 — tag/implementation split — **done**
 
-Move the 18 `Context.Service` declarations and their interface types into
-`src/Tags.ts`. Each implementation module imports its own tag from there.
-Call sites that only _consume_ a service stop importing the implementation.
+Only the tags whose consumers sit _beside or below_ the implementation need to
+move — measured, that is six of the eighteen: `IdentityManagerService`,
+`IdentityProviderService`, `IdentityLifecycleService`, `InvitationsManagerService`,
+`DataSpaceManagerService` and `SigningContextProviderService`. They go to
+`src/Tags.ts`, which references each implementation through a **type-only**
+import: the tag keeps its exact service type without a hand-written interface,
+and the import is erased on emit so it carries no runtime edge. Each
+implementation module now imports its own tag from `Tags.ts`, which is the only
+direction that remains at runtime.
 
-Effect: acyclic. `--check` goes green and becomes a lint gate.
+The other twelve tags stay next to their implementations, because every consumer
+already sits above them.
+
+Effect: **acyclic** — 57 edges down to 33, largest SCC 11 → 1.
+`dependency-graph.mjs --check` now exits 0 and is wired up as `client-services:graph`.
 
 ### Stage 4 — namespace modules
 

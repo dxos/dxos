@@ -1,12 +1,23 @@
 # `@dxos/client-services` — dependency graph
 
 Measured from the source tree (`src/packlets/*`), production files only
-(`*.test.ts` excluded). Reproduce with `node packages/sdk/client-services/scripts/dependency-graph.mjs`
-(`--check` exits non-zero while a cycle remains). Counting all packlet files it
-reports 19 packlets and 57 edges; the tables below exclude `*.test.ts` and the
-per-packlet `testing/` helpers, which is why their counts are lower.
+(`*.test.ts` excluded).
 
-## 1. Current shape
+**Sections 1 and 2 record the graph as it was before the restructure**; section 3
+is the target and section 5 the result. Re-running the script today therefore
+reports section 5's numbers, not section 1's:
+
+```
+node packages/sdk/client-services/scripts/dependency-graph.mjs   # prints the graph
+node packages/sdk/client-services/scripts/dependency-graph.mjs --check   # non-zero while a cycle remains
+moon run client-services:graph                                   # the same check, in CI
+```
+
+Counting all packlet files, the baseline was 19 packlets and 57 edges; the tables
+below exclude `*.test.ts` and the per-packlet `testing/` helpers, which is why
+their counts are lower.
+
+## 1. The shape before the restructure
 
 19 packlets, 4 of them leaves. The production import graph has **one strongly
 connected component of 11 packlets**:

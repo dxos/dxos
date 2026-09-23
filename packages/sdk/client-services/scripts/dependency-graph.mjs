@@ -28,13 +28,16 @@ for (const path of walk(root)) {
   }
   const from = owner(path);
   const source = readFileSync(path, 'utf8');
-  // Type-only imports are erased on emit and cannot form a runtime cycle, so they are not edges.
+  // Type-only imports and re-exports are erased on emit, so they cannot form a runtime cycle.
+  const typeOnly = (members) =>
+    members.split(',').every((member) => member.trim() === '' || /^type\s/.test(member.trim()));
   const value = source
-    .replace(/import\s+type\s[^;]*?from\s+'[^']*';/g, '')
-    .replace(/import\s*\{([^}]*)\}\s*from\s+'([^']*)';/g, (match, members, spec) =>
-      members.split(',').every((member) => member.trim() === '' || /^type\s/.test(member.trim())) ? '' : match,
+    .replace(/(?:import|export)\s+type\s[^;]*?from\s+'[^']*';/g, '')
+    .replace(/(?:import|export)\s*\{([^}]*)\}\s*from\s+'[^']*';/g, (match, members) =>
+      typeOnly(members) ? '' : match,
     );
-  for (const [, spec] of (includeTypes ? source : value).matchAll(/from '(\.[^']+)'/g)) {
+  const specifiers = /(?:from|^\s*import)\s+'(\.[^']+)'/gm;
+  for (const [, spec] of (includeTypes ? source : value).matchAll(specifiers)) {
     const target = normalize(join(dirname(path), spec));
     if (!target.startsWith(root)) {
       continue;
