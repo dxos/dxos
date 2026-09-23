@@ -23,15 +23,15 @@ import { statusIcon, statusTextStyle } from './status-icons.ts';
  */
 
 export type TaskStatusControlProps = {
-  task: Task.Task;
-  /** Absent for a readonly list, which renders the glyph without the control. */
-  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  classNames?: string;
   /**
    * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} — a host passes this
    * only when it knows something the task does not, e.g. that the session behind it has stopped.
    */
   active?: boolean;
-  classNames?: string;
+  task: Task.Task;
+  /** Absent for a readonly list, which renders the glyph without the control. */
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 };
 
 /** The status glyph, which is also the control that completes the task. */
@@ -129,10 +129,10 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
 TaskOrdinal.displayName = 'TaskList.Ordinal';
 
 export type TaskCheckboxProps = {
+  classNames?: string;
   task: Task.Task;
   checked: boolean;
   onCheckedChange: (task: Task.Task) => void;
-  classNames?: string;
 };
 
 /**

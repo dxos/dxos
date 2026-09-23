@@ -23322,6 +23322,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

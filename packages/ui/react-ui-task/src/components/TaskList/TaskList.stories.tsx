@@ -19,6 +19,18 @@ import { TaskList } from './TaskList.tsx';
 
 random.seed(1);
 
+/**
+ * A short activity log, oldest first, ending `minutesAgo` minutes ago — the shape
+ * `Task.update`/`Task.setStatus` write, so the pane renders the same entries it would in the app.
+ */
+const seedHistory = (minutesAgo: number, ...descriptions: string[]): Task.HistoryEntry[] =>
+  descriptions.map((description, index) => ({
+    date: new Date(Date.now() - (minutesAgo + (descriptions.length - 1 - index) * 37) * 60_000).toISOString(),
+    event: index === 0 ? ('created' as const) : ('updated' as const),
+    actor: index % 2 === 0 ? { name: 'Rich', role: 'user' as const } : { name: 'Scout', role: 'assistant' as const },
+    description,
+  }));
+
 const seedFlat = (): Task.Task[] => [
   Task.make({
     title: 'Source green coffee',
@@ -26,6 +38,13 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Two Ethiopian lots and one Colombian, sampled before committing to a full bag. Supplier list: https://example.com/suppliers',
+    history: seedHistory(
+      12,
+      'Created this task',
+      'Assigned to Rich',
+      'Status changed from todo to started',
+      'Status changed from started to done',
+    ),
   }),
   Task.make({
     title: 'Write the launch poem',
@@ -39,6 +58,16 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
+    // Longer than the pane shows, so the "newest first, capped" behaviour is exercised.
+    history: seedHistory(
+      3,
+      'Created this task',
+      'Description updated',
+      'Priority changed from medium to high',
+      'Status changed from todo to started',
+      'Estimate set to m',
+      'Description updated',
+    ),
   }),
   Task.make({
     title: 'Publish the tasting notes',
@@ -51,6 +80,7 @@ const seedFlat = (): Task.Task[] => [
     status: 'started',
     priority: 'high',
     assignee: { role: 'assistant', name: 'Scout' },
+    history: seedHistory(1, 'Created this task', 'Assigned to an agent', 'Status changed from todo to started'),
   }),
   Task.make({
     title: 'Design label',

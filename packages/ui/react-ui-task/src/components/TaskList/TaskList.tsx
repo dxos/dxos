@@ -49,6 +49,7 @@ import { translationKey } from '#translations';
 import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
 import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { TaskHistory } from './TaskHistory.tsx';
 import { type TaskSelectModifiers, TaskTreeContent } from './TaskTreeContent.tsx';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
@@ -839,10 +840,10 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const { className, ...rest } = composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns, showEstimates } =
       useTaskListContext('TaskList.Edit');
-    const { className, ...rest } = composableProps(props);
 
     const task = useMemo(
       () => (createOnly ? undefined : tasks.find(({ id }) => id === selected)),
@@ -954,7 +955,14 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       <div
         {...rest}
         data-testid='taskList.edit'
-        className={mx('grid w-full min-w-0 shrink-0', !grid && 'grid-cols-[2rem_1fr_min-content]', className)}
+        // Three rows, placed explicitly rather than by flow: header (icon, title, toolbar),
+        // description, history. Auto-placement drops a cell into whatever track is free, which put
+        // the description in the icon column whenever the toolbar was absent.
+        className={mx(
+          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto_auto]',
+          !grid && 'grid-cols-[2rem_1fr_min-content]',
+          className,
+        )}
         // On the list's own template the pane's cells name their tracks, so the icon sits under the
         // rows' status controls and the field under their titles whatever the list's options are;
         // the toggle and gutter tracks stay empty.
@@ -984,13 +992,13 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
           />
         </Field.Root>
         {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
-          <span
+          <div
             data-testid='taskList.edit.description'
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
             // description left to auto-place would take the cell it vacates and fall into the icon
             // column — a field one word wide. It runs to the row's end: the toolbar sits on the
             // title line only.
-            className={mx('flex min-w-0 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+            className={mx('flex min-w-0 mt-2 row-start-2 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
@@ -1003,7 +1011,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
               // A long description scrolls within the field rather than growing the pane past the
               // list it edits from: eight lines, with the scroller's line-height set to the lines'
               // (CodeMirror's base theme gives it a smaller one) so `lh` measures a real line.
-              classNames='text-sm [&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
+              classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
               editing
               multiline
               placeholder={descriptionPlaceholder}
@@ -1020,7 +1028,16 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                 }
               }}
             />
-          </span>
+          </div>
+        )}
+        {/* The log, on the row below the description: it reports what has happened to the task, so it
+            reads under what the task says rather than beside it. Only when editing — a task being
+            created has no history yet, and the add row must stay one line tall. */}
+        {current && current.history && current.history.length > 0 && (
+          <TaskHistory
+            entries={current.history}
+            classNames={mx('min-w-0 mt-2 row-start-3 -col-end-1', grid ? 'col-start-[title]' : 'col-start-2')}
+          />
         )}
         {/* The description is held open with no blur to commit it, so the pane needs to say
             explicitly what happens to the pending text. Both buttons keep focus where it is
