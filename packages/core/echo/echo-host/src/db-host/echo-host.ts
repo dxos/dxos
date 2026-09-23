@@ -95,8 +95,23 @@ export type IndexRequestReason = Extract<IndexRunReason, 'rpc-update-indexes' | 
 
 import { type QueryExecutorMode } from '../query/index.ts';
 
+/**
+ * Query evaluation path for this host: the explicit option, else `DX_ECHO_QUERY_EXECUTOR`, else the
+ * in-memory executor. Resolved here, where the option enters, so nothing below reads the
+ * environment — the planner and executor take the mode they are given.
+ */
+const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
+  if (explicit) {
+    return explicit;
+  }
+  const fromEnv =
+    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
+  return fromEnv === 'sql' ? 'sql' : 'memory';
+};
+
 export type EchoHostProps = {
-  /** Query evaluation path; defaults to the in-memory executor (see `QueryExecutorMode`). */
+  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the in-memory executor. */
   queryExecutor?: QueryExecutorMode;
 
   peerIdProvider?: PeerIdProvider;
@@ -250,7 +265,7 @@ export class EchoHost extends Resource {
       // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
       // decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
-      executor: queryExecutor,
+      executor: resolveQueryExecutorMode(queryExecutor),
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
     });
 

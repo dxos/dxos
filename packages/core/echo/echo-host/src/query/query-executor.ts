@@ -41,12 +41,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
-import {
-  type QueryExecutorMode,
-  QueryPlanner,
-  filterContainsInQuery,
-  resolveQueryExecutorMode,
-} from './query-planner.ts';
+import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
 
 type QueryExecutorOptions = {
@@ -630,14 +625,14 @@ export class QueryExecutor extends Resource {
   // TODO(dmaretskyi): Might be used in the future.
   private readonly _reactivity: QueryReactivity;
 
+  /** The uncompiled steps until the first execution, which swaps in the compiled plan. */
   private _plan: QueryPlan.Plan;
   #scopes: QueryScopes;
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
   readonly #planner: QueryPlanner;
-  /** Cleared until the first execution resolves it, because compiling the plan reads the store. */
-  #planned = false;
+  readonly #mode: QueryExecutorMode;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -663,8 +658,10 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
 
-    this.#planner = new QueryPlanner({ executor: resolveQueryExecutorMode(options.executor) });
-    // The uncompiled steps, which scope analysis reads; `execQuery` swaps in the compiled plan.
+    this.#mode = options.executor ?? 'memory';
+    this.#planner = new QueryPlanner({ executor: this.#mode });
+    // The uncompiled steps, which scope analysis reads; the first execution swaps in the compiled
+    // plan, whose `SqlStep` stands for these same steps.
     this._plan = this.#planner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
@@ -687,12 +684,12 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * The path this query takes, which is `memory` whenever the planner declines to compile — either
-   * the configured mode is `memory` or the plan reads `@meta`. Known before the first execution,
-   * because the caller gating on indexing has to ask which store the query will read.
+   * The path this host asked for. Answerable before the first execution, because the caller gating
+   * on indexing has to know which store the query may read; a plan the compiler declines still
+   * reports `sql` here and runs in memory, which only makes that gate conservative.
    */
   get mode(): QueryExecutorMode {
-    return this.#planner.compiles(this._plan) ? 'sql' : 'memory';
+    return this.#mode;
   }
 
   getResults(): QueryService.QueryResult[] {
@@ -760,11 +757,10 @@ export class QueryExecutor extends Resource {
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
-    // Compiling reads the store, so the plan resolves here rather than in the constructor. Its
-    // steps do not change between runs, so this happens once.
-    if (!this.#planned) {
+    // Compiling reads the store — the day boundaries of a named zone span the timestamps present
+    // when it runs — so a compiled plan is rebuilt per run; uncompiled steps resolve once.
+    if (this.#mode === 'sql') {
       this._plan = await this._runInRuntime(this.#planner.compilePlan(this._query));
-      this.#planned = true;
     }
 
     log('exec query', {

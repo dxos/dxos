@@ -35,24 +35,13 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
 /**
  * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
  * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
- * index tables. `memory` is the default — the compiled path is opt-in per host through
- * {@link QueryPlannerOptions.executor}, else by the `DX_ECHO_QUERY_EXECUTOR` environment variable.
+ * index tables. `memory` is the default; the host resolves where the choice comes from.
  */
 export type QueryExecutorMode = 'sql' | 'memory';
 
-export const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
-  if (explicit) {
-    return explicit;
-  }
-  const fromEnv =
-    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
-    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
-  return fromEnv === 'sql' ? 'sql' : 'memory';
-};
-
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
-  /** Evaluation path {@link QueryPlanner.compilePlan} targets; see {@link QueryExecutorMode}. */
+  /** Evaluation path the plan targets, which decides what {@link QueryPlanner.createPlan} returns. */
   executor?: QueryExecutorMode;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
@@ -83,6 +72,25 @@ export class QueryPlanner {
     };
   }
 
+  /**
+   * The plan the executor runs. Under `sql` the steps are compiled into one
+   * {@link QueryPlan.SqlStep}, except where the compiler declines: `objectSnapshot` drops `@meta`
+   * for document rows, so a plan reading it runs step by step whatever the mode says.
+   *
+   * Effectful because compiling reads the store — `metaVersion` literal sets and the day boundaries
+   * of a named zone are resolved against it.
+   */
+  compilePlan(
+    query: QueryAST.Query,
+  ): Effect.Effect<QueryPlan.Plan, QueryError | SqlError.SqlError, SqlClient.SqlClient> {
+    const plan = this.createPlan(query);
+    if (this._options.executor !== 'sql' || planReadsObjectMeta(plan, this.#planSubquery)) {
+      return Effect.succeed(plan);
+    }
+    return Effect.map(compileToSql(plan, this.#planSubquery), (compiled) => compiled.plan);
+  }
+
+  /** The uncompiled steps. Pure, so the compiler can recurse through it for `in-query` subqueries. */
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
@@ -93,34 +101,6 @@ export class QueryPlanner {
     plan = this._optimizeLimits(plan);
     plan = this._optimizeBareAggregate(plan);
     return plan;
-  }
-
-  /**
-   * The plan as the executor will run it. Under `sql` the steps are compiled into one
-   * {@link QueryPlan.SqlStep}; otherwise, and for a plan the compiler declines, the steps are
-   * returned as {@link createPlan} built them.
-   *
-   * Separate from `createPlan` because compiling reads the store — `metaVersion` literal sets and
-   * the day boundaries of a named zone are resolved against it — while `createPlan` stays pure so
-   * the compiler can recurse into subqueries with it.
-   */
-  compilePlan(
-    query: QueryAST.Query,
-  ): Effect.Effect<QueryPlan.Plan, QueryError | SqlError.SqlError, SqlClient.SqlClient> {
-    const plan = this.createPlan(query);
-    if (!this.compiles(plan)) {
-      return Effect.succeed(plan);
-    }
-    return Effect.map(compileToSql(plan, this.#planSubquery), (compiled) => compiled.plan);
-  }
-
-  /**
-   * Whether {@link compilePlan} will compile this plan, answerable before the statement is built so
-   * a caller can tell which store the query will read. `objectSnapshot` drops `@meta` for document
-   * rows, so a plan reading it runs step by step whatever the mode says.
-   */
-  compiles(plan: QueryPlan.Plan): boolean {
-    return this._options.executor === 'sql' && !planReadsObjectMeta(plan, this.#planSubquery);
   }
 
   /**
