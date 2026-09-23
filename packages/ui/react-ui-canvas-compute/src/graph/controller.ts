@@ -161,6 +161,18 @@ export class ComputeGraphController extends Resource {
     super();
   }
 
+  /**
+   * Runs the graph once so a circuit shows its state as soon as it is opened; without this the
+   * trigger nodes only ever fire from {@link setOutput}, leaving a freshly loaded graph inert.
+   */
+  protected override async _open(): Promise<void> {
+    try {
+      await this.exec();
+    } catch (err) {
+      log.catch(err);
+    }
+  }
+
   toJSON() {
     return {
       graph: this._graph,

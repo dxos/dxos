@@ -239,8 +239,8 @@ export type DocumentLeaseRegistryParams = {
 
   /**
    * How long a document stays resident after its last lease is disposed. Faulting a document back in
-   * costs a fresh automerge document whose WASM memory is never returned, so a document released
-   * between two passes of the same workload has to survive the gap rather than be evicted into it.
+   * costs a load from storage, so a document released between two passes of the same workload has to
+   * survive the gap rather than be evicted into it.
    */
   evictionDelay?: number;
 

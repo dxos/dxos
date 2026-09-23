@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 3,
+    "trust": 4,
+    "reasons": {
+      "order": "The document opens with the failure ('the code resumed and pushed into a duplex stream that no longer exists'), then the source guard, then the test that exercises it — the core change leads and the test follows as a consequence rather than file order.",
+      "why": "It supplies the constraint rather than narrating the diff: `data.arrayBuffer()` is the one suspension point, `duplex` is closure-captured, and disposal during suspension clears it, so a re-check is required.",
+      "load": "The sentence 'disposal during the suspension clears the binding the handler still holds a reference to' forces a re-read, since it simultaneously says the binding is cleared and still referenced.",
+      "trust": "The one unverifiable claim, 'Before the fix this rejected', is consistent with the changeset's 'instead of throwing on the torn-down stream' and the test comment 'pushing anyway threw', and no invented symbols appear."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "It leads with the behavioural change ('The frame is dropped instead of pushed to a torn-down stream'), then the `duplex` re-check, then the test — the mechanical consequence arrives after the core fix.",
+      "why": "It names the constraint that `Blob.arrayBuffer()` is 'the only await on the inbound message path, so it is the only point where disposal can happen concurrently with delivery', and states the rejected prior behaviour ('`duplex.push(data)` ran unconditionally after the await').",
+      "load": "Prose is linear and every term is introduced before use; `duplex`, dispose, and the delivery promise each appear with context on first mention.",
+      "trust": "The test section says resolving after `dispose()` means 'the push happens on an already-torn-down duplex', which the new `if (!duplex) return;` guard specifically prevents, and it contradicts the document's own closing line that the frame is dropped."
+    }
+  }
+}

@@ -13,16 +13,20 @@ import React, { memo } from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
+import { type NodeRegistry, nodeDef } from '../../model/registry.ts';
 import {
   type Bounds,
+  type Capabilities,
   type ElementId,
+  type Endpoint,
   type Link,
   type Node,
   type Point,
   type Port,
   type Scene,
   type SplineLink,
+  endpointNode,
+  isPointEndpoint,
 } from '../../model/types.ts';
 import { boundsFromPoints } from '../../utils/hit.ts';
 import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
@@ -53,63 +57,79 @@ export type LinkEnd = 'source' | 'target';
 export type ControlFrameProps = {
   scene: Scene;
   registry: NodeRegistry;
+  /** What the view may do: no handle is drawn for a gesture that could not apply. */
+  capabilities: Capabilities;
   selection: ReadonlySet<ElementId>;
   hover?: ElementId;
   selectedPoint?: ControlPointRef;
   zoom: number;
   drag?: Drag;
-  /** Show every node's ports (a link tool); otherwise only the hovered and selected nodes'. */
-  showPorts: boolean;
+  /** The bounds a create gesture in flight would land, drawn as a provisional frame. */
+  createFrame?: Bounds;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
   onPointPointerDown?: (link: SplineLink, index: number, event: React.PointerEvent) => void;
+  /** `index` is where in the link's points a control point at `point` would be inserted. */
+  onMidpointPointerDown?: (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => void;
   onPointContextMenu?: (link: SplineLink, index: number, event: React.MouseEvent) => void;
+};
+
+/** The midpoint of every span of a spline's polyline, each with the index a control point there takes. */
+const midpoints = (source: Point, points: readonly Point[], target: Point) => {
+  const vertices = [source, ...points, target];
+  return vertices.slice(1).map((vertex, index) => ({
+    index,
+    point: { x: (vertices[index].x + vertex.x) / 2, y: (vertices[index].y + vertex.y) / 2 },
+  }));
 };
 
 export const ControlFrame = memo(
   ({
     scene,
     registry,
+    capabilities,
     selection,
     hover,
     selectedPoint,
     zoom,
     drag,
-    showPorts,
+    createFrame,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
     onPointPointerDown,
+    onMidpointPointerDown,
     onPointContextMenu,
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
     const handleSize = 8 * unit;
     const portRadius = 5 * unit;
+    const midpointRadius = 4 * unit;
     const selectedNodes = [...selection].map((id) => scene.nodes[id]).filter((node) => node !== undefined);
     const selectedLinks = [...selection].map((id) => scene.links[id]).filter((link) => link !== undefined);
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
-    // With a link tool every node offers its ports; otherwise only the selection and the hovered node.
-    const portNodes = new Set<Node>(showPorts ? Object.values(scene.nodes) : selectedNodes);
+    // Only the node under the pointer: every node's ports at once is a field of dots that hides the
+    // diagram the user is drawing, and a link can start from a body now, so they are a refinement
+    // rather than the only way in.
+    const portNodes = new Set<Node>();
     const hovered = hover ? scene.nodes[hover] : undefined;
-    if (hovered) {
+    if (hovered && capabilities.link) {
       portNodes.add(hovered);
     }
     // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.
-    const dropTarget =
-      (drag?.kind === 'link' || drag?.kind === 'end') && drag.target ? scene.nodes[drag.target.node] : undefined;
+    const dropNode = (drag?.kind === 'link' || drag?.kind === 'end') && drag.target && endpointNode(drag.target);
+    const dropTarget = dropNode ? scene.nodes[dropNode] : undefined;
     if (dropTarget) {
       portNodes.add(dropTarget);
     }
     const marquee = drag?.kind === 'marquee' ? boundsFromPoints(drag.from, drag.to) : undefined;
-    const create = drag?.kind === 'create' ? boundsFromPoints(drag.from, drag.to) : undefined;
-    // Over a drop target the layer already draws the provisional link; the band only reaches free space.
+    // The layer draws every provisional link that will land (over a target, or free-ended); the band is only
+    // a port drag over free space, where dropping would create a node rather than a free end.
     const band =
-      drag?.kind === 'link' && !drag.target
+      drag?.kind === 'link' && !drag.target && !isPointEndpoint(drag.source)
         ? { from: { point: drag.from, side: drag.fromSide }, to: drag.to }
-        : drag?.kind === 'end' && !drag.target
-          ? { from: { point: drag.fixed, side: drag.fixedSide }, to: drag.to }
-          : undefined;
+        : undefined;
 
     return (
       <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
@@ -127,7 +147,34 @@ export const ControlFrame = memo(
             />
           );
         })}
-        {single && registry[single.type].resizable && !single.locked && (
+        {[...portNodes].map((node) => {
+          const bounds = nodeBounds(node);
+          return nodePorts(registry, node).map((port) => {
+            const point = portPoint(bounds, port);
+            // Filled while it is an end of the drag in progress: the source, or the port it would drop on.
+            const isEnd = (end: Endpoint | undefined) =>
+              end !== undefined && !isPointEndpoint(end) && end.node === node.id && end.port === port.id;
+            const active =
+              (drag?.kind === 'link' && isEnd(drag.source)) ||
+              ((drag?.kind === 'link' || drag?.kind === 'end') && isEnd(drag.target));
+            return (
+              <circle
+                key={`${node.id}/${port.id}`}
+                cx={point.x}
+                cy={point.y}
+                r={portRadius}
+                className={mx(
+                  'stroke-primary-500 pointer-events-auto cursor-crosshair hover:fill-primary-500',
+                  active ? 'fill-primary-500' : 'fill-base-surface',
+                )}
+                strokeWidth={unit}
+                onPointerDown={(event) => onPortPointerDown?.(node, port, event)}
+              />
+            );
+          });
+        })}
+        {/* Handles after the ports so a handle wins where a port sits on the same point (a side centre). */}
+        {single && capabilities.resize && nodeDef(registry, single)?.resizable && !single.locked && (
           <g>
             {HANDLES.map((handle) => {
               const point = handlePoint(nodeBounds(single), handle);
@@ -147,34 +194,9 @@ export const ControlFrame = memo(
             })}
           </g>
         )}
-        {[...portNodes].map((node) => {
-          const bounds = nodeBounds(node);
-          return nodePorts(registry, node).map((port) => {
-            const point = portPoint(bounds, port);
-            // Filled while it is an end of the drag in progress: the source, or the port it would drop on.
-            const active =
-              (drag?.kind === 'link' && drag.source.node === node.id && drag.source.port === port.id) ||
-              ((drag?.kind === 'link' || drag?.kind === 'end') &&
-                drag.target?.node === node.id &&
-                drag.target.port === port.id);
-            return (
-              <circle
-                key={`${node.id}/${port.id}`}
-                cx={point.x}
-                cy={point.y}
-                r={portRadius}
-                className={mx(
-                  'stroke-primary-500 pointer-events-auto cursor-crosshair hover:fill-primary-500',
-                  active ? 'fill-primary-500' : 'fill-base-surface',
-                )}
-                strokeWidth={unit}
-                onPointerDown={(event) => onPortPointerDown?.(node, port, event)}
-              />
-            );
-          });
-        })}
+        {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
         {selectedLinks.map((link) => {
-          const geometry = linkGeometry(scene, registry, link);
+          const geometry = capabilities.update ? linkGeometry(scene, registry, link) : undefined;
           if (!geometry) {
             return null;
           }
@@ -202,6 +224,18 @@ export const ControlFrame = memo(
                   onPointerDown={(event) => onEndPointerDown?.(link, end, event)}
                 />
               ))}
+              {/* Midpoints first, so a control point wins wherever the two land on each other. */}
+              {link.type === 'spline' &&
+                midpoints(geometry.source.point, points, geometry.target.point).map(({ index, point }) => (
+                  <circle
+                    key={`midpoint-${index}`}
+                    cx={point.x}
+                    cy={point.y}
+                    r={midpointRadius}
+                    className='fill-primary-500/40 pointer-events-auto cursor-copy hover:fill-primary-500'
+                    onPointerDown={(event) => onMidpointPointerDown?.(link, index, point, event)}
+                  />
+                ))}
               {link.type === 'spline' &&
                 points.map((point, index) => (
                   <rect
@@ -243,15 +277,15 @@ export const ControlFrame = memo(
             strokeWidth={unit}
           />
         )}
-        {create && (
+        {createFrame && (
           <rect
-            x={create.x}
-            y={create.y}
-            width={create.width}
-            height={create.height}
-            className='fill-none stroke-primary-500'
+            data-testid='create-frame'
+            x={createFrame.x}
+            y={createFrame.y}
+            width={createFrame.width}
+            height={createFrame.height}
+            className='fill-primary-500/10 stroke-primary-500'
             strokeWidth={unit}
-            strokeDasharray={`${6 * unit} ${4 * unit}`}
           />
         )}
       </svg>

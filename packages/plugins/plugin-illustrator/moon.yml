@@ -18,6 +18,13 @@ tasks:
   render-diagrams:
     # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
     command: vite-node scripts/render-diagrams.tsx
+    # vite-node loads vite.config.ts (tool packages, generated `#capabilities` barrels) and resolves
+    # `@dxos/*` imports to dist, so a fresh clone needs all of these built first.
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
     inputs:
       - scripts/render-diagrams.tsx
       - docs/diagrams/*.mmd

@@ -95,6 +95,7 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Schedule cuppings',
+      description: 'Waits on https://github.com/acme/private/pull/7.',
       status: 'todo',
     },
     {
@@ -185,24 +186,22 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * A description is edited with the extensions other plugins contribute: selecting the task whose
- * description links a pull request opens it in the edit pane, where plugin-github's matcher has
- * turned the URL into an anchor chip, and the row shows the same chip through the contributed
- * resolver's match. Hovering a chip resolves it through the plugin's link resolver, and the popover
- * shows the pull request's card.
+ * A description renders with the extensions other plugins contribute: the row of the task whose
+ * description links a pull request shows it as an anchor chip, through the match plugin-github's
+ * resolver contributes. Hovering the chip resolves it through that resolver, and the popover shows
+ * the pull request's card.
  */
 export const DescriptionLinks: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 }));
-    // Two chips carrying the URL: the row's (a React markdown renderer, which sets `eid` as a
-    // property) and the edit pane's (CodeMirror, which sets it as an attribute).
+    // One chip, in the row itself — a React markdown renderer, which sets `eid` as a property. The
+    // foot pane is create-only now that the detail is its own surface, so a selected task no longer
+    // renders a second copy of the description in CodeMirror.
     const url = 'https://github.com/dxos/dxos/pull/13007';
     const chips = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).filter(
         (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
       );
-    await waitFor(() => expect(chips()).toHaveLength(2), { timeout: 10_000 });
+    await waitFor(() => expect(chips()).toHaveLength(1), { timeout: 10_000 });
 
     await userEvent.hover(chips()[0]);
     await waitFor(() => expect(document.querySelector('[data-id="pullRequestCard"]')).toBeTruthy(), {
@@ -211,6 +210,32 @@ export const DescriptionLinks: Story = {
     await expect(
       within(document.body).findByText('Open on GitHub', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * A link the resolver matches but cannot answer — a private repository the space holds no token for —
+ * still opens its card on hover, titled with the link's short name and saying there is no preview,
+ * rather than leaving a chip that does nothing.
+ */
+export const DescriptionLinkUnavailable: Story = {
+  play: async ({ canvasElement }) => {
+    const url = 'https://github.com/acme/private/pull/7';
+    const chip = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).find(
+        (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
+      );
+    await waitFor(() => expect(chip()).toBeTruthy(), { timeout: 10_000 });
+
+    const anchor = chip();
+    if (!anchor) {
+      throw new Error('The unreachable link did not render as a chip.');
+    }
+    await userEvent.hover(anchor);
+    const card = () => document.querySelector<HTMLElement>('.dx-card-popover');
+    await waitFor(() => expect(card()).toBeTruthy(), { timeout: 10_000 });
+    await expect(card()).toHaveTextContent('#7');
+    await expect(card()).toHaveTextContent('No preview available.');
   },
 };
 

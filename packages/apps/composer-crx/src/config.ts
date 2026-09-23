@@ -7,7 +7,7 @@
 import { DeveloperMode } from './core/state/index.ts';
 import { debugLog } from './debug-log.ts';
 
-export const HOME_URL = 'https://labs.composer.space';
+export const HOME_URL = 'https://composer.space';
 
 const DEV_CHAT_AGENT_URL = 'ws://localhost:8791';
 const MAIN_CHAT_AGENT_URL = 'wss://chat-agent.dxos.workers.dev';

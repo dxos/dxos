@@ -6,7 +6,7 @@ import { fromBinary } from '@bufbuild/protobuf';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 
-import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -130,12 +130,12 @@ export const runSqlStorageDiagnostics = async (
   const exportStarted = performance.now();
   const databaseBytes = await exportOpfsSqlite();
   const asyncExportBytes = databaseBytes.byteLength;
-  const validSqliteHeader = isValidSqliteDatabase(databaseBytes);
+  const validSqliteHeader = Storage.isValidSqliteDatabase(databaseBytes);
   log(`  ${asyncExportBytes.toLocaleString()} bytes (${(performance.now() - exportStarted).toFixed(0)} ms)`);
   log(`  header: ${validSqliteHeader ? 'valid SQLite 3' : 'invalid'}`);
   log('');
 
-  log(`SQLite (in-memory copy of ${OPFS_SQLITE_DB_FILENAME})`);
+  log(`SQLite (in-memory copy of ${Storage.OPFS_SQLITE_DB_FILENAME})`);
 
   const sqlResult = await Effect.gen(function* () {
     const sql = yield* SqliteClient.SqliteClient;
