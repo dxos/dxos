@@ -92,8 +92,8 @@ jobs:
           DX_ANTHROPIC_API_KEY: ${{ secrets.DX_ANTHROPIC_API_KEY }}
           DX_EVAL_MODELS: ${{ inputs.models }}
           DX_EVAL_MCP_TARGET: ${{ inputs.mcp_target || 'preview' }}
-          DX_EVAL_MCP_TOKEN: ${{ secrets.DX_EVAL_MCP_TOKEN }}
-          DX_EVAL_SPACE_ID: ${{ secrets.DX_EVAL_SPACE_ID }}
+          DX_EVAL_MCP_TOKEN: ${{ (inputs.mcp_target == 'prod' || inputs.mcp_target == 'production') && secrets.DX_EVAL_MCP_TOKEN || '' }}
+          DX_EVAL_SPACE_ID: ${{ (inputs.mcp_target == 'prod' || inputs.mcp_target == 'production') && secrets.DX_EVAL_SPACE_ID || '' }}
           DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           DX_EVAL_RUN_NAME: ${{ github.ref_name }}
           DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
