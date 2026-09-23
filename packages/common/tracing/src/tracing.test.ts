@@ -124,6 +124,18 @@ describe('manual spans', () => {
 
     trace.spanEnd('op-3');
   });
+
+  test('spanEnd attaches end attributes under ctx. before ending', ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    trace.spanStart({ id: 'op-4', instance: {}, methodName: 'finish', parentCtx: new Context() });
+    trace.spanEnd('op-4', { attributes: { outcome: 'synced' } });
+
+    const span = spans.find((record) => record.options.name.endsWith('.finish'));
+    expect(span?.ended).toBe(true);
+    expect(span?.lateAttributes).toEqual({ 'ctx.outcome': 'synced' });
+  });
 });
 
 //
