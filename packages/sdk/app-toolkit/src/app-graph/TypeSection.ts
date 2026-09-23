@@ -118,10 +118,10 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
      */
     sectionUrlKey?: string;
     /**
-     * The list each section object stands for; an object dropped onto its row joins that list. Without
-     * it a section object only accepts objects of its own type, as reorders.
+     * The container an object dropped onto a section object's row joins. Without it a section object
+     * only accepts objects of its own type, as reorders.
      */
-    container?: (object: Type.InstanceType<T>) => ContainerModel.Container;
+    dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
     /**
      * How the deck behaves when one of this section's objects is its root — the same answer
      * {@link AppAnnotation.DeckAnnotation} gives, for a type that cannot carry it: the annotation lives
@@ -174,7 +174,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
     );
   };
 
-  const { container } = options;
+  const { dropInto } = options;
   // A row takes other types onto itself and reorders among its own type.
   const blockInstruction = (source: TreeData, instruction: AppNode.Instruction): boolean =>
     canDropSameType(source) === (instruction.type === 'make-child');
@@ -187,7 +187,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
           db: space.db,
           object,
           deck: options.deck,
-          ...(container ? { container: container(object), blockInstruction } : {}),
+          ...(dropInto ? { dropInto: dropInto(object), blockInstruction } : {}),
         }),
       )
       .filter((node): node is NonNullable<typeof node> => node !== null);

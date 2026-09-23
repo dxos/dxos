@@ -48,7 +48,7 @@ export default Capability.makeModule(
       deck: { levels: [{ key: 'project' }, { key: 'task' }] },
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
-      container: artifacts,
+      dropInto: artifacts,
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -377,7 +377,7 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
-            ...(db ? AppNode.getContainerPartials(artifacts(project), db) : {}),
+            ...(db ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
       ]);

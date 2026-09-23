@@ -90,8 +90,6 @@ export const CAN_DROP_OBJECT = (source: TreeData) =>
 // Module-level caches.
 //
 
-const containerPartialsCache = new Map<string, ReturnType<typeof buildContainerPartials>>();
-
 const containerKey = (container: ContainerModel.Container): string =>
   `${Obj.getURI(container.object)}#${container.property}`;
 
@@ -110,39 +108,48 @@ const canDropInto = createFactory(
   containerKey,
 );
 
-/** Node property on a branch whose children are a container's list. */
-const CONTAINER_PROPERTY = 'container';
+/** Node property: the container an item dropped onto the node joins. */
+const DROP_INTO_PROPERTY = 'dropInto';
 
-export const getContainer = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
-  node?.properties[CONTAINER_PROPERTY];
+/** Node property: the container whose members are the node's children. */
+const LIST_OF_PROPERTY = 'listOf';
 
-const buildContainerPartials = (container: ContainerModel.Container, db: Database.Database) => ({
-  role: 'branch' as const,
-  acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-  acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
-  moveScope: container.moveScope,
-  canDrop: canDropInto(container),
-  onRearrange: rearrangeCallback(container),
-  isLink: (child: AppGraphNode.Node<Obj.Unknown>, from?: AppGraphNode.Node) =>
-    ContainerModel.wouldLink({ container, object: child.data, from: getContainer(from) }),
-  onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) =>
-    ContainerModel.release({ container, object: child.data, to: getContainer(destination) }),
-  onMoveIn: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
-    ContainerModel.link({ container, object: child.data, index }),
-  onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
-    ContainerModel.link({ container, object: child.data, index }),
-  [CONTAINER_PROPERTY]: container,
-});
+const getDropInto = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[DROP_INTO_PROPERTY];
 
-export const getContainerPartials = (container: ContainerModel.Container, db: Database.Database) => {
-  const key = containerKey(container);
-  let cached = containerPartialsCache.get(key);
-  if (!cached) {
-    cached = buildContainerPartials(container, db);
-    containerPartialsCache.set(key, cached);
-  }
-  return cached;
-};
+export const getListOf = (node: AppGraphNode.Node | undefined): ContainerModel.Container | undefined =>
+  node?.properties[LIST_OF_PROPERTY];
+
+/** Partials for a node that items can be dropped onto to join `container`. */
+export const getDropTargetPartials = createFactory(
+  (container: ContainerModel.Container, db: Database.Database) => ({
+    role: 'branch' as const,
+    acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+    acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+    moveScope: container.moveScope,
+    canDrop: canDropInto(container),
+    isLink: (child: AppGraphNode.Node<Obj.Unknown>, from?: AppGraphNode.Node) =>
+      ContainerModel.wouldLink({ container, object: child.data, from: getListOf(from) }),
+    onMoveIn: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+      ContainerModel.link({ container, object: child.data, index }),
+    onLink: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) =>
+      ContainerModel.link({ container, object: child.data, index }),
+    [DROP_INTO_PROPERTY]: container,
+  }),
+  containerKey,
+);
+
+/** Partials for a node whose children are `container`'s members; it is also a drop target for it. */
+export const getListPartials = createFactory(
+  (container: ContainerModel.Container, db: Database.Database) => ({
+    ...getDropTargetPartials(container, db),
+    onRearrange: rearrangeCallback(container),
+    onMoveOut: (child: AppGraphNode.Node<Obj.Unknown>, destination: AppGraphNode.Node) =>
+      ContainerModel.release({ container, object: child.data, to: getDropInto(destination) }),
+    [LIST_OF_PROPERTY]: container,
+  }),
+  containerKey,
+);
 
 //
 // makeObject.
@@ -158,7 +165,7 @@ export const makeObject = ({
   droppable = true,
   navigable = false,
   deck,
-  container,
+  dropInto,
   canDrop: canDropOverride,
   blockInstruction,
 }: {
@@ -177,8 +184,8 @@ export const makeObject = ({
    * {@link AppAnnotation.DeckAnnotation} instead.
    */
   deck?: DeckSpec.DeckSpec;
-  /** The list this row stands for; objects dropped onto the row join it. */
-  container?: ContainerModel.Container;
+  /** The container an object dropped onto the row joins. */
+  dropInto?: ContainerModel.Container;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
   canDrop?: (source: TreeData) => boolean;
   /** Blocks a drop instruction, for a row whose answer depends on the source. */
@@ -217,7 +224,7 @@ export const makeObject = ({
   const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getContainerPartials(ContainerModel.collection(object), db)
+    ? getListPartials(ContainerModel.collection(object), db)
     : graphProps;
 
   const label =
@@ -247,9 +254,9 @@ export const makeObject = ({
       selectable,
       draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
-      ...(container ? getContainerPartials(container, db) : {}),
       blockInstruction,
       canDrop,
+      ...(dropInto && droppable ? getDropTargetPartials(dropInto, db) : {}),
       [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,
     },

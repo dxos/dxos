@@ -70,7 +70,7 @@ describe('makeObject', () => {
 const iconAtom = (db: Database.Database, object: Obj.Unknown) =>
   Atom.make((get) => AppNode.makeObject({ get, db, object })?.properties.icon);
 
-describe('container partials: move', () => {
+describe('list and drop-target partials: move', () => {
   let testBuilder: EchoTestBuilder;
   let db: Database.Database;
 
@@ -85,11 +85,17 @@ describe('container partials: move', () => {
     await testBuilder.close();
   });
 
-  const drop = (doc: Obj.Unknown, from: Collection.Collection, to: Collection.Collection) => {
+  const drop = (
+    doc: Obj.Unknown,
+    from: Collection.Collection,
+    to: Collection.Collection,
+    partials: typeof AppNode.getDropTargetPartials = AppNode.getListPartials,
+  ) => {
     const node = { data: doc } as any;
-    const destination = { properties: AppNode.getContainerPartials(ContainerModel.collection(to), db) } as any;
-    AppNode.getContainerPartials(ContainerModel.collection(from), db).onMoveOut(node, destination);
+    const destination = { properties: partials(ContainerModel.collection(to), db) } as any;
+    AppNode.getListPartials(ContainerModel.collection(from), db).onMoveOut(node, destination);
     destination.properties.onMoveIn(node);
+    return destination;
   };
 
   test('dragging between collections re-parents the object', async ({ expect }) => {
@@ -105,6 +111,22 @@ describe('container partials: move', () => {
     expect(Obj.getParent(doc)?.id).toBe(to.id);
     expect(from.objects).toHaveLength(0);
     expect(to.objects).toHaveLength(1);
+  });
+
+  test('dropping onto a row that only takes drops re-parents the object without making the row a list', async ({
+    expect,
+  }) => {
+    const doc = db.add(Obj.make(Doc, { name: 'doc' }));
+    const from = db.add(Collection.make({ objects: [Ref.make(doc)] }));
+    const to = db.add(Collection.make({ objects: [] }));
+    await db.flush();
+
+    const destination = drop(doc, from, to, AppNode.getDropTargetPartials);
+    await db.flush();
+
+    expect(Obj.getParent(doc)?.id).toBe(to.id);
+    expect(to.objects).toHaveLength(1);
+    expect(AppNode.getListOf(destination)).toBeUndefined();
   });
 
   test('dragging a linked object moves the link and leaves ownership where it is', async ({ expect }) => {

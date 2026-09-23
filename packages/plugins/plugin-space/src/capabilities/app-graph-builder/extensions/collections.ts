@@ -119,7 +119,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? AppNode.getContainerPartials(ContainerModel.collection(rootCollection), space.db)
+          ? AppNode.getListPartials(ContainerModel.collection(rootCollection), space.db)
           : undefined;
 
         return Effect.succeed([
@@ -274,7 +274,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-        const container = AppNode.getContainer(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
+        const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
         return Effect.succeed(
           constructObjectActions({

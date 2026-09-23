@@ -143,7 +143,7 @@ One deliberate inconsistency to accept: task rows keep `role=option` while the n
 A drag that dwells over a collapsed parent expands it after ~600ms, so a branch can be entered
 mid-drag — the settle-delay idea the board uses to stop tiles scattering under a moving cursor.
 
-Rejected drops, decided in `canDrop`/`getDropKind` so the cursor says no rather than the
+Rejected drops, decided in `canDrop`/`blockInstruction` so the cursor says no rather than the
 drop silently failing:
 
 - a task onto itself or onto any of its own descendants (the cycle `UpdateTask` already rejects);
