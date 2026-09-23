@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, SystemIconButton, Tag, ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, SystemIconButton, Tag, ThemedClassName, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -104,9 +104,9 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
               {displayName}
             </span>
             <div className='flex items-center gap-1 text-sm text-description'>
-              <span className='font-mono truncate' title={identityKey.toHex()}>
-                {identityKey.truncate()}
-              </span>
+              <Tooltip.Trigger asChild content={t('identity-key.label')}>
+                <span className='font-mono truncate'>{identityKey.truncate()}</span>
+              </Tooltip.Trigger>
               <SystemIconButton.Clipboard
                 iconOnly
                 density='sm'
