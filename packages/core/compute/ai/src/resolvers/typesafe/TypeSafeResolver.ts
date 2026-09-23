@@ -159,8 +159,11 @@ export const toProviderAnswer = (decision: Decision.Any, answer: Answer): Decisi
 //
 
 export type Options<R = never> = {
-  /** Resolved per call, so a key connected or revoked mid-session applies to the next decision. */
-  readonly apiKey: Effect.Effect<Redacted.Redacted<string>, AiError.AiError, R>;
+  /**
+   * Resolved per call, so a key connected or revoked mid-session applies to the next decision.
+   * Undefined sends no credential, for a proxy that authenticates upstream itself (EDGE).
+   */
+  readonly apiKey: Effect.Effect<Redacted.Redacted<string> | undefined, AiError.AiError, R>;
   /** Read per call, so a changed endpoint applies without rebuilding the model. */
   readonly endpoint?: () => string;
   /** How long one call may take; a stalled endpoint otherwise holds every decision waiting on it. */
@@ -201,7 +204,7 @@ export const makeDecisionModel = <R = never>(
         Effect.gen(function* () {
           const key = yield* apiKey;
           const request = HttpClientRequest.post(endpoint()).pipe(
-            HttpClientRequest.bearerToken(key),
+            (request) => (key ? HttpClientRequest.bearerToken(request, key) : request),
             HttpClientRequest.bodyJsonUnsafe({
               model: backend,
               state,
