@@ -91,7 +91,7 @@ import { ControlFrame, type LinkEnd, handlePoint } from '../ControlFrame/Control
 import { GridComponent } from '../Grid/index.ts';
 import { Palette, toolForKey } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
-import { Toolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { ActionToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 
 const AUTO_ENTER = 0.85;
 const AUTO_EXIT = 0.3;
@@ -110,8 +110,6 @@ const ZOOM_STEP = 1.25;
 const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRID_RATIO ** 2, MAJOR_GRID_RATIO ** 3] as const;
 /** Cells under 6px are noise; past 2048px a level is a line or two across the view. */
 const GRID_RANGE = [6, 2048] as const;
-/** Matches the `text-lg` the node views use when a node sets no `fontSize` of its own. */
-const DEFAULT_FONT_SIZE = 18;
 /**
  * A type's default size in scene units such that it covers the same screen area whatever the camera is
  * doing. A nested scene is entered at a fraction of the parent's zoom, so a size fixed in scene units
@@ -1086,10 +1084,8 @@ export const SceneView = ({
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
       const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
       const pending = pendingRef.current;
-      const created: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
-      // Text is sized in scene units too, so it reads the same on screen only if it takes the same scaling
-      // as the box; the node carries the value and the user can override it from the properties form.
-      const node: Node = { ...created, style: { ...created.style, fontSize: DEFAULT_FONT_SIZE / camera.zoom } };
+      // No `fontSize`: a new node inherits the view's default, as one created by dropping a link does.
+      const node: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
       pendingRef.current = { type: drag.type, node };
       return node;
     },
@@ -1730,15 +1726,18 @@ export const SceneView = ({
       </Menu.Root>
 
       {showToolbar && (
-        <Toolbar
-          classNames='absolute top-2 left-2'
-          actions={toolbarActions}
-          nodes={nodeRegistry}
-          capabilities={capabilities}
-        >
-          {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
-          {path.length - 1}
-        </Toolbar>
+        <>
+          <NavigationToolbar classNames='absolute top-2 left-2' actions={toolbarActions}>
+            {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)}) · depth{' '}
+            {path.length - 1}
+          </NavigationToolbar>
+          <ActionToolbar
+            classNames='absolute top-2 right-2'
+            actions={toolbarActions}
+            nodes={nodeRegistry}
+            capabilities={capabilities}
+          />
+        </>
       )}
       {showPalette && (
         <div className='absolute top-14 left-2'>
