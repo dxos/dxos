@@ -42,6 +42,7 @@
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dagrejs/dagre": "catalog:",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lezer/common": "catalog:",

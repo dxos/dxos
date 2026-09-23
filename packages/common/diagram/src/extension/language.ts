@@ -7,7 +7,7 @@ import { type Extension } from '@codemirror/state';
 
 import { diagramComplete } from './complete.ts';
 import { diagramHighlightStyle } from './highlight.ts';
-import { diagramLint, type LintOptions } from './lint.ts';
+import { type LintOptions, diagramLint } from './lint.ts';
 import { diagramLanguage } from './syntax.ts';
 
 /**

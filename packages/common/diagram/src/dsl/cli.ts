@@ -11,6 +11,8 @@
 import * as Effect from 'effect/Effect';
 import { readFileSync } from 'node:fs';
 
+import { EffectEx } from '@dxos/effect';
+
 import { SOURCES, convert } from './convert.ts';
 
 const USAGE = `Usage: convert [--source <${SOURCES.map(({ id }) => id).join('|')}>] [<file>]
@@ -38,7 +40,7 @@ const main = Effect.gen(function* () {
   process.stdout.write(yield* convert(text, { source }));
 });
 
-Effect.runPromise(main).catch((error: unknown) => {
+EffectEx.runPromise(main).catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 });

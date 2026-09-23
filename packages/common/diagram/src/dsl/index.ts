@@ -16,9 +16,9 @@ export { formatCommand, formatElement, formatId, formatObject, formatString, pri
 export {
   type AttrSpec,
   type AttrType,
-  type ElementKind,
   ELEMENT_ATTRS,
   ELEMENT_KINDS,
+  type ElementKind,
   OBJECT_ATTRS,
   RESERVED,
   STATEMENT_KEYWORDS,
