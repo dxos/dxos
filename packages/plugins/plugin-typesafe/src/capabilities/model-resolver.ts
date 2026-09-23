@@ -19,38 +19,57 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { TypeSafeCapabilities } from '#types';
+import { TypeSafeCapabilities, TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
 import { EDGE_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
 
-/** The space's connected key, if any. Absence is an ordinary state, so lookup failures read as none. */
-const connectedApiKey = Effect.gen(function* () {
+const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
+  AiError.make({ module: 'TypeSafe', method: 'decide', reason });
+
+/**
+ * The space's connected key, if any. A failed lookup fails the decision rather than reading as "no
+ * key": through EDGE that would silently bill the platform key for a space that brought its own.
+ */
+export const connectedApiKey = Effect.gen(function* () {
   const credentials = yield* Credential.CredentialsService;
   const matches = yield* Effect.tryPromise(() => credentials.queryCredentials({ service: TYPESAFE_SOURCE })).pipe(
-    Effect.orElseSucceed((): Credential.ServiceCredential[] => []),
+    Effect.mapError(() =>
+      aiError(new AiError.UnknownError({ description: `Failed to look up the ${TYPESAFE_SOURCE} credential` })),
+    ),
   );
   const apiKey = matches.find((credential) => credential.apiKey)?.apiKey;
   return apiKey ? Redacted.make(apiKey) : undefined;
 });
 
-/** A direct endpoint has no platform key behind it, so a space with nothing connected cannot call it. */
-const requiredApiKey = connectedApiKey.pipe(
-  Effect.flatMap((apiKey) =>
-    apiKey
-      ? Effect.succeed(apiKey)
-      : Effect.fail(
-          AiError.make({
-            module: 'TypeSafe',
-            method: 'decide',
-            reason: new AiError.AuthenticationError({
-              kind: 'MissingKey',
-              description: `TypeSafe is not connected in this space (no ${TYPESAFE_SOURCE} credential)`,
-            }),
+/**
+ * A direct endpoint has no platform key behind it, so a space with nothing connected cannot call it.
+ * The key goes out as a bearer token, so an endpoint that would send it in cleartext is refused
+ * before the key is read.
+ */
+export const requiredApiKey = (endpoint: string) =>
+  TypeSafeSettings.isAllowedEndpoint(endpoint)
+    ? connectedApiKey.pipe(
+        Effect.flatMap((apiKey) =>
+          apiKey
+            ? Effect.succeed(apiKey)
+            : Effect.fail(
+                aiError(
+                  new AiError.AuthenticationError({
+                    kind: 'MissingKey',
+                    description: `TypeSafe is not connected in this space (no ${TYPESAFE_SOURCE} credential)`,
+                  }),
+                ),
+              ),
+        ),
+      )
+    : Effect.fail(
+        aiError(
+          new AiError.InvalidRequestError({
+            description: 'The TypeSafe endpoint override must be an https URL (http only for localhost).',
           }),
         ),
-  ),
-);
+      );
 
 /**
  * Where a call goes. Unset routes through EDGE; so does the vendor URL, the previous default and still
@@ -88,7 +107,10 @@ export default Capability.makeModule(
     };
 
     // Through EDGE a connected key is optional (EDGE falls back to the platform key); direct, it is not.
-    const apiKey = Effect.suspend(() => (isEdgeRequest(endpoint()) ? connectedApiKey : requiredApiKey));
+    const apiKey = Effect.suspend(() => {
+      const url = endpoint();
+      return isEdgeRequest(url) ? connectedApiKey : requiredApiKey(url);
+    });
 
     const httpClient = Layer.effect(
       HttpClient.HttpClient,

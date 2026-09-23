@@ -35,9 +35,14 @@ connects TypeSafe mid-session keeps getting failures until something restarts th
 who disconnects keeps succeeding against a captured key. Per call is one query against an in-memory
 credential set, which is not worth optimising away for either of those bugs.
 
-**A direct endpoint needs a key.** The `endpoint` setting bypasses EDGE, so there is no platform key
-behind it; a space with none connected fails with an `AuthenticationError` (`MissingKey`) the caller
-can turn into "connect TypeSafe". Dying inside the layer would surface as `ServiceNotAvailable` far from the cause.
+**A direct endpoint needs a key, over HTTPS.** The `endpoint` setting bypasses EDGE, so there is no
+platform key behind it; a space with none connected fails with an `AuthenticationError`
+(`MissingKey`) the caller can turn into "connect TypeSafe". The key goes out as a bearer token, so the
+setting must be `https` (plain `http` only on loopback), and a non-conforming value fails the decision
+before the key is read.
+
+**A failed credential lookup fails the decision.** Reading it as "no key" would send the call through
+EDGE on the platform key, billing a space that brought its own. Dying inside the layer would surface as `ServiceNotAvailable` far from the cause.
 
 ## The browser cannot call the vendor directly
 
