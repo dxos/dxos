@@ -131,13 +131,38 @@ describe('DocHandleProxy', () => {
     handle._markUnavailable(DOCUMENT_ID);
     await expect(handle.whenReady()).rejects.toThrow(DocumentUnavailableError);
 
+    // The waiter the verdict failed holds a rejected promise, so the transition is announced: it is
+    // the only thing that can tell a caller the document it gave up on has arrived.
+    const available = new Trigger();
+    handle.once('available', () => available.wake());
+
     // Replication catching up supersedes the verdict, so a space that was unopenable opens on a
     // later attempt rather than staying failed for the life of the handle.
     handle._integrateHostUpdate(source._getPendingChanges()!);
 
+    await available.wait({ timeout: 1000 });
     await handle.whenReady();
     expect(handle.state).to.equal('ready');
     expect(handle.doc().text).to.equal(text);
+  });
+
+  test('a handle that was never unavailable does not announce availability', async () => {
+    const source = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    source.change((doc: { text: string }) => {
+      doc.text = 'ordinary load';
+    });
+
+    const handle = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    let announced = false;
+    handle.once('available', () => {
+      announced = true;
+    });
+
+    handle._integrateHostUpdate(source._getPendingChanges()!);
+
+    await handle.whenReady();
+    // Only the recovery transition carries the event; every load would otherwise emit one.
+    expect(announced).to.be.false;
   });
 });
 

@@ -1750,6 +1750,24 @@ export class EntityManager implements IDatabaseBinding {
     });
   }
 
+  /**
+   * Creates the object's core once a document the host could not produce is finally delivered.
+   *
+   * The object stays bound to this handle, so every load path short-circuits on it and nothing
+   * would notice the delivery; the handle's `available` event is the only signal, since the waiter
+   * that would otherwise carry it is holding a rejected `whenReady`.
+   */
+  #recoverWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle.once('available', () => {
+      // The wait outlives the space that started it, so a handle re-bound elsewhere — or a closed
+      // manager — must not recreate an evicted object.
+      if (this.#isStale(generation) || this._objectDocumentHandles.get(objectId) !== handle) {
+        return;
+      }
+      this._onObjectDocumentLoaded({ handle, objectId });
+    });
+  }
+
   private async _loadHandleForObject(
     handle: DocHandleProxy<DatabaseDirectory>,
     objectId: string,
@@ -1775,6 +1793,7 @@ export class EntityManager implements IDatabaseBinding {
           this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
           log('object document unavailable on disk', { objectId, docUrl: handle.url });
           this._onObjectUnavailable({ handle, objectId });
+          this.#recoverWhenAvailable(handle, objectId, generation);
           handle
             .whenReady()
             .then(() => {
@@ -1785,6 +1804,8 @@ export class EntityManager implements IDatabaseBinding {
               }
               this._onObjectDocumentLoaded({ handle, objectId });
             })
+            // Already rejected where the host reported the document unavailable; the recovery
+            // armed above is what carries that case.
             .catch((err) => log.verbose('background network wait failed', { objectId, err }));
           return;
         }
@@ -1811,10 +1832,12 @@ export class EntityManager implements IDatabaseBinding {
         return;
       }
       if (DocumentUnavailableError.is(err)) {
-        // Terminal, so the retry below would spin: the host has said it cannot produce this
-        // document, and the object reads as unavailable until replication delivers the bytes.
+        // Terminal for now, so the retry below would spin: the host has said it cannot produce this
+        // document. Recovery is armed rather than retried — the object stays bound to this handle,
+        // so nothing would start a fresh load once the bytes do arrive.
         log.warn('object document is not available on the host', { objectId, automergeUrl: handle.url });
         this._onObjectUnavailable({ handle, objectId });
+        this.#recoverWhenAvailable(handle, objectId, generation);
         return;
       }
       log.warn('failed to load a document, retrying', {

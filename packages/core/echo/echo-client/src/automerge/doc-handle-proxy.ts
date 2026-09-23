@@ -27,6 +27,12 @@ export type ChangeEvent<T> = {
 export type ClientDocHandleEvents<T> = {
   change: ChangeEvent<T>;
   delete: { handle: DocHandleProxy<T> };
+  /**
+   * The handle left `'unavailable'` because the document's bytes finally arrived. Emitted only on
+   * that transition: a waiter failed by {@link DocHandleProxy._markUnavailable} holds a rejected
+   * promise and has nothing else to wake it.
+   */
+  available: { handle: DocHandleProxy<T> };
 };
 
 export type DocHandleProxyOptions<T> = {
@@ -245,11 +251,15 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   _wakeReady(): void {
     // Bytes arriving after an `unavailable` verdict (replication catching up) supersede it; the
     // rejected trigger is inert, so it is re-armed before waking or later waiters keep the error.
+    const recovered = this._state === 'unavailable';
     if (this._ready.state === TriggerState.REJECTED) {
       this._ready.reset();
     }
     this._state = 'ready';
     this._ready.wake();
+    if (recovered) {
+      this.emit('available', { handle: this });
+    }
     // A `'ready'` outcome implies the doc was either on disk or arrived via
     // the network. Either way the disk probe is settled (`true` because the
     // handle ends up holding the doc, regardless of the actual source).
