@@ -254,17 +254,20 @@ const extractFromPrompt = (prompt: string) => {
  */
 // TODO(dmaretskyi): Extract to ai package as MockAiServiceLayer -- where you're able to configure prebaked replies in options. See about unifiying with scripted model.
 export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    // The @effect/ai LanguageModel surface is large and external; a test/offline fake fills only
-    // the methods the pipeline calls.
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text: '', content: [] }),
-        generateObject: (request: { prompt: string }) =>
-          Effect.succeed({ value: extractFromPrompt(request.prompt), content: [] }),
-        streamText: () => Stream.empty,
-      } as any),
-  });
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      // The @effect/ai LanguageModel surface is large and external; a test/offline fake fills only
+      // the methods the pipeline calls.
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: () => Effect.succeed({ text: '', content: [] }),
+          generateObject: (request: { prompt: string }) =>
+            Effect.succeed({ value: extractFromPrompt(request.prompt), content: [] }),
+          streamText: () => Stream.empty,
+        } as any),
+    }),
+  );
 
 // --- Composed test layer + synthetic fixtures -----------------------------------------------------
 

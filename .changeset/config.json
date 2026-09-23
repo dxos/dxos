@@ -13,7 +13,6 @@
       "@dxos/agent-code-mode",
       "@dxos/agent-runtime",
       "@dxos/ai",
-      "@dxos/ai-typesafe",
       "@dxos/app-framework",
       "@dxos/app-graph",
       "@dxos/app-solid",

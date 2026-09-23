@@ -26,7 +26,7 @@ const DEFAULT_TIMEOUT: Duration.Input = process.env.LLM_TIMEOUT
 /**
  * Generates text from a specific model + provider, resolving the `LanguageModel` from the ambient
  * `AiService` (provided by the benchmark's preset layer). The provider is required because
- * `AiService.model` defaults to edge, which does not serve local (ollama) models. Transient failures
+ * `AiService.languageModel` defaults to edge, which does not serve local (ollama) models. Transient failures
  * are retried with backoff; on final timeout or model error the effect degrades to an empty string,
  * so a weak/slow model yields empty output rather than aborting the whole run.
  */
@@ -39,7 +39,7 @@ export const generateText = (
   Effect.gen(function* () {
     const service = yield* AiService.AiService;
     return yield* LanguageModel.generateText({ prompt }).pipe(
-      Effect.provide(service.model(DXN.make(model), { provider })),
+      Effect.provide(service.languageModel(DXN.make(model), { provider })),
       Effect.timeout(timeout),
       Effect.retry(RETRY),
       Effect.map((response) => response.text),

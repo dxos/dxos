@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DecisionModel } from '@dxos/ai-typesafe';
+import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -33,7 +33,7 @@ export const LabelMailbox = Operation.make({
       "Labels mailbox messages with the space's own tags, plus needs-reply and urgent, using a decision model.",
     icon: 'ph--tag--regular',
   },
-  services: [DecisionModel.DecisionModel, Database.Service, Trace.TraceService],
+  services: [AiService.AiService, Database.Service, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are labelled.',
