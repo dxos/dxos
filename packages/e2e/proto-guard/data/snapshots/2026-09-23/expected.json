@@ -1,0 +1,135 @@
+{
+  "BP2543U5XIDBASCG4H7E6OLOMGKDGZNIJ": {
+    "01M36W8NADCHBE3ED2FPFY2AXZ": {
+      "id": "01M36W8NADCHBE3ED2FPFY2AXZ",
+      "@type": "dxn:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BP2543U5XIDBASCG4H7E6OLOMGKDGZNIJ/01M36W8NADCHBE3ED2FPFY2AXZ",
+      "name": "My Space"
+    }
+  },
+  "B4RKTMJ4XV5E2KYDDEPHWKPJ4XJBLQ547": {
+    "01M36W8ND2YGVTQN0G4XACTGKN": {
+      "id": "01M36W8ND2YGVTQN0G4XACTGKN",
+      "@type": "dxn:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B4RKTMJ4XV5E2KYDDEPHWKPJ4XJBLQ547/01M36W8ND2YGVTQN0G4XACTGKN",
+      "name": "first-space"
+    },
+    "01M36W8NDFM951W6DJN3MAXK9Z": {
+      "id": "01M36W8NDFM951W6DJN3MAXK9Z",
+      "@type": "dxn:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B4RKTMJ4XV5E2KYDDEPHWKPJ4XJBLQ547/01M36W8NDFM951W6DJN3MAXK9Z",
+      "array": ["one", "two", "three"],
+      "string": "hello world!",
+      "value": 100
+    },
+    "01M36W8NWTJ4A3SDCR76QMMV4J": {
+      "id": "01M36W8NWTJ4A3SDCR76QMMV4J",
+      "@type": "dxn:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B4RKTMJ4XV5E2KYDDEPHWKPJ4XJBLQ547/01M36W8NWTJ4A3SDCR76QMMV4J",
+      "value": [
+        1,
+        2,
+        3,
+        {
+          "/": "echo:///01M36W8NWYKH2XFGZGPMHVW1Z5"
+        }
+      ]
+    },
+    "01M36W8NWYKH2XFGZGPMHVW1Z5": {
+      "id": "01M36W8NWYKH2XFGZGPMHVW1Z5",
+      "@type": "dxn:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B4RKTMJ4XV5E2KYDDEPHWKPJ4XJBLQ547/01M36W8NWYKH2XFGZGPMHVW1Z5",
+      "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    }
+  },
+  "B3UUL6NOFKB3BX6BUX3JARJR7E57XDG2M": {
+    "01M36W8NYJXMSNH81PZDN7GN0V": {
+      "id": "01M36W8NYJXMSNH81PZDN7GN0V",
+      "@type": "dxn:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B3UUL6NOFKB3BX6BUX3JARJR7E57XDG2M/01M36W8NYJXMSNH81PZDN7GN0V",
+      "name": "second-space"
+    },
+    "01M36W8NZ07X3E6XYJ0QXT41CP": {
+      "id": "01M36W8NZ07X3E6XYJ0QXT41CP",
+      "@type": "dxn:org.dxos.type.schema:0.1.0",
+      "@meta": {
+        "key": "com.example.type.test",
+        "keys": [],
+        "version": "0.1.0"
+      },
+      "@uri": "echo://B3UUL6NOFKB3BX6BUX3JARJR7E57XDG2M/01M36W8NZ07X3E6XYJ0QXT41CP",
+      "jsonSchema": {
+        "$id": "echo:///01M36W8NZ07X3E6XYJ0QXT41CP",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "entityKind": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "testField": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "todo": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:com.example.type.todo"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          }
+        },
+        "propertyOrder": ["testField", "id", "name", "todo"],
+        "required": ["testField", "id"],
+        "type": "object",
+        "typename": "com.example.type.test",
+        "version": "0.1.0"
+      }
+    },
+    "01M36W8NZ4080R1FVHE9FYJAW4": {
+      "id": "01M36W8NZ4080R1FVHE9FYJAW4",
+      "@type": "echo:///01M36W8NZ07X3E6XYJ0QXT41CP",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B3UUL6NOFKB3BX6BUX3JARJR7E57XDG2M/01M36W8NZ4080R1FVHE9FYJAW4",
+      "testField": "Test",
+      "name": "Test",
+      "todo": {
+        "/": "echo:///01M36W8NZ9HZTTPEM7M7BZCFWR"
+      }
+    },
+    "01M36W8NZ9HZTTPEM7M7BZCFWR": {
+      "id": "01M36W8NZ9HZTTPEM7M7BZCFWR",
+      "@type": "dxn:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://B3UUL6NOFKB3BX6BUX3JARJR7E57XDG2M/01M36W8NZ9HZTTPEM7M7BZCFWR",
+      "name": "Test todo"
+    }
+  }
+}
