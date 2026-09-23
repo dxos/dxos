@@ -104,14 +104,19 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     <div className='grid grid-cols-[1fr_360px] dx-fill'>
       <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
         <div className={sidebar ? 'relative flex overflow-hidden' : 'relative flex overflow-hidden col-span-2'}>
-          <SceneView
+          <SceneView.Root
             store={store}
             root={scene.id}
             atoms={atoms}
             nodes={computeNodeRegistry}
             projection={projection}
-            overlay={<Bullets controller={controller} projection={projection} />}
-          />
+          >
+            <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
+            <SceneView.Navigation />
+            <SceneView.Actions />
+            <SceneView.Debug />
+            <SceneView.Palette />
+          </SceneView.Root>
           <DiagnosticOverlay diagnostics={diagnostics} />
         </div>
       </ComputeContext.Provider>

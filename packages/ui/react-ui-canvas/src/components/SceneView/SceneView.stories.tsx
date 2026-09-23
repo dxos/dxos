@@ -41,7 +41,13 @@ const Editor = ({ store, root, liveDepth, readonly }: EditorProps) => {
   const projection = useSceneProjection({ store, atoms });
   return (
     <div className='dx-fill grid grid-cols-[1fr_20rem]'>
-      <SceneView store={store} root={root} atoms={atoms} liveDepth={liveDepth} readonly={readonly} />
+      <SceneView.Root store={store} root={root} atoms={atoms} readonly={readonly}>
+        <SceneView.Canvas liveDepth={liveDepth} />
+        <SceneView.Navigation />
+        <SceneView.Actions />
+        <SceneView.Debug />
+        <SceneView.Palette />
+      </SceneView.Root>
       <Properties projection={projection} atoms={atoms} readonly={readonly} classNames='border-l border-separator' />
     </div>
   );

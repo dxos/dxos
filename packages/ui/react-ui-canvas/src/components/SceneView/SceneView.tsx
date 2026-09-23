@@ -55,6 +55,7 @@ import { GridComponent } from '../Grid/index.ts';
 import { Palette } from '../Palette/Palette.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, DebugToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
 import { PREVIEW_NODE_ID, createId, usePointerMachine, viewSize } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
@@ -71,7 +72,7 @@ const FRAME_DASH = 4;
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
-export type SceneViewProps = ThemedClassName<{
+export type SceneViewRootProps = ThemedClassName<{
   store: SceneStore;
   root: SceneId;
   nodes?: NodeRegistry;
@@ -86,20 +87,15 @@ export type SceneViewProps = ThemedClassName<{
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in whole major cells. */
   margin?: number;
-  /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
-  liveDepth?: number;
-  showPalette?: boolean;
-  showToolbar?: boolean;
   /**
    * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
    * whatever the projection would allow.
    */
   readonly?: boolean;
-  /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
-  overlay?: ReactNode;
+  children?: ReactNode;
 }>;
 
-export const SceneView = ({
+const SceneViewRoot = ({
   classNames,
   store,
   root,
@@ -110,12 +106,9 @@ export const SceneView = ({
   atoms: atomsProp,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
-  liveDepth = MAX_LIVE_DEPTH,
-  showPalette = true,
-  showToolbar = true,
   readonly = false,
-  overlay,
-}: SceneViewProps) => {
+  children,
+}: SceneViewRootProps) => {
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -563,27 +556,149 @@ export const SceneView = ({
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
 
   return (
-    <div
-      ref={rootRef}
-      tabIndex={0}
-      className={mx(
-        'relative dx-fill overflow-hidden bg-base-surface outline-none touch-none select-none',
-        tool.kind === 'hand' && 'cursor-grab',
-        tool.kind === 'node' && 'cursor-crosshair',
-        classNames,
-      )}
-      style={{ contain: 'strict' }}
-      data-testid='scene-view'
-      onPointerDown={onBackgroundPointerDown}
+    <SceneViewProvider
+      registry={registry}
+      atoms={atoms}
+      store={store}
+      projection={projection}
+      capabilities={capabilities}
+      nodeRegistry={nodeRegistry}
+      linkRegistry={linkRegistry}
+      scene={scene}
+      displayScene={displayScene}
+      bounds={bounds}
+      path={path}
+      camera={camera}
+      nominalZoom={nominalZoom}
+      pointer={pointer}
+      measured={measured}
+      frameUnit={frameUnit}
+      grid={grid}
+      snapEnabled={snapEnabled}
+      selection={selection}
+      hover={hover}
+      selectedPoint={selectedPoint}
+      editing={editing}
+      clipboard={clipboard}
+      drag={drag}
+      tool={tool}
+      debug={debug}
+      createFrame={createFrame}
+      handlers={handlers}
+      select={select}
+      toolbarActions={toolbarActions}
+      navigating={navigating}
+      opening={opening}
+      drillIn={drillIn}
+      copy={copy}
+      cut={cut}
+      paste={paste}
+      onBackgroundPointerDown={onBackgroundPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-      onPointerCancel={cancelDrag}
-      onPointerLeave={() => updateHover(undefined)}
-      onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
+      cancelDrag={cancelDrag}
+      updateHover={updateHover}
+      onHandlePointerDown={onHandlePointerDown}
+      onPortPointerDown={onPortPointerDown}
+      onEndPointerDown={onEndPointerDown}
+      onPointPointerDown={onPointPointerDown}
+      onMidpointPointerDown={onMidpointPointerDown}
+      onPointContextMenu={onPointContextMenu}
+      setTool={setTool}
+      removePoint={removePoint}
+      menu={menu}
+      closeMenu={closeMenu}
+      menuAnchorRef={menuAnchorRef}
+      onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
+      rootRef={rootRef}
     >
+      <div
+        ref={rootRef}
+        tabIndex={0}
+        className={mx(
+          'relative dx-fill overflow-hidden bg-base-surface outline-none touch-none select-none',
+          tool.kind === 'hand' && 'cursor-grab',
+          tool.kind === 'node' && 'cursor-crosshair',
+          classNames,
+        )}
+        style={{ contain: 'strict' }}
+        data-testid='scene-view'
+        onPointerDown={onBackgroundPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+        onPointerCancel={cancelDrag}
+        onPointerLeave={() => updateHover(undefined)}
+        onDoubleClick={onDoubleClick}
+        onContextMenu={onContextMenu}
+        onKeyDown={onKeyDown}
+      >
+        {children}
+      </div>
+    </SceneViewProvider>
+  );
+};
+
+SceneViewRoot.displayName = 'SceneView.Root';
+
+//
+// Canvas
+//
+
+export type SceneViewCanvasProps = {
+  /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
+  liveDepth?: number;
+  /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
+  overlay?: ReactNode;
+};
+
+/** The scene itself under the camera: the grid, the layer, the control frame and the menu a gesture opens. */
+const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanvasProps) => {
+  const {
+    registry,
+    atoms,
+    store,
+    capabilities,
+    projection,
+    nodeRegistry,
+    displayScene,
+    bounds,
+    camera,
+    measured,
+    frameUnit,
+    grid,
+    snapEnabled,
+    selection,
+    hover,
+    selectedPoint,
+    editing,
+    clipboard,
+    drag,
+    debug,
+    createFrame,
+    handlers,
+    select,
+    navigating,
+    opening,
+    copy,
+    cut,
+    paste,
+    onHandlePointerDown,
+    onPortPointerDown,
+    onEndPointerDown,
+    onPointPointerDown,
+    onMidpointPointerDown,
+    onPointContextMenu,
+    removePoint,
+    menu,
+    closeMenu,
+    menuAnchorRef,
+  } = useSceneViewContext('SceneView.Canvas');
+
+  return (
+    <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
           small to read. */}
@@ -709,34 +824,79 @@ export const SceneView = ({
           </Menu.Viewport>
         </Menu.Content>
       </Menu.Root>
+    </>
+  );
+};
 
-      {showToolbar && (
-        <>
-          <NavigationToolbar classNames='absolute top-2 left-2' actions={toolbarActions}>
-            depth {path.length - 1}
-          </NavigationToolbar>
-          <ActionToolbar
-            classNames='absolute top-2 right-2'
-            actions={toolbarActions}
-            nodes={nodeRegistry}
-            capabilities={capabilities}
-          />
-          <DebugToolbar classNames='absolute bottom-2 left-2'>
-            {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
-          </DebugToolbar>
-        </>
-      )}
-      {showPalette && (
-        <div className='absolute top-14 left-2'>
-          <Palette
-            tool={tool}
-            nodes={nodeRegistry}
-            links={linkRegistry}
-            capabilities={capabilities}
-            onToolChange={setTool}
-          />
-        </div>
-      )}
+SceneViewCanvas.displayName = 'SceneView.Canvas';
+
+//
+// Toolbars
+//
+
+export type SceneViewBarProps = ThemedClassName<{}>;
+
+/** Where the view is in the scene tree. */
+const SceneViewNavigation = ({ classNames = 'absolute top-2 left-2' }: SceneViewBarProps) => {
+  const { toolbarActions, path } = useSceneViewContext('SceneView.Navigation');
+  return (
+    <NavigationToolbar classNames={classNames} actions={toolbarActions}>
+      depth {path.length - 1}
+    </NavigationToolbar>
+  );
+};
+
+SceneViewNavigation.displayName = 'SceneView.Navigation';
+
+/** Everything that changes the view or the scene. */
+const SceneViewActions = ({ classNames = 'absolute top-2 right-2' }: SceneViewBarProps) => {
+  const { toolbarActions, nodeRegistry, capabilities } = useSceneViewContext('SceneView.Actions');
+  return (
+    <ActionToolbar classNames={classNames} actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
+  );
+};
+
+SceneViewActions.displayName = 'SceneView.Actions';
+
+/** The camera's own numbers; nothing here acts on the scene. */
+const SceneViewDebug = ({ classNames = 'absolute bottom-2 left-2' }: SceneViewBarProps) => {
+  const { nominalZoom, pointer } = useSceneViewContext('SceneView.Debug');
+  return (
+    <DebugToolbar classNames={classNames}>
+      {Math.round(nominalZoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
+    </DebugToolbar>
+  );
+};
+
+SceneViewDebug.displayName = 'SceneView.Debug';
+
+//
+// Palette
+//
+
+/** The tool rail: what the next gesture will draw. */
+const SceneViewPalette = ({ classNames = 'absolute top-14 left-2' }: SceneViewBarProps) => {
+  const { tool, nodeRegistry, linkRegistry, capabilities, setTool } = useSceneViewContext('SceneView.Palette');
+  return (
+    <div className={mx(classNames)}>
+      <Palette
+        tool={tool}
+        nodes={nodeRegistry}
+        links={linkRegistry}
+        capabilities={capabilities}
+        onToolChange={setTool}
+      />
     </div>
   );
+};
+
+SceneViewPalette.displayName = 'SceneView.Palette';
+
+export const SceneView = {
+  Root: SceneViewRoot,
+  Canvas: SceneViewCanvas,
+  Navigation: SceneViewNavigation,
+  Actions: SceneViewActions,
+  Debug: SceneViewDebug,
+  Palette: SceneViewPalette,
 };

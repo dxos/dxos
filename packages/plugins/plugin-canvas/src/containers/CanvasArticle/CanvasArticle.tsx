@@ -36,14 +36,17 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       <Panel.Content>
         {bound && (
           // An unset preference leaves the engine's own default in place.
-          <SceneView
-            key={bound.root}
-            store={bound.store}
-            root={bound.root}
-            showToolbar={settings.showToolbar}
-            showPalette={settings.showPalette}
-            liveDepth={settings.liveDepth}
-          />
+          <SceneView.Root key={bound.root} store={bound.store} root={bound.root}>
+            <SceneView.Canvas liveDepth={settings.liveDepth} />
+            {settings.showToolbar && (
+              <>
+                <SceneView.Navigation />
+                <SceneView.Actions />
+                <SceneView.Debug />
+              </>
+            )}
+            {settings.showPalette && <SceneView.Palette />}
+          </SceneView.Root>
         )}
       </Panel.Content>
     </Panel.Root>

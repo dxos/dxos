@@ -73,7 +73,13 @@ const DefaultStory = () => {
   const projection = useSceneProjection({ store, atoms, createProjection });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <SceneView store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection} />
+      <SceneView.Root store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection}>
+        <SceneView.Canvas />
+        <SceneView.Navigation />
+        <SceneView.Actions />
+        <SceneView.Debug />
+        <SceneView.Palette />
+      </SceneView.Root>
       <ConstraintList model={model} />
       <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
