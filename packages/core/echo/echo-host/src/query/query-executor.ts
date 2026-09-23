@@ -39,7 +39,7 @@ import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
 import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
 import { QueryError } from './errors.ts';
-import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
+import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
@@ -54,6 +54,8 @@ type QueryExecutorOptions = {
   query: QueryAST.Query;
   reactivity: QueryReactivity;
   executor?: QueryExecutorMode;
+  /** Builds compiled statements; the planner needs it only under the `sql` executor. */
+  sql?: SqlClient.SqlClient;
 };
 
 type QueryExecutionResult = {
@@ -659,9 +661,7 @@ export class QueryExecutor extends Resource {
     this._reactivity = options.reactivity;
 
     this.#mode = options.executor ?? 'memory';
-    this.#planner = new QueryPlanner({ executor: this.#mode });
-    // The uncompiled steps, which scope analysis reads; the first execution swaps in the compiled
-    // plan, whose `SqlStep` stands for these same steps.
+    this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
     this._plan = this.#planner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
@@ -756,12 +756,6 @@ export class QueryExecutor extends Resource {
 
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-
-    // Compiling reads the store — the day boundaries of a named zone span the timestamps present
-    // when it runs — so a compiled plan is rebuilt per run; uncompiled steps resolve once.
-    if (this.#mode === 'sql') {
-      this._plan = await this._runInRuntime(this.#planner.compilePlan(this._query));
-    }
 
     log('exec query', {
       queryId: this._id,
@@ -1867,9 +1861,9 @@ export class QueryExecutor extends Resource {
       return -1;
     }
 
-    // Both strings
+    // Both strings, in the collation SQLite sorts by.
     if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return aValue.localeCompare(bValue);
+      return compareCodeUnits(aValue, bValue);
     }
 
     // Both numbers
@@ -1883,7 +1877,7 @@ export class QueryExecutor extends Resource {
     }
 
     // Fallback: convert to strings and compare
-    return String(aValue).localeCompare(String(bValue));
+    return compareCodeUnits(String(aValue), String(bValue));
   }
 
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {

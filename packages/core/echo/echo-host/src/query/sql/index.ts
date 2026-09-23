@@ -9,5 +9,5 @@ export {
   type PlanSubquery,
   SqlPlanCompiler,
   compilePlan,
-  planReadsObjectMeta,
+  planDeclinedByCompiler,
 } from './compile.ts';

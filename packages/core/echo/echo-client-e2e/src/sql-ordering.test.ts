@@ -40,16 +40,21 @@ describe('ordering agrees across executors', () => {
     return objects.map((object) => object.title as string);
   };
 
-  // `test.fails` because the paths do not agree yet and the fix is a pending decision: SQLite
-  // orders by `BINARY`, the in-memory comparator by `localeCompare`. Flips to failing — the signal
-  // to delete these annotations — as soon as one side moves to the other's collation.
-  test.fails('orderBy(property) returns the same order on both paths', async () => {
-    expect(await orderedTitles('sql')).toEqual(await orderedTitles('memory'));
+  // Both executors order strings by code unit, so the shared order is SQLite's: every upper-case
+  // initial before every lower-case one. Pinned as a literal, not just as an equality between the
+  // two paths, so a comparator that drifts back to `localeCompare` fails here rather than silently
+  // moving both.
+  const CODE_UNIT_ORDER = ['Banana', 'Date', 'apple', 'cherry', 'elderberry'];
+
+  test('orderBy(property) returns the same order on both paths', async () => {
+    expect(await orderedTitles('sql')).toEqual(CODE_UNIT_ORDER);
+    expect(await orderedTitles('memory')).toEqual(CODE_UNIT_ORDER);
   });
 
   // The limit is what turns an ordering difference into a different result set: the rows the two
   // paths cut are not the same rows.
-  test.fails('orderBy(property).limit(n) returns the same rows on both paths', async () => {
-    expect(await orderedTitles('sql', 2)).toEqual(await orderedTitles('memory', 2));
+  test('orderBy(property).limit(n) returns the same rows on both paths', async () => {
+    expect(await orderedTitles('sql', 2)).toEqual(CODE_UNIT_ORDER.slice(0, 2));
+    expect(await orderedTitles('memory', 2)).toEqual(CODE_UNIT_ORDER.slice(0, 2));
   });
 });

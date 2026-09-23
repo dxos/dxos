@@ -176,6 +176,8 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   /** Built in `_open`: resolving the SQL client is asynchronous on some platforms. */
   private _indexEngine: IndexEngine | undefined;
+  /** Resolved when the host opens; the query planner builds compiled statements with it. */
+  private _sql: SqlClient.SqlClient | undefined;
   private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
@@ -266,6 +268,10 @@ export class EchoHost extends Resource {
       // decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
+      sql: () => {
+        invariant(this._sql, 'EchoHost is not open.');
+        return this._sql;
+      },
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
     });
 
@@ -369,7 +375,8 @@ export class EchoHost extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
     // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
-    this._indexEngine = new IndexEngine(await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient));
+    this._sql = await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient);
+    this._indexEngine = new IndexEngine(this._sql);
 
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());

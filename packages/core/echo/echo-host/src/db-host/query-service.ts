@@ -46,6 +46,8 @@ export type QueryServiceProps = {
 
   /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
   executor?: QueryExecutorMode;
+  /** Resolved lazily, like `indexEngine`: the client exists only once the host is open. */
+  sql: () => SqlClient.SqlClient;
 };
 
 /**
@@ -236,6 +238,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         query: parsedQuery,
         reactivity: request.reactivity,
         executor: this._params.executor,
+        sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
       }),
       dirty: true,

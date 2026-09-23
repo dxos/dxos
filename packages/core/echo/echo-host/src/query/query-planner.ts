@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -13,7 +11,7 @@ import { DXN, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors.ts';
 import { QueryPlan } from './plan.ts';
-import { compilePlan as compileToSql, planReadsObjectMeta } from './sql/index.ts';
+import { compilePlan as compileToSql, planDeclinedByCompiler } from './sql/index.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
@@ -43,6 +41,8 @@ export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
   /** Evaluation path the plan targets, which decides what {@link QueryPlanner.createPlan} returns. */
   executor?: QueryExecutorMode;
+  /** Builds the statement's fragments; required for `sql`, which has nothing to compile without it. */
+  sql?: SqlClient.SqlClient;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
    * Use when executing against an in-memory working set without SQL index access.
@@ -63,7 +63,7 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
   /** Passed to the compiler, which plans `in-query` subqueries through it rather than importing this module. */
-  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.createPlan(query);
+  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.#buildSteps(query);
 
   constructor(options?: Partial<QueryPlannerOptions>) {
     this._options = {
@@ -74,24 +74,20 @@ export class QueryPlanner {
 
   /**
    * The plan the executor runs. Under `sql` the steps are compiled into one
-   * {@link QueryPlan.SqlStep}, except where the compiler declines: `objectSnapshot` drops `@meta`
-   * for document rows, so a plan reading it runs step by step whatever the mode says.
-   *
-   * Effectful because compiling reads the store — `metaVersion` literal sets and the day boundaries
-   * of a named zone are resolved against it.
+   * {@link QueryPlan.SqlStep}, except where {@link planDeclinedByCompiler} sends the plan to the
+   * in-memory executor instead. Synchronous: compiling reads nothing, it only builds the statement.
    */
-  compilePlan(
-    query: QueryAST.Query,
-  ): Effect.Effect<QueryPlan.Plan, QueryError | SqlError.SqlError, SqlClient.SqlClient> {
-    const plan = this.createPlan(query);
-    if (this._options.executor !== 'sql' || planReadsObjectMeta(plan, this.#planSubquery)) {
-      return Effect.succeed(plan);
+  createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    const plan = this.#buildSteps(query);
+    const sql = this._options.sql;
+    if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
+      return plan;
     }
-    return Effect.map(compileToSql(plan, this.#planSubquery), (compiled) => compiled.plan);
+    return compileToSql(sql, plan, this.#planSubquery).plan;
   }
 
-  /** The uncompiled steps. Pure, so the compiler can recurse through it for `in-query` subqueries. */
-  createPlan(query: QueryAST.Query): QueryPlan.Plan {
+  /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */
+  #buildSteps(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });

@@ -173,7 +173,7 @@ describe('SqlPlanCompiler differential', () => {
             ? Query.select(Filter.fromAst(filters[0])).from(scope)
             : Query.all(...filters.map((filter) => Query.select(Filter.fromAst(filter)))).from(scope);
         const plan = new QueryPlanner().createPlan(query.ast);
-        const compiled = yield* compilePlan(plan, planSubquery);
+        const compiled = compilePlan(sqlClient, plan, planSubquery);
         const rows = yield* compiled.statement;
         const expected = objects
           .filter((object) => filters.some((filter) => filterMatchObjectJSON(filter, object.data)))

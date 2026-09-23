@@ -31,7 +31,7 @@ const explain = (query: Query.Any) =>
     yield* new ObjectSnapshotIndex(sql).migrate();
     yield* new ReverseRefIndex(sql).migrate();
     const plan = new QueryPlanner().createPlan(query.ast);
-    const compiled = yield* compilePlan(plan, planSubquery);
+    const compiled = compilePlan(sql, plan, planSubquery);
     const rows = yield* sql.unsafe<{ detail: string }>(
       `EXPLAIN QUERY PLAN ${compiled.sql}`,
       compiled.statement.compile()[1],

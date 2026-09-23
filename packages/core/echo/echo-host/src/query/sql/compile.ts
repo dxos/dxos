@@ -2,13 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
 import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { ATTR_META, matchMetaKey } from '@dxos/echo/internal';
+import { ATTR_META } from '@dxos/echo/internal';
 import {
   EscapedPropPath,
   type QueueRef,
@@ -23,7 +21,6 @@ import {
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
 import { QueryError } from '../errors.ts';
-import { GroupBy } from '../group-by.ts';
 import { QueryPlan } from '../plan.ts';
 
 /**
@@ -109,9 +106,6 @@ type GroupedShape = {
   collapsed: boolean;
 };
 
-/** The start of every local day a store's timestamps can fall in, ascending, per IANA zone. */
-export type DayStarts = ReadonlyMap<string, readonly number[]>;
-
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
 const UNTYPED_INDEX_TYPE = 'type';
@@ -131,24 +125,13 @@ export class SqlPlanCompiler {
   #counter = 0;
   /** Distinct `in-query` subqueries already compiled this plan, keyed as the executor caches them. */
   readonly #subqueries = new Map<string, string>();
-  /** Resolved `metaVersion` literal sets, keyed by `key\0range`. */
-  readonly #metaVersions: Map<string, readonly string[]>;
-  /** Day boundaries for `timestamp` group keys in a named zone; SQLite has no zone tables of its own. */
-  readonly #dayStarts: DayStarts;
   /** Whether any select in the plan scopes a space with its feeds, which lets a traversal reach feed items. */
   #includeAllFeeds = false;
   readonly #planSubquery: PlanSubquery;
 
-  constructor(
-    sql: SqlClient.SqlClient,
-    planSubquery: PlanSubquery,
-    metaVersions: Map<string, readonly string[]> = new Map(),
-    dayStarts: DayStarts = new Map(),
-  ) {
+  constructor(sql: SqlClient.SqlClient, planSubquery: PlanSubquery) {
     this.#sql = sql;
     this.#planSubquery = planSubquery;
-    this.#metaVersions = metaVersions;
-    this.#dayStarts = dayStarts;
   }
 
   compile(plan: QueryPlan.Plan, options: CompileOptions = {}): CompiledQuery {
@@ -405,17 +388,12 @@ export class SqlPlanCompiler {
           const keyPath = jsonPathLiteral(sql, [ATTR_META, 'key']);
           conditions.push(sql`json_extract(d.snapshot, ${keyPath}) = ${filter.metaKey}`);
           if (filter.metaVersion !== undefined) {
-            const versions = this.#metaVersions.get(metaVersionKey(filter.metaKey, filter.metaVersion));
-            if (versions === undefined) {
-              throw new QueryError({
-                message: 'metaVersion filter was not resolved before compilation',
-                context: { key: filter.metaKey },
-              });
-            }
-            const versionPath = jsonPathLiteral(sql, [ATTR_META, 'version']);
-            conditions.push(
-              sql`json_extract(d.snapshot, ${versionPath}) IN (SELECT value FROM json_each(${JSON.stringify(versions)}))`,
-            );
+            // Resolving a semver range needs the versions present in the store, so `planDeclinedByCompiler`
+            // sends these plans to the in-memory executor before compilation starts.
+            throw new QueryError({
+              message: 'metaVersion filter is not compilable',
+              context: { key: filter.metaKey },
+            });
           }
         }
         return conditions.length === 0 ? sql`1 = 1` : sql`(${sql.and(conditions)})`;
@@ -1072,14 +1050,12 @@ export class SqlPlanCompiler {
     if (!aggregate.timeZone || aggregate.timeZone === 'UTC') {
       return sql`CAST(${column} / ${DAY_MS} AS INTEGER) * ${DAY_MS}`;
     }
-    const starts = this.#dayStarts.get(aggregate.timeZone);
-    if (!starts) {
-      throw new QueryError({
-        message: 'Day boundaries were not resolved for the time zone',
-        context: { timeZone: aggregate.timeZone },
-      });
-    }
-    return sql`CASE WHEN ${column} IS NULL THEN NULL ELSE (SELECT MAX(b.value) FROM json_each(${JSON.stringify(starts)}) b WHERE b.value <= ${column}) END`;
+    // Local day boundaries need the store's timestamp range, and bake it in, so
+    // `planDeclinedByCompiler` sends these plans to the in-memory executor before compilation starts.
+    throw new QueryError({
+      message: 'Day grouping in a named time zone is not compilable',
+      context: { timeZone: aggregate.timeZone },
+    });
   }
 
   /** The grouped working-set columns, with `groupOrd` (and optionally `ord`) replaced. */
@@ -1163,35 +1139,11 @@ export type CompileOptions = {
  * registry key are few.
  */
 export const compilePlan = (
+  sql: SqlClient.SqlClient,
   plan: QueryPlan.Plan,
   planSubquery: PlanSubquery,
   options: CompileOptions = {},
-): Effect.Effect<CompiledQuery, SqlError.SqlError, SqlClient.SqlClient> =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    const metaVersions = new Map<string, readonly string[]>();
-    for (const [key, range] of collectMetaVersionFilters(plan, planSubquery)) {
-      const keyPath = jsonPathLiteral(sql, [ATTR_META, 'key']);
-      const versionPath = jsonPathLiteral(sql, [ATTR_META, 'version']);
-      const rows = yield* sql<{ version: string | null }>`
-        SELECT DISTINCT json_extract(snapshot, ${versionPath}) AS version FROM objectSnapshot WHERE json_extract(snapshot, ${keyPath}) = ${key}`;
-      const matching = rows
-        .map((row) => row.version)
-        .filter((version): version is string => typeof version === 'string')
-        .filter((version) => matchMetaKey(key, range, key, version));
-      metaVersions.set(metaVersionKey(key, range), matching);
-    }
-    const dayStarts = new Map<string, readonly number[]>();
-    const timeZones = collectDayTimeZones(plan);
-    if (timeZones.size > 0) {
-      const [range] = yield* sql<{ min: number | null; max: number | null }>`
-        SELECT MIN(MIN(createdAt), MIN(updatedAt)) AS min, MAX(MAX(createdAt), MAX(updatedAt)) AS max FROM objectMeta`;
-      for (const timeZone of timeZones) {
-        dayStarts.set(timeZone, dayStartsBetween(range?.min ?? null, range?.max ?? null, timeZone));
-      }
-    }
-    return new SqlPlanCompiler(sql, planSubquery, metaVersions, dayStarts).compile(plan, options);
-  });
+): CompiledQuery => new SqlPlanCompiler(sql, planSubquery).compile(plan, options);
 
 //
 // Helpers.
@@ -1233,24 +1185,6 @@ const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
   return zones;
 };
 
-/**
- * The start of every `timeZone` day from the one holding `min` through the one holding `max`. Days
- * in a zone are 23 to 25 hours apart, so stepping 36 hours from a day's start lands inside the next
- * day and truncating again gives its start.
- */
-const dayStartsBetween = (min: number | null, max: number | null, timeZone: string): number[] => {
-  if (min === null || max === null) {
-    return [];
-  }
-  const starts: number[] = [];
-  let start = GroupBy.truncateTimestamp(min, 'day', timeZone);
-  while (start !== null && start <= max) {
-    starts.push(start);
-    start = GroupBy.truncateTimestamp(start + DAY_MS * 1.5, 'day', timeZone);
-  }
-  return starts;
-};
-
 /** True when any select step, sub-plans included, scopes a space with `includeAllFeeds`. */
 const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
   plan.steps.some((step) => {
@@ -1274,7 +1208,21 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
  * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
  * sees both, so this declines the plan wholesale rather than by scope.
  */
-export const planReadsObjectMeta = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean => {
+/**
+ * Whether the compiler declines this plan, leaving it for the in-memory executor.
+ *
+ * Three reasons, all of which would otherwise need the store read before the statement is built:
+ * `objectSnapshot` drops `@meta` for document rows; a `metaVersion` semver range has to be resolved
+ * to the versions actually present; and a named-zone day group needs the store's timestamp range to
+ * place local day boundaries, which also goes stale as the store grows. Declining them keeps
+ * compilation pure — steps in, SQL out — and the plan correct.
+ */
+export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
+  planReadsObjectMeta(plan, planSubquery) ||
+  collectMetaVersionFilters(plan, planSubquery).length > 0 ||
+  collectDayTimeZones(plan).size > 0;
+
+const planReadsObjectMeta = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean => {
   const readsMeta = (filter: QueryAST.Filter): boolean => {
     if (filter.type === 'object') {
       if (filter.foreignKeys !== undefined || filter.metaKey !== undefined) {
@@ -1381,17 +1329,22 @@ const jsonPathLiteral = (sql: SqlClient.SqlClient, path: readonly string[]): Fra
   return sql.literal(`'$${escaped.replaceAll("'", "''")}'`);
 };
 
-const keyColumn = (name: string): string => `key_${sanitizeIdentifier(name)}`;
-const aggregateColumn = (name: string): string => `agg_${sanitizeIdentifier(name)}`;
+const keyColumn = (name: string): string => `key_${columnSuffix(name)}`;
+const aggregateColumn = (name: string): string => `agg_${columnSuffix(name)}`;
 
-/** Result field names come from the query author; only a safe subset can be a column name. */
-const sanitizeIdentifier = (name: string): string => {
-  const safe = name.replace(/[^A-Za-z0-9_]/g, '_');
-  if (safe !== name) {
-    throw new QueryError({ message: `Aggregate name is not a valid identifier: ${name}`, context: { name } });
-  }
-  return safe;
-};
+/**
+ * A result field name as a column identifier. Names come from the query author and only have to be
+ * unique within the statement, so one that is already identifier-safe is kept for readability and
+ * anything else is hex-encoded; the distinct prefixes keep the two classes from colliding. Encoding
+ * rather than rejecting is what keeps `aggregate({ 'last-at': … })` working on both executors.
+ */
+const columnSuffix = (name: string): string =>
+  /^[A-Za-z0-9_]+$/.test(name)
+    ? `s_${name}`
+    : `u_${name
+        .split('')
+        .map((unit) => unit.charCodeAt(0).toString(16).padStart(4, '0'))
+        .join('')}`;
 
 /** `filterMatchValue`'s `in` normalization: a reference compares by its URI. */
 const normalizeInValue = (value: unknown): unknown =>

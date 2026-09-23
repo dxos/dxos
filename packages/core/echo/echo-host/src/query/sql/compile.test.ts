@@ -23,9 +23,8 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex, ReverseRefIndex } from '@dxos/index-core';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
-import { GroupBy } from '../group-by.ts';
 import { QueryPlanner } from '../query-planner.ts';
-import { compilePlan, planReadsObjectMeta } from './compile.ts';
+import { compilePlan, planDeclinedByCompiler } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
@@ -119,8 +118,9 @@ const seed = Effect.gen(function* () {
 
 const run = (fixture: Fixture, query: Query.Any) =>
   Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
     const plan = new QueryPlanner().createPlan(query.ast);
-    const compiled = yield* compilePlan(plan, planSubquery);
+    const compiled = compilePlan(sql, plan, planSubquery);
     if (process.env.DX_DEBUG_SQL) {
       // eslint-disable-next-line no-console
       console.log(compiled.sql);
@@ -210,19 +210,19 @@ describe('SqlPlanCompiler', () => {
       const planSubquery = (query: QueryAST.Query) => planner.createPlan(query);
       const plan = (query: Query.Any) => planner.createPlan(query.ast);
 
-      expect(planReadsObjectMeta(plan(Query.select(Filter.type(TASK)).from(scope)), planSubquery)).toBe(false);
+      expect(planDeclinedByCompiler(plan(Query.select(Filter.type(TASK)).from(scope)), planSubquery)).toBe(false);
       expect(
-        planReadsObjectMeta(
+        planDeclinedByCompiler(
           plan(Query.select(Filter.foreignKeys(TASK, [{ source: 'github.com', id: '42' }])).from(scope)),
           planSubquery,
         ),
       ).toBe(true);
       expect(
-        planReadsObjectMeta(plan(Query.select(Filter.key('example.com/type/Contact')).from(scope)), planSubquery),
+        planDeclinedByCompiler(plan(Query.select(Filter.key('example.com/type/Contact')).from(scope)), planSubquery),
       ).toBe(true);
       // A meta predicate nested under a union is still a meta predicate.
       expect(
-        planReadsObjectMeta(
+        planDeclinedByCompiler(
           plan(
             Query.all(
               Query.select(Filter.type(TASK)),
@@ -409,22 +409,45 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('truncates a timestamp key to the local day of a named zone and leaves members uncollapsed', () =>
+  // Placing local day boundaries needs the store's timestamp range, which would both make
+  // compilation impure and bake a range that goes stale as the store grows — so the compiler
+  // declines these and the in-memory executor, which recomputes them per run, answers instead.
+  it.effect('declines a day group in a named time zone', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const planner = new QueryPlanner();
+      const planSubquery = (query: QueryAST.Query) => planner.createPlan(query);
+      const named = planner.createPlan(
+        Query.select(Filter.type(TASK))
+          .aggregate({ day: Aggregate.created('day', { timeZone: 'Asia/Kolkata' }), items: Aggregate.items() })
+          .from(scope).ast,
+      );
+      expect(planDeclinedByCompiler(named, planSubquery)).toBe(true);
+
+      // UTC needs no boundary table, so it still compiles.
+      const utc = planner.createPlan(
+        Query.select(Filter.type(TASK))
+          .aggregate({ day: Aggregate.created('day'), items: Aggregate.items() })
+          .from(scope).ast,
+      );
+      expect(planDeclinedByCompiler(utc, planSubquery)).toBe(false);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // Result field names come from the query author, so one that is not an identifier must still
+  // compile: it used to throw here while the in-memory executor accepted it.
+  it.effect('compiles an aggregate whose name is not an identifier', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
       const { rows } = yield* run(
         fixture,
         Query.select(Filter.type(TASK))
-          .aggregate({ day: Aggregate.created('day', { timeZone: 'Asia/Kolkata' }), items: Aggregate.items() })
-          .from(scope),
+          .aggregate({ 'last-at': Aggregate.max('created') })
+          .from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]),
       );
-      // 1,000 ms after the epoch is 05:30 on 1 January 1970 in Kolkata, a day that began at 18:30 UTC
-      // the evening before.
-      const day = GroupBy.truncateTimestamp(1000, 'day', 'Asia/Kolkata');
-      expect(day).toBe(Date.UTC(1969, 11, 31, 18, 30));
-      expect(rows).toHaveLength(3);
-      expect(rows.every((row) => row.groupKey === JSON.stringify({ day }) && row.aggregates === null)).toBe(true);
+      expect(rows).toHaveLength(1);
+      expect(JSON.parse(rows[0].aggregates ?? '{}')).toHaveProperty('last-at');
     }).pipe(Effect.provide(TestLayer)),
   );
 
