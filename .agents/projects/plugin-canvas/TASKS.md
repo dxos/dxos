@@ -59,9 +59,11 @@ Engine lives in `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `
 - [x] Portal frame: a portal gives its child a frame of its own aspect (centred content); drilled-in scenes show and fit that frame; `liveDepth` prop and story control for how many nested levels render live; drill-in clears the selection and hover before the zoom.
 - [x] `SceneBuilder`: chainable scene DSL after illustrator's builders; the fixture's child scenes are distinct simple diagrams (flow, class model, cycle, note).
 - [x] `docs/MIGRATION.md`: feature map of react-ui-canvas-editor and react-ui-canvas-compute against the engine, five design decisions, migration plan M1–M5.
+- [x] `packages/ui/react-ui-canvas/SPEC.mdl`: the engine's machine-readable spec, since the functionality lives here rather than in `plugin-canvas` (which is a thin variant host). Sections after `plugin-conductor/PLUGIN.mdl`: types (`Scene`, `Node` / `NodeBase` and the built-in union, `Link`, `Endpoint`, `Port`, `Camera`), components (`SceneView`, `SceneLayer`, `ControlFrame`, `Palette`, `Toolbar`, `Properties`, `Breadcrumbs`, `Grid`), the projection seam and its intents as the operation surface, features (drill-in, grid and snapping, keys, read-only, undo, clipboard), `rule` blocks the agentic review can enforce (intents only — the view never writes coordinates; no `React.*` namespace imports; every key chord in `model/keys.ts`), acceptance, and a `QA` suite over the storybook rather than the app.
 - [ ] Camera as an imperative transform from the atom (decision 7); today pan/zoom re-render through React like the spike.
 - [x] Text parts + in-place editing (`parts.ts`, `PartEditor.tsx`): rect/ellipse label, text body, class name / attributes / methods are `TextPart`s; double-click opens a `react-ui-editor` over the part, Enter (Mod-Enter in multi-line parts) commits an `update`, Escape rejects, blur commits.
 - [ ] Multi-part nodes beyond text: parts with their own bounds and ports (e.g. a shape with several text areas laid out by the model).
+- [x] Geometry controls in the properties panel: `center` and `size` as two-column number rows with their own cell labels (X / Y, W / H) rather than collapsible nested fieldsets. A canvas-specific `GeometryField` rather than `TupleField`, since the cells answer to the grid: an arrow steps a minor cell and Shift a major one (the arrow-nudge units), a step saves at once like a toggle, and a committed value snaps while snapping is on.
 - [x] Node style: `style { hue, rounded, fill, border }` on every node; hue picker + toggles in the properties panel; frame classes from `style.ts`.
 - [x] Ports: `portsPerSide` per type (default 3, ellipse 1), drawn at the major grid line nearest each offset, never at a corner; ids `<side><index>`.
 - [x] Portal frame on the grid: a whole multiple of the portal box, grid-placed near the child's centre; the drilled-in frame is drawn dashed orange.
@@ -81,6 +83,131 @@ Package `packages/plugins/plugin-canvas` (private), registered in Composer's plu
 - [ ] Article chrome: attention / read-only in sections and slides, selection and `onActivate` wiring (`DrawingVariantSurfaceProps`).
 - [ ] End-to-end test through the illustrator operations (as `plugin-tldraw/src/variant.test.ts`).
 
+## Phase 4: migration M1–M5 (`docs/MIGRATION.md` §4; started 2026-09-20 after #13249 landed)
+
+- [x] M1: `NodeBase` with `size`, open `Node` + built-in guards, `NodeDef.schema` / `create` / `defaultSize` / `group`, `createSceneSchema`; `Port.accepts` in pairing and drops; `Link.directed` arrowheads; palette groups; tests.
+- [x] M2: editor parity: `{point}` endpoints and `ends` markers, `guide` / `className` style, hover border and selected-on-top, ghost create preview and pdnd palette drops, `resize.ts` (symmetric, `maxSize`, tests), alt-subtract marquee, `debug` atom (D), optional `Toolbar` + story, Home, Playwright `e2e` over the Freehand story (PR #13254).
+- [x] M3: canvas-compute on the engine: `scene/defs.ts` (every `ShapeDef` as a `NodeDef`, anchors → ports), `createComputeProjection` over the shared `graph/sync.ts`, runtime ports, `Bullets` overlay, `sceneFromCircuit`, `scene.test.ts`, twelve `scene` stories; engine hooks `Port.snap`, `data-link-id`, `overlay`, `projection` (PR #13254).
+- [x] M4: persistence and the plugin switch (`createEchoStore(board)` over `CanvasBoard.layout` with its three translations, the `layout` intent over `@dxos/diagram`'s ranking, `plugin-conductor`'s `CanvasArticle` on `SceneView`, Composer's `optimizeDeps` regenerated).
+
 ### References
 
 - Muse: https://museapp.com · infinitecanvas.tools · tldraw · @xyflow/react
+
+## Phase 5: post-M4 fixes (started 2026-09-22, PR #13254)
+
+Reported from Composer and the storybook after M4 landed, then measured in Chromium
+(`src/playwright/create.spec.ts`) rather than reasoned about — the first two attempts at the sizing
+were wrong in ways only a measurement showed.
+
+- [x] `plugin-canvas` parity with tldraw / excalidraw: `dependsOn: ['org.dxos.plugin.illustrator']`, a
+      `Settings` schema (`showToolbar`, `showPalette`, `liveDepth`) behind `CanvasCapabilities.Settings`
+      and `AppCapabilities.Settings`, read by `CanvasArticle`.
+- [x] `withRegistry` moved to `@dxos/react-ui/testing` beside `withTheme` / `withLayout`; the four
+      hand-rolled copies in the canvas stories replaced (they built a bare `Registry.make()` rather than
+      `AtomEx.makeRegistry`, so they ran without the idle TTL ECHO atoms need).
+- [x] `createClassSceneTree`: a three-level class diagram fixture (five scenes, invented domain) beside
+      the element-type tree the projection / undo / clipboard tests assert against by id.
+- [x] Create sizing by the camera zoom, not the portal factor. The factor grows with the child's own
+      bounds, so scaling by it fed back — a larger node enlarged the next one. A create with no drawn box
+      (palette drop, toolbar menu) divides the type's default by the zoom and so covers the same screen
+      area at any zoom and depth: measured 261 / 247 / 257px wide at 45 / 64 / 100%.
+- [x] A box drawn on the canvas is exactly what the pointer swept — no minimum, no default fallback — and
+      a gesture that snapped to nothing creates nothing.
+- [x] Snapping follows the grid that is drawn. The unit was fixed in scene units while `Grid` keeps a
+      level only while its cells are legible, so they parted company with the zoom: in a nested scene the
+      lines were coarser than the snap and it landed on nothing visible.
+- [x] Grid drawn only while snapping is on; the toolbar's zoom readout divided by the portal product, so
+      entering a portal no longer drops it fourfold without anything visibly changing.
+- [x] `NodeStyle.fontSize` in the node's own units, overriding the view's size class (the views drop the
+      Tailwind class when it is set, which would otherwise win over the inherited value).
+- [x] Link from and to a node body: with a link tool the body is a source like a port, and a drop binds to
+      the body unless the pointer is within reach of a port. Ports are drawn for the hovered node alone.
+- [x] Picking a shape or link tool clears the selection.
+- [x] `smart` link type: a stub leaves each port along its side's normal by half a major cell and one
+      segment joins them, rounded by `splinePath`. Nothing is stored, so the route follows the nodes.
+- [ ] Smart routing proper: avoid crossing the nodes it connects and other nodes in the way (phase 2,
+      over `@dxos/diagram`'s `ortho-router`).
+- [ ] A click on a spline's span midpoint adds a control point without any movement. The handle is there
+      to be dragged; decide whether a bare click should commit one or whether it needs a threshold.
+- [ ] The default extent is a floor under every scene's bounds, including a child behind a portal, so a
+      small child now maps through a 1600×1024 frame and draws smaller in its tile. Decide whether the
+      floor belongs only to the scene being edited.
+- [ ] A new class still arrives as `Class` with one attribute and one method, and a new text node as
+      `Text`, while a rectangle and an ellipse now arrive with no label at all. Decide whether those two
+      should be blank too — an empty text node is invisible, which is why they were left.
+
+## Phase 6: compute scene stories (started 2026-09-23, PR #13254)
+
+The `ui/react-ui-canvas-compute/scene` stories, walked one at a time. Each fix is measured in
+Chromium against the story itself (`react-ui-canvas-compute:e2e`, a harness the package did not have
+before), not reasoned about from the source.
+
+- [x] `scene--transform`: a shape component fills its node. `computeNodeView` rendered the component
+      straight into the engine's node frame, which is not a flex container — the editor's frame body
+      (`styles.frameContainer`) was, and every component was written against it, so `grow` was inert
+      and the content sat at the top. Wrapped in `dx-fullscreen flex`.
+- [x] `scene--transform`: a click on an interactive control runs its operation. The node frame takes a
+      pointer press as select-and-drag and captures the pointer, so the `click` never arrived; the four
+      shapes with a control (`RNG`, `Switch`, `Audio`, `GptRealtime`) now stop the gesture.
+- [x] `scene--transform`: the beacon lights. The transform emits what JSONPath returns, a list of
+      matches (`[0.68]` above the threshold, `[]` below), and the beacon declared a `Boolean` input, so
+      every value arrived as a type error and the lamp was dark whatever the roll. Its input is now
+      `Any`, read through `isTruthy`, which already treats an empty list as false: 6 of 14 rolls lit.
+      The same fault is in the old editor, so it was never a scene regression.
+- [x] The graph never runs at mount. `AUTO_TRIGGER_NODES` names `constant` and its comment promises
+      execution on startup, but `exec()` was only ever reached from `setOutput()`, so a circuit was inert
+      until something wrote a forced output (the dice, a switch, an edited constant). The controller
+      extends `Resource` and never overrode `_open`; it now runs the graph once there, for both call
+      sites that open it.
+- [x] Every circuit is laid out around the origin. The layouts had drifted — transform by two cells,
+      control by three and a half, template by fifteen — so a scene opened off to one side of its own
+      content. `circuits.test.ts` holds each one's centre extent to half a cell (a cell for the GPT
+      circuit, which is assembled from optional blocks over a shared core).
+- [x] The run control works, and is only drawn where it can. `Box` drew it on every shape but left the
+      handling to each component: three (`Feed`, `Surface`, `Text`) called `evalNode`, the rest passed
+      no handler at all, so the button was dead on `json-transform` and everything built on
+      `FunctionBody`. `Box` now runs the shape's own node through `controller.exec`, which propagates
+      downstream as a run should, and draws the button only for a shape that has a compute node — the
+      note in the Transform circuit has none. Covered in e2e by counting the bullets a run fires.
+- [x] The circuit no longer opens in a corner. `DEFAULT_EXTENT` ran from the origin to (1600, 1024)
+      rather than being centred on it, so the floor it puts under every scene's bounds had its own
+      centre well below and right of content laid out around (0, 0): the initial fit, which centres the
+      frame, pushed every story a sixth to a third of the viewport up and left. Measured across the ten
+      scene stories, the offset fell from -0.15..-0.35 of the viewport to under 0.02, and the share of
+      the viewport the content covers roughly doubled. Held by an e2e test.
+- [ ] Match the old editor where it is better (the user is specifying which): the remaining framing
+      question is the floor itself (below); the dashed scene
+      frame draws where the editor shows none; the editor's one grouped horizontal toolbar against the
+      corner toolbar plus the vertical palette rail; ports drawn at rest against hover-only.
+- [x] `scene--logic`: the switches drive the gates. Verified end to end in Chromium — two switches
+      through the AND and the OR light the beacon — which is what confirms the `Switch` half of the
+      gesture fix above; the e2e harness carries it as a third test.
+- [ ] Implement `text-to-image` against HeyGen. It is a stub today — `VoidOutput` and an `exec` that
+      throws `Not implemented` — so the `plugins` and `image-gen` circuits wire an edge to a `result`
+      output that does not exist, and the graph says so in a banner. A real implementation settles the
+      output schema the edge needs. The same fault is in the old editor; `chat` likewise has no
+      `exec`, which is the console's missing-compute-function error.
+- [x] `scene--plugins`: the Text node renders as an empty box — no header, icon or run control — where
+      the editor draws it normally; its rendered text content is the empty string. Two vocabularies
+      claimed one key: `computeNodeRegistry` spread the compute defs and then wrote `text` again for
+      the engine's free-text node, because `sceneFromCircuit` rewrote a circuit note as `type: 'text'`.
+      The engine's def won, so every compute Text output was drawn by `TextNodeView`, which reads a
+      `text` field the compute shape does not carry. The engine's node is renamed `note` — what the
+      canvas-editor model already calls it — leaving `text` to the host.
+- [x] The remaining `scene` stories (beacon, control, template, gpt, plugins, artifact, image-gen,
+      audio, voice), same treatment. All nine walked in Chromium at 1400x900: every node carries the
+      `dx-fullscreen flex` wrapper, every compute shape its chrome, and no story raises a page error.
+      The only console error left is the known `chat` stub (no compute function for that node type),
+      in the six circuits that wire one; `audio` and `voice` are clean of even that. Measured as
+      nodes, centre offset and coverage as fractions of the viewport, and fitted zoom: beacon 4,
+      (0.000, 0.000), 0.18x0.17, 78%; control 9, (0.009, -0.014), 0.52x0.47, 78%; template 12,
+      (0.011, 0.000), 0.41x0.86, 50%; gpt 6, (0.000, 0.007), 0.82x0.71, 78%; plugins 8, (0.000,
+      0.007), 0.82x0.71, 78%; artifact 5, (0.034, -0.066), 0.64x0.66, 74%; image-gen 5, (0.000,
+      0.007), 0.82x0.71, 78%; audio 2, (0.009, 0.000), 0.20x0.11, 78%; voice 1, (0.000, 0.000),
+      0.14x0.22, 78%. Every story is centred to within 0.034 of the viewport, so the origin-centred
+      extent holds across the set. The floor is what six of the nine fit to: they land on exactly 78%
+      whatever they contain, because their content is smaller than `DEFAULT_EXTENT` and the fit
+      frames the floor rather than the circuit. Only `template` (taller than the floor) and
+      `artifact` fit to their own bounds. That is the open framing question below, not a separate
+      fault.

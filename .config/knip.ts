@@ -392,6 +392,9 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
 const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
   // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
   'packages/core/compute/mcp-server': ['sharp'],
+  // `scripts/{generate,judge}-walkthrough.ts` call the model to run the walkthrough evals by hand.
+  // Neither ships with the package nor runs in CI, and the SDK is already in the workspace store.
+  'packages/plugins/plugin-github': ['@anthropic-ai/sdk'],
 };
 
 /**
@@ -404,6 +407,18 @@ const DECLARED_IN_TYPES: Record<string, string[]> = {
   // `src/testing/errors.ts` declares `SqliteTestError`; `opfs-in-worker-test-worker.ts` is compiled
   // by the package build and constructs it, so the base type has to survive declaration emit.
   'packages/common/sql-sqlite': ['@dxos/errors'],
+};
+
+/**
+ * Dependencies a package uses at runtime, but only from its published `./testing` entry. The
+ * production pass does not traverse `src/testing/`, so the import is invisible there even though the
+ * subpath ships and a consumer resolves the package when it imports the helper. The runtime sibling
+ * of `DECLARED_IN_TYPES`, which covers the same path reaching declaration emit instead.
+ */
+const TESTING_ENTRY_ONLY: Record<string, string[]> = {
+  // `src/testing/decorators/withRegistry.tsx` builds the storybook atom registry with
+  // `AtomEx.makeRegistry` and provides it through `@effect/atom-react`'s context.
+  'packages/ui/react-ui': ['@dxos/effect', '@effect/atom-react'],
 };
 
 const BUNDLER_RESOLVED: Record<string, string[]> = {
@@ -512,6 +527,7 @@ for (const manifest of globSync(
       ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
+      ...(TESTING_ENTRY_ONLY[dir] ?? []),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
       ...(SCRIPT_STORE_RESOLVED[dir] ?? []),

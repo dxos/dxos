@@ -62,7 +62,7 @@ const handler: Operation.WithHandler<typeof VideoOperation.Summarize> = VideoOpe
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
