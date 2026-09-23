@@ -630,7 +630,7 @@ export class QueryExecutor extends Resource {
   #inQueryTracesAttached = new Set<string>();
 
   /**
-   * Strong dependencies loaded during one `execQuery` run, keyed by how they resolve (see
+   * Strong dependencies loaded during the current `execQuery` run, keyed by how they resolve (see
    * {@link QueryExecutor._loadDependency}). Siblings share their parents, and each load is a lookup.
    */
   #dependencyCache = new Map<string, Promise<QueryItem | null>>();
@@ -740,13 +740,9 @@ export class QueryExecutor extends Resource {
     // survive across `execQuery` calls.
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
-    this.#dependencyCache = new Map();
 
     const prevResultSet = this._lastResultSet;
-    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
-    // Omit objects whose strong deps cannot be resolved from local state so they
-    // never reach the client, where hydration would fail or stall on them.
-    const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
+    const { workingSet, trace } = await this._resolveWorkingSet();
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
@@ -779,6 +775,18 @@ export class QueryExecutor extends Resource {
     return {
       changed,
     };
+  }
+
+  /** Runs the plan, then drops items whose strong dependencies cannot be resolved from local state. */
+  private async _resolveWorkingSet(): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
+    try {
+      const { workingSet, trace } = await this._execPlan(this._plan, []);
+      // Unresolvable items never reach the client, where hydration would fail or stall on them.
+      return { workingSet: await this._filterUnresolvableStrongDeps(workingSet), trace };
+    } finally {
+      // An idle reactive query keeps its executor, which would otherwise hold these items until its next run.
+      this.#dependencyCache.clear();
+    }
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
