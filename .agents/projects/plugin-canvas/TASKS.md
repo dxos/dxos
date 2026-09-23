@@ -164,9 +164,12 @@ before), not reasoned about from the source.
       control by three and a half, template by fifteen — so a scene opened off to one side of its own
       content. `circuits.test.ts` holds each one's centre extent to half a cell (a cell for the GPT
       circuit, which is assembled from optional blocks over a shared core).
-- [ ] The run control on a `json-transform` does nothing: `JsonTransformComponent` renders a bare
-      `<Box>` with no `onAction`, and `FunctionBody` handles only `open` / `close`. Either wire `run` to
-      `controller.exec(nodeId)` or stop drawing the button on a node that cannot run.
+- [x] The run control works, and is only drawn where it can. `Box` drew it on every shape but left the
+      handling to each component: three (`Feed`, `Surface`, `Text`) called `evalNode`, the rest passed
+      no handler at all, so the button was dead on `json-transform` and everything built on
+      `FunctionBody`. `Box` now runs the shape's own node through `controller.exec`, which propagates
+      downstream as a run should, and draws the button only for a shape that has a compute node — the
+      note in the Transform circuit has none. Covered in e2e by counting the bullets a run fires.
 - [ ] Match the old editor where it is better (the user is specifying which): the circuit fits to the
       padded scene bounds so it sits small in a corner where the editor centres it; the dashed scene
       frame draws where the editor shows none; the editor's one grouped horizontal toolbar against the

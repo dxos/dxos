@@ -14,6 +14,7 @@ const LOGIC_URL = storybookUrl('ui-react-ui-canvas-compute-scene--logic', PORT);
 const DICE = 'svg:has(use[href*="dice"])';
 const SWITCH = 'input.dx-checkbox--switch';
 const BEACON = 'svg:has(use[href*="sun"])';
+const RUN = 'button:has(use[href*="play"])';
 
 // Serial: the story's cold compile is minutes of the budget, so it is paid once for the file.
 test.describe.configure({ mode: 'serial' });
@@ -56,6 +57,32 @@ test.describe('compute scene', () => {
     // The die spins only from inside the click handler that writes the output, so the animation is the
     // operation having run — the node frame would otherwise have taken the press as select-and-drag.
     await expect(page.locator('[data-node-id] svg[class*="animate-"]').first()).toBeVisible({ timeout: 2_000 });
+    expect(errors).toEqual([]);
+  });
+
+  test('a box run button executes its node, and a node with nothing to run has none', async () => {
+    // The note carries no compute node, so it gets no run button; the constant and the transform do.
+    const note = page.locator('[data-node-id]').filter({ hasText: 'Random number generator' }).first();
+    expect(await note.locator(RUN).count()).toBe(0);
+    expect(await page.locator(`[data-node-id] ${RUN}`).count()).toBe(2);
+
+    // A bullet is appended for every output the run emits and removed ~500ms later, so count the
+    // additions rather than looking for one that would be gone before an assertion could see it.
+    await page.evaluate(() => {
+      (globalThis as any).__bullets = 0;
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const added of record.addedNodes) {
+            if (added.nodeName === 'circle') {
+              (globalThis as any).__bullets++;
+            }
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+
+    await page.locator('[data-node-id]').filter({ hasText: 'Transform' }).first().locator(RUN).click();
+    await expect.poll(() => page.evaluate(() => (globalThis as any).__bullets), { timeout: 5_000 }).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
 });
