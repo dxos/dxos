@@ -61,8 +61,9 @@ import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
-import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
-import { StackReadinessService } from '../services/stack-readiness.ts';
+import { StackReadinessService } from '../../Readiness.ts';
+import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
+import { type IdentityManager } from '../identity/index.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -72,7 +73,7 @@ import {
   writeSerializedSpaceArchive,
 } from '../space-export/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager, DataSpaceManagerService } from './data-space-manager.ts';
+import { type DataSpaceManager } from './data-space-manager.ts';
 import { type DataSpace } from './data-space.ts';
 
 /** Reads the space as the buf message the service returns. */

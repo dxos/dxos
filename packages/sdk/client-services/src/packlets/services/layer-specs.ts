@@ -58,6 +58,16 @@ import {
 import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
+import { StackReadinessLayer, StackReadinessService } from '../../Readiness.ts';
+import { HypercoreStorageDirectoryLayer, SqliteStorageLayer, SqliteStorageService } from '../../SqliteStorage.ts';
+import {
+  DataSpaceManagerService,
+  IdentityLifecycleService,
+  IdentityManagerService,
+  IdentityProviderService,
+  InvitationsManagerService,
+  SigningContextProviderService,
+} from '../../Tags.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
 import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
@@ -68,10 +78,7 @@ import {
 import {
   ContactsServiceLayer,
   IdentityLifecycleLayer,
-  IdentityLifecycleService,
   IdentityManagerLayer,
-  IdentityManagerService,
-  IdentityProviderService,
   IdentityServiceLayer,
 } from '../identity/index.ts';
 import {
@@ -79,7 +86,6 @@ import {
   InvitationsHandlerLayer,
   InvitationsHandlerService,
   InvitationsManagerLayer,
-  InvitationsManagerService,
   InvitationsServiceLayer,
 } from '../invitations/index.ts';
 import { LoggingServiceLayer } from '../logging/index.ts';
@@ -87,13 +93,7 @@ import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/ind
 import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
-import {
-  DataSpaceManagerLayer,
-  DataSpaceManagerService,
-  SigningContextProviderLayer,
-  SigningContextProviderService,
-  SpacesServiceLayer,
-} from '../spaces/index.ts';
+import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
 import { TransportFactoryService } from './client-platform.ts';
 import {
@@ -111,8 +111,6 @@ import {
   storageLifecycleLayer,
   storageMigrationLayer,
 } from './service-stack.ts';
-import { HypercoreStorageDirectoryLayer, SqliteStorageLayer, SqliteStorageService } from './sqlite-storage.ts';
-import { StackReadinessLayer, StackReadinessService } from './stack-readiness.ts';
 
 /**
  * Subduction needs the edge clients as well as the feature flag: the flag is set in config profiles

@@ -29,7 +29,9 @@ import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
-import { HostEvents, enableNetworking, layerClientServices, wipeSqliteStorage } from '../services/index.ts';
+import * as HostEvents from '../../Events.ts';
+import { wipeSqliteStorage } from '../../SqliteStorage.ts';
+import { enableNetworking, layerClientServices } from '../services/index.ts';
 import { SessionClosed } from './events.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol

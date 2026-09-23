@@ -32,17 +32,11 @@ import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/creden
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
+import { StackOpened } from '../../Events.ts';
+import { InvitationsManagerService } from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
-import { StackOpened } from '../services/events.ts';
 import type { InvitationProtocol } from './invitation-protocol.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
-
-/**
- * Effect service tag for {@link InvitationsManager}.
- */
-export class InvitationsManagerService extends EffectContext.Service<InvitationsManagerService, InvitationsManager>()(
-  '@dxos/client-services/InvitationsManager',
-) {}
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and

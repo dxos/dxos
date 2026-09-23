@@ -19,10 +19,10 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { AuthorizedDeviceSchema, ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
+import { openCredentialsDocument } from '../../CredentialsDocument.ts';
 import { MetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { AuthStatus, SpaceManager } from '../space/index.ts';
-import { openCredentialsDocument } from '../spaces/credentials-document-store.ts';
 import { createServiceContext } from '../testing/index.ts';
 import { IdentityManager } from './identity-manager.ts';
 

@@ -29,10 +29,11 @@ import {
 import { DevtoolsHost } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
+import { StackReadinessService } from '../../Readiness.ts';
+import { DataSpaceManagerService } from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
-import { StackReadinessService } from '../services/stack-readiness.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
+import { type DataSpaceManager } from '../spaces/index.ts';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds.ts';
 import { subscribeToKeyringKeys } from './keys.ts';
 import { subscribeToMetadata } from './metadata.ts';

@@ -43,8 +43,9 @@ import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
-import { IdentityManagerService, type JoinIdentityProps } from './identity-manager.ts';
-import { type Identity } from './identity.ts';
+import { type Identity } from '../../Identity.ts';
+import { IdentityManagerService } from '../../Tags.ts';
+import { type JoinIdentityProps } from './identity-manager.ts';
 
 /**
  * Effect service tag for {@link EdgeIdentityRecoveryManager}.

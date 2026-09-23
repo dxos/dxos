@@ -14,15 +14,13 @@ import { Client } from '@dxos/client';
 import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import {
   type DataSpace,
-  DataSpaceManagerService,
-  IdentityManagerService,
   InvitationsHandlerService,
   InvitationsManager,
-  InvitationsManagerService,
   InvitationsServiceImpl,
   MetadataStore,
   createAdmissionKeypair,
 } from '@dxos/client-services';
+import { Tags } from '@dxos/client-services';
 import {
   type PerformInvitationProps,
   type Result,
@@ -134,10 +132,10 @@ const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
     ServiceResolver.resolveAll(
       [
         InvitationsHandlerService,
-        InvitationsManagerService,
+        Tags.InvitationsManagerService,
         SwarmNetworkManagerService,
-        DataSpaceManagerService,
-        IdentityManagerService,
+        Tags.DataSpaceManagerService,
+        Tags.IdentityManagerService,
       ],
       {},
     ).pipe(
@@ -148,10 +146,10 @@ const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
   );
   return {
     invitations: EffectContext.getUnsafe(services, InvitationsHandlerService),
-    invitationsManager: EffectContext.getUnsafe(services, InvitationsManagerService),
+    invitationsManager: EffectContext.getUnsafe(services, Tags.InvitationsManagerService),
     networkManager: EffectContext.getUnsafe(services, SwarmNetworkManagerService),
-    dataSpaceManager: EffectContext.getUnsafe(services, DataSpaceManagerService),
-    identityManager: EffectContext.getUnsafe(services, IdentityManagerService),
+    dataSpaceManager: EffectContext.getUnsafe(services, Tags.DataSpaceManagerService),
+    identityManager: EffectContext.getUnsafe(services, Tags.IdentityManagerService),
   };
 };
 

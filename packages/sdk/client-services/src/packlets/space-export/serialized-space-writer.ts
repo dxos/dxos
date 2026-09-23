@@ -8,19 +8,29 @@ import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 
 import { Context } from '@dxos/context';
+import { type SpecificCredential } from '@dxos/credentials';
 import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
-import { type EchoHost } from '@dxos/echo-host';
+import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
+import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { createFilename } from '@dxos/util';
 
-import { type DataSpace } from '../spaces/data-space.ts';
+/**
+ * The part of a live space an archive is written from; structural so that the exporter
+ * does not depend on the space implementation.
+ */
+export type ExportableSpace = {
+  readonly id: SpaceId;
+  readonly automergeSpaceState: { readonly lastEpoch: SpecificCredential<Epoch> | undefined };
+  readonly databaseRoot: DatabaseRoot | null;
+};
 
 const SERIALIZED_SPACE_VERSION = 1;
 
@@ -77,13 +87,13 @@ export const orderObjJsonFields = (obj: Obj.JSON): Obj.JSON => {
 };
 
 export type WriteSerializedSpaceArchiveOptions = {
-  space: DataSpace;
+  space: ExportableSpace;
   echoHost: EchoHost;
   exportedBy?: IdentityDid;
 };
 
 /**
- * Write a JSON space archive from a live {@link DataSpace}.
+ * Write a JSON space archive from a live space.
  *
  * This runs entirely inside the worker and walks automerge documents directly —
  * it does not require a client-side {@link EchoDatabase}. The output conforms to
@@ -191,7 +201,11 @@ export const objectStructureToObjJson = (objectId: string, structure: EntityStru
   return result as Obj.JSON;
 };
 
-const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj.JSON[]): Promise<SerializedFeed[]> => {
+const exportFeedData = async (
+  space: ExportableSpace,
+  echoHost: EchoHost,
+  objects: Obj.JSON[],
+): Promise<SerializedFeed[]> => {
   const feeds: SerializedFeed[] = [];
   const spaceId: SpaceId = space.id;
 

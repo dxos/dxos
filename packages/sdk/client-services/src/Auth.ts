@@ -13,7 +13,13 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 import { AuthSchema, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ComplexSet, arraysEqual } from '@dxos/util';
 
-import { type AuthProvider, type AuthVerifier } from '../space/index.ts';
+// @import-as-namespace
+
+/** Produces a credential proving the peer may join the space, for the given nonce. */
+export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
+
+/** Verifies a credential produced by an {@link AuthProvider}. */
+export type AuthVerifier = (nonce: Uint8Array, credential: Uint8Array) => Promise<boolean>;
 
 export const createAuthProvider =
   (signer: CredentialSigner): AuthProvider =>

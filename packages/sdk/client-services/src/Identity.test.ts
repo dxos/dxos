@@ -30,10 +30,10 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../metadata/index.ts';
-import { valueEncoding } from '../pipeline/index.ts';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '../space/index.ts';
-import { Identity } from './identity.ts';
+import { Identity } from './Identity.ts';
+import { MetadataStore } from './packlets/metadata/index.ts';
+import { valueEncoding } from './packlets/pipeline/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from './packlets/space/index.ts';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });

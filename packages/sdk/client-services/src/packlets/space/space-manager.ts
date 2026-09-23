@@ -25,8 +25,8 @@ import { GetAdmissionCredentialRequestSchema } from '@dxos/protocols/buf/dxos/me
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
+import { NetworkReady } from '../../Events.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
-import { NetworkReady } from '../services/events.ts';
 import { CredentialRetrieverExtension } from './admission-discovery-extension.ts';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
 import { Space } from './space.ts';

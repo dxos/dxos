@@ -21,7 +21,8 @@ import { type MuxerStats, Teleport } from '@dxos/teleport';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
-import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth.ts';
+import { type AuthProvider, type AuthVerifier } from '../../Auth.ts';
+import { AuthExtension } from './auth.ts';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;

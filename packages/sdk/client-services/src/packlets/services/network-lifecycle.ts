@@ -25,9 +25,9 @@ import { SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-m
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type Identity } from '../identity/index.ts';
+import { IdentityBound, IdentityLoaded, NetworkingEnabled, NetworkReady, StackOpened } from '../../Events.ts';
+import { type Identity } from '../../Identity.ts';
 import { TransportFactoryService } from './client-platform.ts';
-import { IdentityBound, IdentityLoaded, NetworkingEnabled, NetworkReady, StackOpened } from './events.ts';
 
 export type SwarmNetworkManagerLayerOptions = {
   /** @default true */

@@ -24,7 +24,8 @@ import {
   IntroductionRequestSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
-import { type Identity, type JoinIdentityProps } from '../identity/index.ts';
+import { type Identity } from '../../Identity.ts';
+import { type JoinIdentityProps } from '../identity/index.ts';
 import { type InvitationProtocol } from './invitation-protocol.ts';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {

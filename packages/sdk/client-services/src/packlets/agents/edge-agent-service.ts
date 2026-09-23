@@ -22,7 +22,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeAgentService } from '@dxos/protocols/rpc';
 
-import { StackReadinessService } from '../services/stack-readiness.ts';
+import { StackReadinessService } from '../../Readiness.ts';
 import { type EdgeAgentManager, EdgeAgentManagerService } from './edge-agent-manager.ts';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.

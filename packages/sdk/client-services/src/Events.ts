@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Hook } from '@dxos/effect';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type Identity } from '../identity/index.ts';
+import { type Identity } from './Identity.ts';
 
 //
 // Lifecycle events of the client stack. Boot order is the chain of these events, each layer

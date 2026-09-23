@@ -14,7 +14,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { wipeSqliteStorage } from '../services/sqlite-storage.ts';
+import { wipeSqliteStorage } from '../../SqliteStorage.ts';
 import { type ServiceContext, createServiceContext } from '../testing/index.ts';
 import { IdentityServiceImpl } from './identity-service.ts';
 

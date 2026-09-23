@@ -24,7 +24,8 @@ import {
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { DevicesService } from '@dxos/protocols/rpc';
 
-import { type IdentityManager, IdentityManagerService } from '../identity/index.ts';
+import { IdentityManagerService } from '../../Tags.ts';
+import { type IdentityManager } from '../identity/index.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(

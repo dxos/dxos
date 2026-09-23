@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 import { buf } from '@dxos/protocols/buf';
 import { type Platform, Platform_PLATFORM_TYPE, PlatformSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 

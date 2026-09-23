@@ -14,9 +14,10 @@ import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type Identity } from '../identity/index.ts';
-import { DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
-import { DataSpacesAvailable } from './events.ts';
+import { DataSpacesAvailable } from '../../Events.ts';
+import { type Identity } from '../../Identity.ts';
+import { DataSpaceManagerService } from '../../Tags.ts';
+import { DataSpaceManager } from '../spaces/index.ts';
 
 /**
  * Replicates cross-device space membership and deletion credentials from the halo space.

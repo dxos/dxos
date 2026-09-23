@@ -21,11 +21,10 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
+import { Closing, Reset, StackOpened, WipingStorage } from '../../Events.ts';
+import { getPlatform } from '../../Platform.ts';
+import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
 import { type Diagnostics, createDiagnosticsFromRouter } from '../diagnostics/index.ts';
-import { IdentityManagerService } from '../identity/index.ts';
-import { Closing, Reset, StackOpened, WipingStorage } from '../services/events.ts';
-import { getPlatform } from '../services/platform.ts';
-import { DataSpaceManagerService } from '../spaces/index.ts';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;

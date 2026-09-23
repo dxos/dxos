@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -15,7 +17,7 @@ import { HypercoreStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore/index.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/hypercore/index.ts';
 
 /**
  * True when a rejected SQL op failed because its connection was already closed — the message

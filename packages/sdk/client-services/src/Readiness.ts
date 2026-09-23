@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -9,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import { Trigger } from '@dxos/async';
 import { Hook } from '@dxos/effect';
 
-import { DataSpacesAvailable } from './events.ts';
+import { DataSpacesAvailable } from './Events.ts';
 
 /**
  * Readiness gate for the identity-bound services: `initialized` wakes once the data spaces are

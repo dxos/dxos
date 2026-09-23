@@ -268,7 +268,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { layerClientServices, HostEvents, wipeSqliteStorage } = await import('@dxos/client-services');
+    const { layerClientServices, Events: HostEvents, SqliteStorage } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
     const config = this._params.config ?? new Config();
@@ -310,7 +310,7 @@ export class LocalClientServices implements ClientServicesProvider {
         Effect.gen({ self: this }, function* () {
           yield* Hook.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
           yield* Hook.on(HostEvents.WipingStorage, () =>
-            wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
+            SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
           );
           yield* Hook.on(HostEvents.Reset, () =>
             Effect.promise(async () => {

@@ -1,0 +1,107 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// Prints the intra-package import graph and its strongly connected components,
+// so the structure claimed in docs/DEPENDENCY-GRAPH.md stays checkable.
+
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, join, normalize, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const includeTypes = process.argv.includes('--types');
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'packlets');
+
+const walk = (dir) =>
+  readdirSync(dir).flatMap((entry) => {
+    const path = join(dir, entry);
+    return statSync(path).isDirectory() ? walk(path) : [path];
+  });
+
+const owner = (path) => relative(root, path).split(sep)[0];
+
+const edges = new Map();
+for (const path of walk(root)) {
+  if (!path.endsWith('.ts') || path.endsWith('.test.ts')) {
+    continue;
+  }
+  const from = owner(path);
+  const source = readFileSync(path, 'utf8');
+  // Type-only imports are erased on emit and cannot form a runtime cycle, so they are not edges.
+  const value = source
+    .replace(/import\s+type\s[^;]*?from\s+'[^']*';/g, '')
+    .replace(/import\s*\{([^}]*)\}\s*from\s+'([^']*)';/g, (match, members, spec) =>
+      members.split(',').every((member) => member.trim() === '' || /^type\s/.test(member.trim())) ? '' : match,
+    );
+  for (const [, spec] of (includeTypes ? source : value).matchAll(/from '(\.[^']+)'/g)) {
+    const target = normalize(join(dirname(path), spec));
+    if (!target.startsWith(root)) {
+      continue;
+    }
+    const to = owner(target);
+    if (to !== from) {
+      edges.set(from, (edges.get(from) ?? new Map()).set(to, (edges.get(from)?.get(to) ?? 0) + 1));
+    }
+  }
+}
+
+const nodes = readdirSync(root).filter((entry) => statSync(join(root, entry)).isDirectory());
+
+// Tarjan.
+const index = new Map();
+const low = new Map();
+const onStack = new Set();
+const stack = [];
+const components = [];
+let counter = 0;
+const visit = (node) => {
+  index.set(node, counter);
+  low.set(node, counter++);
+  stack.push(node);
+  onStack.add(node);
+  for (const next of edges.get(node)?.keys() ?? []) {
+    if (!index.has(next)) {
+      visit(next);
+      low.set(node, Math.min(low.get(node), low.get(next)));
+    } else if (onStack.has(next)) {
+      low.set(node, Math.min(low.get(node), index.get(next)));
+    }
+  }
+  if (low.get(node) === index.get(node)) {
+    const component = [];
+    for (;;) {
+      const member = stack.pop();
+      onStack.delete(member);
+      component.push(member);
+      if (member === node) {
+        break;
+      }
+    }
+    components.push(component);
+  }
+};
+for (const node of nodes) {
+  if (!index.has(node)) {
+    visit(node);
+  }
+}
+
+console.log('# Edges');
+let total = 0;
+for (const node of nodes.toSorted()) {
+  const outgoing = [...(edges.get(node)?.entries() ?? [])].toSorted(([a], [b]) => a.localeCompare(b));
+  total += outgoing.length;
+  console.log(`  ${node} -> ${outgoing.map(([to, count]) => `${to}(${count})`).join(', ') || '-'}`);
+}
+console.log(`\n# ${nodes.length} packlets, ${total} edges`);
+
+const cycles = components.filter((component) => component.length > 1);
+console.log('\n# Cycles');
+for (const cycle of cycles) {
+  console.log(`  ${cycle.toSorted().join(' <-> ')}`);
+}
+if (cycles.length === 0) {
+  console.log('  none');
+}
+process.exit(process.argv.includes('--check') && cycles.length > 0 ? 1 : 0);

@@ -38,10 +38,9 @@ import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 
+import { getPlatform } from '../../Platform.ts';
+import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
 import { DXOS_VERSION } from '../../version.ts';
-import { IdentityManagerService } from '../identity/index.ts';
-import { getPlatform } from '../services/platform.ts';
-import { DataSpaceManagerService } from '../spaces/index.ts';
 import { type DataSpace } from '../spaces/index.ts';
 
 const DEFAULT_TIMEOUT = 1_000;

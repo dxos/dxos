@@ -16,7 +16,7 @@ import { EffectEx, Hook } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { Closing, Reset, WipingStorage } from '../services/events.ts';
+import { Closing, Reset, WipingStorage } from '../../Events.ts';
 import { SystemServiceImpl } from './system-service.ts';
 
 describe('SystemService', () => {

@@ -33,7 +33,7 @@ import {
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata/index.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../../migrations/metadata/index.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store.ts';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour

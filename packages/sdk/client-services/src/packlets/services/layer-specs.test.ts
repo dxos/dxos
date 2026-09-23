@@ -27,9 +27,9 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
-import { IdentityManagerService } from '../identity/index.ts';
+import { Opening, StackOpened } from '../../Events.ts';
+import { IdentityManagerService } from '../../Tags.ts';
 import { TransportFactoryService } from './client-platform.ts';
-import { Opening, StackOpened } from './events.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 
 describe('clientServiceSpecs', () => {

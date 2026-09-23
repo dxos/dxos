@@ -15,3 +15,13 @@ export * from './packlets/storage/index.ts';
 export * from './packlets/system/index.ts';
 export * from './packlets/worker/index.ts';
 export * from './packlets/agents/index.ts';
+
+export * as Auth from './Auth.ts';
+export * as CredentialsDocument from './CredentialsDocument.ts';
+export * as Events from './Events.ts';
+export * from './Identity.ts';
+export * as Replication from './Replication.ts';
+export * as Platform from './Platform.ts';
+export * as Readiness from './Readiness.ts';
+export * as SqliteStorage from './SqliteStorage.ts';
+export * as Tags from './Tags.ts';

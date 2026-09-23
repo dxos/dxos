@@ -26,7 +26,7 @@ import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/serv
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
-import { StackOpened } from './events.ts';
+import { StackOpened } from '../../Events.ts';
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 

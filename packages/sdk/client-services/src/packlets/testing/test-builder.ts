@@ -45,37 +45,33 @@ import { StorageType } from '@dxos/random-access-storage';
 import { RpcRouter } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
+import { Closing, Opening, StackOpened, WipingStorage } from '../../Events.ts';
+import { type Identity } from '../../Identity.ts';
+import { StackReadinessService } from '../../Readiness.ts';
+import { SqliteStorage, wipeSqliteStorage } from '../../SqliteStorage.ts';
+import {
+  DataSpaceManagerService,
+  IdentityLifecycleService,
+  IdentityManagerService,
+  InvitationsManagerService,
+} from '../../Tags.ts';
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerService,
 } from '../identity/identity-recovery-manager.ts';
-import {
-  type CreateIdentityOptions,
-  type Identity,
-  IdentityLifecycleService,
-  type IdentityManager,
-  IdentityManagerService,
-} from '../identity/index.ts';
+import { type CreateIdentityOptions, type IdentityManager } from '../identity/index.ts';
 import {
   InvitationsHandler,
   InvitationsHandlerService,
   InvitationsManager,
-  InvitationsManagerService,
   SpaceInvitationProtocol,
 } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
-import { Closing, Opening, StackOpened, WipingStorage } from '../services/events.ts';
-import { type ServiceContextRuntimeProps, StackReadinessService, layerClientServices } from '../services/index.ts';
-import { SqliteStorage, wipeSqliteStorage } from '../services/sqlite-storage.ts';
+import { type ServiceContextRuntimeProps, layerClientServices } from '../services/index.ts';
 import { SpaceManager, SpaceManagerService } from '../space/index.ts';
-import {
-  DataSpaceManager,
-  type DataSpaceManagerRuntimeProps,
-  DataSpaceManagerService,
-  type SigningContext,
-} from '../spaces/index.ts';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces/index.ts';
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {

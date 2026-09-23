@@ -11,11 +11,15 @@ import { KeyringApiService } from '@dxos/keyring';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import { IdentityLifecycleService, IdentityManagerService } from '../identity/index.ts';
-import { DataSpaceManagerService, SigningContextProviderService } from '../spaces/index.ts';
+import {
+  DataSpaceManagerService,
+  IdentityLifecycleService,
+  IdentityManagerService,
+  InvitationsManagerService,
+  SigningContextProviderService,
+} from '../../Tags.ts';
 import { DeviceInvitationProtocol } from './device-invitation-protocol.ts';
 import { type InvitationProtocol } from './invitation-protocol.ts';
-import { InvitationsManagerService } from './invitations-manager.ts';
 import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 
 /**

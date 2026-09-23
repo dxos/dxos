@@ -29,13 +29,13 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityService } from '@dxos/protocols/rpc';
 
-import { ProfileUpdated } from '../services/events.ts';
-import { wipeSqliteStorage } from '../services/sqlite-storage.ts';
-import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
-import { IdentityLifecycleService } from './identity-lifecycle.ts';
-import { type CreateIdentityOptions, type IdentityManager, IdentityManagerService } from './identity-manager.ts';
+import { ProfileUpdated } from '../../Events.ts';
+import { type Identity } from '../../Identity.ts';
+import { wipeSqliteStorage } from '../../SqliteStorage.ts';
+import { DataSpaceManagerService, IdentityLifecycleService, IdentityManagerService } from '../../Tags.ts';
+import { type DataSpaceManager } from '../spaces/index.ts';
+import { type CreateIdentityOptions, type IdentityManager } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
-import { type Identity } from './identity.ts';
 
 export class IdentityServiceImpl extends Resource implements IdentityService.Handlers {
   'constructor'(

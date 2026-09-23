@@ -17,11 +17,9 @@ import {
 } from '@dxos/protocols/buf/dxos/mesh/teleport/auth_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import { type AuthProvider, type AuthVerifier } from '../../Auth.ts';
+
 type AuthService = BufService<typeof AuthServiceDesc>;
-
-export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
-
-export type AuthVerifier = (nonce: Uint8Array, credential: Uint8Array) => Promise<boolean>;
 
 export type AuthExtensionProps = {
   provider: AuthProvider;

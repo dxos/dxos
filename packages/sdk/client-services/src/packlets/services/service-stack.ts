@@ -18,18 +18,14 @@ import { type TransportFactory } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 
-import {
-  type IdentityManagerProps,
-  IdentityManagerService,
-  IdentityProviderService,
-  identityProviderFromManager,
-} from '../identity/index.ts';
+import { NetworkReady, Opening, StorageReady } from '../../Events.ts';
+import { SqliteStorage } from '../../SqliteStorage.ts';
+import { IdentityManagerService, IdentityProviderService } from '../../Tags.ts';
+import { type IdentityManagerProps, identityProviderFromManager } from '../identity/index.ts';
 import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManagerRuntimeProps } from '../spaces/index.ts';
-import { NetworkReady, Opening, StorageReady } from './events.ts';
-import { SqliteStorage } from './sqlite-storage.ts';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,

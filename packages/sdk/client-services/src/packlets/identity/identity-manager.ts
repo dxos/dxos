@@ -56,12 +56,13 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
+import { createAuthProvider } from '../../Auth.ts';
+import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { IdentityLoaded, StorageReady } from '../../Events.ts';
+import { Identity } from '../../Identity.ts';
+import { IdentityManagerService } from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
-import { IdentityLoaded, StorageReady } from '../services/events.ts';
 import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
-import { openCredentialsDocument } from '../spaces/credentials-document-store.ts';
-import { createAuthProvider } from './authenticator.ts';
-import { Identity } from './identity.ts';
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -121,26 +122,12 @@ export type IdentityManagerProps = {
 export type IdentityProvider = () => Identity;
 
 /**
- * Effect service tag for {@link IdentityProvider}.
- */
-export class IdentityProviderService extends EffectContext.Service<IdentityProviderService, IdentityProvider>()(
-  '@dxos/client-services/IdentityProvider',
-) {}
-
-/**
  * Builds an {@link IdentityProvider} from an {@link IdentityManager}.
  */
 export const identityProviderFromManager =
   (identityManager: IdentityManager): IdentityProvider =>
   () =>
     identityManager.identity ?? failUndefined();
-
-/**
- * Effect service tag for {@link IdentityManager}.
- */
-export class IdentityManagerService extends EffectContext.Service<IdentityManagerService, IdentityManager>()(
-  '@dxos/client-services/IdentityManager',
-) {}
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
 export class IdentityManager {

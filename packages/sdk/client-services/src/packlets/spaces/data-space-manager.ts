@@ -89,10 +89,18 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { type Identity, IdentityProviderService, createAuthProvider } from '../identity/index.ts';
-import { type InvitationsManager, InvitationsManagerService } from '../invitations/index.ts';
+import { createAuthProvider } from '../../Auth.ts';
+import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { DataSpacesAvailable, IdentityAvailable, ProfileUpdated } from '../../Events.ts';
+import { type Identity } from '../../Identity.ts';
+import {
+  DataSpaceManagerService,
+  IdentityProviderService,
+  InvitationsManagerService,
+  SigningContextProviderService,
+} from '../../Tags.ts';
+import { type InvitationsManager } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
-import { DataSpacesAvailable, IdentityAvailable, ProfileUpdated } from '../services/events.ts';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -102,7 +110,6 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '../space/index.ts';
-import { openCredentialsDocument } from './credentials-document-store.ts';
 import { DataSpace } from './data-space.ts';
 import { spaceGenesis } from './genesis.ts';
 
@@ -122,14 +129,6 @@ export interface SigningContext {
  * Resolves signing context when identity becomes available.
  */
 export type SigningContextProvider = () => SigningContext;
-
-/**
- * Effect service tag for {@link SigningContextProvider}.
- */
-export class SigningContextProviderService extends EffectContext.Service<
-  SigningContextProviderService,
-  SigningContextProvider
->()('@dxos/client-services/SigningContextProvider') {}
 
 /**
  * Builds a {@link SigningContextProvider} from an identity resolver.
@@ -1181,10 +1180,6 @@ export class DataSpaceManager extends Resource {
  */
 export const remainingLifetimeSeconds = (expiresOn: Date): number =>
   Math.max(1, Math.floor((expiresOn.getTime() - Date.now()) / 1000));
-
-export class DataSpaceManagerService extends EffectContext.Service<DataSpaceManagerService, DataSpaceManager>()(
-  '@dxos/client-services/DataSpaceManager',
-) {}
 
 export type DataSpaceManagerLayerOptions = Pick<DataSpaceManagerProps, 'runtimeProps' | 'edgeFeatures'>;
 

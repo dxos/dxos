@@ -10,15 +10,11 @@ import { type Context } from '@dxos/context';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { IdentityAvailable, IdentityBound, NetworkReady } from '../services/events.ts';
-import {
-  type CreateIdentityOptions,
-  type IdentityManager,
-  IdentityManagerService,
-  type JoinIdentityProps,
-} from './identity-manager.ts';
+import { IdentityAvailable, IdentityBound, NetworkReady } from '../../Events.ts';
+import { type Identity } from '../../Identity.ts';
+import { IdentityLifecycleService, IdentityManagerService } from '../../Tags.ts';
+import { type CreateIdentityOptions, type IdentityManager, type JoinIdentityProps } from './identity-manager.ts';
 import { EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
-import { type Identity } from './identity.ts';
 
 /**
  * Brings a new identity into the running stack: binds it to the network, joins, and announces it so
@@ -31,10 +27,6 @@ export interface IdentityLifecycle {
   /** Adopts an identity admitted by another device and resolves once its services are open. */
   acceptIdentity(params: JoinIdentityProps): Promise<Identity>;
 }
-
-export class IdentityLifecycleService extends EffectContext.Service<IdentityLifecycleService, IdentityLifecycle>()(
-  '@dxos/client-services/IdentityLifecycle',
-) {}
 
 export const IdentityLifecycleLayer: Layer.Layer<
   IdentityLifecycleService,

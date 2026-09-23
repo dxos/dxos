@@ -14,7 +14,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { NetworkingEnabled } from './events.ts';
+import { NetworkingEnabled } from '../../Events.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 import { type ServiceContextRuntimeProps } from './service-stack.ts';
 

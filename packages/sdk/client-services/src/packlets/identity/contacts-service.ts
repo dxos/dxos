@@ -21,10 +21,11 @@ import {
 import { ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { StackReadinessService } from '../services/stack-readiness.ts';
+import { StackReadinessService } from '../../Readiness.ts';
+import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
-import { type IdentityManager, IdentityManagerService } from './identity-manager.ts';
+import { type DataSpaceManager } from '../spaces/index.ts';
+import { type IdentityManager } from './identity-manager.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
   'constructor'(
