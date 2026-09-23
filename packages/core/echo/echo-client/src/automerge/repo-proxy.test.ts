@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, generateAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -23,9 +23,10 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { EchoClientError } from '../errors.ts';
+import { DocumentUnavailableError, EchoClientError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
+import { toDocumentId } from './document-id.ts';
 import { RepoProxy } from './repo-proxy.ts';
 
 /** True once the handle's current heads have been written to the host's on-disk heads store. */
@@ -606,6 +607,21 @@ describe('RepoProxy', () => {
     await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
   });
 
+  test('an unavailable report from the host settles the handle', async () => {
+    // A host that takes the subscription and loads nothing: the handle would otherwise stay
+    // `'requesting'` forever, which is the hang the report exists to end.
+    const { dataService } = await setup(undefined, (props) => new SilentDataService(props));
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const url = generateAutomergeUrl();
+    const clientHandle = clientRepo.find<{ text: string }>(url);
+    clientRepo._receiveUpdate({ updates: [{ documentId: toDocumentId(url), unavailable: true }] });
+
+    await expect(asyncTimeout(clientHandle.whenReady(), 1000)).rejects.toThrow(DocumentUnavailableError);
+    expect(clientHandle.state).to.equal('unavailable');
+  });
+
   test('flush during a dropped subscription delivers the write', async () => {
     const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
 
@@ -657,6 +673,15 @@ class RefusingDataService extends DataServiceImpl {
     return this.refuse
       ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
       : super['DataService.createDocument'](request);
+  }
+}
+
+/** Registers subscriptions but loads no document, so nothing the host does races the test's report. */
+class SilentDataService extends DataServiceImpl {
+  override ['DataService.updateSubscription'](
+    _request: DataService.UpdateSubscriptionRequest,
+  ): Effect.Effect<void, Error> {
+    return Effect.void;
   }
 }
 

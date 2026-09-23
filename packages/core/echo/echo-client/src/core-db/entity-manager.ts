@@ -46,7 +46,7 @@ import {
   type SaveStateChangedEvent,
   toDocumentId,
 } from '../automerge/index.ts';
-import { EchoClientError } from '../errors.ts';
+import { DocumentUnavailableError, EchoClientError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
@@ -1511,7 +1511,17 @@ export class EntityManager implements IDatabaseBinding {
       throw new Error('Database opened with no rootUrl');
     }
 
-    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
+    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl).catch((err) => {
+      // Named here because the caller only knows it failed to open the space: every read and write
+      // in it fails, and which document is missing is the whole diagnosis.
+      throw DocumentUnavailableError.is(err)
+        ? new EchoClientError({
+            message: 'Space root document is not available.',
+            context: { spaceId: this._spaceId, rootUrl: spaceState.rootUrl },
+            cause: err,
+          })
+        : err;
+    });
     const doc = existingDocHandle.doc();
     invariant(doc);
     invariant(doc.version === SpaceDocVersion.CURRENT);
@@ -1800,6 +1810,13 @@ export class EntityManager implements IDatabaseBinding {
         log('lifetime ended while a document was loading, abandoning load', { objectId, err });
         return;
       }
+      if (DocumentUnavailableError.is(err)) {
+        // Terminal, so the retry below would spin: the host has said it cannot produce this
+        // document, and the object reads as unavailable until replication delivers the bytes.
+        log.warn('object document is not available on the host', { objectId, automergeUrl: handle.url });
+        this._onObjectUnavailable({ handle, objectId });
+        return;
+      }
       log.warn('failed to load a document, retrying', {
         objectId,
         automergeUrl: handle.url,
@@ -1848,7 +1865,21 @@ export class EntityManager implements IDatabaseBinding {
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
-        await newDocHandle.whenReady();
+        try {
+          await newDocHandle.whenReady();
+        } catch (err) {
+          if (!DocumentUnavailableError.is(err)) {
+            throw err;
+          }
+          // One object the host cannot produce must not abandon the rest of the rebind, which is
+          // what stops the space's remaining objects from ever seeing this root update.
+          log.warn('object document is not available on the host, skipping rebind', {
+            objectId: object.id,
+            automergeUrl: newObjectDocUrl.toString(),
+          });
+          this._onObjectUnavailable({ objectId: object.id });
+          continue;
+        }
         newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
