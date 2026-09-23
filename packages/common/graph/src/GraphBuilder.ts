@@ -223,9 +223,12 @@ export class GraphBuilder<
   Meta = unknown,
   G = unknown,
 >
-  implements Pipeable.Pipeable
+  implements Pipeable.Pipeable, AtomEx.Owner
 {
+  static readonly #finalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
+
   readonly [TypeId]: TypeId = TypeId;
+  readonly [AtomEx.OwnerId]: AtomEx.Owner[typeof AtomEx.OwnerId];
 
   pipe() {
     // eslint-disable-next-line prefer-rest-params
@@ -265,9 +268,9 @@ export class GraphBuilder<
 
   constructor({ registry, store, relationKey, inline, decorateNode, unchanged }: Props<Node, Arg, Rel, Meta, G>) {
     this._registry = registry ?? Registry.make();
+    this[AtomEx.OwnerId] = { registry: this._registry, finalizer: GraphBuilder.#finalizer };
     this._extensions = AtomEx.makeOwned(
       this,
-      this._registry,
       Atom.make<Record<string, Extension<Node, Arg, Rel, Meta>>>(Record.empty()).pipe(
         withLabel('graph-builder:extensions'),
       ),

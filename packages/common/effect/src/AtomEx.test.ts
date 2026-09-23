@@ -44,8 +44,8 @@ describe('AtomEx.makeRegistry', () => {
 describe('AtomEx.makeOwned', () => {
   test('keeps the atom and its value while the owner is alive', async ({ expect }) => {
     const registry = AtomEx.makeRegistry({ idleTTL: Duration.zero });
-    const owner = {};
-    const atom = AtomEx.makeOwned(owner, registry, Atom.make(0));
+    const owner: AtomEx.Owner = { [AtomEx.OwnerId]: { registry, finalizer } };
+    const atom = AtomEx.makeOwned(owner, Atom.make(0));
 
     registry.set(atom, 1);
     await wait(TTL);
@@ -54,5 +54,7 @@ describe('AtomEx.makeOwned', () => {
     expect(owner).toBeDefined();
   });
 });
+
+const finalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

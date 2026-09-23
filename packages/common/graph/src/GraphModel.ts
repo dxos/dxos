@@ -92,7 +92,12 @@ export abstract class AbstractGraphModel<
   Node extends GraphNode.Any = GraphNode.Any,
   Edge extends GraphEdge.Any = GraphEdge.Any,
   Model extends AbstractGraphModel<Node, Edge, Model> = any,
-> {
+>
+  implements AtomEx.Owner
+{
+  static readonly #finalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
+
+  readonly [AtomEx.OwnerId]: AtomEx.Owner[typeof AtomEx.OwnerId];
   readonly #registry: Registry.AtomRegistry;
   readonly #version: Atom.Writable<number>;
   readonly #nodeIndex = new Map<string, EffectGraph.NodeIndex>();
@@ -120,7 +125,8 @@ export abstract class AbstractGraphModel<
 
   constructor({ registry, graph, change }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
-    this.#version = AtomEx.makeOwned(this, this.#registry, Atom.make(0));
+    this[AtomEx.OwnerId] = { registry: this.#registry, finalizer: AbstractGraphModel.#finalizer };
+    this.#version = AtomEx.makeOwned(this, Atom.make(0));
     this.#graph = EffectGraph.beginMutation(EffectGraph.directed<Slot<Node>, Edge>());
     this.#change = change;
     this.#mirror = change ? graph : undefined;
