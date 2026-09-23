@@ -13,7 +13,7 @@ const EDGE_HOST = 'edge.internal';
 /** Host stripped by {@link EdgeAiHttpClient}; only the `/v1/systemone` path reaches EDGE. */
 export const EDGE_ENDPOINT = `http://${EDGE_HOST}/v1/systemone`;
 
-export const isEdgeRequest = (url: string): boolean => new URL(url).host === EDGE_HOST;
+export const isEdgeRequest = (url: string): boolean => URL.canParse(url) && new URL(url).host === EDGE_HOST;
 
 /**
  * Sends System One calls through EDGE's `/ai/generate/typesafe` proxy, the only route a browser has
