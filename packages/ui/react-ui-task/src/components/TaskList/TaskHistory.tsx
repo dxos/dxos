@@ -18,7 +18,7 @@ import { UNSET_ICON } from './status-icons.ts';
  * so a new event kind is one line here instead of a condition to find in the markup.
  */
 const EVENT_ICONS: Record<Task.Event, string> = {
-  created: 'ph--plus--regular',
+  created: 'ph--plant--regular',
   updated: 'ph--pencil-simple--regular',
 };
 
@@ -82,7 +82,7 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
           {/* One line box tall, with the glyph centred inside it: the row aligns to the top so a
               wrapped description does not float the glyph down the paragraph, which would otherwise
               pin the glyph to the text's ascender rather than to the middle of its first line. */}
-          <Icon icon={eventIcon(entry.event)} classNames={mx('block h-[1lh] self-start', cells?.icon)} />
+          <Icon icon={eventIcon(entry.event)} classNames={mx('block h-[1lh] self-start text-subdued', cells?.icon)} />
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
               time column is fixed, so the description takes the height it needs. */}
           <span className={mx('min-w-0', cells?.description)}>{entry.description ?? entry.event}</span>

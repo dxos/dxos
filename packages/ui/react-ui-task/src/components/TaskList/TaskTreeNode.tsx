@@ -49,7 +49,7 @@ import {
  */
 export type TaskSelectModifiers = { meta?: boolean };
 
-export type TaskTreeContentProps = {
+export type TaskTreeNodeProps = {
   /** Paint the drop bands on every row (development affordance). */
   debug?: boolean;
   /** Render status headers with their tasks flat beneath, instead of the hierarchy. */
@@ -78,7 +78,7 @@ export type TaskTreeContentProps = {
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
-export const TaskTreeContent = ({
+export const TaskTreeNode = ({
   debug,
   groupByStatus,
   hierarchical,
@@ -98,7 +98,7 @@ export const TaskTreeContent = ({
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
-}: TaskTreeContentProps) => {
+}: TaskTreeNodeProps) => {
   const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
 
