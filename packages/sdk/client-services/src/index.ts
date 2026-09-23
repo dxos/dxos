@@ -21,7 +21,7 @@ export * as CredentialsDocument from './CredentialsDocument.ts';
 export * as Events from './Events.ts';
 export * from './Identity.ts';
 export * as Replication from './Replication.ts';
-export * as Platform from './Platform.ts';
+export * as PlatformInfo from './PlatformInfo.ts';
 export * as Readiness from './Readiness.ts';
 export * as SqliteStorage from './SqliteStorage.ts';
 export * as Tags from './Tags.ts';

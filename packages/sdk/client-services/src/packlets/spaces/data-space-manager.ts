@@ -10,7 +10,6 @@ import {
   isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -89,16 +88,11 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { createAuthProvider } from '../../Auth.ts';
+import * as Auth from '../../Auth.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
-import { DataSpacesAvailable, IdentityAvailable, ProfileUpdated } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import {
-  DataSpaceManagerService,
-  IdentityProviderService,
-  InvitationsManagerService,
-  SigningContextProviderService,
-} from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { type InvitationsManager } from '../invitations/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import {
@@ -152,9 +146,9 @@ export const createSigningContextProvider =
  * Effect Layer providing {@link SigningContextProvider} from {@link IdentityProviderService}.
  */
 export const SigningContextProviderLayer = Layer.effect(
-  SigningContextProviderService,
+  Tags.SigningContextProviderService,
   Effect.gen(function* () {
-    const identityProvider = yield* IdentityProviderService;
+    const identityProvider = yield* Tags.IdentityProviderService;
     return createSigningContextProvider(identityProvider);
   }),
 );
@@ -863,7 +857,7 @@ export class DataSpaceManager extends Resource {
       swarmIdentity: {
         identityKey: this.signingContext.identityKey,
         peerKey: this.signingContext.deviceKey,
-        credentialProvider: createAuthProvider(this.signingContext.credentialSigner),
+        credentialProvider: Auth.createAuthProvider(this.signingContext.credentialSigner),
         credentialAuthenticator: async () => true,
       },
     });
@@ -920,7 +914,7 @@ export class DataSpaceManager extends Resource {
       swarmIdentity: {
         identityKey: this.signingContext.identityKey,
         peerKey: this.signingContext.deviceKey,
-        credentialProvider: createAuthProvider(this.signingContext.credentialSigner),
+        credentialProvider: Auth.createAuthProvider(this.signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
       onAuthorizedConnection: (session) =>
@@ -1189,27 +1183,27 @@ export type DataSpaceManagerLayerOptions = Pick<DataSpaceManagerProps, 'runtimeP
 export const DataSpaceManagerLayer = (
   options: DataSpaceManagerLayerOptions = {},
 ): Layer.Layer<
-  DataSpaceManagerService,
+  Tags.DataSpaceManagerService,
   never,
   | Hook.Controller
   | SpaceManagerService
   | IMetadataStoreService
   | KeyringApiService
-  | SigningContextProviderService
+  | Tags.SigningContextProviderService
   | HypercoreStoreService
   | EchoHostService
-  | InvitationsManagerService
+  | Tags.InvitationsManagerService
 > =>
   Layer.effect(
-    DataSpaceManagerService,
+    Tags.DataSpaceManagerService,
     Effect.gen(function* () {
       const spaceManager = yield* SpaceManagerService;
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;
-      const signingContextProvider = yield* SigningContextProviderService;
+      const signingContextProvider = yield* Tags.SigningContextProviderService;
       const hypercoreStore = yield* HypercoreStoreService;
       const echoHost = yield* EchoHostService;
-      const invitationsManager = yield* InvitationsManagerService;
+      const invitationsManager = yield* Tags.InvitationsManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
       const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);
@@ -1233,14 +1227,14 @@ export const DataSpaceManagerLayer = (
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => dataSpaceManager.close(Context.default())));
       yield* Hook.on(
-        IdentityAvailable,
+        Events.IdentityAvailable,
         Effect.fn('DataSpaceManager.onIdentityAvailable')(function* ({ identity }) {
           yield* Effect.promise(() => dataSpaceManager.open(ctx));
-          yield* Hook.emit(DataSpacesAvailable, { identity });
+          yield* Hook.emit(Events.DataSpacesAvailable, { identity });
         }),
       );
       yield* Hook.on(
-        ProfileUpdated,
+        Events.ProfileUpdated,
         Effect.fn('DataSpaceManager.onProfileUpdated')(function* ({ profile }) {
           for (const space of dataSpaceManager.spaces.values()) {
             yield* Effect.promise(() => space.updateOwnProfile(profile));

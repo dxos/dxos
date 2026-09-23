@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -10,9 +9,9 @@ import { type Context } from '@dxos/context';
 import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { IdentityAvailable, IdentityBound, NetworkReady } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { IdentityLifecycleService, IdentityManagerService } from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { type CreateIdentityOptions, type IdentityManager, type JoinIdentityProps } from './identity-manager.ts';
 import { EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
@@ -29,13 +28,13 @@ export interface IdentityLifecycle {
 }
 
 export const IdentityLifecycleLayer: Layer.Layer<
-  IdentityLifecycleService,
+  Tags.IdentityLifecycleService,
   never,
-  Hook.Controller | IdentityManagerService | EdgeIdentityRecoveryManagerService
+  Hook.Controller | Tags.IdentityManagerService | EdgeIdentityRecoveryManagerService
 > = Layer.effect(
-  IdentityLifecycleService,
+  Tags.IdentityLifecycleService,
   Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
+    const identityManager = yield* Tags.IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
     const ctx = yield* EffectEx.contextFromScope();
@@ -46,7 +45,7 @@ export const IdentityLifecycleLayer: Layer.Layer<
     // The persisted identity joins once networking is up; a missing identity leaves the stack
     // dormant until one is created or accepted.
     yield* Hook.on(
-      NetworkReady,
+      Events.NetworkReady,
       Effect.fn('IdentityLifecycle.onNetworkReady')(function* () {
         const identity = identityManager.identity;
         if (!identity) {
@@ -55,7 +54,7 @@ export const IdentityLifecycleLayer: Layer.Layer<
         }
         log('joining network...');
         yield* Effect.promise(() => identity.joinNetwork(ctx));
-        yield* Hook.emit(IdentityAvailable, { identity });
+        yield* Hook.emit(Events.IdentityAvailable, { identity });
       }),
     );
     return lifecycle;
@@ -76,9 +75,9 @@ const createIdentityLifecycle = ({
   return {
     createIdentity: async (params = {}, ctx = defaultCtx) => {
       const identity = await identityManager.createIdentity(params, ctx);
-      await emit(Hook.emit(IdentityBound, { identity }));
+      await emit(Hook.emit(Events.IdentityBound, { identity }));
       await identity.joinNetwork(ctx);
-      await emit(Hook.emit(IdentityAvailable, { identity }));
+      await emit(Hook.emit(Events.IdentityAvailable, { identity }));
       log('identity created', { identityKey: identity.identityKey });
       return identity;
     },
@@ -87,7 +86,7 @@ const createIdentityLifecycle = ({
       const ctx = defaultCtx;
       const { identity, identityRecord } = await identityManager.prepareIdentity(params, ctx);
       try {
-        await emit(Hook.emit(IdentityBound, { identity, deviceCredential: params.authorizedDeviceCredential }));
+        await emit(Hook.emit(Events.IdentityBound, { identity, deviceCredential: params.authorizedDeviceCredential }));
         await identity.joinNetwork(ctx);
       } catch (err) {
         // Nothing owns the prepared identity until the manager accepts it.
@@ -95,7 +94,7 @@ const createIdentityLifecycle = ({
         throw err;
       }
       await identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
-      await emit(Hook.emit(IdentityAvailable, { identity }));
+      await emit(Hook.emit(Events.IdentityAvailable, { identity }));
       log('identity accepted', { identityKey: identity.identityKey });
       return identity;
     },

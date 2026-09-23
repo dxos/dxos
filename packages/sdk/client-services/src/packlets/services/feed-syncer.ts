@@ -26,7 +26,7 @@ import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/serv
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
-import { StackOpened } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 
 const encoder = new Encoder({ tagUint8Array: false, useRecords: false });
 
@@ -784,7 +784,7 @@ export const FeedSyncerLayer = (
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => feedSyncer.close()));
       yield* Hook.on(
-        StackOpened,
+        Events.StackOpened,
         Effect.fn('FeedSyncer.onStackOpened')(function* () {
           yield* Effect.promise(() => feedSyncer.open(ctx));
         }),

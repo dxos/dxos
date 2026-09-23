@@ -29,10 +29,10 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityService } from '@dxos/protocols/rpc';
 
-import { ProfileUpdated } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { wipeSqliteStorage } from '../../SqliteStorage.ts';
-import { DataSpaceManagerService, IdentityLifecycleService, IdentityManagerService } from '../../Tags.ts';
+import * as SqliteStorage from '../../SqliteStorage.ts';
+import * as Tags from '../../Tags.ts';
 import { type DataSpaceManager } from '../spaces/index.ts';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
@@ -232,11 +232,11 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 export const IdentityServiceLayer = Layer.effect(
   IdentityService.Tag,
   Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
+    const identityManager = yield* Tags.IdentityManagerService;
     const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
     const keyring = yield* KeyringApiService;
-    const dataSpaceManager = yield* DataSpaceManagerService;
-    const identityLifecycle = yield* IdentityLifecycleService;
+    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const identityLifecycle = yield* Tags.IdentityLifecycleService;
     const runtime = yield* RuntimeProvider.currentRuntime<Hook.Controller>();
     // The stack's own SQLite runtime: the wipe runs under the live stack rather than the reset
     // chain, which tears it down.
@@ -246,10 +246,12 @@ export const IdentityServiceLayer = Layer.effect(
       recoveryManager,
       keyring,
       dataSpaceManager,
-      () => RuntimeProvider.runPromise(sqlRuntime)(wipeSqliteStorage.pipe(Effect.orDie)),
+      () => RuntimeProvider.runPromise(sqlRuntime)(SqliteStorage.wipeSqliteStorage.pipe(Effect.orDie)),
       (params, ctx) => identityLifecycle.createIdentity(params, ctx),
       (profile) =>
-        profile ? RuntimeProvider.runPromise(runtime)(Hook.emit(ProfileUpdated, { profile })) : Promise.resolve(),
+        profile
+          ? RuntimeProvider.runPromise(runtime)(Hook.emit(Events.ProfileUpdated, { profile }))
+          : Promise.resolve(),
     );
     yield* Effect.acquireRelease(
       Effect.promise(() => service.open()),

@@ -29,8 +29,8 @@ import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
-import * as HostEvents from '../../Events.ts';
-import { wipeSqliteStorage } from '../../SqliteStorage.ts';
+import * as Events from '../../Events.ts';
+import * as SqliteStorage from '../../SqliteStorage.ts';
 import { enableNetworking, layerClientServices } from '../services/index.ts';
 import { SessionClosed } from './events.ts';
 
@@ -162,10 +162,12 @@ export const makeWorkerRuntime = ({
     });
 
     // The runtime's own subscriptions: the reset chain and session bookkeeping.
-    yield* Hook.on(HostEvents.Closing, () => closeStack);
+    yield* Hook.on(Events.Closing, () => closeStack);
     /** Wipes persisted storage over a SQLite layer of its own, since the stack's is gone by the time a reset gets here. */
-    yield* Hook.on(HostEvents.WipingStorage, () => wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie));
-    yield* Hook.on(HostEvents.Reset, () => requestShutdown);
+    yield* Hook.on(Events.WipingStorage, () =>
+      SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie),
+    );
+    yield* Hook.on(Events.Reset, () => requestShutdown);
     yield* Hook.on(
       SessionClosed,
       Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
@@ -213,8 +215,8 @@ export const makeWorkerRuntime = ({
       log('worker-runtime: stack built, opening');
       // `StackOpened` resolves once every handler the cascade triggered has run.
       yield* Effect.gen(function* () {
-        yield* Hook.emit(HostEvents.Opening, undefined);
-        yield* Hook.emit(HostEvents.StackOpened, undefined);
+        yield* Hook.emit(Events.Opening, undefined);
+        yield* Hook.emit(Events.StackOpened, undefined);
       }).pipe(Effect.provideService(Hook.Controller, controller));
       log('worker-runtime: stack opened, signalling ready');
       ready.wake(undefined);

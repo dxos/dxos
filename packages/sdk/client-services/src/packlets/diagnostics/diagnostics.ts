@@ -38,8 +38,8 @@ import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 
-import { getPlatform } from '../../Platform.ts';
-import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
+import * as PlatformInfo from '../../PlatformInfo.ts';
+import * as Tags from '../../Tags.ts';
 import { DXOS_VERSION } from '../../version.ts';
 import { type DataSpace } from '../spaces/index.ts';
 
@@ -93,7 +93,7 @@ export type SpaceStats = {
  */
 export const createDiagnosticsFromRouter = (
   router: RpcRouter.Service,
-  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
+  stack: EffectContext.Context<Tags.IdentityManagerService | Tags.DataSpaceManagerService | SwarmNetworkManagerService>,
   config: Config,
 ): Promise<Diagnostics['services']> =>
   EffectEx.runPromise(
@@ -112,12 +112,12 @@ export const createDiagnosticsFromRouter = (
  */
 export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
-  stack: EffectContext.Context<IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService>,
+  stack: EffectContext.Context<Tags.IdentityManagerService | Tags.DataSpaceManagerService | SwarmNetworkManagerService>,
   config: Config,
 ): Promise<Diagnostics['services']> => {
   const diagnostics: Diagnostics['services'] = {
     created: new Date().toISOString(),
-    platform: getPlatform(),
+    platform: PlatformInfo.getPlatform(),
     client: {
       version: DXOS_VERSION,
       storage: {
@@ -139,7 +139,7 @@ export const createDiagnostics = async (
       diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
     })(),
     (async () => {
-      const identity = EffectContext.get(stack, IdentityManagerService).identity;
+      const identity = EffectContext.get(stack, Tags.IdentityManagerService).identity;
       if (identity) {
         // Identity.
         diagnostics.identity = buf.create(IdentitySchema, {
@@ -159,7 +159,7 @@ export const createDiagnostics = async (
         // TODO(dmaretskyi): Add metrics for halo space.
 
         // Spaces.
-        const dataSpaceManager = EffectContext.get(stack, DataSpaceManagerService);
+        const dataSpaceManager = EffectContext.get(stack, Tags.DataSpaceManagerService);
         diagnostics.spaces = await Promise.all(
           Array.from(dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)),
         );

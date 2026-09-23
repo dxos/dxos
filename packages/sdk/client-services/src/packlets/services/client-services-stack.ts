@@ -14,7 +14,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { NetworkingEnabled } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 import { type ServiceContextRuntimeProps } from './service-stack.ts';
 
@@ -76,7 +76,10 @@ export const layerClientServices = (
  * Allows outbound network activity to begin; for embedders that build the stack with
  * `autoConnect: false`.
  */
-export const enableNetworking: Effect.Effect<void, never, Hook.Controller> = Hook.emit(NetworkingEnabled, undefined);
+export const enableNetworking: Effect.Effect<void, never, Hook.Controller> = Hook.emit(
+  Events.NetworkingEnabled,
+  undefined,
+);
 
 /**
  * The stack itself. Config decides which specs the graph has, so the layer is unwrapped from an

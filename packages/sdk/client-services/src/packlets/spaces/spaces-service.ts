@@ -61,8 +61,8 @@ import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
-import { StackReadinessService } from '../../Readiness.ts';
-import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
+import * as Readiness from '../../Readiness.ts';
+import * as Tags from '../../Tags.ts';
 import { type IdentityManager } from '../identity/index.ts';
 import {
   SpaceArchiveWriter,
@@ -603,15 +603,19 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 export const SpacesServiceLayer: Layer.Layer<
   SpacesService.Tag,
   never,
-  IdentityManagerService | SpaceManagerService | EchoHostService | DataSpaceManagerService | StackReadinessService
+  | Tags.IdentityManagerService
+  | SpaceManagerService
+  | EchoHostService
+  | Tags.DataSpaceManagerService
+  | Readiness.StackReadinessService
 > = Layer.effect(
   SpacesService.Tag,
   Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
+    const identityManager = yield* Tags.IdentityManagerService;
     const spaceManager = yield* SpaceManagerService;
     const echoHost = yield* EchoHostService;
-    const dataSpaceManager = yield* DataSpaceManagerService;
-    const readiness = yield* StackReadinessService;
+    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const readiness = yield* Readiness.StackReadinessService;
     return new SpacesServiceImpl(identityManager, spaceManager, echoHost, () =>
       readiness.initialized.wait().then(() => dataSpaceManager),
     );

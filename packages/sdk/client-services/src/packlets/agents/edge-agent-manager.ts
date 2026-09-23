@@ -23,9 +23,9 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
-import { DataSpacesAvailable } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { DataSpaceManagerService, IdentityProviderService } from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { type IdentityProvider } from '../identity/index.ts';
 import { type DataSpaceManager } from '../spaces/index.ts';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
@@ -218,12 +218,16 @@ export type EdgeAgentManagerLayerOptions = {
  */
 export const EdgeAgentManagerLayer = (
   options: EdgeAgentManagerLayerOptions = {},
-): Layer.Layer<EdgeAgentManagerService, never, Hook.Controller | DataSpaceManagerService | IdentityProviderService> =>
+): Layer.Layer<
+  EdgeAgentManagerService,
+  never,
+  Hook.Controller | Tags.DataSpaceManagerService | Tags.IdentityProviderService
+> =>
   Layer.effect(
     EdgeAgentManagerService,
     Effect.gen(function* () {
-      const dataSpaceManager = yield* DataSpaceManagerService;
-      const identityProvider = yield* IdentityProviderService;
+      const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+      const identityProvider = yield* Tags.IdentityProviderService;
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
       const edgeAgentManager = new EdgeAgentManager(
         options.edgeFeatures,
@@ -235,7 +239,7 @@ export const EdgeAgentManagerLayer = (
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => edgeAgentManager.close()));
       yield* Hook.on(
-        DataSpacesAvailable,
+        Events.DataSpacesAvailable,
         Effect.fn('EdgeAgentManager.onDataSpacesAvailable')(function* () {
           yield* Effect.promise(() => edgeAgentManager.open(ctx));
         }),

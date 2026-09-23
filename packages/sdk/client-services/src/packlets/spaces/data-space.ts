@@ -43,7 +43,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../../Auth.ts';
+import * as Auth from '../../Auth.ts';
 import { EdgeFeedReplicator } from '../../Replication.ts';
 import { type IMetadataStore } from '../metadata/index.ts';
 import { createMappedFeedWriter } from '../pipeline/index.ts';
@@ -131,7 +131,7 @@ export class DataSpace {
    */
   public error: Error | undefined = undefined;
 
-  public readonly authVerifier: TrustedKeySetAuthVerifier;
+  public readonly authVerifier: Auth.TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
 
   public readonly postOpen = new CallbackCollection<AsyncCallback<void>>();
@@ -158,7 +158,7 @@ export class DataSpace {
       activeEdgePollingInterval: params.activeEdgeNotarizationPollingInterval,
     });
 
-    this.authVerifier = new TrustedKeySetAuthVerifier({
+    this.authVerifier = new Auth.TrustedKeySetAuthVerifier({
       trustedKeysProvider: () =>
         new ComplexSet(
           PublicKey.hash,

@@ -14,9 +14,9 @@ import { log } from '@dxos/log';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { DataSpacesAvailable } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { DataSpaceManagerService } from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { DataSpaceManager } from '../spaces/index.ts';
 
 /**
@@ -130,17 +130,17 @@ export const createCrossDeviceSpaceSynchronizer = (dataSpaceManager: DataSpaceMa
 export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
   CrossDeviceSpaceSynchronizerService,
   never,
-  Hook.Controller | DataSpaceManagerService
+  Hook.Controller | Tags.DataSpaceManagerService
 > = Layer.effect(
   CrossDeviceSpaceSynchronizerService,
   Effect.gen(function* () {
-    const dataSpaceManager = yield* DataSpaceManagerService;
+    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
     const synchronizer = createCrossDeviceSpaceSynchronizer(dataSpaceManager);
 
     const ctx = yield* EffectEx.contextFromScope();
     yield* Effect.addFinalizer(() => Effect.promise(async () => synchronizer.close?.()));
     yield* Hook.on(
-      DataSpacesAvailable,
+      Events.DataSpacesAvailable,
       Effect.fn('CrossDeviceSpaceSynchronizer.onDataSpacesAvailable')(function* ({ identity }) {
         synchronizer.setIdentity(identity);
         yield* Effect.promise(async () => synchronizer.open?.(ctx));

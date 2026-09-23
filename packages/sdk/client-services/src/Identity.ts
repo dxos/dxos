@@ -36,7 +36,7 @@ import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from './Auth.ts';
+import * as Auth from './Auth.ts';
 import { type Space } from './packlets/space/index.ts';
 import { EdgeFeedReplicator } from './Replication.ts';
 
@@ -64,7 +64,7 @@ export class Identity {
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
   private _haloSpaceRootUrl?: string = undefined;
 
-  public readonly authVerifier: TrustedKeySetAuthVerifier;
+  public readonly authVerifier: Auth.TrustedKeySetAuthVerifier;
 
   public readonly did: IdentityDid;
   public readonly identityKey: PublicKey;
@@ -93,7 +93,7 @@ export class Identity {
       onUpdate: () => this.stateUpdate.emit(),
     });
 
-    this.authVerifier = new TrustedKeySetAuthVerifier({
+    this.authVerifier = new Auth.TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, this.authorizedDeviceKeys.keys()),
       update: this.stateUpdate,
       authTimeout: AUTH_TIMEOUT,

@@ -21,7 +21,7 @@ import {
 import { InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { InvitationsManagerService } from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { type InvitationsManager } from './invitations-manager.ts';
 
 /**
@@ -182,5 +182,5 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
 
 export const InvitationsServiceLayer = Layer.effect(
   InvitationsService.Tag,
-  Effect.map(InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
+  Effect.map(Tags.InvitationsManagerService, (invitationsManager) => new InvitationsServiceImpl(invitationsManager)),
 );

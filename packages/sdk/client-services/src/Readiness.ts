@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import { Trigger } from '@dxos/async';
 import { Hook } from '@dxos/effect';
 
-import { DataSpacesAvailable } from './Events.ts';
+import * as Events from './Events.ts';
 
 /**
  * Readiness gate for the identity-bound services: `initialized` wakes once the data spaces are
@@ -30,7 +30,7 @@ export const StackReadinessLayer: Layer.Layer<StackReadinessService, never, Hook
   Effect.gen(function* () {
     const initialized = new Trigger();
     yield* Hook.on(
-      DataSpacesAvailable,
+      Events.DataSpacesAvailable,
       Effect.fn('StackReadiness.onDataSpacesAvailable')(function* () {
         initialized.wake();
       }),

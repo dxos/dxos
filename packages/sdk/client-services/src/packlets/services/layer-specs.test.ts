@@ -27,15 +27,15 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
-import { Opening, StackOpened } from '../../Events.ts';
-import { IdentityManagerService } from '../../Tags.ts';
+import * as Events from '../../Events.ts';
+import * as Tags from '../../Tags.ts';
 import { TransportFactoryService } from './client-platform.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 
 describe('clientServiceSpecs', () => {
   test('resolves a component the graph builds from the ambient SQL runtime', async () => {
     const { resolve } = await makeHarness();
-    expect(await resolve(IdentityManagerService)).toBeDefined();
+    expect(await resolve(Tags.IdentityManagerService)).toBeDefined();
     expect(await resolve(EchoHostService)).toBeDefined();
   });
 
@@ -59,8 +59,8 @@ describe('clientServiceSpecs', () => {
 
     await EffectEx.runPromise(
       Effect.gen(function* () {
-        yield* Hook.emit(Opening, undefined);
-        yield* Hook.emit(StackOpened, undefined);
+        yield* Hook.emit(Events.Opening, undefined);
+        yield* Hook.emit(Events.StackOpened, undefined);
       }).pipe(Effect.provideService(Hook.Controller, controller)),
     );
 

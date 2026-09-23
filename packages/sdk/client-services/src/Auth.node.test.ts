@@ -11,15 +11,15 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier, createAuthProvider } from './Auth.ts';
+import * as Auth from './Auth.ts';
 
 describe('identity/authenticator', () => {
   test('verifies credentials', async () => {
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);
-    const authProvider = createAuthProvider(signer);
-    const authVerifier = new TrustedKeySetAuthVerifier({
+    const authProvider = Auth.createAuthProvider(signer);
+    const authVerifier = new Auth.TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, [deviceKey]),
       update: new Event(),
       authTimeout: 10,

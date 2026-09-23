@@ -25,7 +25,7 @@ import { SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-m
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { IdentityBound, IdentityLoaded, NetworkingEnabled, NetworkReady, StackOpened } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
 import { TransportFactoryService } from './client-platform.ts';
 
@@ -100,7 +100,7 @@ export const NetworkLifecycleLayer = (
       );
 
       yield* Hook.on(
-        IdentityLoaded,
+        Events.IdentityLoaded,
         Effect.fn('NetworkLifecycle.onIdentityLoaded')(function* ({ identity }) {
           yield* Effect.promise(async () => {
             await setNetworkIdentity({ identity });
@@ -111,12 +111,12 @@ export const NetworkLifecycleLayer = (
             log('opening network manager...');
             await networkManager.open();
           });
-          yield* Hook.emit(NetworkReady, undefined);
+          yield* Hook.emit(Events.NetworkReady, undefined);
         }),
       );
 
       yield* Hook.on(
-        IdentityBound,
+        Events.IdentityBound,
         Effect.fn('NetworkLifecycle.onIdentityBound')(function* ({ identity, deviceCredential }) {
           yield* Effect.promise(() => setNetworkIdentity({ identity, deviceCredential }));
         }),
@@ -124,7 +124,7 @@ export const NetworkLifecycleLayer = (
 
       // Only the edge dial is gated: subduction and feed sync resume from the edge reconnect.
       yield* Hook.on(
-        NetworkingEnabled,
+        Events.NetworkingEnabled,
         Effect.fn('NetworkLifecycle.onNetworkingEnabled')(function* () {
           log('starting edge networking');
           edgeConnection?.startNetworking();
@@ -133,9 +133,9 @@ export const NetworkLifecycleLayer = (
 
       if (options.autoConnect) {
         yield* Hook.on(
-          StackOpened,
+          Events.StackOpened,
           Effect.fn('NetworkLifecycle.onStackOpened')(function* () {
-            yield* Hook.emit(NetworkingEnabled, undefined);
+            yield* Hook.emit(Events.NetworkingEnabled, undefined);
           }),
         );
       }

@@ -11,13 +11,7 @@ import { KeyringApiService } from '@dxos/keyring';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import {
-  DataSpaceManagerService,
-  IdentityLifecycleService,
-  IdentityManagerService,
-  InvitationsManagerService,
-  SigningContextProviderService,
-} from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { DeviceInvitationProtocol } from './device-invitation-protocol.ts';
 import { type InvitationProtocol } from './invitation-protocol.ts';
 import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
@@ -29,20 +23,20 @@ import { SpaceInvitationProtocol } from './space-invitation-protocol.ts';
 export const InvitationFactoriesLayer: Layer.Layer<
   never,
   never,
-  | InvitationsManagerService
-  | IdentityManagerService
-  | IdentityLifecycleService
+  | Tags.InvitationsManagerService
+  | Tags.IdentityManagerService
+  | Tags.IdentityLifecycleService
   | KeyringApiService
-  | DataSpaceManagerService
-  | SigningContextProviderService
+  | Tags.DataSpaceManagerService
+  | Tags.SigningContextProviderService
 > = Layer.effectDiscard(
   Effect.gen(function* () {
-    const invitationsManager = yield* InvitationsManagerService;
-    const identityManager = yield* IdentityManagerService;
-    const identityLifecycle = yield* IdentityLifecycleService;
+    const invitationsManager = yield* Tags.InvitationsManagerService;
+    const identityManager = yield* Tags.IdentityManagerService;
+    const identityLifecycle = yield* Tags.IdentityLifecycleService;
     const keyring = yield* KeyringApiService;
-    const dataSpaceManager = yield* DataSpaceManagerService;
-    const signingContextProvider = yield* SigningContextProviderService;
+    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const signingContextProvider = yield* Tags.SigningContextProviderService;
 
     const factories = new Map<Invitation_Kind, (invitation: Partial<Invitation>) => InvitationProtocol>([
       [

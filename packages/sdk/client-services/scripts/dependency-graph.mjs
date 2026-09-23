@@ -5,7 +5,7 @@
 // Prints the intra-package import graph and its strongly connected components,
 // so the structure claimed in docs/DEPENDENCY-GRAPH.md stays checkable.
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

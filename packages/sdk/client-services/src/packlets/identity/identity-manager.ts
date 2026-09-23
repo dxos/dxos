@@ -3,7 +3,6 @@
 //
 import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -56,11 +55,11 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
-import { createAuthProvider } from '../../Auth.ts';
+import * as Auth from '../../Auth.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
-import { IdentityLoaded, StorageReady } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { Identity } from '../../Identity.ts';
-import { IdentityManagerService } from '../../Tags.ts';
+import * as Tags from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
 
@@ -473,7 +472,7 @@ export class IdentityManager {
       swarmIdentity: {
         identityKey,
         peerKey: deviceKey,
-        credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, deviceKey)),
+        credentialProvider: Auth.createAuthProvider(createCredentialSignerWithKey(this._keyring, deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
       },
       gossip,
@@ -602,12 +601,12 @@ export type IdentityManagerLayerOptions = Pick<
 export const IdentityManagerLayer = (
   options: IdentityManagerLayerOptions = {},
 ): Layer.Layer<
-  IdentityManagerService,
+  Tags.IdentityManagerService,
   never,
   Hook.Controller | IMetadataStoreService | KeyringApiService | HypercoreStoreService | SpaceManagerService
 > =>
   Layer.effect(
-    IdentityManagerService,
+    Tags.IdentityManagerService,
     Effect.gen(function* () {
       const metadataStore = yield* IMetadataStoreService;
       const keyring = yield* KeyringApiService;
@@ -626,10 +625,10 @@ export const IdentityManagerLayer = (
       const ctx = yield* EffectEx.contextFromScope();
       yield* Effect.addFinalizer(() => Effect.promise(() => identityManager.close(Context.default())));
       yield* Hook.on(
-        StorageReady,
+        Events.StorageReady,
         Effect.fn('IdentityManager.onStorageReady')(function* () {
           yield* Effect.promise(() => identityManager.open(ctx));
-          yield* Hook.emit(IdentityLoaded, { identity: identityManager.identity });
+          yield* Hook.emit(Events.IdentityLoaded, { identity: identityManager.identity });
         }),
       );
       return identityManager;

@@ -45,16 +45,11 @@ import { StorageType } from '@dxos/random-access-storage';
 import { RpcRouter } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 
-import { Closing, Opening, StackOpened, WipingStorage } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { StackReadinessService } from '../../Readiness.ts';
-import { SqliteStorage, wipeSqliteStorage } from '../../SqliteStorage.ts';
-import {
-  DataSpaceManagerService,
-  IdentityLifecycleService,
-  IdentityManagerService,
-  InvitationsManagerService,
-} from '../../Tags.ts';
+import * as Readiness from '../../Readiness.ts';
+import * as SqliteStorage from '../../SqliteStorage.ts';
+import * as Tags from '../../Tags.ts';
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
@@ -75,8 +70,8 @@ import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContex
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {
-  yield* Hook.emit(Opening, undefined);
-  yield* Hook.emit(StackOpened, undefined);
+  yield* Hook.emit(Events.Opening, undefined);
+  yield* Hook.emit(Events.StackOpened, undefined);
 });
 
 /**
@@ -95,9 +90,9 @@ export type ServiceContextOptions = {
  */
 const EXPOSED_TAGS = [
   RpcRouter.RpcRouter,
-  StackReadinessService,
-  IdentityManagerService,
-  IdentityLifecycleService,
+  Readiness.StackReadinessService,
+  Tags.IdentityManagerService,
+  Tags.IdentityLifecycleService,
   SpaceManagerService,
   IMetadataStoreService,
   EdgeIdentityRecoveryManagerService,
@@ -105,10 +100,10 @@ const EXPOSED_TAGS = [
   HypercoreStoreService,
   EchoHostService,
   InvitationsHandlerService,
-  InvitationsManagerService,
+  Tags.InvitationsManagerService,
   SwarmNetworkManagerService,
   SignalManagerService,
-  DataSpaceManagerService,
+  Tags.DataSpaceManagerService,
   EdgeAgentManagerService,
 ] as const;
 
@@ -136,8 +131,10 @@ export class ServiceContext {
     this.#config = options.config ?? new Config();
     Effect.runSync(
       Effect.gen({ self: this }, function* () {
-        yield* Hook.on(Closing, () => Effect.promise(() => this.#closeStack()));
-        yield* Hook.on(WipingStorage, () => Effect.promise(() => this.#sql.runPromise(wipeSqliteStorage)));
+        yield* Hook.on(Events.Closing, () => Effect.promise(() => this.#closeStack()));
+        yield* Hook.on(Events.WipingStorage, () =>
+          Effect.promise(() => this.#sql.runPromise(SqliteStorage.wipeSqliteStorage)),
+        );
       }).pipe(Effect.provideService(Hook.Controller, this.#controller), Scope.provide(this.#busScope)),
     );
   }
@@ -170,11 +167,11 @@ export class ServiceContext {
   }
 
   get initialized(): Trigger {
-    return this.#get(StackReadinessService).initialized;
+    return this.#get(Readiness.StackReadinessService).initialized;
   }
 
   get identityManager(): IdentityManager {
-    return this.#get(IdentityManagerService);
+    return this.#get(Tags.IdentityManagerService);
   }
 
   get spaceManager(): SpaceManager {
@@ -206,7 +203,7 @@ export class ServiceContext {
   }
 
   get invitationsManager(): InvitationsManager {
-    return this.#get(InvitationsManagerService);
+    return this.#get(Tags.InvitationsManagerService);
   }
 
   get networkManager(): SwarmNetworkManager {
@@ -218,7 +215,7 @@ export class ServiceContext {
   }
 
   get dataSpaceManager(): DataSpaceManager | undefined {
-    return this.#services && EffectContext.getUnsafe(this.#services, DataSpaceManagerService);
+    return this.#services && EffectContext.getUnsafe(this.#services, Tags.DataSpaceManagerService);
   }
 
   get edgeAgentManager(): EdgeAgentManager | undefined {
@@ -314,7 +311,7 @@ export class ServiceContext {
   }
 
   async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
-    return this.#get(IdentityLifecycleService).createIdentity(params, ctx ?? this.#ctx);
+    return this.#get(Tags.IdentityLifecycleService).createIdentity(params, ctx ?? this.#ctx);
   }
 
   // The stack proves nothing about which tags are built, so the lookup is unsafe by construction:
@@ -406,7 +403,7 @@ export class TestPeer {
   private readonly _runtime = ManagedRuntime.make(
     sqliteLayerMemory.pipe(Layer.provideMerge(Reactivity.layer)).pipe(Layer.orDie),
   );
-  private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.contextEffect });
+  private readonly _feedStorage = new SqliteStorage.SqliteStorage({ runtime: this._runtime.contextEffect });
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,

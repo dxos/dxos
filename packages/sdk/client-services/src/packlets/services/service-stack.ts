@@ -18,9 +18,9 @@ import { type TransportFactory } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { NetworkReady, Opening, StorageReady } from '../../Events.ts';
-import { SqliteStorage } from '../../SqliteStorage.ts';
-import { IdentityManagerService, IdentityProviderService } from '../../Tags.ts';
+import * as Events from '../../Events.ts';
+import * as SqliteStorage from '../../SqliteStorage.ts';
+import * as Tags from '../../Tags.ts';
 import { type IdentityManagerProps, identityProviderFromManager } from '../identity/index.ts';
 import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
@@ -78,7 +78,7 @@ export const registerReplicator = <Self>(
               const echoHost = yield* EchoHostService;
               const ctx = yield* EffectEx.contextFromScope();
               yield* Hook.on(
-                NetworkReady,
+                Events.NetworkReady,
                 Effect.fn('EchoHost.addReplicator')(function* () {
                   yield* Effect.promise(() => echoHost.addReplicator(ctx, replicator));
                 }),
@@ -93,9 +93,9 @@ export const registerReplicator = <Self>(
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
  */
 export const identityProviderLayer = Layer.effect(
-  IdentityProviderService,
+  Tags.IdentityProviderService,
   Effect.gen(function* () {
-    const identityManager = yield* IdentityManagerService;
+    const identityManager = yield* Tags.IdentityManagerService;
     return identityProviderFromManager(identityManager);
   }),
 );
@@ -113,7 +113,7 @@ export const storageMigrationLayer = Layer.effect(
       [
         new SqliteMetadataStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
-        new SqliteStorage({ runtime }).migrate,
+        new SqliteStorage.SqliteStorage({ runtime }).migrate,
       ],
       { discard: true },
     );
@@ -131,7 +131,7 @@ export const storageLifecycleLayer = Layer.effectDiscard(
     const migrate = yield* StorageMigrationService;
     const metadataStore = yield* IMetadataStoreService;
     yield* Hook.on(
-      Opening,
+      Events.Opening,
       Effect.fn('Storage.onOpening')(function* () {
         log('running storage migrations...');
         yield* Effect.promise(() => RuntimeProvider.runPromise(runtime)(migrate));
@@ -143,7 +143,7 @@ export const storageLifecycleLayer = Layer.effectDiscard(
         log('running sqlite health check...');
         yield* Effect.promise(() => runSqliteHealthCheck(runtime));
         log('storage ready');
-        yield* Hook.emit(StorageReady, undefined);
+        yield* Hook.emit(Events.StorageReady, undefined);
       }),
     );
   }),
@@ -168,14 +168,14 @@ export const echoHostLayer = (options: { useSubduction?: boolean }) =>
 
       // Points back down the stack, like the feed sync handlers above: the identity manager anchors
       // the HALO space on a root document and needs the open host to do it.
-      const identityManager = yield* IdentityManagerService;
+      const identityManager = yield* Tags.IdentityManagerService;
       yield* Effect.promise(() => identityManager.setEchoHost(echoHost));
     }),
   ).pipe(
     Layer.provideMerge(
       Layer.unwrap(
         Effect.gen(function* () {
-          const identityManager = yield* IdentityManagerService;
+          const identityManager = yield* Tags.IdentityManagerService;
           const spaceManager = yield* SpaceManagerService;
           return EchoHostLayer({
             peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),

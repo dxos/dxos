@@ -14,7 +14,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { wipeSqliteStorage } from '../../SqliteStorage.ts';
+import * as SqliteStorage from '../../SqliteStorage.ts';
 import { type ServiceContext, createServiceContext } from '../testing/index.ts';
 import { IdentityServiceImpl } from './identity-service.ts';
 
@@ -40,7 +40,7 @@ describe('IdentityService.deleteIdentity', () => {
       serviceContext.recoveryManager,
       serviceContext.keyring,
       serviceContext.dataSpaceManager ?? failedInvariant(),
-      () => serviceContext.runSql(wipeSqliteStorage.pipe(Effect.orDie)),
+      () => serviceContext.runSql(SqliteStorage.wipeSqliteStorage.pipe(Effect.orDie)),
       (options) => serviceContext.createIdentity(options),
     );
   });

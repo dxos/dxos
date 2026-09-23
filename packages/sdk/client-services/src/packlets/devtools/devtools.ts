@@ -29,8 +29,8 @@ import {
 import { DevtoolsHost } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { StackReadinessService } from '../../Readiness.ts';
-import { DataSpaceManagerService } from '../../Tags.ts';
+import * as Readiness from '../../Readiness.ts';
+import * as Tags from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpaceManager } from '../spaces/index.ts';
@@ -272,8 +272,8 @@ const devtoolsImplLayer: Layer.Layer<
   | HypercoreStoreService
   | SpaceManagerService
   | IMetadataStoreService
-  | DataSpaceManagerService
-  | StackReadinessService
+  | Tags.DataSpaceManagerService
+  | Readiness.StackReadinessService
   | SignalManagerService
   | SwarmNetworkManagerService
   | SqlClient.SqlClient
@@ -286,8 +286,8 @@ const devtoolsImplLayer: Layer.Layer<
     const hypercoreStore = yield* HypercoreStoreService;
     const spaceManager = yield* SpaceManagerService;
     const metadataStore = yield* IMetadataStoreService;
-    const dataSpaceManager = yield* DataSpaceManagerService;
-    const readiness = yield* StackReadinessService;
+    const dataSpaceManager = yield* Tags.DataSpaceManagerService;
+    const readiness = yield* Readiness.StackReadinessService;
     const signalManager = yield* SignalManagerService;
     const networkManager = yield* SwarmNetworkManagerService;
     const sql = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlExport.SqlExport>();

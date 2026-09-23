@@ -16,7 +16,7 @@ import { EffectEx, Hook } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { Closing, Reset, WipingStorage } from '../../Events.ts';
+import * as Events from '../../Events.ts';
 import { SystemServiceImpl } from './system-service.ts';
 
 describe('SystemService', () => {
@@ -35,9 +35,9 @@ describe('SystemService', () => {
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
     Effect.runSync(
       Effect.gen(function* () {
-        yield* Hook.on(Closing, () => Effect.sync(() => void steps.push('close')));
-        yield* Hook.on(WipingStorage, () => Effect.sync(() => void steps.push('wipe')));
-        yield* Hook.on(Reset, () => Effect.sync(() => void steps.push('reset')));
+        yield* Hook.on(Events.Closing, () => Effect.sync(() => void steps.push('close')));
+        yield* Hook.on(Events.WipingStorage, () => Effect.sync(() => void steps.push('wipe')));
+        yield* Hook.on(Events.Reset, () => Effect.sync(() => void steps.push('reset')));
       }).pipe(Effect.provideService(Hook.Controller, controller), Scope.provide(scope)),
     );
     systemService = new SystemServiceImpl({

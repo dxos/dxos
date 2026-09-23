@@ -21,9 +21,9 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import { Closing, Reset, StackOpened, WipingStorage } from '../../Events.ts';
-import { getPlatform } from '../../Platform.ts';
-import { DataSpaceManagerService, IdentityManagerService } from '../../Tags.ts';
+import * as Events from '../../Events.ts';
+import * as PlatformInfo from '../../PlatformInfo.ts';
+import * as Tags from '../../Tags.ts';
 import { type Diagnostics, createDiagnosticsFromRouter } from '../diagnostics/index.ts';
 
 export type SystemServiceOptions = {
@@ -83,10 +83,10 @@ export class SystemServiceImpl implements SystemService.Handlers {
       // has in flight: component finalizers are not re-entrant against live traffic. That holds only
       // because every embedder shuts down or reloads immediately after `Reset` below — a reset that
       // left the worker serving would need a gate that fails new requests from here on.
-      yield* Hook.emit(Closing, undefined);
-      yield* Hook.emit(WipingStorage, undefined);
+      yield* Hook.emit(Events.Closing, undefined);
+      yield* Hook.emit(Events.WipingStorage, undefined);
       log.info('reset');
-      yield* Hook.emit(Reset, undefined);
+      yield* Hook.emit(Events.Reset, undefined);
     }).pipe(Effect.provideService(Hook.Controller, this.#options.controller));
 
     // Detached from the request fiber: `Closing` above closes the RPC route this very call is
@@ -139,7 +139,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
 
   ['SystemService.getPlatform'](): Effect.Effect<Platform, BaseError> {
     return Effect.tryPromise({
-      try: async () => getPlatform(),
+      try: async () => PlatformInfo.getPlatform(),
       catch: toServiceError,
     });
   }
@@ -179,8 +179,8 @@ export const SystemServiceLayer: Layer.Layer<
   | RpcRouter.RpcRouter
   | ConfigService
   | Hook.Controller
-  | IdentityManagerService
-  | DataSpaceManagerService
+  | Tags.IdentityManagerService
+  | Tags.DataSpaceManagerService
   | SwarmNetworkManagerService
 > = Layer.effect(
   SystemService.Tag,
@@ -189,14 +189,14 @@ export const SystemServiceLayer: Layer.Layer<
     const controller = yield* Hook.Controller;
     const router = yield* RpcRouter.RpcRouter;
     const stack = yield* Effect.context<
-      IdentityManagerService | DataSpaceManagerService | SwarmNetworkManagerService
+      Tags.IdentityManagerService | Tags.DataSpaceManagerService | SwarmNetworkManagerService
     >();
     const service = new SystemServiceImpl({
       config: () => config,
       getDiagnostics: () => createDiagnosticsFromRouter(router, stack, config),
       controller,
     });
-    yield* Hook.on(StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
+    yield* Hook.on(Events.StackOpened, () => Effect.sync(() => service.setStatus(SystemStatus.ACTIVE)));
     yield* Effect.addFinalizer(() => Effect.sync(() => service.setStatus(SystemStatus.INACTIVE)));
     return service;
   }),

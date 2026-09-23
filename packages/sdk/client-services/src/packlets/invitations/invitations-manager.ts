@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -32,8 +31,8 @@ import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/creden
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { StackOpened } from '../../Events.ts';
-import { InvitationsManagerService } from '../../Tags.ts';
+import * as Events from '../../Events.ts';
+import * as Tags from '../../Tags.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
 import type { InvitationProtocol } from './invitation-protocol.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
@@ -403,12 +402,12 @@ export class InvitationsManager {
  * {@link InvitationsManager.setInvitationHandlerFactory} after composition.
  */
 export const InvitationsManagerLayer = (): Layer.Layer<
-  InvitationsManagerService,
+  Tags.InvitationsManagerService,
   never,
   Hook.Controller | InvitationsHandlerService | IMetadataStoreService
 > =>
   Layer.effect(
-    InvitationsManagerService,
+    Tags.InvitationsManagerService,
     Effect.gen(function* () {
       const invitationsHandler = yield* InvitationsHandlerService;
       const metadataStore = yield* IMetadataStoreService;
@@ -416,7 +415,7 @@ export const InvitationsManagerLayer = (): Layer.Layer<
 
       const ctx = yield* EffectEx.contextFromScope();
       yield* Hook.on(
-        StackOpened,
+        Events.StackOpened,
         Effect.fn('InvitationsManager.onStackOpened')(function* () {
           const loaded = yield* Effect.promise(() => invitationsManager.loadPersistentInvitations(ctx));
           log('loaded persistent invitations', { count: loaded.invitations.length });

@@ -17,13 +17,13 @@ import {
 } from '@dxos/protocols/buf/dxos/mesh/teleport/auth_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { type AuthProvider, type AuthVerifier } from '../../Auth.ts';
+import * as Auth from '../../Auth.ts';
 
 type AuthService = BufService<typeof AuthServiceDesc>;
 
 export type AuthExtensionProps = {
-  provider: AuthProvider;
-  verifier: AuthVerifier;
+  provider: Auth.AuthProvider;
+  verifier: Auth.AuthVerifier;
   onAuthSuccess: () => void;
   onAuthFailure: () => void;
 };
