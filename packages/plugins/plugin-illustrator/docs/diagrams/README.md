@@ -26,4 +26,5 @@ moon run plugin-illustrator:render-diagrams
 ```
 
 renders every `.mmd` to `.svg` and prints the Tier-1 report; `-- --scoreboard` prints the Tier-2
-strategy × metric table instead.
+strategy × metric table instead; `-- /abs/path/x.mmd` renders just that file, writing the `.svg`
+beside it. The end-to-end workflow is the `drawing-diagrams` agent skill.
