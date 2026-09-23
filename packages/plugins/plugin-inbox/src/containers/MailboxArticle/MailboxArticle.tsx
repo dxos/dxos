@@ -18,7 +18,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
+import { QueryBuilder, formatTag } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
@@ -384,10 +384,11 @@ export const MailboxArticle = ({
 
         case 'select-tag': {
           const previous = filterTextRef.current;
+          const token = formatTag(action.label);
           // Check if tag already exists.
           const tags = previous.split(/\s+/).filter(Boolean);
-          if (tags.at(-1)?.toLowerCase() !== '#' + action.label.toLowerCase()) {
-            applyFilterText([previous.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ');
+          if (tags.at(-1)?.toLowerCase() !== token.toLowerCase()) {
+            applyFilterText([previous.trim(), token].filter(Boolean).join(' ') + ' ');
           }
           filterEditorRef.current?.focus();
           break;

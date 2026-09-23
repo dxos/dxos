@@ -5,9 +5,12 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AiService } from '@dxos/ai';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -19,63 +22,47 @@ import { Message } from '@dxos/types';
 import { LabelerOperationHandlerSet } from '#operations';
 import { LabelerOperation } from '#types';
 
+import { MessageState, NO_LABEL, URGENCY_SCALE } from '../questions.ts';
+
 /**
- * Canned answers keyed by subject. The TypeSafe provider is Effect's own; what needs pinning here is
- * the other half — that an answer becomes the right tag on the right message, and that a re-run asks
- * about nothing.
+ * Canned answers keyed by subject. The model itself is exercised live in `@dxos/ai`'s
+ * `TypeSafeResolver`; what needs pinning here is the other half — that an answer becomes the right tag
+ * on the right message, and that a re-run asks about nothing.
  */
-// The label key is the tag's URI (labels are not unique), so the fixture learns it when the space
+// The choice key is the tag's URI (labels are not unique), so the fixture learns it when the space
 // is seeded rather than hard-coding a label.
 let billingTagUri = '';
 
-type Canned = { needsReply: number; rating: number; label: string; confidence: number };
-
-const ANSWERS = (): Record<string, Canned> => ({
-  'Can you approve the invoice today?': { needsReply: 0.95, rating: 1.9, label: billingTagUri, confidence: 0.9 },
-  // Below the threshold, so nothing is applied rather than a guess.
-  'July newsletter': { needsReply: 0.05, rating: 0.1, label: billingTagUri, confidence: 0.2 },
+const ANSWERS = (): Record<string, Record<string, DecisionModel.ProviderAnswer>> => ({
+  'Can you approve the invoice today?': {
+    needsReply: { _tag: 'Probability', probability: 0.95 },
+    urgency: { _tag: 'Rate', rating: 1.9, confidence: 0.9, probabilities: urgencyProbabilities(2) },
+    label: { _tag: 'Classify', label: billingTagUri, confidence: 0.9, probabilities: labelProbabilities() },
+  },
+  'July newsletter': {
+    needsReply: { _tag: 'Probability', probability: 0.05 },
+    urgency: { _tag: 'Rate', rating: 0.1, confidence: 0.9, probabilities: urgencyProbabilities(0) },
+    // Below the threshold, so nothing is applied rather than a guess.
+    label: { _tag: 'Classify', label: billingTagUri, confidence: 0.2, probabilities: labelProbabilities() },
+  },
 });
+
+/** All of the weight on one urgency level. */
+const urgencyProbabilities = (level: number) =>
+  Object.fromEntries(URGENCY_SCALE.map((criterion, index) => [criterion, index === level ? 1 : 0]));
+
+/** All of the weight on the billing tag. */
+const labelProbabilities = () => ({ [billingTagUri]: 1, [NO_LABEL]: 0 });
 
 const SUBJECTS = ['Can you approve the invoice today?', 'July newsletter'];
 
-/** All probability mass on one option; `DecisionModel` rejects a distribution that does not sum to 1. */
-const certain = (options: readonly string[], chosen: string) =>
-  Object.fromEntries(options.map((option) => [option, option === chosen ? 1 : 0]));
-
-const decisionModelLayer = Layer.effect(
+const decisionModel = Layer.effect(
   DecisionModel.DecisionModel,
   DecisionModel.make({
-    decide: ({ state, decisions }) =>
+    decide: ({ state }) =>
       Effect.sync(() => {
-        const subject = typeof state === 'object' && state !== null && 'subject' in state ? String(state.subject) : '';
-        const canned = ANSWERS()[subject];
-        const answers: Record<string, DecisionModel.ProviderAnswer> = {};
-        for (const [key, decision] of Object.entries(decisions)) {
-          switch (decision._tag) {
-            case 'Probability':
-              answers[key] = { _tag: 'Probability', probability: canned.needsReply };
-              break;
-            case 'Rate': {
-              const level = decision.criteria[Math.round(canned.rating)];
-              answers[key] = {
-                _tag: 'Rate',
-                rating: canned.rating,
-                probabilities: certain(decision.criteria, level),
-                confidence: 0.9,
-              };
-              break;
-            }
-            case 'Classify':
-              answers[key] = {
-                _tag: 'Classify',
-                label: canned.label,
-                probabilities: certain(Object.keys(decision.criteria), canned.label),
-                confidence: canned.confidence,
-              };
-              break;
-          }
-        }
-        return { answers, usage: { inputTokens: undefined, outputTokens: undefined } };
+        const subject = Schema.decodeUnknownSync(MessageState)(state).subject;
+        return { answers: ANSWERS()[subject] ?? {}, usage: { inputTokens: undefined, outputTokens: undefined } };
       }),
   }),
 );
@@ -83,9 +70,14 @@ const decisionModelLayer = Layer.effect(
 const TestLayer = AssistantTestLayer({
   operationHandlers: LabelerOperationHandlerSet,
   types: [Cursor.Cursor, Feed.Feed, Mailbox.Mailbox, Message.Message, Tag.Tag, TagIndex.TagIndex],
-  // Through the resolver, not `Effect.provide`: the operation runs in its own process, where an
-  // inline provider is invisible.
-  extraServices: decisionModelLayer,
+  // The labeler never generates text; the runtime only needs a language model to resolve.
+  aiService: Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      languageModel: () => ScriptedLanguageModel.scriptedLanguageModelLayer([]),
+      decisionModel: () => decisionModel,
+    }),
+  ),
 });
 
 const seedMailbox = Effect.fnUntraced(function* () {

@@ -7,20 +7,24 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { TypeSafeResolver } from '@dxos/ai/resolvers';
+
 export const Settings = Schema.Struct({
   /**
-   * Calls System One directly at this base URL (e.g. `https://api.typesafe.ai/v1`) instead of
-   * through EDGE — for a self-hosted or regional endpoint that sends CORS headers. Unset routes
-   * through EDGE, which also works without a connected key.
+   * Where System One is called.
+   *
+   * Configurable because the vendor's API sends no `access-control-allow-origin` for any origin, so
+   * a browser cannot call it directly: a deployment points this at whatever proxies for it until
+   * the call is routed server-side.
    */
-  apiUrl: Schema.optional(
+  endpoint: Schema.optional(
     Schema.String.annotate({
-      title: 'API base URL',
-      description: 'System One endpoint override.',
+      title: 'API endpoint',
+      description: 'System One endpoint, or a proxy in front of it. Defaults to the vendor.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 
-export const defaults = (): Settings => ({});
+export const defaults = (): Settings => ({ endpoint: TypeSafeResolver.DEFAULT_ENDPOINT });

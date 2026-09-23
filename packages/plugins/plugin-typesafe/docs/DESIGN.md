@@ -2,45 +2,39 @@
 
 ## Why
 
-Effect ships a decision model (`effect/unstable/ai/DecisionModel`) and a TypeSafe provider for it
-(`@effect/ai-typesafe`): it answers typed decisions about an input instead of generating text. To be
-usable from a Composer operation it needs two things the provider cannot supply — a route the
-browser can reach with a key, and a place in the layer stack.
+TypeSafe System One is a decision model: it answers typed questions about a state instead of
+generating text. Effect ships the API for it (`Decision` / `DecisionModel` in `effect/unstable/ai`),
+and `@dxos/ai` ships the System One provider (`TypeSafeResolver`) behind `AiService.decisionModel`.
+What neither can supply is a key the user owns.
 
 This plugin is that seam and nothing else. It has no surfaces, no schema, and no operations: a
-plugin that wants decisions depends on `DecisionModel`, not on this plugin.
+plugin that wants decisions asks `AiService.decisionModel(...)`, not this plugin.
 
 ## Contributions
 
-| Capability                | What                                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------------------- |
-| `ConnectorSpec.Connector` | Optional `typesafe.ai` connector; the user pastes an API key, stored as an `AccessToken`. |
-| `Capabilities.LayerSpec`  | Space-affinity `DecisionModel`, routed through EDGE.                                      |
+| Capability                        | What                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `ConnectorSpec.Connector`         | `typesafe.ai` connector; the user pastes an API key, stored as an `AccessToken`.  |
+| `AppCapabilities.AiModelResolver` | `TypeSafeResolver`, keyed by that credential, chained into the space's AiService. |
 
 ## Decisions
 
-**EDGE by default, BYOK optional.** Calls go through EDGE's `/ai/generate/typesafe` proxy, which
-holds a platform key and meters usage per account, so TypeSafe works with nothing connected. A key
-the user connects is a space credential like every other provider key: `CredentialsService`
-resolves it and it rides as `X-BYOK`, which EDGE forwards unbilled.
+**A resolver, not its own layer.** Decision models resolve through `AiService` like language
+models do, so a consumer names a model (`ai.typesafe.model.jev.latest`) and the space decides who
+serves it. The resolver contributes at Startup because `AiService` snapshots its resolvers then.
 
-**Effect's provider, EDGE's transport.** `@effect/ai-typesafe` is built on `HttpClient`, so it sits on
-the same stack as the Anthropic and DeepSeek resolvers: `EdgeAiHttpClient` re-targets the request
-onto the proxy and `Header.byokLayer` adds the connected key. Nothing TypeSafe-specific is
-implemented here.
+**BYOK through the connector, not settings.** The key is a space credential like every other
+provider key, so `CredentialsService` resolves it and the connector UI, the vault and the
+disconnect flow all work with no plugin-specific code.
 
-**Resolve the key per call, not at slice materialisation.** Capturing it when the space slice is
-built means a user who connects TypeSafe mid-session keeps being billed on the platform key until
-something restarts the slice, and a user who disconnects keeps authenticating with a captured key.
-Per call is one query against an in-memory credential set, which is not worth optimising away for
-either of those bugs.
+**Resolve the key per call, not when the model is built.** Capturing it once means a user who
+connects TypeSafe mid-session keeps getting failures until something restarts the slice, and a user
+who disconnects keeps succeeding against a captured key. Per call is one query against an in-memory
+credential set, which is not worth optimising away for either of those bugs.
 
-**A direct `apiUrl` needs a key.** It bypasses EDGE, so there is no platform key; the connected key
-is sent as a bearer token and, without one, the vendor's 401 surfaces as an `AiError` the caller can
-report rather than dying inside the layer and taking the slice with it.
-
-**Space affinity.** Credentials are per space, so the model is too. An application-affinity model
-would have to choose a space's key arbitrarily.
+**Missing credential is an `AiError`, not a defect.** A space with no key connected is an ordinary
+state, so the decision fails with an `AuthenticationError` (`MissingKey`) the caller can turn into
+"connect TypeSafe". Dying inside the layer would surface as `ServiceNotAvailable` far from the cause.
 
 ## The browser cannot call the vendor directly
 
@@ -49,10 +43,14 @@ preflight with a 400, so a fetch from Composer fails before it leaves the tab �
 every origin tried, including `null`. This is not a sandbox artefact: the vendor simply does not
 support browser callers.
 
-So the call is routed through EDGE, like the AI providers. The `apiUrl` setting remains for a
-self-hosted or regional endpoint that does send CORS headers. It replaced an `endpoint` setting whose
-default was the vendor URL; the old key is dropped on decode, so persisted settings route through
-EDGE.
+Two consequences:
+
+- **The endpoint is a setting**, defaulting to the vendor, read per call. A deployment points it at
+  whatever proxies for it, and a self-hosted or regional endpoint costs no code either way.
+- **The production fix is a server-side route** (EDGE), like the AI providers already have. Until
+  that exists, a browser deployment needs a proxy that adds the CORS headers — and, when the proxy
+  is on localhost, `access-control-allow-private-network: true` as well, or Chrome's Private
+  Network Access check blocks the request before it is sent.
 
 ## Not in scope
 

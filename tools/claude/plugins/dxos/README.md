@@ -70,6 +70,23 @@ sign-in in your browser.
    **DXOS Project Tracking**, **Connectors**, then select `composer`.
 2. Click **Connect** and complete the passkey sign-in in your browser.
 
+### Claude Code on the web
+
+A cloud session cannot complete the passkey sign-in, so the plugin's own
+`composer` server stays unauthenticated there. Add Composer as a claude.ai
+connector instead:
+
+1. At [claude.ai/customize/connectors](https://claude.ai/customize/connectors),
+   add a custom connector named exactly `Composer` with the URL
+   `https://composer.dxos.network/mcp`, and complete the passkey sign-in.
+2. Install the plugin in each container: have the environment's setup script run
+   the repo's `.config/claude-code-setup.sh` (it calls
+   `.claude/scripts/bootstrap-plugins.sh`).
+3. Start a new session; connectors and plugins are read at session start.
+
+The session-reporting hooks target both `plugin:dxos:composer` and `Composer`;
+whichever server is not connected is skipped, so the connector name must match.
+
 ## Use Composer for project tracking
 
 Skip this whole section if you are staying on `file`.

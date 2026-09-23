@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
+import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
@@ -15,7 +16,14 @@ import { Message } from '@dxos/types';
 import { LabelerOperation } from '#types';
 
 import { LABELER_TAG_SOURCE, LabelerTag, type LabelerTagId } from '../constants.ts';
-import { DEFAULT_MIN_CONFIDENCE, TriageDecisions, labelDecisions, messageState, toVerdict } from '../questions.ts';
+import {
+  DECISION_MODEL,
+  DEFAULT_MIN_CONFIDENCE,
+  TriageQuestions,
+  labelQuestions,
+  messageState,
+  toVerdict,
+} from '../questions.ts';
 
 /** Finds-or-creates one of this plugin's own tags, keyed so a second run reuses it. */
 const findOrCreateLabelerTag = (db: Pick<Database.Database, 'query' | 'add'>, id: LabelerTagId) =>
@@ -100,15 +108,15 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       const verdicts = yield* Effect.forEach(
         pending,
         Effect.fnUntraced(function* (message) {
-          const input = messageState(message);
+          const context = messageState(message);
           // With no user tags there is nothing to choose between, so the label question is not asked.
           const { answers } = yield* tags.length > 0
-            ? DecisionModel.decide(labelDecisions(criteria), { input })
-            : DecisionModel.decide(TriageDecisions, { input });
+            ? DecisionModel.decide(labelQuestions(criteria), { input: context })
+            : DecisionModel.decide(TriageQuestions, { input: context });
 
           const verdict = toVerdict(answers, threshold);
-          log.info('label: verdict', { subject: input.subject, answers, verdict });
-          // The label key IS the tag's URI, so a confident answer resolves without a lookup by label.
+          log.info('label: verdict', { subject: context.subject, answers, verdict });
+          // The choice key IS the tag's URI, so a confident answer resolves without a lookup by label.
           const labelUri = verdict.label && tagUris.includes(verdict.label) ? verdict.label : undefined;
           if (labelUri) {
             Tagging.set(message, labelUri, { index });
@@ -120,11 +128,11 @@ const handler = LabelerOperation.LabelMailbox.pipe(
             Tagging.set(message, urgentUri, { index });
           }
 
-          reportStatus((processed += 1), input.subject);
+          reportStatus((processed += 1), context.subject);
           return { labelled: labelUri !== undefined, needsReply: verdict.needsReply, urgent: verdict.urgent };
         }),
         { concurrency: LabelerOperation.LABEL_MAILBOX_CONCURRENCY },
-      );
+      ).pipe(Effect.provide(AiService.decisionModel(DECISION_MODEL)));
 
       const count = (predicate: (verdict: (typeof verdicts)[number]) => boolean) => verdicts.filter(predicate).length;
       const labelled = count((result) => result.labelled);

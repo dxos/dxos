@@ -8,18 +8,18 @@ tokenizer to salvage `{...}` spans out of prose, and index-drift normalisation
 (`plugin-inbox/src/operations/classify/classify-mailbox.ts`). The categories are also fixed in the
 prompt, so a user's own labels play no part.
 
-A decision model (`effect/unstable/ai/DecisionModel`) removes both problems. The questions are a
-`Decision` definition, so there is nothing to parse and nothing to salvage; and a `classify` takes its
-labels at call time, so the user's own tags are the vocabulary.
+A decision model removes both problems. The questions are Effect `Decision`s, so there is nothing
+to parse and nothing to salvage; and a `classify` takes its options at call time, so the user's own
+tags are the vocabulary. The model is resolved through `AiService.decisionModel`, so the labeler
+names a model and the space decides who serves it.
 
 ## What it asks
 
 One call per message, three questions answered independently:
 
 - `probability` — does this ask the recipient for a reply, a decision, or an action?
-- `classify` — which of the space's user tags fits? Criteria are the tag labels the user wrote, plus
-  `none`: a classification needs two labels, and without an out a one-tag space would file every
-  message under it.
+- `classify` — which of the space's user tags fits, if any? Criteria are the tag labels the user
+  wrote, plus "none of these".
 - `rate` — how soon does this need dealing with, on `Routine / Timely / Urgent`?
 
 The state is the sender, the subject and a snippet — never the full body.
@@ -30,8 +30,12 @@ The state is the sender, the subject and a snippet — never the full body.
 those are owned by sync or by DXOS, and offering them as choices would let the model fight the
 provider. With no user tags the label question is simply not asked, and the other two still run.
 
-**Confidence is the auto-apply gate.** Each answer carries the model's confidence, so the plugin can
-decline: below the threshold nothing is written. This is the property that makes it safe to run over
+**"None of these" is always an option.** A classification needs at least two labels, and without an
+explicit way out a space with one tag would get every message forced into it.
+
+**Confidence is the auto-apply gate.** Each answer carries the model's confidence (or, where a
+provider reports none, the probability of the option it chose), so the plugin can decline: below the
+threshold nothing is written. This is the property that makes it safe to run over
 a whole inbox unattended, and it is what a text model cannot give you.
 
 **Two plugin-owned tags, not free-form ones.** `Needs reply` and `Urgent` are found-or-created under
