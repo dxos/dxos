@@ -68,7 +68,8 @@ export type FrameBudget = {
 
 /**
  * Produces the nodes to attach to `node`, reactively — once anything the atom depends on changes it is
- * re-read on the builder's next flush, and the resulting difference is applied to the graph.
+ * re-read on the builder's next flush, and the resulting difference is applied to the graph. Nothing
+ * subscribes to it, so an input cuts off a change only if something mounts it or it is non-lazy.
  */
 export type Connector<Node extends NodeLike, Arg extends NodeArgLike> = (
   node: Atom.Atom<Option.Option<Node>>,
@@ -131,7 +132,7 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    *
    * Deliberately the store's own mechanism rather than `Atom.batch`: an atom batch defers
    * invalidation to a rebuild pass that runs only when the outermost batch closes, and a flush
-   * re-enters the registry as connectors resubscribe, which leaves nodes gathered as stale and
+   * re-enters the registry as connectors are read, which leaves nodes gathered as stale and
    * then discarded — their dependents keep a stale value and are never notified.
    */
   batch?(fn: () => void): void;
@@ -247,13 +248,12 @@ export class GraphBuilder<
   }
 
   /**
-   * Expansion cancellers, keyed by the node they belong to and then by relation key. Nested
-   * rather than flat: removal cancels a node's expansions, and a flat map makes that a scan of
-   * every expansion in the graph per removed node.
+   * Expanded connector keys, by the node they belong to. Nested rather than flat: removal untracks a
+   * node's expansions, and a flat set makes that a scan of every expansion in the graph per removed node.
    */
-  readonly _subscriptions = new Map<string, Map<string, CleanupFn>>();
-  /** Expanded connector keys; a dirty one is read only when flushed. */
-  readonly _tracker: ConnectorTracker<{ extensionId: string; node: Arg }[]>;
+  readonly _expansions = new Map<string, Set<string>>();
+  /** The expanded connectors; a dirty one is read only when flushed. */
+  readonly _tracker: ConnectorTracker<ConnectorEntry<Arg>[]>;
   /** Last-flushed node IDs per connector key, used for edge removal on update. */
   readonly _connectorPrevious = new Map<string, string[]>();
   /** All inline-descendant IDs per connector key, used to remove stale inline nodes on update. */
@@ -296,8 +296,7 @@ export class GraphBuilder<
     this._unchanged = unchanged ?? (() => false);
     this._tracker = new ConnectorTracker({
       registry: this._registry,
-      connector: (key) => this._connectors(key),
-      flushed: (key) => this._connectorPrevious.has(key),
+      read: (get, key) => this._readConnectors(get, key),
       onDirty: (key) => this._scheduleDirtyFlush(this._connectorPrevious.has(key)),
     });
     this._store = store(
@@ -411,29 +410,24 @@ export class GraphBuilder<
         if (budget && !budget.hasTime()) {
           break;
         }
-        const start = budget ? performance.now() : 0;
-        try {
-          const update = this._pull(key);
+        spend(budget, () => {
+          // A read that throws skips the key: diffing an empty output would remove its nodes.
+          const update = contain({ key }, () => this._pull(key));
           if (update) {
             updates.push(update);
           }
-        } catch (err) {
-          log.catch(err, { key });
-        }
-        budget?.spend(performance.now() - start);
+        });
       }
 
       const apply = () =>
-        updates.forEach(({ key, nodes, previous }) => this._applyConnectorUpdate(key, nodes, previous));
-      const applyStart = budget ? performance.now() : 0;
+        updates.forEach(({ key, nodes, previous }) =>
+          contain({ key }, () => this._applyConnectorUpdate(key, nodes, previous)),
+        );
       // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
-      this._store.batch ? this._store.batch(apply) : apply();
-      budget?.spend(performance.now() - applyStart);
+      spend(budget, () => (this._store.batch ? this._store.batch(apply) : apply()));
     }
 
-    const relinkStart = budget ? performance.now() : 0;
-    this._tracker.relink();
-    budget?.spend(performance.now() - relinkStart);
+    spend(budget, () => this._tracker.relink());
   }
 
   /** Reads a connector and returns its output if it differs from what was last flushed. */
@@ -443,14 +437,12 @@ export class GraphBuilder<
     const extensions = this.getExtensions();
     // Produced nodes (and their inline descendants) pass through the decorator, which is where a
     // layer attaches whatever its extensions' metadata implies — URL segments, for instance.
-    const nodes = entries.flatMap((entry) => {
-      try {
-        return [this._decorateNode(this._qualify(id, entry.node), extensions[entry.extensionId])];
-      } catch (err) {
-        log.catch(err, { extension: entry.extensionId, key });
-        return [];
-      }
-    });
+    const nodes = entries.flatMap(
+      (entry) =>
+        contain({ key, extension: entry.extensionId }, () => [
+          this._decorateNode(this._qualify(id, entry.node), extensions[entry.extensionId]),
+        ]) ?? [],
+    );
 
     const previous = this._connectorPrevious.get(key) ?? [];
     const ids = nodes.map((node) => node.id);
@@ -528,43 +520,34 @@ export class GraphBuilder<
     return Promise.resolve();
   }
 
-  /** A connector-produced node, tagged with the id of the extension that produced it. */
-  readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Arg }[]>>((key) => {
-    return Atom.make((get) => {
-      this._tracker.observe(get, key);
-      const { id, relation } = relationFromConnectorKey(key);
-      const node = this._store.node(id);
-      if (Option.isNone(get(node))) {
-        return [];
-      }
+  /** Every node the connectors declared for `key`'s relation produce, tagged with its extension. */
+  _readConnectors(get: Atom.AtomContext, key: string): ConnectorEntry<Arg>[] {
+    const { id, relation } = relationFromConnectorKey(key);
+    const node = this._store.node(id);
+    if (Option.isNone(get(node))) {
+      return [];
+    }
 
-      // Tracked, so registering an extension after the relation was expanded re-runs the connectors.
-      const extensions = Function.pipe(
-        get(this._extensions),
-        Record.values,
-        Array.sortBy(Position.compare),
-        Array.filter(
-          (extension): extension is Extension<Node, Arg, Rel, Meta> & { connector: Connector<Node, Arg> } =>
-            this._relationKey(extension.relation) === relation && extension.connector != null,
-        ),
-      );
+    // Tracked, so registering an extension after the relation was expanded re-runs the connectors.
+    const extensions = Function.pipe(
+      get(this._extensions),
+      Record.values,
+      Array.sortBy(Position.compare),
+      Array.filter(
+        (extension): extension is Extension<Node, Arg, Rel, Meta> & { connector: Connector<Node, Arg> } =>
+          this._relationKey(extension.relation) === relation && extension.connector != null,
+      ),
+    );
 
-      const entries: { extensionId: string; node: Arg }[] = [];
-      for (const extension of extensions) {
-        // Uncaught, this atom is never built and never invalidated again; caught, only the throwing
-        // extension is lost, until another input re-runs the key.
-        try {
-          for (const arg of get(extension.connector(node))) {
-            entries.push({ extensionId: extension.id, node: arg });
-          }
-        } catch (err) {
-          log.catch(err, { extension: extension.id, key });
-        }
-      }
-
-      return entries;
-    }).pipe(withLabel(`graph-builder:connectors:${key}`));
-  });
+    // Caught per extension: a read that throws leaves the tracked atom unbuilt, and it is never
+    // invalidated again. The throwing extension contributes nothing until another input re-runs the key.
+    return extensions.flatMap(
+      (extension) =>
+        contain({ key, extension: extension.id }, () =>
+          get(extension.connector(node)).map((arg) => ({ extensionId: extension.id, node: arg })),
+        ) ?? [],
+    );
+  }
 
   /**
    * A relation of a node was read for the first time; track every connector declared for it.
@@ -578,11 +561,9 @@ export class GraphBuilder<
   _expandRelation(id: string, relation: string): void {
     const key = primaryKey(id, relation);
     this._tracker.track(key);
-    const cancel = () => this._tracker.untrack(key);
-
-    const forNode = this._subscriptions.get(id) ?? new Map<string, CleanupFn>();
-    forNode.set(key, cancel);
-    this._subscriptions.set(id, forNode);
+    const forNode = this._expansions.get(id) ?? new Set<string>();
+    forNode.add(key);
+    this._expansions.set(id, forNode);
   }
 
   /**
@@ -590,13 +571,12 @@ export class GraphBuilder<
    * read expands it again. Override to unwind whatever expansion bookkeeping the layer keeps.
    */
   _onReleaseRelation({ id, relation }: { id: string; relation: string }): void {
-    const forNode = this._subscriptions.get(id);
-    const cancel = forNode?.get(primaryKey(id, relation));
-    if (cancel) {
-      cancel();
-      forNode!.delete(primaryKey(id, relation));
-      if (forNode!.size === 0) {
-        this._subscriptions.delete(id);
+    const key = primaryKey(id, relation);
+    const forNode = this._expansions.get(id);
+    if (forNode?.delete(key)) {
+      this._tracker.untrack(key);
+      if (forNode.size === 0) {
+        this._expansions.delete(id);
       }
     }
   }
@@ -607,11 +587,8 @@ export class GraphBuilder<
 
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
-      const forNode = this._subscriptions.get(id);
-      if (forNode) {
-        this._subscriptions.delete(id);
-        forNode.forEach((cleanup) => cleanup());
-      }
+      this._expansions.get(id)?.forEach((key) => this._tracker.untrack(key));
+      this._expansions.delete(id);
     }
   }
 }
@@ -785,14 +762,7 @@ export const release = (builder: Any, ids: readonly string[]): void => {
     }
   }
 
-  // A connector expanded but never flushed has no diff state yet, and left dirty the flush would read
-  // it and re-materialize the released source's relation.
-  for (const key of [...builder._tracker.dirty]) {
-    if (released.has(relationFromConnectorKey(key).id)) {
-      builder._onReleaseRelation(relationFromConnectorKey(key));
-    }
-  }
-
+  // Untracks the released nodes' own expansions, flushed or not.
   builder._onRemoveNodes(ids);
   builder._store.release(ids);
   builder._tracker.relink();
@@ -822,8 +792,7 @@ export const setRetention = <B extends Any>(
  * Cancel every expansion the builder holds.
  */
 export const destroy = (builder: Any): void => {
-  builder._subscriptions.forEach((forNode) => forNode.forEach((unsubscribe) => unsubscribe()));
-  builder._subscriptions.clear();
+  builder._expansions.clear();
   builder._tracker.dispose();
   builder._store.dispose?.();
 };
@@ -916,6 +885,29 @@ type ArgOf<B> = B extends GraphBuilder<any, infer Arg, any, any, any> ? Arg : ne
 type RelationOf<B> = B extends GraphBuilder<any, any, infer Rel, any, any> ? Rel : never;
 type MetaOf<B> = B extends GraphBuilder<any, any, any, infer Meta, any> ? Meta : never;
 type ExtensionOf<B> = Extension<NodeOf<B>, ArgOf<B>, RelationOf<B>, MetaOf<B>>;
+
+/** A node a connector produced, with the extension that produced it. */
+type ConnectorEntry<Arg> = { extensionId: string; node: Arg };
+
+/** Runs `fn`, logging a throw rather than letting one connector abort the rest of a flush. */
+const contain = <T>(context: Record<string, string>, fn: () => T): T | undefined => {
+  try {
+    return fn();
+  } catch (err) {
+    log.catch(err, context);
+    return undefined;
+  }
+};
+
+/** Runs `fn`, charging its time to the budget if there is one. */
+const spend = (budget: FrameBudget | undefined, fn: () => void): void => {
+  const start = performance.now();
+  try {
+    fn();
+  } finally {
+    budget?.spend(performance.now() - start);
+  }
+};
 
 const relationFromConnectorKey = (key: string): { id: string; relation: string } => {
   const [id, relation] = primaryParts(key);

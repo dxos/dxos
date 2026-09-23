@@ -12,10 +12,8 @@ const ANCHORS = 64;
 
 export type ConnectorTrackerOptions<A> = {
   registry: Registry.AtomRegistry;
-  /** The atom tracked under `key`; its read must call {@link ConnectorTracker.observe}. */
-  connector: (key: string) => Atom.Atom<A>;
-  /** Whether `key`'s output has been flushed before. */
-  flushed: (key: string) => boolean;
+  /** Computes the connector tracked under `key`. */
+  read: (get: Atom.AtomContext, key: string) => A;
   /** Called when a tracked key goes from clean to dirty. */
   onDirty: (key: string) => void;
 };
@@ -23,9 +21,12 @@ export type ConnectorTrackerOptions<A> = {
 type Holder<A> = { current?: ConnectorTracker<A> };
 
 /**
- * Tracks connector atoms without subscribing, so an invalidation only marks the key dirty and the atom
- * recomputes on {@link read}. `keepAlive` anchors keep clean atoms registered; an anchor holding a dirty
- * flushed key waits, since re-reading it then would drop that key's inputs.
+ * Keeps an atom per tracked key without subscribing to it, so an invalidation only marks the key dirty
+ * and the atom recomputes when {@link read}.
+ *
+ * The registry drops an atom nothing reads, so `keepAlive` anchors read every tracked atom that reading
+ * would not recompute. A stale atom is left out until it is read; without an idle TTL, the registry may
+ * reclaim its inputs in the meantime, and reading rebuilds them.
  */
 export class ConnectorTracker<A> {
   // Pinned for good, so they capture only a holder that `dispose` empties; a mounted anchor would make
@@ -40,15 +41,22 @@ export class ConnectorTracker<A> {
 
   readonly #options: ConnectorTrackerOptions<A>;
   readonly #holder: Holder<A> = { current: this };
-  readonly #anchors: Atom.Atom<void>[];
+  readonly #anchors = new Map<number, Atom.Atom<void>>();
   readonly #live: Set<string>[] = Array.from({ length: ANCHORS }, () => new Set());
   readonly #dirty = new Set<string>();
-  /** Anchors whose keys changed since they last read them. */
+  /** Anchors whose keys were read or untracked since they last read them. */
   readonly #stale = new Set<number>();
+
+  readonly #connector = Atom.family((key: string) =>
+    Atom.make((get) => {
+      // Runs when an input invalidates the atom, before anything recomputes it.
+      get.addFinalizer(() => this.#invalidated(key));
+      return this.#options.read(get, key);
+    }),
+  );
 
   constructor(options: ConnectorTrackerOptions<A>) {
     this.#options = options;
-    this.#anchors = Array.from({ length: ANCHORS }, (_, index) => ConnectorTracker.#anchor(this.#holder, index));
   }
 
   /** Keys invalidated since they were last read. */
@@ -58,6 +66,9 @@ export class ConnectorTracker<A> {
 
   /** Starts tracking `key`, dirty until its first read. */
   track(key: string): void {
+    if (!this.#holder.current) {
+      return;
+    }
     this.#live[anchorOf(key)].add(key);
     this.#invalidated(key);
   }
@@ -68,51 +79,35 @@ export class ConnectorTracker<A> {
     this.#stale.add(anchorOf(key));
   }
 
-  /** Call from the tracked atom's read: its finalizer runs on invalidation, before any recompute. */
-  observe(get: Atom.AtomContext, key: string): void {
-    get.addFinalizer(() => this.#invalidated(key));
-  }
-
   /** Recomputes `key`'s atom if it is stale, and marks the key clean. */
   read(key: string): A {
     this.#dirty.delete(key);
     this.#stale.add(anchorOf(key));
-    return this.#options.registry.get(this.#options.connector(key));
+    return this.#options.registry.get(this.#connector(key));
   }
 
-  /** Re-reads the anchors of keys read or untracked since the last call, once none holds a dirty flushed key. */
+  /** Re-reads the anchors of keys read or untracked since the last call. */
   relink(): void {
-    if (this.#stale.size === 0) {
-      return;
-    }
-    const blocked = new Set<number>();
-    for (const key of this.#dirty) {
-      if (this.#options.flushed(key)) {
-        blocked.add(anchorOf(key));
-      }
-    }
     for (const index of this.#stale) {
-      if (blocked.has(index)) {
-        continue;
-      }
-      this.#stale.delete(index);
+      const anchor = this.#anchors.get(index) ?? ConnectorTracker.#anchor(this.#holder, index);
+      this.#anchors.set(index, anchor);
       try {
-        // Refreshed even when valid: an atom batch can rebuild an anchor while one of its keys is dirty.
-        this.#options.registry.refresh(this.#anchors[index]);
-        this.#options.registry.get(this.#anchors[index]);
+        // Refreshed even when valid: a key joining or leaving it does not invalidate it.
+        this.#options.registry.refresh(anchor);
+        this.#options.registry.get(anchor);
       } catch (err) {
         log.catch(err);
       }
     }
+    this.#stale.clear();
   }
 
-  /** Untracks every key and lets the registry reclaim the connector atoms. */
+  /** Untracks every key, lets the registry reclaim their atoms, and tracks nothing more. */
   dispose(): void {
-    this.#live.forEach((keys, index) => {
-      keys.clear();
-      this.#stale.add(index);
-    });
+    this.#live.forEach((keys) => keys.clear());
     this.#dirty.clear();
+    this.#stale.clear();
+    this.#anchors.forEach((_, index) => this.#stale.add(index));
     this.relink();
     this.#holder.current = undefined;
   }
@@ -126,9 +121,11 @@ export class ConnectorTracker<A> {
   }
 
   #readAnchor(get: Atom.AtomContext, index: number): void {
+    const nodes = this.#options.registry.getNodes();
     for (const key of this.#live[index]) {
-      if (!this.#dirty.has(key)) {
-        get(this.#options.connector(key));
+      const atom = this.#connector(key);
+      if (nodes.get(atom)?.currentState() === 'valid') {
+        get(atom);
       }
     }
   }

@@ -34,12 +34,13 @@ const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
 
 const nextTask = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const connector =
-  (
-    nodes: GraphBuilder.ModelNodeArg[] | ((get: Atom.AtomContext) => GraphBuilder.ModelNodeArg[]),
-  ): GraphBuilder.Connector<GraphBuilder.ModelNode, GraphBuilder.ModelNodeArg> =>
-  () =>
-    Atom.make((get) => (typeof nodes === 'function' ? nodes(get) : nodes));
+const connector = (
+  nodes: GraphBuilder.ModelNodeArg[] | ((get: Atom.AtomContext) => GraphBuilder.ModelNodeArg[]),
+): GraphBuilder.Connector<GraphBuilder.ModelNode, GraphBuilder.ModelNodeArg> =>
+  // One atom per node, as `createExtensionRaw` does, so a connector re-run is not a rebuilt atom.
+  Atom.family((_node: Atom.Atom<Option.Option<GraphBuilder.ModelNode>>) =>
+    Atom.make((get) => (typeof nodes === 'function' ? nodes(get) : nodes)),
+  );
 
 describe('GraphBuilder', () => {
   test('a connector materializes nodes and edges on expansion', async () => {
@@ -239,14 +240,20 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a10']);
   });
 
-  test('an atom batch write reads the connector once', async () => {
+  test.each([
+    ['within the budget', true],
+    ['past the budget', false],
+  ])('an atom batch write reads the connector once and keeps its inputs, %s', async (_, hasTime) => {
     const { registry, builder, children } = setup();
     const state = Atom.make(0).pipe(Atom.keepAlive);
     let runs = 0;
+    let inputRuns = 0;
+    const input = Atom.make(() => ++inputRuns);
     GraphBuilder.addExtension(builder, {
       id: 'children',
       connector: connector((get) => {
         runs++;
+        get(input);
         return [{ id: `a${get(state)}` }];
       }),
     });
@@ -255,14 +262,83 @@ describe('GraphBuilder', () => {
     await GraphBuilder.flush(builder);
     const before = runs;
 
-    // A batch rebuilds the anchors while the connector is still dirty.
+    // A batch rebuilds the connector and its anchor at once; past the budget nothing reads the connector
+    // before the registry's removal tasks run.
+    builder._frameBudget = () => ({ hasTime: () => hasTime, spend: () => {} });
+    builder._schedule = (callback) => nextTask(20).then(callback);
     Atom.batch(() => registry.set(state, 1));
-    await GraphBuilder.flush(builder);
-    await nextTask();
     await GraphBuilder.flush(builder);
 
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a1']);
-    expect(runs).to.be.at.most(before + 2);
+    expect(runs).to.equal(before + 1);
+    expect(inputRuns).to.equal(1);
+  });
+
+  test('a connector keeps its inputs as other keys join its anchor or stay dirty', async () => {
+    // More relations than anchors, so read keys share anchors with keys the budget leaves dirty.
+    const RELATIONS = 100;
+    const { registry, builder, children } = setup();
+    const trigger = Atom.make(0).pipe(Atom.keepAlive);
+    const inputRuns = new Map<number, number>();
+    const read = new Set<number>();
+    const inputs = Array.from({ length: RELATIONS }, (_, index) =>
+      Atom.make(() => {
+        inputRuns.set(index, (inputRuns.get(index) ?? 0) + 1);
+        return index;
+      }),
+    );
+    GraphBuilder.addExtension(
+      builder,
+      inputs.map((input, index) => ({
+        id: `r${index}`,
+        relation: `r${index}`,
+        connector: connector((get) => {
+          read.add(index);
+          return [{ id: `n${get(input)}-${get(trigger)}` }];
+        }),
+      })),
+    );
+    // One at a time, so most join an anchor that already holds other keys.
+    for (let index = 0; index < RELATIONS; index++) {
+      children(GraphNode.RootId, `r${index}`);
+      await GraphBuilder.flush(builder);
+    }
+    await nextTask();
+    expect([...inputRuns.values()].every((runs) => runs === 1)).to.be.true;
+
+    let reads = 0;
+    builder._frameBudget = () => ({ hasTime: () => reads < RELATIONS / 4, spend: () => reads++ });
+    // Later than the registry's removal tasks, so an unanchored connector would be gone by the flush.
+    builder._schedule = (callback) => nextTask(20).then(callback);
+    read.clear();
+    registry.set(trigger, 1);
+    await Promise.resolve();
+    const readFirst = [...read];
+    expect(readFirst.length).to.be.greaterThan(0).and.lessThan(RELATIONS);
+    await GraphBuilder.flush(builder);
+
+    for (const index of readFirst) {
+      expect(inputRuns.get(index)).to.equal(1);
+    }
+  });
+
+  test('expanding after destroy reads nothing', async () => {
+    const { builder, children } = setup();
+    let runs = 0;
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector(() => {
+        runs++;
+        return [{ id: 'a' }];
+      }),
+    });
+
+    GraphBuilder.destroy(builder);
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    await nextTask(10);
+
+    expect(runs).to.equal(0);
   });
 
   test.each([
