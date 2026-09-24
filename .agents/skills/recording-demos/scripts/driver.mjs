@@ -37,8 +37,10 @@ const parseArgs = () => {
     port: 7333,
     url: 'http://localhost:4173',
     out: 'demo-out',
-    width: 1280,
-    height: 800,
+    // A 16" laptop's layout: at 1280x800 Composer's chrome fills the frame and reads as a small-screen
+    // app, however sharp the pixels are.
+    width: 1728,
+    height: 1080,
     scale: 2,
     fps: 25,
     crf: 28,
