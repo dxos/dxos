@@ -3,6 +3,7 @@
 //
 
 import { afterAll, beforeAll, describe, test } from '@effect/vitest';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -158,7 +159,9 @@ describe.skipIf(!API_KEY)('claude code uploads a file through dx mcp serve', { t
       expect(refId(file.data)).toBe(blob.id);
       expect(blob.type).toBe('image/png');
       expect(blob.size).toBe(image.byteLength);
-      expect(inlineBytes(blob)).toEqual(Buffer.from(image).toString('base64'));
+      // External blobs are content addressed (RFC 6920 `ni:`), so the URI is a digest of what was
+      // stored; inline ones carry the bytes. Either way the stored content must be the fixture's.
+      expect(storedDigest(blob)).toEqual(createHash('sha256').update(image).digest('base64url'));
     },
     TEST_TIMEOUT,
   );
@@ -170,17 +173,22 @@ const refId = (value: unknown): string | undefined => {
   return uri?.split('/').pop();
 };
 
-/** The inline bytes of a serialized blob, as base64. */
-const inlineBytes = (blob: Row): string | undefined => {
+/** SHA-256 (base64url) of a serialized blob's content: read off an `ni:` URI, or hashed from inline bytes. */
+const storedDigest = (blob: Row): string | undefined => {
   const data = blob.data;
-  if (typeof data !== 'object' || data === null || !('bytes' in data)) {
+  if (typeof data !== 'object' || data === null) {
     return undefined;
   }
-  const { bytes } = data;
-  if (typeof bytes === 'string') {
-    return bytes;
+  if ('uri' in data && typeof data.uri === 'string') {
+    return /^ni:\/\/\/sha-256;(.+)$/.exec(data.uri)?.[1];
   }
-  return Array.isArray(bytes) ? Buffer.from(bytes).toString('base64') : undefined;
+  if ('bytes' in data) {
+    const { bytes } = data;
+    const buffer =
+      typeof bytes === 'string' ? Buffer.from(bytes, 'base64') : Array.isArray(bytes) ? Buffer.from(bytes) : undefined;
+    return buffer && createHash('sha256').update(buffer).digest('base64url');
+  }
+  return undefined;
 };
 
 /** A real PNG (a colour gradient) built in memory, so the suite ships no binary fixture. */
