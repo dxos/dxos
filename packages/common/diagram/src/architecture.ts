@@ -145,6 +145,18 @@ export const RULES: readonly Rule[] = [
     },
   ),
   rule(
+    'same-granularity',
+    'sameGranularity',
+    'Every box is a component at one level of abstraction.',
+    'Is every node a component at the same level of abstraction — services, modules or processes of comparable ' +
+      'weight — rather than a mix of components with their fields, caches, limits or data types drawn as boxes?',
+    {
+      true: 'All nodes are peers of comparable importance.',
+      false:
+        'Some nodes are internals of another node (a field, cache, limit or type) drawn as if they were components.',
+    },
+  ),
+  rule(
     'bounded-live-state',
     'boundedLiveState',
     'Long-lived collections show who bounds them and who evicts finished entries.',

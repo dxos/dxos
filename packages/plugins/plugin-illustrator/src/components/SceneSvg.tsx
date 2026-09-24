@@ -166,19 +166,23 @@ type MultilineTextProps = {
   className?: string;
 };
 
+/** Inset kept between a box label and the box's sides. */
+const LABEL_INSET = 12;
+
 const MultilineText = ({ cx, cy, text, weight, width, className }: MultilineTextProps) => {
-  const lines = wrapLines(
-    text,
-    width === undefined ? Infinity : Math.max(4, Math.floor(width / (FONT_SIZE[weight] * CHAR_EM))),
-  );
-  const lineH = LINE_H[weight];
+  const room = width === undefined ? Infinity : width - LABEL_INSET * 2;
+  const lines = wrapLines(text, Math.max(4, Math.floor(room / (FONT_SIZE[weight] * CHAR_EM))));
+  // A word longer than the box cannot wrap (a class name has no spaces), so the font shrinks to fit it.
+  const longest = Math.max(...lines.map((line) => line.length));
+  const fit = Math.min(1, room / (longest * FONT_SIZE[weight] * CHAR_EM));
+  const lineH = LINE_H[weight] * fit;
   return (
     <text
       x={cx}
       y={cy - ((lines.length - 1) * lineH) / 2}
       textAnchor='middle'
       dominantBaseline='central'
-      fontSize={FONT_SIZE[weight]}
+      fontSize={FONT_SIZE[weight] * fit}
       className={mx('fill-current', className)}
     >
       {lines.map((line, index) => (
