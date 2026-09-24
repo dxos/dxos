@@ -31,6 +31,9 @@ const MODEL = process.env.DX_E2E_MODEL ?? 'sonnet';
 /** Distinctive enough that the model cannot produce it without having read the event. */
 const EVENT = 'CI build failed on main: run 7431, packages/echo/query.test.ts timed out';
 
+/** The part of {@link EVENT} a reply can only contain if the agent read the event. */
+const EVENT_MARKER = 'run 7431';
+
 /** How long the monitored `dx mcp listen` gets to connect; a cold `dx` start is seconds, not minutes. */
 const LISTEN_TIMEOUT = 60_000;
 
@@ -120,10 +123,10 @@ describe.skipIf(!API_KEY)('claude code woken by dx mcp listen', { tags: ['manual
 
       // No prompt follows the publish, so a turn quoting the event can only have been started by the monitor.
       let woken: Turn | undefined;
-      for (let wake = 0; wake < MAX_WAKES && !woken?.result?.includes('EVENT:'); wake++) {
+      for (let wake = 0; wake < MAX_WAKES && !woken?.result?.includes(EVENT_MARKER); wake++) {
         woken = await agent.nextTurn();
       }
-      expect(woken?.result).to.contain('run 7431');
+      expect(woken?.result).to.contain(EVENT_MARKER);
     },
     TEST_TIMEOUT,
   );
