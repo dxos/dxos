@@ -5,12 +5,8 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,19 +15,11 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import { rootCollectionRule } from '../capabilities/default-parent.ts';
 import AddObjectHandler from './add-object.ts';
 import AddTypeHandler from './add-type.ts';
 import { TestObject, decodeNamed, makeTestLayer } from './testing.ts';
 
 const TestLayer = makeTestLayer(AddObjectHandler, AddTypeHandler);
-
-/** The app's capability manager carrying plugin-space's default-parent rule, as the invoker supplies it. */
-const withDefaultParents = <A, E, R>(effect: Effect.Effect<A, E, R>) => {
-  const manager = CapabilityManager.make({ registry: Registry.make() });
-  manager.contribute({ module: 'test', interface: AppCapabilities.DefaultParent, implementation: rootCollectionRule });
-  return effect.pipe(Effect.provideService(Capability.Service, manager));
-};
 
 const getRootCollection = Effect.gen(function* () {
   const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
@@ -113,7 +101,7 @@ describe('SpaceOperation.AddObject', () => {
       function* ({ expect }) {
         const { object } = yield* Operation.invoke(SpaceOperation.AddObject, {
           object: { '@type': 'org.dxos.type.collection', 'name': 'filed', 'objects': [] },
-        }).pipe(withDefaultParents);
+        });
 
         const root = yield* getRootCollection;
         expect(root?.objects.map((ref) => ref.peek()?.id)).toEqual([object.id]);
@@ -132,7 +120,7 @@ describe('SpaceOperation.AddObject', () => {
         yield* Database.add(Obj.make(SpaceProperties, {}));
         const { object } = yield* Operation.invoke(SpaceOperation.AddObject, {
           object: { '@type': 'org.dxos.type.collection', 'name': 'filed', 'objects': [] },
-        }).pipe(withDefaultParents);
+        });
 
         const root = yield* getRootCollection;
         expect(root?.objects.map((ref) => ref.peek()?.id)).toEqual([object.id]);

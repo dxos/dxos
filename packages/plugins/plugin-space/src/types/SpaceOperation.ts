@@ -170,8 +170,9 @@ export const AddObject = Operation.make({
     icon: 'ph--plus--regular',
   },
   // Required: the caller names the database — an explicit spaceId, or a database provided in the
-  // calling context (the app's create-object dispatch does the latter).
-  services: [Database.Service],
+  // calling context (the app's create-object dispatch does the latter). The capability manager
+  // carries the `DefaultParent` rules that file an object given no target; every host binds it.
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     // A union rather than two optional fields, so the schema itself admits exactly one form: a
     // caller that cannot hold a live object — anything across an RPC boundary — describes one, and
