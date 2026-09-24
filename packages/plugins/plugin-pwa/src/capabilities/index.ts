@@ -237,14 +237,14 @@ export const UpdateProgress = Capability.inlineModule(
   }),
 );
 
-export const PwaSettings = AppCapability.settings(() => import('./settings'), {
+export const PwaSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 
 export const ReactSurface = Capability.lazyModule(
   'ReactSurface',
   { provides: [Capabilities.ReactSurface] },
-  () => import('./react-surface'),
+  () => import('./react-surface.ts'),
 );
 
 export const Translations = AppCapability.translations(translations);

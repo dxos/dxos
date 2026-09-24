@@ -9,7 +9,7 @@ import React, { type ReactNode, useState } from 'react';
 import { Button } from '@dxos/react-ui';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as AppUpdate from '../../app/AppUpdate';
+import type * as AppUpdate from '../../app/AppUpdate.ts';
 
 export type UpdateRowProps = {
   manager: AppUpdate.Manager;
