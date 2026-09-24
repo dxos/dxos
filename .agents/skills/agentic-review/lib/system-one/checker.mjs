@@ -88,26 +88,40 @@ const buildFileStates = ({ root, file, base, kinds }) => {
   });
 };
 
-/** Build the state for a `pr` rule: every matched file's diff, plus any declared context. */
-const buildPrState = ({ root, files, base, kinds }) => {
-  const perFile = Math.max(1_500, Math.floor(charsForTokens(STATE_BUDGET * 0.8) / Math.max(1, files.length)));
-  const diffs = {};
-  for (const file of files) {
-    diffs[file] = fetchContext('diff', { root, file, base, maxChars: perFile }) ?? '(not available)';
-  }
-  const state = { changes: { base: base ?? '(none)', files: diffs } };
+/** Smallest cut of one file's diff worth sending; below it a diff says nothing. */
+const MIN_DIFF_CHARS = 1_500;
+
+/**
+ * Build the states for a `pr` rule: the matched files' diffs, plus any declared context. A change
+ * set too large for one state is split across several, each located by choosing among its own
+ * files; the rule's verdict is the strongest of them.
+ */
+const buildPrStates = ({ root, files, base, kinds }) => {
   const extra = kinds.filter((kind) => kind !== 'diff');
-  if (extra.length > 0) {
-    state.context = {};
-    const perKind = Math.min(MAX_CONTEXT_TOKENS, Math.floor((STATE_BUDGET * 0.2) / extra.length));
-    for (const kind of extra) {
-      // Package-level kinds describe the first matched file's package; a change set usually has one.
-      state.context[kind] =
-        fetchContext(kind, { root, file: files[0], base, maxChars: charsForTokens(perKind) }) ?? '(not available)';
-    }
+  const context = {};
+  const perKind = extra.length ? Math.min(MAX_CONTEXT_TOKENS, Math.floor((STATE_BUDGET * 0.2) / extra.length)) : 0;
+  for (const kind of extra) {
+    // Package-level kinds describe the first matched file's package; a change set usually has one.
+    context[kind] =
+      fetchContext(kind, { root, file: files[0], base, maxChars: charsForTokens(perKind) }) ?? '(not available)';
   }
-  const segments = files.slice(0, 60).map((file, index) => ({ id: `f${index + 1}`, file, label: file }));
-  return { state, segments, kinds };
+  const diffBudget = charsForTokens(STATE_BUDGET - estimateTokens(context)) - 500;
+  const perState = Math.max(1, Math.floor(diffBudget / MIN_DIFF_CHARS));
+  const states = [];
+  for (let start = 0; start < files.length; start += perState) {
+    const slice = files.slice(start, start + perState);
+    const perFile = Math.floor(diffBudget / slice.length);
+    const diffs = Object.fromEntries(
+      slice.map((file) => [file, fetchContext('diff', { root, file, base, maxChars: perFile }) ?? '(not available)']),
+    );
+    const state = { changes: { base: base ?? '(none)', files: diffs } };
+    if (extra.length > 0) {
+      state.context = context;
+    }
+    const segments = slice.map((file, index) => ({ id: `f${index + 1}`, file, label: file }));
+    states.push({ state, segments, kinds, files: slice });
+  }
+  return states;
 };
 
 const questionId = (index, suffix) => `r${index}_${suffix}`;
@@ -189,10 +203,11 @@ export const planRound = ({ root, base, fileTargets, prTargets }) => {
   }
   for (const { rule, files, extraKind, ask } of prTargets) {
     const kinds = [...new Set([...rule.context, ...(extraKind ? [extraKind] : [])])].sort();
-    const built = buildPrState({ root, files, base, kinds });
-    const planned = planState({ built, rules: [rule], ask, target: { unit: 'pr', files } });
-    requests.push(...planned.requests);
-    oversized.push(...planned.oversized.map((ruleId) => ({ ruleId, file: files[0] })));
+    for (const built of buildPrStates({ root, files, base, kinds })) {
+      const planned = planState({ built, rules: [rule], ask, target: { unit: 'pr', files: built.files } });
+      requests.push(...planned.requests);
+      oversized.push(...planned.oversized.map((ruleId) => ({ ruleId, file: built.files[0] })));
+    }
   }
   return { requests, oversized };
 };
