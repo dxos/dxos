@@ -40,10 +40,11 @@ real worker boundary or run in a browser yet.
    migrations, and shared operation code that calls Automerge through `Doc.Handle`. The CodeMirror
    binding, the largest UI item, has a working prototype.
 7. **A tab can show objects whose documents the worker never loads.** The worker answers from its
-   SQLite index, and a tab's first write to a document loads it and rebases the write. The index copy
-   matches the document exactly once the indexer keeps the fields its JSON form reshapes. Sync still
-   loads a document that receives remote changes, so this saves loads for reading, not for changes
-   (see [Reading objects from the index](#reading-objects-from-the-index)).
+   SQLite index, and a tab's first write to a document loads it and rebases the write. In Chromium,
+   with ECHO in a dedicated worker and SQL query evaluation on, the Tasks app shows 1,000 items three
+   times sooner than today while the worker holds one document instead of 1,001 (see
+   [Index reads in the browser](#index-reads-in-the-browser)). Sync still loads a document that
+   receives remote changes, so this saves loads for reading, not for changes.
 8. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
    serves commit blobs without building documents for reads (its indexer loads them separately), so
    the EchoClient there is what turns bytes into objects. EchoClient keeps both document backends
@@ -302,59 +303,42 @@ value, symbols and meta included, and keep the identity of unchanged items; `Obj
 
 ## Reading objects from the index
 
-The worker's SQLite index already holds every object's JSON. In this experiment a mirror tab asks
-for an object's document in `indexed` mode, and the worker answers from the index without loading
-the Automerge document. The tab's first write to the document switches it to live. The tab
-resubscribes from the heads the index copy was read at, the worker loads the document, and its
-recovery path sends what changed since those heads. That rebases the write the way a restart does.
-`setMirrorIndexedReads` turns it on; it is off by default.
+The worker's SQLite index already holds every object's JSON. A mirror tab can ask for an object's
+document in `indexed` mode, and the worker answers from the index without loading the Automerge
+document. The tab's first write to the document switches it to live. The tab resubscribes from the
+heads the index copy was read at, the worker loads the document, and its recovery path sends what
+changed since those heads. That rebases the write the way a restart does. `setMirrorIndexedReads`,
+or `echoMirror: { indexedReads: true }` on `Client`, turns it on; it is off by default.
 
 The index copy is used only when it reproduces the document exactly. After the switch, recovery
 sends only what changed since the index heads, so a field the copy got wrong would stay wrong in the
-tab, and the worker would refuse a write to a path that exists only in the tab's copy. Two fields
-make it exact:
+tab, and the worker would refuse a write to a path that exists only in the tab's copy. The object
+snapshot store keeps two columns for that beside each object's JSON:
 
-- `@heads`: the document's heads when the indexer read the object.
-- `@stored`: the document's `access` and the object's stored `system` and `meta`. The JSON form
+- `heads`: the document's heads when the indexer read the object.
+- `stored`: the document's `access` and the object's stored `system` and `meta`. The JSON form
   reshapes these. It drops `createdAt`, `kind` and empty meta containers and re-parses references,
   and a test comparing every document both ways found each of those differences.
 
-The worker serves a document live instead when its objects were read at different heads (so the
-space root and inline objects stay live), or when one holds a value JSON cannot carry: bytes, a
-date, or a string over 300,000 characters, which ECHO stores as `RawString`. After each index pass
-the worker re-reads the documents tabs follow this way and sends those whose heads moved.
+A tracker migration re-presents every document to the snapshot store once, so existing rows gain
+both columns. The worker serves a document live instead when its objects were read at different
+heads (so the space root and inline objects stay live), or when one holds a value JSON cannot carry:
+bytes, a date, or a string over 300,000 characters, which ECHO stores as `RawString`. It reads every
+document a subscription asks for with one query, and after an index pass it pushes only the followed
+documents that pass changed, switching one to live if its copy stopped being exact.
 
 | Question                                                                           | Result                                                                                                                                            |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Does a tab show objects whose documents the worker never loads?                    | 10 objects shown, 0 documents loaded; a write loads only its own                                                                                  |
-| Do query results hydrate from the index copy, so the nav tree needs no change?     | Yes, but the worker still loads each result's document to answer the query (below)                                                                |
+| Does a query show objects without loading their documents?                         | Yes, with SQL query evaluation ([#13288](https://github.com/dxos/dxos/pull/13288)) on                                                             |
 | Does a remote edit reach a tab reading from the index?                             | Yes, after the next index pass                                                                                                                    |
 | Does a write against an index copy that missed an insert land where the tab meant? | Yes, recovery rebases it                                                                                                                          |
 | Does a write survive arriving with the index copy, or a worker restart in flight?  | Yes. Before a fix, both left the write unsent                                                                                                     |
 | Is the index copy identical to the worker's copy?                                  | Yes for plain values, references, meta keys, typed objects, a parent, a relation and a deleted object; an object holding bytes falls back to live |
+| Does a copy that stops being exact hand over to the live document?                 | Yes, when the tab's object gains bytes                                                                                                            |
 
-Time for a tab to show every object after a worker restart, in Node over the in-process transport
-(`MIRROR_BENCH=1` for 200). The index run goes first, so warm-up favors the other one.
-
-| Reads                | Objects | Time to show all | Documents the worker loaded |
-| -------------------- | ------- | ---------------- | --------------------------- |
-| From the index       | 40      | 56 ms            | 0                           |
-| From the worker copy | 40      | 151 ms           | 40                          |
-| From the index       | 200     | 104 ms           | 0                           |
-| From the worker copy | 200     | 619 ms           | 200                         |
-
-None of the following blocks a rollout. Index reads do depend on mirror tabs, so as built they ship
-with worker-only ECHO or after it.
-
-Work before rollout:
-
-1. **The push re-reads every followed document after every index pass.** A pass runs after saves,
-   so while anyone types, a nav tree of 1,000 objects costs 2,000 SQLite reads per pass. The pass
-   knows which documents it changed and should push only those.
-2. **Existing indexes lack `@heads` and `@stored`.** They need a reindex. Until then every document
-   falls back to live, which is safe but saves nothing.
-3. **Per-object fields are a stand-in.** A column, or a per-document snapshot table, is the
-   production shape. The table would also serve the space root and inline objects.
+None of the following blocks a rollout. Index reads depend on mirror tabs, so as built they ship with
+worker-only ECHO or after it.
 
 Limits on what it saves:
 
@@ -362,17 +346,65 @@ Limits on what it saves:
    evicted, the collection-sync diff leases it until it syncs (`_leaseUntilSettled`), and the save
    reindexes it, so the index copy follows. Collection sync that works without loading would leave
    only the load for indexing.
-2. **Queries load their results in the worker on this branch.** `QueryExecutor` reads each
-   document-backed result from Automerge (`_loadFromAutomerge`), so a query in a tab reading from
-   the index still makes the worker load all ten result documents briefly.
-   [#13288](https://github.com/dxos/dxos/pull/13288) on main answers queries from SQL without
-   loading documents. The two have not run together.
-3. **The space root and inline objects stay live.** Objects get their own document by default, so
-   this is one document per space plus whatever is inlined.
-4. **A tab keeps a document live after editing it** until it reloads.
-5. **Index lag.** An edit in another tab reaches a tab reading from the index in 51 ms median and
-   84 ms at most, in Node. Pushing from the worker's copy while it is loaded would remove most of
-   that.
+2. **The space root and inline objects stay live.** Objects get their own document by default, so
+   this is one document per space plus whatever is inlined. A per-document snapshot table would
+   serve those too.
+3. **A tab keeps a document live after editing it** until it reloads.
+4. **Index lag.** An edit in another tab reaches a tab reading from the index in 51 ms median and
+   84 ms at most, in Node, and in 200 to 460 ms in the Tasks runs below. Pushing from the worker's
+   copy while it is loaded would remove most of that.
+5. **Upgrading re-reads every document once.** The reindex migration loads each document the first
+   time a worker opens an existing database.
+
+## Index reads in the browser
+
+TodoMVC and the Tasks app run the whole path in Chromium: ECHO in a dedicated worker behind the real
+worker transport, mirror tabs, SQL query evaluation and index reads. `?echo=indexed` turns all three
+on, `?echo=mirror` leaves out index reads, and `?seed=N` fills the list.
+`packages/apps/todomvc/scripts/measure-echo.mjs` drives either app (`APP=tasks` for Tasks).
+
+Four changes made that work beyond the Node tests:
+
+1. `MirrorService` is registered with the worker's services, and `Client` passes it to ECHO under
+   the `echoMirror` option.
+2. The worker transport encodes every `Schema.Unknown` as strict JSON and fails on a RawString,
+   bytes or a date. Mirror values now cross it with those leaves tagged (`Mirror.eventToWire`,
+   `Mirror.changesToWire` and their inverses).
+3. The index copy lives in snapshot columns rather than in the snapshot JSON, which SQL query
+   results now carry.
+4. The same switch sets `runtime.client.queryExecutor: SQL` for the worker.
+
+Time until every item is on screen, with a fresh page and worker per run on data seeded in replica
+mode. About 2 s of each is boot, the same in every mode. Medians of three runs for 200 items, of two
+for 1,000.
+
+| App, how it lists         | Items | Mode    | Shown after | Worker documents | Worker heap | Worker buffers | Tab buffers |
+| ------------------------- | ----- | ------- | ----------- | ---------------- | ----------- | -------------- | ----------- |
+| Tasks, a query            | 200   | replica | 3,662 ms    | 201              | 19.0 MB     | 48.9 MB        | 28.4 MB     |
+|                           |       | mirror  | 3,306 ms    | 201              | 19.2 MB     | 48.0 MB        | 24.3 MB     |
+|                           |       | indexed | 2,670 ms    | 1                | 16.0 MB     | 42.7 MB        | 24.3 MB     |
+|                           | 1,000 | replica | 10,144 ms   | 1,001            | 30.2 MB     | 75.8 MB        | 45.6 MB     |
+|                           |       | mirror  | 7,419 ms    | 1,001            | 30.4 MB     | 71.6 MB        | 25.3 MB     |
+|                           |       | indexed | 3,337 ms    | 1                | 16.8 MB     | 45.6 MB        | 25.3 MB     |
+| TodoMVC, refs from a list | 200   | replica | 4,697 ms    | 202              | 19.6 MB     | 49.1 MB        | 28.9 MB     |
+|                           |       | mirror  | 4,583 ms    | 202              | 19.8 MB     | 49.2 MB        | 24.5 MB     |
+|                           |       | indexed | 3,830 ms    | 1                | 16.6 MB     | 42.8 MB        | 24.5 MB     |
+
+- With index reads the worker holds one document, the space root. A query-driven list of 1,000
+  shows three times sooner than today, and its worker holds 13 MB less heap and 30 MB less buffer
+  memory, about 44 KB per small document.
+- A mirror tab holds 4 to 20 MB less buffer memory than a replica tab. It still initializes
+  Automerge's wasm, about 24 MB of buffers, so tab memory cannot fall to the mirror's own cost until
+  that goes.
+- TodoMVC at 1,000 takes 22 to 33 s in every mode, with a page heap of 180 to 300 MB. Its list
+  rendering dominates there, so those runs say nothing about the backends.
+- A write in index-read mode loaded exactly one document, and the change survived a reload in
+  replica mode.
+- A second tab, proxying through the first tab's worker and reading from the index, saw an edit from
+  the first in 200 to 460 ms in Tasks, and in 1.6 s in TodoMVC at 1,000, where rendering dominates.
+- Seeding 1,000 items at once in replica mode hits one 30 s RPC timeout, in today's path, and every
+  item still arrives. The runs themselves log no errors besides EDGE being unreachable.
+- EDGE is unreachable from the sandbox, so none of this measures sync.
 
 ## Blockers
 

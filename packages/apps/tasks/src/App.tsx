@@ -17,7 +17,7 @@ import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomEx } from '@dxos/effect';
 import { parseId } from '@dxos/keys';
-import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
+import { type Client, ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { getConfig } from './config.ts';
@@ -98,12 +98,42 @@ const router = createBrowserRouter([
   },
 ]);
 
+/**
+ * Experimental ECHO backends, chosen with `?echo=`: `mirror` keeps a JSON mirror of each document in
+ * the tab while only the worker runs Automerge, and `indexed` also shows objects from the worker's
+ * index until the tab writes to them. Both answer queries in SQL. Anything else is today's replica.
+ */
+const echoMode = new URLSearchParams(location.search).get('echo');
+const echoMirror =
+  echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
+
+/** Adds tasks until the first space holds `count`, to measure a list of that size (`?seed=count`). */
+const seedTasks = async (client: Client, count: number) => {
+  const [space] = client.spaces.get();
+  if (!space) {
+    return;
+  }
+  await space.waitUntilReady();
+  const existing = await space.db.query(Filter.type(Task)).run();
+  for (let index = existing.length; index < count; index++) {
+    space.db.add(Obj.make(Task, { title: `task ${index}`, completed: false }));
+  }
+  await space.db.flush();
+};
+
 // Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
 // the dedicated Worker hosting the ECHO services; follower tabs proxy through it.
 const createServices = (config?: Config) =>
   createClientServices(
     new Config(
-      { runtime: { client: { servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER } } },
+      {
+        runtime: {
+          client: {
+            servicesMode: defs.Runtime_Client_ServicesMode.DEDICATED_WORKER,
+            ...(echoMirror ? { queryExecutor: defs.Runtime_Client_QueryExecutor.SQL } : {}),
+          },
+        },
+      },
       ...(config ? [config.values] : []),
     ),
     {
@@ -130,10 +160,17 @@ export const App = () => {
       services={createServices}
       shell='./shell.html'
       types={[Task]}
+      echoMirror={echoMirror}
       onInitialized={async (client) => {
         const searchProps = new URLSearchParams(location.search);
         if (!client.halo.identity.get() && !searchProps.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
+          // Home opens the first space, and a new identity has none.
+          await client.spaces.create();
+        }
+        const seed = Number(searchProps.get('seed') ?? 0);
+        if (seed > 0) {
+          await seedTasks(client, seed);
         }
       }}
     >
