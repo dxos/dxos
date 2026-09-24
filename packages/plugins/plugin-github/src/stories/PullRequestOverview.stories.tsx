@@ -52,7 +52,7 @@ const REAL_PULL_REQUEST: PullRequestOverviewProps = {
 
 /** dxos/dxos#13348 as GitHub returned it: R2 demo media as pills, footers as cards, every check. */
 export const Default: Story = {
-  args: REAL_PULL_REQUEST,
+  args: { ...REAL_PULL_REQUEST },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = await canvas.findByTestId('pull-request.body');
@@ -89,7 +89,7 @@ export const FailingChecks: Story = {
 
 /** A pill opens its demo video in place. */
 export const ArtifactPreview: Story = {
-  args: REAL_PULL_REQUEST,
+  args: { ...REAL_PULL_REQUEST },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const [videoPill] = await canvas.findAllByTestId('pull-request.artifact.pill');
