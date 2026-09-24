@@ -142,7 +142,8 @@ describe.skipIf(!API_KEY)('claude code uploads a file through dx mcp serve', { t
       expect(turn.toolCalls).toContain(tool('createUpload'));
 
       const files = query(FILE_TYPE);
-      expect(files).toHaveLength(1);
+      // The agent's own account rides the message, so a failure says what it believed it did.
+      expect(files, `agent said: ${turn.result}`).toHaveLength(1);
       const [file] = files;
       expect(file.name).toBe(IMAGE_NAME);
 

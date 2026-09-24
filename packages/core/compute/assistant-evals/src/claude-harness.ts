@@ -16,6 +16,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { asyncTimeout, sleep } from '@dxos/async';
+import { type BlobTransport } from '@dxos/blob';
+import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import { type Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -24,7 +26,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { createDidFromIdentityKey } from '@dxos/credentials';
-import { Database, Tag, type Type } from '@dxos/echo';
+import { Blob, Database, Tag, type Type } from '@dxos/echo';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
@@ -432,6 +434,19 @@ const stagedUploadPlugin = (uploads: LocalUpload.Stage): Plugin.Plugin =>
     ),
   )();
 
+/** Content-addressed bytes held in this process, standing in for the EDGE blob service. */
+const memoryTransport = (): BlobTransport => {
+  const store = new Map<string, Uint8Array>();
+  return {
+    url: (key) => new URL(`memory://blob/${key}`),
+    put: async (key, data) => {
+      store.set(key, data);
+    },
+    get: async (key) => store.get(key),
+    has: async (key) => store.has(key),
+  };
+};
+
 const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.tag.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
@@ -497,6 +512,14 @@ export const runClaudeEval = async <T>(
   const link: Usage.Link = { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name };
   try {
     const client = app.get(ClientCapabilities.Client);
+    if (uploads) {
+      // The in-process host has no blob service, and inline storage would put a multi-megabyte
+      // upload inside the space's documents — every later listing then pays to load it. The EDGE
+      // backend over an in-memory transport stores it the way a deployed run does.
+      client.graph.registerBlobBackend(Blob.Storage.edge, createEdgeBlobBackend({ transport: memoryTransport() }), {
+        default: true,
+      });
+    }
     const { identity, defaultSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(client));
     // A deployed worker serves its own data plane: a provisioned run replicates the space it just
     // created there, and a token run has to be pointed at one that already exists.

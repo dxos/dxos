@@ -475,10 +475,9 @@ const localTask = () =>
           // and the service stored what it received, which no amount of model narration produces.
           stored?.size === UPLOAD_BYTES &&
           sameBytes(stored.bytes, fixture) &&
-          // Against EDGE, external rather than inline — an inline blob there would mean the bytes came
-          // back through the model after all. The in-process host has no blob service and stores
-          // inline, so there the operation check above is what excludes the base64 route.
-          stored.external === REMOTE;
+          // External, not inline — an inline blob would mean the bytes came back through the model
+          // after all, which is the exact failure this whole path exists to prevent.
+          stored.external === true;
         const file = await query(findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME));
         const [onRotate, onBackfill] = await Promise.all([
           query(readArtifactIds(ROTATE)),
