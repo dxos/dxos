@@ -34,19 +34,25 @@ import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
 const parseArgs = () => {
   const args = process.argv.slice(2);
   const options = {
-    port: 7333,
-    url: 'http://localhost:4173',
-    out: 'demo-out',
+    'port': 7333,
+    'url': 'http://localhost:4173',
+    'out': 'demo-out',
     // A 16" laptop's layout: at 1280x800 Composer's chrome fills the frame and reads as a small-screen
     // app, however sharp the pixels are.
-    width: 1728,
-    height: 1080,
-    scale: 2,
-    fps: 25,
-    crf: 28,
-    quality: 92,
-    overlay: 'on',
-    feed: 'top-right',
+    'width': 1728,
+    'height': 1080,
+    'scale': 2,
+    'fps': 25,
+    'crf': 28,
+    'quality': 92,
+    'overlay': 'on',
+    // App boot is rarely what a demo is about: the first `goto` waits for the app to be ready and cuts
+    // everything before it. `--boot keep` records it when the boot is the subject.
+    'boot': 'cut',
+    'ready': '[data-testid="deck.sidebar"], #storybook-root > *',
+    'ready-timeout': 180_000,
+    'settle': 2_000,
+    'feed': 'top-right',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -120,7 +126,7 @@ const recorder = hires
  * these onto the trimmed timeline and turns them into chapters and a WebVTT track, so the steps stay
  * navigable instead of living only in burned-in pixels.
  */
-const started = recorder?.started ?? Date.now();
+let started = recorder?.started ?? Date.now();
 const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
@@ -243,12 +249,47 @@ const center = async (selector) => {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
 
+/**
+ * Drops everything recorded so far. Captions already issued are dropped too, since their times would
+ * point into footage that no longer exists.
+ */
+const cut = () => {
+  if (!recorder) {
+    return { cut: false, reason: 'the 1x Playwright fallback cannot drop recorded frames' };
+  }
+  started = recorder.cut();
+  timeline.length = 0;
+  return { cut: true };
+};
+
+let booted = false;
+
 const handlers = {
   goto: async (command) => {
     await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
+    const result = { url: page.url() };
+    // Only the first navigation boots the app; a later `goto` is part of the demo.
+    if (!booted && options.boot !== 'keep') {
+      booted = true;
+      const ready = await page
+        .locator(options.ready)
+        .first()
+        .waitFor({ state: 'visible', timeout: options['ready-timeout'] })
+        .then(() => true)
+        .catch(() => false);
+      if (ready) {
+        // The shell appears before its content does; a cut on the first chrome would still show panels
+        // filling in.
+        await page.waitForTimeout(options.settle);
+        result.boot = cut();
+      } else {
+        result.boot = { cut: false, reason: `no ${options.ready} within ${options['ready-timeout']}ms` };
+      }
+    }
     await overlay.event({ kind: 'nav', label: summarize(page.url(), 80) });
-    return { url: page.url() };
+    return result;
   },
+  cut: async () => cut(),
   click: async (command) => {
     const target = locator(command).first();
     await pointAt(target, command, 'click');
