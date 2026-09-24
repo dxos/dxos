@@ -34,6 +34,7 @@ export class Connection extends Type.makeObject<Connection>(DXN.make('org.dxos.t
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'emerald' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

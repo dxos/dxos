@@ -67,6 +67,7 @@ export class Question extends Type.makeObject<Question>(DXN.make('org.dxos.type.
   }).pipe(
     LabelAnnotation.set(['text']),
     Annotation.IconAnnotation.set({ icon: 'ph--question--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

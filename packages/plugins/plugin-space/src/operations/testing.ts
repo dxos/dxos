@@ -9,30 +9,21 @@ import { SpaceProperties } from '@dxos/client-protocol/types';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Collection, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { CollectionItemAnnotation } from '@dxos/schema';
 
 export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
-
-/**
- * A type eligible to live in a collection, which is what routes `ContainerModel.add` through its
- * root-collection branch — the one that files a ref without persisting the object itself.
- */
-export class TestCollectionItem extends Type.makeObject<TestCollectionItem>(
-  DXN.make('com.example.type.testCollectionItem', '0.1.0'),
-)(Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(CollectionItemAnnotation.set(true))) {}
 
 export class TestContainer extends Type.makeObject<TestContainer>(DXN.make('com.example.type.testContainer', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     items: Schema.Array(Ref.Ref(TestObject)),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
 
 export const TestRelation = Type.makeRelation(DXN.make('com.example.relation.testRelation', '0.1.0'))({
@@ -69,7 +60,6 @@ export const makeTestLayer = (...handlers: Operation.WithHandler<Operation.Defin
       Collection.Collection,
       SpaceProperties,
       TestObject,
-      TestCollectionItem,
       TestContainer,
       TestRelation,
     ],

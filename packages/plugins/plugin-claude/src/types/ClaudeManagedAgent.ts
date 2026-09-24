@@ -70,6 +70,7 @@ export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

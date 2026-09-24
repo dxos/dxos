@@ -10,7 +10,6 @@ import { Annotation, Collection, Database, DXN, Obj, Ref, Type } from '@dxos/ech
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
-import { CollectionItemAnnotation } from '@dxos/schema';
 
 import * as ContainerModel from './ContainerModel.ts';
 
@@ -58,15 +57,15 @@ describe('add', () => {
     await builder.close();
   });
 
-  /** A hidden type stands in for implementation-detail objects (a sketch's canvas, a game's state). */
+  /** A type without `Annotation.UserType` stands in for implementation details (a sketch's canvas, a game's state). */
   class HiddenState extends Type.makeObject<HiddenState>(DXN.make('org.dxos.test.hiddenState', '0.1.0'))(
-    Schema.Struct({ value: Schema.String }).pipe(Annotation.HiddenAnnotation.set(true)),
+    Schema.Struct({ value: Schema.String }),
   ) {}
 
   const add = (db: EchoDatabase, props: { object: Obj.Unknown; target?: Collection.Collection }) =>
     ContainerModel.add(props).pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
 
-  test('files a visible object into the target collection', async ({ expect }) => {
+  test('files a user-facing object into the target collection', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
     const collection = db.add(Collection.make({ name: 'People', objects: [] }));
     await add(db, { object: Obj.make(TestSchema.Person, { name: 'alice' }), target: collection });
@@ -75,22 +74,31 @@ describe('add', () => {
     expect(collection.objects).toHaveLength(1);
   });
 
-  test('keeps a hidden object out of the target collection but still persists it', async ({ expect }) => {
+  test('refuses an object whose type is not user-facing', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, HiddenState] });
     const collection = db.add(Collection.make({ name: 'People', objects: [] }));
     const hidden = Obj.make(HiddenState, { value: 'canvas' });
-    await add(db, { object: hidden, target: collection });
+    expect(ContainerModel.canAdd({ object: hidden, target: collection })).toBe(false);
+    await expect(add(db, { object: hidden, target: collection })).rejects.toThrow();
+    expect(collection.objects).toHaveLength(0);
+    // Refused before anything is written, so the object is not left in the space unfiled.
+    expect(Obj.getDatabase(hidden)).toBeUndefined();
+  });
+
+  test('without a target persists the object and files it nowhere', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, TestSchema.Person] });
+    const collection = db.add(Collection.make({ name: 'People', objects: [] }));
+    const person = Obj.make(TestSchema.Person, { name: 'alice' });
+    await add(db, { object: person });
     await db.flush();
 
-    // Collection membership drives the navtree; a hidden object filed there would show up as a
-    // sibling of the object that owns it (see plugin-illustrator's Sketch/canvas pair).
+    expect(Obj.getDatabase(person)).toBeDefined();
     expect(collection.objects).toHaveLength(0);
-    expect(Obj.getDatabase(hidden)).toBeDefined();
   });
 });
 
 const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
-  Schema.Struct({ name: Schema.String }).pipe(CollectionItemAnnotation.set(true)),
+  Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set()),
 );
 
 describe('ownership', () => {

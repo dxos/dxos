@@ -20,6 +20,7 @@ export class SourceFile extends Type.makeObject<SourceFile>(DXN.make('org.dxos.t
   }).pipe(
     Annotation.LabelAnnotation.set(['path']),
     Annotation.IconAnnotation.set({ icon: 'ph--file-code--regular', hue: meta.profile.icon?.hue }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

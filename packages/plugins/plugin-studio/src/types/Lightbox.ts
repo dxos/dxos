@@ -24,6 +24,7 @@ export class Lightbox extends Type.makeObject<Lightbox>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
