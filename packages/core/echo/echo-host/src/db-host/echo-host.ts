@@ -48,6 +48,7 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { MirrorServiceImpl } from '../mirror/mirror-service.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
@@ -150,6 +151,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
+  private readonly _mirrorService: MirrorServiceImpl;
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;
 
@@ -245,6 +247,7 @@ export class EchoHost extends Resource {
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
     });
 
+    this._mirrorService = new MirrorServiceImpl({ automergeHost: this._automergeHost });
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
@@ -308,6 +311,11 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
+  /** Document sync for clients that keep JSON mirrors instead of Automerge replicas. */
+  get mirrorService(): MirrorServiceImpl {
+    return this._mirrorService;
+  }
+
   get feedService(): FeedService.Handlers {
     return this._feedService;
   }
@@ -361,6 +369,7 @@ export class EchoHost extends Resource {
     log('echo-host: opening automerge host...');
     await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
+    await this._mirrorService.open(ctx);
 
     log('echo-host: opening query service...');
     await this._queryService.open(ctx);
@@ -421,6 +430,7 @@ export class EchoHost extends Resource {
     // iteration finishes.
     await this._updateIndexes?.join();
 
+    await this._mirrorService.close(ctx);
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();

@@ -22,7 +22,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
+import { DataService, FeedService, MirrorService, QueryService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
@@ -187,16 +187,18 @@ export class EchoTestPeer extends Resource {
    * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
    * and connects the given client. The bridged clients live on {@link _serviceScope}.
    */
-  private async _connectServices(client: EchoClient): Promise<void> {
+  private async _connectServices(client: EchoClient, mirror = Boolean(process.env.DX_ECHO_MIRROR)): Promise<void> {
     invariant(this._serviceScope, 'Service scope not initialized');
-    const [dataService, queryService, feedService] = await EffectEx.runPromise(
+    const [dataService, queryService, feedService, mirrorService] = await EffectEx.runPromise(
       Effect.all([
         makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
         makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
         makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
+        makeInProcessClient(MirrorService.Rpcs, this._echoHost.mirrorService),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
     );
-    client.connectToService({ dataService, queryService, feedService });
+    // DX_ECHO_MIRROR runs every test client on JSON mirrors instead of Automerge replicas.
+    client.connectToService({ dataService, queryService, feedService, ...(mirror ? { mirrorService } : {}) });
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -260,11 +262,12 @@ export class EchoTestPeer extends Resource {
     await this.open();
   }
 
-  async createClient(): Promise<EchoClient> {
+  /** @param options.mirror Serve documents to this client as JSON mirrors; defaults to `DX_ECHO_MIRROR`. */
+  async createClient({ mirror }: { mirror?: boolean } = {}): Promise<EchoClient> {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    await this._connectServices(client);
+    await this._connectServices(client, mirror);
     await client.open();
     return client;
   }

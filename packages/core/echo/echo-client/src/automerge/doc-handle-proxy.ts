@@ -11,57 +11,21 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { DocumentUnavailableError } from '../errors.ts';
-import * as Doc from './Doc.ts';
+import {
+  type ChangeEvent,
+  type ClientDocHandle,
+  type ClientDocHandleEvents,
+  type DiskSettlement,
+  type DocHandleProxyState,
+} from './client-handle.ts';
 
-export type ChangeEvent<T> = {
-  handle: DocHandleProxy<T>;
-  doc: A.Doc<T>;
-  patches: A.Patch[];
-  /**
-   * `change` is a change made on this thread; `host` is bytes the worker delivered on their own;
-   * `bulk` is bytes the worker delivered as part of a large batch, such as a first sync.
-   */
-  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' | 'host' | 'bulk' };
-};
-
-export type ClientDocHandleEvents<T> = {
-  change: ChangeEvent<T>;
-  delete: { handle: DocHandleProxy<T> };
-  /**
-   * The handle left `'unavailable'` because the document's bytes finally arrived. Emitted only on
-   * that transition: a waiter failed by {@link DocHandleProxy._markUnavailable} holds a rejected
-   * promise and has nothing else to wake it.
-   */
-  available: { handle: DocHandleProxy<T> };
-};
+export type { ChangeEvent, ClientDocHandleEvents, DiskSettlement, DocHandleProxyState };
 
 export type DocHandleProxyOptions<T> = {
   initialValue?: T;
   documentId?: DocumentId;
   onDelete: () => void;
 };
-
-/**
- * Lifecycle of {@link DocHandleProxy}.
- *
- * - `'pending'`  — handle just created; the worker has not yet reported the
- *                  outcome of the local-storage probe.
- * - `'requesting'` — worker confirmed the doc is **not** on disk and is
- *                    currently fetching it over the network.
- * - `'ready'`    — doc bytes are loaded and the handle is usable.
- * - `'unavailable'` — the host reported it cannot produce the doc at all;
- *                     {@link DocHandleProxy.whenReady} rejects rather than
- *                     waiting on bytes nothing is fetching.
- */
-export type DocHandleProxyState = 'pending' | 'requesting' | 'ready' | 'unavailable';
-
-/**
- * Settled state of the worker-side disk probe.
- * `true` means the worker had the doc on disk and the handle is now `'ready'`.
- * `false` means the worker did not find the doc on disk and is now requesting
- * it over the network (handle is `'requesting'`).
- */
-export type DiskSettlement = boolean;
 
 /**
  * A client-side `Handle` implementation.
@@ -80,7 +44,7 @@ export type DiskSettlement = boolean;
  * ({@link _markUnavailable}), which is terminal only until bytes actually
  * arrive.
  */
-export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements Doc.Handle<T> {
+export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements ClientDocHandle<T> {
   private readonly _ready = new Trigger();
   private readonly _settledOnDisk = new Trigger<DiskSettlement>();
   private _state: DocHandleProxyState = 'pending';

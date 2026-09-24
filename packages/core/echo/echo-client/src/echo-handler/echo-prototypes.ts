@@ -50,7 +50,6 @@
 //   `rawTarget(this)` and keep `this` as the receiver for any re-entrant reads.
 //
 
-import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
@@ -115,6 +114,7 @@ import { deepMapValues, defaultMap } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc.ts';
 import { type ObjectCore } from '../core-db/index.ts';
+import * as DocOps from '../mirror/doc-ops.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 import { getBody, getHeader } from './devtools-formatter.ts';
 import {
@@ -346,10 +346,11 @@ const getVersion = (target: ProxyTarget): Obj.Version => {
   const accessor = target[symbolInternals].getDocAccessor();
   const doc = accessor.handle.doc();
   invariant(doc);
-  const heads = A.getHeads(doc);
+  // A mirror's heads are the last confirmed ones; an object the worker has not confirmed has none.
+  const heads = DocOps.getHeads(doc);
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
-    versioned: true,
+    versioned: !DocOps.isMirrorDoc(doc) || heads.length > 0,
     automergeHeads: heads,
   };
 };

@@ -12,3 +12,5 @@ export * from './reference.ts';
 export * from './space-doc-version.ts';
 export * from './space-id.ts';
 export * from './space-root.ts';
+export * as Mirror from './mirror/index.ts';
+export * as MirrorTesting from './mirror/testing.ts';

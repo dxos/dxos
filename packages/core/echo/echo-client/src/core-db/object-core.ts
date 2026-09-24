@@ -31,7 +31,9 @@ import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc.ts';
-import { type DocHandleProxy } from '../automerge/index.ts';
+import { type ClientDocHandle } from '../automerge/index.ts';
+import * as DocOps from '../mirror/doc-ops.ts';
+import { isMirrorMode } from '../mirror/mode.ts';
 import { docChangeSemaphore } from './doc-semaphore.ts';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
@@ -98,7 +100,7 @@ export class ObjectCore {
   /**
    * Set when the object is bound to a database.
    */
-  public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
+  public docHandle?: ClientDocHandle<DatabaseDirectory> = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -243,16 +245,19 @@ export class ObjectCore {
 
     initialProps ??= {};
 
-    this.doc = A.from<EntityStructure>({
-      data: this.encode(initialProps),
-      meta: this.encode({
-        ...opts?.meta,
-        keys: opts?.meta?.keys ?? [],
-        tags: opts?.meta?.tags ?? [],
-        annotations: opts?.meta?.annotations ?? {},
-      }),
-      system: { createdAt: Date.now() },
-    });
+    this.doc = DocOps.createLocalDoc<EntityStructure>(
+      {
+        data: this.encode(initialProps),
+        meta: this.encode({
+          ...opts?.meta,
+          keys: opts?.meta?.keys ?? [],
+          tags: opts?.meta?.tags ?? [],
+          annotations: opts?.meta?.annotations ?? {},
+        }),
+        system: { createdAt: Date.now() },
+      },
+      isMirrorMode(),
+    );
   }
 
   bind(options: BindOptions): void {
@@ -323,11 +328,7 @@ export class ObjectCore {
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     if (this.doc) {
-      if (options) {
-        this.doc = A.change(this.doc!, options, changeFn);
-      } else {
-        this.doc = A.change(this.doc!, changeFn);
-      }
+      this.doc = DocOps.changeLocalDoc(this.doc, changeFn, options);
 
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
@@ -347,7 +348,9 @@ export class ObjectCore {
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     let result: Heads | undefined;
-    if (this.doc) {
+    if (this.doc && DocOps.isMirrorDoc(this.doc)) {
+      throw new Error('changeAt needs Automerge history, which a mirrored local document does not have');
+    } else if (this.doc) {
       if (options) {
         const { newDoc, newHeads } = A.changeAt(this.doc!, heads, options, callback);
         this.doc = newDoc;
@@ -724,7 +727,7 @@ export class ObjectCore {
    */
   getHeads(): Heads {
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
-    return doc ? A.getHeads(doc) : [];
+    return doc ? DocOps.getHeads(doc) : [];
   }
 
   getType(): EncodedReference | undefined {
@@ -769,7 +772,8 @@ export class ObjectCore {
    */
   getUpdatedAt(): number | undefined {
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
-    if (!doc) {
+    // A mirror has no change metadata; the worker would have to send the time with each entry.
+    if (!doc || DocOps.isMirrorDoc(doc)) {
       return undefined;
     }
 
@@ -901,7 +905,7 @@ export class ObjectCore {
 
 export type BindOptions = {
   db: IDatabaseBinding;
-  docHandle: DocHandleProxy<DatabaseDirectory>;
+  docHandle: ClientDocHandle<DatabaseDirectory>;
   path: Doc.KeyPath;
   /** Assign the state from the local doc into the shared structure for the database. */
   assignFromLocalState?: boolean;

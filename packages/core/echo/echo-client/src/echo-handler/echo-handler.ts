@@ -56,6 +56,7 @@ import {
   ObjectCore,
   type TargetRefreshScope,
 } from '../core-db/index.ts';
+import * as DocOps from '../mirror/doc-ops.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 import { EchoArray } from './echo-array.ts';
 import { isEchoObject, isRootDataObject } from './echo-object-utils.ts';
@@ -645,7 +646,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolInternals].change((doc: any) => {
       // `A.updateText` computes a minimal diff so cursors/anchors survive and concurrent edits merge.
       // `.slice()` materializes a mutable copy since Automerge mutates the path array.
-      A.updateText(doc, fullPath.slice(), newText);
+      DocOps.updateText(doc, fullPath, newText);
     });
   }
 
@@ -659,7 +660,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(typeof current === 'string', 'Text mutation target is not a string');
       const range = normalizeSpliceRange(current.length, start, deleteCount);
       removed = current.slice(range.start, range.start + range.deleteCount);
-      A.splice(doc, fullPath.slice(), range.start, range.deleteCount, insert);
+      DocOps.splice(doc, fullPath, range.start, range.deleteCount, insert);
     });
 
     return removed;

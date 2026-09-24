@@ -14,7 +14,8 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { RepoClosedError } from '../errors.ts';
-import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
+import { type ChangeEvent, type ClientRepo, type SaveStateChangedEvent } from './client-handle.ts';
+import { DocHandleProxy } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
@@ -46,7 +47,7 @@ const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
  * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
-export class RepoProxy extends Resource {
+export class RepoProxy extends Resource implements ClientRepo {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
   private readonly _subscriptionId = PublicKey.random().toHex();
@@ -840,6 +841,4 @@ export class RepoProxy extends Resource {
   }
 }
 
-export type SaveStateChangedEvent = {
-  unsavedDocuments: DocumentId[];
-};
+export type { SaveStateChangedEvent };

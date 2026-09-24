@@ -1,0 +1,16 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+/**
+ * Whether objects not yet added to a database keep JSON documents instead of Automerge ones. Set
+ * process-wide because an object is created before anyone knows which database it will join; a
+ * tab without Automerge sets it once at startup.
+ */
+let mirrorMode = false;
+
+export const isMirrorMode = (): boolean => mirrorMode;
+
+export const setMirrorMode = (enabled: boolean): void => {
+  mirrorMode = enabled;
+};

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A, type Heads, getHeads } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -35,19 +35,22 @@ import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import type { DataService, QueryService } from '@dxos/protocols/rpc';
+import type { DataService, MirrorService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
 import {
   type ChangeEvent,
-  type DocHandleProxy,
+  type ClientDocHandle,
+  type ClientRepo,
   RepoProxy,
   type SaveStateChangedEvent,
   toDocumentId,
 } from '../automerge/index.ts';
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
+import * as DocOps from '../mirror/doc-ops.ts';
+import { MirrorRepo } from '../mirror/mirror-repo.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
@@ -77,7 +80,7 @@ const isSettled = (request: RefResolverRequest): boolean =>
  * Payload for the internal object-document-loaded notification.
  */
 interface ObjectDocumentLoaded {
-  handle: DocHandleProxy<DatabaseDirectory>;
+  handle: ClientDocHandle<DatabaseDirectory>;
   objectId: string;
 }
 
@@ -85,7 +88,7 @@ interface ObjectDocumentLoaded {
  * Payload for the internal object-unavailable notification.
  */
 interface ObjectUnavailable {
-  handle?: DocHandleProxy<DatabaseDirectory>;
+  handle?: ClientDocHandle<DatabaseDirectory>;
   objectId: string;
 }
 
@@ -95,6 +98,8 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
+  /** Serve documents as JSON mirrors instead of Automerge replicas when set. */
+  mirrorService?: MirrorService.Client;
   runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
@@ -118,7 +123,7 @@ export class EntityManager implements IDatabaseBinding {
   private _dataService: DataService.Client;
   private _queryService: QueryService.Client;
   private readonly _runtime: EffectContext.Context<never>;
-  readonly _repoProxy: RepoProxy;
+  readonly _repoProxy: ClientRepo;
 
   // ── Object storage ──────────────────────────────────────────────────────
   /**
@@ -184,9 +189,9 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   // ── Automerge document state ────────────────────────────────────────────
-  private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
+  private _spaceRootDocHandle: ClientDocHandle<DatabaseDirectory> | null = null;
 
-  private readonly _objectDocumentHandles = new Map<string, DocHandleProxy<DatabaseDirectory>>();
+  private readonly _objectDocumentHandles = new Map<string, ClientDocHandle<DatabaseDirectory>>();
 
   /**
    * Object ids per document, the inverse of {@link _objectDocumentHandles}. Releasing one object's
@@ -194,7 +199,7 @@ export class EntityManager implements IDatabaseBinding {
    * can hold several — so the last object out is what makes the handle evictable, which this answers
    * without a scan of the loaded set.
    */
-  private readonly _documentObjects = new Map<DocHandleProxy<DatabaseDirectory>, Set<string>>();
+  private readonly _documentObjects = new Map<ClientDocHandle<DatabaseDirectory>, Set<string>>();
 
   private readonly _objectsPendingDocumentLoad = new Map<string, LoadObjectDocumentOptions>();
 
@@ -240,7 +245,9 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
-    this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
+    this._repoProxy = options.mirrorService
+      ? new MirrorRepo(options.mirrorService, this._dataService, this._runtime, this._spaceId)
+      : new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
 
@@ -725,7 +732,7 @@ export class EntityManager implements IDatabaseBinding {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    let spaceDocHandle: DocHandleProxy<DatabaseDirectory>;
+    let spaceDocHandle: ClientDocHandle<DatabaseDirectory>;
     const placement = opts?.placeIn ?? 'linked-doc';
     switch (placement) {
       case 'linked-doc': {
@@ -906,7 +913,7 @@ export class EntityManager implements IDatabaseBinding {
       heads[state.documentId] = state.heads ?? [];
     }
 
-    heads[root.documentId] = getHeads(doc);
+    heads[root.documentId] = DocOps.getHeads(doc);
 
     return { heads };
   }
@@ -946,7 +953,7 @@ export class EntityManager implements IDatabaseBinding {
     await asyncTimeout(
       Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
         const doc = rootHandle.doc();
-        return doc != null && A.hasHeads(doc, rootHeads);
+        return doc != null && DocOps.hasHeads(doc, rootHeads);
       }),
       RPC_TIMEOUT,
       'waiting for the space root document to replicate to the client',
@@ -1070,7 +1077,7 @@ export class EntityManager implements IDatabaseBinding {
     return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
   }
 
-  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
+  getLoadedDocumentHandles(): ClientDocHandle<any>[] {
     return Object.values(this._repoProxy.handles);
   }
 
@@ -1094,12 +1101,12 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Document-handle public surface ───────────────────────────────────────
 
-  getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+  getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory> {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     return this._spaceRootDocHandle;
   }
 
-  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+  getLinkedDocHandles(): ClientDocHandle<DatabaseDirectory>[] {
     const rootHandle = this._spaceRootDocHandle;
     return [...new Set(this._objectDocumentHandles.values())].filter((h) => h !== rootHandle);
   }
@@ -1212,7 +1219,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     const spaceRoot = this.getSpaceRootDocHandle();
-    const baseHeads = memberHeads[rootObjectId] ?? getHeads(rootCore.getDoc());
+    const baseHeads = memberHeads[rootObjectId] ?? DocOps.getHeads(rootCore.getDoc());
     const createdAt = Date.now();
     spaceRoot.change((doc: DatabaseDirectory) => {
       // Assign through re-read doc proxies (not a chained `??=` result, which returns the orphan
@@ -1289,7 +1296,7 @@ export class EntityManager implements IDatabaseBinding {
       invariant(record, `branch not found: ${name}`);
       // Preflight every member's branch doc + main handle before mutating any of them, so a member
       // that fails to load aborts the merge cleanly rather than leaving the subtree half-merged.
-      const merges: Array<{ branchDoc: A.Doc<DatabaseDirectory>; mainHandle: DocHandleProxy<DatabaseDirectory> }> = [];
+      const merges: Array<{ branchDoc: A.Doc<DatabaseDirectory>; mainHandle: ClientDocHandle<DatabaseDirectory> }> = [];
       for (const [memberId, urlData] of Object.entries(record.members)) {
         const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
         await branchHandle.whenReady();
@@ -1318,7 +1325,7 @@ export class EntityManager implements IDatabaseBinding {
       const record = this.getBranchRegistry(rootObjectId)?.[name];
       invariant(record, `branch not found: ${name}`);
       // Preflight every member before mutating any, so a failed load aborts cleanly.
-      const merges: Array<{ branchHandle: DocHandleProxy<DatabaseDirectory>; mainDoc: A.Doc<DatabaseDirectory> }> = [];
+      const merges: Array<{ branchHandle: ClientDocHandle<DatabaseDirectory>; mainDoc: A.Doc<DatabaseDirectory> }> = [];
       for (const [memberId, urlData] of Object.entries(record.members)) {
         const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
         await branchHandle.whenReady();
@@ -1395,7 +1402,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /** Resolve the object's main (default-branch) document handle. */
-  private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
+  private async _mainDocHandle(objectId: string): Promise<ClientDocHandle<DatabaseDirectory>> {
     const spaceRoot = this.getSpaceRootDocHandle();
     const url = spaceRoot.doc().links?.[objectId]?.toString();
     if (!url) {
@@ -1462,7 +1469,7 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
-    let handle: DocHandleProxy<DatabaseDirectory>;
+    let handle: ClientDocHandle<DatabaseDirectory>;
     if (url) {
       handle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
       await handle.whenReady();
@@ -1589,12 +1596,12 @@ export class EntityManager implements IDatabaseBinding {
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
   }
 
-  private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
+  private _onObjectBoundToDocument(handle: ClientDocHandle<DatabaseDirectory>, objectId: string): void {
     this._bindObjectDocument(objectId, handle);
   }
 
   /** Records the object -> document mapping in both directions. */
-  private _bindObjectDocument(objectId: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+  private _bindObjectDocument(objectId: string, handle: ClientDocHandle<DatabaseDirectory>): void {
     const previous = this._objectDocumentHandles.get(objectId);
     if (previous !== undefined && previous !== handle) {
       this._forgetDocumentObject(objectId, previous);
@@ -1610,7 +1617,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /** Drops the object -> document mapping, returning the handle it was bound to. */
-  private _unbindObjectDocument(objectId: string): DocHandleProxy<DatabaseDirectory> | undefined {
+  private _unbindObjectDocument(objectId: string): ClientDocHandle<DatabaseDirectory> | undefined {
     const handle = this._objectDocumentHandles.get(objectId);
     this._objectDocumentHandles.delete(objectId);
     if (handle !== undefined) {
@@ -1619,7 +1626,7 @@ export class EntityManager implements IDatabaseBinding {
     return handle;
   }
 
-  private _forgetDocumentObject(objectId: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+  private _forgetDocumentObject(objectId: string, handle: ClientDocHandle<DatabaseDirectory>): void {
     const objects = this._documentObjects.get(handle);
     if (objects === undefined) {
       return;
@@ -1630,7 +1637,7 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  private _createDocumentForObject(objectId: string): DocHandleProxy<DatabaseDirectory> {
+  private _createDocumentForObject(objectId: string): ClientDocHandle<DatabaseDirectory> {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     const spaceDocHandle = this._repoProxy.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
@@ -1681,7 +1688,7 @@ export class EntityManager implements IDatabaseBinding {
     return objectsWithHandles;
   }
 
-  private _getAllDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+  private _getAllDocHandles(): ClientDocHandle<DatabaseDirectory>[] {
     return this._spaceRootDocHandle != null
       ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
       : [];
@@ -1716,7 +1723,7 @@ export class EntityManager implements IDatabaseBinding {
         log.warn('object document was already loaded', logMeta);
         continue;
       }
-      let handle: DocHandleProxy<DatabaseDirectory>;
+      let handle: ClientDocHandle<DatabaseDirectory>;
       try {
         handle = this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
       } catch (err) {
@@ -1734,7 +1741,7 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
+  private async _initDocHandle(ctx: Context, url: string): Promise<ClientDocHandle<DatabaseDirectory>> {
     const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
     await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
       await cancelWithContext(ctx, docHandle.whenReady());
@@ -1743,7 +1750,7 @@ export class EntityManager implements IDatabaseBinding {
     return docHandle;
   }
 
-  private _initDocAccess(handle: DocHandleProxy<DatabaseDirectory>): void {
+  private _initDocAccess(handle: ClientDocHandle<DatabaseDirectory>): void {
     handle.change((newDoc: DatabaseDirectory) => {
       newDoc.access ??= {};
       newDoc.access.spaceId = this._spaceId;
@@ -1759,7 +1766,7 @@ export class EntityManager implements IDatabaseBinding {
    * would notice the delivery; the handle's `available` event is the only signal, since the waiter
    * that would otherwise carry it is holding a rejected `whenReady`.
    */
-  #recoverWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+  #recoverWhenAvailable(handle: ClientDocHandle<DatabaseDirectory>, objectId: string, generation: number): void {
     handle.once('available', () => {
       // The wait outlives the space that started it, so a handle re-bound elsewhere — or a closed
       // manager — must not recreate an evicted object.
@@ -1776,7 +1783,7 @@ export class EntityManager implements IDatabaseBinding {
    * A rebind onto an unavailable document is skipped rather than awaited, so the object keeps its
    * previous binding and nothing else would revisit the link.
    */
-  #rebindWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+  #rebindWhenAvailable(handle: ClientDocHandle<DatabaseDirectory>, objectId: string, generation: number): void {
     handle.once('available', () => {
       if (this.#isStale(generation) || !this._objects.has(objectId)) {
         return;
@@ -1792,7 +1799,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private async _loadHandleForObject(
-    handle: DocHandleProxy<DatabaseDirectory>,
+    handle: ClientDocHandle<DatabaseDirectory>,
     objectId: string,
     opts: LoadObjectDocumentOptions = {},
   ): Promise<void> {
@@ -1875,7 +1882,7 @@ export class EntityManager implements IDatabaseBinding {
   // ── Private document change handlers ────────────────────────────────────
 
   private async _handleSpaceRootDocumentChange(
-    spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
+    spaceRootDocHandle: ClientDocHandle<DatabaseDirectory>,
     objectsToLoad: string[],
   ): Promise<void> {
     const spaceRootUrl = spaceRootDocHandle.url;
@@ -1888,7 +1895,7 @@ export class EntityManager implements IDatabaseBinding {
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
-    const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
+    const objectsToRebind = new Map<string, { handle: ClientDocHandle<DatabaseDirectory>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootUrl, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
@@ -1910,7 +1917,7 @@ export class EntityManager implements IDatabaseBinding {
           existing.objectIds.push(object.id);
           continue;
         }
-        let newDocHandle: DocHandleProxy<DatabaseDirectory>;
+        let newDocHandle: ClientDocHandle<DatabaseDirectory>;
         try {
           newDocHandle = this._repoProxy.find<DatabaseDirectory>(newObjectDocUrl as DocumentId);
         } catch (err) {
@@ -2146,14 +2153,14 @@ export class EntityManager implements IDatabaseBinding {
     this._scheduleThrottledUpdate([objectId]);
   }
 
-  private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
+  private _createInlineObjects(docHandle: ClientDocHandle<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
   }
 
-  private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
+  private _createObjectInDocument(docHandle: ClientDocHandle<DatabaseDirectory>, objectId: string): ObjectCore {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;
@@ -2258,7 +2265,7 @@ export class EntityManager implements IDatabaseBinding {
     this._scheduleThrottledUpdate([objectId]);
   }
 
-  private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
+  private _rebindObjects(docHandle: ClientDocHandle<DatabaseDirectory>, objectIds: string[]): void {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);

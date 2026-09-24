@@ -10,10 +10,11 @@ import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
 
 import { type BranchStore } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
+import { setMirrorMode } from '../mirror/mode.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
 
@@ -26,6 +27,8 @@ export type ConnectToServiceProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
+  /** Serve documents as JSON mirrors: the client then loads no Automerge documents. */
+  mirrorService?: MirrorService.Client;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
   runtime?: EffectContext.Context<never>;
@@ -71,6 +74,7 @@ export class EchoClient extends Resource {
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
 
   private _dataService: DataService.Client | undefined = undefined;
+  private _mirrorService: MirrorService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
@@ -97,7 +101,11 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, feedService, runtime }: ConnectToServiceProps): this {
+  connectToService({ dataService, queryService, feedService, mirrorService, runtime }: ConnectToServiceProps): this {
+    this._mirrorService = mirrorService;
+    if (mirrorService) {
+      setMirrorMode(true);
+    }
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
@@ -156,6 +164,7 @@ export class EchoClient extends Resource {
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new DatabaseImpl({
       dataService: this._dataService!,
+      mirrorService: this._mirrorService,
       queryService: this._queryService!,
       feedService: this._feedService,
       runtime: this._runtime,

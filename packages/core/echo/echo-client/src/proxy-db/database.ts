@@ -52,10 +52,10 @@ import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { type DataService, type FeedService, type MirrorService, type QueryService } from '@dxos/protocols/rpc';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
-import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
 import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -123,19 +123,19 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Returns the loaded automerge document handles.
    */
-  getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
+  getLoadedDocumentHandles(): ClientDocHandle<unknown>[];
 
   /**
    * Migration-scoped accessor to the automerge repo.
    * Will be moved to a dedicated internal entrypoint in a future stage.
    */
-  readonly _repo: RepoProxy;
+  readonly _repo: ClientRepo;
 
   /**
    * Returns the space root document handle for migration tools.
    * Will be moved to a dedicated internal entrypoint in a future stage.
    */
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
+  _getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory>;
 
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
@@ -180,6 +180,8 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.Branch
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
+  /** Serve documents as JSON mirrors instead of Automerge replicas when set. */
+  mirrorService?: MirrorService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
   runtime: EffectContext.Context<never>;
@@ -321,6 +323,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
+      mirrorService: params.mirrorService,
       queryService: params.queryService,
       runtime: params.runtime,
       spaceId: params.spaceId,
@@ -959,23 +962,23 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getTotalNumberOfObjects();
   }
 
-  getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
+  getLoadedDocumentHandles(): ClientDocHandle<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
   }
 
-  get _repo(): RepoProxy {
+  get _repo(): ClientRepo {
     return this._entityManager._repoProxy;
   }
 
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+  _getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory> {
     return this._entityManager.getSpaceRootDocHandle();
   }
 
-  getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+  getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory> {
     return this._entityManager.getSpaceRootDocHandle();
   }
 
-  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+  getLinkedDocHandles(): ClientDocHandle<DatabaseDirectory>[] {
     return this._entityManager.getLinkedDocHandles();
   }
 
