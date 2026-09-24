@@ -145,7 +145,8 @@ which cannot drop frames).
 - **Keep it when it matters** — a demo about startup, a splash, or a slow boot — with `--boot keep`.
 - **`cut` at any point** drops everything recorded so far, for setup you would rather not show (seeding
   a space, enabling a plugin). Captions issued before it are dropped too, so caption after the cut.
-- **For another app**, pass the selector that means "ready" there, e.g. `--ready '[data-testid=app]'`.
+- **For another app**, pass a selector whose first match is the element that means "ready", e.g.
+  `--ready '[data-testid=app]'`; the driver waits for that first match to become visible.
 
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.
