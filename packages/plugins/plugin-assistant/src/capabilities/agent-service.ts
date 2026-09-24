@@ -26,7 +26,7 @@ import { AssistantCapabilities, AssistantOptions } from '#types';
 // Owns the application-affinity {@link AgentService} layer for process-backed agents.
 //
 
-const makeAgentServiceSpec = (codeModeTurnProducer: MakeTurnProducer | undefined) =>
+const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPluginOptions['codeModeTurnProducer']) =>
   LayerSpec.make(
     {
       affinity: 'application',
@@ -44,9 +44,10 @@ const makeAgentServiceSpec = (codeModeTurnProducer: MakeTurnProducer | undefined
           // Optional supervisor behaviour, contributed by a plugin that knows the agent/plan model.
           const strategies = yield* Capability.getAll(RoutineCapabilities.AgentDelegationStrategy);
           const manager = yield* Capability.Service;
+          const codeMode = codeModeTurnProducer?.(manager);
           return AgentServiceRuntime.layer({
             delegationStrategy: strategies[0],
-            makeTurnProducer: (options) => resolveTurnProducer(manager, codeModeTurnProducer)(options),
+            makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
           });
         }),
       ),
