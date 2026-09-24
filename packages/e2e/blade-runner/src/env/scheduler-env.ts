@@ -6,7 +6,7 @@ import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
@@ -34,12 +34,6 @@ import { writeEventStreamToAFile } from '../tracing/index.ts';
 import { ReadableMuxer } from '../tracing/readable-muxer.ts';
 import { type RpcHandle, type SchedulerEnv } from './interface.ts';
 import { ReplicantRpcHandle, close, open } from './replicant-rpc-handle.ts';
-
-/**
- * How long closing waits for killed replicants to exit: each closes its client and flushes its spans
- * first, each step bounded by `span-export.ts` at 10s.
- */
-const REPLICANT_EXIT_TIMEOUT = 25_000;
 
 // TODO(mykola): Unify with ReplicatorEnv.
 /**
@@ -76,8 +70,6 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
    * List of all handles to replicants spawned by this scheduler.
    */
   readonly replicants: ReplicantBrain<any>[] = [];
-
-  private readonly _replicantExits: Promise<unknown>[] = [];
 
   constructor(
     private readonly _options: GlobalOptions,
@@ -127,9 +119,6 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
       // Kill all replicants.
       replicant.kill('SIGTERM');
     }
-    // Each closes its client and flushes its spans on the way out. Exiting first ends the CI step, and the
-    // job removes the container within seconds, killing them mid-flush.
-    await Promise.race([Promise.all(this._replicantExits), sleep(REPLICANT_EXIT_TIMEOUT)]);
 
     this._redis.disconnect();
     this._redisSub.disconnect();
@@ -279,7 +268,6 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     };
 
     this.replicants.push(replicantHandle);
-    this._replicantExits.push(processHandle.exited);
 
     return replicantHandle;
   }

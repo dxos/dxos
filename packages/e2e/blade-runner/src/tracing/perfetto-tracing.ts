@@ -5,27 +5,18 @@
 import fs from 'node:fs';
 
 import { log } from '@dxos/log';
-import { TRACE_PROCESSOR, type TracingBackend } from '@dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { PerfettoEvents } from './perfetto-events.ts';
 
 export const PERFETTO_EVENTS = new PerfettoEvents();
 
-/**
- * Records every span as perfetto events. Forwards spans to `next` as well, since `TRACE_PROCESSOR` holds a
- * single backend and installing this one would otherwise replace it (the span export, for one).
- */
-export const registerPerfettoTracer = (next?: TracingBackend) => {
+export const registerPerfettoTracer = () => {
   TRACE_PROCESSOR.tracingBackend = {
-    startSpan: (options) => {
-      PERFETTO_EVENTS.begin({ name: options.name });
-      const span = next?.startSpan(options);
+    startSpan: ({ name }) => {
+      PERFETTO_EVENTS.begin({ name });
       return {
-        ...span,
-        end: (endTime) => {
-          PERFETTO_EVENTS.end({ name: options.name });
-          span?.end(endTime);
-        },
+        end: () => PERFETTO_EVENTS.end({ name }),
       };
     },
   };

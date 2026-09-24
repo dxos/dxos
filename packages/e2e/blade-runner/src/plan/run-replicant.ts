@@ -8,7 +8,6 @@ import { isNode } from '@dxos/util';
 
 import { ReplicantEnvImpl, ReplicantRegistry } from '../env/index.ts';
 import { DEFAULT_REDIS_OPTIONS } from '../redis/index.ts';
-import { flushSpanExport, startSpanExport } from '../tracing/index.ts';
 import { type RunProps } from './run-process.ts';
 import { type ReplicantProps } from './spec.ts';
 
@@ -20,12 +19,8 @@ export const runReplicant = async ({ replicantProps }: RunProps) => {
     initLogProcessor(replicantProps);
     log.info('running replicant', { params: replicantProps });
 
-    // The conventional codes for the signals: `process.exit` throws on a signal name.
-    process.on('SIGINT', () => void finish(130));
-    process.on('SIGTERM', () => void finish(143));
-    if (isNode()) {
-      await startSpanExport();
-    }
+    process.on('SIGINT', () => finish('SIGINT'));
+    process.on('SIGTERM', () => finish('SIGTERM'));
 
     const env: ReplicantEnvImpl = new ReplicantEnvImpl(replicantProps, DEFAULT_REDIS_OPTIONS);
     const replicant = new (ReplicantRegistry.instance.get(replicantProps.replicantClass))(env);
@@ -36,7 +31,7 @@ export const runReplicant = async ({ replicantProps }: RunProps) => {
     // Ensure graceful termination so Node writes CPU profile when enabled.
   } catch (err) {
     log.catch(err, { params: replicantProps });
-    await finish(1);
+    finish(1);
   }
 };
 
@@ -59,10 +54,8 @@ const initLogProcessor = (params: ReplicantProps) => {
   }
 };
 
-const finish = async (code: number) => {
+const finish = (code: number | string) => {
   if (isNode()) {
-    // The orchestrator ends a run by killing its replicants, which would drop the last batch of spans.
-    await flushSpanExport();
     process.exit(code);
   } else {
     // NOTE: `dx_runner_done` is being exposed by playwright `.exposeFunction()` API.

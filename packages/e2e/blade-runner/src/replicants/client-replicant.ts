@@ -34,7 +34,6 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
-import { onBeforeSpanFlush, setSpanTags } from '../tracing/index.ts';
 
 /**
  * The one document type the stress test manipulates.
@@ -108,9 +107,6 @@ export class ClientReplicant {
 
   constructor(env: ReplicantEnv) {
     this.#env = env;
-    // Closing the client ends a sync still in flight when the run kills this replicant, so its
-    // `CollectionSynchronizer.syncPeer` span is exported as `closed` rather than dropped.
-    onBeforeSpanFlush(() => this.destroy());
   }
 
   //
@@ -122,19 +118,13 @@ export class ClientReplicant {
     edgeUrl,
     agents,
     partitions,
-    spanTags = {},
   }: {
     edgeUrl: string;
     agents: boolean;
     partitions: boolean;
-    /** Run parameters for the spans this process exports, beyond the ones `init` already knows. */
-    spanTags?: Record<string, string>;
   }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
     this.#config = { edgeUrl, agents, partitions };
-    // The span dashboard filters on these tags, as the CI report pins `ciEdge` and `ciAgents`, so do not
-    // rename them without updating it.
-    setSpanTags({ edgeUrl, agents: String(agents), ...spanTags });
     // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
     // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
     // plain socket and send `Host: localhost`. A run without partitions needs no proxy, so dial
@@ -363,12 +353,8 @@ export class ClientReplicant {
    *
    * Both are measured here rather than by the caller, so neither carries the RPC round trip or the
    * cost of spawning the peer.
-   *
-   * Do not rename or remove the span or its `ctx.spaceId`: its start is "accept" on the PostHog dashboard
-   * "EDGE nightly join latency (spans)", which measures each joiner from here to the end of its
-   * `CollectionSynchronizer.syncPeer` span for that space: https://eu.posthog.com/project/126171/dashboard/973334.
    */
-  @trace.span({ resultAttributes: ({ spaceId }) => ({ spaceId }) })
+  @trace.span()
   async joinSpace({
     invitationCode,
   }: {
