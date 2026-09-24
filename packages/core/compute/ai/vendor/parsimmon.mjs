@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as parsimmon from 'parsimmon';
+import parsimmon from 'parsimmon';
 
 export { parsimmon };
