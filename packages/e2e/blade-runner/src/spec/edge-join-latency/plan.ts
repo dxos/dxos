@@ -218,7 +218,13 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
       // Never `partitions`: the offline proxy cannot front an `https:` endpoint, and nothing here
       // cuts a link anyway.
-      await replicant.brain.init({ edgeUrl, agents: spec.agents, partitions: false });
+      // The span dashboard pins the object count by this tag, as the CI report pins `ciObjects`.
+      await replicant.brain.init({
+        edgeUrl,
+        agents: spec.agents,
+        partitions: false,
+        spanTags: { objects: String(spec.objects) },
+      });
       const { identityDid } = await replicant.brain.createIdentity({ displayName: label });
       identityDids.push(identityDid);
       // Tracked from the moment an identity exists, not once the client is fully provisioned:

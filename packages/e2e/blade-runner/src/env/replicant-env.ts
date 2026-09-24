@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { type ReplicantProps } from '../plan/index.ts';
 import { createRedisRpcPort, createRedisWritableStream } from '../redis/index.ts';
-import { PERFETTO_EVENTS, registerPerfettoTracer } from '../tracing/index.ts';
+import { PERFETTO_EVENTS, getSpanExportBackend, registerPerfettoTracer } from '../tracing/index.ts';
 import { initDiagnostics } from './diagnostics.ts';
 import { type ReplicantEnv } from './interface.ts';
 import { ReplicantRpcServer } from './replicant-rpc-server.ts';
@@ -80,8 +80,8 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   }
 
   protected override async _open(): Promise<void> {
-    // Send tracing data to the scheduler process.
-    registerPerfettoTracer();
+    // Send tracing data to the scheduler process, and on to the span export when `runReplicant` started one.
+    registerPerfettoTracer(getSpanExportBackend());
     const tracingStream = createRedisWritableStream({
       client: this._tracingRedis,
       queue: this.params.redisTracingQueue,

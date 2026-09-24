@@ -105,12 +105,16 @@ jobs:
       - name: Build
         run: moon run blade-runner:build
 
+      # The token also makes every replicant export its spans to PostHog (`startSpanExport`): the
+      # `CollectionSynchronizer.syncPeer` spans feed the "EDGE nightly join latency (spans)" dashboard,
+      # the span-built twin of the one `Trend the join latency` feeds: https://eu.posthog.com/project/126171/dashboard/973334
       - name: Measure join latency
         working-directory: packages/e2e/blade-runner
         env:
           EDGE: ${{ inputs.edge || 'preview' }}
           OBJECTS: ${{ inputs.objects || '100' }}
           JOINERS: ${{ inputs.joiners || '5' }}
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           GRAVITY_OUT_BASE="$PWD" node --import tsx src/main.ts edgeJoinLatency --no-browser \
             --spec "{\"edge\":\"$EDGE\",\"objects\":$OBJECTS,\"joiners\":$JOINERS}"
