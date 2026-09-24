@@ -75,6 +75,21 @@ Memory means four different things that differ by 3-5x (JS heap, snapshot self s
 allocators, private footprint). The trended one is the renderers' private footprint, because it is
 the app's own cost and it is a quantity: footprints are disjoint per process, so they can be added.
 
+## Recording a run
+
+`DX_PERF_VIDEO=1` records the whole flow as a Playwright video and writes a chapter index beside it:
+
+```bash
+DX_PERF_VIDEO=1 moon run composer-app:e2e-perf
+```
+
+It lands as `artifacts/<mode>-<runId>/<flow>-<mode>-<iteration>.webm`, with a
+`.chapters.json` giving each stage's offset into the file — a run is minutes of footage in which
+the stage worth watching is seconds long. A recorded run is NOT a measured run: the capture path
+runs on every frame, so its numbers are not comparable with an unrecorded run's and the nightly
+never sets the flag. Separate from `diagnose`'s screencast, which keeps a stage's first and last
+frame as a measurement (`stillFrame*`) rather than as something to watch.
+
 ## Output
 
 Written under `test-results/perf/`:

@@ -3,6 +3,7 @@
 //
 
 import { type Locator, type Page, expect, test } from '@playwright/test';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -144,6 +145,16 @@ const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ??
 const screencastEnabled = process.env.DX_PERF_SCREENCAST !== '0';
 
 /**
+ * Records the run as a Playwright video, and writes a chapter index beside it.
+ *
+ * `DX_PERF_VIDEO=1` only, never in the nightly: the video is a capture path attached to every
+ * frame, so a recorded run is not comparable with an unrecorded one — this exists to SHOW the flow,
+ * not to measure it. Deliberately separate from `diagnose`'s screencast, which keeps a stage's
+ * first and last frame and is a measurement (`stillFrame*`) rather than something to watch.
+ */
+const videoEnabled = process.env.DX_PERF_VIDEO === '1';
+
+/**
  * Locator budget per mode.
  *
  * `diagnose` gets far more because the SCREENCAST is not a small tax — it took `open-tasks` from
@@ -207,7 +218,17 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   const { browser, browserCdp, debugPort } = instrumented;
 
   try {
-    const context = await browser.newContext();
+    const videoDir = path.join(artifactDir, 'video');
+    const context = await browser.newContext(
+      // Sized to the viewport, because the default caps the frame at 800px and downscales the
+      // recording — a task list and a markdown editor are unreadable at that size.
+      videoEnabled ? { recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } } : {},
+    );
+    // Taken here because recording starts with the context: a stage's `wallMs` says how long it
+    // took but not WHERE it is in the file, and a whole flow is minutes of footage in which the
+    // interesting part is seconds long.
+    const recordingStartedAt = Date.now();
+    const chapters: Array<{ stage: string; atMs: number }> = [];
     const page = await context.newPage();
     const network = trackNetwork(page);
 
@@ -238,6 +259,11 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       snapshotDir,
     });
 
+    const stage = (id: string, body: () => Promise<void>) => {
+      chapters.push({ stage: id, atMs: Date.now() - recordingStartedAt });
+      return runner.stage(id, body);
+    };
+
     // `boot` is its own stage and the profiler cannot start before it: there is no target to attach
     // to until the page exists. Boot therefore carries no profile in either mode, which is why the
     // startup harness — not this flow — owns boot-time attribution.
@@ -250,7 +276,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // and the workers boot creates, the window no per-target instrument can reach.
     const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
 
-    await runner.stage('boot', async () => {
+    await stage('boot', async () => {
       await page.goto(`${BASE_URL}/?profiler=1`, { timeout: 120_000 });
       await waitForReady(page);
     });
@@ -347,7 +373,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // `tasks.create` resolves and whichever stage ran next absorbed their SQLite writes and socket
     // traffic — the spread the stages' own disk and network columns were reporting. A stage rather
     // than a silent wait in setup, so the cost it soaks up shows as its own row.
-    await runner.stage('await-replication', async () => {
+    await stage('await-replication', async () => {
       const result = await waitForReplication(page, fixture.spaceId, { timeoutMs: REPLICATION_TIMEOUT_MS });
       const described = describeReplication(result);
       if (result.outcome === 'timeout') {
@@ -367,7 +393,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       detachAll(allocationTargets);
     }
 
-    await runner.stage('open-space', async () => {
+    await stage('open-space', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', {
         subject: `root/${fixture.spaceId}`,
       });
@@ -377,24 +403,24 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.waitForURL(new RegExp(`/w/${fixture.spaceId}`), { timeout: budget });
     });
 
-    await runner.stage('open-project', async () => {
+    await stage('open-project', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
         subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
       });
       await page.getByTestId('projectsPlugin.tab.tasks').waitFor({ timeout: budget });
     });
 
-    await runner.stage('open-tasks', async () => {
+    await stage('open-tasks', async () => {
       await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
       await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
     });
 
-    await runner.stage('toggle-task', async () => {
+    await stage('toggle-task', async () => {
       await page.getByTestId('taskList.item.checkbox').first().click({ timeout: budget });
       await page.waitForTimeout(500);
     });
 
-    await runner.stage('scroll-tasks', async () => {
+    await stage('scroll-tasks', async () => {
       const list = page.getByTestId('taskList.item').first();
       await list.waitFor({ timeout: budget });
       for (let step = 0; step < 10; step++) {
@@ -408,7 +434,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // The document stages: the flow is a project, not a task list, and a project accumulates
     // documents. Their cost is a different engine — CodeMirror's measurement and highlighting
     // rather than the flat `tasks` array — which is the point of measuring both in one journey.
-    await runner.stage('open-document', async () => {
+    await stage('open-document', async () => {
       // Opened through the graph path rather than by clicking its card in the Overview artifact
       // gallery: that click empties the deck instead of opening the document (planks 1 -> 0 and
       // nothing renders for 30s — a defect, filed separately). The operation is the same mechanism
@@ -419,7 +445,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await documentEditor(page).waitFor({ timeout: budget });
     });
 
-    await runner.stage('scroll-document', async () => {
+    await stage('scroll-document', async () => {
       const editor = documentEditor(page);
       await editor.waitFor({ timeout: budget });
       await editor.click({ timeout: budget, position: { x: 20, y: 20 } });
@@ -431,7 +457,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.waitForTimeout(500);
     });
 
-    await runner.stage('edit-document', async () => {
+    await stage('edit-document', async () => {
       // Typed rather than set: the keystroke path — input handling, the CRDT write, re-highlight —
       // is what a user feels in a long document, and a programmatic set would skip all of it.
       await documentEditor(page).click({ timeout: budget });
@@ -439,7 +465,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.waitForTimeout(500);
     });
 
-    await runner.stage('reopen-project', async () => {
+    await stage('reopen-project', async () => {
       await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
         subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
       });
@@ -497,11 +523,21 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       });
     }
 
-    // The only assertion: a stage that could not complete is a broken flow, not a slow one.
+    const video = page.video();
+    await context.close();
+    if (video) {
+      const file = path.join(artifactDir, `${name}-${iteration}.webm`);
+      // `saveAs` rather than `path()`: it waits for the recording to be finalized, which closing
+      // the context only starts.
+      await video.saveAs(file);
+      writeFileSync(file.replace(/\.webm$/, '.chapters.json'), JSON.stringify(chapters, null, 2));
+      log.info('video saved', { file, chapters: chapters.length });
+    }
+
+    // The only assertion, and LAST: a stage that could not complete is a broken flow, not a slow
+    // one — and the recording of the stage that broke is written above before this throws.
     const failed = rows.filter((row) => !row.ok);
     expect(failed.map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
-
-    await context.close();
   } finally {
     await instrumented.close();
   }
