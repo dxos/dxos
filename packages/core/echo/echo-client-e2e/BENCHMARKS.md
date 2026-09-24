@@ -667,3 +667,423 @@ even that is not enough to resolve a ten-percent effect on a 300 ms window under
 
 What can be said: reads remain in the tens of nanoseconds and flat in object width, and nothing moved
 enough to suggest the shared handler cost anything. Stage E's case is the deletion, not a number.
+
+---
+
+# Query executor: memory vs sql — `src/query-executor.bench.ts`
+
+The same query workload under the host's two query executors, side by side in one process. The `memory`
+column is the in-memory executor, which loads every candidate document from the Automerge repo and
+evaluates the plan in JS; the `sql` executor compiles the plan into one SQLite statement over the index tables
+and loads no documents. Both ship: `memory` is the default and `sql` is selected with
+`DX_ECHO_QUERY_EXECUTOR=sql`, so either column can be reproduced by setting that variable. The earliest runs
+below built one peer per mode in a single process, which the harness no longer does; a run now measures the
+one mode it was given. Run with:
+
+```bash
+DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run query-executor --outputJson /tmp/query-executor.json
+```
+
+`--outputJson` matters: vitest 4's bench reporter prints its per-row table only on a TTY, so a logged run
+shows the `BENCH Summary` ratios and nothing else. `QUERY_EXECUTOR_BENCH_COUNT` overrides N (default 2,000).
+
+**Data.** Per peer, N tasks of a bench-local `BenchTask` type (`title`, `description`, `priority`, `assignee`
+ref) and 50 `TestSchema.Person`. `TestSchema.Task` has no numeric field to filter and order on, hence the
+local type; every field is optional, as in `TestSchema`, because `Filter.eq(n)` is a `Filter<number |
+undefined>` and the typed props overload of `Filter.type` only accepts it against an optional field.
+Priority cycles 1..5 and task _i_ is assigned to person _i_ mod 50, so `priority = 3` matches 400 tasks whose
+assignees are 10 distinct persons. Objects are added in batches of 200 with a flush per batch and a final
+`flush({ indexes: true })` before any row runs.
+
+**Rows** (per mode in the recorded runs):
+
+- `run: type` — `Query.select(Filter.type(BenchTask)).run()`, 2,000 results.
+- `run: type + property` — `Filter.type(BenchTask, { priority: Filter.eq(3) })`, 400 results.
+- `run: reference traversal` — the type + property query `.reference('assignee')`, 10 results.
+- `run: order + limit` — `Filter.type(BenchTask)` ordered by `priority desc`, `limit(20)`, 20 results.
+- `reactive first result` — subscribe a reactive query for type + property, wait for the first non-empty
+  result, unsubscribe. Each sample uses a distinct `.limit(n > N)` so the AST differs: the client caches
+  `QueryResult` by AST and fires a subscriber only when the result set changes, so re-subscribing to the
+  identical query never fires a second time.
+- `cold: reload + open + run type + property` — a file-backed peer is reloaded, its database
+  reopened, and the type + property query run once; the reload is inside the timed body (no per-iteration
+  hooks in `bench()`), so the query-only phase is also timed inside the row and printed from `afterAll`. 3
+  samples + 1 warm-up. A short result (the index source's 2 s per-object load budget) would be re-run and
+  counted; none occurred in this run.
+
+Every `run:` row checks its result count and throws on a mismatch, so a row that reports a number returned
+the full set.
+
+## `f261daf7` (dirty tree) — 2026-09-17 — N = 2,000
+
+Node 22.22.2. The bench file is as committed; the tree carries uncommitted changes to `echo-host`,
+`echo-client` and `index-core`. Warm rows: 1 s window, 3 warm-up iterations. Means ± rme, sample count in
+parentheses.
+
+| row                                         |                memory |                   sql |            sql vs memory |
+| ------------------------------------------- | --------------------: | --------------------: | -----------------------: |
+| `run: type` (2,000 results)                 |   294.9 ms ±7.1% (10) |   178.3 ms ±2.6% (10) |                    1.65× |
+| `run: type + property` (400)                |   172.8 ms ±2.3% (10) |    67.6 ms ±2.7% (15) |                    2.56× |
+| `run: reference traversal` (10)             |   192.4 ms ±4.3% (10) | 3,245.5 ms ±6.8% (10) | **0.06×** (16.9× slower) |
+| `run: order + limit` (20)                   |   107.7 ms ±2.9% (10) |    13.0 ms ±2.3% (77) |                    8.28× |
+| `reactive first result` (400)               |   137.8 ms ±1.8% (10) |    41.6 ms ±2.3% (25) |                    3.31× |
+| `cold: reload + open + run type + property` | 7,070.6 ms ±46.6% (3) | 2,311.3 ms ±41.7% (3) |                    3.06× |
+
+Cold phases, timed inside the row (n = 4 including the warm-up; min in parentheses):
+
+| phase                            |           memory |              sql |
+| -------------------------------- | ---------------: | ---------------: |
+| reload + open                    |     811 ms (479) |     596 ms (322) |
+| run type + property, first, cold | 7,114 ms (5,074) | 1,863 ms (1,744) |
+
+### Host traces
+
+Read from `peer.host.queryService.getQueryTraces()` after the first result of a reactive query for each
+shape, on the warm peers. `docsLoaded` and `indexHits` are summed over the trace tree; `exec` is the root
+trace's `executionTime` on the sql path and the sum of the step traces on the memory path, because the
+memory path's root trace is created with `beginTs: 0` and its own `executionTime` reads as the process
+uptime (~290 s in this run).
+
+| mode   | query               | objects | docsLoaded | indexHits |       exec | of which doc load |
+| ------ | ------------------- | ------: | ---------: | --------: | ---------: | ----------------: |
+| memory | type                |   2,000 |      2,000 |     2,000 |   104.5 ms |           64.7 ms |
+| memory | type + property     |     400 |      2,000 |     2,000 |   103.0 ms |           60.7 ms |
+| memory | reference traversal |     400 |      2,000 |     2,000 |   117.5 ms |           77.9 ms |
+| memory | order + limit       |      20 |      2,000 |     2,000 |   101.6 ms |           58.0 ms |
+| sql    | type                |   2,000 |          0 |     2,000 |    13.6 ms |                 0 |
+| sql    | type + property     |     400 |          0 |       400 |     7.6 ms |                 0 |
+| sql    | reference traversal |      10 |          0 |        10 | 3,135.6 ms |                 0 |
+| sql    | order + limit       |      20 |          0 |        20 |     9.8 ms |                 0 |
+
+The memory path's `objects` for the traversal is the host's working set before the client dedupes it (400
+task → assignee hops onto 10 persons); the sql statement groups by target and returns 10.
+
+### Reading
+
+- **The host no longer loads documents on the sql path.** `docsLoaded` is 0 for every shape; on the memory
+  path it is 2,000 for every shape — including the 400-result property filter and the 20-result
+  `order + limit`, because the memory executor's type selector returns all 2,000 index hits, loads each
+  document, and applies the predicate, order and limit in JS. The sql path's `indexHits` of 400 and 20 show
+  the predicate and the limit moved into the statement. Host execution goes from ~100–118 ms (of which
+  58–78 ms is document loading) to 8–14 ms.
+- **What the client sees is smaller than what the host saved, in proportion to the result size.** `run:
+type` returns 2,000 objects and improves 295 → 178 ms: the host's ~90 ms saving is a third of the row, and
+  the rest is the client hydrating 2,000 result objects from their documents, which both modes pay. `order
+  - limit` returns 20 objects and improves 108 → 13 ms (8×), because the memory path still loaded 2,000
+    documents to sort 20. Type + property (400 objects) sits between at 2.6×, and the reactive first result
+    for the same query at 3.3× (138 → 42 ms).
+- **Outgoing reference traversal is 17× slower on the sql path**: 3.2 s against 192 ms, and the host trace
+  places all of it in the statement (`exec` 3,136 ms, no document loads, 10 hits). The compiled traversal
+  joins each source row's `objectData` body through `json_each`, then joins `objectMeta` on the URI split
+  into space and local id by `CASE`/`substr` expressions (`compile.ts`, `#compileTraverse`), so 400 source
+  rows are matched against 2,050 `objectMeta` rows on computed columns. Whether the planner can use the
+  `(spaceId, objectId)` index against those expressions is what `EXPLAIN QUERY PLAN` would show; this run
+  did not capture it (the executor's `DX_TRACE_QUERY_EXECUTION` switch is read from `import.meta.env`,
+  which vitest does not populate from `DX_` variables). The cause was established afterwards and fixed in
+  `c5294281`; see the re-run below.
+- **Cold, the sql path is 3× faster but still pays the client's loads**: 2.3 s against 7.1 s inclusive of
+  the reload, 1.86 s against 7.1 s for the query alone. On the memory path the host loads all 2,000 documents
+  from disk before filtering; on the sql path the host loads none, and the 1.7–2.0 s is the reload-heavy
+  client hydrating 400 results. Cold rows carry ±40–47% rme from 3 samples that include one slow first reload;
+  read the min alongside the mean. No cold query came back short in either mode.
+
+### Harness notes
+
+- Unsubscribing from inside a `subscribe` callback hung the first run indefinitely: the callback runs inside
+  the query's own `changed` emission, where a throw from `unsubscribe()` → `_stop()` is routed to the
+  context's error handler rather than the caller, so the bench's promise never settled. The bench resolves
+  from the callback and unsubscribes from the awaiting code.
+- The memory-mode warm rows take ~300 ms per iteration; tinybench's default 16 warm-up iterations added
+  ~5 s per row, so the rows cap warm-up at 3.
+
+## `c5294281` — 2026-09-17 — N = 2,000, re-run after the index pins
+
+Same harness, same Node 22.22.2, same N. The only code change between the runs is `c5294281`, which pins
+the index seeks the compiled statements depend on (`INDEXED BY` on the working-set and traversal joins,
+`NOT INDEXED` on the `objectMeta` metadata joins, children as a `UNION ALL` of two seeks, and the strong
+dependency recursion per union branch). The tree is clean at this commit apart from this file.
+
+| row                                         |                memory |                   sql | sql vs memory |
+| ------------------------------------------- | --------------------: | --------------------: | ------------: |
+| `run: type` (2,000 results)                 |   285.5 ms ±2.1% (10) |   168.4 ms ±2.5% (10) |         1.70× |
+| `run: type + property` (400)                |   163.9 ms ±0.9% (10) |    59.4 ms ±1.4% (17) |         2.76× |
+| `run: reference traversal` (10)             |   197.0 ms ±2.0% (10) |    41.8 ms ±1.4% (24) |         4.71× |
+| `run: order + limit` (20)                   |   120.0 ms ±1.6% (10) |    10.7 ms ±3.3% (95) |        11.26× |
+| `reactive first result` (400)               |   151.1 ms ±2.3% (10) |    41.0 ms ±4.5% (25) |         3.69× |
+| `cold: reload + open + run type + property` | 7,071.8 ms ±40.5% (3) | 2,300.8 ms ±39.7% (3) |         3.07× |
+
+Cold phases, timed inside the row (n = 4 including the warm-up; min in parentheses):
+
+| phase                            |           memory |              sql |
+| -------------------------------- | ---------------: | ---------------: |
+| reload + open                    |     756 ms (514) |     356 ms (294) |
+| run type + property, first, cold | 7,347 ms (5,229) | 2,108 ms (1,767) |
+
+### Host traces
+
+Same method as the first run.
+
+| mode   | query               | objects | docsLoaded | indexHits |     exec | of which doc load |
+| ------ | ------------------- | ------: | ---------: | --------: | -------: | ----------------: |
+| memory | type                |   2,000 |      2,000 |     2,000 | 114.5 ms |           73.0 ms |
+| memory | type + property     |     400 |      2,000 |     2,000 | 112.3 ms |           70.1 ms |
+| memory | reference traversal |     400 |      2,000 |     2,000 | 135.0 ms |           94.1 ms |
+| memory | order + limit       |      20 |      2,000 |     2,000 | 118.1 ms |           71.4 ms |
+| sql    | type                |   2,000 |          0 |     2,000 |  12.3 ms |                 0 |
+| sql    | type + property     |     400 |          0 |       400 |   7.1 ms |                 0 |
+| sql    | reference traversal |      10 |          0 |        10 |  15.0 ms |                 0 |
+| sql    | order + limit       |      20 |          0 |        20 |   7.7 ms |                 0 |
+
+### Reading
+
+- **The traversal regression is gone: 3,136 ms → 15 ms in the statement, 3.2 s → 42 ms end to end.**
+  `EXPLAIN QUERY PLAN` on the first run's statement (captured afterwards with a standalone script against
+  the bench database) showed two mis-picks by SQLite's planner, which has no `ANALYZE` statistics to work
+  from: the traversal target lookup ran `SEARCH t USING INDEX idx_object_index_queuePosition (queueId=?)`,
+  a scan of every non-queue row per source row, and the strong-dependency recursion seeded from a full
+  `objectMeta` scan. With the `(spaceId, queueId, objectId)` index pinned on the join and the working set
+  driving the recursion, the plan is one seek per source row. `explain.test.ts` now asserts this plan shape
+  so a planner regression fails a unit test rather than a benchmark.
+- **The other sql rows moved by a few percent, within the noise of a single run**, except `order + limit`,
+  which is 13.0 → 10.7 ms; the `NOT INDEXED` hint on the metadata joins removes an index probe per result
+  row there as well. The memory rows are unchanged within rme (the memory executor is not touched by
+  `c5294281`).
+- **Every sql row is now faster than its memory counterpart**, from 1.7× on the 2,000-result type query,
+  where the client's hydration of the result objects dominates and both modes pay it, to 11× on
+  `order + limit`, where the memory path still loads 2,000 documents to return 20. The sql host executes
+  every shape in 7–15 ms with no document loads; the memory host takes 112–135 ms, 70–94 ms of it loading
+  documents.
+
+## `fd6e6782` — 2026-09-17 — N = 2,000, sql only, after the in-memory executor was deleted
+
+A confirmation run of the collapsed harness, to check that the deletion changed nothing on the surviving
+path. Every row is within the noise of the `c5294281` sql column; host traces are unchanged (0 documents
+loaded, 6–12 ms per shape).
+
+| row                                         |                   sql |
+| ------------------------------------------- | --------------------: |
+| `run: type` (2,000 results)                 |   167.3 ms ±3.8% (10) |
+| `run: type + property` (400)                |    61.3 ms ±2.1% (17) |
+| `run: reference traversal` (10)             |    44.0 ms ±1.8% (23) |
+| `run: order + limit` (20)                   |   10.1 ms ±1.5% (100) |
+| `reactive first result` (400)               |    37.1 ms ±1.6% (27) |
+| `cold: reload + open + run type + property` | 2,086.5 ms ±18.0% (3) |
+
+## `3f17ac76` — 2026-09-17 — mixed types, memory sampling, N = 2,000 and N = 5,000
+
+The bench was rewritten (`3f17ac76`) to answer three questions the runs above leave open: what the
+executors cost in memory, how they behave when the queried type is a minority of the store, and how they
+scale. The memory column here comes from the `c5294281` executor written into the working tree of
+`3f17ac76` for the run (the sql code is identical in both), selected with `DX_ECHO_QUERY_EXECUTOR=memory`;
+each mode runs in its own process, so the memory figures are not contaminated by the other mode.
+
+**Population**, per peer: N `BenchTask`, N/2 `BenchNote` (~1 KB `body`, two tags), N/2 `BenchEvent`
+(`kind` cycling meeting/call/deadline, `day`, `organizer` ref), N/20 `TestSchema.Organization`, 50
+`TestSchema.Person`. At N = 2,000 that is 4,150 objects; the type query selects 48% of them, the event
+query 8%. Two new rows: `type + string property` (`Filter.type(BenchEvent, { kind: 'deadline' })`,
+N/6 results) and `union of two types` (`Query.all` of notes and organizations, N/2 + N/20 results).
+
+**Memory method.** From `afterAll`, after the timing rows: `gc()` (exposed at runtime via
+`v8.setFlagsFromString`), read `process.memoryUsage()`, run the shape 3× under a 1 ms sampler that
+records the highest `heapUsed` and `rss` seen, `gc()` again, read again. _Peak_ is the sampler's high
+water mark over the pre-run baseline; _retained_ is the post-collection reading over the baseline. The
+cold peer is then reloaded and the property query run under the same sampler, followed by the full type
+query on the same reloaded peer. The baseline heap printed for the first warm row is also the heap the
+timing rows left behind, since it follows them.
+
+### N = 2,000 (4,150 objects per peer)
+
+Seeding took 301 s per run in both modes (two peers; ~36 ms per object through `db.add` + batched
+flushes). Post-seed, collected: heap 504 MB in both modes; RSS 1,765 MB (memory) / 1,727 MB (sql),
+of which ~1,015 MB is `external` (Automerge's WASM heap and buffers for 8,300 documents across the two
+peers).
+
+| row                                         |                memory |                  sql | sql vs memory |
+| ------------------------------------------- | --------------------: | -------------------: | ------------: |
+| `run: type` (2,000 of 4,150)                |   277.9 ms ±2.6% (10) |  167.8 ms ±2.5% (10) |         1.66× |
+| `run: type + property` (400)                |   166.6 ms ±5.9% (10) |   62.3 ms ±1.2% (17) |         2.67× |
+| `run: reference traversal` (10)             |   191.3 ms ±2.7% (10) |   46.4 ms ±3.8% (22) |         4.12× |
+| `run: order + limit` (20)                   |   110.6 ms ±3.8% (10) |   10.8 ms ±2.6% (94) |        10.27× |
+| `run: type + string property` (333)         |   112.5 ms ±1.6% (10) |   56.8 ms ±1.8% (18) |         1.98× |
+| `run: union of two types` (1,100)           |   258.8 ms ±5.2% (10) |  200.0 ms ±3.0% (10) |         1.29× |
+| `reactive first result` (400)               |   147.4 ms ±2.0% (10) |   44.6 ms ±6.9% (23) |         3.31× |
+| `cold: reload + open + run type + property` | 6,538.6 ms ±32.9% (3) | 2,305.3 ms ±7.7% (3) |         2.84× |
+
+Host traces (first reactive run of each shape):
+
+| mode   | query                  | objects | docsLoaded | indexHits |     exec | of which doc load |
+| ------ | ---------------------- | ------: | ---------: | --------: | -------: | ----------------: |
+| memory | type                   |   2,000 |      2,000 |     2,000 | 106.7 ms |           64.7 ms |
+| memory | type + property        |     400 |      2,000 |     2,000 | 104.0 ms |           64.3 ms |
+| memory | reference traversal    |     400 |      2,000 |     2,000 | 125.4 ms |           84.2 ms |
+| memory | order + limit          |      20 |      2,000 |     2,000 | 105.4 ms |           62.2 ms |
+| memory | type + string property |     333 |      1,000 |     1,000 |  50.7 ms |           31.4 ms |
+| memory | union of two types     |   1,100 |      1,100 |     1,100 |  62.0 ms |           78.8 ms |
+| sql    | type                   |   2,000 |          0 |     2,000 |  12.2 ms |                 0 |
+| sql    | type + property        |     400 |          0 |       400 |   5.9 ms |                 0 |
+| sql    | reference traversal    |      10 |          0 |        10 |  11.8 ms |                 0 |
+| sql    | order + limit          |      20 |          0 |        20 |   7.2 ms |                 0 |
+| sql    | type + string property |     333 |          0 |       333 |   4.5 ms |                 0 |
+| sql    | union of two types     |   1,100 |          0 |     1,100 |  11.4 ms |                 0 |
+
+Memory (deltas over the pre-row collected baseline; the first row's baseline is the heap after the timing
+rows):
+
+| measurement                                 | memory: heap peak / retained | sql: heap peak / retained | memory: rss peak / retained | sql: rss peak / retained |
+| ------------------------------------------- | ---------------------------: | ------------------------: | --------------------------: | -----------------------: |
+| heap after the timing rows (baseline)       |                       731 MB |                    540 MB |                             |                          |
+| `warm: type` ×3                             |             +33.2 / −11.0 MB |          +53.4 / −11.1 MB |                 +0.5 / −0.5 |                    0 / 0 |
+| `warm: type + property` ×3                  |              +26.8 / −6.5 MB |           +19.8 / −6.9 MB |                       0 / 0 |                    0 / 0 |
+| `warm: reference traversal` ×3              |              +26.1 / −1.9 MB |           +13.7 / −2.0 MB |                       0 / 0 |                    0 / 0 |
+| `warm: order + limit` ×3                    |              +18.6 / −1.6 MB |            +9.5 / −1.8 MB |                       0 / 0 |                    0 / 0 |
+| `warm: type + string property` ×3           |              +21.9 / +2.6 MB |           +20.0 / +2.9 MB |                       0 / 0 |              +1.3 / +1.3 |
+| `warm: union of two types` ×3               |              +34.9 / +7.8 MB |           +59.4 / +7.6 MB |                       0 / 0 |                    0 / 0 |
+| `cold: reload + open + run type + property` |            +113.8 / +57.0 MB |          +90.4 / +11.8 MB |               +35.5 / +35.3 |              +3.9 / +1.6 |
+| `cold: then run type` (all 2,000 tasks)     |             +50.3 / +30.9 MB |         +221.8 / +74.6 MB |               +20.9 / +20.9 |              +6.3 / +5.7 |
+
+### Reading, N = 2,000
+
+- **The executor's memory cost is what stays resident, not what a query allocates.** The timing rows
+  leave the process at 731 MB of heap in memory mode against 540 MB in sql mode, from the same 504 MB
+  after seeding: about 190 MB the memory executor's document loads left behind in the repo cache, ~46
+  KB per document across 4,150. The warm peaks do not separate the modes; they are the client hydrating
+  the result objects and are within noise (or higher on sql) for every shape, with retained deltas of a
+  few MB either way because the warm peer already holds everything.
+- **The cold peer shows the same thing per query.** One 400-result property query after a reload
+  retains 57 MB of heap and 35 MB of RSS in memory mode (the host loaded all 2,000 task documents to
+  evaluate `priority = 3`), against 12 MB and 1.6 MB on sql (only the 400 hydrated results). The
+  follow-up `type` query inverts it: sql retains +75 MB because the client now hydrates 2,000 objects
+  for the first time, memory mode only +31 MB because the host's load already put them in the cache.
+  After both, heap converges (88 MB vs 87 MB) and RSS does not (56 MB vs 7 MB): the memory path's
+  cost is paid by the first query regardless of result size, and its WASM-side share never comes back.
+- **Speed over the mixed population matches the earlier runs.** The four original rows are within a
+  few percent of the `c5294281` results (1.7× / 2.7× / 4.1× / 10.3×), so the notes and events in the
+  store did not slow the task queries on either path: both start from the type index. The new
+  `type + string property` row is 2.0×, smaller than the numeric one because its memory-path cost
+  (1,000 event documents) is half.
+- **Union is the weakest sql row at 1.29×**, and the host trace says why: 11.4 ms in the statement, so
+  the remaining ~190 ms of the 200 ms is the client hydrating 1,100 results (550 of them 1 KB notes).
+  Same story as `run: type`: once the result set is large, the client dominates and the executor's
+  share of the row is small in both modes.
+
+### N = 5,000 (10,300 objects per peer), `ee130802` harness
+
+Two harness changes between this and the N = 2,000 tables, both forced by scale:
+
+- **The store is seeded once and cloned.** Seeding a second peer in the same process gets slower with
+  everything the first peer left resident, and its flushes reached the 30 s RPC timeout at this size:
+  one two-peer memory run passed with a 27.8 s worst flush, the next failed at 8,000 objects of the
+  second peer. The warm peer is now file-backed and seeded once (569 s memory run, 574 s sql run), and
+  the cold peer opens an `exportSqliteDatabase` copy of that file. The cold peer is therefore genuinely
+  cold: nothing of its store has been in this process before the row, where the two-peer harness had
+  created the documents in-process and reloaded, leaving the OS page cache and possibly more warm.
+- **The memory sampler runs at 10 ms** using `v8.getHeapStatistics()` and `process.memoryUsage.rss()`.
+  At 1 ms with `process.memoryUsage()` it ate enough of the event loop to push the client's 2 s
+  per-object load budget over on a cold 1,000-result hydration. Peaks are coarser than in the
+  N = 2,000 tables; retained figures are unaffected.
+
+Post-seed, collected: heap 629 MB (memory) / 628 MB (sql); RSS 2,231 MB / 2,085 MB, of which 1,286 MB /
+1,276 MB is `external`.
+
+| row                                         |              memory |                   sql | sql vs memory |
+| ------------------------------------------- | ------------------: | --------------------: | ------------: |
+| `run: type` (5,000 of 10,300)               | 678.7 ms ±2.4% (10) |   460.6 ms ±2.3% (10) |         1.47× |
+| `run: type + property` (1,000)              | 404.9 ms ±1.8% (10) |   159.2 ms ±4.9% (10) |         2.54× |
+| `run: reference traversal` (10)             | 469.8 ms ±0.8% (10) |   118.3 ms ±2.2% (10) |         3.97× |
+| `run: order + limit` (20)                   | 293.8 ms ±1.9% (10) |    19.0 ms ±2.0% (53) |        15.46× |
+| `run: type + string property` (833)         | 285.0 ms ±1.0% (10) |   150.5 ms ±5.1% (10) |         1.89× |
+| `run: union of two types` (2,750)           | 696.6 ms ±2.4% (10) |   496.3 ms ±6.2% (10) |         1.40× |
+| `reactive first result` (1,000)             | 359.5 ms ±2.7% (10) |   105.5 ms ±4.4% (10) |         3.41× |
+| `cold: reload + open + run type + property` |   failed, see below | 9,064.6 ms ±17.0% (3) |               |
+
+Cold phases, timed inside the row (n = 4 including the warm-up):
+
+| phase                            |                memory |                                     sql |
+| -------------------------------- | --------------------: | --------------------------------------: |
+| reload + open                    |              1,646 ms |                  1,926 ms (1,706–2,138) |
+| run type + property, first, cold | error after 31,965 ms | 9,715 ms (6,744–17,235), 1 short result |
+
+Host traces (first reactive run of each shape):
+
+| mode   | query                  | objects | docsLoaded | indexHits |     exec | of which doc load |
+| ------ | ---------------------- | ------: | ---------: | --------: | -------: | ----------------: |
+| memory | type                   |   5,000 |      5,000 |     5,000 | 319.6 ms |          205.1 ms |
+| memory | type + property        |   1,000 |      5,000 |     5,000 | 273.8 ms |          169.8 ms |
+| memory | reference traversal    |   1,000 |      5,000 |     5,000 | 336.6 ms |          228.6 ms |
+| memory | order + limit          |      20 |      5,000 |     5,000 | 270.9 ms |          162.1 ms |
+| memory | type + string property |     833 |      2,500 |     2,500 | 130.5 ms |           76.6 ms |
+| memory | union of two types     |   2,750 |      2,750 |     2,750 | 151.3 ms |          168.4 ms |
+| sql    | type                   |   5,000 |          0 |     5,000 |  37.6 ms |                 0 |
+| sql    | type + property        |   1,000 |          0 |     1,000 |  13.9 ms |                 0 |
+| sql    | reference traversal    |      10 |          0 |        10 |  24.8 ms |                 0 |
+| sql    | order + limit          |      20 |          0 |        20 |  16.0 ms |                 0 |
+| sql    | type + string property |     833 |          0 |       833 |   9.3 ms |                 0 |
+| sql    | union of two types     |   2,750 |          0 |     2,750 |  28.0 ms |                 0 |
+
+Memory (deltas over the pre-row collected baseline):
+
+| measurement                                 | memory: heap peak / retained | sql: heap peak / retained | memory: rss peak / retained | sql: rss peak / retained |
+| ------------------------------------------- | ---------------------------: | ------------------------: | --------------------------: | -----------------------: |
+| heap after the timing rows (baseline)       |                       874 MB |                    883 MB |                             |                          |
+| `warm: type` ×3                             |             +77.7 / −33.8 MB |          +47.7 / −33.6 MB |                 +3.1 / −0.6 |              +3.0 / +0.6 |
+| `warm: type + property` ×3                  |             +63.1 / −26.4 MB |           +21.9 / −2.0 MB |                 +1.1 / −1.1 |                    0 / 0 |
+| `warm: reference traversal` ×3              |              +59.4 / −4.1 MB |           +15.9 / −9.1 MB |                       0 / 0 |                    0 / 0 |
+| `warm: order + limit` ×3                    |              +41.7 / +0.1 MB |           +10.1 / −0.1 MB |                       0 / 0 |                    0 / 0 |
+| `warm: type + string property` ×3           |              +33.0 / +6.9 MB |           +25.0 / +7.2 MB |                       0 / 0 |                    0 / 0 |
+| `warm: union of two types` ×3               |             +66.5 / +18.6 MB |          +48.7 / +18.8 MB |                 +0.1 / +0.1 |              +0.4 / +0.2 |
+| `cold: reload + open + run type + property` |                       failed |          +70.7 / +20.1 MB |                             |            +34.6 / +34.6 |
+| `cold: then run type` (all 5,000 tasks)     |                       failed |                    failed |                             |                          |
+
+### Reading, N = 5,000
+
+- **The memory executor cannot answer a cold query at this size.** `Filter.type(BenchTask, { priority:
+3 })` on a freshly opened 10,300-object store fails in the client with `Timeout [20,000ms]: index
+query` (the query service's first-result budget), in the timing row and in both memory-pass cold
+  measurements. The host had to load all 5,000 task documents from disk before it could return
+  anything, and at the 7–17 ms per cold document load this store shows, that is 35–85 s. The sql path
+  returns the 1,000 identities in ~14 ms and then the client hydrates them, which is the 6.7–17.2 s
+  the row measures (one sample came back 936 of 1,000 and was re-run). Cold, the executor decides
+  whether the query completes at all; the client's per-document hydration then decides how long.
+- **A cold 5,000-result query times out in both modes**: `cold: then run type` failed on the sql path
+  too, with 115 `index object load timed out` warnings from the client's 2 s per-object budget. The
+  executor is not the limiting factor for large cold result sets; document loading is, and it is the
+  same loading on both paths once the identities are known.
+- **Warm ratios hold from 2,000 to 5,000**, slightly compressed on the large-result rows (type 1.66 →
+  1.47×, union 1.29 → 1.40×) and widened where the memory path's cost scales with the store and sql's
+  with the result: order + limit 10.3 → 15.5×, reactive first result 3.3 → 3.4×. Host execution is
+  9–38 ms on sql against 130–337 ms in memory mode, the latter 55–70% document loading.
+- **Warm peaks now separate the modes**, by 1.5–4× on the task shapes (type + property +63 vs +22 MB,
+  order + limit +42 vs +10 MB, traversal +59 vs +16 MB): the memory executor's per-query working set
+  of 5,000 loaded documents is large enough at this N to show over the client's hydration, where at
+  2,000 it was inside the noise. Retained deltas are within a few MB of each other on every warm row.
+- **The resident-heap gap from N = 2,000 did not reproduce.** After the timing rows both modes sit at
+  ~880 MB, where the two-peer harness at 2,000 had memory mode 190 MB above sql. The cold rows differ
+  between the harnesses (a clone here, an in-process reload there) and the memory-mode cold row failed
+  before it could load anything, so the two runs' baselines are not measuring the same sequence; the
+  memory executor's document leases are also released after each query (`using` in the deleted
+  `_loadFromAutomerge`), which would let a file-backed host unload them. Not established here; the
+  per-query cold figures from N = 2,000 (+57 MB / +35 MB RSS retained for one 400-result query) remain
+  the direct measurement of what a memory-mode query leaves behind.
+
+### Seeding does not scale, and that bounds these runs
+
+N = 10,000 (20,550 objects per peer) was attempted first and failed in both modes during seeding, with
+`RPC timeout: call: {"timeout":30000}` from `RepoProxy._sendUpdates` and the client proxy closing. The
+per-flush cost grows with the size of the store. Measured in the sql attempt, 200-object batches:
+
+| objects seeded | elapsed | slowest flush in the last 1,000 |
+| -------------: | ------: | ------------------------------: |
+|          1,000 |    28 s |                           5.5 s |
+|          2,000 |    63 s |                           4.6 s |
+|          3,000 |   102 s |                           7.5 s |
+|          4,000 |   152 s |                           8.3 s |
+|          5,000 |   202 s |                           8.8 s |
+
+and in the two-peer N = 5,000 memory run, 10,300 objects per peer: the first peer's flushes rose from
+3.0 s to 13.4 s over its 10,000 objects; the second peer's, seeded into the same process, from 8.2 s
+to 27.8 s. The second peer is slower at every point, so the cost is process-wide (the heap and
+Automerge's WASM memory the first peer left behind), not only per-subscription. The growing call is the
+`DataService.updateSubscription` the client issues for each batch of new documents; what in the host's
+`addDocuments`/sync path scales with the store is not established here and is a follow-up outside the
+executor. Practical limit for this harness: ~15k objects in one process before a flush hits the 30 s
+RPC timeout, hence N = 5,000 as the larger run and the single-seed clone for the cold peer.
