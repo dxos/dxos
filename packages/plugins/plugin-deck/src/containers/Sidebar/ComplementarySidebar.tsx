@@ -44,7 +44,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const handleTabClick = useCallback(
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
-      if (nextValue === activeId) {
+      if (nextValue === selectedVariant) {
         updateState((state) => ({
           ...state,
           complementarySidebarState: state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
@@ -55,7 +55,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         void invokePromise(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [state.complementarySidebarState, activeId, invokePromise, updateState],
+    [state.complementarySidebarState, selectedVariant, invokePromise, updateState],
   );
 
   const hasPersistedPanel = current !== undefined;
