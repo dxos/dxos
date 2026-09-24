@@ -65,7 +65,7 @@ const program = Effect.gen(function* () {
   const results = yield* Effect.forEach(paths, (path) => judgeFile(resolve(path)), { concurrency: 4 });
   for (const { name, graph, scores } of results) {
     console.log(
-      `\n${name}: ${graph.nodes.length} nodes, ${graph.groups.length} groups, ${graph.edges.length} edges — overall ${Score.overall(scores).toFixed(2)}`,
+      `\n${name}: ${graph.nodes.length} nodes, ${graph.groups.length} groups, ${graph.edges.length} edges — overall ${Score.overall(scores)?.toFixed(2) ?? '—'}`,
     );
     for (const { kind, id, score, error, detail } of scores) {
       const value = error ? `error: ${error}` : score.toFixed(2);

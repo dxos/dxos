@@ -117,7 +117,7 @@ const grade = (scene: Scene): Graded => {
 };
 
 /** The engine's own evaluation on the same 0–1 scale, for reference. */
-const engineScore = ({ violations, terms }: Objective.Evaluation): number =>
+const engineScore = ({ violations, terms }: Objective.Evaluation): number | undefined =>
   Score.overall([
     { kind: 'constraint', score: violations.length ? 0 : 1 },
     ...terms.map(({ weighted }) => ({ kind: 'cost', score: Score.fromCost(weighted) })),
@@ -223,14 +223,17 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
     >
       <Section title='Score'>
         <div className='flex items-baseline gap-2'>
-          <span className={mx('text-3xl font-mono', scoreColor(total))} data-testid='scene-view.scorecard.score'>
-            {total.toFixed(2)}
+          <span
+            className={mx('text-3xl font-mono', total === undefined ? 'text-description' : scoreColor(total))}
+            data-testid='scene-view.scorecard.score'
+          >
+            {total?.toFixed(2) ?? '—'}
           </span>
-          {baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
+          {total !== undefined && baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
         </div>
         <div className='text-xs text-description'>
           0 is bad, 1 is good. A broken constraint scores 0 overall; otherwise the mean of the other scores.
-          {engine && ` Engine layout (its own routes): ${engineScore(engine).toFixed(2)}.`}
+          {engine && ` Engine layout (its own routes): ${engineScore(engine)?.toFixed(2) ?? '—'}.`}
         </div>
       </Section>
 

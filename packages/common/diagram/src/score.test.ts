@@ -47,6 +47,11 @@ describe('score', () => {
     expect(overall(scores)).toBe(0);
   });
 
+  test('nothing judged is no score, not a perfect one', ({ expect }) => {
+    expect(overall([])).toBeUndefined();
+    expect(overall([{ kind: 'architecture', score: 0, error: 'down' }])).toBeUndefined();
+  });
+
   test('other kinds join the mean', ({ expect }) => {
     expect(
       overall([

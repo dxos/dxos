@@ -2,11 +2,12 @@
 
 Four architecture diagrams, drawn from the code (every node has a `%% ref`) and revised against the
 architecture rules in `@dxos/diagram`'s `Architecture.RULES`. They live outside the corpus, so neither
-`render-diagrams` nor the corpus snapshot picks them up; render or grade one by passing its path:
+`render-diagrams` nor the corpus snapshot picks them up; render or grade one by passing its absolute
+path, here from the repository root:
 
 ```bash
-moon run plugin-illustrator:render-diagrams -- $PWD/docs/diagrams/ideas/echo.mmd
-moon run plugin-illustrator:judge-diagrams -- $PWD/docs/diagrams/ideas/echo.mmd   # needs TYPESAFE_API_KEY
+moon run plugin-illustrator:render-diagrams -- $PWD/packages/plugins/plugin-illustrator/docs/diagrams/ideas/echo.mmd
+moon run plugin-illustrator:judge-diagrams -- $PWD/packages/plugins/plugin-illustrator/docs/diagrams/ideas/echo.mmd  # needs TYPESAFE_API_KEY
 ```
 
 What each rule changed in the first drafts:

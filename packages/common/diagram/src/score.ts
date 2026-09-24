@@ -114,9 +114,13 @@ export const evaluate = <S, R>(sources: readonly Source<S, R>[], subject: S): Ef
  * One number for a set of scores: the worst constraint gates the mean of everything else, so a
  * layout that breaks a constraint scores 0 however good it otherwise is — the same precedence
  * `Objective.select` gives violations over cost — while every other kind contributes equally.
+ * `undefined` when nothing could be judged, so a set of failed scorers never reads as a perfect score.
  */
-export const overall = (all: readonly Pick<Scored, 'kind' | 'score' | 'error'>[]): number => {
+export const overall = (all: readonly Pick<Scored, 'kind' | 'score' | 'error'>[]): number | undefined => {
   const scores = all.filter(({ error }) => error === undefined);
+  if (scores.length === 0) {
+    return undefined;
+  }
   const gate = Math.min(1, ...scores.filter(({ kind }) => kind === 'constraint').map(({ score }) => score));
   const rest = scores.filter(({ kind }) => kind !== 'constraint');
   const mean = rest.length ? rest.reduce((total, { score }) => total + score, 0) / rest.length : 1;
