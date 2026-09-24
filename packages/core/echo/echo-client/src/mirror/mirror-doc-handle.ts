@@ -4,6 +4,7 @@
 
 import type { Doc as AutomergeDoc, ChangeFn, ChangeOptions, Heads, Patch } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { EventEmitter } from 'eventemitter3';
 
 import { Event, Trigger, TriggerState } from '@dxos/async';
@@ -49,6 +50,17 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 
   /** Fires with this tab's changes the worker refused, before the {@link confirmed} that settles them. */
   readonly refused = new Event<Mirror.Change[]>();
+
+  /**
+   * The document as an atom whose value is the frozen tree {@link doc} returns, not a copy of it, so an
+   * atom derived from a subtree sees an unchanged subtree as the same value and does not notify.
+   */
+  readonly atom: Atom.Atom<AutomergeDoc<T>> = Atom.make((get) => {
+    const update = () => get.setSelf(this.#view());
+    this.on('change', update);
+    get.addFinalizer(() => this.off('change', update));
+    return this.#view();
+  });
 
   readonly #clientId: string;
   readonly #onDelete: () => void;
@@ -121,7 +133,7 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
 
   doc(): AutomergeDoc<T> {
     invariant(!this.#deleted, 'MirrorDocHandle.doc called on deleted doc');
-    return registerMirrorDoc(this.#client?.current ?? this.#local, this.#client?.heads ?? []);
+    return this.#view();
   }
 
   async whenReady(): Promise<void> {
@@ -350,6 +362,10 @@ export class MirrorDocHandle<T> extends EventEmitter<ClientDocHandleEvents<T>> i
     }
     this.#client.requeue();
     this.confirmed.emit();
+  }
+
+  #view(): AutomergeDoc<T> {
+    return registerMirrorDoc(this.#client?.current ?? this.#local, this.#client?.heads ?? []);
   }
 
   #emitRefused(refused: readonly Mirror.Change[]): void {
