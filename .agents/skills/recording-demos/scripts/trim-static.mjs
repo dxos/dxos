@@ -78,7 +78,7 @@ const escapeHtml = (value) =>
 
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
-  console.error('usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15]');
+  console.error('usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4]');
   process.exit(1);
 }
 const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
@@ -478,6 +478,48 @@ const annotate = async () => {
 
 const annotated = await annotate();
 
+/**
+ * iOS plays neither VP9 nor WebM from a file share, so a demo meant for a phone needs an H.264 copy. Video
+ * only: iOS players reject the chapter and WebVTT tracks muxed into the WebM rather than ignoring them.
+ */
+const toMp4 = async () => {
+  const mp4 = output.replace(/\.webm$/, '') + '.mp4';
+  const transcode = spawn(FFMPEG, [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-i',
+    output,
+    '-map',
+    '0:v',
+    '-map_chapters',
+    '-1',
+    '-c:v',
+    'libx264',
+    '-profile:v',
+    'high',
+    '-level',
+    '5.1',
+    '-pix_fmt',
+    'yuv420p',
+    '-crf',
+    '20',
+    '-preset',
+    'slow',
+    '-tag:v',
+    'avc1',
+    '-movflags',
+    '+faststart',
+    '-y',
+    mp4,
+  ]);
+  transcode.stderr.pipe(process.stderr);
+  const [code] = await once(transcode, 'close');
+  return code === 0 ? mp4 : undefined;
+};
+
+const mp4 = options.mp4 ? await toMp4() : undefined;
+
 const before = seconds ?? read / options.fps;
 const after = kept / options.fps;
 console.log(
@@ -485,6 +527,7 @@ console.log(
     {
       output,
       annotated,
+      mp4,
       frames: { read, kept, dropped: read - kept },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,

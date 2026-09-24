@@ -173,9 +173,10 @@ const install = ({ hostId, feedMs, position }) => {
     const composer = globalThis.composer;
     if (composer?.invoke && !composer.invoke.__demoWrapped) {
       const original = composer.invoke;
-      let sequence = 0;
       const wrapped = async (key, input, options) => {
-        const id = `op-${++sequence}`;
+        // Random, not a per-wrapper counter: the app can replace `invoke`, and a fresh wrapper restarting at
+        // op-1 would collide with an operation still in flight from the previous one.
+        const id = `op-${crypto.randomUUID()}`;
         let detail;
         try {
           detail = input === undefined ? undefined : JSON.stringify(input);

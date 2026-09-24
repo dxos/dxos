@@ -244,6 +244,13 @@ decoder, none of `select`/`concat`/`mpdecimate` — so frames cannot be fed back
 `apt-get update && apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one. (In the cloud
 sandbox `apt-get update` first: the preinstalled index is stale and the install 404s without it.)
 
+### For a phone: `--mp4`
+
+iOS does not play VP9 or WebM from a file share, so a demo someone will watch on an iPhone needs an
+H.264 copy. `--mp4` writes `<name>.mp4` next to the trimmed WebM, video only — iOS players reject the
+chapter and WebVTT tracks rather than ignoring them, so those stay in the WebM. It costs one more encode,
+which is why it is opt-in.
+
 ## 4b. Step titles as real annotations
 
 `.webm` carries time-ranged annotations, and the trimmer writes both from the driver's `timeline.json`
