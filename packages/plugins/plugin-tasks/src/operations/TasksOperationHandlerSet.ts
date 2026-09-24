@@ -8,6 +8,8 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { OutlineOperation, RemoteSessionOperation, TaskOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
+  TaskOperation.AnswerQuestion.pipe(Operation.lazyHandler(() => import('./answer-question.ts'))),
+  TaskOperation.AskQuestion.pipe(Operation.lazyHandler(() => import('./ask-question.ts'))),
   OutlineOperation.ConvertToTask.pipe(Operation.lazyHandler(() => import('./convert-to-task.ts'))),
   TaskOperation.CreateMilestone.pipe(Operation.lazyHandler(() => import('./create-milestone.ts'))),
   TaskOperation.CreateTask.pipe(Operation.lazyHandler(() => import('./create-task.ts'))),

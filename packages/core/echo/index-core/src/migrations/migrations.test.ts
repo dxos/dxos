@@ -12,6 +12,8 @@ import { test } from 'vitest';
 
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
+import activityInit from './activity/0001_init.sql?raw';
+import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
@@ -26,6 +28,7 @@ import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
+  { name: 'activity', init: activityInit, manifest: ACTIVITY },
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
   { name: 'fts', init: ftsInit, manifest: FTS },
   { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
@@ -58,13 +61,16 @@ const DESIRED_COLUMNS = [
   'entityKind',
   'objectId',
   'parent',
+  'parentId',
   'queueId',
   'queueNamespace',
   'queuePosition',
   'recordId',
   'source',
+  'sourceId',
   'spaceId',
   'target',
+  'targetId',
   'typeDXN',
   'updatedAt',
   'version',

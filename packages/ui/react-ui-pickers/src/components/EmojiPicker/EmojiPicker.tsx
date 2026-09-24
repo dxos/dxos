@@ -13,6 +13,7 @@ import {
   type ButtonProps,
   Icon,
   IconButton,
+  IconButtonProps,
   Popover,
   type ThemedClassName,
   Toolbar,
@@ -30,6 +31,7 @@ const EmojiMartPanel = lazy(() => import('./EmojiMartPanel.tsx'));
 
 export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;
+  size?: IconButtonProps['size'];
   defaultEmoji?: string;
   emoji?: string;
   onChangeEmoji?: (nextEmoji: string) => void;
@@ -41,7 +43,7 @@ export type EmojiPickerProps = ThemedClassName<{
  * A toolbar button for picking an emoji. Use only in `role=toolbar` elements. Unable to unset the value.
  */
 export const EmojiPickerToolbarButton = ({
-  classNames,
+  size,
   emoji,
   disabled,
   defaultEmoji,
@@ -67,8 +69,9 @@ export const EmojiPickerToolbarButton = ({
     >
       <Popover.Trigger asChild>
         <Toolbar.IconButton
-          icon='ph--user-circle--regular'
+          size={size}
           label={t('select-emoji.label')}
+          icon='ph--smiley--regular'
           iconOnly
           tooltipSide='bottom'
           disabled={disabled}

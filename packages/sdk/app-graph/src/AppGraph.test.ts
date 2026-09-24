@@ -352,9 +352,13 @@ describe('Graph', () => {
     const nodeKey = graph.node(exampleId(1));
 
     let node: Option.Option<Node.Node> = Option.none();
-    const cancel = registry.subscribe(nodeKey, (n) => {
-      node = n;
-    });
+    const cancel = registry.subscribe(
+      nodeKey,
+      (n) => {
+        node = n;
+      },
+      { immediate: true },
+    );
     onTestFinished(() => cancel());
 
     expect(node).toEqual(Option.none());
@@ -871,5 +875,42 @@ describe('Graph', () => {
     });
     const path = await Graph.waitForPath(graph, { target: exampleId(1) }, { timeout: 1000 });
     expect(path).to.deep.equal(['root', exampleId(1)]);
+  });
+});
+
+describe('registry lifetime', () => {
+  test('a graph pins its nodes only while retained', async () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} });
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(false);
+
+    const release = Graph.retain(graph);
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} });
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(true);
+    expect(registry.getNodes().has(graph.node(exampleId(2)))).toBe(true);
+
+    release();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(false);
+    expect(registry.getNodes().has(graph.node(exampleId(2)))).toBe(false);
+  });
+
+  test('readers leave nothing in the registry once they unsubscribe', async () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNodes(graph, [
+      { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} },
+      { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} },
+    ]);
+    Graph.addEdges(graph, [{ source: GraphNode.RootId, target: exampleId(1), relation: 'child' }]);
+    const before = registry.getNodes().size;
+    const unsubscribe = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), () => {});
+    expect(registry.get(graph.connections(GraphNode.RootId, 'child')).map((node) => node.id)).toEqual([exampleId(1)]);
+
+    unsubscribe();
+    // The registry drops unobserved nodes on its scheduler, not synchronously.
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().size).toBe(before);
   });
 });

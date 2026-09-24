@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Format, Type, View } from '@dxos/echo';
+import { Database, DXN, Format, Ref, Type, View } from '@dxos/echo';
 import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
 import { Table } from '@dxos/react-ui-table/types';
 
@@ -54,7 +54,7 @@ export const Create = Operation.make({
 export const AddRow = Operation.make({
   meta: { key: DXN.make('org.dxos.operation.table.addRow'), name: 'Add Row', icon: 'ph--plus--regular' },
   input: Schema.Struct({
-    view: Type.getSchema(View.View),
+    view: Ref.Ref(View.View),
     data: Schema.Any,
   }),
   output: Schema.Void,

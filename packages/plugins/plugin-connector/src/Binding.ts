@@ -68,6 +68,13 @@ const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
 };
 
 /**
+ * Navigation subject for a connection, for a caller that has to send the user to it — e.g. to
+ * reauthenticate after its provider rejected the stored credential.
+ */
+export const connectionSubject = (spaceId: string, connectionId: string): string =>
+  connectionDeckSubject(GraphPath.getSpacePath(spaceId), connectionId);
+
+/**
  * True when `cursor` is an external-sync cursor authenticated by `connection`'s access token.
  * `Cursor` no longer relates to `Connection` directly (that coupling was removed to make `Cursor`
  * an infrastructure type) — a connection's cursors are found by matching `spec.source` against its
@@ -427,7 +434,7 @@ export const syncAll = <A, E, R>({
     // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
     // callback, since it rides on the error across the process boundary.
     const openConnection = Operation.prepare(LayoutOperation.Open, {
-      subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connection.id)],
+      subject: [connectionSubject(db.spaceId, connection.id)],
       navigation: 'immediate',
     });
 

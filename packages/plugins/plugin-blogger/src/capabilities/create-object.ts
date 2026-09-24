@@ -12,7 +12,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Blog } from '#types';
 
-// `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
+// `BloggerOperation.AddPublication`/`AddPost` persist via `ContainerModel.add` and return a `Ref`
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic
 // "create object" menu needs to navigate to the new object, so both entries below construct the
 // object directly and file it via `SpaceOperation.AddObject` instead, matching every other plugin's

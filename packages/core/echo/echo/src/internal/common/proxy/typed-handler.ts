@@ -16,7 +16,15 @@ import { getDeep } from '@dxos/util';
 import { getSchemaURI } from '../../Annotation/annotations.ts';
 import { isEntity } from '../../Entity/guard.ts';
 import { toEffectSchema } from '../../JsonSchema/json-schema.ts';
-import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types/index.ts';
+import {
+  ObjectDeletedId,
+  ParentId,
+  SchemaAstId,
+  SchemaId,
+  StaticTypeSchemaSlot,
+  TypeEntityId,
+  TypeId,
+} from '../types/index.ts';
 import { assertMutable, executeChange, queueNotification } from './change-context.ts';
 import { defineHiddenProperty } from './define-hidden-property.ts';
 import { createTextMethodError } from './errors.ts';
@@ -56,7 +64,12 @@ type ProxyTarget = {
   /**
    * Schema for the root.
    */
-  [SchemaId]: Schema.Top;
+  [SchemaId]?: Schema.Top;
+
+  /**
+   * AST for a nested value.
+   */
+  [SchemaAstId]?: SchemaAST.AST;
   [ParentId]?: any;
 
   /**
@@ -145,11 +158,14 @@ const setDeepOnRawTargets = (target: object, path: readonly (string | number)[],
 };
 
 /**
- * Copy hidden properties (SchemaId, TypeId) from source to target.
+ * Copy hidden properties (SchemaId, SchemaAstId, TypeId) from source to target.
  */
 const copyHiddenProperties = (source: any, target: any): void => {
   if (SchemaId in source) {
     defineHiddenProperty(target, SchemaId, source[SchemaId]);
+  }
+  if (SchemaAstId in source) {
+    defineHiddenProperty(target, SchemaAstId, source[SchemaAstId]);
   }
   if (TypeId in source) {
     defineHiddenProperty(target, TypeId, source[TypeId]);
@@ -302,7 +318,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   init(target: ProxyTarget): void {
     assertArgument(typeof target === 'object' && target !== null, 'target');
-    invariant(SchemaId in target, 'Schema is not defined for the target');
+    invariant(SchemaId in target || SchemaAstId in target, 'Schema is not defined for the target');
 
     // Only set EventId on root objects (those without an owner).
     // Nested objects share their root's EventId for centralized reactivity.
@@ -558,15 +574,15 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop === ParentId) {
       return value;
     }
-    const schema = SchemaValidator.getTargetPropertySchema(target, prop);
+    const ast = SchemaValidator.getTargetPropertyAst(target, prop);
     // Clearing an optional property is admitted here rather than by the property's own schema: v4
     // keeps optionality on the property's context instead of widening its type to `T | undefined`.
     if (value !== undefined || !SchemaValidator.isOptionalProperty(target, prop)) {
-      assertsWithDetail(schema, value);
+      assertsWithDetail(Schema.make(ast), value);
     }
-    SchemaValidator.assertExactProperties(schema, value, (path) => getDeep(value, path));
+    SchemaValidator.assertExactProperties(ast, value, (path) => getDeep(value, path));
     if (isValidProxyTarget(value)) {
-      setSchemaProperties(value, schema);
+      setNestedSchema(value, ast);
     }
 
     return value;
@@ -603,7 +619,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Top };
 
 /**
- * Recursively set AST on all potential proxy targets.
+ * Stamps a root target with its schema, and each nested proxy target below it with the AST it follows.
  *
  * @param skipOwnStamp Skip stamping `TypeId`/`SchemaId` on `obj` itself (still recurses into
  *   children, which always get stamped). Used for objects decoded from JSON, whose own `TypeId`/
@@ -638,11 +654,24 @@ const setSchemaProperties = (obj: any, schema: Schema.Top, typeSource?: TypeSour
     }
   }
 
+  setChildSchemas(obj, schema.ast);
+};
+
+/** Stamps a nested proxy target, and those below it, with the AST it follows. */
+const setNestedSchema = (obj: any, ast: SchemaAST.AST) => {
+  const schemaType = getSchemaURI(Schema.make(ast));
+  if (schemaType != null) {
+    defineHiddenProperty(obj, TypeId, schemaType);
+  }
+  defineHiddenProperty(obj, SchemaAstId, ast);
+  setChildSchemas(obj, ast);
+};
+
+const setChildSchemas = (obj: any, ast: SchemaAST.AST) => {
   if (Array.isArray(obj)) {
     for (let index = 0; index < obj.length; index++) {
       if (isValidProxyTarget(obj[index])) {
-        const elementSchema = SchemaValidator.getIndexedElementSchema(schema, index) ?? Schema.Any;
-        setSchemaProperties(obj[index], elementSchema);
+        setNestedSchema(obj[index], SchemaValidator.getIndexedElementAst(ast, index) ?? Schema.Any.ast);
       }
     }
     return;
@@ -650,14 +679,14 @@ const setSchemaProperties = (obj: any, schema: Schema.Top, typeSource?: TypeSour
 
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
-      let elementSchema: Schema.Schema<any>;
+      let elementAst: SchemaAST.AST;
       try {
-        elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);
+        elementAst = SchemaValidator.getTargetPropertyAst(obj, key);
       } catch {
         // Property not in schema — treat as untyped so the proxy can still wrap it.
-        elementSchema = Schema.Any;
+        elementAst = Schema.Any.ast;
       }
-      setSchemaProperties(obj[key], elementSchema);
+      setNestedSchema(obj[key], elementAst);
     }
   }
 };
@@ -681,7 +710,7 @@ export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>
 
   SchemaValidator.validateSchema(schema);
   assertsWithDetail(schema, target);
-  SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path));
+  SchemaValidator.assertExactProperties(schema.ast, target, (path) => getDeep(target, path));
   makeArraysReactive(target);
 };
 

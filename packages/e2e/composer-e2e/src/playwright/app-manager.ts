@@ -11,6 +11,7 @@ import {
   type Page,
   expect,
 } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -50,10 +51,10 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 export const INITIAL_SPACE_COUNT = 1;
 
 /**
- * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
+ * Budget for `joinNewIdentity()`: spans deleting the identity and every space it held, so it is sized
  * above the 30s `actionTimeout` a single interaction gets.
  */
-const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
+const JOIN_IDENTITY_TIMEOUT = 60_000;
 
 /** The default space's Home, which a first-run boot lands on. */
 const DEFAULT_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}\/home/;
@@ -208,6 +209,32 @@ export class AppManager {
     await expect(this.page).toHaveURL(url);
   }
 
+  /**
+   * Waits for a new identity, created in place, to land on its own default space's Home — a different
+   * workspace from `previousWorkspace`, the one the deleted identity was on.
+   */
+  async waitForNewIdentityWorkspace(previousWorkspace: string | undefined): Promise<void> {
+    await expect.poll(() => this.workspaceId, { timeout: 60_000 }).not.toBe(previousWorkspace);
+    await this.waitForDefaultWorkspace();
+  }
+
+  /**
+   * Tags the live document so {@link expectSameDocument} can prove a flow ran in place: a reload, or
+   * a navigation to a new document, starts a fresh global scope without the tag.
+   */
+  async markDocument(): Promise<string> {
+    const tag = randomUUID();
+    await this.page.evaluate((tag) => {
+      globalThis.e2eDocumentTag = tag;
+    }, tag);
+    return tag;
+  }
+
+  /** Fails unless the page still holds the document {@link markDocument} tagged. */
+  async expectSameDocument(tag: string): Promise<void> {
+    expect(await this.page.evaluate(() => globalThis.e2eDocumentTag), 'the page reloaded').toBe(tag);
+  }
+
   async openUserAccount(timeout = 30_000): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
     await this.page.getByTestId('clientPlugin.devices').waitFor({ state: 'visible', timeout });
@@ -215,8 +242,45 @@ export class AppManager {
 
   async openUserDevices(timeout = 30_000): Promise<void> {
     await this.openUserAccount(timeout);
+    await this.showUserDevices(timeout);
+  }
+
+  /** Switches to the devices panel from another account panel; the account rail tab toggles the sidebar. */
+  async showUserDevices(timeout = 30_000): Promise<void> {
     await this.page.getByTestId('clientPlugin.devices').click();
     await this.page.getByTestId('devicesContainer.logout').waitFor({ state: 'visible', timeout });
+  }
+
+  async openUserSecurity(timeout = 30_000): Promise<void> {
+    await this.openUserAccount(timeout);
+    await this.page.getByTestId('clientPlugin.security').click();
+    await this.page.getByTestId('recoveryCredentials.createRecoveryCode').waitFor({ state: 'visible', timeout });
+  }
+
+  /** Writes a recovery credential and returns its code, acknowledging the dialog that shows it. */
+  async createRecoveryCode(): Promise<string> {
+    await this.page.getByTestId('recoveryCredentials.createRecoveryCode').click();
+    const code = await this.page.getByTestId('recoveryCode.code').getAttribute('data-code', { timeout: 30_000 });
+    expect(code, 'the recovery code dialog showed no code').toBeTruthy();
+    await this.confirmRecoveryCode();
+    return code ?? '';
+  }
+
+  /** From the devices panel: deletes this identity and re-admits the device with a recovery code. */
+  async recoverIdentity(recoveryCode: string, confirmInput = 'RESET'): Promise<void> {
+    await this.page.getByTestId('devicesContainer.recover').click();
+    const confirmInputLocator = this.page.getByTestId('recover.reset-identity-input');
+    await confirmInputLocator.click();
+    await confirmInputLocator.pressSequentially(confirmInput);
+    const confirmButton = this.page.getByTestId('recover.reset-identity-confirm');
+    await expect(confirmButton).toBeEnabled();
+    await confirmButton.click();
+
+    // The join panel renders every step and shows one, so the recovery step's input is the visible one.
+    const input = this.page.getByTestId('identity-input').filter({ visible: true });
+    await expect(input).toBeVisible({ timeout: JOIN_IDENTITY_TIMEOUT });
+    await input.fill(recoveryCode);
+    await this.page.getByTestId('recover-identity-input-continue').click();
   }
 
   async createDeviceInvitation(): Promise<string> {
@@ -248,10 +312,9 @@ export class AppManager {
     await expect(confirmButton).toBeEnabled();
     await confirmButton.click();
 
-    // A polling assertion rather than `waitFor`, because confirming reloads the page and a single
-    // wait issued beforehand binds to the document being torn down.
+    // The identity is deleted in place and the join dialog replaces the confirmation.
     await expect(this.shell.shell.getByTestId('halo-invitation-input')).toBeVisible({
-      timeout: JOIN_IDENTITY_BOOT_TIMEOUT,
+      timeout: JOIN_IDENTITY_TIMEOUT,
     });
   }
 

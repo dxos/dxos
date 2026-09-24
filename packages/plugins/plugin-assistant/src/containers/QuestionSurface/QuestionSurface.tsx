@@ -10,7 +10,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { Question } from '@dxos/types';
+import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -19,32 +19,33 @@ import { QuestionCard } from '../QuestionCard/QuestionCard.tsx';
 const QUESTION_SURFACE_NAME = 'QuestionSurface';
 
 export type QuestionSurfaceProps = {
-  /** Object id of the question, as the agent wrote it into the `<surface>` block. */
+  /** Object id of the task the question was filed on, as the agent wrote it into the `<surface>` block. */
+  task?: string;
+  /** Id of the question's entry in the task's history. */
   question?: string;
 };
 
 /**
- * A question rendered inline in the conversation, from the id the agent emitted.
+ * A question rendered inline in the conversation, from the ids the agent emitted.
  *
  * The chrome is composed here because the thread is not a card host: a popover or a plank supplies
- * `Card.Root` and the header around a `CardContent` surface, and nothing does inside a message. The
- * composition mirrors the deck's popover host so the same body reads identically in both.
+ * `Card.Root` and the header around a card body, and nothing does inside a message.
  *
- * The id is looked up rather than carried as a payload, so the card shows the live object: an
- * answer given here and one given from the task have to be the same answer.
+ * The task is looked up rather than the question carried as a payload, so the card shows the live
+ * history: an answer given here and one given from the task's row have to be the same answer.
  */
-export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
+export const QuestionSurface = ({ task: taskId, question: questionId }: QuestionSurfaceProps) => {
   const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
   // Validated before it reaches `Filter.id`, which asserts on its arguments: this id is written by
   // a model, so a truncated or hallucinated one is the expected case, and an unguarded filter
   // would throw during render inside the transcript rather than render nothing.
-  const valid = id !== undefined && EntityId.isValid(id) ? id : undefined;
+  const valid = taskId !== undefined && EntityId.isValid(taskId) ? taskId : undefined;
   const filter = useMemo(() => (valid ? Filter.id(valid) : Filter.nothing()), [valid]);
   const [object] = useQuery(valid ? space?.db : undefined, filter);
   // Before the guard below, so the hook count is stable; it answers `[]` for a missing subject.
   const menuItems = useObjectMenuItems(object);
-  if (!object || !Obj.instanceOf(Question.Question, object)) {
+  if (!object || !Obj.instanceOf(Task.Task, object) || !questionId) {
     return null;
   }
 
@@ -55,14 +56,13 @@ export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={object}>
-            <Icon icon={Obj.getIcon(object)?.icon ?? 'ph--question--regular'} />
+            <Icon icon='ph--question--regular' />
           </CardIconSlot>
         </Card.Block>
-        {/* The type name, not the question: a `Card.Title` truncates to one line by design, and the
+        {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
             question is a sentence the reader has to read in full — so the body carries it. */}
-        <Card.Title>{t('question-card.label')}</Card.Title>
-        {/* Same trailing slot the deck's popover host gives every card, so a question in a message
-            offers the actions a question anywhere else does. */}
+        <Card.Title>{object.title}</Card.Title>
+        {/* The task's actions, as a task card anywhere else offers them. */}
         <Card.Block end>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
             <IconButton
@@ -75,7 +75,7 @@ export const QuestionSurface = ({ question: id }: QuestionSurfaceProps) => {
           </ActionMenu>
         </Card.Block>
       </Card.Header>
-      <QuestionCard subject={object} />
+      <QuestionCard task={object} questionId={questionId} />
     </Card.Root>
   );
 };
