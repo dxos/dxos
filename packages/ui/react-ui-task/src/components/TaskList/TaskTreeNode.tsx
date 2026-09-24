@@ -79,6 +79,8 @@ export type TaskTreeNodeProps = {
   onQuestionAnswer?: (task: Task.Task, questionId: string, answer: string) => void;
   /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
   gridTemplateColumns: string;
+  /** Class list from `TaskList.Content`, merged onto the tree's own. */
+  classNames?: string | (string | undefined)[];
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
@@ -93,6 +95,7 @@ export const TaskTreeNode = ({
   selected,
   checked,
   gridTemplateColumns,
+  classNames,
   renderTrailing,
   translationKey,
   showDescription = false,
@@ -306,7 +309,7 @@ export const TaskTreeNode = ({
       ariaLabel={t('task-list.label')}
       model={model}
       gridTemplateColumns={gridTemplateColumns}
-      classNames='w-full min-w-0'
+      classNames={['w-full min-w-0', ...(Array.isArray(classNames) ? classNames : [classNames])]}
       draggable={!!onTaskMove}
       // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
       // carries no toggle track and the first cell is the gutter or the status control.

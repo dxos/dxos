@@ -192,21 +192,23 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onTaskSelect={handleOpen}
       onQuestionAnswer={handleQuestionAnswer}
     >
-      <TaskList.Viewport>
-        <TaskList.Content classNames='dx-document border' />
+      <TaskList.Viewport classNames='border'>
+        <TaskList.Content />
       </TaskList.Viewport>
       {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
           than turning into an editor the moment a row is selected. Full width, edge to edge — it is
           the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
-      <TaskList.Edit
-        createOnly
-        showDescription
-        descriptionExtensions={descriptionExtensions}
-        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there, and a
-        // fourth line would double it.
-        classNames='dx-document bg-input-surface border-x border-t border-separator rounded-t-md p-2'
-        placeholder={t('task-create.placeholder')}
-      />
+      <div className='px-trim-md'>
+        <TaskList.Edit
+          createOnly
+          showDescription
+          descriptionExtensions={descriptionExtensions}
+          // Bordered on three sides, open at the foot: the pane meets the panel's own edge there,
+          // and a fourth line would double it.
+          classNames='bg-input-surface border-x border-t border-separator rounded-t-md p-2'
+          placeholder={t('task-create.placeholder')}
+        />
+      </div>
     </TaskList.Root>
   );
 
