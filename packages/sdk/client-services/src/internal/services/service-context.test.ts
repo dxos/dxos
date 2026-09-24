@@ -13,9 +13,9 @@ import { fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 
+import * as SqliteStorage from '../../SqliteStorage.ts';
 import { IdentityServiceImpl } from '../identity/identity-service.ts';
 import { type ServiceContext, createServiceContext, performInvitation } from '../testing/index.ts';
-import { wipeSqliteStorage } from './sqlite-storage.ts';
 
 describe('services/ServiceContext', () => {
   test('new space is synchronized on device invitations', async () => {
@@ -81,7 +81,7 @@ describe('services/ServiceContext', () => {
         serviceContext.recoveryManager,
         serviceContext.keyring,
         serviceContext.dataSpaceManager ?? failedInvariant(),
-        () => serviceContext.runSql(wipeSqliteStorage.pipe(Effect.orDie)),
+        () => serviceContext.runSql(SqliteStorage.wipeSqliteStorage.pipe(Effect.orDie)),
         (options) => serviceContext.createIdentity(options),
       )['IdentityService.deleteIdentity'](),
     );
