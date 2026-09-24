@@ -14,7 +14,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { IndexEngine, type IndexingResult } from './index-engine.ts';
 import { type IndexCursor } from './index-tracker.ts';
-import { EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
+import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
 import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
@@ -77,6 +77,53 @@ class MockIndexDataSource implements IndexDataSource {
       }));
 
       return { objects, cursors: newCursors };
+    });
+  }
+}
+
+class ActivityMockDataSource implements IndexDataSource {
+  readonly sourceName = 'activity-mock-source';
+
+  constructor(
+    private readonly spaceId: SpaceId,
+    private readonly documentId: string,
+    private readonly objectId: EntityId,
+  ) {}
+
+  getChangedObjects(
+    _ctx: Context,
+    cursors: IndexCursor[],
+    opts?: { limit?: number; activity?: boolean },
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] }> {
+    return Effect.sync(() => {
+      const seen = cursors.some((cursor) => cursor.resourceId === this.documentId && cursor.cursor === 'v1');
+      if (seen) {
+        return { objects: [], cursors: [], activity: [] };
+      }
+
+      const object: IndexerObject = {
+        spaceId: this.spaceId,
+        documentId: this.documentId,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: this.objectId, [ATTR_TYPE]: TYPE_DEFAULT, title: 'Activity' },
+      };
+      const newCursors: DataSourceCursor[] = [{ spaceId: this.spaceId, resourceId: this.documentId, cursor: 'v1' }];
+      const activity: DocumentActivity[] | undefined = opts?.activity
+        ? [
+            {
+              spaceId: this.spaceId,
+              documentId: this.documentId,
+              full: true,
+              changes: [{ time: 1700000000000, ops: 1 }],
+            },
+          ]
+        : undefined;
+
+      return { objects: [object], cursors: newCursors, activity };
     });
   }
 }
@@ -398,6 +445,32 @@ describe('IndexEngine', () => {
       expect(result.documents.size).toBe(0);
       expect(result.types.size).toBe(0);
       expect(result.objects.size).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'activity survives garbage collection and counts a replicated-again document once',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const spaceId = SpaceId.random();
+      const documentId = 'doc-activity';
+      const objectId = EntityId.random();
+      const dataSource = new ActivityMockDataSource(spaceId, documentId, objectId);
+      const indexAll = Effect.gen(function* () {
+        let done = false;
+        while (!done) {
+          done = (yield* engine.update(Context.default(), dataSource, { spaceId: null })).done;
+        }
+      });
+
+      yield* indexAll;
+      expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
+
+      yield* engine.deleteObjects({ spaceId, documentIds: [documentId], objects: [] });
+      expect(yield* engine.queryActivity({ spaceId })).toHaveLength(1);
+
+      yield* indexAll;
+      expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
     }, Effect.provide(TestLayer)),
   );
 

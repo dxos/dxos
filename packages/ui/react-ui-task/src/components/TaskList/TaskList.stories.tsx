@@ -11,7 +11,7 @@ import { random } from '@dxos/random';
 import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { File, PullRequest, Question, Task } from '@dxos/types';
+import { File, PullRequest, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -20,6 +20,18 @@ import { TaskList } from './TaskList.tsx';
 
 random.seed(1);
 
+/**
+ * A short activity log, oldest first, ending `minutesAgo` minutes ago — the shape
+ * `Task.update`/`Task.setStatus` write, so the pane renders the same entries it would in the app.
+ */
+const seedHistory = (minutesAgo: number, ...descriptions: string[]): Task.HistoryEntry[] =>
+  descriptions.map((description, index) => ({
+    date: new Date(Date.now() - (minutesAgo + (descriptions.length - 1 - index) * 37) * 60_000).toISOString(),
+    event: index === 0 ? ('created' as const) : ('updated' as const),
+    actor: index % 2 === 0 ? { name: 'Rich', role: 'user' as const } : { name: 'Scout', role: 'assistant' as const },
+    description,
+  }));
+
 const seedFlat = (): Task.Task[] => [
   Task.make({
     title: 'Source green coffee',
@@ -27,6 +39,13 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Two Ethiopian lots and one Colombian, sampled before committing to a full bag. Supplier list: https://example.com/suppliers',
+    history: seedHistory(
+      12,
+      'Created this task',
+      'Assigned to Rich',
+      'Status changed from todo to started',
+      random.lorem.paragraph(),
+    ),
   }),
   Task.make({
     title: 'Write the launch poem',
@@ -40,6 +59,16 @@ const seedFlat = (): Task.Task[] => [
     priority: 'high',
     description:
       'Target a 12 minute development window; log every profile so the next batch can be reproduced from the notes rather than from memory.',
+    // Longer than the pane shows, so the "newest first, capped" behaviour is exercised.
+    history: seedHistory(
+      3,
+      'Created this task',
+      'Description updated',
+      'Priority changed from medium to high',
+      'Status changed from todo to started',
+      'Estimate set to m',
+      'Description updated',
+    ),
   }),
   Task.make({
     title: 'Publish the tasting notes',
@@ -52,6 +81,11 @@ const seedFlat = (): Task.Task[] => [
     status: 'started',
     priority: 'high',
     assignee: { role: 'assistant', name: 'Scout' },
+    // Spans the cut-off: the oldest entries are past three days and read as calendar dates.
+    history: seedHistory(1, 'Created this task', 'Assigned to an agent', 'Status changed from todo to started').map(
+      (entry, index) =>
+        index === 0 ? { ...entry, date: new Date(Date.now() - 9 * 24 * 60 * 60_000).toISOString() } : entry,
+    ),
   }),
   Task.make({
     title: 'Design label',
@@ -178,6 +212,40 @@ const seedDrag = (): Task.Task[] => {
   return [a, b, c];
 };
 
+/**
+ * Tasks an agent stopped on to ask something: one question still open with options to pick from,
+ * one open with nothing but the free-form field, and one already answered — so the three shapes a
+ * question takes in a row sit side by side.
+ */
+const seedQuestions = (): Task.Task[] => {
+  const agent = { role: 'assistant' as const, name: 'Scout' };
+  const refunds = Task.make({ title: 'Draft the refund reply', status: 'started', priority: 'high', assignee: agent });
+  Task.ask(refunds, {
+    text: 'What is our refund window for annual plans?',
+    context: 'The order is 45 days old and nothing in the project states the policy.',
+    options: [
+      { title: '30 days', description: 'The standard terms on the pricing page.' },
+      { title: '60 days', description: 'The enterprise terms, if this customer is on them.' },
+    ],
+    actor: agent,
+  });
+  Task.setStatus(refunds, 'blocked', { actor: agent });
+
+  const launch = Task.make({ title: 'Schedule the launch post', status: 'started', assignee: agent });
+  Task.ask(launch, { text: 'Which day should the launch post go out?', actor: agent });
+  Task.setStatus(launch, 'blocked', { actor: agent });
+
+  const roast = Task.make({ title: 'Pick the house roast', status: 'started', assignee: agent });
+  const roastQuestion = Task.ask(roast, {
+    text: 'Light or medium for the house roast?',
+    options: [{ title: 'Light' }, { title: 'Medium' }],
+    actor: agent,
+  });
+  Task.answer(roast, roastQuestion.id, 'Medium', { actor: { name: 'Rich', role: 'user' } });
+
+  return [refunds, launch, roast, Task.make({ title: 'Design label', status: 'todo' })];
+};
+
 /** A public CC0 clip; video is too large to generate or inline, so its blob points at it externally. */
 const SAMPLE_VIDEO_URL = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm';
 
@@ -202,8 +270,8 @@ const makePngBytes = (): Uint8Array => {
 };
 
 /**
- * One task per artifact kind — a GitHub pull request, an image, a video and a question — plus one
- * carrying the first three, so a row with several tags is covered too. Media is a `File` owning a `Blob`, which is the
+ * One task per artifact kind — a GitHub pull request, an image and a video — plus a task blocked on a
+ * question in its history, and one carrying all three artifacts, so a row with several tags is covered too. Media is a `File` owning a `Blob`, which is the
  * shape an uploaded attachment takes in a space.
  */
 const seedArtifacts = (): Task.Task[] => {
@@ -232,23 +300,19 @@ const seedArtifacts = (): Task.Task[] => {
     data: Ref.make(Blob.make({ type: 'video/webm', size: 554_058, data: Blob.externalData(SAMPLE_VIDEO_URL) })),
   });
 
-  // The question points back at the task it blocks, so the task exists first and takes it after.
+  // A question is a history entry, not an artifact: the row shows it under the title.
   const blocked = Task.make({
     title: 'Choose the launch roast',
     status: 'blocked',
     assignee: { role: 'assistant', name: 'Scout' },
   });
-  const question = Question.make({
+  Task.ask(blocked, {
     text: 'Which roast should launch first?',
     context: 'Both lots cupped well; the label and the post need one name.',
     options: [
       { title: 'Ethiopian Guji', description: 'Brighter, fruit-forward.' },
       { title: 'Colombian Huila', description: 'Rounder, chocolate notes.' },
     ],
-    task: Ref.make(blocked),
-  });
-  Obj.update(blocked, (blocked) => {
-    blocked.artifacts = [Ref.make(question)];
   });
 
   return [
@@ -317,30 +381,8 @@ const FilePreview = ({ file }: { file: File.File }) => {
   return null;
 };
 
-const QuestionPreview = ({ question }: { question: Question.Question }) => (
-  <>
-    {question.context && (
-      <Card.Row>
-        <Card.Text variant='description'>{question.context}</Card.Text>
-      </Card.Row>
-    )}
-    {(question.options ?? []).map((option) => (
-      <Card.Row key={option.title}>
-        <Card.Text data-testid='artifact-preview.question.option'>
-          {option.title}
-          {option.description && ` — ${option.description}`}
-        </Card.Text>
-      </Card.Row>
-    ))}
-  </>
-);
-
 const iconFor = (artifact: Obj.Unknown): string =>
-  PullRequest.instanceOf(artifact)
-    ? 'ph--git-pull-request--regular'
-    : Obj.instanceOf(Question.Question, artifact)
-      ? 'ph--question--regular'
-      : 'ph--file--regular';
+  PullRequest.instanceOf(artifact) ? 'ph--git-pull-request--regular' : 'ph--file--regular';
 
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
@@ -403,7 +445,6 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
                   <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
                 </Card.Header>
                 {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
-                {Obj.instanceOf(Question.Question, artifact) && <QuestionPreview question={artifact} />}
                 {Obj.instanceOf(File.File, artifact) && (
                   <Card.Row>
                     <FilePreview file={artifact} />
@@ -514,6 +555,12 @@ const DefaultStory = ({
     setTasks((tasks) => [...tasks]);
   }, []);
 
+  // Stands in for the `AnswerQuestion` operation, minus the resume: the answer lands in the history.
+  const handleQuestionAnswer = useCallback((task: Task.Task, questionId: string, answer: string) => {
+    Task.answer(task, questionId, answer, { actor: { name: 'Rich', role: 'user' } });
+    setTasks((tasks) => [...tasks]);
+  }, []);
+
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
   }, []);
@@ -553,6 +600,7 @@ const DefaultStory = ({
       onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
+      onQuestionAnswer={readonly ? undefined : handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content />
@@ -630,6 +678,48 @@ export const WithDescriptions: Story = {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: true,
+  },
+};
+
+export const WithQuestions: Story = {
+  args: {
+    seed: seedQuestions,
+    showGroupLabels: false,
+  },
+};
+
+/** Picking an option records it as the answer, and the row collapses to the question and its answer. */
+export const TestAnswerQuestion: Story = {
+  args: {
+    seed: seedQuestions,
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const answers = () =>
+      [...canvasElement.querySelectorAll('[data-testid="task-question.answer"]')].map((answer) => answer.textContent);
+
+    await waitFor(async () => {
+      await expect(canvasElement.querySelector('[data-testid="task-question.option"]')).not.toBeNull();
+    });
+    const option = canvasElement.querySelector<HTMLButtonElement>('[data-testid="task-question.option"]');
+    if (!option) {
+      throw new Error('the open question has no options');
+    }
+    await userEvent.click(option);
+    await waitFor(async () => {
+      await expect(answers()).toContain('30 days');
+    });
+
+    // Typing in the free-form field must not reach the row: its keys would move the selection.
+    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="task-question.input"]');
+    if (!input) {
+      throw new Error('the open question has no answer field');
+    }
+    await userEvent.type(input, 'Tuesday{Enter}');
+    await waitFor(async () => {
+      await expect(answers()).toContain('Tuesday');
+    });
+    await expect(canvasElement.querySelectorAll('[data-testid="task-question.option"]')).toHaveLength(0);
   },
 };
 
@@ -763,8 +853,8 @@ export const TestLongArtifactTag: Story = {
 
 /**
  * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
- * `Blob`), and a question blocking its task. Clicking a tag opens a preview of the artifact it names;
- * the question's also opens on hover.
+ * `Blob`), beside a task blocked on a question in its history. Clicking a tag opens a preview of the
+ * artifact it names.
  */
 export const WithArtifacts: Story = {
   render: ArtifactsStory,
@@ -775,7 +865,7 @@ export const WithArtifacts: Story = {
   },
 };
 
-/** Each artifact kind opens its own preview: the pull request's summary, the image, the video, the question. */
+/** Each artifact kind opens its own preview: the pull request's summary, the image, the video. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -814,7 +904,6 @@ export const TestArtifactPreviews: Story = {
     await open('#12752', 'artifact-preview.pullRequest');
     await open('label-v2.png', 'artifact-preview.image');
     await open('roast-timelapse.webm', 'artifact-preview.video');
-    await open('Which roast should launch first?', 'artifact-preview.question.option');
   },
 };
 

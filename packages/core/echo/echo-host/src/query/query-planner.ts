@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -9,6 +11,7 @@ import { DXN, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors.ts';
 import { QueryPlan } from './plan.ts';
+import { compilePlan as compileToSql, planDeclinedByCompiler } from './sql/index.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
@@ -27,8 +30,19 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
   });
 };
 
+/**
+ * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
+ * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
+ * index tables. `memory` is the default; the host resolves where the choice comes from.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
+
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
+  /** Evaluation path the plan targets, which decides what {@link QueryPlanner.createPlan} returns. */
+  executor?: QueryExecutorMode;
+  /** Builds the statement's fragments; required for `sql`, which has nothing to compile without it. */
+  sql?: SqlClient.SqlClient;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
    * Use when executing against an in-memory working set without SQL index access.
@@ -39,6 +53,7 @@ export type QueryPlannerOptions = {
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
   defaultTextSearchKind: 'full-text',
+  executor: 'memory',
 };
 
 /**
@@ -47,6 +62,8 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
 // TODO(dmaretskyi): Implement inefficient versions of complex queries.
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
+  /** Passed to the compiler, which plans `in-query` subqueries through it rather than importing this module. */
+  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.#buildSteps(query);
 
   constructor(options?: Partial<QueryPlannerOptions>) {
     this._options = {
@@ -55,16 +72,107 @@ export class QueryPlanner {
     };
   }
 
+  /**
+   * The plan the executor runs. Under `sql` the steps are compiled into one
+   * {@link QueryPlan.SqlStep}, except where {@link planDeclinedByCompiler} sends the plan to the
+   * in-memory executor instead. Synchronous: compiling reads nothing, it only builds the statement.
+   */
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    const plan = this.#buildSteps(query);
+    const sql = this._options.sql;
+    if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
+      return plan;
+    }
+    return compileToSql(sql, plan, this.#planSubquery).plan;
+  }
+
+  /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */
+  #buildSteps(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
+    const selectsChanges = queryContainsChanges(query);
+    if (selectsChanges) {
+      this._validateChangesFilters(query);
+    }
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
+    if (selectsChanges) {
+      return this._routeChanges(plan, query);
+    }
     plan = this._optimizeLimits(plan);
     plan = this._optimizeBareAggregate(plan);
     return plan;
+  }
+
+  private _validateChangesFilters(query: QueryAST.Query): void {
+    QueryAST.visit(query, (node) => {
+      if (
+        (node.type === 'filter' && filterContainsChanges(node.filter)) ||
+        (node.type === 'select' && node.filter.type !== 'changes' && filterContainsChanges(node.filter))
+      ) {
+        throw new QueryError({
+          message: 'Filter.changes() cannot be combined with other filters, traversals or unions.',
+          context: { query: Query.pretty(Query.fromAst(query)) },
+        });
+      }
+    });
+  }
+
+  private _routeChanges(plan: QueryPlan.Plan, query: QueryAST.Query): QueryPlan.Plan {
+    const fail = (message: string): never => {
+      throw new QueryError({ message, context: { query: Query.pretty(Query.fromAst(query)) } });
+    };
+    const [select, ...rest] = plan.steps;
+    if (select?._tag !== 'SelectStep' || select.selector._tag !== 'ChangesSelector') {
+      return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
+    }
+    if (!select.scope.every((scope) => scope._tag === 'space')) {
+      return fail('Filter.changes() selects from spaces, not feeds.');
+    }
+    for (const step of rest) {
+      switch (step._tag) {
+        case 'LimitStep':
+        case 'SkipStep':
+          break;
+        case 'OrderStep':
+          if (!step.order.every((order) => order.kind === 'natural' || order.kind === 'property')) {
+            return fail('Changes can only be ordered by a property or naturally (by time).');
+          }
+          break;
+        case 'AggregateStep': {
+          const unsupported = step.aggregates.find(
+            (aggregate) => aggregate.kind === 'items' || aggregate.kind === 'type' || aggregate.kind === 'timestamp',
+          );
+          if (unsupported) {
+            const name =
+              unsupported.kind === 'timestamp'
+                ? unsupported.field === 'updatedAt'
+                  ? 'updated'
+                  : 'created'
+                : unsupported.kind;
+            return fail(`Aggregate.${name}() does not apply to changes.`);
+          }
+          break;
+        }
+        default:
+          return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
+      }
+    }
+
+    const indexAnswers = activityIndexAnswers(rest);
+    if (!indexAnswers && select.selector.targets === undefined) {
+      return fail(
+        "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', …), " +
+          "Aggregate.group('source'), Aggregate.count() and Aggregate.sum('ops'); pass targets to Filter.changes() " +
+          'for anything else.',
+      );
+    }
+    return QueryPlan.Plan.make([
+      { ...select, selector: { ...select.selector, source: indexAnswers ? 'index' : 'replay' } },
+      ...rest,
+    ]);
   }
 
   /**
@@ -373,6 +481,19 @@ export class QueryPlanner {
           {
             _tag: 'FilterStep',
             filter: { ...filter },
+          },
+        ]);
+      }
+
+      case 'changes': {
+        if (context.selectionInverted) {
+          throw queryTooComplexError(context.originalQuery);
+        }
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: { _tag: 'ChangesSelector', targets: filter.targets, source: 'replay' },
           },
         ]);
       }
@@ -887,7 +1008,7 @@ export class QueryPlanner {
    * pagination clauses `limit()`/`skip()` may wrap it. At most one `aggregate` may appear anywhere
    * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so an
    * aggregated subquery would otherwise produce an unsupported double-`aggregate`). The DSL's types
-   * can't enforce this (`Query<AggregateResult & ...>` still exposes `orderBy`/`select`/etc.), so
+   * can't enforce this (`Query<RecordResult & ...>` still exposes `orderBy`/`select`/etc.), so
    * it's validated here at plan time.
    *
    * `limit`/`skip` above an `aggregate` page over whole groups (see the group-aware `LimitStep`/
@@ -1041,6 +1162,12 @@ export class QueryPlanner {
         return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        // An outgoing reference traversal emits each anchor's refs in array order, which is the only
+        // order a ref array has. Order the anchors instead, so the result stays deterministic.
+        if (isOutgoingReferenceTraversal(step)) {
+          const anchor = this._ensureOrderStep(QueryPlan.Plan.make(processedPlan.steps.slice(0, i)));
+          return QueryPlan.Plan.make([...anchor.steps, ...processedPlan.steps.slice(i)]);
+        }
         break;
       }
     }
@@ -1286,6 +1413,11 @@ const NOOP_FILTER: QueryAST.Filter = {
   props: {},
 };
 
+const isOutgoingReferenceTraversal = (step: QueryPlan.Step): boolean =>
+  step._tag === 'TraverseStep' &&
+  step.traversal._tag === 'ReferenceTraversal' &&
+  step.traversal.direction === 'outgoing';
+
 const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['direction']): QueryPlan.Step => ({
   _tag: 'TraverseStep',
   traversal: {
@@ -1440,6 +1572,50 @@ const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
     default:
       return false;
   }
+};
+
+/** Whether hourly activity buckets answer the steps after a changes select as individual changes would. */
+const activityIndexAnswers = (steps: readonly QueryPlan.Step[]): boolean => {
+  const aggregateIndex = steps.findIndex((step) => step._tag === 'AggregateStep');
+  const aggregate = steps[aggregateIndex];
+  return (
+    aggregate?._tag === 'AggregateStep' &&
+    steps.slice(0, aggregateIndex).every(isNaturalOrderStep) &&
+    aggregate.aggregates.every(readsOnlyBucketFields)
+  );
+};
+
+const isNaturalOrderStep = (step: QueryPlan.Step): boolean =>
+  step._tag === 'OrderStep' && step.order.every((order) => order.kind === 'natural');
+
+const readsOnlyBucketFields = (aggregate: QueryAST.GroupAggregate): boolean =>
+  aggregate.kind === 'count' ||
+  (aggregate.kind === 'sum' && aggregate.property === 'ops') ||
+  (aggregate.kind === 'time' && aggregate.property === 'time') ||
+  (aggregate.kind === 'group' && aggregate.properties.length === 1 && aggregate.properties[0] === 'source');
+
+const filterContainsChanges = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'changes':
+      return true;
+    case 'not':
+      return filterContainsChanges(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterContainsChanges);
+    default:
+      return false;
+  }
+};
+
+export const queryContainsChanges = (query: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(query, (node) => {
+    if ((node.type === 'select' || node.type === 'filter') && filterContainsChanges(node.filter)) {
+      found = true;
+    }
+  });
+  return found;
 };
 
 /**

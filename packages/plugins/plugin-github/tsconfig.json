@@ -73,6 +73,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -80,6 +83,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/react-ui-menu"

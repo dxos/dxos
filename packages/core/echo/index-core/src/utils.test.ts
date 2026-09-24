@@ -10,6 +10,7 @@ import {
   SQL_MAX_BOUND_VARIABLES,
   chunkRows,
   chunkSizeForBoundVariables,
+  isUnauthorizedFunctionError,
   mergeChunkedRows,
   planChunkPairs,
   planChunks,
@@ -145,5 +146,22 @@ describe('chunk planning', () => {
       { recordId: 2, rank: 3 },
       { recordId: 1, rank: 2 },
     ]);
+  });
+});
+
+describe('isUnauthorizedFunctionError', () => {
+  test('matches the authorizer refusal nested under the driver error', ({ expect }) => {
+    const denied = new Error('not authorized to use function: sqlite_version at offset 7: SQLITE_ERROR');
+    const driver = new Error('Failed to execute statement', {
+      cause: new Error('Failed to execute statement', { cause: denied }),
+    });
+    expect(isUnauthorizedFunctionError(driver)).toBe(true);
+  });
+
+  test('does not match other SQL failures', ({ expect }) => {
+    expect(isUnauthorizedFunctionError(new Error('Failed', { cause: new Error('no such table: objectMeta') }))).toBe(
+      false,
+    );
+    expect(isUnauthorizedFunctionError(undefined)).toBe(false);
   });
 });

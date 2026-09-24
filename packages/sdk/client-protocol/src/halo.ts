@@ -17,6 +17,7 @@ import {
   type Presentation,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type InboxService } from '@dxos/protocols/rpc';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations/index.ts';
 
@@ -31,6 +32,26 @@ export type RecoverIdentityArgs =
   | { external: RecoverIdentityRequest_ExternalSignature };
 
 /**
+ * User-to-user notices relayed through EDGE; today only space invitation notices.
+ */
+export interface HaloInbox {
+  /**
+   * Pending notices whose signature, sender and recipient have been verified, oldest first.
+   * Not filtered by contact book: callers decide which senders to show.
+   */
+  get notices(): MulticastObservable<readonly InboxService.Notice[]>;
+
+  /**
+   * Tells a known identity it has been admitted to a space.
+   * Resolves once the relay has accepted the notice, not once the recipient has received it.
+   */
+  send(request: InboxService.SendRequest): Promise<void>;
+
+  /** Marks notices handled for this identity, on all of its devices. */
+  ack(ids: readonly string[]): Promise<void>;
+}
+
+/**
  * TODO(burdon): Public API (move comments here).
  */
 export interface Halo {
@@ -40,6 +61,7 @@ export interface Halo {
   get contacts(): MulticastObservable<Contact[]>;
   get invitations(): MulticastObservable<CancellableInvitation[]>;
   get credentials(): MulticastObservable<Credential[]>;
+  get inbox(): HaloInbox;
 
   createIdentity(options?: ProfileDocument, deviceProfile?: DeviceProfileDocument): Promise<Identity>;
   recoverIdentity(args: RecoverIdentityArgs): Promise<Identity>;

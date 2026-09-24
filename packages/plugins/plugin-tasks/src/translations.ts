@@ -52,6 +52,7 @@ export const translations = [
         'task-create.placeholder': 'Add task',
         'filter.label': 'Filter tasks',
         'filter.placeholder': 'Filter',
+        'filter-clear.label': 'Clear filter',
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
         'delete-object.label': 'Delete object',

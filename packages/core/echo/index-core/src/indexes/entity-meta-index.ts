@@ -19,6 +19,7 @@ import {
 } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
+import { localEntityId } from '../entity-ids.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
 import {
   SqlBoundVariableLimit,
@@ -89,9 +90,19 @@ export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readon
     typeDxns.map((typeDXN) => {
       const { forms, hasNoVersion } = _typeDxnMatch(typeDXN);
       const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
-      return hasNoVersion
-        ? sql.or([exactMatch, sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`))])
-        : exactMatch;
+      if (!hasNoVersion) {
+        return exactMatch;
+      }
+      // A range bounds the seek on `(spaceId, typeDXN)`; `= OR LIKE` alone makes SQLite scan the
+      // space partition. `;` is the code point after `:`, so the range covers the bare form and
+      // every `form:<version>`; the exact predicate stays as the residual because the range also
+      // admits `form` followed by a code point below `:`.
+      return sql.or(
+        forms.map(
+          (form) =>
+            sql`(typeDXN >= ${form} AND typeDXN < ${form + ';'} AND (typeDXN = ${form} OR typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'))`,
+        ),
+      );
     }),
   );
 
@@ -175,7 +186,15 @@ export const splitSourceRefs = (sources: readonly SourceRef[]): { spaceIds: stri
  * Builds a SQL condition for filtering by space and queue source.
  * When `includeAllQueues` is false and no `queues`, only non-queue objects are returned.
  */
-const buildSourceCondition = (
+export const buildSourceCondition = (
+  sql: SqlClient.SqlClient,
+  spaceIds: readonly string[],
+  includeAllQueues: boolean,
+  queues: readonly QueueRef[] | null,
+): Statement.Fragment => buildSourceRefsCondition(sql, sourceRefs(spaceIds, queues), includeAllQueues);
+
+/** {@link buildSourceCondition} over one chunk of a read's sources. */
+const buildSourceRefsCondition = (
   sql: SqlClient.SqlClient,
   sources: readonly SourceRef[],
   includeAllQueues: boolean,
@@ -258,7 +277,7 @@ export interface NaturalQueueWindow {
  * Empty when there is no window, so the unwindowed query keeps its previous shape (and its
  * unspecified row order).
  */
-const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
+export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
   if (window === undefined) {
     return sql``;
   }
@@ -398,7 +417,7 @@ export class EntityMetaIndex implements Index {
         const results: (readonly EntityMeta[])[] = [];
         for (const chunk of planChunks(sources, sourceVariableCost, budget)) {
           results.push(
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceCondition(sql, chunk, includeAllQueues)}${window}`,
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${window}`,
           );
         }
         return mergeChunkedRows(results, queueWindowMerge(query.window)).map(withDeletedFlag);
@@ -442,7 +461,7 @@ export class EntityMetaIndex implements Index {
             budget,
           )) {
             results.push(
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${queueWindow}`,
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${queueWindow}`,
             );
           }
           return mergeChunkedRows(results, merge).map(withDeletedFlag);
@@ -456,7 +475,7 @@ export class EntityMetaIndex implements Index {
           const typeWhere = typeDxns.length > 0 ? sql` AND NOT ${buildTypeDxnCondition(sql, typeDxns)}` : sql``;
           for (const chunk of planChunks(sources, sourceVariableCost, budget - typeCost)) {
             results.push(
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceCondition(sql, chunk, includeAllQueues)}${typeWhere}${queueWindow}`,
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${typeWhere}${queueWindow}`,
             );
           }
           return mergeChunkedRows(results, merge).map(withDeletedFlag);
@@ -472,13 +491,13 @@ export class EntityMetaIndex implements Index {
         )) {
           const rows = yield* sql<{
             recordId: number;
-          }>`SELECT recordId FROM objectMeta WHERE ${buildSourceCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}`;
+          }>`SELECT recordId FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}`;
           rows.forEach((row) => excluded.add(row.recordId));
         }
         const widenedWindow = buildQueueWindow(sql, widenQueueWindow(window, excluded.size));
         for (const chunk of planChunks(sources, sourceVariableCost, limit - countBoundVariables(sql, widenedWindow))) {
           const rows =
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceCondition(sql, chunk, includeAllQueues)}${widenedWindow}`;
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${widenedWindow}`;
           results.push(rows.filter((row) => !excluded.has(row.recordId)));
         }
         return mergeChunkedRows(results, merge).map(withDeletedFlag);
@@ -537,15 +556,18 @@ export class EntityMetaIndex implements Index {
               source: string | null;
               target: string | null;
               parent: string | null;
+              parentId: string | null;
+              sourceId: string | null;
+              targetId: string | null;
               convergenceKey: string | null;
             };
             let existing: readonly ExistingRow[];
             if (documentId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
             } else if (queueId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
             } else {
               // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
               existing = [];
@@ -594,6 +616,10 @@ export class EntityMetaIndex implements Index {
                 : null;
             // Parent (nullable).
             const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
+            // Bare local ids of the dependencies, the columns the query compiler joins through.
+            const parentId = preserveBody ? priorRow.parentId : localEntityId(parent, spaceId);
+            const sourceId = preserveBody ? priorRow.sourceId : localEntityId(source, spaceId);
+            const targetId = preserveBody ? priorRow.targetId : localEntityId(target, spaceId);
             // Convergence key (nullable) — from the meta section of the serialized object. The meta
             // arrives as raw replicated JSON, so anything but a string is treated as no key.
             const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)?.convergenceKey;
@@ -623,6 +649,9 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
+                    parentId = ${parentId},
+                    sourceId = ${sourceId},
+                    targetId = ${targetId},
                     convergenceKey = ${convergenceKey},
                     updatedAt = ${updatedAtTimestamp},
                     queuePosition = ${queuePosition ?? null}
@@ -632,12 +661,13 @@ export class EntityMetaIndex implements Index {
               yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, convergenceKey, version,
-                    createdAt, updatedAt, queuePosition
+                    entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
+                    convergenceKey, version, createdAt, updatedAt, queuePosition
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${convergenceKey}, ${version},
+                    ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
+                    ${convergenceKey}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
                   )
                 `;
@@ -848,7 +878,7 @@ export class EntityMetaIndex implements Index {
         const results: (readonly EntityMeta[])[] = [];
         for (const chunk of planChunks(sources, sourceVariableCost, budget)) {
           results.push(
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceCondition(sql, chunk, includeAllQueues)}${timeFilter}`,
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${timeFilter}`,
           );
         }
         return mergeChunkedRows(results).map(withDeletedFlag);

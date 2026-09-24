@@ -373,4 +373,36 @@ describe('ReverseRefIndex.queryReferrers', () => {
       expect(referrers.map(({ objectId }) => objectId)).toEqual([sameSpace.data.id]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  // `propPathNormalized` is what an incoming-reference lookup by property matches on, so it must
+  // name the property regardless of the array position the reference sat at.
+  it.effect('stores the property path with and without array-index segments', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const reverseRefIndex = new ReverseRefIndex(sql);
+      yield* reverseRefIndex.migrate();
+
+      const targetDXN = EID.make({ entityId: EntityId.random() });
+      const sourceObject: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: 1,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          items: [{ assignee: { '/': targetDXN } }],
+        },
+      };
+
+      yield* reverseRefIndex.update([sourceObject]);
+
+      const rows = yield* sql<{ propPath: string; propPathNormalized: string }>`
+        SELECT propPath, propPathNormalized FROM reverseRef WHERE targetDXN = ${targetDXN}`;
+      expect(rows).toEqual([{ propPath: 'items.0.assignee', propPathNormalized: 'items.assignee' }]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

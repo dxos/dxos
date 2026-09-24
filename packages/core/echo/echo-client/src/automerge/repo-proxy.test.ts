@@ -244,9 +244,17 @@ describe('RepoProxy', () => {
     // `whenReady()` must NOT resolve — there is no source for the doc on
     // disk or on the network.
     let readyResolved = false;
-    void handle.whenReady().then(() => {
-      readyResolved = true;
-    });
+    void handle.whenReady().then(
+      () => {
+        readyResolved = true;
+      },
+      (err) => {
+        // The close at the end of the test settles the still-pending load.
+        if (!(err instanceof RepoClosedError)) {
+          throw err;
+        }
+      },
+    );
     await sleep(300);
 
     expect(readyResolved).toBe(false);
@@ -389,6 +397,28 @@ describe('RepoProxy', () => {
 
       expect(clientHandle.doc()?.text).to.equal('Hello World!');
     }
+  });
+
+  test('a disk flush saves only the documents written since the last one', async () => {
+    let recorder: FlushRecordingDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (recorder = new FlushRecordingDataService(props)));
+    invariant(recorder);
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    type TestDoc = { text?: string };
+    const first = clientRepo.create<TestDoc>();
+    const second = clientRepo.create<TestDoc>();
+    await clientRepo.flush({ disk: true });
+    expect(new Set(recorder.flushed.at(-1))).toEqual(new Set([first.documentId, second.documentId]));
+
+    first.change((doc: TestDoc) => (doc.text = 'changed'));
+    await clientRepo.flush({ disk: true });
+    expect(recorder.flushed.at(-1)).toEqual([first.documentId]);
+
+    const flushes = recorder.flushed.length;
+    await clientRepo.flush({ disk: true });
+    expect(recorder.flushed.length).toBe(flushes);
   });
 
   test('client and host make changes simultaneously', async () => {
@@ -664,6 +694,36 @@ describe('RepoProxy', () => {
     await closing;
   });
 
+  test('a load still in flight is settled when the proxy closes', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    // The host has no bytes for this document and no peer to fetch them from, so only the close can
+    // settle the load.
+    const handle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    const ready = asyncTimeout(handle.whenReady(), 1_000);
+    await clientRepo.close();
+
+    await expect(ready).rejects.toThrow(RepoClosedError);
+  });
+
+  // `Trigger` marks its own promise handled, so settling a load nobody awaits must not surface as an
+  // unhandled rejection; vitest reports one as an error for the run.
+  test('closing with a load nobody awaits raises no unhandled rejection', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    await clientRepo.close();
+    // Lets an unhandled rejection surface inside this test rather than a later one.
+    await sleep(10);
+
+    // The load is settled rather than left pending, even though nobody was waiting on it.
+    await expect(asyncTimeout(handle.whenReady(), 1_000)).rejects.toThrow(RepoClosedError);
+  });
+
   test('find on a closed proxy reports the client going away', async () => {
     const { dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);
@@ -712,6 +772,16 @@ class RefusingDataService extends DataServiceImpl {
     return this.refuse
       ? Effect.fail(new EchoClientError({ message: 'document creation refused' }))
       : super['DataService.createDocument'](request);
+  }
+}
+
+/** Records the documents each disk flush asks the host to save. */
+class FlushRecordingDataService extends DataServiceImpl {
+  readonly 'flushed': string[][] = [];
+
+  override ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {
+    this.flushed.push([...(request.documentIds ?? [])]);
+    return super['DataService.flush'](request);
   }
 }
 

@@ -362,6 +362,8 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           spaceKey: request.spaceKey,
           identityKey: requirePublicKey(request.contact?.identityKey),
           role: request.role,
+          // Record the profile the host already knows, so the member is named before they first join.
+          profile: request.contact?.profile,
         });
       },
       catch: toServiceError,
@@ -405,6 +407,11 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         await writer.setCurrentRootUrl(rootUrl);
 
         for await (const [documentId, data] of space.getAllDocuments()) {
+          // A linked document never persisted locally exports as zero bytes, which no importer can load.
+          if (data.byteLength === 0) {
+            log.warn('skipping document with no local data in space export', { spaceId: space.id, documentId });
+            continue;
+          }
           await writer.writeDocument(documentId, data);
         }
 

@@ -409,6 +409,18 @@ const DECLARED_IN_TYPES: Record<string, string[]> = {
   'packages/common/sql-sqlite': ['@dxos/errors'],
 };
 
+/**
+ * Dependencies a package uses at runtime, but only from its published `./testing` entry. The
+ * production pass does not traverse `src/testing/`, so the import is invisible there even though the
+ * subpath ships and a consumer resolves the package when it imports the helper. The runtime sibling
+ * of `DECLARED_IN_TYPES`, which covers the same path reaching declaration emit instead.
+ */
+const TESTING_ENTRY_ONLY: Record<string, string[]> = {
+  // `src/testing/decorators/withRegistry.tsx` builds the storybook atom registry with
+  // `AtomEx.makeRegistry` and provides it through `@effect/atom-react`'s context.
+  'packages/ui/react-ui': ['@dxos/effect', '@effect/atom-react'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
   // edge-compute generates a function entrypoint containing
@@ -515,6 +527,7 @@ for (const manifest of globSync(
       ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
+      ...(TESTING_ENTRY_ONLY[dir] ?? []),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
       ...(SCRIPT_STORE_RESOLVED[dir] ?? []),

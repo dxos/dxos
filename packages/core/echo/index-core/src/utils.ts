@@ -12,6 +12,13 @@ import { invariant } from '@dxos/invariant';
 export type EntityPropPath = string[];
 
 /**
+ * A property path with array-index segments removed, the form `reverseRef.propPathNormalized`
+ * stores: `['items', '0', 'assignee']` and `['items', 'assignee']` name the same property.
+ */
+export const normalizePropPath = (path: readonly string[]): EntityPropPath =>
+  path.filter((segment) => !/^[0-9]+$/.test(segment));
+
+/**
  * Bound variables one statement may carry (`SQLITE_LIMIT_VARIABLE_NUMBER`).
  *
  * Sized for Durable Object SQLite, which is what production indexes against and which caps this at
@@ -30,6 +37,25 @@ const RESERVED_BOUND_VARIABLES = 8;
 export const chunkSizeForBoundVariables = (variablesPerRow: number): number => {
   invariant(Number.isInteger(variablesPerRow) && variablesPerRow > 0, 'variables per row must be a positive integer');
   return Math.max(1, Math.floor((SQL_MAX_BOUND_VARIABLES - RESERVED_BOUND_VARIABLES) / variablesPerRow));
+};
+
+/**
+ * True for SQLite's authorizer refusing a function call, which Durable Object SQLite does for
+ * introspection functions such as `sqlite_version()`; the driver nests the message under `cause`.
+ */
+export const isUnauthorizedFunctionError = (err: unknown): boolean => {
+  let current: unknown = err;
+  for (let depth = 0; depth < 5 && current instanceof Object; depth++) {
+    if (
+      'message' in current &&
+      typeof current.message === 'string' &&
+      /not authorized to use function/i.test(current.message)
+    ) {
+      return true;
+    }
+    current = 'cause' in current ? current.cause : undefined;
+  }
+  return false;
 };
 
 /** Chunk size for a list binding one variable per element, as `IN (...)` does. */
