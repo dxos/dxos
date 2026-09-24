@@ -485,7 +485,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     Schema.asserts(propertySchema, value);
-    SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
+    SchemaValidator.assertExactProperties(propertySchema.ast, value, (path) => getDeep(value, path));
     return value;
   }
 

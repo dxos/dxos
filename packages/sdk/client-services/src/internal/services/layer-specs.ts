@@ -48,6 +48,7 @@ import {
   EdgeAgentService,
   FeedService,
   IdentityService,
+  InboxService,
   InvitationsService,
   LoggingService,
   NetworkService,
@@ -75,6 +76,7 @@ import {
   IdentityLifecycleLayer,
   IdentityManagerLayer,
   IdentityServiceLayer,
+  InboxServiceLayer,
 } from '../identity/index.ts';
 import {
   InvitationFactoriesLayer,
@@ -405,7 +407,11 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
       requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
-    () => echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator }),
+    () =>
+      echoHostLayer({
+        useSubduction: options.edgeFeatures?.subductionReplicator,
+        queryExecutor: options.queryExecutor,
+      }),
   );
 
 export const DataSpaceManagerSpec = (options: ServiceStackServices) =>
@@ -592,6 +598,26 @@ export const ContactsServiceSpec = LayerSpec.make(
 export const ContactsServiceRegistrationSpec = LayerSpec.make(
   { affinity: 'application', requires: [ContactsService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(ContactsService.Rpcs, ContactsService.Tag),
+);
+
+// The edge tags are required only when configured, so the service is built after them rather than
+// finding them absent; without them it still serves an empty inbox.
+export const InboxServiceSpec = (options: ServiceStackServices) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [
+        IdentityContract.ManagerService,
+        ...(options.edgeAvailable ? [EdgeHttpClientService, EdgeConnectionService] : []),
+      ],
+      provides: [InboxService.Tag],
+    },
+    () => InboxServiceLayer,
+  );
+
+export const InboxServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [InboxService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(InboxService.Rpcs, InboxService.Tag),
 );
 
 export const InvitationsServiceSpec = LayerSpec.make(
@@ -790,6 +816,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   IdentityServiceRegistrationSpec,
   ContactsServiceSpec,
   ContactsServiceRegistrationSpec,
+  InboxServiceSpec(options),
+  InboxServiceRegistrationSpec,
   InvitationsServiceSpec,
   InvitationsServiceRegistrationSpec,
   DevicesServiceSpec,

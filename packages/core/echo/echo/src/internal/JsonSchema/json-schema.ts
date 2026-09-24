@@ -152,7 +152,10 @@ const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType>
   // the serializer, where the type-side annotations are dropped (a bare `Schema.Number` encodes to
   // `number | "NaN" | ±"Infinity"` and loses its title, format and ECHO annotations). Materializing
   // it here lets the encoding flattening below carry those annotations onto the encoded node.
-  const withRefinements = withEchoRefinements(Schema.toCodecJson(Schema.make(ast)).ast, new Map());
+  // The root is rewritten outside the memo: reached again through its own cycle it would be the same
+  // node, and the serializer would hoist the root itself into `$defs`, leaving a bare `$ref` where
+  // readers (and model tool schemas) expect an object.
+  const withRefinements = refine(Schema.toCodecJson(Schema.make(ast)).ast, makeRewrites());
   // Effect 4 replaced `fromAST` with a document generator that returns the root schema and its
   // definitions separately; only a genuinely cyclic schema produces definitions (an acyclic suspend
   // is inlined), and they are carried over as `$defs` rather than dropped.
@@ -210,13 +213,60 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
 };
 
 /**
+ * Memoized rewrites for one generation: by node, and for structs also by shape, since a struct
+ * re-annotated with the same annotations is a copy that shares its property list.
+ */
+type Rewrites = {
+  nodes: Map<SchemaAST.AST, SchemaAST.AST>;
+  structs: Map<SchemaAST.Objects['propertySignatures'], { ast: SchemaAST.Objects; result: SchemaAST.AST }[]>;
+};
+
+const makeRewrites = (): Rewrites => ({ nodes: new Map(), structs: new Map() });
+
+const sameAnnotations = (left: SchemaAST.AST['annotations'] = {}, right: SchemaAST.AST['annotations'] = {}) => {
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every((key) => left[key] === right[key]);
+};
+
+const sameElements = <T>(left: readonly T[] = [], right: readonly T[] = []) =>
+  left.length === right.length && left.every((element, index) => element === right[index]);
+
+const findStructCopy = (ast: SchemaAST.Objects, rewrites: Rewrites): SchemaAST.AST | undefined =>
+  rewrites.structs
+    .get(ast.propertySignatures)
+    ?.find(
+      ({ ast: other }) =>
+        sameElements(other.indexSignatures, ast.indexSignatures) &&
+        sameElements(other.checks, ast.checks) &&
+        other.encoding === ast.encoding &&
+        other.context === ast.context &&
+        sameAnnotations(other.annotations, ast.annotations),
+    )?.result;
+
+/**
  * Rewrites an AST into the shape ECHO serializes.
  *
- * `expansions` memoizes the rewrite of every suspended body so that re-entering a cycle yields the
- * *same* node object. Effect 4's serializer walks suspends eagerly and terminates on node identity;
- * a thunk that rebuilt its body on each call would recurse until the stack blew.
+ * Memoized so that a schema reached twice yields the *same* node object. Effect 4's serializer
+ * walks suspends eagerly and terminates on node identity, so a cycle needs it; and it names `$defs`
+ * by identity too, so a named schema rewritten once per occurrence would be emitted once per
+ * occurrence (`jsonSchema`, `jsonSchema_1`, ...).
  */
-const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, SchemaAST.AST>): SchemaAST.AST => {
+const withEchoRefinements = (ast: SchemaAST.AST, rewrites: Rewrites): SchemaAST.AST => {
+  const cached = rewrites.nodes.get(ast) ?? (SchemaAST.isObjects(ast) ? findStructCopy(ast, rewrites) : undefined);
+  if (cached) {
+    return cached;
+  }
+  const result = refine(ast, rewrites);
+  rewrites.nodes.set(ast, result);
+  if (SchemaAST.isObjects(ast)) {
+    const copies = rewrites.structs.get(ast.propertySignatures) ?? [];
+    copies.push({ ast, result });
+    rewrites.structs.set(ast.propertySignatures, copies);
+  }
+  return result;
+};
+
+const refine = (ast: SchemaAST.AST, rewrites: Rewrites): SchemaAST.AST => {
   // v4 encodes `Schema.Number` as `number | "NaN" | ±"Infinity"` so non-finite values survive JSON,
   // and that projection drops the node's checks -- `multipleOf`, `minimum` and the rest would vanish
   // from the emitted schema. ECHO never stores a non-finite number, so they still describe the wire
@@ -241,19 +291,16 @@ const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, 
   let recursiveResult: SchemaAST.AST;
   if (SchemaAST.isSuspend(ast)) {
     const suspendedAst = ast.thunk();
-    const expand = () => {
-      const cached = expansions.get(suspendedAst);
-      if (cached) {
-        return cached;
-      }
-      const expanded = withEchoRefinements(suspendedAst, expansions);
-      expansions.set(suspendedAst, expanded);
-      return expanded;
-    };
-    recursiveResult = new SchemaAST.Suspend(expand, ast.annotations, undefined, ast.encoding, ast.context);
+    recursiveResult = new SchemaAST.Suspend(
+      () => withEchoRefinements(suspendedAst, rewrites),
+      ast.annotations,
+      undefined,
+      ast.encoding,
+      ast.context,
+    );
   } else if (SchemaAST.isObjects(ast)) {
     // Add property order annotations
-    recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(stripUndefinedMember(ast), expansions));
+    recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(stripUndefinedMember(ast), rewrites));
     // Not for a reference: its encoded side is a struct only so that v4 will serialize it, and the
     // `$ref` node it collapses to has no properties to order.
     if (SchemaAST.getAnnotation(ast, '$ref') !== JSON_SCHEMA_ECHO_REF_ID) {
@@ -265,7 +312,7 @@ const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, 
     // Ignore undefined keyword that appears in the optional fields.
     return ast;
   } else {
-    recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(ast, expansions));
+    recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(ast, rewrites));
   }
 
   const annotationFields = annotations_toJsonSchemaFields(SchemaAST.resolveAnnotations(ast) ?? {});
@@ -295,7 +342,7 @@ const isEchoReferenceNode = (node: JsonSchemaType): boolean =>
  * Memoizes the decode of every `$defs` entry within one `toEffectSchema` call, keyed by definition
  * name. A definition is only ever reached through a `$ref`, and a `$ref` is only emitted for a
  * genuine cycle, so re-entry must resolve to the in-flight placeholder rather than expand the body
- * again -- the mirror of the `expansions` map on the encode side.
+ * again.
  */
 type Expansions = Map<string, Schema.Codec<any, any>>;
 

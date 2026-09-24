@@ -5,19 +5,25 @@
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type ActivityDatum } from '@dxos/react-ui-dashboard';
 
-/** Counts live objects by the local day in `timeZone` they were last updated; one row per day. */
-export const dailyActivityQuery = (timeZone: string) =>
-  Query.select(Filter.everything()).aggregate({
-    day: Aggregate.updated('day', { timeZone }),
-    count: Aggregate.count(),
-  });
+export const HOURLY_ACTIVITY_QUERY = Query.select(Filter.changes()).aggregate({
+  hour: Aggregate.time('time', 'hour'),
+  count: Aggregate.count(),
+});
 
-/** A row of {@link dailyActivityQuery}. */
-export type DayCount = {
-  readonly day: number | null;
+export type HourCount = {
+  readonly hour: number | null;
   readonly count: number;
 };
 
-/** One calendar entry per day; a `null` day (no timestamp recorded) has no square and is dropped. */
-export const toActivity = (rows: readonly DayCount[]): ActivityDatum[] =>
-  rows.flatMap(({ day, count }) => (day === null ? [] : [{ date: new Date(day), value: count }]));
+export const toActivity = (rows: readonly HourCount[]): ActivityDatum[] => {
+  const days = new Map<number, number>();
+  for (const { hour, count } of rows) {
+    if (hour === null) {
+      continue;
+    }
+    const date = new Date(hour);
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    days.set(day, (days.get(day) ?? 0) + count);
+  }
+  return [...days].sort(([a], [b]) => a - b).map(([day, value]) => ({ date: new Date(day), value }));
+};

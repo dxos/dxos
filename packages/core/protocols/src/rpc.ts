@@ -16,6 +16,7 @@ export * as EdgeAgentService from './EdgeAgentService.ts';
 export * as FeedService from './FeedService.ts';
 export * as MirrorService from './MirrorService.ts';
 export * as IdentityService from './IdentityService.ts';
+export * as InboxService from './InboxService.ts';
 export * as InvitationsService from './InvitationsService.ts';
 export * as LoggingService from './LoggingService.ts';
 export * as NetworkService from './NetworkService.ts';
