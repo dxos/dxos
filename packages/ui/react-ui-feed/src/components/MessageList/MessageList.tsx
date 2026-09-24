@@ -25,7 +25,7 @@ import {
   createContext,
   setRef,
 } from '@dxos/react-ui';
-import { type WindowController, type WindowState, useFollow, useWindow } from '@dxos/react-ui-virtual';
+import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
@@ -613,7 +613,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
         // in the browser, in the same frame; placing each row ourselves meant re-placing every row
         // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
-        <div key={message.id} data-index={index} data-object-id={message.id} data-window-id={message.id}>
+        <div key={message.id} data-object-id={message.id} {...windowRowProps(index, message.id)}>
           {!empty && (
             <Column.Root gutter={gutter}>
               {/* The widgets' query container: it must be an element whose width is definite, since

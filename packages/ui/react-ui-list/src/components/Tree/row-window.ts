@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useEffect, useState } from 'react';
+import { type RefObject, useLayoutEffect, useState } from 'react';
 
 import { type Label } from '@dxos/react-ui';
 
@@ -20,46 +20,37 @@ const NOMINAL_ROW_EXTENT = 40;
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
 export type RowUnit =
   | { kind: 'header'; key: string; label: Label }
-  | { kind: 'row'; key: string; node: TreeNodeEntry; position: RowPosition }
+  | { kind: 'row'; key: string; node: TreeNodeEntry }
   | { kind: 'end'; key: string };
-
-/**
- * A row's place among its siblings, for `aria-posinset`/`aria-setsize`: a windowed tree mounts a
- * flat run of some rows, so assistive technology cannot infer either from the DOM.
- */
-export type RowPosition = { posinset: number; setsize: number };
-
-export const END_UNIT_KEY = 'end:';
-
-export const spliceGroups = <T extends { id: string }>(entries: TreeNodeEntry<T>[] = []): TreeNodeEntry<T>[] =>
-  entries.flatMap((entry) => (entry.group ? spliceGroups(entry.children) : [entry]));
 
 /** The id the window measures a unit by, namespaced by kind so no item collides with a header or the end strip. */
 export const rowUnitId = (unit: RowUnit): string => `${unit.kind}:${unit.key}`;
 
-const indexSiblings = (entries: readonly TreeNodeEntry[] | undefined): Map<TreeNodeEntry, number> =>
-  new Map(spliceGroups([...(entries ?? [])]).map((entry, index) => [entry, index]));
-
-/** Flattens the visible entries into the rows the window would mount. */
-export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] => {
+/**
+ * Flattens the visible entries into the units the window would mount, closed by the "append at
+ * the end" strip when `end` is set.
+ */
+export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined, { end = false } = {}): RowUnit[] => {
   const units: RowUnit[] = [];
-  const visit = (nodes: readonly TreeNodeEntry[] | undefined, siblings: Map<TreeNodeEntry, number>) => {
+  const visit = (nodes: readonly TreeNodeEntry[] | undefined) => {
     for (const node of nodes ?? []) {
       if (node.group) {
-        units.push({ kind: 'header', key: `header:${node.value}`, label: node.props.label });
-        visit(node.children, siblings);
-        continue;
-      }
-
-      const position = { posinset: (siblings.get(node) ?? 0) + 1, setsize: siblings.size };
-      units.push({ kind: 'row', key: node.value, node, position });
-      if (node.branch && node.open) {
-        visit(node.children, indexSiblings(node.children));
+        units.push({ kind: 'header', key: node.value, label: node.props.label });
+        visit(node.children);
+      } else {
+        units.push({ kind: 'row', key: node.value, node });
+        if (node.branch && node.open) {
+          visit(node.children);
+        }
       }
     }
   };
 
-  visit(entries, indexSiblings(entries));
+  visit(entries);
+  if (end) {
+    units.push({ kind: 'end', key: '' });
+  }
+
   return units;
 };
 
@@ -85,22 +76,18 @@ export const findScrollParent = (element: HTMLElement | null): HTMLElement | nul
  * Resolves the element to window against: the one the consumer named, or the nearest that scrolls.
  *
  * Held as state rather than read into a ref, because the answer is only knowable after the tree is
- * in the document and the virtualizer has to re-run once it is.
+ * in the document and the virtualizer has to re-run once it is. `undefined` until then, which the
+ * tree renders as no rows rather than all of them; resolved before paint, so that frame never shows.
  */
 export const useScroller = (
   treeRef: RefObject<HTMLElement | null>,
   scrollerRef: RefObject<HTMLElement | null> | undefined,
   enabled: boolean,
-): HTMLElement | null => {
-  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+): HTMLElement | null | undefined => {
+  const [scroller, setScroller] = useState<HTMLElement | null | undefined>(undefined);
 
-  useEffect(() => {
-    if (!enabled) {
-      setScroller(null);
-      return;
-    }
-
-    setScroller(scrollerRef?.current ?? findScrollParent(treeRef.current));
+  useLayoutEffect(() => {
+    setScroller(enabled ? (scrollerRef?.current ?? findScrollParent(treeRef.current)) : null);
   }, [enabled, scrollerRef, treeRef]);
 
   return scroller;

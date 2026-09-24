@@ -129,6 +129,30 @@ describe('placement', () => {
     expect([0, 1, 2, 3].map((step) => placement.positionOf(placement.anchor.index + step))).to.deep.eq(positions);
   });
 
+  test('rows inserted or removed above the anchor move nothing at or after it', () => {
+    const ids = Array.from({ length: 100 }, (_, index) => `row-${index}`);
+    const placement = new Placement({
+      count: ids.length,
+      getId: (index) => ids[index],
+      extents: { of: () => 100 },
+      viewport: VIEWPORT,
+      overscan: 2,
+    });
+    placement.scrollTo(2_000);
+    const anchor = placement.anchor;
+    const position = placement.positionOf(anchor.index);
+
+    ids.splice(5, 0, 'opened-0', 'opened-1', 'opened-2');
+    placement.setCount(ids.length);
+    expect(placement.anchor.index).to.eq(anchor.index + 3);
+    expect(placement.positionOf(placement.anchor.index)).to.eq(position);
+
+    ids.splice(5, 4);
+    placement.setCount(ids.length);
+    expect(placement.anchor.index).to.eq(anchor.index - 1);
+    expect(placement.positionOf(placement.anchor.index)).to.eq(position);
+  });
+
   test('appending moves nothing at all', () => {
     const { placement, append } = create({ count: 100 });
     placement.scrollTo(2_000);

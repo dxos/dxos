@@ -18,12 +18,17 @@ import {
   extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {
+  draggable,
+  dropTargetForElements,
+  monitorForElements,
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
   type FC,
   type MouseEvent,
+  type MutableRefObject,
   type PointerEvent,
   memo,
   useCallback,
@@ -34,7 +39,7 @@ import React, {
 } from 'react';
 
 import { Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type WindowController, useListModel, useWindow } from '@dxos/react-ui-virtual';
+import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import {
   getStyles,
   hoverableControls,
@@ -46,16 +51,7 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import {
-  END_UNIT_KEY,
-  type RowPosition,
-  type RowUnit,
-  flattenRowUnits,
-  nominalExtents,
-  rowUnitId,
-  spliceGroups,
-  useScroller,
-} from './row-window.ts';
+import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -98,10 +94,16 @@ type TreeWalkState<T extends { id: string }> = {
   byValue: Map<string, TreeNodeEntry<T>>;
 };
 
-/** Assigns collection index paths over the spliced topology. */
+/** Splices group wrappers out so the machine sees their children as direct children of the group's parent. */
+const spliceGroups = <T extends { id: string }>(entries: TreeNodeEntry<T>[] = []): TreeNodeEntry<T>[] =>
+  entries.flatMap((entry) => (entry.group ? spliceGroups(entry.children) : [entry]));
+
+/** Assigns collection index paths and sibling counts over the spliced topology. */
 const assignIndexPaths = <T extends { id: string }>(entries: TreeNodeEntry<T>[] | undefined, base: number[]): void => {
-  spliceGroups(entries ?? []).forEach((entry, index) => {
+  const siblings = spliceGroups(entries ?? []);
+  siblings.forEach((entry, index) => {
     entry.indexPath = [...base, index];
+    entry.setsize = siblings.length;
     assignIndexPaths(entry.children, entry.indexPath);
   });
 };
@@ -154,6 +156,7 @@ const createTreeWalkAtom = <T extends { id: string }>(
           open,
           current,
           indexPath: [],
+          setsize: 0,
         };
         if (group) {
           entry.children = walkChildren(id, path, level);
@@ -196,6 +199,7 @@ const createTreeWalkAtom = <T extends { id: string }>(
       children: rootChildren,
       childrenCount: rootChildren.length,
       indexPath: [],
+      setsize: 1,
     };
     assignIndexPaths(root.children, []);
     return { root, expanded, selected, byValue };
@@ -463,17 +467,8 @@ export const Tree = <T extends { id: string } = any>({
     setFocusedValue(value);
   }, []);
 
-  // No dependency array: the render that lands the reorder is the one to follow, and which render
-  // that is depends on how the consumer commits the move.
-  useEffect(() => {
-    const id = pendingFocusRef.current;
-    if (!id) {
-      return;
-    }
-    // Queried off the document, not a ref to the tree: `TreeView.Tree` is Ark's element and may not
-    // forward one.
-    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
-    if (!row) {
+  const claimFocus = useCallback((id: string, row: HTMLElement) => {
+    if (pendingFocusRef.current !== id) {
       return;
     }
     // Only while focus is still where the drag left it: the reader may have clicked away, and
@@ -483,7 +478,74 @@ export const Tree = <T extends { id: string } = any>({
       pendingFocusRef.current = null;
       row.focus();
     }
+  }, []);
+
+  /** Brings the first row matching into a windowed tree's mounted range; set while windowed. */
+  const revealRef = useRef<((match: (node: TreeNodeEntry) => boolean) => void) | null>(null);
+
+  // No dependency array: the render that lands the reorder is the one to follow, and which render
+  // that is depends on how the consumer commits the move. A row outside the window is revealed
+  // instead, and claims the focus itself when it mounts.
+  useEffect(() => {
+    const id = pendingFocusRef.current;
+    if (!id) {
+      return;
+    }
+    // Queried off the document, not a ref to the tree: `TreeView.Tree` is Ark's element and may not
+    // forward one.
+    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
+    if (row) {
+      claimFocus(id, row);
+    } else {
+      revealRef.current?.((node) => node.id === id);
+    }
   });
+
+  // The machine moves focus over the whole collection, and focuses the row a frame after asking for
+  // it to be scrolled to, which is how a windowed tree gets to mount it first.
+  const scrollToNode = useCallback(
+    ({ node }: { node: TreeNodeEntry<T> }) => revealRef.current?.((entry) => entry.value === node.value),
+    [],
+  );
+
+  // A dragged open branch is collapsed for the drag and reopened after it. Here rather than on the
+  // row: a windowed row can scroll out of the window mid-drag, and an unmounted row hears no drop.
+  const byValueRef = useRef(byValue);
+  byValueRef.current = byValue;
+  useEffect(() => {
+    if (!draggable) {
+      return;
+    }
+
+    let reopen: TreeNodeEntry<T> | undefined;
+    return monitorForElements({
+      onDragStart: ({ source }) => {
+        if (!isTreeDataFor(source.data, treeId)) {
+          return;
+        }
+        const entry = byValueRef.current.get(Path.create(...source.data.path));
+        reopen = entry?.branch && entry.open ? entry : undefined;
+        if (reopen) {
+          onOpenChange?.({ item: reopen.item, path: reopen.path, open: false });
+        }
+      },
+      onDrop: ({ source }) => {
+        if (!isTreeDataFor(source.data, treeId)) {
+          return;
+        }
+        if (reopen) {
+          onOpenChange?.({ item: reopen.item, path: reopen.path, open: true });
+          reopen = undefined;
+        }
+        // Return the roving tabstop to the row that moved, so the arrows carry on from where the
+        // reader left it — a drag leaves focus on the body, which restarts navigation at the top of
+        // the tree. Asking the machine rather than calling `focus()` here: the reorder moves the
+        // row's DOM node, and moving a node blurs it, so any focus set around the drop races the
+        // commit. As controlled state it is simply the focused value once the tree renders.
+        focusNode(source.data.id, Path.create(...source.data.path));
+      },
+    });
+  }, [draggable, treeId, onOpenChange, focusNode]);
 
   // Focus moves without a selection event of its own, so the follow is driven from the machine's
   // focus change rather than inferred from the selection one.
@@ -574,6 +636,18 @@ export const Tree = <T extends { id: string } = any>({
     mountedRef.current = true;
   }, []);
 
+  const units = useMemo(
+    () => (virtualize ? flattenRowUnits(root.children, { end: dropAtEnd && draggable }) : undefined),
+    [virtualize, root.children, dropAtEnd, draggable],
+  );
+  const endData = useMemo<TreeData>(
+    () => ({ treeId, id: root.id, path: root.path, item: root.item }),
+    [treeId, root.id, root.path, root.item],
+  );
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const scroller = useScroller(treeRef, scrollerRef, !!units);
+  const windowed = !!units && !!scroller;
+
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       treeId,
@@ -596,6 +670,8 @@ export const Tree = <T extends { id: string } = any>({
       canSelect,
       selectionMode,
       mountedRef,
+      windowed,
+      claimFocus,
     }),
     [
       treeId,
@@ -617,24 +693,10 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       onOpenChange,
       onItemHover,
+      windowed,
+      claimFocus,
     ],
   );
-
-  const units = useMemo(() => {
-    if (!virtualize) {
-      return undefined;
-    }
-
-    const units = flattenRowUnits(root.children);
-    return dropAtEnd && draggable ? [...units, { kind: 'end' as const, key: END_UNIT_KEY }] : units;
-  }, [virtualize, root.children, dropAtEnd, draggable]);
-  const endData = useMemo<TreeData>(
-    () => ({ treeId, id: root.id, path: root.path, item: root.item }),
-    [treeId, root.id, root.path, root.item],
-  );
-  const treeRef = useRef<HTMLDivElement | null>(null);
-  const scroller = useScroller(treeRef, scrollerRef, !!units);
-  const windowed = !!units && !!scroller;
 
   return (
     <TreeView.Root
@@ -648,6 +710,7 @@ export const Tree = <T extends { id: string } = any>({
       onExpandedChange={handleExpandedChange}
       onSelectionChange={handleSelectionChange}
       onFocusChange={handleFocusChange}
+      scrollToIndexFn={windowed ? scrollToNode : undefined}
       className='contents'
     >
       {/* The name the machine already points `aria-labelledby` at; `sr-only` because the tree is
@@ -680,15 +743,13 @@ export const Tree = <T extends { id: string } = any>({
           onKeyDown={handleKeyDown}
         >
           {windowed ? (
-            <TreeWindow units={units} scroller={scroller} focusedValue={focusedValue} endData={endData} />
-          ) : (
+            <TreeWindow units={units} scroller={scroller} endData={endData} revealRef={revealRef} />
+          ) : units && scroller === undefined ? null : (
             <>
               {root.children?.map((node) => (
                 <TreeNodeRow key={node.value} node={node} />
               ))}
-              {dropAtEnd && draggable && (
-                <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
-              )}
+              {dropAtEnd && draggable && <TreeEndDropTarget data={endData} />}
             </>
           )}
         </TreeView.Tree>
@@ -707,13 +768,13 @@ export const Tree = <T extends { id: string } = any>({
 const TreeWindow = ({
   units,
   scroller,
-  focusedValue,
   endData,
+  revealRef,
 }: {
   units: RowUnit[];
   scroller: HTMLElement;
-  focusedValue: string | null;
   endData: TreeData;
+  revealRef: MutableRefObject<((match: (node: TreeNodeEntry) => boolean) => void) | null>;
 }) => {
   const scrollerRef = useRef<HTMLElement | null>(scroller);
   scrollerRef.current = scroller;
@@ -728,28 +789,28 @@ const TreeWindow = ({
     last,
   } = useWindow({ scrollerRef, model, extents: nominalExtents, controllerRef });
 
-  // The machine moves focus over the whole collection, including rows this window has not mounted,
-  // so a row it focuses has to be brought into the window before it can take the focus. Nearest
-  // edge, which is what the `scrollIntoView({ block: 'nearest' })` of an unwindowed tree did.
+  // Nearest edge, which is what the `scrollIntoView({ block: 'nearest' })` of an unwindowed tree did.
   const visibleRef = useRef(visible);
   visibleRef.current = visible;
   useEffect(() => {
-    if (!focusedValue) {
-      return;
-    }
+    revealRef.current = (match) => {
+      const index = units.findIndex((unit) => unit.kind === 'row' && match(unit.node));
+      if (index < 0) {
+        return;
+      }
 
-    const index = units.findIndex((unit) => unit.kind === 'row' && unit.key === focusedValue);
-    if (index < 0) {
-      return;
-    }
+      const { first, last } = visibleRef.current;
+      if (index < first) {
+        controllerRef.current?.scrollToIndex(index, 'start');
+      } else if (index > last) {
+        controllerRef.current?.scrollToIndex(index, 'end');
+      }
+    };
 
-    const { first, last } = visibleRef.current;
-    if (index < first) {
-      controllerRef.current?.scrollToIndex(index, 'start');
-    } else if (index > last) {
-      controllerRef.current?.scrollToIndex(index, 'end');
-    }
-  }, [focusedValue, units]);
+    return () => {
+      revealRef.current = null;
+    };
+  }, [units, revealRef]);
 
   const mounted = [];
   for (let index = first; index <= last; index++) {
@@ -758,20 +819,17 @@ const TreeWindow = ({
       continue;
     }
 
+    const id = rowUnitId(unit);
     mounted.push(
-      unit.kind === 'header' ? (
-        <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} windowId={rowUnitId(unit)} />
-      ) : unit.kind === 'end' ? (
-        <TreeEndDropTarget key={unit.key} data={endData} windowIndex={index} windowId={rowUnitId(unit)} />
-      ) : (
-        <TreeNodeRow
-          key={unit.key}
-          node={unit.node}
-          windowIndex={index}
-          windowId={rowUnitId(unit)}
-          position={unit.position}
-        />
-      ),
+      <div key={id} role='none' className='col-[tree-row] grid grid-cols-subgrid' {...windowRowProps(index, id)}>
+        {unit.kind === 'header' ? (
+          <TreeSectionHeader label={unit.label} />
+        ) : unit.kind === 'end' ? (
+          <TreeEndDropTarget data={endData} />
+        ) : (
+          <TreeNodeRow node={unit.node} />
+        )}
+      </div>,
     );
   }
 
@@ -790,15 +848,7 @@ const TreeWindow = ({
 };
 
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
-const TreeSectionHeader = ({
-  label,
-  windowIndex,
-  windowId,
-}: {
-  label: Label;
-  windowIndex?: number;
-  windowId?: string;
-}) => {
+const TreeSectionHeader = ({ label }: { label: Label }) => {
   const { t } = useTranslation();
   const { toggle } = useTreeRender();
   return (
@@ -806,8 +856,6 @@ const TreeSectionHeader = ({
     // decorative — the group's items remain individually labeled.
     <div
       role='presentation'
-      data-index={windowIndex}
-      data-window-id={windowId}
       className={mx(
         'col-[tree-row] pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none',
         // Cleared past the toggle track so the label starts where the rows' first cell does.
@@ -821,14 +869,10 @@ const TreeSectionHeader = ({
 
 type TreeNodeRowProps = {
   node: TreeNodeEntry;
-  /** Position in the mounted window, when the tree is windowed. */
-  windowIndex?: number;
-  /** What the window measures the row by, when the tree is windowed. */
-  windowId?: string;
-  position?: RowPosition;
 };
 
-const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, windowId, position }) => {
+const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
+  const { windowed } = useTreeRender();
   if (node.group) {
     return (
       <>
@@ -842,24 +886,14 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, windowId, p
 
   return (
     <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
-      {node.branch && windowIndex !== undefined ? (
-        // The window measures this element, which a `display: contents` wrapper cannot be.
-        <TreeView.Branch
-          className='col-[tree-row] grid grid-cols-subgrid'
-          data-index={windowIndex}
-          data-window-id={windowId}
-          aria-posinset={position?.posinset}
-          aria-setsize={position?.setsize}
-        >
+      {node.branch ? (
+        <TreeView.Branch className='contents' aria-posinset={node.indexPath.at(-1)! + 1} aria-setsize={node.setsize}>
           <TreeNodeRowContent node={node} />
-        </TreeView.Branch>
-      ) : node.branch ? (
-        <TreeView.Branch className='contents'>
-          <TreeNodeRowContent node={node} />
-          <TreeBranchContent node={node} />
+          {/* Windowed, the children are rows of the window's own. */}
+          {!windowed && <TreeBranchContent node={node} />}
         </TreeView.Branch>
       ) : (
-        <TreeNodeRowContent node={node} windowIndex={windowIndex} windowId={windowId} position={position} />
+        <TreeNodeRowContent node={node} />
       )}
     </TreeView.NodeProvider>
   );
@@ -916,15 +950,7 @@ TreeBranchContent.displayName = 'Tree.BranchContent';
  * It carries the tree's root as its payload with `atEnd`, so a consumer's monitor can tell this
  * drop from one onto the root itself. No hitbox: there is only one thing this can mean.
  */
-const TreeEndDropTarget = ({
-  data,
-  windowIndex,
-  windowId,
-}: {
-  data: TreeData;
-  windowIndex?: number;
-  windowId?: string;
-}) => {
+const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [over, setOver] = useState(false);
 
@@ -945,13 +971,7 @@ const TreeEndDropTarget = ({
   }, [data]);
 
   return (
-    <div
-      ref={ref}
-      role='none'
-      data-index={windowIndex}
-      data-window-id={windowId}
-      className='relative col-[tree-row] min-h-(--dx-control)'
-    >
+    <div ref={ref} role='none' className='relative col-[tree-row] min-h-(--dx-control)'>
       {over && <div className='absolute inset-x-0 top-0 h-0.5 bg-accent-bg' />}
     </div>
   );
@@ -962,7 +982,7 @@ TreeEndDropTarget.displayName = 'Tree.EndDropTarget';
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 /** The visible row: branch control or leaf item, with DnD wiring, columns, and the drop indicator. */
-const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, windowId, position }) => {
+const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const {
     treeId,
     draggable: treeDraggable,
@@ -981,17 +1001,16 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, wind
     selectNode,
     canSelect,
     selectionMode,
-    focusNode,
+    claimFocus,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const openRef = useRef(false);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
   const [dragState, setDragState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [dropKind, setDropKind] = useState<DropKind>('move');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { id, value, item, path, level, branch, open, last, current, props } = node;
+  const { id, item, path, level, branch, open, last, current, props, indexPath, setsize } = node;
   // `expanded` only applies to a branch that is actually showing children: the mode exists to drop
   // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
@@ -1027,27 +1046,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, wind
         element,
         getInitialData: () => data,
         getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
-        onDragStart: () => {
-          setDragState('dragging');
-          // Stamped every drag, not only when open: a row left over from an earlier open-branch
-          // drag would otherwise still read `true` here and be reopened on drop.
-          openRef.current = open;
-          if (open) {
-            onOpenChange?.({ item, path, open: false });
-          }
-        },
-        onDrop: () => {
-          setDragState('idle');
-          if (openRef.current) {
-            onOpenChange?.({ item, path, open: true });
-          }
-          // Return the roving tabstop to the row that moved, so the arrows carry on from where the
-          // reader left it — a drag leaves focus on the body, which restarts navigation at the top
-          // of the tree. Asking the machine rather than calling `focus()` here: the reorder moves
-          // this row's DOM node, and moving a node blurs it, so any focus set around the drop races
-          // the commit. As controlled state it is simply the focused value once the tree renders.
-          focusNode(id, value);
-        },
+        onDragStart: () => setDragState('dragging'),
+        onDrop: () => setDragState('idle'),
       });
 
     if (!isItemDroppable) {
@@ -1140,6 +1140,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, wind
 
   useEffect(() => () => onCancelExpand(), [onCancelExpand]);
 
+  // A row the tree is waiting to focus may only now be mounted, scrolled into a windowed tree's range.
+  useEffect(() => {
+    if (rowRef.current) {
+      claimFocus(id, rowRef.current);
+    }
+  }, [id, claimFocus]);
+
   const handleClick = useCallback(
     (event: MouseEvent) => {
       if (current) {
@@ -1188,11 +1195,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, wind
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
       data-testid={props.testId}
-      data-index={windowIndex}
-      data-window-id={windowId}
       // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
-      aria-posinset={branch ? undefined : position?.posinset}
-      aria-setsize={branch ? undefined : position?.setsize}
+      aria-posinset={branch ? undefined : indexPath.at(-1)! + 1}
+      aria-setsize={branch ? undefined : setsize}
       className={mx(
         'col-[tree-row] outline-none select-none',
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',

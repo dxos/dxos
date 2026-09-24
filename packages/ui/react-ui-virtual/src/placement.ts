@@ -200,12 +200,32 @@ export class Placement {
     this.#measured.set(id, extent);
   }
 
-  /** The model changed length. `prepended` rows arrived before the anchor and shift its index. */
+  /**
+   * The model changed. `prepended` rows arrived before the anchor and shift its index; any other
+   * insert or removal above it is found by looking the anchor's row up by id.
+   */
   setCount(count: number, { prepended = 0 }: { prepended?: number } = {}): void {
     this.#count = count;
-    if (prepended) {
-      this.#anchor = { ...this.#anchor, index: this.#anchor.index + prepended };
+    const index = this.#anchor.index + prepended;
+    this.#anchor = { ...this.#anchor, index: this.#locate(this.#anchor.id, index) };
+  }
+
+  /** The index of the row `id`, searching out from `near`; `near` when the row is gone. */
+  #locate(id: string, near: number): number {
+    if (!id || this.#getId(near) === id) {
+      return near;
     }
+
+    for (let distance = 1; distance < this.#count; distance++) {
+      if (near - distance >= 0 && this.#getId(near - distance) === id) {
+        return near - distance;
+      }
+      if (near + distance < this.#count && this.#getId(near + distance) === id) {
+        return near + distance;
+      }
+    }
+
+    return near;
   }
 
   /**

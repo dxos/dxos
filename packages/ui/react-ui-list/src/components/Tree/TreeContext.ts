@@ -75,6 +75,8 @@ export type TreeNodeEntry<T extends { id: string } = any> = {
   children?: TreeNodeEntry<T>[];
   /** Index path within the collection (groups spliced), assigned after the walk. */
   indexPath: number[];
+  /** Number of siblings in the collection (groups spliced), for `aria-setsize`. */
+  setsize: number;
 };
 
 /**
@@ -152,6 +154,10 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
+  /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
+  windowed: boolean;
+  /** Takes DOM focus for a row that {@link focusNode} is waiting on, once the row is in the document. */
+  claimFocus: (id: string, row: HTMLElement) => void;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);

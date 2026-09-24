@@ -128,10 +128,17 @@ export type UseWindowOptions = Omit<WindowProps, 'classNames' | 'children'> & {
   scrollerRef: React.RefObject<HTMLElement | null>;
 };
 
+/**
+ * The attributes the window reads off each mounted row: its index, and the id its extent is
+ * measured under. `id` is the host's id for the row it rendered, not one read back from the model,
+ * which a host folding its list in an effect has not updated yet.
+ */
+export const windowRowProps = (index: number, id: string) => ({ 'data-index': index, 'data-window-id': id });
+
 export type UseWindowResult = {
   placement: Placement;
   layout: Layout;
-  /** Ref for the element holding the mounted rows; each is a direct child carrying `data-index` and `data-window-id`. */
+  /** Ref for the element holding the mounted rows; each is a direct child carrying {@link windowRowProps}. */
   windowRef: React.RefObject<HTMLDivElement | null>;
   /** Extent of the whole document along the axis, reserve included: what the thumb is scaled to. */
   sizerExtent: number;
@@ -281,7 +288,10 @@ export const useWindow = ({
     for (const element of parent.children) {
       const row = element as HTMLElement;
       const index = Number(row.dataset.index);
-      const id = row.dataset.windowId!;
+      const id = row.dataset.windowId;
+      if (id === undefined) {
+        throw new Error(`Window row ${index} has no data-window-id; spread windowRowProps onto it.`);
+      }
       const actual = Math.round(axis === 'block' ? row.offsetHeight : row.offsetWidth);
       const declared = placement.extentOf(index);
       if (extents.exact) {
@@ -416,7 +426,7 @@ export const Window = ({ classNames, children, controllerRef, ...options }: Wind
   const rows = [];
   for (let index = first; index <= last; index++) {
     rows.push(
-      <div key={getId(index)} data-index={index} data-window-id={getId(index)}>
+      <div key={getId(index)} {...windowRowProps(index, getId(index))}>
         {children(index, getId(index))}
       </div>,
     );
