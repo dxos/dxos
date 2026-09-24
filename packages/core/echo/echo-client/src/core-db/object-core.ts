@@ -293,6 +293,27 @@ export class ObjectCore {
   }
 
   /**
+   * {@link getDoc} without the writes an open {@link batch} has pending; history reads (`A.view`) need
+   * it, because viewing an open change discards its pending writes.
+   */
+  getCommittedDoc(): AutomergeDoc<unknown> {
+    return this.docHandle && !this.doc ? this.docHandle.committedDoc() : this.getDoc();
+  }
+
+  /**
+   * Runs `fn` with this core's writes landing in one Automerge change (see `DocHandleProxy.batch`).
+   * A core that is not bound yet writes to a local document whose history is not kept, so it runs
+   * `fn` as is.
+   */
+  batch(fn: () => void): void {
+    if (this.docHandle && !this.doc) {
+      this.docHandle.batch(fn);
+    } else {
+      fn();
+    }
+  }
+
+  /**
    * False only between construction and `initNewObject`/`bind`, while {@link getDoc} would throw.
    */
   get hasDoc(): boolean {
@@ -319,6 +340,13 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
+    const docHandle = this.docHandle;
+    if (docHandle?.isBatching && !this.doc) {
+      // Joins the open change rather than starting one, so it is not a recursive change.
+      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
+      return;
+    }
+
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -332,7 +360,6 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      const docHandle = this.docHandle;
       invariant(docHandle);
       // No manual notification: the DB already processes the `change` event.
       this.#writeAndRefresh(() => docHandle.change(changeFn, options));

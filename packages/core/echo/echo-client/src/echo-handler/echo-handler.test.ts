@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
@@ -196,6 +197,81 @@ describe('Reactive Object with ECHO database', () => {
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  describe('Obj.update', () => {
+    const changesSince = (obj: Obj.Unknown, heads: A.Heads) =>
+      A.getChangesMetaSince(getObjectCore(obj).getDoc(), heads).length;
+    const headsOf = (obj: Obj.Unknown) => A.getHeads(getObjectCore(obj).getDoc());
+
+    test('writes in one update make one Automerge change', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+      const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo', stringArray: [], nested: { field: 'a' } }));
+      const heads = headsOf(obj);
+
+      Obj.update(obj, (obj) => {
+        obj.string = 'bar';
+        obj.number = 1;
+        obj.stringArray?.push('x');
+        if (obj.nested) {
+          obj.nested.field = 'b';
+        }
+      });
+
+      expect(changesSince(obj, heads)).to.eq(1);
+      expect(Obj.getSnapshot(obj)).to.include({ string: 'bar', number: 1 });
+      expect(obj.stringArray).to.deep.eq(['x']);
+      expect(obj.nested?.field).to.eq('b');
+    });
+
+    test('reads later in the update see its earlier writes', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+      const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo', stringArray: ['a'] }));
+
+      Obj.update(obj, (obj) => {
+        obj.string = 'bar';
+        expect(obj.string).to.eq('bar');
+        obj.stringArray?.push('b');
+        expect(obj.stringArray).to.deep.eq(['a', 'b']);
+        obj.nested = { field: 'c' };
+        obj.nested.field = `${obj.nested.field}d`;
+        expect(obj.nested.field).to.eq('cd');
+      });
+
+      expect(obj.nested?.field).to.eq('cd');
+    });
+
+    test('an update nested in another commits both objects', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+      const outer = db.add(Obj.make(TestSchema.Example, { string: 'outer' }));
+      const inner = db.add(Obj.make(TestSchema.Example, { string: 'inner' }));
+      const heads = headsOf(outer);
+
+      Obj.update(outer, (outer) => {
+        outer.string = 'outer 2';
+        Obj.update(inner, (inner) => {
+          inner.string = 'inner 2';
+        });
+      });
+
+      expect(outer.string).to.eq('outer 2');
+      expect(inner.string).to.eq('inner 2');
+      expect(changesSince(outer, heads)).to.eq(1);
+    });
+
+    test('a throw keeps the writes made before it', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+      const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
+
+      expect(() =>
+        Obj.update(obj, (obj) => {
+          obj.string = 'bar';
+          throw new Error('stop');
+        }),
+      ).to.throw('stop');
+
+      expect(obj.string).to.eq('bar');
+    });
   });
 
   test('Obj.isObject', async () => {

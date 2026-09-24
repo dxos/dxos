@@ -128,7 +128,7 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc();
+  const doc = objectCore.getCommittedDoc();
   const snapshot = A.view(doc as Doc<any>, version);
 
   // TODO(dmaretskyi): Refactor so this doesn't have to create another core.
@@ -158,7 +158,7 @@ export const checkoutVersionSnapshot = <T extends Obj.Unknown>(object: T, versio
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
-  const historical = A.view(objectCore.getDoc() as Doc<any>, version);
+  const historical = A.view(objectCore.getCommittedDoc() as Doc<any>, version);
 
   // Reconstruct the object over the historical doc in a detached core, then brand it as an immutable
   // snapshot. The core is transient — it exists only to produce the snapshot.

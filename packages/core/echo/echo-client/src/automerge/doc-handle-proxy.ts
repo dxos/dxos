@@ -104,6 +104,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   private _documentId?: DocumentId;
   /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
   #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
+  /** The open change while {@link batch} runs; writes join it and reads see it. */
+  #draft?: A.Doc<T> = undefined;
   private readonly _onDelete: () => void;
 
   constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
@@ -150,10 +152,53 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   doc(): A.Doc<T> {
+    if (this.#draft) {
+      return this.#draft;
+    }
     if (!this._doc) {
       throw new Error('DocHandleProxy.doc called on deleted doc');
     }
     return this._doc;
+  }
+
+  /** The document as of the last committed change, excluding writes a {@link batch} has pending. */
+  committedDoc(): A.Doc<T> {
+    invariant(this._doc, 'DocHandleProxy.committedDoc called on deleted doc');
+    return this._doc;
+  }
+
+  get isBatching(): boolean {
+    return this.#draft !== undefined;
+  }
+
+  /**
+   * Runs `fn` with every {@link change} it makes landing in one Automerge change, since each change
+   * costs history in every realm holding the document; {@link doc} returns the open draft meanwhile,
+   * so reads see the writes. A nested call joins the open change. A throw still commits the writes
+   * made before it, as separate changes would have.
+   */
+  batch<R>(fn: () => R): R {
+    if (this.#draft) {
+      return fn();
+    }
+
+    let outcome: { value: R } | { error: unknown } | undefined;
+    this.change((draft) => {
+      this.#draft = draft;
+      try {
+        outcome = { value: fn() };
+      } catch (error) {
+        outcome = { error };
+      } finally {
+        this.#draft = undefined;
+      }
+    });
+
+    invariant(outcome);
+    if ('error' in outcome) {
+      throw outcome.error;
+    }
+    return outcome.value;
   }
 
   /**
@@ -181,6 +226,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
+    if (this.#draft) {
+      fn(this.#draft);
+      return;
+    }
     invariant(this._doc, 'DocHandleProxy.change called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -194,6 +243,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
+    invariant(!this.#draft, 'DocHandleProxy.changeAt cannot join an open batch');
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);

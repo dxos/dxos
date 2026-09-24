@@ -671,7 +671,8 @@ export class EchoRoot extends EchoRecord {
     const core = this[symbolInternals];
     const target = rawTarget(this);
     const receiver = this;
-    return (callback: (mutableObj: any) => void) => executeChange(core, target, receiver, callback);
+    return (callback: (mutableObj: any) => void) =>
+      executeChange(core, target, receiver, (mutableObj) => core.batch(() => callback(mutableObj)));
   }
 
   get [RelationSourceDXNId](): URI.URI | undefined {
