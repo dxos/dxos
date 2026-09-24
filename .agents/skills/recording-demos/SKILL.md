@@ -152,6 +152,12 @@ encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only sme
 | `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is |
 | `--quality` | `92`    | JPEG quality of the screencast frames                                             |
 
+**`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
+reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
+arrive at 1280x800 and the encoder upscales them — a "2560x1600" file that is as soft as 1x. The driver
+also launches Chromium with `--force-device-scale-factor`, which makes the frames themselves 2x. Check a
+recording by cropping a frame at 1:1 next to a `screenshot` of the same screen; they should match.
+
 The recording is variable-frame-rate — Chromium only emits a frame when something paints — so `stop`
 encodes in time proportional to the motion, not the session length. The trimmer resamples on decode and
 re-encodes with the same VP9 settings (`--crf`, default 30), so the resolution survives trimming.

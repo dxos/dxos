@@ -69,17 +69,6 @@ const token = randomUUID();
 // The cloud sandbox needs a pinned executable, the egress proxy passed as an arg, and a TLS 1.2 cap;
 // gated so a real desktop run is never silently downgraded (see the `cloud-sandbox` skill).
 const sandbox = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
-const browser = await chromium.launch({
-  executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
-  args: sandbox
-    ? [
-        '--no-sandbox',
-        `--proxy-server=${sandbox}`,
-        '--proxy-bypass-list=127.0.0.1;localhost',
-        '--ssl-version-max=tls1.2',
-      ]
-    : [],
-});
 
 const viewport = { width: options.width, height: options.height };
 const hires = hasFullFfmpeg();
@@ -87,6 +76,24 @@ if (!hires) {
   console.warn('no ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): recording at 1x through Playwright');
 }
 const scale = hires ? options.scale : 1;
+
+const browser = await chromium.launch({
+  executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
+  args: [
+    ...(sandbox
+      ? [
+          '--no-sandbox',
+          `--proxy-server=${sandbox}`,
+          '--proxy-bypass-list=127.0.0.1;localhost',
+          '--ssl-version-max=tls1.2',
+        ]
+      : []),
+    // `deviceScaleFactor` alone renders the page at 2x but the screencast still captures at CSS size, so
+    // the "2x" video was 1x frames upscaled; forcing the scale browser-wide makes the frames real 2x.
+    ...(scale !== 1 ? [`--force-device-scale-factor=${scale}`] : []),
+  ],
+});
+
 const context = await browser.newContext({
   viewport,
   deviceScaleFactor: scale,
