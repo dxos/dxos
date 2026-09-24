@@ -32,8 +32,8 @@ import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
 import { CommentComposer, LineCommentPopover } from '../../components/CommentComposer/index.ts';
-import { GITHUB_PROVIDER_ID } from '../../constants.ts';
 import { PullRequestOverview } from '../../components/PullRequestOverview/index.ts';
+import { GITHUB_PROVIDER_ID } from '../../constants.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
 
