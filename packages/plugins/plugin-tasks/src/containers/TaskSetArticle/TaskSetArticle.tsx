@@ -192,7 +192,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       onTaskSelect={handleOpen}
       onQuestionAnswer={handleQuestionAnswer}
     >
-      <TaskList.Viewport classNames='border'>
+      <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
       {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
