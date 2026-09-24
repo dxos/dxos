@@ -3506,6 +3506,9 @@ importers:
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
+      fast-check:
+        specifier: 'catalog:'
+        version: 3.23.2
 
   packages/common/hypercore:
     dependencies:

@@ -221,9 +221,14 @@ export type TypeId = typeof TypeId;
 //
 
 /**
- * Composes the construction of a graph out of independently registered extensions: each expansion of a
- * node's relation tracks every connector declared for it, and a flush re-reads the ones whose inputs
- * changed and writes the difference into the store as node and edge changes.
+ * Composes the construction of a graph out of independently registered extensions.
+ *
+ * The first read of a node's relation expands it: the builder tracks one connector key for it, whose
+ * atom reads every extension declared for that relation. Nothing subscribes to that atom, so a change to
+ * its inputs only marks the key dirty (see {@link ConnectorTracker}). A flush later reads each dirty key
+ * once, compares the output with what the key last wrote ({@link GraphBuilder._flushed}), and writes the
+ * difference into the store as node and edge changes. A burst of changes costs one read per connector,
+ * not one per change.
  *
  * Subclass to layer a vocabulary on top (see `@dxos/app-graph`'s `AppGraphBuilder`); the generic engine
  * is unaware of what the nodes mean.
@@ -348,6 +353,10 @@ export class GraphBuilder<
       removed.map((target) => ({ source: id, target, relation })),
       true,
     );
+    // Removing the last edges of a node its parent already dropped removes the node, which forgets the key.
+    if (!this._tracker.tracks(key)) {
+      return;
+    }
     this._store.addNodes(nodes);
     this._store.addEdges(nodes.map((node) => ({ source: id, target: node.id, relation })));
     if (ids.length > 0) {
@@ -389,7 +398,8 @@ export class GraphBuilder<
   }
 
   /**
-   * Reads each selected dirty connector, then applies whatever changed. The budget covers the reads,
+   * Reads each selected dirty connector, then applies whatever changed, until none is left: applying one
+   * key's output can dirty another, such as a key whose node it rewrote. The budget covers the reads,
    * which are most of the cost: a key the budget does not reach stays dirty and unread.
    */
   _flushDirtyConnectors(select: (key: string) => boolean = () => true, budget?: FrameBudget): void {

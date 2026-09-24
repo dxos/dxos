@@ -8,7 +8,10 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
-/** Keys are spread over this many anchors, so a relink re-reads only a slice of them. */
+/**
+ * Rebuilding an anchor re-reads each of its keys, so keys are hashed across this many to keep each small;
+ * an anchor per key would instead double the atoms.
+ */
 const ANCHORS = 64;
 
 /** How long an anchor outlives its last touch; the tracker touches its anchors twice as often. */
@@ -23,16 +26,28 @@ export type ConnectorTrackerOptions<A> = {
 };
 
 /**
- * Keeps an atom per tracked key without subscribing to it, so an invalidation only marks the key dirty
- * and the atom recomputes when {@link read}.
+ * Tracks an atom per key without subscribing to it: an invalidation only marks the key dirty, and the
+ * atom recomputes when {@link read}, once however many invalidations came first.
  *
- * The registry drops an atom nothing reads, so anchors read every tracked atom that reading would not
- * recompute. A stale atom is left out until it is read; without an idle TTL, the registry may reclaim its
- * inputs in the meantime, and reading rebuilds them.
+ * It rests on three rules of Effect's atom registry:
+ * 1. Invalidating an atom makes it stale and runs the finalizers its last computation registered.
+ * 2. A stale atom recomputes at once only if something active depends on it (a subscriber, or a
+ *    dependent that has one); otherwise it waits to be read.
+ * 3. An atom with no subscribers and no dependents is removed, and its inputs are released.
  *
- * The anchors expire rather than being mounted, since a mounted anchor would make its connectors recompute
- * on invalidation. A heartbeat keeps them alive, so {@link dispose} is required: until it runs, the anchors
- * and the registry's idle timers stay live.
+ * Rules 1 and 2 give notification without recomputation: each tracked atom registers a finalizer that
+ * marks its key dirty, and nothing active depends on it.
+ *
+ * Rule 3 would remove those atoms, so anchors depend on them instead. An anchor is an atom that reads
+ * its share of the tracked atoms. It is never subscribed, since an active anchor would make them
+ * recompute on invalidation (rule 2). That leaves the anchors under rule 3 too, so each has an idle TTL
+ * that a heartbeat keeps restarting. {@link dispose} is required: until it runs, the anchors and every
+ * tracked atom stay for as long as the registry does.
+ *
+ * Invalidating a tracked atom also stales its anchor and detaches the atom from it. After the atom is
+ * read, its anchor is rebuilt, which reattaches every valid atom in it. A stale atom stays detached
+ * until it is read, since reading it would recompute it early; without an idle TTL, the registry may
+ * reclaim its inputs meanwhile, and reading rebuilds them.
  */
 export class ConnectorTracker<A> {
   readonly #options: ConnectorTrackerOptions<A>;
@@ -48,8 +63,9 @@ export class ConnectorTracker<A> {
   readonly #connector = Atom.family((key: string) => {
     const atom: Atom.Atom<A> = Atom.make((get) => {
       const value = this.#options.read(get, key);
-      // Runs when an input invalidates the atom, before anything recomputes it. Registered after the
-      // read, so a read that throws leaves nothing that the atom's removal could mark dirty again.
+      // Runs when an input invalidates the atom (rule 1), and when the registry removes it: removing a
+      // tracked atom that is still valid means its anchor lapsed. Registered after the read, so a read
+      // that throws leaves nothing that the atom's removal could mark dirty again.
       get.addFinalizer(() => {
         if (this.tracks(key) && isRemoved(this.#options.registry, atom)) {
           log.warn('tracked connector reclaimed; its inputs will be rebuilt', { key });
@@ -138,7 +154,8 @@ export class ConnectorTracker<A> {
     const anchor = Atom.make((get) => this.#readAnchor(get, index)).pipe(Atom.setIdleTTL(ANCHOR_TTL));
     this.#anchors.set(index, anchor);
     if (!this.#heartbeat && !this.#disposed) {
-      // Weakly, so the timer does not keep a builder alive that nothing else references.
+      // Weakly, so a registry and tracker that are both dropped can be collected; while the registry
+      // lives it holds the tracker through the anchors, and only dispose stops the timer.
       const tracker = new WeakRef(this);
       const heartbeat = setInterval(
         () => {
@@ -154,7 +171,10 @@ export class ConnectorTracker<A> {
     return anchor;
   }
 
-  /** Restarts each anchor's idle countdown without recomputing it; false once the registry refuses. */
+  /**
+   * Subscribing cancels an anchor's removal timer and unsubscribing starts a fresh one, so this restarts
+   * each anchor's idle countdown without computing it; false once the registry refuses.
+   */
   #touch(): boolean {
     try {
       for (const anchor of this.#anchors.values()) {
@@ -175,6 +195,7 @@ export class ConnectorTracker<A> {
     this.#options.onDirty(key);
   }
 
+  /** Reads only valid atoms: reading a stale one would recompute it before {@link read} is asked. */
   #readAnchor(get: Atom.AtomContext, index: number): void {
     const nodes = this.#options.registry.getNodes();
     for (const key of this.#live[index]) {

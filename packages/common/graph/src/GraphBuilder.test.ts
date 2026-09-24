@@ -6,9 +6,11 @@ import * as Duration from 'effect/Duration';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as fc from 'fast-check';
 import { describe, expect, test, vi } from 'vitest';
 
 import { AtomEx } from '@dxos/effect';
+import { LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as GraphBuilder from './GraphBuilder.ts';
 import * as GraphNode from './GraphNode.ts';
@@ -510,6 +512,127 @@ describe('GraphBuilder', () => {
     }
   });
 
+  test('a connector the flush dirties is read in the same flush', async () => {
+    const { registry, builder, children } = setup();
+    const label = Atom.make('x').pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id, properties }) =>
+              id === GraphNode.RootId ? [{ id: 'a', properties: { label: get(label) } }] : [{ id: properties?.label }],
+          }),
+        ),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    children('root/a');
+    await GraphBuilder.flush(builder);
+
+    // Rewriting `a` dirties `a`'s own connector mid-flush; the same microtask reads it.
+    registry.set(label, 'y');
+    await Promise.resolve();
+    expect(children('root/a')).to.deep.equal(['root/a/y']);
+  });
+
+  test("a relation torn down by release lets its connector's inputs go", async () => {
+    const { registry, builder, children } = setup();
+    const input = Atom.make(() => 'a');
+    GraphBuilder.addExtension(builder, { id: 'children', connector: connector((get) => [{ id: get(input) }]) });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    expect(registry.getNodes().has(input)).to.be.true;
+
+    // Releasing its output forgets the root's relation while its connector is still valid.
+    GraphBuilder.release(builder, ['root/a']);
+    await nextTask(10);
+    expect(registry.getNodes().has(input)).to.be.false;
+  });
+
+  test("a throwing extension recovers when a sibling extension's input changes", async () => {
+    const { registry, builder, children } = setup();
+    const broken = Atom.make(true).pipe(Atom.keepAlive);
+    const sibling = Atom.make(0).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, [
+      {
+        id: 'flaky',
+        connector: connector((get) => {
+          if (get(broken)) {
+            throw new Error('broken');
+          }
+          return [{ id: 'f' }];
+        }),
+      },
+      { id: 'steady', connector: connector((get) => [{ id: `s${get(sibling)}` }]) },
+    ]);
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/s0']);
+
+    registry.set(broken, false);
+    await GraphBuilder.flush(builder);
+    registry.set(sibling, 1);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/f', 'root/s1']);
+  });
+
+  test('an update that removes its own node writes nothing more', async () => {
+    const { registry, builder, model, children } = setup();
+    const shown = Atom.make(true).pipe(Atom.keepAlive);
+    const child = Atom.make('x').pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) => (id === GraphNode.RootId ? (get(shown) ? [{ id: 'a' }] : []) : [{ id: get(child) }]),
+          }),
+        ),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    children('root/a');
+    await GraphBuilder.flush(builder);
+
+    // Dropped by the root, `a` stays while it has a child; replacing the child removes `a`'s last edge.
+    registry.set(shown, false);
+    await GraphBuilder.flush(builder);
+    expect(model.findNode('root/a')).not.to.be.undefined;
+    registry.set(child, 'y');
+    await GraphBuilder.flush(builder);
+
+    expect(model.findNode('root/a')).to.be.undefined;
+    expect(model.findNode('root/a/y')).to.be.undefined;
+    expect(builder._flushed.size).to.equal(1);
+  });
+
+  test('a store write that throws leaves the previous output to diff against', async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(['a']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => get(state).map((id) => ({ id }))),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    const { removeEdges } = builder._store;
+    builder._store.removeEdges = () => {
+      throw new Error('store');
+    };
+    registry.set(state, ['b']);
+    await GraphBuilder.flush(builder);
+    builder._store.removeEdges = removeEdges;
+
+    // Diffed against `a`, the output that last landed, so `a` goes.
+    registry.set(state, ['c']);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/c']);
+  });
+
   test('an unrelated node changing leaves a connector alone', async () => {
     const { registry, builder, model, children } = setup();
     let runs = 0;
@@ -918,5 +1041,253 @@ describe('retention', () => {
     registry.set(ids, ['w', 'v']);
     await GraphBuilder.flush(builder);
     expect(children(GraphNode.RootId)).to.deep.equal(['root/w', 'root/v']);
+  });
+});
+
+describe('model-based', () => {
+  // Every connector's output is a pure function of a few sources, so the graph the builder settles on
+  // can be checked against that function whatever order changes, expansions and releases came in.
+  const SOURCES = 3;
+  const DEPTH = 3;
+  const RELATIONS = ['child', 'other'] as const;
+  const ANCHOR_TTL = 60_000;
+
+  type Command =
+    | { kind: 'set'; source: number; value: number; batch: boolean }
+    | { kind: 'expand'; pick: number; relation: (typeof RELATIONS)[number] }
+    | { kind: 'release'; pick: number; relation: (typeof RELATIONS)[number] }
+    | { kind: 'toggle' }
+    | { kind: 'settle' }
+    | { kind: 'advance'; ms: number };
+
+  // Weighted towards expansion and settling, so the graph grows deep enough for changes to cascade.
+  const command: fc.Arbitrary<Command> = fc.oneof(
+    {
+      weight: 3,
+      arbitrary: fc.record({
+        kind: fc.constant('set' as const),
+        source: fc.nat(SOURCES - 1),
+        value: fc.nat(5),
+        batch: fc.boolean(),
+      }),
+    },
+    {
+      weight: 5,
+      arbitrary: fc.record({
+        kind: fc.constant('expand' as const),
+        pick: fc.nat(),
+        relation: fc.constantFrom(...RELATIONS),
+      }),
+    },
+    {
+      weight: 1,
+      arbitrary: fc.record({
+        kind: fc.constant('release' as const),
+        pick: fc.nat(),
+        relation: fc.constantFrom(...RELATIONS),
+      }),
+    },
+    { weight: 1, arbitrary: fc.record({ kind: fc.constant('toggle' as const) }) },
+    { weight: 3, arbitrary: fc.record({ kind: fc.constant('settle' as const) }) },
+    {
+      weight: 1,
+      arbitrary: fc.record({
+        kind: fc.constant('advance' as const),
+        ms: fc.constantFrom(1_000, 31_000, 61_000, 300_000),
+      }),
+    },
+  );
+
+  const hash = (id: string) => [...id].reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 7);
+
+  /** The segment ids `relation` of `id` holds for the given source values. */
+  const segments = (id: string, relation: string, value: (source: number) => number): string[] => {
+    if (id.split(GraphNode.PathSeparator).length > DEPTH) {
+      return [];
+    }
+    return relation === 'child'
+      ? Array.from({ length: value(hash(id) % SOURCES) % 3 }, (_, index) => `c${index}`)
+      : [`o${value((hash(id) + 1) % SOURCES) % 2}`];
+  };
+
+  const run = async ({ ttl, budget, commands }: { ttl: boolean; budget?: number; commands: Command[] }) => {
+    const realImmediate = globalThis.setImmediate;
+    const turn = () => new Promise((resolve) => realImmediate(resolve));
+    // The registry's removal tasks run on `setImmediate`, which stays real so settling can wait for them.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+    const logged: string[] = [];
+    const collect: LogProcessor = (_, entry) => {
+      if (entry.level >= LogLevel.WARN) {
+        logged.push(entry.message ?? String(entry.error));
+      }
+    };
+    const removeProcessor = log.addProcessor(collect);
+    const registry = ttl ? AtomEx.makeRegistry({ idleTTL: Duration.seconds(5) }) : Registry.make();
+    const { builder, model } = setup({ registry });
+    try {
+      if (budget !== undefined) {
+        builder._frameBudget = () => {
+          let reads = 0;
+          return { hasTime: () => reads < budget, spend: () => void reads++ };
+        };
+      }
+
+      const sources = Array.from({ length: SOURCES }, () => Atom.make(2).pipe(Atom.keepAlive));
+      const connectors: Atom.Atom<unknown>[] = [];
+      let reads = 0;
+      const extension = (
+        relation: string,
+      ): GraphBuilder.Extension<GraphBuilder.ModelNode, GraphBuilder.ModelNodeArg, string, string> => ({
+        id: relation,
+        relation,
+        connector: Atom.family((node: Atom.Atom<Option.Option<GraphBuilder.ModelNode>>) => {
+          const atom = Atom.make((get) => {
+            reads++;
+            return Option.match(get(node), {
+              onNone: () => [],
+              onSome: ({ id }) => segments(id, relation, (source) => get(sources[source])).map((id) => ({ id })),
+            });
+          });
+          connectors.push(atom);
+          return atom;
+        }),
+      });
+      GraphBuilder.addExtension(builder, [extension('child'), extension('other')]);
+      let other = true;
+
+      const settle = async () => {
+        for (let index = 0; index < 100; index++) {
+          const flushed = GraphBuilder.flush(builder);
+          await vi.advanceTimersByTimeAsync(1);
+          await flushed;
+          await turn();
+          if (builder._tracker.dirty.size === 0 && !builder._flushScheduled && !builder._updateScheduled) {
+            return;
+          }
+        }
+        throw new Error('the builder did not settle');
+      };
+
+      const check = () => {
+        expect(builder._tracker.dirty.size, 'dirty keys after settling').to.equal(0);
+        for (const [id, keys] of builder._expansions) {
+          expect(model.findNode(id), `tracked node ${id}`).not.to.be.undefined;
+          for (const key of keys) {
+            expect(builder._tracker.tracks(key)).to.be.true;
+            const relation = key.slice(id.length + 1);
+            const expected =
+              relation === 'other' && !other
+                ? []
+                : segments(id, relation, (source) => registry.get(sources[source])).map((segment) =>
+                    GraphNode.qualifyId(id, segment),
+                  );
+            const actual = model
+              .outgoing(id, relation)
+              .toSorted((a, b) => a.data.order - b.data.order)
+              .map((edge) => edge.target);
+            expect(actual, `${id} ${relation}`).to.deep.equal(expected);
+          }
+        }
+        for (const key of builder._flushed.keys()) {
+          expect(builder._tracker.tracks(key), `flushed key ${key} is tracked`).to.be.true;
+        }
+        expect(logged, 'warnings and errors').to.deep.equal([]);
+      };
+
+      const nodes = () => model.nodes.map(({ id }) => id).toSorted();
+      builder.children(GraphNode.RootId);
+      for (const step of commands) {
+        switch (step.kind) {
+          case 'set': {
+            const before = reads;
+            const write = () => registry.set(sources[step.source], step.value);
+            if (step.batch) {
+              Atom.batch(write);
+            } else {
+              write();
+              // The point of the builder: a write marks connectors dirty and runs none of them.
+              expect(reads, 'connector reads inside a write').to.equal(before);
+            }
+            break;
+          }
+          case 'expand': {
+            const candidates = nodes().filter((id) => !builder._tracker.tracks(`${id}\u0001${step.relation}`));
+            if (candidates.length > 0) {
+              builder.children(candidates[step.pick % candidates.length], step.relation);
+            }
+            break;
+          }
+          case 'release': {
+            // A relation's whole output, as retention releases a level at a time: releasing part of one
+            // tears the relation down while the rest of its edges stay.
+            const candidates = nodes().filter((id) => model.outgoing(id, step.relation).length > 0);
+            if (candidates.length > 0) {
+              const id = candidates[step.pick % candidates.length];
+              const targets = model.outgoing(id, step.relation).map((edge) => edge.target);
+              GraphBuilder.release(builder, [...targets, ...targets.flatMap((target) => model.descendants(target))]);
+            }
+            break;
+          }
+          case 'toggle': {
+            other = !other;
+            if (other) {
+              GraphBuilder.addExtension(builder, extension('other'));
+            } else {
+              GraphBuilder.removeExtension(builder, 'other');
+            }
+            break;
+          }
+          case 'settle': {
+            await settle();
+            check();
+            break;
+          }
+          case 'advance': {
+            await settle();
+            await vi.advanceTimersByTimeAsync(step.ms);
+            await settle();
+            check();
+            break;
+          }
+        }
+      }
+      await settle();
+      check();
+
+      // Destroy releases the connectors at once, well inside the anchors' TTL, and the anchors after it.
+      GraphBuilder.destroy(builder);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await turn();
+      expect(
+        connectors.filter((atom) => registry.getNodes().has(atom)),
+        'connectors',
+      ).to.have.length(0);
+      await vi.advanceTimersByTimeAsync(5 * ANCHOR_TTL);
+      expect(
+        [...registry.getNodes().values()].filter((node) => node.atom.idleTTL === ANCHOR_TTL),
+        'anchors',
+      ).to.have.length(0);
+    } finally {
+      // A failed run must not leave its builder behind to log into the next one.
+      GraphBuilder.destroy(builder);
+      registry.dispose();
+      removeProcessor();
+      vi.useRealTimers();
+    }
+  };
+
+  test('the graph matches its connectors after any sequence of changes', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          ttl: fc.boolean(),
+          budget: fc.option(fc.integer({ min: 1, max: 3 }), { nil: undefined }),
+          commands: fc.array(command, { maxLength: 80 }),
+        }),
+        run,
+      ),
+      // Seeded, so CI replays the same cases; FC_RUNS and FC_SEED widen the search locally.
+      { numRuns: Number(process.env.FC_RUNS ?? 300), seed: Number(process.env.FC_SEED ?? 1) },
+    );
   });
 });
