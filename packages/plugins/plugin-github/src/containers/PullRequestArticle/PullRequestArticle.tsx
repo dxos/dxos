@@ -9,7 +9,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Button, Panel, Tabs, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -31,6 +33,7 @@ import { GitHubOperation, Walkthrough } from '#types';
 
 import { CommentComposer, LineCommentPopover } from '../../components/CommentComposer/index.ts';
 import { PullRequestOverview } from '../../components/PullRequestOverview/index.ts';
+import { GITHUB_PROVIDER_ID } from '../../constants.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
 
@@ -160,6 +163,39 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     [invokePromise],
   );
 
+  /**
+   * A rejected credential is the one failure the user can fix, so it names the fix and links to the
+   * connection; any other failure shows the raw error under the action's own title.
+   */
+  const failureToast = useCallback(
+    async (id: string, fallbackKey: string, error: Error) => {
+      const key = pullRequestFailureKey(error, fallbackKey);
+      if (key === fallbackKey || !db) {
+        return toast(id, key, false, error.message);
+      }
+
+      const connections = await db.query(Filter.type(Connection.Connection)).run();
+      const connection = connections.find((connection) => connection.connectorId === GITHUB_PROVIDER_ID);
+      return invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}.${id}`,
+        icon: 'ph--warning--regular',
+        title: [key, { ns: meta.profile.key }],
+        ...(connection
+          ? {
+              actionLabel: ['open-github-connection.label', { ns: meta.profile.key }],
+              actionAlt: ['open-github-connection.label', { ns: meta.profile.key }],
+              onAction: () =>
+                void invokePromise(LayoutOperation.Open, {
+                  subject: [Binding.connectionSubject(db.spaceId, connection.id)],
+                  navigation: 'immediate',
+                }),
+            }
+          : {}),
+      });
+    },
+    [db, invokePromise, toast],
+  );
+
   const handleApprove = useCallback(async () => {
     setBusy(true);
     const { data, error } = await invokePromise(
@@ -170,7 +206,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     setBusy(false);
     if (error) {
       log.warn('approve failed', { error });
-      await toast('approve', 'approve-pull-request-error.title', false, error.message);
+      await failureToast('approve', 'approve-pull-request-error.title', error);
       return;
     }
     await toast(
@@ -179,7 +215,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       true,
     );
     void refreshStatus();
-  }, [invokePromise, pullRequestRef, spaceId, toast, refreshStatus]);
+  }, [invokePromise, pullRequestRef, spaceId, toast, failureToast, refreshStatus]);
 
   /** `force` is what makes the toolbar's entry a REgeneration: the same head would otherwise no-op. */
   const handleGenerate = useCallback(async () => {
@@ -193,19 +229,11 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     setGenerating(false);
     if (error) {
       log.warn('walkthrough generation failed', { error });
-      // A rejected credential is the one failure the user can act on, and `error.message` states it
-      // only as a bare `401` inside an HTTP error string.
-      const failureKey = pullRequestFailureKey(error, 'walkthrough-failed.title');
-      await toast(
-        'walkthrough',
-        failureKey,
-        false,
-        failureKey === 'walkthrough-failed.title' ? error.message : undefined,
-      );
+      await failureToast('walkthrough', 'walkthrough-failed.title', error);
       return;
     }
     await toast('walkthrough', 'walkthrough-ready.title', true);
-  }, [invokePromise, pullRequestRef, spaceId, walkthrough, toast]);
+  }, [invokePromise, pullRequestRef, spaceId, walkthrough, toast, failureToast]);
 
   const handleCopyLink = useCallback(async () => {
     if (!pullRequest.url) {
@@ -250,13 +278,13 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     setBusy(false);
     if (error) {
       log.warn('comment failed', { error });
-      await toast('comment', 'comment-error.title', false, error.message);
+      await failureToast('comment', 'comment-error.title', error);
       return;
     }
     setComment('');
     handleCloseComposer();
     await toast('comment', 'comment-success.title', true);
-  }, [comment, lineTarget, invokePromise, pullRequestRef, spaceId, toast, handleCloseComposer]);
+  }, [comment, lineTarget, invokePromise, pullRequestRef, spaceId, toast, failureToast, handleCloseComposer]);
 
   // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
   const tabs = useMemo(

@@ -54,6 +54,7 @@ export const translations = [
         'import-pull-request-no-space.title': 'Open a space to import a pull request into',
         'open-pull-request.label': 'Open pull request',
         'github-token-rejected.title': 'GitHub rejected your connection — reconnect GitHub and try again',
+        'open-github-connection.label': 'Go to connection',
         'walkthrough-ready.title': 'Walkthrough ready',
         'walkthrough-failed.title': 'Walkthrough generation failed',
         'approve-pull-request.label': 'Approve',
