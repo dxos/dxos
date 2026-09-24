@@ -8,6 +8,7 @@
 // `Diagnostics`, so they show what the renderer draws rather than what the source declared.
 //
 
+import { analyze } from './diagnostics.ts';
 import type * as Scene from './scene.ts';
 
 type Point = Scene.Point;
@@ -178,6 +179,18 @@ export const rows = (objects: readonly Scene.WorldObject[]): string => {
       `arrow ${name(path.from)} → ${name(path.to)}${path.label ? ` labelled "${path.label}"` : ''} runs ${way}${span}${bends}`,
     );
   }
+  // A crossing is the one thing a reader sees at a glance that no row or direction implies, so it is stated.
+  const byRef = new Map(paths.map((path) => [path.ref, path]));
+  const arrow = (ref: string) => {
+    const path = byRef.get(ref);
+    return path ? `${name(path.from)} → ${name(path.to)}` : ref;
+  };
+  const crossings = analyze(objects).diagnostics.filter(({ code }) => code === 'edge-crossing');
+  lines.push(
+    ...(crossings.length
+      ? crossings.map(({ refs: [left, right] }) => `crossing: arrow ${arrow(left)} crosses arrow ${arrow(right)}`)
+      : ['no arrows cross']),
+  );
   return lines.join('\n');
 };
 

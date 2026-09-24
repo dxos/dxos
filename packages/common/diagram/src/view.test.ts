@@ -94,6 +94,7 @@ describe('view', () => {
       'row 2 (bottom), left to right: "Gamma"',
       'arrow "Alpha" → "Beta" labelled "calls" runs right, row 1 to row 1, 1 bends',
       'arrow "Alpha" → "Gamma" runs down, row 1 to row 2',
+      'no arrows cross',
     ]);
   });
 });

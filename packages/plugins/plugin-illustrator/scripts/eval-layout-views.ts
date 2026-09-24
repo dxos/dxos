@@ -47,6 +47,7 @@ const VIEWS: Record<string, (objects: readonly Scene.WorldObject[]) => string | 
   'ascii-coarse': (objects) => View.ascii(objects, { column: 12, row: 32 }),
   'rows': (objects) => View.rows(objects),
   'ascii+rows': (objects) => `${View.ascii(objects)}\n\n${View.rows(objects)}`,
+  'coordinates+rows': (objects) => `${View.coordinates(objects)}\n\n${View.rows(objects)}`,
 };
 
 type Question = {
@@ -309,9 +310,11 @@ const program = Effect.gen(function* () {
     return;
   }
   const reference: Record<string, Answers> = JSON.parse(readFileSync(referenceFile, 'utf8'));
+  // `--views a,b` reruns a subset, e.g. after changing one view.
+  const views = argument('--views')?.split(',') ?? Object.keys(VIEWS);
   const results = new Map<string, Answers>();
   yield* Effect.forEach(
-    diagrams.flatMap((diagram) => Object.entries(VIEWS).map(([view, render]) => ({ diagram, view, render }))),
+    diagrams.flatMap((diagram) => views.map((view) => ({ diagram, view, render: VIEWS[view] }))),
     ({ diagram, view, render }) =>
       ask(diagram, render).pipe(
         Effect.tap((answers) => Effect.sync(() => results.set(`${view}/${diagram.name}`, answers))),
@@ -331,7 +334,7 @@ const program = Effect.gen(function* () {
 
   const graders: [string, (name: string) => Answers | undefined][] = [
     ['reference (image)', (name) => reference[name]],
-    ...Object.keys(VIEWS).map((view): [string, (name: string) => Answers | undefined] => [
+    ...views.map((view): [string, (name: string) => Answers | undefined] => [
       `jev ${view}`,
       (name) => results.get(`${view}/${name}`),
     ]),
