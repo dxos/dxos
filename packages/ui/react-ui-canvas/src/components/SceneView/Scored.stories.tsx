@@ -313,18 +313,21 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
-  const [seed, setSeed] = useState<Seed>();
+  // The key travels with the seed so the editor remounts when the new scene arrives, not before it.
+  const [seed, setSeed] = useState<Seed & { key: string }>();
   const [failure, setFailure] = useState<string>();
   useEffect(() => {
+    const key = `${fixture}:${source}`;
     if (fixture === 'classes') {
-      setSeed(createClassSceneTree());
+      setSeed({ ...createClassSceneTree(), key });
+      setFailure(undefined);
       return;
     }
     let cancelled = false;
     fromMermaid(source)
       .then((next) => {
         if (!cancelled) {
-          setSeed(next);
+          setSeed({ ...next, key });
           setFailure(undefined);
         }
       })
@@ -345,8 +348,7 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
   if (!seed || !store) {
     return <div className='dx-fill' />;
   }
-  // Keyed on the seed so a new one remounts the editor and resets the baseline.
-  return <Editor key={`${fixture}:${source}`} store={store} root={seed.root} engine={seed.engine} />;
+  return <Editor key={seed.key} store={store} root={seed.root} engine={seed.engine} />;
 };
 
 const meta: Meta<StoryArgs> = {

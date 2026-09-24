@@ -33,8 +33,11 @@ export type DiagramObjects = {
   elementOf: ReadonlyMap<string, ElementId>;
 };
 
-/** `Diagnostics` reads the owning object as the ref's prefix up to `/`, and `#` as a port. */
-const objectId = (id: ElementId): string => id.replace(/[/#]/g, '_');
+/**
+ * `Diagnostics` reads the owning object as the ref's prefix up to `/`, and `#` as a port; percent-encoding
+ * removes both and stays injective, so distinct ids never merge into one owner.
+ */
+const objectId = (id: ElementId): string => encodeURIComponent(id);
 
 const nodeText = (node: Node): string | undefined => {
   if (isRectNode(node) || isEllipseNode(node)) {

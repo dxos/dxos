@@ -36,6 +36,17 @@ describe('diagram', () => {
     expect(diagnosticElements(converted, overlap.refs).sort()).toEqual(['scene:test/a', 'scene:test/b']);
   });
 
+  test('ids that differ only in separators stay distinct objects', ({ expect }) => {
+    const scene = SceneBuilder.create('scene:test')
+      .rect('scene/a', box(0, 0), 'A')
+      .rect('scene_a', box(64, 32), 'B')
+      .build();
+    const converted = toDiagramObjects(scene, defaultNodeRegistry);
+    const [overlap] = Diagnostics.errors(Diagnostics.analyze(converted.objects));
+    expect(overlap.code).toBe('node-overlap');
+    expect(diagnosticElements(converted, overlap.refs).sort()).toEqual(['scene/a', 'scene_a']);
+  });
+
   test('crossing links are counted', ({ expect }) => {
     const scene = SceneBuilder.create('scene:test')
       .rect('scene:test/a', box(0, 0), 'A')
