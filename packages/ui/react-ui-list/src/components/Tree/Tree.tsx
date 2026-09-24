@@ -46,7 +46,16 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import { END_UNIT_KEY, type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import {
+  END_UNIT_KEY,
+  type RowPosition,
+  type RowUnit,
+  flattenRowUnits,
+  nominalExtents,
+  rowUnitId,
+  spliceGroups,
+  useScroller,
+} from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -88,10 +97,6 @@ type TreeWalkState<T extends { id: string }> = {
   selected: string[];
   byValue: Map<string, TreeNodeEntry<T>>;
 };
-
-/** Splices group wrappers out so the machine sees their children as direct children of the group's parent. */
-const spliceGroups = <T extends { id: string }>(entries: TreeNodeEntry<T>[] = []): TreeNodeEntry<T>[] =>
-  entries.flatMap((entry) => (entry.group ? spliceGroups(entry.children) : [entry]));
 
 /** Assigns collection index paths over the spliced topology. */
 const assignIndexPaths = <T extends { id: string }>(entries: TreeNodeEntry<T>[] | undefined, base: number[]): void => {
@@ -761,7 +766,7 @@ const TreeWindow = ({
       ) : unit.kind === 'end' ? (
         <TreeEndDropTarget key={unit.key} data={endData} windowIndex={index} objectId={unit.key} />
       ) : (
-        <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} />
+        <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} position={unit.position} />
       ),
     );
   }
@@ -814,9 +819,11 @@ type TreeNodeRowProps = {
   node: TreeNodeEntry;
   /** Position in the mounted window, when the tree is windowed; the window measures rows by it. */
   windowIndex?: number;
+  /** Place among its siblings, when the tree is windowed and the DOM no longer shows it. */
+  position?: RowPosition;
 };
 
-const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
+const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position }) => {
   if (node.group) {
     return (
       <>
@@ -837,6 +844,8 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
           className='col-[tree-row] grid grid-cols-subgrid'
           data-index={windowIndex}
           data-object-id={node.id}
+          aria-posinset={position?.posinset}
+          aria-setsize={position?.setsize}
         >
           <TreeNodeRowContent node={node} />
         </TreeView.Branch>
@@ -846,7 +855,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
           <TreeBranchContent node={node} />
         </TreeView.Branch>
       ) : (
-        <TreeNodeRowContent node={node} windowIndex={windowIndex} />
+        <TreeNodeRowContent node={node} windowIndex={windowIndex} position={position} />
       )}
     </TreeView.NodeProvider>
   );
@@ -949,7 +958,7 @@ TreeEndDropTarget.displayName = 'Tree.EndDropTarget';
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 /** The visible row: branch control or leaf item, with DnD wiring, columns, and the drop indicator. */
-const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
+const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex, position }) => {
   const {
     treeId,
     draggable: treeDraggable,
@@ -1178,6 +1187,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) =>
       // Read by the window to measure this row; it reads the id off `data-object-id` above, which
       // is why a windowed tree is one whose item ids are unique.
       data-index={windowIndex}
+      // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
+      aria-posinset={branch ? undefined : position?.posinset}
+      aria-setsize={branch ? undefined : position?.setsize}
       className={mx(
         'col-[tree-row] outline-none select-none',
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',

@@ -20,11 +20,21 @@ const NOMINAL_ROW_EXTENT = 40;
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
 export type RowUnit =
   | { kind: 'header'; key: string; label: Label }
-  | { kind: 'row'; key: string; node: TreeNodeEntry }
+  | { kind: 'row'; key: string; node: TreeNodeEntry; position: RowPosition }
   | { kind: 'end'; key: string };
 
-/** Key of the "append at the end" drop strip; no item value is a bare word, so it cannot collide. */
-export const END_UNIT_KEY = 'end';
+/**
+ * A row's place among its siblings, for `aria-posinset`/`aria-setsize`: a windowed tree mounts a
+ * flat run of some rows, so assistive technology cannot infer either from the DOM.
+ */
+export type RowPosition = { posinset: number; setsize: number };
+
+/** Key of the "append at the end" drop strip, namespaced like the header keys. */
+export const END_UNIT_KEY = 'end:';
+
+/** Splices group wrappers out so the machine sees their children as direct children of the group's parent. */
+export const spliceGroups = <T extends { id: string }>(entries: TreeNodeEntry<T>[] = []): TreeNodeEntry<T>[] =>
+  entries.flatMap((entry) => (entry.group ? spliceGroups(entry.children) : [entry]));
 
 /**
  * The id the window measures a row against — the item's own, because that is what the row element
@@ -44,15 +54,19 @@ export const rowUnitId = (unit: RowUnit): string => (unit.kind === 'row' ? unit.
  * measured, found to disagree and measured again, every commit. A tree that addresses one item at
  * two paths therefore renders whole.
  */
+const indexSiblings = (entries: readonly TreeNodeEntry[] | undefined): Map<TreeNodeEntry, number> =>
+  new Map(spliceGroups([...(entries ?? [])]).map((entry, index) => [entry, index]));
+
 export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): RowUnit[] | undefined => {
   const units: RowUnit[] = [];
   const ids = new Set<string>();
 
-  const visit = (nodes: readonly TreeNodeEntry[] | undefined): boolean => {
+  // `siblings` indexes the collection's sibling list, which groups do not break up.
+  const visit = (nodes: readonly TreeNodeEntry[] | undefined, siblings: Map<TreeNodeEntry, number>): boolean => {
     for (const node of nodes ?? []) {
       if (node.group) {
         units.push({ kind: 'header', key: `header:${node.value}`, label: node.props.label });
-        if (!visit(node.children)) {
+        if (!visit(node.children, siblings)) {
           return false;
         }
         continue;
@@ -62,8 +76,9 @@ export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): 
       }
 
       ids.add(node.id);
-      units.push({ kind: 'row', key: node.value, node });
-      if (node.branch && node.open && !visit(node.children)) {
+      const position = { posinset: (siblings.get(node) ?? 0) + 1, setsize: siblings.size };
+      units.push({ kind: 'row', key: node.value, node, position });
+      if (node.branch && node.open && !visit(node.children, indexSiblings(node.children))) {
         return false;
       }
     }
@@ -71,7 +86,7 @@ export const flattenRowUnits = (entries: readonly TreeNodeEntry[] | undefined): 
     return true;
   };
 
-  return visit(entries) ? units : undefined;
+  return visit(entries, indexSiblings(entries)) ? units : undefined;
 };
 
 /**

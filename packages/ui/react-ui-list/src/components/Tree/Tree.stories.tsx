@@ -526,6 +526,16 @@ export const TestWindowFlattensOpenBranches: Story = {
     await waitFor(async () => expect(rows()[1]?.getAttribute('aria-level')).toEqual('2'), { timeout: 5_000 });
     await expect(rows()[1].dataset.index).toEqual('1');
 
+    // A flat run no longer shows the hierarchy, so each row states its place among its siblings.
+    await expect([rows()[0].getAttribute('aria-posinset'), rows()[0].getAttribute('aria-setsize')]).toEqual([
+      '1',
+      '30',
+    ]);
+    await expect([rows()[2].getAttribute('aria-posinset'), rows()[2].getAttribute('aria-setsize')]).toEqual([
+      '2',
+      '30',
+    ]);
+
     // The scrollbar spans the children too: the last unit is the thirtieth branch, after 30 children.
     scroller.scrollTo({ top: scroller.scrollHeight });
     await waitFor(async () => expect(indices()[indices().length - 1]).toEqual(59), { timeout: 5_000 });
