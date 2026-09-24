@@ -60,15 +60,6 @@ export class Service extends Context.Service<
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
 >()('@dxos/functions/ProcessOperationInvoker') {}
 
-/**
- * Services the host makes available to every invocation, beneath whatever the caller's context holds.
- * An app binds its capability and plugin managers here, so a handler reading them as optional ambient
- * services finds them whether it was invoked from an effect that provided them or from `invokePromise`.
- */
-export class AmbientContext extends Context.Service<AmbientContext, Context.Context<never>>()(
-  '@dxos/functions/ProcessOperationInvoker/AmbientContext',
-) {}
-
 const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     // `forkDaemon` so the collector fiber's lifetime is independent of whichever
@@ -132,16 +123,13 @@ export const make = (opts: {
   parentProcessId?: Process.ID;
   remoteInvoker?: RemoteOperationInvoker.Invoker;
   tracer: Tracer.Tracer;
-  /** See {@link AmbientContext}. */
-  ambient?: Context.Context<never>;
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
-  const baseContext = Context.merge(opts.ambient ?? Context.empty(), Context.make(Tracer.Tracer, opts.tracer));
+  const tracerContext = Context.make(Tracer.Tracer, opts.tracer);
 
   // Beneath the caller's context: `invokePromise` starts a fresh, empty-context fiber that would
-  // otherwise fall back to Effect's native tracer, whose spans never reach OpenTelemetry, and lack
-  // the host's ambient services.
-  const withBaseContext = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
-    effect.pipe(Effect.updateContext((context: Context.Context<never>) => Context.merge(baseContext, context)));
+  // otherwise fall back to Effect's native tracer, whose spans never reach OpenTelemetry.
+  const withFallbackTracer = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
+    effect.pipe(Effect.updateContext((context: Context.Context<never>) => Context.merge(tracerContext, context)));
 
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
@@ -214,7 +202,7 @@ export const make = (opts: {
           log('operation interrupted', { opKey: op.meta.key });
         }),
       ),
-      withBaseContext,
+      withFallbackTracer,
     );
 
   const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
@@ -232,7 +220,7 @@ export const make = (opts: {
       const newFiber = yield* fiberFromProcess(handle);
       fiberCache.set(pid, newFiber);
       return newFiber;
-    }).pipe(withBaseContext);
+    }).pipe(withFallbackTracer);
 
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,
@@ -247,7 +235,7 @@ export const make = (opts: {
       log('invoking operation on edge', { opKey: op.meta.key, deployedId: op.meta.deployedId });
       return invokeRemote<I, O>(op, input).pipe(
         Effect.tap((output) => PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() })),
-        withBaseContext,
+        withFallbackTracer,
       );
     }
 
@@ -281,7 +269,7 @@ export const make = (opts: {
           log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
         }),
       ),
-      withBaseContext,
+      withFallbackTracer,
     );
   };
 
@@ -307,7 +295,7 @@ export const make = (opts: {
         fiber.addObserver(() => {
           pendingFibers.delete(fiber);
         });
-      }).pipe(withBaseContext);
+      }).pipe(withFallbackTracer);
     }
 
     const traceMeta = options?.tracing as Trace.Meta | undefined;
@@ -352,7 +340,7 @@ export const make = (opts: {
           log('operation schedule interrupted', { opKey: op.meta.key });
         }),
       ),
-      withBaseContext,
+      withFallbackTracer,
     );
   };
 
@@ -405,14 +393,7 @@ export const layer: Layer.Layer<
     // `RemoteOperationInvoker.Service` is present in context; otherwise edge invocations die.
     const remoteInvoker = yield* Effect.serviceOption(RemoteOperationInvoker.Service);
     const tracer = yield* Effect.tracer;
-    const ambient = yield* Effect.serviceOption(AmbientContext);
-    const service = make({
-      manager,
-      handlerSet,
-      remoteInvoker: Option.getOrUndefined(remoteInvoker),
-      tracer,
-      ambient: Option.getOrUndefined(ambient),
-    });
+    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker), tracer });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
 );
