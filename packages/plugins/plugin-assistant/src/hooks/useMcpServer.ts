@@ -5,6 +5,7 @@
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
 import * as McpServer from '@dxos/compute/McpServer';
@@ -25,6 +26,11 @@ const OAUTH_CHANNEL = 'dxos.mcp-oauth';
 const SIGN_IN_TIMEOUT = Duration.minutes(5);
 
 type CallbackResult = { code?: string; state?: string; error?: string };
+
+/** The interactive part of an MCP sign-in failed; `message` is shown on the server's row. */
+class McpSignInError extends Schema.TaggedError<McpSignInError>('McpSignInError')('McpSignInError', {
+  message: Schema.String,
+}) {}
 
 /**
  * The server's connection options as this browser can build them: the same credentials the agent
@@ -117,7 +123,7 @@ export const useMcpServerSignIn = (server: McpServer.McpServer) => {
 const authorize = (server: McpServer.McpServer, popup: Window | null) =>
   Effect.gen(function* () {
     if (!popup) {
-      return yield* Effect.fail(new Error('The sign-in window was blocked.'));
+      return yield* Effect.fail(new McpSignInError({ message: 'The sign-in window was blocked.' }));
     }
 
     const callback = yield* Deferred.make<CallbackResult>();
@@ -143,14 +149,14 @@ const authorize = (server: McpServer.McpServer, popup: Window | null) =>
     const { code, state, error } = yield* Deferred.await(callback).pipe(
       Effect.timeoutOrElse({
         duration: SIGN_IN_TIMEOUT,
-        orElse: () => Effect.fail(new Error('Timed out waiting for sign-in.')),
+        orElse: () => Effect.fail(new McpSignInError({ message: 'Timed out waiting for sign-in.' })),
       }),
     );
     if (error || !code) {
-      return yield* Effect.fail(new Error(error ?? 'The authorization server returned no code.'));
+      return yield* Effect.fail(new McpSignInError({ message: error ?? 'The authorization server returned no code.' }));
     }
     if (state !== provider.pendingState) {
-      return yield* Effect.fail(new Error('Sign-in response did not match the request.'));
+      return yield* Effect.fail(new McpSignInError({ message: 'Sign-in response did not match the request.' }));
     }
 
     yield* McpOAuth.completeAuthorization(provider, server.url, code);
