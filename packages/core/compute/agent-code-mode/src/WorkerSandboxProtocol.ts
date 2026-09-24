@@ -9,11 +9,14 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import { ClientServicesRpcs } from '@dxos/client-protocol';
 import type { JsonSchema } from '@dxos/echo';
 
+/** Document id to Automerge heads. */
+const DocumentHeads = Schema.Record(Schema.String, Schema.mutable(Schema.Array(Schema.String)));
+
 /**
  * What the worker needs from the host beyond ECHO itself.
  *
  * The database reaches the worker over {@link ClientServicesRpcs}, unchanged — an out-of-process
- * sandbox is just another client, so there is nothing to invent there. These three calls are what
+ * sandbox is just another client, so there is nothing to invent there. These calls are what
  * that boundary has no service for: the turn's output buffer, the skills' operations (whose
  * handlers live here with the conversation), and the evaluation's own result.
  */
@@ -31,10 +34,21 @@ export const SandboxHostRpcs = RpcGroup.make(
       Schema.Struct({ _tag: Schema.Literal('Error'), message: Schema.String }),
     ]),
   }),
+  // `Operation.invoke` from the worker: runs the definition through the turn's `Operation.Service`
+  // as in-process code would, so input and output carry live objects in the `Wire` encoding.
+  // Each side sends the heads of what it wrote, so the other reads only after catching up.
+  Rpc.make('Sandbox.invokeDefinition', {
+    payload: Schema.Struct({ key: Schema.String, input: Schema.Any, heads: DocumentHeads }),
+    success: Schema.Union([
+      Schema.Struct({ _tag: Schema.Literal('Ok'), value: Schema.Any, heads: DocumentHeads }),
+      Schema.Struct({ _tag: Schema.Literal('Error'), message: Schema.String }),
+    ]),
+  }),
   Rpc.make('Sandbox.complete', {
     payload: Schema.Struct({
       value: Schema.Any,
       failure: Schema.NullOr(Schema.String),
+      heads: DocumentHeads,
     }),
     success: Schema.Void,
   }),

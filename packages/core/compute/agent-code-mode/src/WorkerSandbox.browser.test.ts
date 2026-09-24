@@ -43,22 +43,47 @@ const Score = Operation.make({
   output: Schema.Number,
 });
 
+const File = Operation.make({
+  meta: { key: DXN.make('com.example.operation.file'), name: 'File' },
+  input: Schema.Struct({ object: Obj.Unknown }),
+  output: Schema.Struct({ object: Obj.Unknown }),
+});
+
 const scored: string[] = [];
 const ScoreOperation: SandboxOperation = {
   name: 'score',
   description: 'Scores a title',
   parameters: {},
   definition: Score,
-  invoke: (input: unknown) =>
-    Effect.sync(() => {
-      const title = Schema.decodeUnknownSync(Schema.Struct({ title: Schema.String }))(input).title;
-      scored.push(title);
-      return title.length;
-    }),
+  invoke: () => Effect.die(new Error('not used')),
 };
 
-const noAmbientOperations: Operation.OperationService = {
+const FileOperation: SandboxOperation = {
+  name: 'file',
+  description: 'Files an object',
+  parameters: {},
+  definition: File,
   invoke: () => Effect.die(new Error('not used')),
+};
+
+/**
+ * The turn's `Operation.Service` on the page, which the worker's `Operation.invoke` runs through.
+ * Like the real invoker it hands values through undecoded, so a live object stays that object.
+ */
+const hostOperations: Operation.OperationService = {
+  invoke: (op, ...[input]) => {
+    const result: Effect.Effect<unknown> = Schema.is(Score.input)(input)
+      ? Effect.sync(() => {
+          scored.push(input.title);
+          return input.title.length;
+        })
+      : Effect.succeed(input);
+    return result.pipe(
+      Effect.flatMap((output) =>
+        Schema.is(op.output)(output) ? Effect.succeed(output) : Effect.die(new Error('Unexpected output.')),
+      ),
+    );
+  },
   schedule: () => Effect.die(new Error('not used')),
   invokePromise: () => Promise.resolve({ error: new Error('not used') }),
 };
@@ -100,6 +125,22 @@ describe('worker sandbox in a Web Worker', () => {
     expect(scored).toEqual(['Review the PR']);
   }, 60_000);
 
+  test('passes a stored object to an operation on the page as that same object', async () => {
+    const { db, run } = await setup();
+    const output = await run(`
+      const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
+      const { object } = yield* Operation.invoke(ops['${String(File.meta.key)}'], { object: task });
+      Obj.update(object, (task) => { task.status = 'filed'; });
+      yield* Database.flush();
+      yield* print(object.id === task.id, task.status);
+    `);
+    expect(output).toEqual('true filed');
+
+    await expect
+      .poll(async () => (await db.query(Filter.type(Task)).run()).map((task) => [task.title, task.status]))
+      .toEqual([['Write the docs', 'filed']]);
+  }, 60_000);
+
   test('kills a worker whose code never finishes', async () => {
     const { run } = await setup();
     expect(await run('while (true) {}', '2 seconds')).toContain('the worker was killed');
@@ -135,7 +176,7 @@ const setup = async () => {
     ),
   });
 
-  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, noAmbientOperations));
+  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, hostOperations));
 
   const runOn = (target: typeof sandbox, code: string, timeout?: Duration.Input) =>
     EffectEx.runPromise(
@@ -144,7 +185,7 @@ const setup = async () => {
           dialect: EffectDialect,
           sandbox: target,
           runtime,
-          operations: [ScoreOperation],
+          operations: [ScoreOperation, FileOperation],
           timeout,
         });
         const result = yield* callTool(yield* toolkit.handlers, {

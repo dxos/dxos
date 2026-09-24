@@ -22,6 +22,7 @@ import { log } from '@dxos/log';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import { type Dialect, type SandboxOperation } from './Dialect.ts';
+import * as Wire from './Wire.ts';
 import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
 /**
@@ -37,6 +38,9 @@ import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+
+/** An operation the host ran for the worker and reported failed. */
+class OperationFailed extends Data.TaggedError('OperationFailed')<{ readonly message: string }> {}
 
 /** Whatever the model's code threw, named so the error channel carries more than `unknown`. */
 class ModelCodeFailed extends Data.TaggedError('ModelCodeFailed')<{ readonly message: string }> {}
@@ -119,11 +123,22 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       invoke: (input: unknown) => invokeOperation(key, toWire(input)),
     }));
 
+    // `Operation.invoke` crosses with its objects, and with the heads of what each side wrote so the
+    // other reads them only once they have arrived.
+    const invokeDefinition = (key: string, input: unknown) =>
+      Wire.settle(db).pipe(
+        Effect.flatMap((heads) => client['Sandbox.invokeDefinition']({ key, input: Wire.encode(input), heads })),
+        Effect.flatMap(
+          (outcome): Effect.Effect<unknown, OperationFailed | Wire.ObjectNotFoundError | Wire.ReplicationError> =>
+            outcome._tag === 'Ok'
+              ? Wire.catchUp(db, outcome.heads).pipe(Effect.andThen(Wire.decode(outcome.value, db)))
+              : Effect.fail(new OperationFailed({ message: outcome.message })),
+        ),
+        Effect.orDie,
+      );
+
     const runtime = Context.make(Database.Service, { db }).pipe(
-      Context.add(
-        Operation.Service,
-        forwardOperations((key, input) => invokeOperation(key, toWire(input))),
-      ),
+      Context.add(Operation.Service, forwardOperations(invokeDefinition)),
     );
 
     const dialect = DIALECTS[init.dialect];
@@ -150,6 +165,8 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
         onSuccess: (value: unknown) => ({ value, failure: null }),
         onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
       }),
+      // The turn carries on against the host's database, so it waits for what the code wrote.
+      Effect.flatMap((result) => Wire.settle(db).pipe(Effect.map((heads) => ({ ...result, heads })))),
     );
   });
 
@@ -166,7 +183,7 @@ export const runSandboxWorker = (port: MessagePort, init: SandboxInit) =>
     const client = yield* connect(port);
     const exit = yield* Effect.exit(evaluate(client, init));
     yield* client['Sandbox.complete'](
-      Exit.isSuccess(exit) ? exit.value : { value: undefined, failure: Cause.pretty(exit.cause) },
+      Exit.isSuccess(exit) ? exit.value : { value: undefined, failure: Cause.pretty(exit.cause), heads: {} },
     );
   });
 
@@ -206,9 +223,8 @@ const forwardOperations = (
 });
 
 /**
- * An operation's input as it crosses the thread: its JSON form. Live ECHO objects and references
- * cannot be structured-cloned, but serialize to the same `{ "/": "echo:…" }` form the host's tool
- * path decodes.
+ * A tool call's input as it crosses the thread: its JSON form, which is what the host's tool path
+ * takes from any caller and what the plain dialect's `ops` produce in-process too.
  */
 const toWire = (input: unknown): unknown => (input === undefined ? undefined : JSON.parse(JSON.stringify(input)));
 

@@ -63,6 +63,21 @@ const Score = Operation.make({
 /** How the Effect dialect keys `ops`: by the operation's own DXN. */
 const SCORE_KEY = String(Score.meta.key);
 
+/**
+ * Takes an object the way `AddObject` does: a live one, or a description to create one from, and
+ * reports which of the two arrived so a test can tell the model's own object from a copy.
+ */
+const File = Operation.make({
+  meta: { key: DXN.make('com.example.operation.file'), name: 'File' },
+  input: Schema.Struct({ object: Schema.Union([Obj.Unknown, Schema.Record(Schema.String, Schema.Unknown)]) }),
+  output: Schema.Struct({ received: Schema.String, object: Obj.Unknown }),
+});
+
+const FILE_KEY = String(File.meta.key);
+
+/** A draft of a task, as `File` receives a detached one. */
+const TaskDraft = Schema.Struct({ '@type': Schema.String, 'title': Schema.String, 'status': Schema.String });
+
 /** Stands in for a skill-bound tool. Its handler stays here, which is the point of the call home. */
 const scored: string[] = [];
 const ScoreOperation: SandboxOperation = {
@@ -73,20 +88,63 @@ const ScoreOperation: SandboxOperation = {
   definition: Score,
   invoke: (input: unknown) =>
     Effect.sync(() => {
-      const { title } = input as { title: string };
+      const { title } = Schema.decodeUnknownSync(Score.input)(input);
       scored.push(title);
       return title.length;
     }),
 };
 
-/**
- * Operations reach their handler through the dialect's binding, which carries the key home, so
- * nothing resolves one from the ambient service — least of all inside the worker.
- */
-const noAmbientOperations: Operation.OperationService = {
+const FileOperation: SandboxOperation = {
+  name: 'file',
+  description: 'Files an object',
+  parameters: {},
+  definition: File,
+  // Reached only through `Operation.invoke`, which runs the definition rather than the tool.
   invoke: () => Effect.die(new Error('not used')),
-  schedule: () => Effect.die(new Error('not used')),
-  invokePromise: () => Promise.resolve({ error: new Error('not used') }),
+};
+
+/**
+ * The turn's `Operation.Service`, which `Operation.invoke` from the worker runs through on the host
+ * just as the Effect dialect's calls do in-process. Like the real invoker it hands values through
+ * undecoded: decoding a live object against `Obj.Unknown` yields a copy, not the object.
+ */
+const hostOperations = (db: Database.Database): Operation.OperationService => {
+  const handlers: Record<string, (input: unknown) => Effect.Effect<unknown>> = {
+    [SCORE_KEY]: (input) =>
+      Schema.decodeUnknownEffect(Score.input)(input).pipe(
+        Effect.map(({ title }) => {
+          scored.push(title);
+          return title.length;
+        }),
+        Effect.orDie,
+      ),
+    [FILE_KEY]: (input) => {
+      if (!Schema.is(File.input)(input)) {
+        return Effect.die(new Error('File: bad input'));
+      }
+      const { object } = input;
+      return Obj.isObject(object)
+        ? Effect.succeed({ received: 'object', object })
+        : Schema.decodeUnknownEffect(TaskDraft)(object).pipe(
+            Effect.map(({ '@type': typename, title, status }) => ({
+              received: `draft ${typename}`,
+              object: db.add(Obj.make(Task, { title, status })),
+            })),
+            Effect.orDie,
+          );
+    },
+  };
+  const run = (key: string, input: unknown) => handlers[key]?.(input) ?? Effect.die(new Error(`No handler: ${key}`));
+  return {
+    invoke: (op, ...[input]) =>
+      run(String(op.meta.key), input).pipe(
+        Effect.flatMap((output) =>
+          Schema.is(op.output)(output) ? Effect.succeed(output) : Effect.die(new Error('Unexpected output.')),
+        ),
+      ),
+    schedule: () => Effect.die(new Error('not used')),
+    invokePromise: () => Promise.resolve({ error: new Error('not used') }),
+  };
 };
 
 describe('worker sandbox', () => {
@@ -218,6 +276,47 @@ describe('worker sandbox', () => {
       expect(scored).toEqual(['Review the PR']);
     }, 60_000);
 
+    test('passes a stored object to an operation as that same object', async () => {
+      const { db, runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `
+        const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
+        const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: task });
+        Obj.update(result.object, (task) => { task.status = 'filed'; });
+        yield* Database.flush();
+        yield* print(result.received, result.object.id === task.id, task.status);
+      `,
+      );
+      // Not a copy either way: the handler got the object the model made, and the one it returned
+      // is live in the worker, so the model's edit to it lands on that same object.
+      expect(output).toEqual('object true filed');
+
+      // Polled: the completion barrier covers the space root, so the object is found at once, but an
+      // edit to an object the host already holds reaches its copy a few milliseconds later.
+      await expect
+        .poll(async () => (await db.query(Filter.type(Task)).run()).map((task) => [task.title, task.status]))
+        .toEqual([['Write the docs', 'filed']]);
+    }, 60_000);
+
+    test('passes a detached object to an operation as a draft', async () => {
+      const { db, runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `
+        const draft = Obj.make(types['${TASK_TYPENAME}'], { title: 'Review the PR', status: 'open' });
+        const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: draft });
+        yield* print(result.received, result.object.title, Obj.isObject(result.object));
+      `,
+      );
+      expect(output).toEqual(`draft ${TASK_TYPENAME} Review the PR true`);
+
+      const tasks = await db.query(Filter.type(Task)).run();
+      expect(tasks.map((task) => task.title)).toEqual(['Review the PR']);
+    }, 60_000);
+
     test('reports a failing effect as output', async () => {
       const { runWith } = await setup();
       const output = await runWith(EffectDialect, "yield* Effect.fail(new Error('nope'));");
@@ -256,7 +355,7 @@ const setup = async () => {
 
   const sandbox = makeSandbox(BUILT_ENTRY);
 
-  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, noAmbientOperations));
+  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, hostOperations(db)));
 
   /** Runs `code` in a worker exactly as a turn would, returning what it printed. */
   const run = (code: string, timeout?: Duration.Input) => runWith(PlainDialect, code, timeout);
@@ -273,7 +372,7 @@ const setup = async () => {
           dialect,
           sandbox,
           runtime,
-          operations: [ScoreOperation],
+          operations: [ScoreOperation, FileOperation],
           timeout,
         });
         const result = yield* callTool(yield* toolkit.handlers, {
@@ -284,7 +383,8 @@ const setup = async () => {
           providerExecuted: false,
         });
         expect(result.error).toBeUndefined();
-        return JSON.parse(String(result.result)).output as string;
+        return Schema.decodeUnknownSync(Schema.Struct({ output: Schema.String }))(JSON.parse(String(result.result)))
+          .output;
       }),
     );
 

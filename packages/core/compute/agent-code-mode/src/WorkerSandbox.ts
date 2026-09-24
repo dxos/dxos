@@ -12,10 +12,14 @@ import * as Layer from 'effect/Layer';
 import type * as WorkerThreads from 'node:worker_threads';
 
 import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@dxos/client-protocol';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
+import type { BindingsContext } from './Dialect.ts';
 import * as Sandbox from './Sandbox.ts';
+import * as Wire from './Wire.ts';
 import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
 /**
@@ -114,13 +118,23 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
           SandboxHostRpcs.toLayer({
             'Sandbox.print': ({ values }) => Effect.sync(() => context.print(...values)),
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
-            'Sandbox.complete': ({ value, failure }) =>
-              Deferred.complete(
-                settled,
-                failure === null
-                  ? Effect.succeed(value)
-                  : Effect.fail(new Sandbox.EvaluationError({ message: failure })),
-              ).pipe(Effect.asVoid),
+            'Sandbox.invokeDefinition': ({ key, input, heads }) => invokeDefinition(context, key, input, heads),
+            'Sandbox.complete': ({ value, failure, heads }) =>
+              Wire.catchUp(db, heads).pipe(
+                // The code ran either way; a turn that reads stale data is better than one told it failed.
+                Effect.catch((error) =>
+                  Effect.sync(() => log.warn('code-mode worker writes not yet visible to the host', { error })),
+                ),
+                Effect.andThen(
+                  Deferred.complete(
+                    settled,
+                    failure === null
+                      ? Effect.succeed(value)
+                      : Effect.fail(new Sandbox.EvaluationError({ message: failure })),
+                  ),
+                ),
+                Effect.asVoid,
+              ),
           }),
         ),
         // Both ends must agree on the timing middleware; neither applies it, since this connection
@@ -203,6 +217,31 @@ const invokeOperation = (
   return operation.invoke(input).pipe(
     Effect.match({
       onSuccess: (value: unknown) => ({ _tag: 'Ok' as const, value }),
+      onFailure: (error: unknown) => ({ _tag: 'Error' as const, message: describe(error) }),
+    }),
+  );
+};
+
+/**
+ * Runs `Operation.invoke` from the worker through the turn's own `Operation.Service`, exactly as
+ * the Effect dialect does in-process: stored objects in the input are this database's own copies, so
+ * the operation acts on the object the model holds rather than on a JSON description of it.
+ */
+const invokeDefinition = (context: BindingsContext, key: string, input: unknown, heads: Wire.Heads) => {
+  const definition = context.operations.find(
+    (candidate) => candidate.definition !== undefined && String(candidate.definition.meta.key) === key,
+  )?.definition;
+  if (definition === undefined) {
+    return Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` });
+  }
+  const { db } = Context.get(context.runtime, Database.Service);
+  return Wire.catchUp(db, heads).pipe(
+    Effect.andThen(Wire.decode(input, db)),
+    Effect.flatMap((decoded) => Operation.invoke(definition, decoded)),
+    Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value), heads })))),
+    Effect.provide(context.runtime),
+    Effect.match({
+      onSuccess: ({ value, heads }) => ({ _tag: 'Ok' as const, value, heads }),
       onFailure: (error: unknown) => ({ _tag: 'Error' as const, message: describe(error) }),
     }),
   );
