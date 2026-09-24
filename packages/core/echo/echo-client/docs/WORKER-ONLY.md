@@ -70,11 +70,12 @@ against the dead worker's entries. The tab rebuilt its visible state from the co
 tab still converged. A small persisted op log in the worker would remove the case.
 
 The same fuzz found an Automerge issue, not a mirror one. After `A.merge`, Automerge 3.5.0 can leave
-a document's cached view out of step with the document itself: `A.load(A.save(doc))` differs, while
-`A.diff` over the same heads is correct. A replay of the recorded steps through Automerge calls alone
-reproduces it, and so does the fuzz from before the per-change work, in 1 of 2,000 sessions. The
-worker builds snapshots from that cached view, and replica-mode ECHO reads the same view, so both
-could show the drift. It needs a minimal repro and an upstream report.
+the properties of a document object out of step with the document: in one run a list reads `""`
+where a fresh `A.load(A.save(doc))` has `"Rt195"`, and the elements after it shift. `A.toJS` and
+`A.diff` over the same heads are correct. A script that replays the recorded steps with only
+`A.load`, `A.change` and `A.merge` reproduces it, and the fuzz from before the per-change work showed
+it in 1 of 2,000 sessions. The worker builds snapshots from those properties, and replica-mode ECHO
+reads them too, so both can show the drift. It needs an upstream report with the replay script.
 
 ## Memory
 
