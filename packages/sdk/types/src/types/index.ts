@@ -31,6 +31,7 @@ import * as Task from './Task.ts';
 import * as TaskSet from './TaskSet.ts';
 import * as Thread from './Thread.ts';
 import * as Transcript from './Transcript.ts';
+import * as Video from './Video.ts';
 
 /**
  * Common data types.
@@ -79,6 +80,7 @@ export {
   TaskSet,
   Thread,
   Transcript,
+  Video,
 };
 
 //
