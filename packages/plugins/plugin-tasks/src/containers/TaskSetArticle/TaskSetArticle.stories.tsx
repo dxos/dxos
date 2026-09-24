@@ -240,6 +240,64 @@ export const DescriptionLinkUnavailable: Story = {
 };
 
 /**
+ * Hiding a status from the toolbar's status selector drops its rows, and the menu stays open across
+ * several toggles — a reader narrowing a ledger sets more than one.
+ */
+export const StatusFilter: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // Re-queried rather than held: the trigger is rebuilt when the deferred menu mounts under it.
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
+    const item = (status: string) =>
+      document.querySelector<HTMLElement>(`[data-testid="tasks.filter.status.${status}"]`);
+    await userEvent.click(trigger()!);
+    await waitFor(() => expect(item('done')).toBeTruthy(), { timeout: 10_000 });
+
+    // Checkboxes, not radios: the group is multi-select, so every status announces its own state.
+    await expect(item('done')).toHaveAttribute('role', 'menuitemcheckbox');
+    await expect(item('done')).toHaveAttribute('aria-checked', 'true');
+
+    await userEvent.click(item('done')!);
+    await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+
+    // Still open, so the second status is one click away.
+    await expect(item('cancelled')).toBeTruthy();
+    await userEvent.click(item('cancelled')!);
+    await waitFor(() => expect(canvas.queryByText('Print run v1')).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // Back to every status in one item, rather than re-checking the two by hand.
+    await userEvent.click(item('all')!);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Print run v1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // A hidden status takes the branch filed under it: the sub-task is part of the work its parent
+    // stands for, so hiding the parent's status hides it too — even though its own is still shown.
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    const { space, taskSet } = context;
+    const parent = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Source green coffee')!;
+    const subTask = space.db.add(
+      Task.make({ title: 'Cup the samples', status: 'started', parentTask: Ref.make(parent) }),
+    );
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.tasks.push(Ref.make(subTask));
+    });
+    await expect(canvas.findByText('Cup the samples', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    await userEvent.click(item('done')!);
+    await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText('Cup the samples')).toBeNull(), { timeout: 10_000 });
+    // Its own status is still shown — a sibling in it stays.
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
  *

@@ -30,6 +30,7 @@ import { TaskOperation, TasksCapabilities } from '#types';
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
 import { filterTasks } from '../../util/index.ts';
 import { TaskFilter } from './TaskFilter.tsx';
+import { ALL_STATUSES } from './TaskStatusFilter.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
   /**
@@ -58,6 +59,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
   // reader edits, its parse is what the list is narrowed by. Held per mount — a filter is a glance,
   // not a property of the set.
   const [filterText, setFilterText] = useState('');
+  // Which statuses the ledger shows. Held beside the text for the same reason — a glance, not a
+  // property of the set — and starting at every status, so the list opens unfiltered.
+  const [statuses, setStatuses] = useState<readonly Task.Status[]>(ALL_STATUSES);
   const tags = useTagMap(db);
   // Parsed here rather than taken from the editor's own callback: the parse then re-runs when the
   // tag registry changes (a `#tag` typed before its tag loaded resolves on arrival), and a query
@@ -69,10 +73,13 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     }
     return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
   }, [filterText, tags]);
-  const tasks = useFilteredTasks(allTasks, filter);
+  const tasks = useFilteredTasks(allTasks, filter, statuses);
+  // Clears both terms: a reader who hid a status and typed a query asked one question of the list,
+  // and clearing half of it leaves rows missing with nothing in the toolbar saying why.
   const handleClearFilter = useCallback(() => {
     filterEditorRef.current?.setText('');
     setFilterText('');
+    setStatuses(ALL_STATUSES);
   }, []);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
@@ -159,7 +166,9 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       db={db}
       tags={tags}
       value={filterText}
+      statuses={statuses}
       onChange={setFilterText}
+      onStatusesChange={setStatuses}
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
     />
@@ -275,7 +284,14 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
  * of every match kept so a matching sub-task still hangs off its branch. Empty filter: every task.
  * Read through atoms so a title edited in a row re-runs the match.
  */
-const useFilteredTasks = (tasks: readonly Task.Task[], filter: Filter.Any | undefined): readonly Task.Task[] => {
+const useFilteredTasks = (
+  tasks: readonly Task.Task[],
+  filter: Filter.Any | undefined,
+  statuses: readonly Task.Status[],
+): readonly Task.Task[] => {
+  // A set, so the match is a lookup per task rather than a scan of the status list, and one the
+  // atom below can depend on by identity.
+  const statusSet = useMemo(() => new Set(statuses), [statuses]);
   const atom = useMemo(
     () =>
       Atom.make((get): readonly Task.Task[] => {
@@ -285,9 +301,9 @@ const useFilteredTasks = (tasks: readonly Task.Task[], filter: Filter.Any | unde
         // (`status:`, `priority:`) or the task's tags, and a property-level subscription would miss
         // every term but the ones listed here.
         tasks.forEach((task) => get(Obj.atom(task)));
-        return filterTasks(tasks, filter);
+        return filterTasks(tasks, { filter, statuses: statusSet });
       }),
-    [tasks, filter],
+    [tasks, filter, statusSet],
   );
 
   return useAtomValue(atom);
