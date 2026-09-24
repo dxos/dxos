@@ -66,6 +66,12 @@ const MAX_RESTART_DELAY = 5000;
 export const MAX_IN_PLACE_REHANDSHAKES = 3;
 
 /**
+ * How long a (re-)handshake may go without Subduction binding the peer before the connection is restarted: an
+ * unbound connection stays open while no document bytes can flow on it.
+ */
+const DEFAULT_BIND_TIMEOUT = 30_000;
+
+/**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
  * coalesced into one {@link SubductionBatchEnvelope}, flushed on whichever bound trips first:
  * {@link SUBDUCTION_BATCH_MAX_FRAMES} frames, {@link SUBDUCTION_BATCH_MAX_BYTES} accumulated, or
@@ -86,6 +92,8 @@ export type EchoEdgeSubductionReplicatorProps = {
    * deployed. See `frame-batching-spec.md`.
    */
   frameBatching?: boolean;
+  /** Milliseconds a handshake may take to bind before the connection is restarted. */
+  bindTimeout?: number;
 };
 
 /**
@@ -122,6 +130,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _spaceMutexes = new Map<SpaceId, Mutex>();
   private readonly _disableSharePolicy: boolean;
   private readonly _frameBatching: boolean;
+  private readonly _bindTimeout: number;
 
   private _ctx?: Context = undefined;
   private _context: AutomergeReplicatorContext | null = null;
@@ -144,11 +153,13 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     edgeHttpClient,
     disableSharePolicy,
     frameBatching,
+    bindTimeout,
   }: EchoEdgeSubductionReplicatorProps) {
     this._edgeConnection = edgeConnection;
     this._edgeHttpClient = edgeHttpClient;
     this._disableSharePolicy = disableSharePolicy ?? false;
     this._frameBatching = frameBatching ?? true;
+    this._bindTimeout = bindTimeout ?? DEFAULT_BIND_TIMEOUT;
   }
 
   async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
@@ -280,6 +291,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       context: this._context,
       sharedPolicyEnabled: !this._disableSharePolicy,
       frameBatching: this._frameBatching,
+      bindTimeout: this._bindTimeout,
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
@@ -336,6 +348,7 @@ type EdgeSubductionReplicatorConnectionProps = {
   context: AutomergeReplicatorContext;
   sharedPolicyEnabled: boolean;
   frameBatching: boolean;
+  bindTimeout: number;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
   onRestartRequested: () => Promise<void>;
@@ -356,6 +369,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
   private readonly _frameBatching: boolean;
+  private readonly _bindTimeout: number;
 
   // Outbound batching state. `#pending` holds encoded-size-tracked inner frames awaiting a
   // flush; `#firstFrameSent` forces the handshake (first frame) to go single so session
@@ -370,6 +384,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   /** Error signals answered in place since the last inbound frame; see {@link MAX_IN_PLACE_REHANDSHAKES}. */
   #inPlaceRehandshakes = 0;
 
+  /** Armed from each (re-)handshake until Subduction binds the peer; disposing it cancels the restart. */
+  #bindWatchdog?: Context;
+
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
   public readable: ReadableStream<SubductionProtocolMessage>;
@@ -381,6 +398,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     context,
     sharedPolicyEnabled,
     frameBatching,
+    bindTimeout,
     onRemoteConnected,
     onRemoteDisconnected,
     onRestartRequested,
@@ -391,6 +409,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     this._context = context;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._frameBatching = frameBatching;
+    this._bindTimeout = bindTimeout;
     // Generate a unique peer id for every connection so sync-state is fresh on reconnect.
     this._subductionServiceId = compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId);
     this._remotePeerId = `${this._subductionServiceId}-${this._connectionId}`;
@@ -434,6 +453,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       ),
     );
 
+    this.#armBindWatchdog();
     await this._onRemoteConnected();
   }
 
@@ -447,6 +467,16 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   get peerId(): string {
     return this._remotePeerId;
+  }
+
+  onTransportBound(): void {
+    this.#disarmBindWatchdog();
+  }
+
+  onTransportFailed(error: unknown): void {
+    this.#disarmBindWatchdog();
+    log.info('subduction handshake failed; restarting', { spaceId: this._spaceId, error });
+    this._onRestartRequested();
   }
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
@@ -531,6 +561,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         // and every piece of sync state keyed by it.
         if (this.#inPlaceRehandshakes < MAX_IN_PLACE_REHANDSHAKES && this._context.onConnectionTransportReset(this)) {
           this.#discardPendingFrames();
+          this.#armBindWatchdog();
           this.#inPlaceRehandshakes++;
           log.info('received subduction error; re-handshaking in place', {
             message: payload.message,
@@ -681,6 +712,29 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
     }
+  }
+
+  #armBindWatchdog(): void {
+    this.#disarmBindWatchdog();
+    const watchdog = this._ctx.derive();
+    this.#bindWatchdog = watchdog;
+    scheduleTask(
+      watchdog,
+      () => {
+        log.info('subduction handshake did not bind; restarting', {
+          spaceId: this._spaceId,
+          bindTimeout: this._bindTimeout,
+          lastInboundAt: this.lastInboundAt,
+        });
+        this._onRestartRequested();
+      },
+      this._bindTimeout,
+    );
+  }
+
+  #disarmBindWatchdog(): void {
+    void this.#bindWatchdog?.dispose();
+    this.#bindWatchdog = undefined;
   }
 
   /** A frame arrived, so the session behind this connection works: clear the re-handshake budget. */
