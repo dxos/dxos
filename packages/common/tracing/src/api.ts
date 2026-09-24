@@ -185,9 +185,10 @@ const spanEnd = (id: string, { attributes }: SpanEndOptions = {}) => {
   }
 
   const timestamps = manualSpanTimestamps.get(id);
+  // Released even without `performance.measure`, since `spanStart` refuses an id that is still recorded.
+  manualSpanTimestamps.delete(id);
   if (timestamps && typeof globalThis?.performance?.measure === 'function') {
     performance.measure(timestamps.name, { start: timestamps.startTs, end: performance.now() });
-    manualSpanTimestamps.delete(id);
   }
 };
 
