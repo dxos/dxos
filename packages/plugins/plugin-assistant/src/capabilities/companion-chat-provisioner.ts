@@ -69,6 +69,8 @@ export default Capability.makeModule(
     );
 
     const plankSubs = new Map<string, () => void>();
+    /** Companion URIs with a chat being provisioned, so a second trigger does not create another. */
+    const pending = new Set<string>();
 
     /** Unsubscribe a single plank and remove it from the map. */
     const unsubPlank = (plankId: string) => {
@@ -105,6 +107,9 @@ export default Capability.makeModule(
       if (cache[companionUri]) {
         return true;
       }
+      if (pending.has(companionUri)) {
+        return false;
+      }
 
       const db = Obj.getDatabase(object);
       if (!db) {
@@ -112,9 +117,11 @@ export default Capability.makeModule(
         return false;
       }
 
+      pending.add(companionUri);
       void operationInvoker
         .invokePromise(AssistantOperation.EnsureCompanionChat, { companionTo: object }, { spaceId: db.spaceId })
-        .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }));
+        .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }))
+        .finally(() => pending.delete(companionUri));
 
       return false;
     };
@@ -151,14 +158,23 @@ export default Capability.makeModule(
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
           AppGraph.expandSync(graph, plankId, AppNode.companion);
-          plankSubs.set(
-            plankId,
-            registry.subscribe(graph.connections(plankId, AppNode.companion), () => {
-              if (provisionForPlank(plankId, registry.get(variantAtom))) {
+          let provisioned = false;
+          const unsubscribe = registry.subscribe(
+            graph.connections(plankId, AppNode.companion),
+            () => {
+              if (!provisioned && provisionForPlank(plankId, registry.get(variantAtom))) {
+                provisioned = true;
                 unsubPlank(plankId);
               }
-            }),
+            },
+            { immediate: true },
           );
+          // The immediate call can provision before the subscription is tracked.
+          if (provisioned) {
+            unsubscribe();
+          } else {
+            plankSubs.set(plankId, unsubscribe);
+          }
         }
       }
     };

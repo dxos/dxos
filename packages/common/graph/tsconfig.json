@@ -25,6 +25,9 @@
       "path": "../debug"
     },
     {
+      "path": "../effect"
+    },
+    {
       "path": "../errors"
     },
     {

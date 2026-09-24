@@ -4,6 +4,7 @@
 
 import * as Duration from 'effect/Duration';
 import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as AtomEx from './AtomEx.ts';
@@ -40,5 +41,29 @@ describe('AtomEx.makeRegistry', () => {
     expect(() => AtomEx.makeRegistry({ idleTTL: Duration.infinity })).toThrow();
   });
 });
+
+describe('AtomEx.makeOwned', () => {
+  test('keeps the atom and its value while the owner is alive', async ({ expect }) => {
+    const registry = AtomEx.makeRegistry({ idleTTL: Duration.zero });
+    const owner = new TestOwner(registry);
+    const atom = AtomEx.makeOwned(owner, Atom.make(0));
+
+    registry.set(atom, 1);
+    await wait(TTL);
+    expect(registry.getNodes().has(atom)).toBe(true);
+    expect(registry.get(atom)).toBe(1);
+    expect(owner).toBeDefined();
+  });
+});
+
+class TestOwner implements AtomEx.Owner {
+  static readonly #finalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
+
+  readonly [AtomEx.OwnerId]: AtomEx.Owner[typeof AtomEx.OwnerId];
+
+  constructor(registry: Registry.AtomRegistry) {
+    this[AtomEx.OwnerId] = { registry, finalizer: TestOwner.#finalizer };
+  }
+}
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

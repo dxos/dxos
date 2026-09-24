@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +22,7 @@ const handler: Operation.WithHandler<typeof AddPublication> = AddPublication.pip
       const db = targetIsDatabase ? target : Obj.getDatabase(target);
       invariant(db, 'Database not found.');
 
-      yield* CollectionModel.add({
+      yield* ContainerModel.add({
         object: publication,
         target: targetIsDatabase ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));

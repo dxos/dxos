@@ -36,6 +36,7 @@ export const translations = [
         'task-check.label': 'Select task',
         'task-title.placeholder': 'Untitled',
         'save-task.label': 'Save',
+        'task-history.label': 'Activity',
         'cancel-edit.label': 'Cancel',
         'question-answer.label': 'Your answer',
         'question-answer.placeholder': 'Type an answer…',

@@ -12,6 +12,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import {
   AccountContainer,
+  ContactPickerContainer,
+  ContactsContainer,
   DevicesContainer,
   InvitationsContainer,
   JoinDialog,
@@ -46,6 +48,11 @@ export default Capability.makeModule(
         props: () => ({ createInvitationUrl, identityTestActions }),
       }),
       Surface.create({
+        id: Account.Contacts,
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Contacts)),
+        component: ContactsContainer,
+      }),
+      Surface.create({
         id: Account.Security,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Security)),
         component: RecoveryCredentialsContainer,
@@ -64,6 +71,12 @@ export default Capability.makeModule(
         id: Account.Usage,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Usage)),
         component: UsageContainer,
+      }),
+      Surface.create({
+        id: 'contactPicker',
+        filter: Surface.makeFilter(AppSurface.ContactPicker),
+        component: ContactPickerContainer,
+        props: ({ data }) => data,
       }),
       Surface.create({
         id: JOIN_DIALOG,

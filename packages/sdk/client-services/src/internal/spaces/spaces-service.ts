@@ -362,6 +362,8 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           spaceKey: request.spaceKey,
           identityKey: requirePublicKey(request.contact?.identityKey),
           role: request.role,
+          // Record the profile the host already knows, so the member is named before they first join.
+          profile: request.contact?.profile,
         });
       },
       catch: toServiceError,
