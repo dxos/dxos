@@ -154,7 +154,7 @@ encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only sme
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
-arrive at 1280x800 and the encoder upscales them — a "2560x1600" file that is as soft as 1x. The driver
+arrive at 1728x1080 and the encoder upscales them — a "3456x2160" file that is as soft as 1x. The driver
 also launches Chromium with `--force-device-scale-factor`, which makes the frames themselves 2x. Check a
 recording by cropping a frame at 1:1 next to a `screenshot` of the same screen; they should match.
 
