@@ -36,6 +36,25 @@ export const chunkSizeForBoundVariables = (variablesPerRow: number): number => {
   return Math.max(1, Math.floor((SQL_MAX_BOUND_VARIABLES - RESERVED_BOUND_VARIABLES) / variablesPerRow));
 };
 
+/**
+ * True for SQLite's authorizer refusing a function call, which Durable Object SQLite does for
+ * introspection functions such as `sqlite_version()`; the driver nests the message under `cause`.
+ */
+export const isUnauthorizedFunctionError = (err: unknown): boolean => {
+  let current: unknown = err;
+  for (let depth = 0; depth < 5 && current instanceof Object; depth++) {
+    if (
+      'message' in current &&
+      typeof current.message === 'string' &&
+      /not authorized to use function/i.test(current.message)
+    ) {
+      return true;
+    }
+    current = 'cause' in current ? current.cause : undefined;
+  }
+  return false;
+};
+
 /** Chunk size for a list binding one variable per element, as `IN (...)` does. */
 export const SQL_CHUNK_SIZE: number = chunkSizeForBoundVariables(1);
 
