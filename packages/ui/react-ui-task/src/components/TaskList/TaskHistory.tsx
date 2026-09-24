@@ -22,6 +22,20 @@ type EventIcon = { icon: string; hue: string };
 const EVENT_ICONS: Record<Task.Event, EventIcon> = {
   created: { icon: 'ph--plant--regular', hue: 'emerald' },
   updated: { icon: 'ph--pencil-simple--regular', hue: 'indigo' },
+  question: { icon: 'ph--question--regular', hue: 'amber' },
+  answer: { icon: 'ph--check-circle--regular', hue: 'emerald' },
+};
+
+/** The line an entry reads as: a change's own note, or the question asked and the answer given. */
+const entryText = (entry: Task.HistoryEntry): string => {
+  switch (entry.event) {
+    case 'question':
+      return entry.text;
+    case 'answer':
+      return entry.answer;
+    default:
+      return entry.description ?? entry.event;
+  }
 };
 
 /** Falls back to the unset glyph: an entry written by an older schema still renders as a row. */
@@ -101,7 +115,7 @@ export const TaskHistory = ({ entries, limit = 5, subgrid, cells, classNames }: 
           </IconBlock>
           {/* Wraps: an entry is a sentence, and truncating it hides what actually happened — the
               time column is fixed, so the description takes the height it needs. */}
-          <span className={mx('min-w-0', cells?.description)}>{entry.description ?? entry.event}</span>
+          <span className={mx('min-w-0 pe-2', cells?.description)}>{entryText(entry)}</span>
           {/* Relative, because the log is read as "what has been happening" rather than as a record
               to cite; the exact timestamp stays on the entry for a surface that needs it. */}
           <span className={mx('whitespace-nowrap tabular-nums text-right', cells?.date)}>

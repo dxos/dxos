@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { EntityId } from '@dxos/echo/Key';
 import { Task, TaskSet } from '@dxos/types';
 
 import { daysAgo } from './util.ts';
@@ -71,7 +72,14 @@ export const Tasks: SampleSpace.Phase<TasksResult> = SampleSpace.phase('tasks', 
           description: step.description,
           estimate: step.estimate,
           status: 'todo',
-          history: [{ date: daysAgo(0), event: 'created' as const, description: 'Filed from the incident template.' }],
+          history: [
+            {
+              id: EntityId.random(),
+              date: daysAgo(0),
+              event: 'created' as const,
+              description: 'Filed from the incident template.',
+            },
+          ],
         }),
       );
       yield* SampleSpace.children(taskSet, tasks, (taskSet, refs) => {

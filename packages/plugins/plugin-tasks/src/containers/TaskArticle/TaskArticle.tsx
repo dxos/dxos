@@ -14,6 +14,7 @@ import { Task } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { useMarkdownExtensions } from '../../hooks/index.ts';
+import { TaskArtifacts } from './TaskArtifacts.tsx';
 
 export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
 
@@ -47,6 +48,7 @@ export const TaskArticle = ({ role, subject: task }: TaskArticleProps) => {
         <TaskList.Root tasks={[task]} selected={task.id} showDescription onTaskUpdate={handleUpdate}>
           <TaskList.Edit showDescription descriptionExtensions={descriptionExtensions} classNames='dx-document p-2' />
         </TaskList.Root>
+        <TaskArtifacts task={task} />
       </Panel.Content>
     </Panel.Root>
   );

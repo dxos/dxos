@@ -3,15 +3,16 @@
 //
 
 import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
-import { McpServer, Memory } from '@dxos/assistant-toolkit';
+import { Memory } from '@dxos/assistant-toolkit';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Feed, type Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { HasSubject, Message, Question } from '@dxos/types';
+import { HasSubject, Message } from '@dxos/types';
 
 // The single source for the plugin's schema list, loaded lazily by every `AssistantPlugin`
 // variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →
@@ -30,7 +31,6 @@ const types: ReadonlyArray<Type.AnyEntity> = [
   McpServer.McpServer,
   Sequence.Sequence,
   Memory.Memory,
-  Question.Question,
   Text.Text,
 ];
 

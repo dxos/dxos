@@ -166,7 +166,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
-    echoClient: EchoClient,
+    private readonly _echoClient: EchoClient,
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
@@ -180,7 +180,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       }),
     );
 
-    this._db = echoClient.constructDatabase({
+    this._db = _echoClient.constructDatabase({
       spaceId: this.id,
       spaceKey: this.key,
       owningObject: this,
@@ -507,7 +507,11 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   @synchronized
   async _destroy(): Promise<void> {
+    // Unregistered before anything awaits: a space that returns under the same id gets a new proxy,
+    // which constructs its own database straight away.
+    const removed = this._echoClient.removeDatabase(this._db);
     await this._reset();
+    await removed;
   }
 
   private async _reset(): Promise<void> {

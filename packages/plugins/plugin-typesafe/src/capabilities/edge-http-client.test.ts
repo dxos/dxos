@@ -14,7 +14,7 @@ import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 
-import { EDGE_ENDPOINT, makeEdgeHttpClient } from './edge-http-client.ts';
+import { EDGE_ENDPOINT, WORKERS_AI_ENDPOINT, makeEdgeHttpClient } from './edge-http-client.ts';
 
 const Urgency = Decision.make({
   input: Schema.String,
@@ -37,10 +37,10 @@ const stubFetch = () => {
   return calls;
 };
 
-const ask = (apiKey: string | undefined) =>
+const ask = (apiKey: string | undefined, endpoint = EDGE_ENDPOINT) =>
   TypeSafeResolver.makeDecisionModel('jev-latest', {
     apiKey: Effect.succeed(apiKey ? Redacted.make(apiKey) : undefined),
-    endpoint: () => EDGE_ENDPOINT,
+    endpoint: () => endpoint,
   }).pipe(
     Effect.flatMap((model) => model.decide(Urgency, { input: 'Payouts failing for 3 days' })),
     Effect.provide(
@@ -75,6 +75,21 @@ describe('makeEdgeHttpClient', () => {
         yield* ask('ts-user-key');
 
         expect(calls[0].headers.get('x-byok')).toBe('ts-user-key');
+        expect(calls[0].headers.get('authorization')).not.toBe('Bearer ts-user-key');
+      }),
+    ));
+
+  test("routes the Workers AI endpoint to EDGE's workers-ai route without the vendor key", ({ expect }) =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const calls = stubFetch();
+        const response = yield* ask('ts-user-key', WORKERS_AI_ENDPOINT);
+
+        expect(response.answers.urgent.probability).toBe(0.9);
+        expect(calls.map((request) => request.url)).toEqual([
+          'https://edge.test/ai/generate/workers-ai/typesafe/v1/systemone',
+        ]);
+        expect(calls[0].headers.get('x-byok')).toBeNull();
         expect(calls[0].headers.get('authorization')).not.toBe('Bearer ts-user-key');
       }),
     ));
