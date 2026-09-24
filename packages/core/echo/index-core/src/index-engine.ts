@@ -30,6 +30,7 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes/index.ts';
+import { isUnauthorizedFunctionError } from './utils.ts';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -148,8 +149,12 @@ export class IndexEngine {
   migrate() {
     return Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      const [{ version }] = yield* sql<{ version: string }>`SELECT sqlite_version() AS version`;
-      if (compareVersions(version, MIN_SQLITE_VERSION) < 0) {
+      const version = yield* sql<{ version: string }>`SELECT sqlite_version() AS version`.pipe(
+        Effect.map(([row]) => row.version),
+        // Durable Object SQLite denies `sqlite_version()`, and its bundled SQLite is well past the minimum.
+        Effect.catchIf(isUnauthorizedFunctionError, () => Effect.succeed(undefined)),
+      );
+      if (version !== undefined && compareVersions(version, MIN_SQLITE_VERSION) < 0) {
         return yield* Effect.die(
           new Error(`SQLite ${version} is below the ${MIN_SQLITE_VERSION.join('.')} the index requires`),
         );
