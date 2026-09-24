@@ -34,6 +34,8 @@ export const operations: readonly Operation.Definition.Any[] = [
   TaskOperation.CreateTask,
   TaskOperation.UpdateTask,
   TaskOperation.ListTasks,
+  // Records what a task produced (a file, a document) on the task itself, without needing a project.
+  TaskOperation.AddArtifact,
   // Files a question on a task and blocks it; the answer comes back in the task's history.
   TaskOperation.AskQuestion,
   TaskOperation.CreateMilestone,

@@ -41,7 +41,7 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
               <li key={`${error.url}::${error.protocol}`} className='truncate'>
                 <span className='font-mono'>{error.url}</span>
                 {' — '}
-                <span>{error.message}</span>
+                <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
               </li>
             ))}
           </ul>

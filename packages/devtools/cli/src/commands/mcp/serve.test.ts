@@ -28,7 +28,7 @@ const SKILL = 'project';
  * being contributed drops off this surface silently, which is how the Space skill would have
  * disappeared unnoticed.
  */
-const PROMPTS = [SKILL, 'database', 'registry'];
+const PROMPTS = [SKILL, 'database', 'file', 'registry'];
 
 /** The requests every session sends after its own opening, whichever revision it speaks. */
 const SURFACE_REQUESTS = [
@@ -70,8 +70,8 @@ const SURFACE_REQUESTS = [
 
 const SURFACE_IDS = SURFACE_REQUESTS.map((request) => request.id);
 
-/** All that is left of the host-local toolkits; see the TODO on `space-tools.ts`. */
-const STATIC_TOOLS = ['whoami'];
+/** The host-local toolkits: `whoami` (see the TODO on `space-tools.ts`) and the loopback `createUpload`. */
+const STATIC_TOOLS = ['whoami', 'createUpload'];
 
 /** This package's fixed surface: every operation is reached through these rather than as a tool. */
 const SURFACE_TOOLS = ['queryOperations', 'invokeOperation', 'loadSkill'];

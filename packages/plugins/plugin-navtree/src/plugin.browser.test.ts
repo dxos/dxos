@@ -13,6 +13,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { DXN } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -20,6 +21,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { hotkeyStore, setHotkeyScope } from '@dxos/react-focus/store';
 
 import { NavTreePlugin } from '#plugin';
+import { NavTreeCapabilities } from '#types';
 
 const OBJECT_SEGMENT = 'object';
 const OBJECT_TYPE = 'example.com.type.object';
@@ -79,6 +81,19 @@ describe('NavTreePlugin', () => {
     setHotkeyScope(objectId);
     press('P');
     await expect.poll(() => fired).toEqual(['present 2']);
+  });
+
+  test('expose opens the ancestors of the subject but not the subject itself', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [makeHostPlugin([], Atom.make(1))(), NavTreePlugin()],
+    });
+
+    const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);
+    await harness.invoke(LayoutOperation.Expose, { subject: objectId });
+
+    const { getItem } = await harness.waitForCapability(NavTreeCapabilities.State);
+    expect(getItem([GraphNode.RootId]).open).toBe(true);
+    expect(getItem([GraphNode.RootId, objectId]).open).toBe(false);
   });
 });
 

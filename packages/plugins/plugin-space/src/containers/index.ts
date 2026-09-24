@@ -12,6 +12,7 @@ export type { ObjectMasonryArticleProps };
 export type { RenameSubject } from './RenamePopover/index.ts';
 
 export const AddToCollectionDialog: ComponentType<any> = lazy(() => import('./AddToCollectionDialog/index.ts'));
+export const CardMasonry: ComponentType<any> = lazy(() => import('./CardMasonry/index.ts'));
 export const CollectionArticle: ComponentType<any> = lazy(() => import('./CollectionArticle/index.ts'));
 export const CollectionSection: ComponentType<any> = lazy(() => import('./CollectionSection/index.ts'));
 export const CreateSpaceDialog: ComponentType<any> = lazy(() => import('./CreateSpaceDialog/index.ts'));

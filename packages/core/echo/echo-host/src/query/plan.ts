@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { EntityId, URI } from '@dxos/keys';
+import type { EID, EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -129,7 +129,25 @@ export namespace QueryPlan {
     | TypeSelector
     | TextSelector
     | TimestampSelector
-    | IncomingReferenceSelector;
+    | IncomingReferenceSelector
+    | ChangesSelector;
+
+  /**
+   * Select Automerge changes (`Filter.changes`) rather than objects. The working set holds change
+   * records, so only ordering, paging and aggregation may follow.
+   */
+  export type ChangesSelector = {
+    _tag: 'ChangesSelector';
+
+    /** Entities whose documents to read; every document in scope when absent. */
+    targets?: readonly EID.EID[];
+
+    /**
+     * `index` reads hourly buckets from the activity index, valid only for the aggregates it can
+     * answer; `replay` lists each target document's change history.
+     */
+    source: 'index' | 'replay';
+  };
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';

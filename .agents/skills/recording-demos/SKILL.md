@@ -68,7 +68,7 @@ monorepo is served from source, which is slower to boot and re-optimizes mid-ses
 task builds the full package closure first, so budget the same 10+ minutes as an app.
 
 **Always record storybook demos in isolation mode.** Drive
-`/iframe.html?id=<story-id>&viewMode=story` — the story fills the 1280×800 frame, and the recording
+`/iframe.html?id=<story-id>&viewMode=story` — the story fills the 1728×1080 frame, and the recording
 carries the component instead of a sidebar, a Controls table and a toolbar that mean nothing to the
 person watching. The manager is worth one establishing shot at most; it is never where the feature
 gets demonstrated.
@@ -123,7 +123,7 @@ C '{"op":"screenshot","name":"01-registry.png"}'
 C '{"op":"stop"}'          # closes the context — this is what writes the video
 ```
 
-Ops: `goto` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
+Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
 `caption` `clearCaption` `sleep` `screenshot` `stop`. `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
@@ -133,6 +133,21 @@ driver.
 pressed — pass `"hud": false` to suppress it, or `keys` to show a chord for a gesture the driver did
 not perform. The chip is the proof; without it a palette just appears. See "The action overlay" below.
 
+### The boot is cut by default
+
+App boot is almost never what a demo is about, and it is the longest stretch of motion in a session, so
+the trimmer cannot remove it. The first `goto` therefore waits for the app to be ready — `--ready`,
+by default a Composer plank or a rendered storybook story (not the sidebar, which renders ~8s before any content) — lets it settle for `--settle` ms, and
+discards everything recorded before that. Its reply says what happened: `"boot":{"cut":true}`, or
+`cut:false` with the reason (the selector never appeared within `--ready-timeout`, or the 1x fallback,
+which cannot drop frames).
+
+- **Keep it when it matters** — a demo about startup, a splash, or a slow boot — with `--boot keep`.
+- **`cut` at any point** drops everything recorded so far, for setup you would rather not show (seeding
+  a space, enabling a plugin). Captions issued before it are dropped too, so caption after the cut.
+- **For another app**, pass a selector whose first match is the element that means "ready", e.g.
+  `--ready '[data-testid=app]'`; the driver waits for that first match to become visible.
+
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.
 
@@ -140,21 +155,21 @@ un-stopped leaves nothing behind.
 
 With a full ffmpeg on the path (see §4 — the trimmer needs one anyway) the page renders at 2x device
 pixels and the driver encodes the session itself: `page.screencast` frames go to disk as they arrive and
-are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 2560x1600 for the default
+are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 3456x2160 for the default
 viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
 encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
 
-| flag        | default | effect                                                                            |
-| ----------- | ------- | --------------------------------------------------------------------------------- |
-| `--scale`   | `2`     | device pixel ratio; `1.5` → 1920x1200, `1` for the smallest file                  |
-| `--width`   | `1280`  | CSS viewport — keep it; a wider viewport changes the app's layout, not sharpness  |
-| `--crf`     | `28`    | VP9 quality, lower is better and larger                                           |
-| `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is |
-| `--quality` | `92`    | JPEG quality of the screencast frames                                             |
+| flag        | default | effect                                                                                                     |
+| ----------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `--scale`   | `2`     | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                           |
+| `--width`   | `1728`  | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look |
+| `--crf`     | `28`    | VP9 quality, lower is better and larger                                                                    |
+| `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is                          |
+| `--quality` | `92`    | JPEG quality of the screencast frames                                                                      |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
-arrive at 1280x800 and the encoder upscales them — a "2560x1600" file that is as soft as 1x. The driver
+arrive at 1728x1080 and the encoder upscales them — a "3456x2160" file that is as soft as 1x. The driver
 also launches Chromium with `--force-device-scale-factor`, which makes the frames themselves 2x. Check a
 recording by cropping a frame at 1:1 next to a `screenshot` of the same screen; they should match.
 
