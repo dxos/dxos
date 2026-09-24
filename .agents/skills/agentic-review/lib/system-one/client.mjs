@@ -16,11 +16,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * A client bound to a key, with a cap on requests in flight: the API allows 1,200 requests a
- * minute, and a burst past that only buys 429s.
+ * minute (20 a second), so about 16 in flight at a second or so each stays under it.
  *
  * @param {{ apiKey: string, endpoint?: string, model?: string, concurrency?: number }} options
  */
-export const makeClient = ({ apiKey, endpoint = DEFAULT_ENDPOINT, model = DEFAULT_MODEL, concurrency = 8 }) => {
+export const makeClient = ({ apiKey, endpoint = DEFAULT_ENDPOINT, model = DEFAULT_MODEL, concurrency = 16 }) => {
   if (!apiKey) {
     throw new Error('System One needs an API key: set TYPESAFE_API_KEY (see the 1password skill for where it lives).');
   }

@@ -17,10 +17,17 @@ const MAX_IMPORTERS = 8;
 const MAX_USES_PER_IMPORTER = 6;
 const MAX_SIMILAR = 15;
 
-const IMPORT_RE = /^\s*(?:import|export)\s+(?:type\s+)?([\s\S]*?)\s*from\s*['"]([^'"]+)['"]/gm;
+// An import clause holds only names, braces, commas, `*` and `as`; allowing anything else lets an
+// `export const x = f(...)` statement run on to a later `from` and read as an import.
+const IMPORT_RE = /^\s*(?:import|export)\s+(?:type\s+)?([\w$\s,{}*]*?)\s*from\s*['"]([^'"]+)['"]/gm;
+
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 
 /** Per-run caches: repo-wide scans are paid once however many files a run reviews. */
-const caches = { workspace: null, exportIndex: null, files: new Map() };
+const caches = { workspace: null, exportIndex: null, files: new Map(), fetched: new Map() };
+
+/** Largest cut any fetch returns; callers truncate further to their own share. */
+const MAX_FETCH_CHARS = 16_000;
 
 const readText = (root, path) => {
   if (!caches.files.has(path)) {
@@ -127,7 +134,7 @@ export const parseImports = (text) => {
     if (defaultName && defaultName !== 'type') {
       names.push(defaultName);
     }
-    imports.push({ specifier: match[2], names });
+    imports.push({ specifier: match[2], names: names.filter((name) => /^[\w$]+$/.test(name)) });
   }
   return imports;
 };
@@ -191,7 +198,7 @@ const reachingSpecifierPattern = (root, file) => {
       const target = exportTarget(entry);
       if (target && toPosix(posix.join(pkg.dir, target)) === file) {
         const specifier = subpath === '.' ? pkg.manifest.name : `${pkg.manifest.name}/${subpath.slice(2)}`;
-        patterns.push(`['"]${specifier.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}['"]`);
+        patterns.push(`['"]${escapeRegExp(specifier)}['"]`);
       }
     }
   }
@@ -230,7 +237,7 @@ const fetchImporters = ({ root, file, maxChars }) => {
       const line = lines[index];
       if (
         !/^\s*import\b/.test(line) &&
-        names.some((name) => new RegExp(`\\b${name.replace(/\$/g, '\\$')}\\b`).test(line))
+        names.some((name) => new RegExp(`(^|[^\\w$])${escapeRegExp(name)}($|[^\\w$])`).test(line))
       ) {
         uses.push(`${index + 1}: ${line.trim().slice(0, 160)}`);
       }
@@ -440,5 +447,11 @@ export const fetchContext = (kind, options) => {
   if (!fetcher) {
     throw new Error(`no fetcher for context kind ${JSON.stringify(kind)}`);
   }
-  return fetcher(options);
+  // One file is planned once per context group and round, so each kind is fetched once per file.
+  const key = `${kind}\u0000${options.file}\u0000${options.base ?? ''}`;
+  if (!caches.fetched.has(key)) {
+    caches.fetched.set(key, fetcher({ ...options, maxChars: MAX_FETCH_CHARS }));
+  }
+  const text = caches.fetched.get(key);
+  return text === null ? null : truncateText(text, options.maxChars);
 };

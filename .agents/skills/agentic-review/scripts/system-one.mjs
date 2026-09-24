@@ -13,8 +13,9 @@
 //   node system-one.mjs --file=<path> [--file=…] [--rule=<id> …]   probe files, print verdicts
 //
 // Options: --base=<ref> (diff base for context; default the review's base, or the merge-base
-// with origin/main for a full-project review), --threshold=0.8, --uncertain=0.4, --need=0.35,
-// --rounds=2, --model=jev-latest, --concurrency=8, --dry-run (plan and price, no API calls),
+// with origin/main for a full-project review), --threshold=0.8, --uncertain=0.15, --lift=0.15,
+// --need=0.35,
+// --rounds=2, --model=jev-latest, --concurrency=16, --dry-run (plan and price, no API calls),
 // --json (probe mode: print raw verdicts).
 //
 // Needs TYPESAFE_API_KEY. In store mode it appends diagnostics to groups/NN.md, then writes
@@ -39,7 +40,8 @@ const { discoverRules, listRepoFiles, matchRuleFiles } = await import('../lib/di
 const { mainMergeBase, repoRoot } = await import('../lib/git.mjs');
 const { assertSafeSlug, FULL_BASE, GROUPS_MANIFEST, REVIEWS_DIR, readReview } = await import('../lib/store.mjs');
 const { makeClient, DEFAULT_MODEL } = await import('../lib/system-one/client.mjs');
-const { classify, DEFAULTS, diagnosticBody, diagnosticLine, runReview } = await import('../lib/system-one/checker.mjs');
+const { classify, DEFAULTS, diagnosticBody, diagnosticLine, runReview, uncertainBounds } =
+  await import('../lib/system-one/checker.mjs');
 
 const { values } = parseArgs({
   options: {
@@ -50,10 +52,11 @@ const { values } = parseArgs({
     'base': { type: 'string' },
     'threshold': { type: 'string', default: String(DEFAULTS.threshold) },
     'uncertain': { type: 'string', default: String(DEFAULTS.uncertain) },
+    'lift': { type: 'string', default: String(DEFAULTS.lift) },
     'need': { type: 'string', default: String(DEFAULTS.need) },
     'rounds': { type: 'string', default: '2' },
     'model': { type: 'string', default: DEFAULT_MODEL },
-    'concurrency': { type: 'string', default: '8' },
+    'concurrency': { type: 'string', default: '16' },
     'dry-run': { type: 'boolean', default: false },
     'json': { type: 'boolean', default: false },
   },
@@ -63,6 +66,8 @@ const root = repoRoot();
 const settings = {
   threshold: Number(values.threshold),
   uncertain: Number(values.uncertain),
+  lift: Number(values.lift),
+  minSample: DEFAULTS.minSample,
   need: Number(values.need),
   rounds: Number.parseInt(values.rounds, 10),
 };
@@ -160,8 +165,9 @@ if (values.file?.length) {
       ),
     );
   } else {
+    const bounds = uncertainBounds(result.verdicts, settings);
     for (const verdict of result.verdicts.sort((left, right) => (right.probability ?? 0) - (left.probability ?? 0))) {
-      const status = classify(verdict, settings);
+      const status = classify(verdict, settings, bounds);
       const where = verdict.where?.start ? `:${verdict.where.start}` : '';
       const need =
         verdict.need && verdict.need.kind !== 'none'
@@ -203,9 +209,10 @@ if (values.file?.length) {
     Object.entries(manifest).find(([, group]) => group.ruleId === ruleId && group.files.includes(file))?.[0];
   const counts = { violation: 0, uncertain: 0, clean: 0, unanswered: 0 };
   const uncertain = new Map();
+  const bounds = uncertainBounds(result.verdicts, settings);
   if (client) {
     for (const verdict of result.verdicts) {
-      const status = classify(verdict, settings);
+      const status = classify(verdict, settings, bounds);
       counts[status]++;
       const nn = groupOf(verdict.rule.id, verdict.file);
       if (!nn) {
@@ -225,7 +232,7 @@ if (values.file?.length) {
       `${JSON.stringify(
         result.verdicts.map(({ rule, files, ...verdict }) => ({
           rule: rule.id,
-          status: classify(verdict, settings),
+          status: classify({ rule, ...verdict }, settings, bounds),
           ...verdict,
         })),
         null,
@@ -238,7 +245,7 @@ if (values.file?.length) {
     '',
     `- model: ${values.model}${client ? '' : ' (dry run: nothing was sent)'}`,
     `- base for context: \`${base ?? 'none'}\``,
-    `- thresholds: violation ≥ ${settings.threshold}, uncertain ≥ ${settings.uncertain}, context fetched when asked with ≥ ${settings.need}`,
+    `- thresholds: violation ≥ ${settings.threshold}; uncertain ≥ ${settings.uncertain} and ≥ the rule's median across this run + ${settings.lift} (rules with ${settings.minSample}+ verdicts); context fetched when asked with ≥ ${settings.need}`,
     `- verdicts: ${counts.violation} violations written to fragments, ${counts.uncertain} uncertain, ${counts.clean} clean, ${counts.unanswered} unanswered`,
     '',
     '```text',

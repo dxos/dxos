@@ -38,15 +38,22 @@ const MAX_CONTEXT_TOKENS = 4_000;
 const CONTEXT_SHARE = 0.5;
 
 /**
- * Calibrated on the diff hunks the mined rules cite (`.agents/projects/architecture-rules/dataset/
- * CALIBRATION.md`): at 0.8 almost nothing clean is reported, and dismissing under 0.15 keeps about
- * 80% of real findings while sending about a fifth of clean pairs on to an agentic reviewer.
+ * Calibrated on the diff hunks the mined rules cite and on a 202-file trial
+ * (`.agents/projects/architecture-rules/dataset/CALIBRATION.md`). At 0.8 almost nothing clean is
+ * reported. Subjective rules (naming, indirection, docs) score a middling 0.2-0.4 on nearly every
+ * file, so a flat lower bound routes most of them onward; a bound relative to each rule's own
+ * median across the run routes about a seventh of pairs while keeping about two thirds of real
+ * findings, better on both counts than any flat bound.
  */
 export const DEFAULTS = {
   /** A verdict at or above this is reported as a violation. */
   threshold: 0.8,
-  /** A verdict at or above this but under `threshold` is uncertain and routed to an agentic reviewer. */
+  /** Floor of the uncertain band: under it a verdict is dismissed. */
   uncertain: 0.15,
+  /** A verdict must also clear its rule's median across the run by this much to be uncertain. */
+  lift: 0.15,
+  /** Verdicts a rule needs in a run before its median is trusted; fewer use the floor alone. */
+  minSample: 20,
   /** Probability the context answer must give a kind before round two fetches it. */
   need: 0.35,
 };
@@ -311,10 +318,13 @@ export const runReview = async ({ client, root, base, fileTargets, prTargets, se
   );
 
   // Round two: re-ask uncertain verdicts with the context their model asked for, and locate the rest.
+  // Bounds come from round one's verdicts across the whole run, so subjective rules that score
+  // middling everywhere are not re-asked for verdicts they would end up dismissing.
+  const bounds = uncertainBounds([...first.values()], settings);
   const followFiles = new Map();
   const followPr = [];
   for (const verdict of first.values()) {
-    const status = classify(verdict, settings);
+    const status = classify(verdict, settings, bounds);
     if (status !== 'violation' && status !== 'uncertain') {
       continue;
     }
@@ -363,15 +373,41 @@ export const runReview = async ({ client, root, base, fileTargets, prTargets, se
   };
 };
 
-/** Classify a verdict against the reporting thresholds. */
-export const classify = (verdict, { threshold, uncertain }) =>
-  verdict.probability === undefined
-    ? 'unanswered'
-    : verdict.probability >= threshold
-      ? 'violation'
-      : verdict.probability >= uncertain
-        ? 'uncertain'
-        : 'clean';
+/**
+ * Per-rule lower bound of the uncertain band: the floor, raised to the rule's median across the
+ * run plus `lift` once the rule has enough verdicts for the median to mean something.
+ *
+ * @param {Array<{ rule: { id: string }, probability?: number }>} verdicts
+ * @returns {Map<string, number>} Rule id → bound.
+ */
+export const uncertainBounds = (verdicts, { uncertain, lift = 0, minSample = Number.POSITIVE_INFINITY }) => {
+  const byRule = new Map();
+  for (const verdict of verdicts) {
+    if (verdict.probability !== undefined) {
+      byRule.set(verdict.rule.id, [...(byRule.get(verdict.rule.id) ?? []), verdict.probability]);
+    }
+  }
+  return new Map(
+    [...byRule].map(([ruleId, scores]) => {
+      if (scores.length < minSample) {
+        return [ruleId, uncertain];
+      }
+      const sorted = [...scores].sort((left, right) => left - right);
+      const middle = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+      return [ruleId, Math.max(uncertain, median + lift)];
+    }),
+  );
+};
+
+/** Classify a verdict against the reporting threshold and its rule's uncertain bound. */
+export const classify = (verdict, { threshold, uncertain }, bounds) => {
+  if (verdict.probability === undefined) {
+    return 'unanswered';
+  }
+  const bound = bounds?.get(verdict.rule.id) ?? uncertain;
+  return verdict.probability >= threshold ? 'violation' : verdict.probability >= bound ? 'uncertain' : 'clean';
+};
 
 /** Line a diagnostic points at: the located segment, or the first changed line of a `pr` file. */
 export const diagnosticLine = (verdict, { base }) => {

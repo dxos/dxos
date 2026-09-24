@@ -13,7 +13,8 @@ import { describe, test } from 'node:test';
 
 import { loadRules } from '../mdl.mjs';
 import { estimateTokens, packQuestions, REQUEST_BUDGET, STATE_PLUS_QUESTION_BUDGET } from './budget.mjs';
-import { classify, runReview } from './checker.mjs';
+import { classify, runReview, uncertainBounds } from './checker.mjs';
+import { parseImports } from './fetchers.mjs';
 import { contextQuestion, ruleText, verdictQuestion } from './questions.mjs';
 import { exportedNames, identifierWords, MAX_SEGMENTS, segmentLines, truncateText, windowLines } from './source.mjs';
 
@@ -139,6 +140,25 @@ describe('source', () => {
   });
 });
 
+describe('imports', () => {
+  test('reads import and re-export clauses, not declarations that happen to precede a from', () => {
+    const text = [
+      "import * as Effect from 'effect/Effect';",
+      "import { type A, b as c } from './b.ts';",
+      'export const Dashboard = Capability.lazyModule(',
+      "  'Dashboard',",
+      "  () => import('./dashboard.ts'),",
+      ');',
+      "export { d } from './d.ts';",
+    ].join('\n');
+    assert.deepEqual(parseImports(text), [
+      { specifier: 'effect/Effect', names: ['Effect'] },
+      { specifier: './b.ts', names: ['A', 'c'] },
+      { specifier: './d.ts', names: ['d'] },
+    ]);
+  });
+});
+
 describe('questions', () => {
   const rule = {
     id: 'r',
@@ -157,6 +177,27 @@ describe('questions', () => {
     const asked = contextQuestion({ ...rule, unit: 'pr' }, ['diff']);
     assert.deepEqual(Object.keys(asked.criteria).sort(), ['none', 'package', 'pr', 'public-api']);
     assert.equal(contextQuestion({ ...rule, unit: 'pr' }, ['diff', 'package', 'public-api', 'pr']), null);
+  });
+});
+
+describe('uncertain bounds', () => {
+  const verdicts = (ruleId, scores) => scores.map((probability) => ({ rule: { id: ruleId }, probability }));
+  const settings = { threshold: 0.8, uncertain: 0.15, lift: 0.15, minSample: 5 };
+
+  test('raise a rule that scores middling everywhere above its own median', () => {
+    const bounds = uncertainBounds(
+      [...verdicts('vague', [0.3, 0.3, 0.35, 0.4, 0.3]), ...verdicts('sharp', [0.02, 0.05, 0.03, 0.9, 0.04])],
+      settings,
+    );
+    assert.equal(bounds.get('vague'), 0.3 + 0.15);
+    assert.equal(bounds.get('sharp'), 0.04 + 0.15);
+    assert.equal(classify({ rule: { id: 'vague' }, probability: 0.4 }, settings, bounds), 'clean');
+    assert.equal(classify({ rule: { id: 'vague' }, probability: 0.5 }, settings, bounds), 'uncertain');
+  });
+
+  test('fall back to the floor when a rule has too few verdicts', () => {
+    const bounds = uncertainBounds(verdicts('rare', [0.4, 0.4]), settings);
+    assert.equal(bounds.get('rare'), 0.15);
   });
 });
 

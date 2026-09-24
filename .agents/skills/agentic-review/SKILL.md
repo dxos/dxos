@@ -8,6 +8,8 @@ description: >-
   the agentic review, list unresolved review issues, review a branch/PR against
   the repo's `.mdl` rules, or check a diff for known anti-patterns. For the
   built-in bug/quality passes use `/code-review` instead.
+  A cheaper first pass with TypeSafe System One (`scripts/system-one.mjs`)
+  judges most groups and routes only uncertain ones to subagents.
 ---
 
 # Agentic Review
@@ -30,6 +32,8 @@ The scripts are dependency-free Node ESM and can also be run by hand.
   scripts/prepare.mjs      # discover rules, resolve base, group, write the store
   scripts/finalize.mjs     # merge fragments → REVIEW.md + RESOLUTION.md
   scripts/unresolved.mjs   # re-print unresolved issues across all runs
+  scripts/system-one.mjs   # cheap first pass with TypeSafe System One; routes the rest onward
+  lib/system-one/          # budget, source segmentation, context fetchers, questions, checker
   lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, store
   rules/                   # seed rules (repo-wide non-negotiables)
 ```
@@ -92,6 +96,44 @@ Give each subagent its group number and the store path. Prompt template:
 > Use the rule's severity (`WARN` or `ERROR`) in the header. If a file is clean,
 > write nothing for it. Do not edit any file other than your `groups/<NN>.md`
 > fragment. Do not run the finalize step.
+
+### 2b. Or: a System One pass first
+
+`scripts/system-one.mjs` answers the same groups with TypeSafe System One, a
+decision model that returns calibrated probabilities for typed questions. It is
+orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
+million) but cannot explore, so each rule's `context` field decides what it is
+shown. Needs `TYPESAFE_API_KEY`.
+
+```sh
+node .agents/skills/agentic-review/scripts/prepare.mjs --pr-only
+node .agents/skills/agentic-review/scripts/system-one.mjs --dry-run   # plan and price only
+node .agents/skills/agentic-review/scripts/system-one.mjs             # fill the newest prepared store
+```
+
+How it works:
+
+- **Batched per file.** Every rule matching a file is asked in one call, grouped
+  by declared context so each state carries only what its rules need. Files too
+  large for the 32k-token state limit are split into windows.
+- **Two rounds.** Round one asks each rule's verdict (a probability) and which one
+  missing context kind would most change it. Round two re-asks uncertain verdicts
+  with that kind fetched, which is how a model that cannot explore asks for more,
+  and locates every verdict worth reporting by choosing a segment of the file.
+- **Triage, not a final judge.** A verdict at or above `--threshold` (0.8) becomes
+  a diagnostic in `groups/NN.md`. One between `--uncertain` (0.15) and the
+  threshold is listed in `SYSTEM-ONE.md` under "Still needs an agentic reviewer",
+  beside the groups whose rule is `system-one: off`. **Spawn subagents only for
+  those groups and files**, then finalize as usual. Every verdict is kept in
+  `system-one.json`.
+- **Probe mode** judges named files without a store:
+  `system-one.mjs --file=<path> [--rule=<id>]`, printing each verdict, its
+  location and any context the model asked for.
+
+Calibration against the hunks the mined rules cite is in
+`.agents/projects/architecture-rules/dataset/CALIBRATION.md`: rules a reader can
+judge from the code alone separate cleanly, and rules that depend on context do
+only when that context is fetched.
 
 ### 3. Finalize
 
@@ -184,6 +226,19 @@ rule no-sleep-in-test: No sleep in tests
 - **`severity`** — `warn` | `error` (default `warn`), authoritative from the rule
   (deterministic). `finalize.mjs` stamps every diagnostic in a group with the
   rule's severity from the run manifest, so a subagent's header cannot change it.
+- **`unit`** — `file` (default) judges each matched file on its own; `pr` judges
+  the change set once, for rules about what a change adds or leaves behind across
+  files (an old path left beside its replacement, a diff wider than its purpose).
+- **`context`** — what a non-agentic checker must be shown beside the code, as a
+  list: `diff`, `imports`, `importers`, `siblings`, `package`, `public-api`,
+  `similar`, `test`, `pr` (table in
+  `.agents/projects/architecture-rules/DESIGN.md`). Declare the smallest set a
+  reader who cannot open other files needs; leave it out when the file is enough.
+- **`system-one`** — `on` (default) | `off`. `off` when no fetcher can supply what
+  the rule needs, so only an agentic reviewer applies it.
+- **`question`** — optional literal yes/no question ("yes" means violated) that
+  replaces the default for the System One checker, for prose a literal reader
+  would misapply.
 
 A document that uses the `rule` type should declare it in an `## Extensions`
 section (`` `rule` `` → `org.dxos.mdl.rule@1.0`); see

@@ -87,3 +87,31 @@ cannot go and look. Four optional fields, parsed by `lib/mdl.mjs`:
 - `question:` an optional one-sentence yes/no question that replaces the default "does this code
   violate the rule?" for the System One checker, for a rule whose prose a literal reader would
   misapply.
+
+## The System One checker
+
+`scripts/system-one.mjs` applies the rules with TypeSafe System One (`jev`), a decision model:
+it takes a state and a map of typed questions and returns calibrated answers, charging for input
+tokens only ($0.042 per million). It does not generate text or call tools, which decides the
+design.
+
+- **Context is fetched, not explored.** The rule's `context` field names what to show; fetchers
+  in `lib/system-one/fetchers.mjs` cut each kind to what the rule needs, because the vendor's
+  own guidance is that unrelated state costs accuracy. Rules are grouped by declared context, so
+  each state carries only its rules' kinds.
+- **The model asks for more with a choice.** Round one asks every rule a second question beside
+  its verdict: which one missing context kind would most change the answer, or none. An
+  uncertain verdict whose model names a kind is re-asked in round two with that kind fetched.
+  This is option (b) from the brief, done with a closed choice, since the model cannot write a
+  request; option (a) is the `context` field.
+- **Locations are chosen, not written.** The model cannot emit a line number, so round two asks
+  a choice over the file's top-level segments for every verdict worth reporting.
+- **Budget.** 64k tokens per request and 32k for the state plus its longest question. Estimates
+  use three characters per token, which measured runs put slightly conservative (3.2); every
+  limit keeps a 20% margin, questions are packed into as few requests as fit, and a file too
+  large for one state is cut into balanced, overlapping windows whose verdicts take the maximum.
+- **Change-set rules.** A `unit: pr` rule gets one state holding every matched file's diff and
+  one verdict, located by choosing a file.
+- **Triage.** Calibration on the hunks the rules were mined from (`dataset/CALIBRATION.md`)
+  shows high precision and modest recall, so the checker reports only verdicts at 0.8 or above
+  and sends the band between 0.15 and 0.8 to agentic reviewers; below 0.15 is dismissed.
