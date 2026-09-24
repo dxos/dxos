@@ -104,6 +104,8 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
       };
 
       const settled = yield* Deferred.make<unknown, Sandbox.EvaluationError>();
+      // What the code wrote, reported with its result; waited on after the budget, not within it.
+      let written: Wire.Heads = {};
 
       const handle = yield* Effect.acquireRelease(
         Effect.promise(() => (options.spawn ?? spawnNodeWorker)(options.entry ?? defaultEntry(), init)),
@@ -120,11 +122,9 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
             'Sandbox.invokeDefinition': ({ key, input, heads }) => invokeDefinition(context, key, input, heads),
             'Sandbox.complete': ({ value, failure, heads }) =>
-              Wire.catchUp(db, heads).pipe(
-                // The code ran either way; a turn that reads stale data is better than one told it failed.
-                Effect.catch((error) =>
-                  Effect.sync(() => log.warn('code-mode worker writes not yet visible to the host', { error })),
-                ),
+              Effect.sync(() => {
+                written = heads;
+              }).pipe(
                 Effect.andThen(
                   Deferred.complete(
                     settled,
@@ -167,23 +167,31 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
       );
 
       const evaluation = Effect.raceFirst(Deferred.await(settled), stopped);
-      return yield* timeout === undefined
-        ? evaluation
-        : evaluation.pipe(
-            Effect.timeoutOrElse({
-              duration: timeout,
-              orElse: () =>
-                Effect.sync(handle.terminate).pipe(
-                  Effect.flatMap(() =>
-                    Effect.fail(
-                      new Sandbox.EvaluationError({
-                        message: `Evaluation did not finish within ${Duration.format(Duration.fromInputUnsafe(timeout))}; the worker was killed.`,
-                      }),
+      // The turn carries on against this database, so it waits for what the code wrote either way.
+      const caughtUp = Effect.suspend(() => Wire.catchUp(db, written)).pipe(
+        Effect.catch((error) =>
+          Effect.sync(() => log.warn('code-mode worker writes not yet visible to the host', { error })),
+        ),
+      );
+      return yield* (
+        timeout === undefined
+          ? evaluation
+          : evaluation.pipe(
+              Effect.timeoutOrElse({
+                duration: timeout,
+                orElse: () =>
+                  Effect.sync(handle.terminate).pipe(
+                    Effect.flatMap(() =>
+                      Effect.fail(
+                        new Sandbox.EvaluationError({
+                          message: `Evaluation did not finish within ${Duration.format(Duration.fromInputUnsafe(timeout))}; the worker was killed.`,
+                        }),
+                      ),
                     ),
                   ),
-                ),
-            }),
-          );
+              }),
+            )
+      ).pipe(Effect.ensuring(caughtUp));
     }).pipe(
       Effect.scoped,
       Effect.catch((error) =>
@@ -222,11 +230,7 @@ const invokeOperation = (
   );
 };
 
-/**
- * Runs `Operation.invoke` from the worker through the turn's own `Operation.Service`, exactly as
- * the Effect dialect does in-process: stored objects in the input are this database's own copies, so
- * the operation acts on the object the model holds rather than on a JSON description of it.
- */
+/** Runs the worker's `Operation.invoke` through the turn's `Operation.Service`, as the Effect dialect does in-process. */
 const invokeDefinition = (context: BindingsContext, key: string, input: unknown, heads: Wire.Heads) => {
   const definition = context.operations.find(
     (candidate) => candidate.definition !== undefined && String(candidate.definition.meta.key) === key,
@@ -238,7 +242,7 @@ const invokeDefinition = (context: BindingsContext, key: string, input: unknown,
   return Wire.catchUp(db, heads).pipe(
     Effect.andThen(Wire.decode(input, db)),
     Effect.flatMap((decoded) => Operation.invoke(definition, decoded)),
-    Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value), heads })))),
+    Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
     Effect.provide(context.runtime),
     Effect.match({
       onSuccess: ({ value, heads }) => ({ _tag: 'Ok' as const, value, heads }),

@@ -123,16 +123,14 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       invoke: (input: unknown) => invokeOperation(key, toWire(input)),
     }));
 
-    // `Operation.invoke` crosses with its objects, and with the heads of what each side wrote so the
-    // other reads them only once they have arrived.
+    // Heads travel both ways so neither side reads the other's writes before they arrive.
     const invokeDefinition = (key: string, input: unknown) =>
       Wire.settle(db).pipe(
-        Effect.flatMap((heads) => client['Sandbox.invokeDefinition']({ key, input: Wire.encode(input), heads })),
-        Effect.flatMap(
-          (outcome): Effect.Effect<unknown, OperationFailed | Wire.ObjectNotFoundError | Wire.ReplicationError> =>
-            outcome._tag === 'Ok'
-              ? Wire.catchUp(db, outcome.heads).pipe(Effect.andThen(Wire.decode(outcome.value, db)))
-              : Effect.fail(new OperationFailed({ message: outcome.message })),
+        Effect.flatMap((heads) => client['Sandbox.invokeDefinition']({ key, input: Wire.encode(input, db), heads })),
+        Effect.flatMap((outcome): Effect.Effect<unknown, OperationFailed | Wire.WireError> =>
+          outcome._tag === 'Ok'
+            ? Wire.catchUp(db, outcome.heads).pipe(Effect.andThen(Wire.decode(outcome.value, db)))
+            : Effect.fail(new OperationFailed({ message: outcome.message })),
         ),
         Effect.orDie,
       );

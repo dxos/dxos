@@ -34,9 +34,7 @@ export const SandboxHostRpcs = RpcGroup.make(
       Schema.Struct({ _tag: Schema.Literal('Error'), message: Schema.String }),
     ]),
   }),
-  // `Operation.invoke` from the worker: runs the definition through the turn's `Operation.Service`
-  // as in-process code would, so input and output carry live objects in the `Wire` encoding.
-  // Each side sends the heads of what it wrote, so the other reads only after catching up.
+  // `Operation.invoke` from the worker; values are `Wire`-encoded, and heads let the reader catch up first.
   Rpc.make('Sandbox.invokeDefinition', {
     payload: Schema.Struct({ key: Schema.String, input: Schema.Any, heads: DocumentHeads }),
     success: Schema.Union([

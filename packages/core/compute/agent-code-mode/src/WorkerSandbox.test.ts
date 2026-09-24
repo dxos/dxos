@@ -64,19 +64,16 @@ const Score = Operation.make({
 const SCORE_KEY = String(Score.meta.key);
 
 /**
- * Takes an object the way `AddObject` does: a live one, or a description to create one from, and
- * reports which of the two arrived so a test can tell the model's own object from a copy.
+ * Takes an object as `AddObject` does, filing a detached one, and reports what arrived: whether it
+ * was stored, the status it had, and the owner its reference resolved to.
  */
 const File = Operation.make({
   meta: { key: DXN.make('com.example.operation.file'), name: 'File' },
-  input: Schema.Struct({ object: Schema.Union([Obj.Unknown, Schema.Record(Schema.String, Schema.Unknown)]) }),
+  input: Schema.Struct({ object: Obj.Unknown, owner: Schema.optional(Ref.Ref(Person)) }),
   output: Schema.Struct({ received: Schema.String, object: Obj.Unknown }),
 });
 
 const FILE_KEY = String(File.meta.key);
-
-/** A draft of a task, as `File` receives a detached one. */
-const TaskDraft = Schema.Struct({ '@type': Schema.String, 'title': Schema.String, 'status': Schema.String });
 
 /** Stands in for a skill-bound tool. Its handler stays here, which is the point of the call home. */
 const scored: string[] = [];
@@ -122,16 +119,20 @@ const hostOperations = (db: Database.Database): Operation.OperationService => {
       if (!Schema.is(File.input)(input)) {
         return Effect.die(new Error('File: bad input'));
       }
-      const { object } = input;
-      return Obj.isObject(object)
-        ? Effect.succeed({ received: 'object', object })
-        : Schema.decodeUnknownEffect(TaskDraft)(object).pipe(
-            Effect.map(({ '@type': typename, title, status }) => ({
-              received: `draft ${typename}`,
-              object: db.add(Obj.make(Task, { title, status })),
-            })),
-            Effect.orDie,
-          );
+      const { object, owner } = input;
+      const stored = Obj.getDatabase(object) !== undefined;
+      const filed = stored ? object : db.add(object);
+      return Effect.promise(async () => (owner === undefined ? undefined : await owner.load())).pipe(
+        Effect.map((person) => ({
+          received: [
+            stored ? 'stored' : 'detached',
+            Obj.getTypename(filed),
+            Schema.decodeUnknownSync(Schema.Struct({ status: Schema.String }))(Obj.toJSON(filed)).status,
+            ...(person === undefined ? [] : [`owner ${person.name}`]),
+          ].join(' '),
+          object: filed,
+        })),
+      );
     },
   };
   const run = (key: string, input: unknown) => handlers[key]?.(input) ?? Effect.die(new Error(`No handler: ${key}`));
@@ -279,28 +280,27 @@ describe('worker sandbox', () => {
     test('passes a stored object to an operation as that same object', async () => {
       const { db, runWith } = await setup();
 
+      // Edited just before the call, so the host's copy is only right once it has caught up.
       const output = await runWith(
         EffectDialect,
         `
         const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
+        Obj.update(task, (task) => { task.status = 'ready'; });
         const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: task });
         Obj.update(result.object, (task) => { task.status = 'filed'; });
-        yield* Database.flush();
         yield* print(result.received, result.object.id === task.id, task.status);
       `,
       );
-      // Not a copy either way: the handler got the object the model made, and the one it returned
-      // is live in the worker, so the model's edit to it lands on that same object.
-      expect(output).toEqual('object true filed');
+      expect(output).toEqual(`stored ${TASK_TYPENAME} ready true filed`);
 
-      // Polled: the completion barrier covers the space root, so the object is found at once, but an
-      // edit to an object the host already holds reaches its copy a few milliseconds later.
+      // Polled: nothing names the objects the code edited after its last call, so the host's copy of
+      // one it already holds catches up on its own, milliseconds later.
       await expect
         .poll(async () => (await db.query(Filter.type(Task)).run()).map((task) => [task.title, task.status]))
         .toEqual([['Write the docs', 'filed']]);
     }, 60_000);
 
-    test('passes a detached object to an operation as a draft', async () => {
+    test('passes a detached object to an operation as an object of its type', async () => {
       const { db, runWith } = await setup();
 
       const output = await runWith(
@@ -311,10 +311,25 @@ describe('worker sandbox', () => {
         yield* print(result.received, result.object.title, Obj.isObject(result.object));
       `,
       );
-      expect(output).toEqual(`draft ${TASK_TYPENAME} Review the PR true`);
+      expect(output).toEqual(`detached ${TASK_TYPENAME} open Review the PR true`);
 
       const tasks = await db.query(Filter.type(Task)).run();
       expect(tasks.map((task) => task.title)).toEqual(['Review the PR']);
+    }, 60_000);
+
+    test('passes a reference to an operation as a reference', async () => {
+      const { runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `
+        const owner = yield* Database.add(Obj.make(types['${PERSON_TYPENAME}'], { name: 'Ada' }));
+        const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
+        const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: task, owner: Ref.make(owner) });
+        yield* print(result.received);
+      `,
+      );
+      expect(output).toEqual(`stored ${TASK_TYPENAME} open owner Ada`);
     }, 60_000);
 
     test('reports a failing effect as output', async () => {
