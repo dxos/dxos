@@ -15,8 +15,8 @@ import { type TransportFactory } from '@dxos/network-manager';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import * as Events from '../../Events.ts';
-import { clientServiceSpecs } from './layer-specs.ts';
 import { type ServiceContextRuntimeProps } from './service-stack.ts';
+import { clientServiceSpecs } from './specs.ts';
 
 /** The SQL services the stack persists through; the embedder provides them beneath it. */
 export type ClientServicesSqlContext = SqlClient.SqlClient | SqlExport.SqlExport;

@@ -31,7 +31,16 @@ introspection. Flattened together, the only way to see the difference was to rea
 | **Halo**   | `identity` `invitations` `devices` — identity, devices, invitations, contacts, recovery, and their services                            | Kernel, Echo            |
 | **Host**   | the RPC router, the stack itself, `system` `devtools` `logging` `diagnostics` `worker`                                                 | all of the above        |
 
-`Kernel → {Mesh, Echo} → Halo → Host`, acyclic.
+`Kernel → {Mesh, Echo} → Halo → Host`, acyclic. Measured:
+
+|               | modules |  edges | largest cycle |
+| ------------- | ------: | -----: | ------------: |
+| before #13328 |      19 |     57 |            11 |
+| after #13328  |      18 |     33 |          none |
+| after this    |   **6** | **11** |          none |
+
+The module count falls because a subsystem's internals stop being edges of the package graph:
+nesting `storage`, `metadata` and `pipeline` under `kernel/` alone removed six.
 
 Two edges are worth stating because they look wrong and are not:
 
@@ -56,9 +65,14 @@ Three shapes, and a module is whichever of them its content calls for:
 - **Combined** — a small subsystem whose interface is a tag or two states them alongside the
   implementation rather than in a file of its own.
 
-Each subsystem exports one `specs(options)` returning its own specs; `Host` concatenates the
-four. `clientServiceSpecs` becomes that concatenation instead of a hand-maintained list of
-sixty names.
+Each subsystem exports one `specs(options)` returning its own specs; `Host` concatenates the four.
+`clientServiceSpecs` becomes that concatenation instead of a hand-maintained list of sixty names:
+`host/specs.ts` is 60 lines and defines no spec of its own, where `layer-specs.ts` was 813 and
+defined all of them.
+
+Each subsystem also declares the options it reads rather than taking the stack's whole bag —
+`Mesh.Options` is six fields, not twenty-odd — so a spec can move into a subsystem without that
+subsystem depending upward on the host that composes it.
 
 ## Specs over layers this package does not own
 

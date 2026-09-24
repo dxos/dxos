@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { WorkerRuntimeStartError } from '@dxos/protocols';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-import { MIGRATIONS_TABLE } from '../../migrations/metadata/index.ts';
+import { MIGRATIONS_TABLE } from '../../../migrations/metadata/index.ts';
 import { makeWorkerRuntime } from './worker-runtime.ts';
 
 describe('WorkerRuntime', () => {

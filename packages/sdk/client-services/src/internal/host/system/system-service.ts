@@ -9,6 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Event, MulticastObservable } from '@dxos/async';
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Config, ConfigService } from '@dxos/config';
 import { EffectEx, Hook } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
@@ -21,10 +23,10 @@ import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
-import * as Events from '../../Events.ts';
-import * as PlatformInfo from '../../PlatformInfo.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import * as Events from '../../../Events.ts';
+import * as PlatformInfo from '../../../PlatformInfo.ts';
 import { type Diagnostics, createDiagnosticsFromRouter } from '../diagnostics/index.ts';
 
 export type SystemServiceOptions = {
@@ -201,4 +203,25 @@ export const SystemServiceLayer: Layer.Layer<
     yield* Effect.addFinalizer(() => Effect.sync(() => service.setStatus(SystemStatus.INACTIVE)));
     return service;
   }),
+);
+
+export const SystemServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      RpcRouter.RpcRouter,
+      ConfigService,
+      Hook.Controller,
+      IdentityContract.ManagerService,
+      SpacesContract.ManagerService,
+      SwarmNetworkManagerService,
+    ],
+    provides: [SystemService.Tag],
+  },
+  () => SystemServiceLayer,
+);
+
+export const SystemServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SystemService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(SystemService.Rpcs, SystemService.Tag),
 );

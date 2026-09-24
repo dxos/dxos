@@ -9,6 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { Event } from '@dxos/async';
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
@@ -21,6 +23,7 @@ import {
   QueryLogsRequest_MatchingOptions,
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { LoggingService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import { numericalValues, tracer } from '@dxos/util';
 
 /**
@@ -213,4 +216,14 @@ export const LoggingServiceLayer: Layer.Layer<LoggingService.Tag> = Layer.effect
     );
     return service;
   }),
+);
+
+export const LoggingServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [], provides: [LoggingService.Tag] },
+  () => LoggingServiceLayer,
+);
+
+export const LoggingServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [LoggingService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(LoggingService.Rpcs, LoggingService.Tag),
 );

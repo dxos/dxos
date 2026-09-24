@@ -16,7 +16,7 @@ import { EffectEx, Hook } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import * as Events from '../../Events.ts';
+import * as Events from '../../../Events.ts';
 import { SystemServiceImpl } from './system-service.ts';
 
 describe('SystemService', () => {

@@ -66,9 +66,9 @@ import {
   InvitationsManager,
   SpaceInvitationProtocol,
 } from '../halo/invitations/index.ts';
+import { type ServiceContextRuntimeProps, layerClientServices } from '../host/index.ts';
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../kernel/metadata/index.ts';
 import { valueEncoding } from '../kernel/pipeline/index.ts';
-import { type ServiceContextRuntimeProps, layerClientServices } from '../services/index.ts';
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {

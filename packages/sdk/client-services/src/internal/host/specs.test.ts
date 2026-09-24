@@ -30,7 +30,7 @@ import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import { TransportFactoryService } from '../mesh/index.ts';
-import { clientServiceSpecs } from './layer-specs.ts';
+import { clientServiceSpecs } from './specs.ts';
 
 describe('clientServiceSpecs', () => {
   test('resolves a component the graph builds from the ambient SQL runtime', async () => {

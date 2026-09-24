@@ -9,6 +9,8 @@ import * as EffectStream from 'effect/Stream';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Event as AsyncEvent, type Trigger } from '@dxos/async';
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
@@ -27,12 +29,13 @@ import {
   type SubscribeToSpacesResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { DevtoolsHost } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import * as SpacesContract from '../../contracts/spaces.ts';
-import * as Readiness from '../../Readiness.ts';
-import { type SpaceManager, SpaceManagerService } from '../echo/space/index.ts';
-import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import * as Readiness from '../../../Readiness.ts';
+import { type SpaceManager, SpaceManagerService } from '../../echo/space/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../../kernel/metadata/index.ts';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds.ts';
 import { subscribeToKeyringKeys } from './keys.ts';
 import { subscribeToMetadata } from './metadata.ts';
@@ -308,4 +311,30 @@ const devtoolsImplLayer: Layer.Layer<
 
 export const DevtoolsHostLayer = Layer.effect(DevtoolsHost.Tag, DevtoolsHostService).pipe(
   Layer.provideMerge(devtoolsImplLayer),
+);
+
+export const DevtoolsHostSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      ConfigService,
+      KeyringApiService,
+      HypercoreStoreService,
+      SpaceManagerService,
+      IMetadataStoreService,
+      SpacesContract.ManagerService,
+      Readiness.StackReadinessService,
+      SignalManagerService,
+      SwarmNetworkManagerService,
+      SqlClient.SqlClient,
+      SqlExport.SqlExport,
+    ],
+    provides: [DevtoolsHost.Tag, DevtoolsHostService],
+  },
+  () => DevtoolsHostLayer,
+);
+
+export const DevtoolsHostRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [DevtoolsHost.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
 );
