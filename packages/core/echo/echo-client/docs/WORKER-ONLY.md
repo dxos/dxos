@@ -43,8 +43,11 @@ real worker boundary or run in a browser yet.
    SQLite index, and a tab's first write to a document loads it and rebases the write. In Chromium,
    with ECHO in a dedicated worker and SQL query evaluation on, the Tasks app shows 1,000 items three
    times sooner than today while the worker holds one document instead of 1,001 (see
-   [Index reads in the browser](#index-reads-in-the-browser)). Sync still loads a document that
-   receives remote changes, so this saves loads for reading, not for changes.
+   [Index reads in the browser](#index-reads-in-the-browser)). Composer's nav tree lists 1,000
+   documents in about 10 s instead of 31 s with 4 documents in the worker, though opening a document
+   in mirror mode still needs the editor binding
+   ([Index reads in Composer's nav tree](#index-reads-in-composers-nav-tree)). Sync still loads a
+   document that receives remote changes, so this saves loads for reading, not for changes.
 8. **The Cloudflare functions runtime keeps the byte protocol and Automerge.** EDGE's db-service
    serves commit blobs without building documents for reads (its indexer loads them separately), so
    the EchoClient there is what turns bytes into objects. EchoClient keeps both document backends
@@ -405,6 +408,40 @@ for 1,000.
 - Seeding 1,000 items at once in replica mode hits one 30 s RPC timeout, in today's path, and every
   item still arrives. The runs themselves log no errors besides EDGE being unreachable.
 - EDGE is unreachable from the sandbox, so none of this measures sync.
+
+## Index reads in Composer's nav tree
+
+Composer takes the same switch (`?echo=mirror`, `?echo=indexed`, read in `main.tsx`).
+`packages/apps/composer-app/scripts/measure-navtree.mjs` seeds a space with markdown documents
+through the `markdown.create` operation, opens its Collections branch, and times each mode until
+every document row is in the nav tree. Each run relaunches the browser on the same profile, so every
+mode starts a fresh worker on the same data.
+
+The nav tree lists a space's documents with an ECHO query that follows its root collection's
+`objects` refs, and each row reads the live object for its label. With SQL queries and index reads,
+neither the query nor the rows load a document in the worker.
+
+| Documents | Mode    | First row     | All rows      | Worker documents | Worker heap | Worker buffers | Tab buffers |
+| --------- | ------- | ------------- | ------------- | ---------------- | ----------- | -------------- | ----------- |
+| 200       | replica | 7.4 s         | 7.4 s         | 213              | 23.3 MB     | 37.6 MB        | 25.8 MB     |
+|           | mirror  | 6.6 s         | 6.6 s         | 209              | 23.3 MB     | 36.7 MB        | 20.4 MB     |
+|           | indexed | 6.7 s         | 6.7 s         | 4                | 19.7 MB     | 29.6 MB        | 20.4 MB     |
+| 1,000     | replica | 8.8 s         | 30.9 s        | 1,010            | 35.6 MB     | 71.1 MB        | 45.7 MB     |
+|           | mirror  | 5.8 s         | 13.9 s        | 1,009            | 37.2 MB     | 67.8 MB        | 20.7 MB     |
+|           | indexed | 8.7 to 12.4 s | 8.7 to 12.4 s | 4                | 21.5 MB     | 35.9 MB        | 20.7 MB     |
+
+Medians of three runs for 200 documents; both runs for 1,000. About 5.5 s of each run is boot.
+
+- At 1,000 documents the nav tree takes 31 s today, 14 s on mirrors and 9 to 12 s with index reads.
+  With index reads the worker holds 4 documents instead of 1,010, and about 50 MB less memory.
+- A mirror tab holds 25 MB less buffer memory than a replica tab at 1,000 documents.
+- With index reads every row arrives at once, since one SQLite query answers the whole subscription
+  request. Answering it in chunks would show the first rows sooner.
+- Opening a document does not work in mirror mode yet, with or without index reads. The plank shows
+  "Unable to open this object": the markdown editor's Automerge extension calls Automerge on the
+  tab's copy of the document and throws `RangeError: must be the document root`. That is the
+  CodeMirror binding blocker below, and the hybrid in this proposal, a replica for any document
+  handed to Automerge code, is what fixes it.
 
 ## Blockers
 

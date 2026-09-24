@@ -209,6 +209,12 @@ const main = async () => {
   }
 
   const url = new URL(window.location.href);
+  // Experimental ECHO backends: `?echo=mirror` keeps a JSON mirror of each document in the tab while
+  // only the worker runs Automerge, and `?echo=indexed` also shows objects from the worker's index
+  // until the tab writes to them. Both answer queries in SQL.
+  const echoMode = url.searchParams.get('echo');
+  const echoMirror =
+    echoMode === 'mirror' || echoMode === 'indexed' ? { indexedReads: echoMode === 'indexed' } : undefined;
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
     log.info('SAFE MODE');
@@ -504,6 +510,7 @@ const main = async () => {
           servicesMode,
           // Host and dedicated worker both use OPFS-backed SQLite.
           storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
+          ...(echoMirror ? { queryExecutor: defs.Runtime_Client_QueryExecutor.SQL } : {}),
         },
       },
     },
@@ -546,7 +553,7 @@ const main = async () => {
   // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
-  const client = new Client({ config, services });
+  const client = new Client({ config, services, echoMirror });
   void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
