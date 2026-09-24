@@ -15,6 +15,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type * as Scope from 'effect/Scope';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -53,9 +54,13 @@ export interface Options {
   authProvider?: OAuthClientProvider;
 }
 
-export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
+export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError, Scope.Scope> =>
   Effect.gen(function* () {
-    const { client, protocol } = yield* connectWithFallback(options);
+    // Closed with the scope: an open client holds a connection (its SSE stream) to the server, and a
+    // browser allows only six per host over HTTP/1.1, so clients leaked across turns stall the next.
+    const { client, protocol } = yield* Effect.acquireRelease(connectWithFallback(options), ({ client }) =>
+      Effect.tryPromise(() => client.close()).pipe(Effect.ignore),
+    );
 
     const { tools } = yield* Effect.tryPromise({
       try: () => client.listTools(),
