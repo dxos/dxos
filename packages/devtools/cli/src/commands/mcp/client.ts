@@ -211,20 +211,7 @@ export const request = async <A, I>(
 
   let response = await send(session.accessToken);
   if (response.status === 401 && session.refreshToken) {
-    const tokens = await exchange(session.serverUrl, {
-      grant_type: 'refresh_token',
-      refresh_token: session.refreshToken,
-      client_id: session.clientId,
-    });
-    const refreshed: McpSession = {
-      ...session,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token ?? session.refreshToken,
-    };
-    if (options.profile) {
-      await saveSession(options.profile, refreshed);
-    }
-    session = refreshed;
+    session = await refreshSession(session, options);
     response = await send(session.accessToken);
   }
   if (response.status !== 200) {
@@ -241,6 +228,30 @@ export const request = async <A, I>(
     throw new McpProtocolError({ message: `MCP ${method} failed: ${JSON.stringify(message.error)}` });
   }
   return Schema.decodeUnknownSync(schema)(message.result);
+};
+
+/**
+ * Exchanges the session's refresh token for a new access token, persisting the result when a
+ * profile is given so the next command starts from the fresh token.
+ */
+export const refreshSession = async (session: McpSession, options: { profile?: string } = {}): Promise<McpSession> => {
+  if (!session.refreshToken) {
+    throw new McpProtocolError({ message: 'Session has no refresh token; re-run `dx mcp connect`.' });
+  }
+  const tokens = await exchange(session.serverUrl, {
+    grant_type: 'refresh_token',
+    refresh_token: session.refreshToken,
+    client_id: session.clientId,
+  });
+  const refreshed: McpSession = {
+    ...session,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token ?? session.refreshToken,
+  };
+  if (options.profile) {
+    await saveSession(options.profile, refreshed);
+  }
+  return refreshed;
 };
 
 /** Flattens a JSON or `text/event-stream` body into its JSON-RPC messages, unwrapping batches. */
