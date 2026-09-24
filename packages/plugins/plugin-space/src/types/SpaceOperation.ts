@@ -292,7 +292,7 @@ export const DeleteField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to delete the field from.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to delete the field from.' }),
     fieldId: Schema.String,
   }),
   output: DeleteFieldOutput,
@@ -589,7 +589,7 @@ export const RestoreField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to restore the field to.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to restore the field to.' }),
     field: View.FieldSchema.annotate({ description: 'The field schema to restore.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
     props: Schema.Any.annotate({ description: 'The field properties to restore.' }),

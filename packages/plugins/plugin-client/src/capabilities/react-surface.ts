@@ -22,6 +22,7 @@ import {
   RecoveryCodeDialog,
   RecoveryCredentialsContainer,
   ResetDialog,
+  SpaceInvitationsContainer,
   UsageContainer,
 } from '#containers';
 import { Account, ClientOptions } from '#types';
@@ -50,6 +51,11 @@ export default Capability.makeModule(({ createInvitationUrl, identityTestActions
         id: Account.Contacts,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Contacts)),
         component: ContactsContainer,
+      }),
+      Surface.create({
+        id: 'spaceInvitations',
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.SpaceInvitations)),
+        component: SpaceInvitationsContainer,
       }),
       Surface.create({
         id: Account.Security,

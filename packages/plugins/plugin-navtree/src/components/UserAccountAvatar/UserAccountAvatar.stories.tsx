@@ -19,3 +19,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const WithUser: Story = {
+  args: { userId: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', size: 10 },
+};
+
+export const WithBadge: Story = {
+  args: { userId: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', size: 10, badge: true },
+};

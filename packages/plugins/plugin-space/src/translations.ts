@@ -259,7 +259,7 @@ export const translations = [
         'members.description': 'Current space members and pending invitations.',
         'members.label': 'Members',
         'invitations.label': 'Invitations',
-        'add-known-people.label': 'Add people you know',
+        'add-known-people.label': 'Add from contacts',
         'add-members-failed-toast.title': 'Some people could not be added',
         'add-members-failed-toast.description': 'Could not add: {{names}}',
         'space-invitation.description': 'Manage invitations to the space.',

@@ -38,6 +38,7 @@ import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
 import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
+import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
 import { QueryPlan } from './plan.ts';
@@ -197,7 +198,13 @@ const QueryItem = Object.freeze({
           key[aggregate.name] = QueryItem.getTypeUri(item);
           break;
         case 'timestamp':
-          key[aggregate.name] = GroupBy.truncateTimestamp(item[aggregate.field], aggregate.unit, aggregate.timeZone);
+          key[aggregate.name] = GroupBy.truncateTime(item[aggregate.field], aggregate.unit);
+          break;
+        case 'time':
+          key[aggregate.name] = GroupBy.truncateTime(
+            QueryItem.getAggregateProperty(item, aggregate.property),
+            aggregate.unit,
+          );
           break;
       }
     }
@@ -633,6 +640,7 @@ export class QueryExecutor extends Resource {
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
+  #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
 
@@ -689,16 +697,14 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  /**
-   * The path this host asked for. Answerable before the first execution, because the caller gating
-   * on indexing has to know which store the query may read; a plan the compiler declines still
-   * reports `sql` here and runs in memory, which only makes that gate conservative.
-   */
-  get mode(): QueryExecutorMode {
-    return this.#mode;
+  get compiled(): boolean {
+    return this._plan.steps.some((step) => step._tag === 'SqlStep');
   }
 
   getResults(): QueryService.QueryResult[] {
+    if (this.#changeResultSet) {
+      return changeResults(this.#changeResultSet);
+    }
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -766,13 +772,26 @@ export class QueryExecutor extends Resource {
     log('exec query', {
       queryId: this._id,
       query: Query.pretty(Query.fromAst(this._query)),
-      mode: this.mode,
+      mode: this.#mode,
     });
 
     // Subquery results can change between reactive runs, so resolved `in-query` sets must not
     // survive across `execQuery` calls.
     this.#inQuerySetCache = new Map();
     this.#inQueryTracesAttached = new Set();
+
+    const [select] = this._plan.steps;
+    if (select?._tag === 'SelectStep' && select.selector._tag === 'ChangesSelector') {
+      const previous = this.#changeResultSet;
+      const next = await executeChangesPlan(this._ctx, this._plan, {
+        indexEngine: this._indexEngine,
+        automergeHost: this._automergeHost,
+        spaceStateManager: this._spaceStateManager,
+        runInRuntime: (effect) => this._runInRuntime(effect),
+      });
+      this.#changeResultSet = next;
+      return { changed: serializeChangeResults(previous ?? []) !== serializeChangeResults(next) };
+    }
 
     const previous = this._lastResultSet;
     const { workingSet, trace } = await this._resolveWorkingSet();
@@ -804,7 +823,7 @@ export class QueryExecutor extends Resource {
       const { workingSet, trace } = await this._execPlan(this._plan, []);
       // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
       // the compiler declined runs step by step even under `sql` and needs the filter.
-      if (this._plan.steps.some((step) => step._tag === 'SqlStep')) {
+      if (this.compiled) {
         return { workingSet, trace };
       }
       // Unresolvable items never reach the client, where hydration would fail or stall on them.
@@ -1029,6 +1048,9 @@ export class QueryExecutor extends Resource {
 
         break;
       }
+
+      case 'ChangesSelector':
+        throw new Error('A changes plan runs through executeChangesPlan.');
 
       case 'IncomingReferenceSelector': {
         const beginIndexQuery = performance.now();
