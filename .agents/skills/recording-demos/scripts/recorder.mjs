@@ -38,9 +38,12 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   rmSync(framesDir, { recursive: true, force: true });
   mkdirSync(framesDir, { recursive: true });
 
-  const started = Date.now();
+  let started = Date.now();
   /** `{ file, ms }` per kept frame; `ms` is from `started`, the same clock the caption timeline uses. */
   const frames = [];
+  // A counter rather than `frames.length`: after a `cut` the array restarts but earlier files remain, and
+  // reusing a name would overwrite the frame the cut kept.
+  let written = 0;
   // Frames closer together than one output frame overwrite the last one: during a drag Chromium emits
   // at display rate, and every extra frame is disk and encode time the output rate would discard anyway.
   const minGap = 1000 / fps;
@@ -55,7 +58,7 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
         writeFileSync(last.file, data);
         return;
       }
-      const frameFile = path.join(framesDir, `${String(frames.length).padStart(6, '0')}.jpg`);
+      const frameFile = path.join(framesDir, `${String(written++).padStart(6, '0')}.jpg`);
       writeFileSync(frameFile, data);
       frames.push({ file: frameFile, ms });
     },
@@ -127,5 +130,25 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
     return { file, frames: frames.length, seconds: stoppedMs / 1000 };
   };
 
-  return { started, stop };
+  /**
+   * Discards everything recorded so far — app boot, setup — and restarts the clock. The last frame is
+   * kept as the new first one so the video opens on the screen as it stands, not on black.
+   */
+  const cut = () => {
+    const last = frames.at(-1);
+    frames.length = 0;
+    started = Date.now();
+    if (last) {
+      frames.push({ file: last.file, ms: 0 });
+    }
+    return started;
+  };
+
+  return {
+    get started() {
+      return started;
+    },
+    cut,
+    stop,
+  };
 };
