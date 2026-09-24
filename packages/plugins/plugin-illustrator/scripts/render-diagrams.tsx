@@ -6,7 +6,8 @@
 // Renders the diagram corpus (`docs/diagrams/*.mmd`) headlessly through the SVG variant, writing a
 // standalone `.svg` beside each source, and prints the Tier-1 report per diagram. With
 // `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
-// Passing `.mmd` paths renders just those files instead of the corpus.
+// Passing `.mmd` paths renders just those files instead of the corpus; `--layering down` (or a comma list of
+// `down`, `up`, `free`) restricts the candidate layerings the engine chooses among.
 // Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (vite-node; bun cannot load elkjs).
 //
 
@@ -40,6 +41,11 @@ const STYLE = `
   .text-neutral-400 { color: #a3a3a3; }
   .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
 `;
+
+const layeringArg = process.argv[process.argv.indexOf('--layering') + 1];
+const LAYERING = process.argv.includes('--layering')
+  ? layeringArg.split(',').filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value))
+  : undefined;
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -92,7 +98,7 @@ if (process.argv.includes('--scoreboard')) {
 } else {
   let failed = false;
   for (const { name, source, svgPath } of sources) {
-    const objects = objectsOf(await MermaidEngine.compile(source));
+    const objects = objectsOf(await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {}));
     const report = Diagnostics.analyze(objects);
     writeFileSync(svgPath, toSvg(objects));
     const { crossings, bends, nodes, connectors } = report.metrics;

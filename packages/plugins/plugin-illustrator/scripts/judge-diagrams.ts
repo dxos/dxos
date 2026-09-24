@@ -9,7 +9,7 @@
 // still print.
 // Flags: `--layout` adds the drawn page (`View.ascii` + `View.rows`) to the judge's input, `--no-title` drops
 // the caption so only the diagram is judged, `--runs N` averages the architecture scores over N calls, and
-// `--json out.json` writes the scores.
+// `--json out.json` writes the scores, and `--layering down` restricts the layerings the engine chooses among.
 // Run: `moon run plugin-illustrator:judge-diagrams -- /abs/path/x.mmd …` (vite-node; bun cannot load elkjs).
 //
 
@@ -57,6 +57,9 @@ const OPTIONS = {
   title: !process.argv.includes('--no-title'),
   runs: Math.max(1, Number(argument('--runs') ?? 1)),
   json: argument('--json'),
+  layering: argument('--layering')
+    ?.split(',')
+    .filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value)),
 };
 
 type Row = Score.Scored & { spread?: number };
@@ -76,7 +79,11 @@ const judgeFile = (path: string) =>
   Effect.gen(function* () {
     const source = readFileSync(path, 'utf8');
     const graph = Mermaid.parse(source);
-    const objects = objectsOf(yield* Effect.promise(() => MermaidEngine.compile(source)));
+    const objects = objectsOf(
+      yield* Effect.promise(() =>
+        MermaidEngine.compile(source, OPTIONS.layering ? { layering: OPTIONS.layering } : {}),
+      ),
+    );
     const layout = OPTIONS.layout ? `${View.ascii(objects)}\n\n${View.rows(objects)}` : undefined;
     const subject = {
       objects,
