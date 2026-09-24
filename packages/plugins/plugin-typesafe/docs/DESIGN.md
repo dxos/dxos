@@ -35,11 +35,14 @@ connects TypeSafe mid-session keeps getting failures until something restarts th
 who disconnects keeps succeeding against a captured key. Per call is one query against an in-memory
 credential set, which is not worth optimising away for either of those bugs.
 
-**Workers AI is a second EDGE backend, not a second resolver.** Cloudflare serves the same model as
-`typesafe/jev` and EDGE exposes it on the System One wire (`/ai/generate/workers-ai/typesafe/v1/systemone`),
-so switching is a setting (`backend: 'workers-ai'`) that picks the EDGE route; `TypeSafeResolver`,
-the model id, and every consumer stay unchanged. Workers AI has no vendor key, so none is sent — a
-connected TypeSafe key would otherwise leak to a route that never uses it.
+**Workers AI is a second model id, not a setting.** Cloudflare serves the same model as `typesafe/jev`,
+so `@dxos/ai` catalogs jev once per provider: `Model.typesafeJev` (TypeSafe) and `Model.cloudflareJev`
+(Workers AI). A consumer picks one with `AiService.decisionModel(id)`, which keeps the choice in the
+code that asks the question rather than in a space-wide setting. `TypeSafeResolver` routes by the
+model's provider, and this plugin gives each provider its EDGE route
+(`/ai/generate/typesafe`, `/ai/generate/workers-ai/typesafe`). Both speak the System One wire. Workers
+AI has no vendor key, so none is sent: a connected TypeSafe key would otherwise go to a route that
+never uses it.
 
 **A direct endpoint needs a key, over HTTPS.** The `endpoint` setting bypasses EDGE, so there is no
 platform key behind it; a space with none connected fails with an `AuthenticationError`

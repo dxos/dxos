@@ -1,5 +1,7 @@
 ---
-'@dxos/plugin-typesafe': minor
+'@dxos/ai': minor
 ---
 
-plugin-typesafe gains a `backend` setting: `workers-ai` answers decisions with Cloudflare Workers AI's `typesafe/jev` through EDGE's `/ai/generate/workers-ai/typesafe` route instead of TypeSafe's API, with no vendor key sent. `EdgeAiService` in `@dxos/edge-client` accepts `'workers-ai/typesafe'`.
+TypeSafe's jev decision model can now run on Cloudflare Workers AI: `AiService.decisionModel(Model.cloudflareJev.id)` answers through EDGE's Workers AI route, while `Model.typesafeJev` keeps TypeSafe's own API. `AiService.decisionModel` now accepts a model DXN as well as a bare NSID.
+
+Breaking: `TypeSafeResolver.make` takes routes per provider (`{ typesafe, workersAi }`), and `TypeSafeResolver.provider` and `TypeSafeResolver.jevLatest` are replaced by `Provider.typesafe` and `Model.typesafeJev`.

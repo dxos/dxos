@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
-import { EDGE_ENDPOINT, WORKERS_AI_ENDPOINT } from './edge-http-client.ts';
+import { EDGE_ENDPOINT } from './edge-http-client.ts';
 import { connectedApiKey, requiredApiKey, resolveEndpoint } from './model-resolver.ts';
 
 const credentials = (query: () => Promise<Credential.ServiceCredential[]>) =>
@@ -90,15 +90,10 @@ describe('endpoint override validation', () => {
 });
 
 describe('resolveEndpoint', () => {
-  test('routes through EDGE to TypeSafe by default, and to Workers AI when selected', ({ expect }) => {
-    expect(resolveEndpoint(undefined)).toBe(EDGE_ENDPOINT);
-    expect(resolveEndpoint({ backend: 'typesafe' })).toBe(EDGE_ENDPOINT);
-    expect(resolveEndpoint({ backend: 'workers-ai' })).toBe(WORKERS_AI_ENDPOINT);
-  });
-
-  test('honours the endpoint override for TypeSafe only', ({ expect }) => {
+  test('routes through EDGE unless an override is set', ({ expect }) => {
     const endpoint = 'https://typesafe.example/v1/systemone';
-    expect(resolveEndpoint({ endpoint })).toBe(endpoint);
-    expect(resolveEndpoint({ backend: 'workers-ai', endpoint })).toBe(WORKERS_AI_ENDPOINT);
+    expect(resolveEndpoint(undefined)).toBe(EDGE_ENDPOINT);
+    expect(resolveEndpoint('  ')).toBe(EDGE_ENDPOINT);
+    expect(resolveEndpoint(endpoint)).toBe(endpoint);
   });
 });
