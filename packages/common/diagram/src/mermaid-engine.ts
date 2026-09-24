@@ -603,6 +603,62 @@ type EmitOptions = {
   route?: Router;
 };
 
+const rectsOverlap = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/** Whether an axis-aligned (or short diagonal) segment passes through a rect, by its bounding box. */
+const segmentHits = ([a, b]: [Scene.Point, Scene.Point], rect: Rect) =>
+  rectsOverlap(
+    { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x) || 1, h: Math.abs(b.y - a.y) || 1 },
+    rect,
+  );
+
+/**
+ * Edge labels, each at the first spot along its own path that is clear of every node, every label
+ * already placed and every other edge's line: beside a vertical run or above/below a horizontal one,
+ * trying the middle segment first and working outward. Falls back to the middle when nothing is clear.
+ */
+const placeLabels = (
+  labelled: readonly { id: string; text: string; points: Scene.Point[] }[],
+  paths: readonly Scene.Point[][],
+  nodes: readonly Rect[],
+): Scene.Text[] => {
+  const segments = paths.map((points) =>
+    points.slice(0, -1).map((point, index): [Scene.Point, Scene.Point] => [point, points[index + 1]]),
+  );
+  const placed: Rect[] = [];
+  return labelled.map(({ id, text, points }) => {
+    const size = { w: text.length * LABEL_FONT.charW, h: LABEL_FONT.lineH };
+    const own = points.slice(0, -1).map((point, index): [Scene.Point, Scene.Point] => [point, points[index + 1]]);
+    const middle = Math.floor((own.length - 1) / 2);
+    const order = own.map((_, index) => index).sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle));
+    const candidates = order.flatMap((index) => {
+      const [a, b] = own[index];
+      const vertical = Math.abs(a.x - b.x) < Math.abs(a.y - b.y);
+      return [0.5, 0.3, 0.7].flatMap((t) => {
+        const at = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+        return vertical
+          ? [
+              { x: at.x + GRID / 4, y: at.y - size.h / 2 },
+              { x: at.x - GRID / 4 - size.w, y: at.y - size.h / 2 },
+            ]
+          : [
+              { x: at.x - size.w / 2, y: at.y - size.h - GRID / 8 },
+              { x: at.x - size.w / 2, y: at.y + GRID / 8 },
+            ];
+      });
+    });
+    const clear = (rect: Rect) =>
+      !nodes.some((node) => rectsOverlap(rect, node)) &&
+      !placed.some((other) => rectsOverlap(rect, other)) &&
+      !segments.some((path) => path.some((segment) => segmentHits(segment, rect)));
+    const [head, tail] = own[middle] ?? [points[0], points[points.length - 1]];
+    const fallback = { x: (head.x + tail.x) / 2 + GRID / 4, y: (head.y + tail.y) / 2 - LABEL_FONT.lineH };
+    const origin = candidates.find((candidate) => clear({ ...candidate, ...size })) ?? fallback;
+    placed.push({ ...origin, ...size });
+    return { kind: 'text', id: `${id}-label`, x: origin.x, y: origin.y, text, weight: 's' };
+  });
+};
+
 /** Group tints in declaration order; a renderer fills a frame with a light wash of its color. */
 const GROUP_COLORS: readonly Scene.Color[] = [
   'light-blue',
@@ -765,6 +821,8 @@ const emit = (
       }
       return best ?? direct;
     };
+    const labelled: { id: string; text: string; points: Scene.Point[] }[] = [];
+    const paths: Scene.Point[][] = [];
     routed.forEach((edge, index) => {
       const from = nodes.get(edge.from);
       const to = nodes.get(edge.to);
@@ -792,18 +850,11 @@ const emit = (
         ...style,
       });
       if (edge.label) {
-        const head = points[Math.floor(points.length / 2) - 1];
-        const tail = points[Math.floor(points.length / 2)];
-        elements.push({
-          kind: 'text',
-          id: `${id}-label`,
-          x: (head.x + tail.x) / 2 + GRID / 4,
-          y: (head.y + tail.y) / 2 - LABEL_FONT.lineH,
-          text: edge.label,
-          weight: 's',
-        });
+        labelled.push({ id, text: edge.label, points });
       }
+      paths.push(points);
     });
+    elements.push(...placeLabels(labelled, paths, [...nodes.values()]));
     commands.push({ op: 'upsert-object', object: { id: 'edges', origin, scale, elements } });
   }
 
