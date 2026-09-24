@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Connection } from '@dxos/link';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Button, Panel, Tabs, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -33,7 +34,7 @@ import { GitHubOperation, Walkthrough } from '#types';
 
 import { CommentComposer, LineCommentPopover } from '../../components/CommentComposer/index.ts';
 import { PullRequestOverview } from '../../components/PullRequestOverview/index.ts';
-import { GITHUB_PROVIDER_ID } from '../../constants.ts';
+import { githubConnection } from '../../operations/pull-request.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
 
@@ -174,8 +175,14 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         return toast(id, key, false, error.message);
       }
 
-      const connections = await db.query(Filter.type(Connection.Connection)).run();
-      const connection = connections.find((connection) => connection.connectorId === GITHUB_PROVIDER_ID);
+      const connection = (
+        await EffectEx.runPromise(
+          githubConnection().pipe(
+            Effect.provide(Database.layer(db)),
+            Effect.orElseSucceed(() => undefined),
+          ),
+        )
+      )?.connection;
       return invokePromise(LayoutOperation.AddToast, {
         id: `${meta.profile.key}.${id}`,
         icon: 'ph--warning--regular',

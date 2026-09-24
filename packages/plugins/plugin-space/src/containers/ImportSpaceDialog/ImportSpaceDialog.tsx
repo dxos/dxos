@@ -23,6 +23,7 @@ export const ImportSpaceDialog = () => {
   const handleFile = useCallback(
     async (file: File) => {
       setImporting(file.name);
+      let space: { id: string } | undefined;
       try {
         const contents = new Uint8Array(await file.arrayBuffer());
         const { data: result, error } = await invokePromise(SpaceOperation.ImportSpace, {
@@ -31,10 +32,7 @@ export const ImportSpaceDialog = () => {
         if (error) {
           throw error;
         }
-        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-        if (result?.space) {
-          await invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(result.space.id) });
-        }
+        space = result?.space;
       } catch (error) {
         log.catch(error);
         await invokePromise(LayoutOperation.AddToast, {
@@ -44,8 +42,15 @@ export const ImportSpaceDialog = () => {
           description: error instanceof Error ? error.message : String(error),
           closeLabel: ['dismiss.label', { ns: meta.profile.key }],
         });
+        return;
       } finally {
         setImporting(undefined);
+      }
+
+      // Outside the import's catch: the space already exists, so a failure here must not invite a retry that duplicates it.
+      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+      if (space) {
+        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
       }
     },
     [invokePromise],

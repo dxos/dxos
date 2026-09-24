@@ -16,10 +16,10 @@ import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
- * The first GitHub connection token in the space, or empty for anonymous — which reaches any public
- * pull request, and is the only option in a space that has not connected GitHub.
+ * The GitHub connection whose token requests are sent with: the first one holding a token. Shared by
+ * the handlers and by the UI that sends the user to reconnect, so both name the same connection.
  */
-export const githubToken = () =>
+export const githubConnection = () =>
   Effect.gen(function* () {
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
     for (const connection of connections) {
@@ -28,12 +28,18 @@ export const githubToken = () =>
       }
       const accessToken = yield* Database.load(connection.accessToken);
       if (accessToken.token) {
-        return accessToken.token;
+        return { connection, token: accessToken.token };
       }
     }
 
-    return '';
+    return undefined;
   });
+
+/**
+ * The token of {@link githubConnection}, or empty for anonymous — which reaches any public pull
+ * request, and is the only option in a space that has not connected GitHub.
+ */
+export const githubToken = () => githubConnection().pipe(Effect.map((selected) => selected?.token ?? ''));
 
 /**
  * The stored pull request behind an operation's input and credentials for its space.
