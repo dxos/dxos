@@ -289,10 +289,10 @@ const resolveTarget = (profile: string, url: Option.Option<string>) =>
     if (Option.isNone(url)) {
       return fromSession(profile, yield* requireSession(profile, url));
     }
+    const endpoint = `${url.value.replace(/\/(mcp)?$/, '')}/mcp`;
+    // Sessions are stored per host, so the requested path wins over the one the session was made for.
     const session = yield* loadSession(profile, url.value);
-    return session === undefined
-      ? { endpoint: `${url.value.replace(/\/(mcp)?$/, '')}/mcp` }
-      : fromSession(profile, session);
+    return session === undefined ? { endpoint } : { ...fromSession(profile, session), endpoint };
   });
 
 const fromSession = (
