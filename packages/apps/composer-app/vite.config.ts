@@ -30,6 +30,7 @@ import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { reactCompilerHooks } from './src/vite/react-compiler-hooks.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -124,6 +125,20 @@ const slimWasm = (): PluginOption => {
     },
   };
 };
+
+/**
+ * Sources compiled by the Solid JSX transform instead of React's.
+ */
+const SOLID_SOURCES = [
+  '**/solid-ui-geo/**',
+  '**/plugin-map-solid/**',
+  '**/effect-atom-solid/**',
+  '**/web-context-solid/**',
+  '**/echo-solid/**',
+  '**/node_modules/solid-js/**',
+  '**/node_modules/solid-element/**',
+  '**/node_modules/@solid-primitives/**',
+];
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -536,20 +551,12 @@ export default defineConfig((env) => ({
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
-    solid({
-      include: [
-        '**/solid-ui-geo/**',
-        '**/plugin-map-solid/**',
-        '**/effect-atom-solid/**',
-        '**/web-context-solid/**',
-        '**/echo-solid/**',
-        '**/node_modules/solid-js/**',
-        '**/node_modules/solid-element/**',
-        '**/node_modules/@solid-primitives/**',
-      ],
-    }),
+    solid({ include: SOLID_SOURCES }),
 
-    react(),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel; Solid sources are excluded so
+    // Solid's output is not memoised and refresh-registered as if it were React.
+    react({ compiler: true, include: /\.[jt]sx$/, exclude: [/\/node_modules\//, ...SOLID_SOURCES] }),
+    reactCompilerHooks({ exclude: SOLID_SOURCES }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 
