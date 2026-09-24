@@ -348,6 +348,7 @@ const handlers = {
     await overlay.ensure();
     const value = await page.evaluate(
       async ({ key, input, spaceId }) => {
+        window.__demoOverlay?.wrapInvoke();
         if (!globalThis.composer?.invoke) {
           throw new Error('composer.invoke is unavailable — the app has not finished mounting');
         }

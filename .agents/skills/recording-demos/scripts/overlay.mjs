@@ -75,8 +75,45 @@ const install = ({ hostId, feedMs, position }) => {
       cursor.style.transform = `translate(${x}px, ${y}px)`;
     };
 
+    const pending = new Map();
+
+    const render = ({ kind, label, detail, keys, id }) => {
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.dataset.id = id ?? '';
+      const badge = document.createElement('span');
+      badge.className = `badge ${kind}`;
+      badge.textContent = kind;
+      const body = document.createElement('div');
+      body.className = 'body';
+      const main = document.createElement('div');
+      main.className = keys ? 'label keys' : 'label';
+      main.textContent = label;
+      body.appendChild(main);
+      if (detail) {
+        const line = document.createElement('div');
+        line.className = 'detail';
+        line.textContent = detail;
+        body.appendChild(line);
+      }
+      entry.append(badge, body);
+      feed.appendChild(entry);
+      while (feed.children.length > 4) {
+        feed.firstElementChild.remove();
+      }
+      return entry;
+    };
+
+    const retire = (entry) => {
+      setTimeout(() => entry.classList.add('fade'), feedMs);
+      setTimeout(() => entry.remove(), feedMs + 450);
+    };
+
     window.__demoOverlay = {
       moveCursor,
+      // `composer.invoke` is assigned by an effect after `composer` exists, so a caller about to invoke
+      // re-wraps in its own page task rather than trusting the last install.
+      wrapInvoke: () => wrapInvoke(),
       click: (x, y) => {
         moveCursor(x, y);
         const ripple = document.createElement('div');
@@ -87,38 +124,24 @@ const install = ({ hostId, feedMs, position }) => {
         setTimeout(() => ripple.remove(), 700);
       },
       /** Returns an id so a pending entry (an operation in flight) can be resolved with its outcome. */
-      event: ({ kind, label, detail, keys, id }) => {
-        const entry = document.createElement('div');
-        entry.className = 'entry';
-        entry.dataset.id = id ?? '';
-        const badge = document.createElement('span');
-        badge.className = `badge ${kind}`;
-        badge.textContent = kind;
-        const body = document.createElement('div');
-        body.className = 'body';
-        const main = document.createElement('div');
-        main.className = keys ? 'label keys' : 'label';
-        main.textContent = label;
-        body.appendChild(main);
-        if (detail) {
-          const line = document.createElement('div');
-          line.className = 'detail';
-          line.textContent = detail;
-          body.appendChild(line);
+      event: (spec) => {
+        const entry = render(spec);
+        // A pending entry fades only once resolved, so a slow operation still shows how it ended.
+        if (spec.id) {
+          pending.set(spec.id, spec);
+        } else {
+          retire(entry);
         }
-        entry.append(badge, body);
-        feed.appendChild(entry);
-        while (feed.children.length > 4) {
-          feed.firstElementChild.remove();
-        }
-        setTimeout(() => entry.classList.add('fade'), feedMs);
-        setTimeout(() => entry.remove(), feedMs + 450);
       },
       resolve: (id, ok, note) => {
-        const entry = feed.querySelector(`[data-id="${CSS.escape(id)}"]`);
+        const spec = pending.get(id);
+        pending.delete(id);
+        // Evicted by newer entries while in flight: re-render it so the outcome is not lost.
+        const entry = feed.querySelector(`[data-id="${CSS.escape(id)}"]`) ?? (spec && render(spec));
         if (!entry) {
           return;
         }
+        retire(entry);
         const status = document.createElement('span');
         status.className = 'status';
         status.textContent = ok ? '✓' : '✗';
