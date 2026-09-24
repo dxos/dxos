@@ -47,7 +47,7 @@ import {
 
 import { type InvitationProtocol } from '../../contracts/invitation-protocol.ts';
 import * as SpacesContract from '../../contracts/spaces.ts';
-import { type SigningContext } from '../spaces/index.ts';
+import { type SigningContext } from '../echo/spaces/index.ts';
 import { computeExpirationTime, toSpaceMemberRole } from './utils.ts';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {

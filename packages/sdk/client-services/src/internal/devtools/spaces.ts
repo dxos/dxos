@@ -19,8 +19,8 @@ import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 import * as SpacesContract from '../../contracts/spaces.ts';
+import { type Space, type SpaceManager } from '../echo/space/index.ts';
 import { type IMetadataStore } from '../kernel/metadata/index.ts';
-import { type Space, type SpaceManager } from '../space/index.ts';
 
 export const subscribeToSpaces = (
   {

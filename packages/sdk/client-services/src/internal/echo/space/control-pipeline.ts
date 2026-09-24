@@ -30,8 +30,8 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 
-import { type IMetadataStore } from '../kernel/metadata/index.ts';
-import { Pipeline, type PipelineAccessor } from '../kernel/pipeline/index.ts';
+import { type IMetadataStore } from '../../kernel/metadata/index.ts';
+import { Pipeline, type PipelineAccessor } from '../../kernel/pipeline/index.ts';
 
 export type ControlPipelineProps = {
   spaceKey: PublicKey;

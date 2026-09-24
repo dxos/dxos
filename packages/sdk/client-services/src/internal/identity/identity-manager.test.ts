@@ -20,9 +20,9 @@ import { AuthorizedDeviceSchema, ProfileDocumentSchema } from '@dxos/protocols/b
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { AuthStatus, SpaceManager } from '../echo/space/index.ts';
 import { MetadataStore } from '../kernel/metadata/index.ts';
 import { valueEncoding } from '../kernel/pipeline/index.ts';
-import { AuthStatus, SpaceManager } from '../space/index.ts';
 import { createServiceContext } from '../testing/index.ts';
 import { IdentityManager } from './identity-manager.ts';
 

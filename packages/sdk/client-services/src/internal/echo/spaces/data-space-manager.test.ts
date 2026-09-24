@@ -23,9 +23,9 @@ import { type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/buf/dx
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 
-import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { openCredentialsDocument } from '../../../CredentialsDocument.ts';
+import { TestBuilder, type TestPeer } from '../../testing/index.ts';
 import { AuthStatus } from '../space/index.ts';
-import { TestBuilder, type TestPeer } from '../testing/index.ts';
 import { remainingLifetimeSeconds } from './data-space-manager.ts';
 
 describe('remainingLifetimeSeconds', () => {

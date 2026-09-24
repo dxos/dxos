@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { EffectEx, Hook } from '@dxos/effect';
@@ -148,4 +149,15 @@ export const CrossDeviceSpaceSynchronizerLayer: Layer.Layer<
     );
     return synchronizer;
   }),
+);
+
+/** Eager: nothing asks for its tag — it exists to subscribe to space changes across devices. */
+export const CrossDeviceSpaceSynchronizerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Hook.Controller, SpacesContract.ManagerService],
+    provides: [CrossDeviceSpaceSynchronizerService],
+    eager: true,
+  },
+  () => CrossDeviceSpaceSynchronizerLayer,
 );

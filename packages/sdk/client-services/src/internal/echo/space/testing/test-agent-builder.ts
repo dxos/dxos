@@ -20,8 +20,8 @@ import { type Storage, StorageType, createStorage } from '@dxos/random-access-st
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { MetadataStore } from '../../kernel/metadata/index.ts';
-import { TestFeedBuilder } from '../../kernel/pipeline/testing/index.ts';
+import { MetadataStore } from '../../../kernel/metadata/index.ts';
+import { TestFeedBuilder } from '../../../kernel/pipeline/testing/index.ts';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../index.ts';
 
 export type NetworkManagerProvider = () => SwarmNetworkManager;

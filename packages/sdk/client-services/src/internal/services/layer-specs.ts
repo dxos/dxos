@@ -2,39 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RegisterService } from '@dxos/client-protocol';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { ConfigService } from '@dxos/config';
-import {
-  EchoEdgeSubductionReplicatorLayer,
-  EchoHostService,
-  EdgeAutomergeReplicatorService,
-  MeshEchoReplicatorLayer,
-  MeshEchoReplicatorService,
-} from '@dxos/echo-host';
-import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { Hook } from '@dxos/effect';
 import { HypercoreStoreService } from '@dxos/feed-store';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
-import { FeedProtocol } from '@dxos/protocols';
 import {
   ContactsService,
-  DataService,
   DevicesService,
   DevtoolsHost,
   EdgeAgentService,
-  FeedService,
   IdentityService,
   InvitationsService,
   LoggingService,
-  QueryService,
-  SpacesService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
@@ -47,6 +32,8 @@ import * as Readiness from '../../Readiness.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
 import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
+import * as Echo from '../echo/index.ts';
+import { SpaceManagerService } from '../echo/space/index.ts';
 import {
   EdgeIdentityRecoveryManagerLayer,
   EdgeIdentityRecoveryManagerService,
@@ -68,20 +55,8 @@ import * as Kernel from '../kernel/index.ts';
 import { IMetadataStoreService } from '../kernel/metadata/index.ts';
 import { LoggingServiceLayer } from '../logging/index.ts';
 import * as Mesh from '../mesh/index.ts';
-import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
-import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
-import {
-  CrossDeviceSpaceSynchronizerLayer,
-  CrossDeviceSpaceSynchronizerService,
-} from './cross-device-space-synchronizer.ts';
-import { FeedSyncerLayer, FeedSyncerService } from './feed-syncer.ts';
-import {
-  type ServiceStackServices,
-  echoHostLayer,
-  identityProviderLayer,
-  registerReplicator,
-} from './service-stack.ts';
+import { type ServiceStackServices, identityProviderLayer } from './service-stack.ts';
 
 /**
  * Subduction needs the edge clients as well as the feature flag: the flag is set in config profiles
@@ -113,16 +88,6 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
 //
 // Identity and spaces.
 //
-
-export const SpaceManagerSpec = (options: ServiceStackServices) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [Hook.Controller, HypercoreStoreService, SwarmNetworkManagerService, IMetadataStoreService],
-      provides: [SpaceManagerService],
-    },
-    () => SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication }),
-  );
 
 export const IdentityManagerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
@@ -167,15 +132,6 @@ export const IdentityLifecycleSpec = LayerSpec.make(
   () => IdentityLifecycleLayer,
 );
 
-export const SigningContextProviderSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [IdentityContract.ProviderService],
-    provides: [SpacesContract.SigningContextProviderService],
-  },
-  () => SigningContextProviderLayer,
-);
-
 export const InvitationsHandlerSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     { affinity: 'application', requires: [SwarmNetworkManagerService], provides: [InvitationsHandlerService] },
@@ -190,38 +146,6 @@ export const InvitationsManagerSpec = LayerSpec.make(
   },
   () => InvitationsManagerLayer(),
 );
-
-export const EchoHostSpec = (options: ServiceStackServices) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
-      provides: [EchoHostService],
-    },
-    () => echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator }),
-  );
-
-export const DataSpaceManagerSpec = (options: ServiceStackServices) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [
-        Hook.Controller,
-        SpaceManagerService,
-        IMetadataStoreService,
-        KeyringApiService,
-        SpacesContract.SigningContextProviderService,
-        HypercoreStoreService,
-        EchoHostService,
-        InvitationsContract.ManagerService,
-        // Read with `Effect.serviceOption`, so each is required only where it is also provided.
-        ...(options.disableP2pReplication ? [] : [MeshEchoReplicatorService]),
-        ...(subductionEnabled(options) ? [EdgeAutomergeReplicatorService] : []),
-      ],
-      provides: [SpacesContract.ManagerService],
-    },
-    () => DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures }),
-  );
 
 export const InvitationFactoriesSpec = LayerSpec.make(
   {
@@ -250,70 +174,11 @@ export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
     () => EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures }),
   );
 
-// Eager: nothing asks for its tag — it exists to subscribe to space changes across devices.
-export const CrossDeviceSpaceSynchronizerSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [Hook.Controller, SpacesContract.ManagerService],
-    provides: [CrossDeviceSpaceSynchronizerService],
-    eager: true,
-  },
-  () => CrossDeviceSpaceSynchronizerLayer,
-);
-
 //
 // Replication. Each replicator provides its own tag as well as registering itself with the echo
 // host, because `SpacesContract.Manager` reads both tags with `Effect.serviceOption` to decide which
 // replication paths a space gets. The ones that need the edge are pruned without it.
 //
-
-export const MeshReplicatorSpec = LayerSpec.make(
-  { affinity: 'application', requires: [], provides: [MeshEchoReplicatorService] },
-  () => MeshEchoReplicatorLayer(),
-);
-
-export const MeshReplicatorRegistrationSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [MeshEchoReplicatorService, EchoHostService, Hook.Controller],
-    provides: [],
-    eager: true,
-  },
-  () => registerReplicator(MeshEchoReplicatorService),
-);
-
-export const EdgeSubductionReplicatorSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [EdgeConnectionService, EdgeHttpClientService],
-    provides: [EdgeAutomergeReplicatorService],
-  },
-  () => EchoEdgeSubductionReplicatorLayer(),
-);
-
-export const EdgeSubductionReplicatorRegistrationSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [EdgeAutomergeReplicatorService, EchoHostService, Hook.Controller],
-    provides: [],
-    eager: true,
-  },
-  () => registerReplicator(EdgeAutomergeReplicatorService),
-);
-
-export const FeedSyncerSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
-    provides: [FeedSyncerService],
-    eager: true,
-  },
-  () =>
-    FeedSyncerLayer({
-      peerId: '',
-      syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-    }),
-);
 
 //
 // RPC services. Each handler keeps its own tag, and its registration with the router is a separate
@@ -407,26 +272,6 @@ export const DevicesServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(DevicesService.Rpcs, DevicesService.Tag),
 );
 
-export const SpacesServiceSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [
-      IdentityContract.ManagerService,
-      SpaceManagerService,
-      EchoHostService,
-      SpacesContract.ManagerService,
-      Readiness.StackReadinessService,
-    ],
-    provides: [SpacesService.Tag],
-  },
-  () => SpacesServiceLayer,
-);
-
-export const SpacesServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SpacesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(SpacesService.Rpcs, SpacesService.Tag),
-);
-
 export const EdgeAgentServiceSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -444,48 +289,6 @@ export const EdgeAgentServiceRegistrationSpec = LayerSpec.make(
 //
 // Data, query and feed: thin projections of the echo host rather than package-local impls.
 //
-
-export const DataServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [EchoHostService], provides: [DataService.Tag] },
-  () =>
-    Layer.effect(
-      DataService.Tag,
-      Effect.map(EchoHostService, (echoHost) => echoHost.dataService),
-    ),
-);
-
-export const DataServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [DataService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(DataService.Rpcs, DataService.Tag),
-);
-
-export const QueryServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [EchoHostService], provides: [QueryService.Tag] },
-  () =>
-    Layer.effect(
-      QueryService.Tag,
-      Effect.map(EchoHostService, (echoHost) => echoHost.queryService),
-    ),
-);
-
-export const QueryServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [QueryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(QueryService.Rpcs, QueryService.Tag),
-);
-
-export const FeedServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [EchoHostService], provides: [FeedService.Tag] },
-  () =>
-    Layer.effect(
-      FeedService.Tag,
-      Effect.map(EchoHostService, (echoHost) => echoHost.feedService),
-    ),
-);
-
-export const FeedServiceRegistrationSpec = LayerSpec.make(
-  { affinity: 'application', requires: [FeedService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
-  () => RegisterService(FeedService.Rpcs, FeedService.Tag),
-);
 
 export const LoggingServiceSpec = LayerSpec.make(
   { affinity: 'application', requires: [], provides: [LoggingService.Tag] },
@@ -530,23 +333,15 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   ...Kernel.specs(),
   ...Mesh.specs({ ...options, edgeSignaling: !!options.edgeFeatures?.signaling }),
 
-  SpaceManagerSpec(options),
+  ...Echo.specs({ ...options, subductionEnabled: subductionEnabled(options) }),
   IdentityManagerSpec(options),
   IdentityProviderSpec,
   EdgeIdentityRecoverySpec,
   IdentityLifecycleSpec,
-  SigningContextProviderSpec,
   InvitationsHandlerSpec(options),
   InvitationsManagerSpec,
-  EchoHostSpec(options),
-  DataSpaceManagerSpec(options),
   InvitationFactoriesSpec,
   EdgeAgentManagerSpec(options),
-  CrossDeviceSpaceSynchronizerSpec,
-
-  ...(options.disableP2pReplication ? [] : [MeshReplicatorSpec, MeshReplicatorRegistrationSpec]),
-  ...(subductionEnabled(options) ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec] : []),
-  FeedSyncerSpec,
 
   RpcRouterSpec,
   SystemServiceSpec,
@@ -559,16 +354,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   InvitationsServiceRegistrationSpec,
   DevicesServiceSpec,
   DevicesServiceRegistrationSpec,
-  SpacesServiceSpec,
-  SpacesServiceRegistrationSpec,
   EdgeAgentServiceSpec,
   EdgeAgentServiceRegistrationSpec,
-  DataServiceSpec,
-  DataServiceRegistrationSpec,
-  QueryServiceSpec,
-  QueryServiceRegistrationSpec,
-  FeedServiceSpec,
-  FeedServiceRegistrationSpec,
   LoggingServiceSpec,
   LoggingServiceRegistrationSpec,
   DevtoolsHostSpec,

@@ -16,6 +16,7 @@ import * as Option from 'effect/Option';
 
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -85,14 +86,15 @@ import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import * as Auth from '../../Auth.ts';
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as InvitationsContract from '../../contracts/invitations.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
-import { openCredentialsDocument } from '../../CredentialsDocument.ts';
-import * as Events from '../../Events.ts';
-import { type Identity } from '../../Identity.ts';
-import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
+import * as Auth from '../../../Auth.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as InvitationsContract from '../../../contracts/invitations.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import { openCredentialsDocument } from '../../../CredentialsDocument.ts';
+import * as Events from '../../../Events.ts';
+import { type Identity } from '../../../Identity.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../../kernel/metadata/index.ts';
+import { type Options } from '../interface.ts';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -1192,4 +1194,35 @@ export const DataSpaceManagerLayer = (
       );
       return dataSpaceManager;
     }),
+  );
+
+export const SigningContextProviderSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [IdentityContract.ProviderService],
+    provides: [SpacesContract.SigningContextProviderService],
+  },
+  () => SigningContextProviderLayer,
+);
+
+export const DataSpaceManagerSpec = (options: Options) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [
+        Hook.Controller,
+        SpaceManagerService,
+        IMetadataStoreService,
+        KeyringApiService,
+        SpacesContract.SigningContextProviderService,
+        HypercoreStoreService,
+        EchoHostService,
+        InvitationsContract.ManagerService,
+        // Read with `Effect.serviceOption`, so each is required only where it is also provided.
+        ...(options.disableP2pReplication ? [] : [MeshEchoReplicatorService]),
+        ...(options.subductionEnabled ? [EdgeAutomergeReplicatorService] : []),
+      ],
+      provides: [SpacesContract.ManagerService],
+    },
+    () => DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures }),
   );

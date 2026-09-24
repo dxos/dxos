@@ -9,6 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { RegisterService } from '@dxos/client-protocol';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import {
   type CredentialProcessor,
@@ -58,12 +60,13 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
+import { RpcRouter } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
-import * as IdentityContract from '../../contracts/identity.ts';
-import * as SpacesContract from '../../contracts/spaces.ts';
-import * as Readiness from '../../Readiness.ts';
+import * as IdentityContract from '../../../contracts/identity.ts';
+import * as SpacesContract from '../../../contracts/spaces.ts';
+import * as Readiness from '../../../Readiness.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -625,3 +628,23 @@ export const SpacesServiceLayer: Layer.Layer<
 
 // Add `user-channel` prefix to the channel name, so that it doesn't collide with the internal channels.
 const getChannelId = (channel: string): string => `user-channel/${channel}`;
+
+export const SpacesServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      IdentityContract.ManagerService,
+      SpaceManagerService,
+      EchoHostService,
+      SpacesContract.ManagerService,
+      Readiness.StackReadinessService,
+    ],
+    provides: [SpacesService.Tag],
+  },
+  () => SpacesServiceLayer,
+);
+
+export const SpacesServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SpacesService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(SpacesService.Rpcs, SpacesService.Tag),
+);

@@ -24,7 +24,7 @@ import { type ComplexMap } from '@dxos/util';
 // as a rich object, so an interface over it would duplicate the class rather than abstract it.
 // `DataSpace` is an aggregate its consumers use as a rich object, so an interface over it would
 // duplicate the class rather than abstract it; it is the one implementation type the contract names.
-import { type DataSpace } from '../internal/spaces/data-space.ts';
+import { type DataSpace } from '../internal/echo/spaces/data-space.ts';
 
 //
 // The data-space subsystem's contract. See `contracts/identity.ts` for why the tags live with the

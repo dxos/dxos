@@ -24,7 +24,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
-import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
+import { type SpaceManager, SpaceManagerService } from '../echo/space/index.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
   'constructor'(

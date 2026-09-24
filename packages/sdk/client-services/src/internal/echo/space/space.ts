@@ -15,8 +15,8 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
 
-import { type IMetadataStore } from '../kernel/metadata/index.ts';
-import { type PipelineAccessor } from '../kernel/pipeline/index.ts';
+import { type IMetadataStore } from '../../kernel/metadata/index.ts';
+import { type PipelineAccessor } from '../../kernel/pipeline/index.ts';
 import { ControlPipeline } from './control-pipeline.ts';
 import { type SpaceProtocol } from './space-protocol.ts';
 

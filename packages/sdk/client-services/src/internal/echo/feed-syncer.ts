@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { AsyncTask, scheduleTask } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context, Resource } from '@dxos/context';
 import { EchoHostService } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
@@ -792,3 +793,18 @@ export const FeedSyncerLayer = (
       return feedSyncer;
     }),
   );
+
+/** Eager: nothing asks for its tag — it syncs feeds with the edge in the background. */
+export const FeedSyncerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Hook.Controller, SqlClient.SqlClient, EchoHostService, EdgeConnectionService],
+    provides: [FeedSyncerService],
+    eager: true,
+  },
+  () =>
+    FeedSyncerLayer({
+      peerId: '',
+      syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+    }),
+);

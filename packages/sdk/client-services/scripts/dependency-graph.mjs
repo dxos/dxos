@@ -103,7 +103,7 @@ console.log(`\n# ${nodes.length} modules, ${total} edges`);
 // a tag typed against an implementation class keeps the dependency while erasing the import that
 // would show it, so checking only runtime edges would certify exactly what the trick hides.
 const contractsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'contracts');
-const ALLOWED_AGGREGATES = ['internal/spaces/data-space.ts'];
+const ALLOWED_AGGREGATES = ['internal/echo/spaces/data-space.ts'];
 const violations = [];
 for (const path of walk(contractsDir)) {
   if (!path.endsWith('.ts')) {

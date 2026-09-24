@@ -60,8 +60,8 @@ import * as IdentityContract from '../../contracts/identity.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
 import * as Events from '../../Events.ts';
 import { Identity } from '../../Identity.ts';
+import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../echo/space/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
-import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;

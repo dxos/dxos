@@ -42,7 +42,7 @@ import * as IdentityContract from '../../contracts/identity.ts';
 import * as SpacesContract from '../../contracts/spaces.ts';
 import * as PlatformInfo from '../../PlatformInfo.ts';
 import { DXOS_VERSION } from '../../version.ts';
-import { type DataSpace } from '../spaces/index.ts';
+import { type DataSpace } from '../echo/spaces/index.ts';
 
 const DEFAULT_TIMEOUT = 1_000;
 

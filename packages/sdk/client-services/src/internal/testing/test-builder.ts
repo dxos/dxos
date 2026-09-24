@@ -53,6 +53,8 @@ import { type Identity } from '../../Identity.ts';
 import * as Readiness from '../../Readiness.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
 import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
+import { SpaceManager, SpaceManagerService } from '../echo/space/index.ts';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../echo/spaces/index.ts';
 import {
   type EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerService,
@@ -67,8 +69,6 @@ import {
 import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore } from '../kernel/metadata/index.ts';
 import { valueEncoding } from '../kernel/pipeline/index.ts';
 import { type ServiceContextRuntimeProps, layerClientServices } from '../services/index.ts';
-import { SpaceManager, SpaceManagerService } from '../space/index.ts';
-import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces/index.ts';
 
 /** The open event chain; `StackOpened` resolves once every handler the cascade triggered has run. */
 const openChain = Effect.gen(function* () {

@@ -31,8 +31,8 @@ import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
+import { type SpaceManager, SpaceManagerService } from '../echo/space/index.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
-import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds.ts';
 import { subscribeToKeyringKeys } from './keys.ts';
 import { subscribeToMetadata } from './metadata.ts';

@@ -54,7 +54,7 @@ import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 
-import { remainingLifetimeSeconds } from '../spaces/data-space-manager.ts';
+import { remainingLifetimeSeconds } from '../echo/spaces/data-space-manager.ts';
 
 //
 // Helpers & Schema for test suite 2

@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -25,8 +26,9 @@ import { GetAdmissionCredentialRequestSchema } from '@dxos/protocols/buf/dxos/me
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import * as Events from '../../Events.ts';
-import { type IMetadataStore, IMetadataStoreService } from '../kernel/metadata/index.ts';
+import * as Events from '../../../Events.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../../kernel/metadata/index.ts';
+import { type Options } from '../interface.ts';
 import { CredentialRetrieverExtension } from './admission-discovery-extension.ts';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
 import { Space } from './space.ts';
@@ -223,4 +225,14 @@ export const SpaceManagerLayer = (
       );
       return spaceManager;
     }),
+  );
+
+export const SpaceManagerSpec = (options: Pick<Options, 'disableP2pReplication'>) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [Hook.Controller, HypercoreStoreService, SwarmNetworkManagerService, IMetadataStoreService],
+      provides: [SpaceManagerService],
+    },
+    () => SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication }),
   );
