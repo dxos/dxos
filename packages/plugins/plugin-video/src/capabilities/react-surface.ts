@@ -9,9 +9,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Video } from '@dxos/types';
 
 import { SummarySection, TranscriptSection, VideoArticle, VideoSection } from '#containers';
-import { Video } from '#types';
 
 const isVideoPart = (data: unknown, part: string): boolean => {
   if (typeof data !== 'object' || data === null) {

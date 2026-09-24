@@ -301,6 +301,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       disabled,
       closeOnSelect = true,
       children,
+      ...props
     },
     forwardedRef,
   ) => {
@@ -317,6 +318,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
 
     return (
       <Picker.Item
+        {...props}
         value={value}
         disabled={disabled}
         onSelect={handleSelect}

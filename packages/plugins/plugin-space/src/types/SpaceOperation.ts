@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { SpaceSchema } from '@dxos/client/echo';
+import { SpaceMember_Role, SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Tag, Type, View } from '@dxos/echo';
@@ -108,6 +108,26 @@ export const Share = Operation.make({
     target: Schema.optional(Schema.String),
   }),
   output: Schema.instanceOf(CancellableInvitationObservable),
+});
+
+export const AddMembers = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.addMembers'),
+    name: 'Add Members',
+    description: 'Admit known contacts to a space by identity key.',
+    icon: 'ph--user-plus--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+    identityKeys: Schema.Array(Schema.String),
+    role: Schema.Enum(SpaceMember_Role),
+  }),
+  output: Schema.Struct({
+    joinUrl: Schema.String,
+    admitted: Schema.Array(Schema.String),
+    failed: Schema.Array(Schema.Struct({ key: Schema.String, error: Schema.String })),
+  }),
 });
 
 export const OpenSettings = Operation.make({
@@ -273,7 +293,7 @@ export const DeleteField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to delete the field from.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to delete the field from.' }),
     fieldId: Schema.String,
   }),
   output: DeleteFieldOutput,
@@ -570,7 +590,7 @@ export const RestoreField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to restore the field to.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to restore the field to.' }),
     field: View.FieldSchema.annotate({ description: 'The field schema to restore.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
     props: Schema.Any.annotate({ description: 'The field properties to restore.' }),

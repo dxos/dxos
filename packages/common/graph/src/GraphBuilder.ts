@@ -13,6 +13,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
+import { AtomEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -139,6 +140,8 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   release(ids: readonly string[]): void;
   /** The edges leaving `id`, read without subscribing. */
   outgoing(id: string): readonly Edge[];
+  /** Releases what the store holds on the builder's behalf; called by {@link destroy}. */
+  dispose?(): void;
 }
 
 /**
@@ -228,9 +231,12 @@ export class GraphBuilder<
   Meta = unknown,
   G = unknown,
 >
-  implements Pipeable.Pipeable
+  implements Pipeable.Pipeable, AtomEx.Owner
 {
+  static readonly #finalizer = new FinalizationRegistry<() => void>((unmount) => unmount());
+
   readonly [TypeId]: TypeId = TypeId;
+  readonly [AtomEx.OwnerId]: AtomEx.Owner[typeof AtomEx.OwnerId];
 
   pipe() {
     // eslint-disable-next-line prefer-rest-params
@@ -264,11 +270,7 @@ export class GraphBuilder<
   _flushPromise: Promise<void> = Promise.resolve();
   /** Resolves when the queued update flush completes. */
   _updatePromise: Promise<void> = Promise.resolve();
-  /** Registered extensions keyed by extension ID. */
-  readonly _extensions = Atom.make(Record.empty<string, Extension<Node, Arg, Rel, Meta>>()).pipe(
-    Atom.keepAlive,
-    withLabel('graph-builder:extensions'),
-  );
+  readonly _extensions: Atom.Writable<Record<string, Extension<Node, Arg, Rel, Meta>>>;
   readonly _registry: Registry.AtomRegistry;
   readonly _store: Store<Node, Arg, G>;
   readonly _inline: Inline<Arg>;
@@ -278,6 +280,13 @@ export class GraphBuilder<
 
   constructor({ registry, store, relationKey, inline, decorateNode, unchanged }: Props<Node, Arg, Rel, Meta, G>) {
     this._registry = registry ?? Registry.make();
+    this[AtomEx.OwnerId] = { registry: this._registry, finalizer: GraphBuilder.#finalizer };
+    this._extensions = AtomEx.makeOwned(
+      this,
+      Atom.make<Record<string, Extension<Node, Arg, Rel, Meta>>>(Record.empty()).pipe(
+        withLabel('graph-builder:extensions'),
+      ),
+    );
     this._relationKey = relationKey;
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
@@ -633,9 +642,7 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
         children: (node) => node.nodes ?? [],
         map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn) }),
       },
-      // The default model retains its node atoms: builder graphs are consumed through atoms, and a
-      // view dropped between reads strands its subscribers. `release` is the reclamation path.
-      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry, retainAtoms: true }), hooks),
+      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry }), hooks),
     });
     if (!this.graph.findNode(rootId)) {
       this.graph.addNode({ id: rootId });
@@ -861,6 +868,7 @@ export const setRetention = <B extends Any>(
 export const destroy = (builder: Any): void => {
   builder._subscriptions.forEach((forNode) => forNode.forEach((unsubscribe) => unsubscribe()));
   builder._subscriptions.clear();
+  builder._store.dispose?.();
 };
 
 /**

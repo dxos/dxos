@@ -16,6 +16,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types.ts'))),
   SpaceOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag.ts'))),
   SpaceOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object.ts'))),
+  SpaceOperation.AddMembers.pipe(Operation.lazyHandler(() => import('./add-members.ts'))),
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object.ts'))),
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation.ts'))),
   SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type.ts'))),

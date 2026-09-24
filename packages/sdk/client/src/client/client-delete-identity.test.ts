@@ -11,8 +11,10 @@ import { Config } from '@dxos/config';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { buf, requirePublicKey } from '@dxos/protocols/buf';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { TestBuilder, performInvitation } from '../testing/index.ts';
 import { Client } from './client.ts';
 
 describe('Client.halo.deleteIdentity', () => {
@@ -100,6 +102,35 @@ describe('Client.halo.deleteIdentity', () => {
     const reopened = await openClient();
     expect(reopened.halo.identity.get()).to.be.null;
     expect(reopened.spaces.get()).to.have.length(0);
+  });
+
+  test('a device rejoining the identity it deleted gets its spaces back', { timeout: 60_000 }, async () => {
+    // The spaces come back under the ids they had, so nothing kept for the deleted ones may block them.
+    const testBuilder = new TestBuilder();
+    const openPeer = async (name: string) => {
+      const client = new Client({
+        services: testBuilder.createLocalClientServices({ sqlitePath: join(dataRoot, `${name}.db`) }),
+      });
+      onTestFinished(() => client.destroy());
+      await client.initialize();
+      return client;
+    };
+
+    const host = await openPeer('host');
+    const guest = await openPeer('guest');
+    await createIdentity(host, 'host');
+    const space = await populate(host, 'shared');
+    const joinHost = () =>
+      Promise.all(performInvitation({ host: host.halo, guest: guest.halo, options: { kind: Invitation_Kind.DEVICE } }));
+
+    await joinHost();
+    await expect.poll(() => guest.spaces.get(space.id), { timeout: 20_000 }).toBeDefined();
+
+    await guest.halo.deleteIdentity();
+    expect(guest.spaces.get()).to.have.length(0);
+
+    await joinHost();
+    await expect.poll(() => guest.spaces.get(space.id), { timeout: 20_000 }).toBeDefined();
   });
 
   test('is a no-op when there is no identity', { timeout: 30_000 }, async () => {

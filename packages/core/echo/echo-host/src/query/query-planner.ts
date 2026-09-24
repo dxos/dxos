@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -9,6 +11,7 @@ import { DXN, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors.ts';
 import { QueryPlan } from './plan.ts';
+import { compilePlan as compileToSql, planDeclinedByCompiler } from './sql/index.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
@@ -27,8 +30,19 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
   });
 };
 
+/**
+ * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
+ * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
+ * index tables. `memory` is the default; the host resolves where the choice comes from.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
+
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
+  /** Evaluation path the plan targets, which decides what {@link QueryPlanner.createPlan} returns. */
+  executor?: QueryExecutorMode;
+  /** Builds the statement's fragments; required for `sql`, which has nothing to compile without it. */
+  sql?: SqlClient.SqlClient;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
    * Use when executing against an in-memory working set without SQL index access.
@@ -39,6 +53,7 @@ export type QueryPlannerOptions = {
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
   defaultTextSearchKind: 'full-text',
+  executor: 'memory',
 };
 
 /**
@@ -47,6 +62,8 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
 // TODO(dmaretskyi): Implement inefficient versions of complex queries.
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
+  /** Passed to the compiler, which plans `in-query` subqueries through it rather than importing this module. */
+  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.#buildSteps(query);
 
   constructor(options?: Partial<QueryPlannerOptions>) {
     this._options = {
@@ -55,7 +72,22 @@ export class QueryPlanner {
     };
   }
 
+  /**
+   * The plan the executor runs. Under `sql` the steps are compiled into one
+   * {@link QueryPlan.SqlStep}, except where {@link planDeclinedByCompiler} sends the plan to the
+   * in-memory executor instead. Synchronous: compiling reads nothing, it only builds the statement.
+   */
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    const plan = this.#buildSteps(query);
+    const sql = this._options.sql;
+    if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
+      return plan;
+    }
+    return compileToSql(sql, plan, this.#planSubquery).plan;
+  }
+
+  /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */
+  #buildSteps(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });

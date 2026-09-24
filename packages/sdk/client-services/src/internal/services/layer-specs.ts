@@ -405,7 +405,11 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
       requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
-    () => echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator }),
+    () =>
+      echoHostLayer({
+        useSubduction: options.edgeFeatures?.subductionReplicator,
+        queryExecutor: options.queryExecutor,
+      }),
   );
 
 export const DataSpaceManagerSpec = (options: ServiceStackServices) =>

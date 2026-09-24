@@ -136,6 +136,9 @@ describe('SpaceOperation.AddObject', () => {
 
         const root = yield* getRootCollection;
         expect(root?.objects.map((ref) => ref.peek()?.id)).toEqual([object.id]);
+        // Persisted, not only referenced: a parent missing from the space drops the object from every query.
+        expect(root && Obj.getDatabase(root)).toBeDefined();
+        expect(Obj.getParent(object as Obj.Any)?.id).toBe(root?.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

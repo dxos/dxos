@@ -244,9 +244,17 @@ describe('RepoProxy', () => {
     // `whenReady()` must NOT resolve — there is no source for the doc on
     // disk or on the network.
     let readyResolved = false;
-    void handle.whenReady().then(() => {
-      readyResolved = true;
-    });
+    void handle.whenReady().then(
+      () => {
+        readyResolved = true;
+      },
+      (err) => {
+        // The close at the end of the test settles the still-pending load.
+        if (!(err instanceof RepoClosedError)) {
+          throw err;
+        }
+      },
+    );
     await sleep(300);
 
     expect(readyResolved).toBe(false);
@@ -684,6 +692,36 @@ describe('RepoProxy', () => {
     expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
     expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
     await closing;
+  });
+
+  test('a load still in flight is settled when the proxy closes', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    // The host has no bytes for this document and no peer to fetch them from, so only the close can
+    // settle the load.
+    const handle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    const ready = asyncTimeout(handle.whenReady(), 1_000);
+    await clientRepo.close();
+
+    await expect(ready).rejects.toThrow(RepoClosedError);
+  });
+
+  // `Trigger` marks its own promise handled, so settling a load nobody awaits must not surface as an
+  // unhandled rejection; vitest reports one as an error for the run.
+  test('closing with a load nobody awaits raises no unhandled rejection', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+
+    const handle = clientRepo.find<{ text: string }>(generateAutomergeUrl());
+    await clientRepo.close();
+    // Lets an unhandled rejection surface inside this test rather than a later one.
+    await sleep(10);
+
+    // The load is settled rather than left pending, even though nobody was waiting on it.
+    await expect(asyncTimeout(handle.whenReady(), 1_000)).rejects.toThrow(RepoClosedError);
   });
 
   test('find on a closed proxy reports the client going away', async () => {
