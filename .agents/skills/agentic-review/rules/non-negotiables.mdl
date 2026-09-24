@@ -146,7 +146,7 @@ rule bounded-live-state: Every collection of live entities has an explicit upper
   files:
     - packages/**/src/**/*.ts
     - packages/**/src/**/*.tsx
-  grep: \.set\(|\.push\(|\.add\(|\.put\(|\.insert\(|register\w*\(|spawn\w*\(|INSERT INTO
+  grep: \.set\(|\.push\(|\.add\(|\.put\(|\.insert\(|register\w*\(|spawn\w*\(|INSERT INTO|insert into
   severity: error
 ```
 
