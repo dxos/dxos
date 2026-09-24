@@ -235,13 +235,13 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
       </Section>
 
       <Section title='Scores'>
-        {scores.map(({ id, kind, description, score, detail }) => {
+        {scores.map(({ id, kind, description, score, detail, error }) => {
           const previous = baseline?.find((entry) => entry.id === id);
           return (
             <div
               key={id}
               className='grid grid-cols-[5.5rem_1fr_3rem_2.5rem] items-center gap-2 text-xs'
-              title={[description, detail].filter(Boolean).join('\n')}
+              title={[description, error ?? detail].filter(Boolean).join('\n')}
               data-testid={`scene-view.scorecard.${id}`}
             >
               <span>
@@ -250,11 +250,18 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
               <span className='flex flex-col gap-0.5 min-w-0'>
                 <span className='font-mono truncate'>{id}</span>
                 <span className='h-1 rounded-full bg-separator overflow-hidden'>
-                  <span className={mx('block h-full', barColor(score))} style={{ width: `${score * 100}%` }} />
+                  <span
+                    className={mx('block h-full', barColor(score))}
+                    style={{ width: error ? 0 : `${score * 100}%` }}
+                  />
                 </span>
               </span>
-              <span className={mx('font-mono text-end', scoreColor(score))}>{score.toFixed(2)}</span>
-              <span className='font-mono text-end'>{previous && <Delta value={score - previous.score} />}</span>
+              <span className={mx('font-mono text-end', error ? 'text-description' : scoreColor(score))}>
+                {error ? '—' : score.toFixed(2)}
+              </span>
+              <span className='font-mono text-end'>
+                {previous && !error && !previous.error && <Delta value={score - previous.score} />}
+              </span>
             </div>
           );
         })}

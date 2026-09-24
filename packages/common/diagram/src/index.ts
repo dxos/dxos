@@ -4,6 +4,7 @@
 
 export * from './content.ts';
 export * from './dialect.ts';
+export * as Architecture from './architecture.ts';
 export * as Diagnostics from './diagnostics.ts';
 export * as Dsl from './dsl/index.ts';
 export * as Layout from './layout.ts';
