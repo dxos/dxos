@@ -410,6 +410,11 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         await writer.setCurrentRootUrl(rootUrl);
 
         for await (const [documentId, data] of space.getAllDocuments()) {
+          // A linked document never persisted locally exports as zero bytes, which no importer can load.
+          if (data.byteLength === 0) {
+            log.warn('skipping document with no local data in space export', { spaceId: space.id, documentId });
+            continue;
+          }
           await writer.writeDocument(documentId, data);
         }
 

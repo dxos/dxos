@@ -27,7 +27,13 @@ const pluginTranslations = [
         'contacts.label': 'Contacts',
         'contacts.description': 'People you share at least one space with.',
         'contacts-search.placeholder': 'Search contacts…',
-        'contact-picker-add.label': 'Add',
+        'space-invitations.label': 'Space invitations',
+        'space-invitations.description': 'Spaces your contacts have added you to. Join to open one on this device.',
+        'space-invitation-toast.title': 'You’ve been added to a space',
+        'space-invitation-toast.description': 'A contact invited you to join a space.',
+        'join-space-invitation.label': 'Join',
+        'dismiss-space-invitation.label': 'Dismiss',
+        'contact-picker-add.label': 'Add member',
         'contact-picker-empty.message':
           'You have no contacts yet — people appear here once you share a space with them.',
         'role-editor.label': 'Editor',
@@ -35,7 +41,7 @@ const pluginTranslations = [
         'role-admin.label': 'Admin',
         'security.label': 'Security',
         'account-panel.label': 'Account',
-        'invitations-panel.label': 'Invitations',
+        'invitations-panel.label': 'Account invitations',
         'usage-panel.label': 'Usage',
         'usage-section.title': 'Usage',
         'usage-section.description':
@@ -63,7 +69,7 @@ const pluginTranslations = [
         'account-section.title': 'Account',
         'account-section.description':
           'Your identity on this device is bound to a DXOS account that gates access to edge services like sync, agents, and AI.',
-        'invitations-section.title': 'Invitations',
+        'invitations-section.title': 'Account invitations',
         'invitations-section.description':
           'Share an invitation with someone you’d like to bring onto DXOS. Each code grants one-time access to create an account.',
         'no-edge-access.title': 'No edge access',

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type QueryExecutorMode } from '@dxos/echo-host';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { type DataSpaceManagerRuntimeProps } from './spaces/index.ts';
@@ -16,6 +17,8 @@ export type Options = DataSpaceManagerRuntimeProps & {
   /** Disables the p2p (mesh) replication path, taking its replicator and its requirement with it. */
   disableP2pReplication?: boolean;
   edgeFeatures?: Runtime_Client_EdgeFeatures;
+  /** Query evaluation path for every host query; see `QueryExecutorMode`. */
+  queryExecutor?: QueryExecutorMode;
   /**
    * Whether subduction replication can actually be built. The feature flag is set in config
    * profiles that configure no edge endpoint, and requiring a tag nothing provides would prune the

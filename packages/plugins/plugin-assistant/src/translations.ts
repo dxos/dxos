@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { McpServer } from '@dxos/assistant-toolkit';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -15,7 +15,6 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
-import { Question } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -87,12 +86,6 @@ export const translations: Resource[] = [
         'rename-object.label': 'Rename agent',
         'delete-object.label': 'Delete agent',
         'object-deleted.label': 'Agent deleted',
-      },
-      [Type.getTypename(Question.Question)]: {
-        'typename.label': 'Question',
-        'typename.label_zero': 'Questions',
-        'typename.label_one': 'Question',
-        'typename.label_other': 'Questions',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
@@ -170,10 +163,6 @@ export const translations: Resource[] = [
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
         'integration-prompt.scopes': 'Permissions needed:',
 
-        'question-card.label': 'Question',
-        'question-answer.label': 'Your answer',
-        'question-answer.placeholder': 'Type an answer…',
-        'question-submit.label': 'Answer',
         'question-actions.label': 'Question actions',
         'question-failed.message': 'That answer could not be saved. Try again.',
         'question-stranded.message': 'Answer saved, but the assistant could not be resumed.',
@@ -216,7 +205,15 @@ export const translations: Resource[] = [
         'mcp-server-protocol.label': 'Protocol',
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
+        'mcp-server-status.checking': 'Connecting…',
+        'mcp-server-status.connected_one': '{{count}} tool',
+        'mcp-server-status.connected_other': '{{count}} tools',
+        'mcp-server-status.unauthorized': 'Sign-in required',
+        'mcp-server-status.disabled': 'Disabled',
+        'mcp-server-sign-in.label': 'Sign in',
+        'mcp-server-retry.label': 'Retry connection',
         'mcp-server-error.label': 'MCP server unavailable',
+        'mcp-server-error.unauthorized': 'Sign-in required — sign in from the MCP tab of the chat options.',
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 

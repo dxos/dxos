@@ -143,6 +143,8 @@ export class EdgeAgentManager extends Resource {
   protected override async _close(): Promise<void> {
     this._fetchAgentStatusTask = undefined;
     this._lastKnownDeviceCount = 0;
+    this._agentStatus = undefined;
+    this._agentDeviceKey = undefined;
   }
 
   protected async _fetchAgentStatus(ctx: Context): Promise<void> {
@@ -244,6 +246,9 @@ export const EdgeAgentManagerLayer = (
       yield* Hook.on(
         Events.DataSpacesAvailable,
         Effect.fn('EdgeAgentManager.onDataSpacesAvailable')(function* () {
+          // Rebound on every identity, so an identity deleted in place does not leave its agent's
+          // status (and the subscriptions on its HALO) standing in for the next one's.
+          yield* Effect.promise(() => edgeAgentManager.close());
           yield* Effect.promise(() => edgeAgentManager.open(ctx));
         }),
       );

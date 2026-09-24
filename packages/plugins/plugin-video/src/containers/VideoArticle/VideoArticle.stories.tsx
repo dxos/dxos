@@ -15,11 +15,11 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { Video } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { VideoPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Video } from '#types';
 
 import { VideoArticle } from './VideoArticle.tsx';
 

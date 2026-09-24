@@ -38,7 +38,10 @@ export * from './interface.ts';
 export const specs = (options: Options): LayerSpec.LayerSpec[] => [
   SpaceManagerSpec(options),
   SigningContextProviderSpec,
-  EchoHostSpec({ useSubduction: options.edgeFeatures?.subductionReplicator }),
+  EchoHostSpec({
+    useSubduction: options.edgeFeatures?.subductionReplicator,
+    queryExecutor: options.queryExecutor,
+  }),
   DataSpaceManagerSpec(options),
   CrossDeviceSpaceSynchronizerSpec,
 

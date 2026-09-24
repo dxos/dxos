@@ -117,6 +117,74 @@ export const UpdateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Files a question on a task and blocks the task on it — the task-addressed counterpart of the chat's
+ * planning tool, for an agent that has a task ref but no conversation (one driving the MCP verbs).
+ * The question is an entry in the task's own history, so the person answering sees it on the task.
+ */
+export const AskQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.askQuestion'),
+    name: 'Ask Question',
+    description:
+      'Ask the user a question you cannot answer yourself about one task, and block the task on it. ' +
+      'The question is recorded in the task history, where the user answers it. Offer likely answers ' +
+      'in `options`; the user may still type their own. Refused while the task already has an ' +
+      "unanswered question. Read the answer back later from the task's `history`: the entry with " +
+      '`event: "answer"` whose `questionId` is the id this returns.',
+    icon: 'ph--question--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    question: Schema.String.annotate({ description: 'The question, as put to the user.' }),
+    context: Schema.optional(
+      Schema.String.annotate({ description: 'Why you are asking — what you are blocked on, in a sentence or two.' }),
+    ),
+    options: Schema.optional(
+      Schema.Array(Task.AnswerOption).annotate({
+        description: 'Suggested answers. Omit when you have no plausible candidates.',
+      }),
+    ),
+    /** Who is asking; recorded on the question and on the status change it causes. */
+    actor: Schema.optional(Actor.Actor),
+  }),
+  // JSON snapshot, not a live object — see the create/update verbs above.
+  output: Schema.Struct({
+    /** Id of the question's entry in the task's history. */
+    questionId: Schema.String,
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Records a person's answer to a question in a task's history. It only writes the answer: waking a
+ * chat that asked is the assistant plugin's own `AnswerQuestion`, and an agent that asked over the
+ * MCP reads the answer back from the task.
+ */
+export const AnswerQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.answerQuestion'),
+    name: 'Answer Question',
+    description: "Answer a question in a task's history.",
+    icon: 'ph--check-circle--regular',
+    // The asker is an agent; handing it the tool to answer its own question is a footgun.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    /** Id of the question's entry in the task's history. */
+    question: Schema.String,
+    answer: Schema.String.annotate({ description: "The chosen option's title, or free-form text." }),
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    /** False when the answer was blank, the question is unknown, or it was already answered. */
+    accepted: Schema.Boolean,
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const TaskRestorePoint = Schema.Struct({
   entries: Schema.Array(
     Schema.Struct({

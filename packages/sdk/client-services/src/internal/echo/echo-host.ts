@@ -10,7 +10,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RegisterService } from '@dxos/client-protocol';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { type AutomergeReplicator, EchoHostLayer, EchoHostService } from '@dxos/echo-host';
+import { type AutomergeReplicator, EchoHostLayer, EchoHostService, type QueryExecutorMode } from '@dxos/echo-host';
 import { EffectEx, Hook } from '@dxos/effect';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
@@ -55,7 +55,7 @@ export const registerReplicator = <Self>(
  * open/close is owned by the layer scope: it opens when the stack is built and closes when the
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle is driven by the events.
  */
-export const echoHostLayer = (options: { useSubduction?: boolean }) =>
+export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?: QueryExecutorMode }) =>
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
@@ -79,20 +79,21 @@ export const echoHostLayer = (options: { useSubduction?: boolean }) =>
             peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
             getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
             useSubduction: options.useSubduction,
+            queryExecutor: options.queryExecutor,
           });
         }),
       ),
     ),
   );
 
-export const EchoHostSpec = (options: { useSubduction?: boolean }) =>
+export const EchoHostSpec = (options: { useSubduction?: boolean; queryExecutor?: QueryExecutorMode }) =>
   LayerSpec.make(
     {
       affinity: 'application',
       requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
-    () => echoHostLayer({ useSubduction: options.useSubduction }),
+    () => echoHostLayer({ useSubduction: options.useSubduction, queryExecutor: options.queryExecutor }),
   );
 
 //

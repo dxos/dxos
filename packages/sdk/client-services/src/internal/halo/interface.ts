@@ -18,5 +18,7 @@ export type Options = Pick<
   'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval' | 'automergeCredentials'
 > & {
   edgeFeatures?: Runtime_Client_EdgeFeatures;
+  /** Whether an edge endpoint is configured; the inbox is built over the edge clients when it is. */
+  edgeAvailable?: boolean;
   invitationConnectionDefaultProps?: InvitationConnectionProps;
 };

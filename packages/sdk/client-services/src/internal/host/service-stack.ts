@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type QueryExecutorMode } from '@dxos/echo-host';
 import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
@@ -21,6 +22,8 @@ export type ServiceContextRuntimeProps = Pick<
   DataSpaceManagerRuntimeProps & {
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
+    /** Query evaluation path for every host query; see `QueryExecutorMode`. */
+    queryExecutor?: QueryExecutorMode;
     enableVectorIndexing?: boolean;
   };
 

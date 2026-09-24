@@ -13,6 +13,7 @@ export default defineConfig({
     Obj: 'src/Obj.ts',
     Annotation: 'src/Annotation.ts',
     Blob: 'src/Blob.ts',
+    Change: 'src/Change.ts',
     Database: 'src/Database.ts',
     Error: 'src/Error.ts',
     Feed: 'src/Feed.ts',

@@ -560,6 +560,7 @@ export const TaskStatusChanged = EventType('task.statusChanged', {
  */
 export const QuestionAsked = EventType('question.asked', {
   schema: Schema.Struct({
+    /** Id of the question's entry in the task's history. */
     questionId: Obj.ID,
     /** The question as put to the reader. */
     text: Schema.String,
@@ -690,6 +691,8 @@ export const McpServerError = EventType('assistant.mcpServerError', {
     url: Schema.String,
     protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
+    /** The server wants credentials the configuration does not (validly) supply. */
+    unauthorized: Schema.optional(Schema.Boolean),
   }),
   isEphemeral: true,
 });

@@ -12,6 +12,7 @@ import { IdentityLifecycleSpec } from './identity/identity-lifecycle.ts';
 import { IdentityManagerSpec, IdentityProviderSpec } from './identity/identity-manager.ts';
 import { EdgeIdentityRecoverySpec } from './identity/identity-recovery-manager.ts';
 import { IdentityServiceRegistrationSpec, IdentityServiceSpec } from './identity/identity-service.ts';
+import { InboxServiceRegistrationSpec, InboxServiceSpec } from './identity/inbox-service.ts';
 import { type Options } from './interface.ts';
 import { InvitationFactoriesSpec } from './invitations/invitation-factories.ts';
 import { InvitationsHandlerSpec } from './invitations/invitations-handler.ts';
@@ -41,6 +42,8 @@ export const specs = (options: Options): LayerSpec.LayerSpec[] => [
   InvitationsServiceRegistrationSpec,
   DevicesServiceSpec,
   DevicesServiceRegistrationSpec,
+  InboxServiceSpec(options),
+  InboxServiceRegistrationSpec,
   EdgeAgentServiceSpec,
   EdgeAgentServiceRegistrationSpec,
 ];
