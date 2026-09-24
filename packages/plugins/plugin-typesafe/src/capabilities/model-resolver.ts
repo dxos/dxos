@@ -22,7 +22,13 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { TypeSafeCapabilities, TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
-import { EDGE_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
+import {
+  EDGE_ENDPOINT,
+  WORKERS_AI_ENDPOINT,
+  isEdgeRequest,
+  isWorkersAiRequest,
+  makeEdgeHttpClient,
+} from './edge-http-client.ts';
 
 const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
   AiError.make({ module: 'TypeSafe', method: 'decide', reason });
@@ -72,11 +78,15 @@ export const requiredApiKey = (endpoint: string) =>
       );
 
 /**
- * Where a call goes. Unset routes through EDGE; so does the vendor URL, the previous default and still
- * in persisted settings, since a browser can never call it (no CORS).
+ * Where a call goes. Workers AI always goes through EDGE. Otherwise an unset endpoint routes through
+ * EDGE; so does the vendor URL, the previous default and still in persisted settings, since a browser
+ * can never call it (no CORS).
  */
-const resolveEndpoint = (configured: string | undefined): string => {
-  const endpoint = configured?.trim();
+export const resolveEndpoint = (settings: TypeSafeSettings.Settings | undefined): string => {
+  if (settings?.backend === 'workers-ai') {
+    return WORKERS_AI_ENDPOINT;
+  }
+  const endpoint = settings?.endpoint?.trim();
   return endpoint && endpoint !== TypeSafeResolver.DEFAULT_ENDPOINT ? endpoint : EDGE_ENDPOINT;
 };
 
@@ -89,7 +99,7 @@ export default Capability.makeModule(
     // settings modules are guaranteed to have been contributed.
     const endpoint = () => {
       const [settingsAtom] = manager.getAll(TypeSafeCapabilities.Settings);
-      return resolveEndpoint(settingsAtom && registry.get(settingsAtom).endpoint);
+      return resolveEndpoint(settingsAtom && registry.get(settingsAtom));
     };
 
     // Resolved on the first EDGE call rather than here, since the Client capability does not exist
@@ -106,10 +116,15 @@ export default Capability.makeModule(
       return edgeClient;
     };
 
-    // Through EDGE a connected key is optional (EDGE falls back to the platform key); direct, it is not.
+    // Workers AI takes no vendor key; through EDGE to TypeSafe a connected key is optional (EDGE falls
+    // back to the platform key); direct, it is not.
     const apiKey = Effect.suspend(() => {
       const url = endpoint();
-      return isEdgeRequest(url) ? connectedApiKey : requiredApiKey(url);
+      return isWorkersAiRequest(url)
+        ? Effect.succeed(undefined)
+        : isEdgeRequest(url)
+          ? connectedApiKey
+          : requiredApiKey(url);
     });
 
     const httpClient = Layer.effect(

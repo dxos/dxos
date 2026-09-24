@@ -21,4 +21,9 @@ and meters the usage against the user's account; a connected key rides as `X-BYO
 The `endpoint` setting bypasses EDGE for a self-hosted endpoint the browser can reach, and needs a
 connected key.
 
+The `backend` setting set to `workers-ai` answers the same questions with Cloudflare Workers AI's
+[`typesafe/jev`](https://developers.cloudflare.com/ai/models/typesafe/jev/) instead, through EDGE's
+`/ai/generate/workers-ai/typesafe` route on EDGE's Cloudflare account. No vendor key is involved, so a
+connected key is not sent, every call is metered, and the `endpoint` override is ignored.
+
 See [docs/DESIGN.md](./docs/DESIGN.md); the provider itself lives in `@dxos/ai/resolvers`.

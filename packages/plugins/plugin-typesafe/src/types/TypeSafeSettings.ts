@@ -21,7 +21,19 @@ export const isAllowedEndpoint = (value: string): boolean => {
   return url.protocol === 'https:' || (url.protocol === 'http:' && LOOPBACK_HOSTS.has(url.hostname));
 };
 
+/** Who answers through EDGE: TypeSafe's own API, or Workers AI's `typesafe/jev` on EDGE's Cloudflare account. */
+export const Backend = Schema.Literals(['typesafe', 'workers-ai']);
+
+export type Backend = Schema.Schema.Type<typeof Backend>;
+
 export const Settings = Schema.Struct({
+  backend: Schema.optional(
+    Backend.annotate({
+      title: 'Backend',
+      description:
+        'Serve decisions from TypeSafe (default) or Cloudflare Workers AI; the endpoint override is ignored for Workers AI.',
+    }),
+  ),
   /**
    * Calls System One directly at this URL instead of through EDGE — for a self-hosted or regional
    * endpoint that sends CORS headers. Unset routes through EDGE, which works with no key connected.
