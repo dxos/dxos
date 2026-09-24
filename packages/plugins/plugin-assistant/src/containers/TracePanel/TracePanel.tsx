@@ -143,17 +143,10 @@ const feedKey = (uri: string): string => {
   return (eid && EID.getEntityId(eid)) ?? uri;
 };
 
-/**
- * Debug hatch (dev builds only): exposes the raw trace messages (the exact `buildExecutionGraph`
- * input) so a real trace can be captured as a test fixture. While the panel is mounted, run
- * `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
- * (and logs it). Chosen at build time, so production never subscribes to the whole trace for it.
- */
 const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta.env.DEV
   ? (space) => {
       const traceMessages = useTraceMessages(space);
       useEffect(() => {
-        // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
         const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
         debugGlobal.dxosDumpTrace = () => {
           const data = traceMessages.map((message) => ({
