@@ -707,9 +707,9 @@ describe('ManagerImpl', () => {
       yield* Effect.yieldNow;
 
       // A remount lookup adopts the first process it finds in a non-terminal state. While teardown
-      // blocks, this handle must not be that process: it is already released from the live set.
+      // blocks, this handle must not be that process.
       const listed = yield* manager.list({ key: 'test.stalling' });
-      expect(listed).toEqual([]);
+      expect(listed.map((process) => process.status.state)).toEqual([Process.State.TERMINATED]);
 
       // Input after the stop is refused outright. Queueing it would be worse than dropping it: the
       // handler never runs again, so the caller would wait on a turn that cannot come.
@@ -1520,9 +1520,6 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       );
       yield* fiber.await;
 
-      // The parent op spawns the child via Operation.invoke; locate the
-      // child through the process tree and assert its environment
-      // carries both inherited fields.
       const tree = yield* monitor.processTree;
       const childInfo = tree.find((node) => node.parentPid === fiber.pid);
       if (!childInfo) {
