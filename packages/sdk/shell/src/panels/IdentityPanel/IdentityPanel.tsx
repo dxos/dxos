@@ -15,7 +15,7 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Avatar, Clipboard, Field, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Field, SystemIconButton, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -135,7 +135,8 @@ const IdentityHeading = ({
             classNames='h-(--dx-rail-action)'
             rootVariant='toolbar-button'
           />
-          <Clipboard.IconButton
+          <SystemIconButton.Clipboard
+            iconOnly
             classNames='h-(--dx-rail-action)'
             data-testid='update-profile-form-copy-key'
             label={t('copy-self-did.label')}

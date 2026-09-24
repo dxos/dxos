@@ -1073,6 +1073,12 @@ export class QueryPlanner {
         return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        // An outgoing reference traversal emits each anchor's refs in array order, which is the only
+        // order a ref array has. Order the anchors instead, so the result stays deterministic.
+        if (isOutgoingReferenceTraversal(step)) {
+          const anchor = this._ensureOrderStep(QueryPlan.Plan.make(processedPlan.steps.slice(0, i)));
+          return QueryPlan.Plan.make([...anchor.steps, ...processedPlan.steps.slice(i)]);
+        }
         break;
       }
     }
@@ -1317,6 +1323,11 @@ const NOOP_FILTER: QueryAST.Filter = {
   id: [],
   props: {},
 };
+
+const isOutgoingReferenceTraversal = (step: QueryPlan.Step): boolean =>
+  step._tag === 'TraverseStep' &&
+  step.traversal._tag === 'ReferenceTraversal' &&
+  step.traversal.direction === 'outgoing';
 
 const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['direction']): QueryPlan.Step => ({
   _tag: 'TraverseStep',

@@ -1038,3 +1038,4 @@ export const atomReactive = objInternal.makeWithReactive;
 export const atomProperty = objInternal.makeProperty;
 export const labelAtom = objInternal.makeLabelAtom;
 export const labelProperty = internal.getLabelProperty;
+export const parentAtom = objInternal.makeParentAtom;

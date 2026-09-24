@@ -55,7 +55,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     name: Schema.String.pipe(Schema.optional),
 
     /** The durable message log. Every pipeline in `docs/PIPELINE.md` reads from (or writes to) this. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
 
     /**
      * Append-only feed of derived annotations about the messages in {@link feed} — summaries today
@@ -67,11 +67,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * old. The primary feed stays pure — no reader has to filter annotations out of the message list.
      * Provisioned lazily on first annotation, like {@link tags}.
      */
-    annotations: Ref.Ref(Feed.Feed).pipe(
-      Annotation.SetParent.set(true),
-      FormInputAnnotation.set(false),
-      Schema.optional,
-    ),
+    annotations: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false), Schema.optional),
 
     /**
      * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
@@ -80,7 +76,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * live in a child `TagIndex` object instead (the `meta.tags` augmentation for feed objects). Tag
      * labels and hues live on the `Tag` objects themselves.
      */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
 
     /**
      * Which contributed object extractors run over this mailbox, and the confidence a match must

@@ -147,8 +147,10 @@ export const registry: Record<NodeType, Executable> = {
   // Outputs/views
   //
 
+  // Any value, read through `isTruthy`: a boolean from a switch, but also the match list a JSONPath
+  // transform emits, where empty means no match. A `Boolean` input rejected those as a type error.
   'beacon': defineComputeNode({
-    input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
+    input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Any }),
     output: VoidOutput,
   }),
 

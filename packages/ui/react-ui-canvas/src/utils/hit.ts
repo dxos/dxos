@@ -11,7 +11,13 @@ import { type Bounds, MAJOR_GRID, type Node, type Point, type Scene } from '../m
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
-export const DEFAULT_EXTENT: Bounds = { x: 0, y: 0, width: 1600, height: 1024 };
+/**
+ * Centred on the origin, not anchored at it: a scene is laid out around (0, 0), so an extent running
+ * from the origin to (1600, 1024) puts its own centre well below and right of the content and the
+ * initial fit — which centres the frame — pushes everything into the top-left corner. Each half is a
+ * whole number of major cells, so the frame still lands on grid lines.
+ */
+export const DEFAULT_EXTENT: Bounds = { x: -832, y: -512, width: 1664, height: 1024 };
 export const BOUNDS_PADDING = MAJOR_GRID;
 
 export const containsPoint = (bounds: Bounds, point: Point) =>
@@ -73,12 +79,26 @@ export const nodeList = (scene: Scene): Node[] => Object.values(scene.nodes);
 
 /**
  * Derived scene bounds (decision 6): the union of nodes plus padding, grown to the major grid so the
- * frame sits on grid lines; an empty scene gets a default extent so a portal to it still has
- * something to map.
+ * frame sits on grid lines. The default extent is a floor rather than a fallback for an empty scene:
+ * content only ever grows the frame, so drawing the first node does not collapse the scene around it.
+ *
+ * This is the frame of a scene shown on its own — the surface the user edits on. A scene shown through
+ * a portal is framed by {@link contentBounds} instead.
  */
 export const sceneBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds => {
-  const union = unionBounds(nodeList(scene).map(nodeBounds));
-  return union ? alignBounds(padBounds(union, padding), unit) : DEFAULT_EXTENT;
+  const content = unionBounds(nodeList(scene).map(nodeBounds));
+  const union = unionBounds(content ? [DEFAULT_EXTENT, padBounds(content, padding)] : [DEFAULT_EXTENT]);
+  return alignBounds(union ?? DEFAULT_EXTENT, unit);
+};
+
+/**
+ * What a scene is worth showing: the same frame without the floor under it, so a child drawn in a portal
+ * fills its tile rather than being shrunk to fit an editing surface it is not being edited on. An empty
+ * scene has no content to frame, so there the floor is the frame.
+ */
+export const contentBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds => {
+  const content = unionBounds(nodeList(scene).map(nodeBounds));
+  return content ? alignBounds(padBounds(content, padding), unit) : alignBounds(DEFAULT_EXTENT, unit);
 };
 
 /** Topmost node under `point`, or none; `margin` widens every node, e.g. to reach its ports. */

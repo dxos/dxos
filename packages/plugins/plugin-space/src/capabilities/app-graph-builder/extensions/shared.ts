@@ -66,7 +66,9 @@ export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];
 export const MIGRATE_SPACE_LABEL: Label = ['migrate-space.label', META_NS];
 export const NEW_TYPE_LABEL: Label = ['new-type.label', META_NS];
 export const PENDING_SPACE_LABEL: Label = ['pending-space.label', META_NS];
+export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove-from-collection.label', META_NS];
 export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
+export const SHOW_ORIGINAL_LABEL: Label = ['show-original.label', META_NS];
 export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
 export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];
 

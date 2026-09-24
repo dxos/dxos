@@ -11,16 +11,19 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Task } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
@@ -39,8 +42,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
       urlKey: 'project',
+      // Reading a project's ledger is a chain: the task replaces the task plank rather than growing
+      // the deck, so moving down the list reuses one plank. Declared here rather than as a schema
+      // annotation because `Project` lives in `@dxos/compute`, below `@dxos/app-toolkit`.
+      deck: { levels: [{ key: 'project' }, { key: 'task' }] },
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
+      dropInto: artifacts,
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -58,6 +66,8 @@ export default Capability.makeModule(
     const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
     const artifactsExtensions = yield* createProjectArtifactsExtension();
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
+    const taskExtensions = yield* createProjectTasksExtension();
+    const taskCompanionExtensions = yield* createProjectTaskCompanionExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
@@ -66,6 +76,8 @@ export default Capability.makeModule(
       ...chatChildrenExtensions,
       ...artifactsExtensions,
       ...artifactsActionExtensions,
+      ...taskExtensions,
+      ...taskCompanionExtensions,
       ...mailboxExtensions,
     ]);
   }),
@@ -217,6 +229,59 @@ export const createProjectChatsChildrenExtension = () =>
   });
 
 /**
+ * A "Task" companion on every project row: the slot the ledger's selected task opens into, so reading
+ * a task keeps the project in front of the reader rather than navigating over it. One fixed slot —
+ * which task it shows is the ledger's selection, read by the surface.
+ */
+export const createProjectTaskCompanionExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectTaskCompanion',
+    relation: AppNode.companion,
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeCompanion({
+          variant: 'task',
+          label: ['task-companion.label', { ns: meta.profile.key }],
+          icon: 'ph--check-circle--regular',
+          data: 'task',
+          position: Position.first,
+        }),
+      ]),
+  });
+
+/**
+ * Every task in the project's set as a hidden child of the project node, so `…/project/<id>/<taskId>`
+ * resolves and a row can open the task as its own plank. Hidden because the ledger is the Tasks tab,
+ * not the nav tree — the nodes exist to be addressed, never listed.
+ *
+ * The node's data is the `Task` object itself, so it picks up the standard object companions and the
+ * `TaskArticle` surface matches it like any other object.
+ */
+export const createProjectTasksExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectTasks',
+    url: PROJECT_URL,
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    connector: (project, get) => {
+      const db = Obj.getDatabase(project);
+      const taskSet = project.taskSet && get(project.taskSet.atom);
+      if (!db || !taskSet) {
+        return Effect.succeed([]);
+      }
+
+      // Membership is the parent edge (the set's `tasks` array only orders it), matching how
+      // `TaskSetArticle` reads the same rows.
+      const tasks = get(db.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet))).atom);
+      return Effect.succeed(
+        tasks
+          .map((task) => AppNode.makeObject({ get, db, object: task, disposition: 'hidden' }))
+          .filter((node): node is NonNullable<typeof node> => node !== null),
+      );
+    },
+  });
+
+/**
  * Start a chat in project scope, on the project's navtree row. The `ProjectArticle` toolbar owns its
  * own create-chat button rather than sharing this one — the two surfaces are expected to diverge as
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
@@ -253,6 +318,9 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
+export const artifacts = (project: Project.Project): ContainerModel.Container =>
+  ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
+
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
 
@@ -286,8 +354,9 @@ export const createProjectArtifactsExtension = () =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
         : Option.none(),
-    connector: ({ project, space }) =>
-      Effect.succeed([
+    connector: ({ project, space }) => {
+      const db = Obj.getDatabase(project);
+      return Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
         // would pull @dxos/client into this plugin's dependencies for a value it only passes through.
         AppGraphNode.make({
@@ -308,9 +377,11 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
+            ...(db ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
-      ]),
+      ]);
+    },
   });
 
 /**
@@ -337,21 +408,7 @@ export const createProjectArtifactsActionExtension = () =>
         return Effect.succeed([]);
       }
 
-      // Subscribe to the project itself: the children are its ref array, so a new artifact changes no
-      // query this connector would otherwise re-run on.
-      get(Obj.atom(project));
-      const ids = project.artifacts.flatMap((ref) => {
-        const uri = EID.tryParse(ref.uri);
-        const entityId = uri && EID.getEntityId(uri);
-        return entityId ? [entityId] : [];
-      });
-      if (ids.length === 0) {
-        return Effect.succeed([]);
-      }
-
-      // Query rather than read `ref.target`: on a cold load the targets are not in memory yet, and a
-      // sync read would leave the branch permanently empty.
-      const objects = get(db.query(Query.select(Filter.id(...ids))).atom);
+      const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
@@ -370,7 +427,7 @@ export const createProjectArtifactsActionExtension = () =>
               }
 
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
-                target: db,
+                target: project,
                 targetNodeId: nodeId,
               });
               // Dismissed dialog: nothing was created, so there is nothing to link.

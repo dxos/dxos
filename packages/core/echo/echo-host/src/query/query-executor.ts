@@ -648,6 +648,12 @@ export class QueryExecutor extends Resource {
   /** Subquery-resolution traces already attached to a FilterStep's trace this `execQuery` run. */
   #inQueryTracesAttached = new Set<string>();
 
+  /**
+   * Strong dependencies loaded during the current `execQuery` run, keyed by how they resolve (see
+   * {@link QueryExecutor._loadDependency}). Siblings share their parents, and each load is a lookup.
+   */
+  #dependencyCache = new Map<string, Promise<QueryItem | null>>();
+
   constructor(options: QueryExecutorOptions) {
     super();
 
@@ -769,13 +775,7 @@ export class QueryExecutor extends Resource {
     this.#inQueryTracesAttached = new Set();
 
     const previous = this._lastResultSet;
-    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
-    // Omit objects whose strong deps cannot be resolved from local state so they never reach the
-    // client, where hydration would fail or stall on them. Keyed on the plan rather than the mode,
-    // because a plan the compiler declined runs step by step even under `sql` and is not filtered by
-    // the statement.
-    const compiled = this._plan.steps.some((step) => step._tag === 'SqlStep');
-    const workingSet = compiled ? rawWorkingSet : await this._filterUnresolvableStrongDeps(rawWorkingSet);
+    const { workingSet, trace } = await this._resolveWorkingSet();
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
@@ -796,6 +796,23 @@ export class QueryExecutor extends Resource {
     }
 
     return { changed };
+  }
+
+  /** Runs the plan, then drops items whose strong dependencies cannot be resolved from local state. */
+  private async _resolveWorkingSet(): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
+    try {
+      const { workingSet, trace } = await this._execPlan(this._plan, []);
+      // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
+      // the compiler declined runs step by step even under `sql` and needs the filter.
+      if (this._plan.steps.some((step) => step._tag === 'SqlStep')) {
+        return { workingSet, trace };
+      }
+      // Unresolvable items never reach the client, where hydration would fail or stall on them.
+      return { workingSet: await this._filterUnresolvableStrongDeps(workingSet), trace };
+    } finally {
+      // An idle reactive query keeps its executor, which would otherwise hold these items until its next run.
+      this.#dependencyCache.clear();
+    }
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
@@ -2291,18 +2308,29 @@ export class QueryExecutor extends Resource {
 
   /**
    * Resolves an object `item` depends on, in the same form as `item`: an item selected from the index
-   * resolves its dependencies from the index too, so checking them loads no documents either.
+   * resolves its dependencies from the index too, so checking them loads no documents either. Each
+   * dependency loads once per `execQuery` run.
    */
-  private async _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
-    if (item.doc || item.data || !item.meta) {
-      return this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId });
+  private _loadDependency(item: QueryItem, dxn: URI.URI): Promise<QueryItem | null> {
+    const fromDocument = Boolean(item.doc || item.data || !item.meta);
+    const key = compositeKey(item.spaceId, dxn, fromDocument ? 'document' : 'index');
+    let loaded = this.#dependencyCache.get(key);
+    if (!loaded) {
+      loaded = fromDocument
+        ? this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId })
+        : this._loadDependencyFromIndex(item.spaceId, dxn);
+      this.#dependencyCache.set(key, loaded);
     }
+    return loaded;
+  }
+
+  private async _loadDependencyFromIndex(sourceSpaceId: SpaceId, dxn: URI.URI): Promise<QueryItem | null> {
     const echoUri = EID.tryParse(dxn);
     const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
     if (!echoUri || !objectId) {
       return null;
     }
-    const spaceId = EID.getSpaceId(echoUri) ?? item.spaceId;
+    const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
     const metas = await this._runInRuntime(
       this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
     );

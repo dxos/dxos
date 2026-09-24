@@ -19,7 +19,7 @@ export class Outline extends Type.makeObject<Outline>(DXN.make('org.dxos.type.ou
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** Owned body: `SetParent` cascades it with the outline. */
-    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tree-structure--regular', hue: 'indigo' }),
     CollectionItemAnnotation.set(true),

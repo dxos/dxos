@@ -67,15 +67,29 @@ export const createStaticTreeModel = <T extends { id: string }>(
   };
   index(root);
 
+  const states = new Map<string, TreeNodeState>();
   const stateAtoms = new Map<string, Atom.Writable<TreeNodeState>>();
   const stateAtom = (path: string[]): Atom.Writable<TreeNodeState> => {
     const key = Path.create(...path);
     let atom = stateAtoms.get(key);
     if (!atom) {
-      const item = itemMap.get(path.at(-1) ?? root.id);
-      const open = item !== undefined && (isOpen?.(item, path) ?? false);
-      const current = item !== undefined && (isCurrent?.(item, path) ?? false);
-      atom = Atom.make<TreeNodeState>({ open, current }).pipe(Atom.keepAlive);
+      atom = Atom.writable(
+        () => {
+          let state = states.get(key);
+          if (!state) {
+            const item = itemMap.get(path.at(-1) ?? root.id);
+            const open = item !== undefined && (isOpen?.(item, path) ?? false);
+            const current = item !== undefined && (isCurrent?.(item, path) ?? false);
+            state = { open, current };
+            states.set(key, state);
+          }
+          return state;
+        },
+        (ctx, value: TreeNodeState) => {
+          states.set(key, value);
+          ctx.setSelf(value);
+        },
+      );
       stateAtoms.set(key, atom);
     }
     return atom;
@@ -84,10 +98,16 @@ export const createStaticTreeModel = <T extends { id: string }>(
   // Writable rather than derived: a derived atom would snapshot the initial ordering and never
   // reflect an in-place reorder pushed through `refresh`.
   const childIdsFamily = Atom.family((id: string) =>
-    Atom.make<string[]>(childIdsMap.get(id) ?? []).pipe(Atom.keepAlive),
+    Atom.writable(
+      () => childIdsMap.get(id) ?? [],
+      (ctx, ids: string[]) => {
+        childIdsMap.set(id, ids);
+        ctx.setSelf(ids);
+      },
+    ),
   );
 
-  const itemFamily = Atom.family((id: string) => Atom.make(() => itemMap.get(id)).pipe(Atom.keepAlive));
+  const itemFamily = Atom.family((id: string) => Atom.make(() => itemMap.get(id)));
 
   const itemPropsFamily = Atom.family((key: string) =>
     Atom.make<TreeItemDataProps>(() => {
@@ -108,7 +128,12 @@ export const createStaticTreeModel = <T extends { id: string }>(
         }),
         ...getProps?.(item, path),
       };
-    }).pipe(Atom.keepAlive),
+    }),
+  );
+
+  const itemOpenFamily = Atom.family((path: readonly string[]) => Atom.make((get) => get(stateAtom([...path])).open));
+  const itemCurrentFamily = Atom.family((path: readonly string[]) =>
+    Atom.make((get) => get(stateAtom([...path])).current),
   );
 
   const childIdsAtom = (parentId?: string) => childIdsFamily(parentId ?? root.id);
@@ -120,14 +145,8 @@ export const createStaticTreeModel = <T extends { id: string }>(
     stateAtom,
     item: (id: string) => itemFamily(id),
     itemProps: (path: string[]) => itemPropsFamily(Path.create(...path)),
-    itemOpen: (path: string[]) => {
-      const atom = stateAtom(path);
-      return Atom.make((get) => get(atom).open).pipe(Atom.keepAlive);
-    },
-    itemCurrent: (path: string[]) => {
-      const atom = stateAtom(path);
-      return Atom.make((get) => get(atom).current).pipe(Atom.keepAlive);
-    },
+    itemOpen: (path: string[]) => itemOpenFamily([...path]),
+    itemCurrent: (path: string[]) => itemCurrentFamily([...path]),
     refresh: (set) => {
       itemMap.clear();
       childIdsMap.clear();

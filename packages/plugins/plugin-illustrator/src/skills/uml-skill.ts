@@ -11,7 +11,13 @@ import { DrawingOperation } from '#types';
 
 const SKILL_KEY = 'org.dxos.skill.uml';
 
-const operations = [DrawingOperation.Create, DrawingOperation.Read, DrawingOperation.Generate, DrawingOperation.Edit];
+const operations = [
+  DrawingOperation.Create,
+  DrawingOperation.Read,
+  DrawingOperation.Generate,
+  DrawingOperation.Draw,
+  DrawingOperation.Edit,
+];
 
 const make = () =>
   Skill.make({
@@ -76,8 +82,59 @@ const make = () =>
         node for tooling. Keep to ~14 nodes and 3 groups; split a larger system into several
         drawings.
 
+        ## Drawing it yourself
+
+        ${Operation.toolName(DrawingOperation.Draw)} takes the native text DSL, in which you choose
+        every coordinate. Prefer ${Operation.toolName(DrawingOperation.Generate)} whenever a layout
+        engine can do the job — it is faster and usually better. Reach for the DSL when the picture
+        is not a graph the engine understands: a precise arrangement, a free-form illustration, a
+        figure with circles, arcs or text you place yourself, or a fix to one object of a diagram
+        that generation otherwise got right.
+
+        A document is a sequence of statements, brace-delimited and whitespace-insensitive:
+
+        \`\`\`
+        object api @ 0,0 ref="dxn:echo:@:01ABC" {
+          rect box 0,0 140x64 "API gateway" color=blue
+          text note 0,72 "public" color=grey weight=s
+        }
+
+        object store @ 110,160 {
+          ellipse disk 0,0 140x56 "Postgres" color=violet fill=pattern
+        }
+
+        object edges @ 0,0 {
+          arrow api-store api/box -> store/disk "writes" head=crowsfoot
+        }
+        \`\`\`
+
+        - \`object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { … }\` places a group; \`@\` is its
+          canvas origin and elements inside it are in object-local units. Omit \`@\` to leave an
+          existing object where it is.
+        - Elements are \`<kind> <id> <geometry> ["label"] <name=value>*\`: \`rect\`/\`ellipse\`/
+          \`diamond\`/\`triangle\` take \`x,y WxH\`; \`circle\` takes \`cx,cy r\`; \`line\`/\`curve\`
+          take two or more \`x,y\`; \`arc\` takes \`cx,cy r a0..a1\`; \`text\` takes \`x,y "string"\`;
+          \`portal\` takes \`x,y WxH ref="<dxn>"\` and shows another drawing inside the frame.
+        - An \`arrow\` is \`<end> -> <end>\`. An end is a **ref** (\`Object/element\`, optionally
+          \`#port\`), a point (\`10,20\`), or \`_\` for none. Prefer refs: a bound end follows its
+          target when the target moves, which a coordinate pair cannot.
+        - Attributes are always \`name=value\`, never bare: \`color\`, \`fill\`, \`stroke\`,
+          \`weight\` on anything; \`rotation\` and \`corners\` on the box kinds; \`w\` on \`text\`;
+          \`closed=true\` on \`line\`; \`head\` and \`tail\` on \`arrow\`. Values are the schema's
+          literals (\`head=triangle\`, \`stroke=dashed\`); free text and ids that are not bare words
+          are quoted.
+        - The other statements edit in place: \`elements <objectId> { … }\` adds or replaces
+          elements, \`move <id> @ <x>,<y>\`, \`remove object <id>\`,
+          \`remove elements <objectId> <elementId>…\`.
+
+        Read \`problems\` in the result first — each carries a line and column, and a single
+        \`error\` means nothing was applied at all. Then read \`diagnostics\` exactly as for
+        generation.
+
         When asked for the diagram source rather than a canvas rendering (e.g. to embed in a
-        markdown document), return the same mermaid classDiagram in a fenced mermaid block.
+        markdown document), return a mermaid classDiagram in a fenced mermaid block — that is the
+        portable form and needs no coordinates. If the DSL is what was asked for, by name or by
+        asking for a \`diagram\` fenced block or positioned source, return the DSL instead.
       `,
     }),
   });
