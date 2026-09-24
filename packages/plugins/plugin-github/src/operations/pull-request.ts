@@ -62,6 +62,29 @@ const FAILED_CONCLUSIONS = new Set([
   'stale',
 ]);
 
+/** One check run as the article lists it: its outcome folded the way {@link summarizeCheckRuns} counts it. */
+export const toCheckRun = (run: GitHubApi.GitHubCheckRun): GitHubOperation.CheckRun => {
+  const outcome: GitHubOperation.CheckOutcome =
+    run.status !== 'completed'
+      ? 'pending'
+      : run.conclusion && FAILED_CONCLUSIONS.has(run.conclusion)
+        ? 'failure'
+        : run.conclusion === 'skipped'
+          ? 'skipped'
+          : run.conclusion === 'neutral'
+            ? 'neutral'
+            : 'success';
+  const url = run.details_url ?? run.html_url;
+  return {
+    name: run.name,
+    outcome,
+    ...(run.conclusion ? { conclusion: run.conclusion } : {}),
+    ...(url ? { url } : {}),
+    ...(run.started_at ? { startedAt: run.started_at } : {}),
+    ...(run.completed_at ? { completedAt: run.completed_at } : {}),
+  };
+};
+
 /** Folds a commit's check runs into one outcome: any failure fails, then any unfinished run is pending. */
 export const summarizeCheckRuns = (
   runs: readonly GitHubApi.GitHubCheckRun[],

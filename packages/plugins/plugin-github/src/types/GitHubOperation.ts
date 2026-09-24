@@ -269,6 +269,23 @@ export const CheckCounts = Schema.Struct({
 });
 export interface CheckCounts extends Schema.Schema.Type<typeof CheckCounts> {}
 
+/** How one check run ended, folded to what a reader acts on; `skipped` is neither passing nor failing. */
+export const CheckOutcome = Schema.Literals(['success', 'failure', 'pending', 'skipped', 'neutral']);
+export type CheckOutcome = Schema.Schema.Type<typeof CheckOutcome>;
+
+/** One check run on the head commit, as the article lists it. */
+export const CheckRun = Schema.Struct({
+  name: Schema.String,
+  outcome: CheckOutcome,
+  /** GitHub's own `conclusion` (`timed_out`, `cancelled`, …), kept for the label when it says more than the outcome. */
+  conclusion: Schema.String.pipe(Schema.optional),
+  /** Where the run's logs live: the provider's page when it has one, else GitHub's. */
+  url: Schema.String.pipe(Schema.optional),
+  startedAt: Schema.String.pipe(Schema.optional),
+  completedAt: Schema.String.pipe(Schema.optional),
+});
+export interface CheckRun extends Schema.Schema.Type<typeof CheckRun> {}
+
 /** Read a pull request's live state and the CI outcome of its head commit from GitHub. */
 export const GetPullRequestStatus = Operation.make({
   meta: {
@@ -284,8 +301,11 @@ export const GetPullRequestStatus = Operation.make({
     state: PullRequest.State,
     title: Schema.String,
     commit: Schema.String.pipe(Schema.optional),
+    /** The live description, which may have changed since the pull request was imported. */
+    body: Schema.String.pipe(Schema.optional),
     ci: CiState,
     checks: CheckCounts,
+    runs: Schema.Array(CheckRun),
   }),
   types: [PullRequest.PullRequest],
 });
