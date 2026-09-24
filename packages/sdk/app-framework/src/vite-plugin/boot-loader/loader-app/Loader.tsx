@@ -212,7 +212,9 @@ export const Loader: Component<LoaderProps> = (props) => {
       {props.store.onAbort() ? (
         <div id='boot-loader-stalled'>
           <p id='boot-loader-stalled-text'>Still starting after {props.store.elapsedSeconds()}s.</p>
-          <button id='boot-loader-stalled-abort' type='button' onClick={() => props.store.onAbort()?.()}>
+          {/* `on:click`, not `onClick`: Solid delegates `onClick` to a document listener that outlives
+              the loader, and its handler pins the app's first click event, and that event's view. */}
+          <button id='boot-loader-stalled-abort' type='button' on:click={() => props.store.onAbort()?.()}>
             Abort and show diagnostics
           </button>
         </div>

@@ -364,7 +364,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             </span>
           )}
           <span className='dx-tag' data-hue={status ? ciHue[status.ci] : 'neutral'}>
-            {t(status ? `ci-status.${status.ci}` : 'ci-status.unknown')}
+            {t(status ? `ci-status.${status.ci}.label` : 'ci-status.unknown.label')}
             {status && status.checks.total > 0 && ` ${status.checks.passed}/${status.checks.total}`}
           </span>
           <span className='truncate'>{pullRequest.title}</span>

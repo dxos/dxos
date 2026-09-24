@@ -18,6 +18,7 @@ import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
+import { getProjectArtifactPath } from '../paths.ts';
 import {
   ARTIFACTS_SEGMENT,
   SESSIONS_SEGMENT,
@@ -245,6 +246,7 @@ describe('project chats graph extension', () => {
     const artifact = await addArtifact();
     const artifactNodeId = GraphNode.qualifyId(artifactsNodeId, artifact.id);
     const pairId = [project.id, ARTIFACTS_SEGMENT, artifact.id].join('+');
+    expect(getProjectArtifactPath(db.spaceId, project.id, artifact.id)).toEqual(artifactNodeId);
 
     const represented = PathResolution.representNode(builder, artifactNodeId);
     expect(Option.getOrUndefined(represented)).toEqual({ key: 'project', id: pairId, workspace: db.spaceId });

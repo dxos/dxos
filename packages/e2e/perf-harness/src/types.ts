@@ -39,9 +39,16 @@ export type Comparability = {
    *
    * The profiler runs in both modes — measured at +2.6% on the whole flow, below the run-to-run
    * noise — so that worker CPU is trended rather than diagnose-only. The screencast is what makes
-   * `diagnose` timings incomparable: it costs +45%.
+   * `diagnose` timings incomparable: it costs +45%. Allocation sampling runs only on request.
    */
-  instruments: 'profiler' | 'profiler+screencast';
+  instruments: `profiler${'' | '+screencast'}${'' | '+allocations'}`;
+  /**
+   * Stages after which a memory snapshot was taken, if any.
+   *
+   * A snapshot runs after its stage's row is complete, so that row is unaffected; every LATER
+   * stage inherits the allocator pages the snapshot committed in the realm it serialized.
+   */
+  snapshotStages?: string[];
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */

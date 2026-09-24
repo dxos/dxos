@@ -3,6 +3,7 @@
 //
 
 import * as Duration from 'effect/Duration';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { assertArgument } from '@dxos/invariant';
@@ -28,4 +29,34 @@ export const makeRegistry = ({ idleTTL = DEFAULT_IDLE_TTL, ...options }: Registr
   // An infinite TTL makes the registry's bucket arithmetic NaN, which removes nodes at once.
   assertArgument(Number.isFinite(millis), 'idleTTL', 'Must be finite; use Atom.keepAlive to retain an atom');
   return Registry.make({ ...options, defaultIdleTTL: millis > 0 ? millis : undefined });
+};
+
+/**
+ * Key under which an {@link Owner} exposes what its atoms are mounted with.
+ */
+export const OwnerId = Symbol.for('@dxos/effect/AtomEx/Owner');
+
+/**
+ * An object whose atoms live as long as it does; see {@link makeOwned}.
+ */
+export interface Owner {
+  readonly [OwnerId]: {
+    /** The registry the owner's atoms are mounted in. */
+    readonly registry: Registry.AtomRegistry;
+    /**
+     * Unmounts a collected owner's atoms. One per class, held in a static field: a registry the
+     * instance created would be collected with it and never run.
+     */
+    readonly finalizer: FinalizationRegistry<() => void>;
+  };
+}
+
+/**
+ * Keeps `atom` mounted until `owner` is collected. Unlike `Atom.keepAlive`, it does not outlive the
+ * owner. Neither the atom nor its value may reference `owner`, or the registry keeps `owner` alive.
+ */
+export const makeOwned = <A extends Atom.Atom<any>>(owner: Owner, atom: A): A => {
+  const { registry, finalizer } = owner[OwnerId];
+  finalizer.register(owner, registry.mount(atom));
+  return atom;
 };

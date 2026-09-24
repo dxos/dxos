@@ -17,6 +17,7 @@ import type * as Relation from '../../Relation.ts';
 import { getLabel } from '../Annotation/index.ts';
 import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
+import { ParentId } from '../common/types/index.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
 import { RefTypeId } from '../Ref/ref.ts';
 import { loadRefTarget } from '../Ref/utils.ts';
@@ -285,4 +286,36 @@ const labelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.
 export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
   return labelAtomFamily(entity);
+};
+
+const readParent = (obj: Obj.Unknown): Obj.Unknown | undefined => (obj as any)[ParentId];
+
+/**
+ * Atom family for an object's parent.
+ * Fires only when the parent changes, compared by id since the database may hand back a different proxy.
+ */
+const parentAtomFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Unknown | undefined> => {
+  return Atom.make<Obj.Unknown | undefined>((get) => {
+    let previous = readParent(obj);
+
+    const unsubscribe = subscribe(obj, () => {
+      const next = readParent(obj);
+      if (next?.id !== previous?.id) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  });
+});
+
+/**
+ * Create a read-only atom for the parent of a reactive ECHO object.
+ * Re-evaluates on object mutation; only propagates when the parent changes.
+ */
+export const makeParentAtom = <T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Unknown | undefined> => {
+  assertArgument(isEntity(obj), 'obj', 'Must be a reactive ECHO object');
+  return parentAtomFamily(obj);
 };

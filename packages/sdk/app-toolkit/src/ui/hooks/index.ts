@@ -3,6 +3,7 @@
 //
 
 export * from './useAppGraph.ts';
+export * from './useDetailNavigation.ts';
 export * from './useActiveSpace.ts';
 export * from './useHomeVisibility.ts';
 export * from './useLayout.ts';

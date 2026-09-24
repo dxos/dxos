@@ -3,13 +3,13 @@
 //
 
 //
-// Property panel for the selected element: a schema-driven form over the element's own Effect schema,
-// so every field a type has is editable without a per-type form. Edits go through the projection as
-// `update` intents; the panel never mutates the scene.
+// Property panel for the selected element: a schema-driven form over the element's own Effect schema
+// (a node's from its registry definition), so every field a type has is editable without a per-type
+// form. Edits go through the projection as `update` intents; the panel never mutates the scene.
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Field, type ThemedClassName } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
@@ -17,18 +17,20 @@ import { mx } from '@dxos/ui-theme';
 
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
+import { type NodeRegistry, defaultNodeRegistry, nodeDef } from '../../model/registry.ts';
 import {
-  ClassNode,
   CurveLink,
+  DEFAULT_GRID,
   type Element,
-  EllipseNode,
   LineLink,
-  PortalNode,
-  RectNode,
+  type Link,
+  type Node,
+  NodeBase,
   SplineLink,
-  TextNode,
   getElement,
+  isLink,
 } from '../../model/types.ts';
+import { createGeometryField } from './GeometryField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
@@ -60,19 +62,42 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   );
 };
 
-const CLASS_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
+/** Renderers by field name for the built-in types' list fields; a host may pass its own. */
+export const DEFAULT_FIELDS: FormFieldMap = { attributes: LinesField, methods: LinesField };
 
 export type PropertiesProps = ThemedClassName<{
   projection: Projection;
   atoms: SceneViewAtoms;
+  nodes?: NodeRegistry;
+  fields?: FormFieldMap;
+  /** Minor grid spacing the geometry cells step and snap by; the view's own. */
+  grid?: number;
+  /** Show the fields without letting them change; also implied by a projection that cannot `update`. */
+  readonly?: boolean;
 }>;
 
-export const Properties = ({ classNames, projection, atoms }: PropertiesProps) => {
+export const Properties = ({
+  classNames,
+  projection,
+  atoms,
+  nodes = defaultNodeRegistry,
+  fields = DEFAULT_FIELDS,
+  grid = DEFAULT_GRID,
+  readonly: readonlyProp = false,
+}: PropertiesProps) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
+  const snap = useAtomValue(atoms.snap);
   const ids = [...selection];
   const element = ids.length === 1 ? getElement(scene, ids[0]) : undefined;
-  const readonly = !projection.capabilities.update;
+  const readonly = readonlyProp || !projection.capabilities.update;
+
+  // The geometry cells answer to the view's own grid and snap toggle, so typing a number leaves the
+  // node exactly as snapped as dragging it would.
+  const fieldMap = useMemo<FormFieldMap>(() => {
+    const geometry = createGeometryField({ grid, snap });
+    return { center: geometry, size: geometry, ...fields };
+  }, [grid, snap, fields]);
 
   const onSave = useCallback(
     (values: Element) => {
@@ -89,73 +114,66 @@ export const Properties = ({ classNames, projection, atoms }: PropertiesProps) =
         <div className='p-2 text-sm text-description'>
           {ids.length === 0 ? 'Select a node or link to edit its properties.' : `${ids.length} elements selected.`}
         </div>
+      ) : isLink(element) ? (
+        <LinkForm key={element.id} link={element} readonly={readonly} onSave={onSave} />
       ) : (
-        <ElementForm key={element.id} element={element} readonly={readonly} onSave={onSave} />
+        <NodeForm key={element.id} node={element} nodes={nodes} fields={fieldMap} readonly={readonly} onSave={onSave} />
       )}
     </div>
   );
 };
 
-type ElementFormProps = { element: Element; readonly: boolean; onSave: (values: Element) => void };
+type FormProps = { readonly: boolean; onSave: (values: Element) => void };
 
-const fields = (
-  <Form.Viewport>
+// Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it.
+const formFields = (
+  <Form.Viewport scroll>
     <Form.Content>
       <Form.Fields exclude={HIDDEN} />
     </Form.Content>
   </Form.Viewport>
 );
 
-/** One `Form.Root` per type: the schema and the values must agree, which a switch proves per branch. */
-const ElementForm = ({ element, readonly, onSave }: ElementFormProps) => {
+/** A node's form over its type's schema; a type the registry does not know gets the shared fields. */
+const NodeForm = ({
+  node,
+  nodes,
+  fields,
+  readonly,
+  onSave,
+}: FormProps & { node: Node; nodes: NodeRegistry; fields: FormFieldMap }) => (
+  <Form.Root
+    schema={nodeDef(nodes, node)?.schema ?? NodeBase}
+    values={node}
+    fieldMap={fields}
+    readonly={readonly}
+    autoSave
+    onSave={onSave}
+  >
+    {formFields}
+  </Form.Root>
+);
+
+/** One `Form.Root` per link type: the schema and the values must agree, which a switch proves per branch. */
+const LinkForm = ({ link, readonly, onSave }: FormProps & { link: Link }) => {
   const common = { readonly, autoSave: true, onSave };
-  switch (element.type) {
-    case 'rect':
-      return (
-        <Form.Root schema={RectNode} values={element} {...common}>
-          {fields}
-        </Form.Root>
-      );
-    case 'ellipse':
-      return (
-        <Form.Root schema={EllipseNode} values={element} {...common}>
-          {fields}
-        </Form.Root>
-      );
-    case 'class':
-      return (
-        <Form.Root schema={ClassNode} values={element} fieldMap={CLASS_FIELDS} {...common}>
-          {fields}
-        </Form.Root>
-      );
-    case 'text':
-      return (
-        <Form.Root schema={TextNode} values={element} {...common}>
-          {fields}
-        </Form.Root>
-      );
-    case 'scene':
-      return (
-        <Form.Root schema={PortalNode} values={element} {...common}>
-          {fields}
-        </Form.Root>
-      );
+  switch (link.type) {
     case 'line':
       return (
-        <Form.Root schema={LineLink} values={element} {...common}>
-          {fields}
+        <Form.Root schema={LineLink} values={link} {...common}>
+          {formFields}
         </Form.Root>
       );
     case 'curve':
       return (
-        <Form.Root schema={CurveLink} values={element} {...common}>
-          {fields}
+        <Form.Root schema={CurveLink} values={link} {...common}>
+          {formFields}
         </Form.Root>
       );
     case 'spline':
       return (
-        <Form.Root schema={SplineLink} values={element} {...common}>
-          {fields}
+        <Form.Root schema={SplineLink} values={link} {...common}>
+          {formFields}
         </Form.Root>
       );
   }
