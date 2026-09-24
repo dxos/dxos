@@ -114,6 +114,45 @@ describe('AutomergeRepo with Subduction', () => {
       }
     });
 
+    test('a long document stores the commits and fragments that cover its history', async () => {
+      const storage = await createSqliteAdapter();
+      const { repos, adapters, repoPairs } = await createHostClientRepoTopology({ storages: [storage] });
+      const [host, client] = repos;
+      await connectAdapters(adapters, { repoPairs });
+
+      // Enough changes to cross several fragment boundaries (about 1 change in 256), saved in
+      // batches so the stored set is built up across many saves.
+      const handle = host.create<{ count: number }>({ count: 0 });
+      for (let batch = 0; batch < 40; batch++) {
+        for (let index = 0; index < 50; index++) {
+          handle.change((doc: { count: number }) => {
+            doc.count++;
+          });
+        }
+        await host.flush();
+      }
+
+      const doc = handle.doc();
+      const expected = {
+        commits: A.getFragmentMetadata(doc, 0)
+          .map((meta) => meta.head)
+          .sort(),
+        fragments: A.getFragmentMetadata(doc, { start: 1 })
+          .map((meta) => meta.head)
+          .sort(),
+      };
+      expect(expected.fragments.length).toBeGreaterThan(0);
+      const stored = async (kind: string) =>
+        (await storage.loadRange(['subduction', kind])).map((chunk) => chunk.key[chunk.key.length - 1]).sort();
+      // Absorbed loose commits can stay on disk after compaction, so only the live ones are required.
+      expect(await stored('commits')).toEqual(expect.arrayContaining(expected.commits));
+      expect(await stored('fragments')).toEqual(expected.fragments);
+
+      await expect
+        .poll(async () => (await client.find<{ count: number }>(handle.url)).doc()?.count, { timeout: SYNC_WINDOW_MS })
+        .toEqual(2_000);
+    }, 30_000);
+
     test('share config does not gate subduction replication', async () => {
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
         shareConfig: {

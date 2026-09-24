@@ -586,7 +586,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..42f81172527cd3863c52cb23d90b7364
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..6de1c5895436dd599d5c58afa7407f3dab216fd9 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..7cb7e7b8363e2413997afab6f2040a7537522e44 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -848,6 +848,89 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..6de1c5895436dd599d5c58afa7407f3d
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
+@@ -1057,10 +1166,20 @@ export class SubductionSource {
+         // only the small handful of newly-formed commits/fragments per
+         // tick. See proposals/bundle-fragments-single-walk.md for the
+         // matching automerge-core fix.
+-        const commitMetas = Automerge.getFragmentMetadata(doc, 0);
+-        const fragmentMetas = Automerge.getFragmentMetadata(doc, { start: 1 });
+-        const newCommitMetas = commitMetas.filter(m => !entry.knownHashes.has(m.head));
+-        const newFragmentMetas = fragmentMetas.filter(m => !entry.knownHashes.has(m.head));
++        const cover = this.#coverOf(entry, doc);
++        const newCommitMetas = [];
++        for (const meta of cover.commits.values()) {
++            if (!entry.knownHashes.has(meta.head))
++                newCommitMetas.push(meta);
++        }
++        const newFragmentMetas = [];
++        for (const head of cover.fragments) {
++            if (entry.knownHashes.has(head))
++                continue;
++            const meta = Automerge.getFragmentMeta(doc, head);
++            if (meta)
++                newFragmentMetas.push(meta);
++        }
+         if (newCommitMetas.length === 0 && newFragmentMetas.length === 0) {
+             return { prepFailures: 0 };
+         }
+@@ -1174,6 +1293,45 @@ export class SubductionSource {
+         this.#scheduleCompaction(entry);
+         return { prepFailures: prepErrors.length };
+     }
++    /**
++     * DXOS patch: the loose commits and fragment heads covering `doc`'s history, which is what
++     * `getFragmentMetadata` returns, without recomputing it on every save.
++     *
++     * A change that is not a fragment boundary only adds itself as a loose commit, so the cover
++     * advances by the changes since its heads; one on a boundary (about 1 in 256) can absorb
++     * earlier commits and fragments, so it rebuilds the cover in full. A doc that no longer
++     * contains the cover's heads rebuilds it too.
++     */
++    #coverOf(entry, doc) {
++        const heads = Automerge.getHeads(doc);
++        const cover = entry.cover;
++        if (cover && Automerge.hasHeads(doc, cover.heads)) {
++            const loose = [];
++            let atBoundary = false;
++            for (const change of Automerge.getChangesMetaSince(doc, cover.heads)) {
++                const meta = Automerge.getFragmentMeta(doc, change.hash);
++                if (meta?.level !== 0) {
++                    atBoundary = true;
++                    break;
++                }
++                loose.push(meta);
++            }
++            if (!atBoundary) {
++                for (const meta of loose)
++                    cover.commits.set(meta.head, meta);
++                cover.heads = heads;
++                return cover;
++            }
++        }
++        // Fragments keep only their heads: their member lists hold every absorbed change hash,
++        // and `getFragmentMeta` returns a fragment's metadata when a save needs it.
++        entry.cover = {
++            heads,
++            commits: new Map(Automerge.getFragmentMetadata(doc, 0).map(m => [m.head, m])),
++            fragments: new Set(Automerge.getFragmentMetadata(doc, { start: 1 }).map(m => m.head)),
++        };
++        return entry.cover;
++    }
+     /**
+      * Kick off a compaction pass without blocking the save loop.
+      *
+@@ -1248,8 +1406,9 @@ export class SubductionSource {
+         // set, so avoid `getCommits` / `getFragments` which would
+         // re-bundle every item (O(N × #items) wasted work per compaction
+         // pass — same trap that bit `#saveNewCommits`).
+-        const liveCommits = new Set(Automerge.getFragmentMetadata(doc, 0).map(m => m.head));
+-        const liveFragments = new Set(Automerge.getFragmentMetadata(doc, { start: 1 }).map(m => m.head));
++        const cover = this.#coverOf(entry, doc);
++        const liveCommits = cover.commits;
++        const liveFragments = cover.fragments;
+         const staleCommits = [];
+         for (const hex of entry.persistedCommitHashes) {
+             if (!liveCommits.has(hex) && !entry.untransformedHashes.has(hex)) {
 diff --git a/dist/subduction/storage.js b/dist/subduction/storage.js
 index 37f9cc727f7ab1d24118879efadc4bb44f90e827..cd16b010938fccf22be693573f3db419dbf875d9 100644
 --- a/dist/subduction/storage.js
