@@ -861,10 +861,11 @@ describe('ManagerImpl', () => {
     );
 
     it.effect(
-      'a finished process is released but stays in processTree',
+      'a finished process is released, leaving its summary in processTree and nothing in the registry',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
         const monitor = yield* Process.ProcessMonitorService;
+        const registry = yield* Registry.AtomRegistry;
 
         const handle = yield* manager.spawn(makeWaitingExecutable());
         yield* handle.terminate();
@@ -873,6 +874,10 @@ describe('ManagerImpl', () => {
         expect(tree.map((info) => [info.pid, info.state])).toEqual([[handle.pid, Process.State.TERMINATED]]);
         const attached = yield* manager.attach(handle.pid).pipe(Effect.exit);
         expect(Exit.isFailure(attached)).toBe(true);
+
+        yield* Effect.promise(() => new Promise<void>((resolve) => setImmediate(resolve)));
+        expect(registry.getNodes().has(handle.statusAtom)).toBe(false);
+        expect(registry.get(handle.statusAtom).state).toEqual(Process.State.TERMINATED);
       }, Effect.provide(TestLayer)),
     );
 
