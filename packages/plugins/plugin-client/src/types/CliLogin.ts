@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 /**
  * Contract between `dx account login --method composer` and the Composer page that approves it.
  *
