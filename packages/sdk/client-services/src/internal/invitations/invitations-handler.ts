@@ -328,13 +328,14 @@ export class InvitationsHandler {
 
     const triedPeersIds = new ComplexSet(PublicKey.hash);
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
-    let admittedBy: 'edge' | 'swarm' | undefined;
+    // A delegated invitation races EDGE against member devices, so its type cannot say which one admitted the guest.
+    let admittedBy: 'edge' | 'peer' | undefined;
     // Ends with the flow, however it ends; the last state it reached says how.
     ctx.onDispose(() =>
       _trace.spanEnd(guestSpanId, {
         attributes: {
           outcome: getInvitationOutcome(guardedState.current.state),
-          ...(admittedBy ? { 'dxos.invitation.method': admittedBy } : {}),
+          ...(admittedBy ? { 'dxos.invitation.admittedBy': admittedBy } : {}),
         },
       }),
     );
@@ -452,7 +453,7 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
               });
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'swarm' } });
-              admittedBy = 'swarm';
+              admittedBy = 'peer';
               guardedState.complete({
                 ...guardedState.current,
                 ...result,

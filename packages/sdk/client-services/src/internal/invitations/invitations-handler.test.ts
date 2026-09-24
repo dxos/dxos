@@ -297,7 +297,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
           'ctx.spaceId': invitation.spaceId,
         });
         expect(span.ended).toBe(true);
-        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'success', 'ctx.dxos.invitation.method': 'swarm' });
+        expect(span.endAttributes).toEqual({ 'ctx.outcome': 'success', 'ctx.dxos.invitation.admittedBy': 'peer' });
       });
 
       test('ends as timed out once a flow that timed out is disposed', async ({ expect }) => {
