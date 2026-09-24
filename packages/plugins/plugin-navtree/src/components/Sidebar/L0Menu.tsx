@@ -392,6 +392,7 @@ export const L0Menu = ({
               hue={userAccountItem.properties.hue}
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
+              badge={userAccountItem.properties.badge}
               size={10}
             />
           </L0ItemRoot>
