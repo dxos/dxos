@@ -9,8 +9,8 @@ import { execFileSync } from 'node:child_process';
 
 // All git calls run with cwd pinned to the repo root, so ls-files/diff outputs
 // are repo-root-relative regardless of where the script was invoked from.
-let cachedRoot = null;
-const resolveRoot = () => {
+let cachedRoot: string | null = null;
+const resolveRoot = (): string => {
   if (cachedRoot == null) {
     cachedRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
       encoding: 'utf8',
@@ -20,8 +20,19 @@ const resolveRoot = () => {
   return cachedRoot;
 };
 
+/** Options for {@link git}. */
+export type GitOptions = { allowFail?: boolean };
+
+/** Narrow shape of the error `execFileSync` throws, enough to read its captured stderr. */
+type ExecError = { stderr?: unknown; message: string };
+
+const isExecError = (error: unknown): error is ExecError =>
+  typeof error === 'object' && error !== null && 'message' in error;
+
 /** Run git and return trimmed stdout; throws on non-zero exit unless `allowFail`. */
-export const git = (args, { allowFail = false } = {}) => {
+export function git(args: string[], options?: { allowFail?: false }): string;
+export function git(args: string[], options: { allowFail: true }): string | null;
+export function git(args: string[], { allowFail = false }: GitOptions = {}): string | null {
   try {
     // Pipe stderr so a tolerated failure (allowFail) does not leak git's fatal
     // messages to the console.
@@ -35,12 +46,15 @@ export const git = (args, { allowFail = false } = {}) => {
     if (allowFail) {
       return null;
     }
-    throw new Error(`git ${args.join(' ')} failed: ${err.stderr ?? err.message}`);
+    const detail = isExecError(err) ? (err.stderr ?? err.message) : String(err);
+    throw new Error(`git ${args.join(' ')} failed: ${detail}`);
   }
-};
+}
 
 /** Resolve the merge-base of HEAD with the first main-like ref that exists. */
-export const mainMergeBase = (candidates = ['origin/main', 'main', 'origin/master', 'master']) => {
+export const mainMergeBase = (
+  candidates: string[] = ['origin/main', 'main', 'origin/master', 'master'],
+): string | null => {
   for (const ref of candidates) {
     const base = mergeBase('HEAD', ref);
     if (base) {
@@ -50,25 +64,25 @@ export const mainMergeBase = (candidates = ['origin/main', 'main', 'origin/maste
   return null;
 };
 
-export const repoRoot = () => resolveRoot();
+export const repoRoot = (): string => resolveRoot();
 
-export const headCommit = () => git(['rev-parse', 'HEAD']);
+export const headCommit = (): string => git(['rev-parse', 'HEAD']);
 
-export const shortSha = (commit) => git(['rev-parse', '--short', commit]);
+export const shortSha = (commit: string): string => git(['rev-parse', '--short', commit]);
 
-export const currentBranch = () => git(['rev-parse', '--abbrev-ref', 'HEAD']);
+export const currentBranch = (): string => git(['rev-parse', '--abbrev-ref', 'HEAD']);
 
 /**
  * True when the working tree has staged, unstaged, or untracked changes.
  * Reviews are keyed by commit, so prepare refuses to run on a dirty tree.
  */
-export const isWorkingTreeDirty = () => {
+export const isWorkingTreeDirty = (): boolean => {
   const out = git(['status', '--porcelain'], { allowFail: true });
   return Boolean(out && out.length > 0);
 };
 
 /** Committer timestamp (unix seconds) for a commit, or 0 if unknown. */
-export const commitTimestamp = (commit) => {
+export const commitTimestamp = (commit: string): number => {
   const out = git(['show', '-s', '--format=%ct', commit], { allowFail: true });
   return out ? Number.parseInt(out, 10) : 0;
 };
@@ -80,7 +94,7 @@ export const commitTimestamp = (commit) => {
  * prior review referencing an unfetched commit), both of which mean base
  * resolution should skip it rather than fail.
  */
-export const isAncestor = (ancestor, descendant) => {
+export const isAncestor = (ancestor: string, descendant: string): boolean => {
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { stdio: 'ignore' });
     return true;
@@ -91,7 +105,7 @@ export const isAncestor = (ancestor, descendant) => {
 
 /** Best-effort merge-base of two refs; null if either is unknown. Internal — the
  * only consumer is `mainMergeBase`. */
-const mergeBase = (a, b) => git(['merge-base', a, b], { allowFail: true });
+const mergeBase = (a: string, b: string): string | null => git(['merge-base', a, b], { allowFail: true });
 
 /**
  * Newest commit reachable from `ref` that touched `path`, or null if none. Used
@@ -100,7 +114,7 @@ const mergeBase = (a, b) => git(['merge-base', a, b], { allowFail: true });
  * under a new SHA (or, in a shallow clone, was simply never fetched) — even
  * though the review's own files are plainly present in `ref`'s history.
  */
-export const lastCommitTouching = (path, ref = 'HEAD') => {
+export const lastCommitTouching = (path: string, ref: string = 'HEAD'): string | null => {
   const commit = git(['log', '-1', '--format=%H', ref, '--', path], { allowFail: true });
   return commit || null;
 };
@@ -109,9 +123,9 @@ export const lastCommitTouching = (path, ref = 'HEAD') => {
  * Repo-relative paths changed between `base` and the working tree: committed
  * diff `base..HEAD`, plus staged, unstaged, and untracked changes.
  */
-export const changedFiles = (base) => {
-  const paths = new Set();
-  const collect = (out) => {
+export const changedFiles = (base: string): Set<string> => {
+  const paths = new Set<string>();
+  const collect = (out: string | null): void => {
     if (!out) {
       return;
     }

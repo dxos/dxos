@@ -8,7 +8,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { parseFrontmatter } from './frontmatter.mjs';
+import { type Severity } from './diagnostics.ts';
+import { type ParsedFrontmatter, parseFrontmatter } from './frontmatter.ts';
 
 export const REVIEWS_DIR = '.agents/reviews';
 
@@ -17,8 +18,32 @@ export const REVIEWS_DIR = '.agents/reviews';
 // wrote in its fragment header.
 export const GROUPS_MANIFEST = 'groups.json';
 
+/** One entry of `groups.json`: the rule and file scope a subagent group reviewed. */
+export type GroupManifestEntry = {
+  ruleId: string;
+  severity: Severity;
+  title: string;
+  scope: 'full' | 'delta';
+  files: string[];
+};
+
+/** `groups.json`'s shape: group number (zero-padded) → its manifest entry. */
+export type GroupsManifest = Record<string, GroupManifestEntry>;
+
+/** A value a REVIEW.md frontmatter field may hold before serialization. */
+type FrontmatterValue = string | number | boolean | string[] | null | undefined;
+
+/** Input to {@link renderFrontmatter}: a flat map of frontmatter fields. */
+export type FrontmatterInput = Record<string, FrontmatterValue>;
+
+/** Narrow shape of a Node.js errno exception, enough to read its `code`. */
+type NodeErrnoError = { code?: string; message: string };
+
+const isNodeErrnoError = (error: unknown): error is NodeErrnoError =>
+  typeof error === 'object' && error !== null && 'message' in error;
+
 /** Per-issue status ledger written by finalize; agents update statuses in place. */
-export { RESOLUTION_FILE } from './resolution.mjs';
+export { RESOLUTION_FILE } from './resolution.ts';
 
 /** Sentinel `base` when a run reviews the whole project rather than a diff. */
 export const FULL_BASE = 'full';
@@ -27,7 +52,7 @@ export const FULL_BASE = 'full';
  * Short review id used as the `<review_id>` prefix in issue ids (`<id>-<seq>`).
  * Store dirs are the short sha; accept a legacy `…-<sha>` dir name too.
  */
-export const reviewIdFromStore = (storeDirName, commit) => {
+export const reviewIdFromStore = (storeDirName: string, commit: string | null | undefined): string => {
   if (/^[0-9a-f]{7,40}$/i.test(storeDirName)) {
     return storeDirName;
   }
@@ -45,14 +70,14 @@ export const reviewIdFromStore = (storeDirName, commit) => {
  * Review store directory name: just the short commit sha. Branch is omitted —
  * the commit already identifies the reviewed tree, and keeps paths short.
  */
-export const reviewSlug = (_branch, short) => short;
+export const reviewSlug = (_branch: string | null | undefined, short: string): string => short;
 
 /**
  * Reject a `--slug` that is not a single safe path component — no separators,
  * no `.`/`..` — so a store path can never escape `.agents/reviews` (prepare
  * recursively removes `<store>/groups`, finalize overwrites `<store>/REVIEW.md`).
  */
-export const assertSafeSlug = (slug) => {
+export const assertSafeSlug = (slug: string): string => {
   if (!/^[A-Za-z0-9._-]+$/.test(slug) || slug === '.' || slug === '..') {
     throw new Error(`unsafe --slug ${JSON.stringify(slug)}: expected a single path component (no / or ..)`);
   }
@@ -60,7 +85,7 @@ export const assertSafeSlug = (slug) => {
 };
 
 /** Serialize a flat object into a REVIEW.md frontmatter block. */
-export const renderFrontmatter = (data) => {
+export const renderFrontmatter = (data: FrontmatterInput): string => {
   const lines = Object.entries(data)
     .filter(([, value]) => value != null)
     .map(([key, value]) => {
@@ -79,14 +104,17 @@ export const renderFrontmatter = (data) => {
  * review is never mistaken for a missing one (which would let finalize skip it
  * and select an older run).
  */
-export const readReview = (path) => {
+export const readReview = (path: string): ParsedFrontmatter | null => {
   try {
     return parseFrontmatter(readFileSync(path, 'utf8'));
   } catch (error) {
-    if (error?.code === 'ENOENT') {
-      return null;
+    if (isNodeErrnoError(error)) {
+      if (error.code === 'ENOENT') {
+        return null;
+      }
+      throw new Error(`cannot read ${path}: ${error.message}`);
     }
-    throw new Error(`cannot read ${path}: ${error.message}`);
+    throw new Error(`cannot read ${path}: ${String(error)}`);
   }
 };
 
@@ -95,7 +123,7 @@ export const readReview = (path) => {
  * back to `groups.json` so legacy finalized reviews still mark their rules as
  * seen (new rules then get a full-project first pass).
  */
-export const ruleIdsFromReviewDir = (dir, review = null) => {
+export const ruleIdsFromReviewDir = (dir: string, review: ParsedFrontmatter | null = null): string[] => {
   const parsed = review ?? readReview(join(dir, 'REVIEW.md'));
   const fromFrontmatter = parsed?.data?.rules;
   if (Array.isArray(fromFrontmatter) && fromFrontmatter.length > 0) {
@@ -106,12 +134,17 @@ export const ruleIdsFromReviewDir = (dir, review = null) => {
     return [];
   }
   try {
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const manifest: unknown = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const entries = typeof manifest === 'object' && manifest !== null ? Object.values(manifest) : [];
     return [
       ...new Set(
-        Object.values(manifest)
-          .map((group) => group?.ruleId)
-          .filter((id) => typeof id === 'string' && id.length > 0),
+        entries
+          .map((group) =>
+            typeof group === 'object' && group !== null && 'ruleId' in group
+              ? (group as { ruleId: unknown }).ruleId
+              : undefined,
+          )
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
       ),
     ];
   } catch {
