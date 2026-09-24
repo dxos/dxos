@@ -4415,6 +4415,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../echo/blob
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -6808,6 +6811,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-file':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-file
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game

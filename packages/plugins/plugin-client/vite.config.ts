@@ -22,6 +22,7 @@ export default defineConfig({
     ClientAction: 'src/types/ClientAction.ts',
     ClientCapabilities: 'src/types/ClientCapabilities.ts',
     ClientEvents: 'src/types/ClientEvents.ts',
+    CliLogin: 'src/types/CliLogin.ts',
     PasskeyError: 'src/types/PasskeyError.ts',
     types: 'src/types/index.ts',
   },
