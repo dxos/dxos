@@ -11,9 +11,10 @@ import { useObject } from '@dxos/echo-react';
 import { IconButton, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Video } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+import { VideoOperation } from '#types';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
