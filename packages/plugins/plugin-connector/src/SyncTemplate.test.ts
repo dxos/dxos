@@ -20,9 +20,9 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from './Binding';
-import { SyncTemplateScaffoldError } from './errors';
-import * as SyncTemplate from './SyncTemplate';
+import * as Binding from './Binding.ts';
+import { SyncTemplateScaffoldError } from './errors.ts';
+import * as SyncTemplate from './SyncTemplate.ts';
 
 let builder: EchoTestBuilder;
 

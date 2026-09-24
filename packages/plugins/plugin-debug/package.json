@@ -66,13 +66,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Debug": {
       "source": "./src/types/Debug.ts",
       "types": "./dist/types/src/types/Debug.d.ts",
@@ -103,10 +96,52 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
+    "./IncidentSpace": {
+      "source": "./src/samples/incident/IncidentSpace.ts",
+      "types": "./dist/types/src/samples/incident/IncidentSpace.d.ts",
+      "import": "./dist/lib/IncidentSpace.mjs"
+    },
+    "./PipelineSpace": {
+      "source": "./src/samples/crm/PipelineSpace.ts",
+      "types": "./dist/types/src/samples/crm/PipelineSpace.d.ts",
+      "import": "./dist/lib/PipelineSpace.mjs"
+    },
+    "./ReviewSpace": {
+      "source": "./src/samples/review/ReviewSpace.ts",
+      "types": "./dist/types/src/samples/review/ReviewSpace.d.ts",
+      "import": "./dist/lib/ReviewSpace.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./StockfishSpace": {
+      "source": "./src/samples/stockfish/StockfishSpace.ts",
+      "types": "./dist/types/src/samples/stockfish/StockfishSpace.d.ts",
+      "import": "./dist/lib/StockfishSpace.mjs"
+    },
+    "./TidepoolSpace": {
+      "source": "./src/samples/tidepool/TidepoolSpace.ts",
+      "types": "./dist/types/src/samples/tidepool/TidepoolSpace.d.ts",
+      "import": "./dist/lib/TidepoolSpace.mjs"
+    },
+    "./WeatherSpace": {
+      "source": "./src/samples/weather/WeatherSpace.ts",
+      "types": "./dist/types/src/samples/weather/WeatherSpace.d.ts",
+      "import": "./dist/lib/WeatherSpace.mjs"
+    },
+    "./WorkerSpace": {
+      "source": "./src/samples/worker/WorkerSpace.ts",
+      "types": "./dist/types/src/samples/worker/WorkerSpace.d.ts",
+      "import": "./dist/lib/WorkerSpace.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -137,7 +172,7 @@
     "scripts"
   ],
   "scripts": {
-    "build-sample": "vite-node ./scripts/build-sample-space.ts"
+    "build-template": "vite-node ./scripts/build-template-archive.ts"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -162,9 +197,12 @@
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
@@ -181,6 +219,7 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-terminal": "workspace:*",
@@ -188,19 +227,25 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-sandbox": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

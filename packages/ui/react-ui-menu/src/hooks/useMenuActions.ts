@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { type DependencyList, useCallback, useContext, useEffect, useMemo } from 'react';
+import { type DependencyList, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -22,7 +22,7 @@ import {
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,
-} from '../types';
+} from '../types.ts';
 
 export type ActionGraphNodes = AppGraphNode.NodeArg<any>[];
 export type ActionGraphEdges = AppGraph.Edge[];
@@ -33,7 +33,18 @@ export type ActionGraphProps = {
 
 const DEFAULT_PRIORITY = 100;
 
-const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] }).pipe(Atom.keepAlive);
+const EMPTY_GRAPH = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
+
+/**
+ * The graph behind a menu, rebuilt when `deps` change. Its nodes stay pinned while the menu is mounted,
+ * taken on commit so a render React discards leaves nothing behind.
+ */
+export const useMenuGraph = <G extends AppGraph.BaseGraph | undefined>(build: () => G, deps: DependencyList): G => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const graph = useMemo(build, deps);
+  useLayoutEffect(() => (graph ? AppGraph.retain(graph) : undefined), [graph]);
+  return graph;
+};
 
 /** A `MenuActions` over a given accessor, for sources that are not an action graph (tests, fixtures). */
 export const makeMenuActions = ({
@@ -41,7 +52,7 @@ export const makeMenuActions = ({
   ...options
 }: { items: MenuItemsAccessor } & MenuActionsOptions): MenuActions => ({
   items,
-  contributions: Atom.make<MenuItemsMap>(new Map()).pipe(Atom.keepAlive),
+  contributions: Atom.make<MenuItemsMap>(new Map()),
   ...options,
 });
 
@@ -60,7 +71,7 @@ export const useMenuActions = (
   // (AppGraph.addEdges appends rather than replaces, which breaks ordering on updates.)
   // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
   // which would trigger atom state updates in other components (setState-in-render React warning).
-  const graph = useMemo(() => {
+  const graph = useMenuGraph(() => {
     const newGraph = AppGraph.make({ registry });
     AppGraph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
     AppGraph.addEdges(newGraph, menuGraphProps.edges);
@@ -75,7 +86,9 @@ export const useMenuActions = (
     [graph],
   );
 
-  const contributions = useMemo(() => Atom.make<MenuItemsMap>(new Map()).pipe(Atom.keepAlive), []);
+  const contributions = useMemo(() => Atom.make<MenuItemsMap>(new Map()), []);
+  // A layout effect, so it is mounted before any contributor's effect writes to it.
+  useLayoutEffect(() => registry.mount(contributions), [registry, contributions]);
 
   const { onAction, caller, iconSize } = options;
   return useMemo(

@@ -4,8 +4,8 @@
 
 import { LogLevel } from '@dxos/log';
 
-import { type OtelDestination } from '../otel/otel';
-import * as OtelLogSink from '../otel/OtelLogSink';
+import { type OtelDestination } from '../otel/otel.ts';
+import * as OtelLogSink from '../otel/OtelLogSink.ts';
 
 const FLUSH_BATCH_SIZE = 1_000;
 

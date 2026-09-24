@@ -6,24 +6,27 @@ import * as Option from 'effect/Option';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
-import { SetParentAnnotation, getFromAst } from '../Annotation';
-import { KindId, ParentId, getSchema } from '../common/types';
-import { EntityKind } from '../common/types/entity';
-import { Ref } from '../Ref/ref';
+import { SetParentAnnotation, getFromAst } from '../Annotation/index.ts';
+import { EntityKind } from '../common/types/entity.ts';
+import { KindId, ParentId, getSchema } from '../common/types/index.ts';
+import { Ref } from '../Ref/ref.ts';
 
-/** Path to an owning field, relative to the holder (nested inside plain structs, e.g. `backend.config`). */
-type Path = readonly string[];
+/** An owning field; `path` is relative to the parent and may nest inside plain structs, e.g. `backend.config`. */
+type OwningField = { readonly path: readonly string[]; readonly override: boolean };
 
 /**
  * Owning-field paths relative to an AST node, per {@link SetParentAnnotation}. Memoized per node —
  * a schema's annotations do not change once it is built (a dynamic type rebuilds its AST, yielding
  * fresh keys) — which also keeps the walk linear in nodes over a schema whose nested types repeat.
  */
-const cache = new WeakMap<SchemaAST.AST, readonly Path[]>();
+const cache = new WeakMap<SchemaAST.AST, readonly OwningField[]>();
 
-const isOwning = (ast: SchemaAST.AST): boolean => Option.getOrElse(getFromAst(ast, SetParentAnnotation), () => false);
+const getOwnership = (ast: SchemaAST.AST): { override: boolean } | undefined => {
+  const value = Option.getOrUndefined(getFromAst(ast, SetParentAnnotation));
+  return value?.value ? { override: value.override } : undefined;
+};
 
-const collect = (ast: SchemaAST.AST): readonly Path[] => {
+const collect = (ast: SchemaAST.AST): readonly OwningField[] => {
   const cached = cache.get(ast);
   if (cached) {
     return cached;
@@ -32,11 +35,11 @@ const collect = (ast: SchemaAST.AST): readonly Path[] => {
   // an owned field is declared at the level it appears on, so the cycle contributes nothing further.
   cache.set(ast, []);
 
-  const paths: Path[] = [];
+  const fields: OwningField[] = [];
   // A union of structs (e.g. a discriminated `spec`) contributes each member's fields at this path.
   if (SchemaAST.isUnion(ast)) {
     for (const member of ast.types) {
-      paths.push(...collect(member));
+      fields.push(...collect(member));
     }
   } else {
     for (const property of SchemaAST.getPropertySignatures(ast)) {
@@ -47,22 +50,24 @@ const collect = (ast: SchemaAST.AST): readonly Path[] => {
       // on either the array or its element.
       const unwrapped = SchemaEx.unwrapOptional(property.type);
       const element = SchemaEx.getArrayElementType(unwrapped);
-      if (isOwning(property.type) || isOwning(unwrapped) || (element != null && isOwning(element))) {
-        paths.push([property.name]);
+      const ownership =
+        getOwnership(property.type) ?? getOwnership(unwrapped) ?? (element != null ? getOwnership(element) : undefined);
+      if (ownership) {
+        fields.push({ path: [property.name], override: ownership.override });
       } else {
         // Recurse into nested structs and unions of structs (a ref is a Declaration, which
         // terminates the walk).
         const name = property.name;
-        paths.push(...collect(unwrapped).map((path): Path => [name, ...path]));
+        fields.push(...collect(unwrapped).map((field): OwningField => ({ ...field, path: [name, ...field.path] })));
       }
     }
   }
 
-  cache.set(ast, paths);
-  return paths;
+  cache.set(ast, fields);
+  return fields;
 };
 
-const setParent = (value: unknown, parent: unknown): void => {
+const setParent = (value: unknown, parent: unknown, override: boolean): void => {
   if (!Ref.isRef(value)) {
     return;
   }
@@ -76,7 +81,11 @@ const setParent = (value: unknown, parent: unknown): void => {
   // By id, not identity: the database resolves a parent edge through the working set, which may
   // hand back a different proxy for the same entity — an identity compare would miss the
   // short-circuit and re-write the unchanged edge on every update of the holder.
-  if (target[ParentId]?.id === (parent as any)?.id) {
+  const current = target[ParentId];
+  if (current?.id === (parent as any)?.id) {
+    return;
+  }
+  if (!override && current != null) {
     return;
   }
   target[ParentId] = parent;
@@ -95,17 +104,17 @@ export const propagateParentAnnotations = (obj: unknown): void => {
     return;
   }
 
-  for (const path of collect(schema.ast)) {
+  for (const { path, override } of collect(schema.ast)) {
     let value: any = obj;
     for (const key of path) {
       value = value?.[key];
     }
     if (Array.isArray(value)) {
       for (const element of value) {
-        setParent(element, obj);
+        setParent(element, obj, override);
       }
     } else {
-      setParent(value, obj);
+      setParent(value, obj, override);
     }
   }
 };

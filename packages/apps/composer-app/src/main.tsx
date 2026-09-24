@@ -44,7 +44,8 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
+import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
+import { initAutomergeWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
@@ -53,13 +54,14 @@ import {
   PARAM_SAFE_MODE,
   type Profiler,
   WorkerLogProcessor,
-  clearChunkRecovery,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
   isFalse,
   isTrue,
-  readChunkRecovery,
+  readBootAssetFailure,
+  reportBootAssetFailure,
+  reportWebProcessTerminations,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -69,12 +71,11 @@ import {
   startupMeasure,
   startupProfiler,
   translations,
-} from './util';
-import { initAutomergeWasm } from './util/automerge-wasm';
+} from './util/index.ts';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
-const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
+const ResetDialog = lazy(() => import('./components/index.ts').then((module) => ({ default: module.ResetDialog })));
 
 const startupTimeout = (() => {
   if (!import.meta.env.DEV) {
@@ -186,11 +187,11 @@ if (import.meta.env?.DEV) {
  */
 const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<PluginAssetCache.Cache> => {
   if (isTauri) {
-    const { createTauriAssetCache } = await import('./asset-cache/tauri');
+    const { createTauriAssetCache } = await import('./asset-cache/tauri.ts');
     return createTauriAssetCache();
   }
   if (isPwa && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker.ts');
     return createServiceWorkerAssetCache();
   }
   return PluginAssetCache.noop();
@@ -239,7 +240,7 @@ const main = async () => {
   // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
   // so the read handle's own sweep is disabled.
   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
-  const observabilityWorker = new Worker(new URL('./workers/observability-worker', import.meta.url), {
+  const observabilityWorker = new Worker(new URL('./workers/observability-worker.ts', import.meta.url), {
     type: 'module',
     name: 'dxos-observability',
   });
@@ -409,19 +410,7 @@ const main = async () => {
       if (startupFailureReported) {
         return;
       }
-      // A boot that follows a chunk-recovery reload reports it on the startup event rather than a
-      // separate one, so the rate is filterable against the same denominator. Released only here, on
-      // a boot that actually succeeded: clearing it after a failure would re-arm the reload for a
-      // build broken by something a reload cannot fix.
-      const recovery = readChunkRecovery();
-      captureStartup(
-        'composer.startup',
-        'ready',
-        recovery && { chunkRecovered: true, chunkRecoveryReason: recovery.reason },
-      );
-      if (recovery) {
-        clearChunkRecovery();
-      }
+      captureStartup('composer.startup', 'ready');
     },
     { once: true },
   );
@@ -450,6 +439,27 @@ const main = async () => {
     Match.exhaustive,
     EffectEx.runPromise,
   );
+
+  // The popover shares storage and the host's termination queue with the main window, which reports them.
+  if (!isPopover) {
+    window.addEventListener(
+      STARTUP_ACTIVATED_EVENT,
+      () => {
+        const failure = readBootAssetFailure();
+        void observability
+          .then(async (obs) => {
+            if (failure) {
+              reportBootAssetFailure(obs, failure);
+            }
+            if (isTauri) {
+              await reportWebProcessTerminations(obs);
+            }
+          })
+          .catch((error) => log.catch(error));
+      },
+      { once: true },
+    );
+  }
 
   // Detect mobile operating systems (phones only, not tablets).
   const isMobile = await Match.value(isTauri).pipe(
@@ -501,12 +511,12 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createDedicatedWorker: () =>
-      new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
+      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createCoordinatorWorker: () =>
-      new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
         type: 'module',
         // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts, so suffix the name
         // with the server boot id — a restarted server then gets a fresh coordinator instead of

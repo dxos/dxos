@@ -16,12 +16,12 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Terra, TerraObject } from '#types';
 
-import { PlanetCache, SceneManager, cross, normalize, seaRadius } from '../engine';
-import { BALLISTIC_APEX, EXPLOSION_SECONDS, SimEngine, angleBetween, slerp, toUnit } from '../sim';
-import { STORY_ATTENDABLE_ID, withAttention } from '../testing';
-import { ExplosionLayer } from './explosion-layer';
-import { ObjectLayer } from './object-layer';
-import { TrailLayer } from './trail-layer';
+import { PlanetCache, SceneManager, cross, normalize, seaRadius } from '../engine/index.ts';
+import { BALLISTIC_APEX, EXPLOSION_SECONDS, SimEngine, angleBetween, slerp, toUnit } from '../sim/index.ts';
+import { STORY_ATTENDABLE_ID, withAttention } from '../testing/index.ts';
+import { ExplosionLayer } from './explosion-layer.ts';
+import { ObjectLayer } from './object-layer.ts';
+import { TrailLayer } from './trail-layer.ts';
 
 /** Both ends of the flight, close enough together that the whole arc fits in one view. */
 const SOURCE = { lat: 0, lng: -18, height: 0 };

@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { decamelize } from '@dxos/util';
 
-import * as SchemaAST from './schema-ast';
+import * as SchemaAST from './schema-ast.ts';
 
 // Annotation keys are strings in v4, so the id is a namespaced string rather than a symbol.
 const ParamKeyAnnotationId = '@dxos/schema/annotation/ParamKey';

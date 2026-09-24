@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import * as Credential from '@dxos/compute/Credential';
 
-import { createUrl, makeGoogleApiRequest } from '../google-api';
-import { DateTime, Event, ListEventsResponse } from './types';
+import { createUrl, makeGoogleApiRequest } from '../google-api.ts';
+import { DateTime, Event, ListEventsResponse } from './types.ts';
 
 /**
  * Google Calendar API.

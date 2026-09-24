@@ -27,7 +27,7 @@ import { Cell } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
+import { StoryRole } from '../modules/index.ts';
 import {
   ModuleContainer,
   ResearchInputQueue,
@@ -39,7 +39,7 @@ import {
   organizations,
   storyParameters,
   testTypes,
-} from '../testing';
+} from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Data',
   render: ModuleContainer,

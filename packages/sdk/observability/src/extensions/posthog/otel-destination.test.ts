@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Config } from '@dxos/config';
 
-import { signalUrl } from '../otel/otel';
-import { otelDestination } from './otel-destination';
+import { signalUrl } from '../otel/otel.ts';
+import { otelDestination } from './otel-destination.ts';
 
 const config = (env: Record<string, string>) => new Config({ runtime: { app: { env } } });
 

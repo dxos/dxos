@@ -16,9 +16,9 @@ import { FileSystemCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export * from './state';
+export * from './state/index.ts';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [Capabilities.AtomRegistry, FileSystemCapabilities.State],
 });
 export const Markdown = Capability.lazyModule(
@@ -30,9 +30,9 @@ export const Markdown = Capability.lazyModule(
     provides: [MarkdownCapabilities.ExtensionProvider],
     activatesOn: MarkdownEvents.Start,
   },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -41,7 +41,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   requires: [FileSystemCapabilities.State],
   roles: ['org.dxos.role.article'],
 });

@@ -20,7 +20,7 @@ import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProp
 
 import { translationKey } from '#translations';
 
-import { useMenuActions, useMenuItems } from '../hooks';
+import { useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
   type MenuActions,
@@ -28,11 +28,11 @@ import {
   type MenuItemGroup,
   isMenuGroup,
   isSeparator,
-} from '../types';
-import { executeMenuAction } from '../util';
-import { actionLabel } from './action-label';
-import { ActionLabel } from './ActionLabel';
-import { ActionMenu } from './ActionMenu';
+} from '../types.ts';
+import { executeMenuAction } from '../util.ts';
+import { actionLabel } from './action-label.ts';
+import { ActionLabel } from './ActionLabel.tsx';
+import { ActionMenu } from './ActionMenu.tsx';
 
 //
 // Items (private): the graph's root items as `Toolbar` parts.

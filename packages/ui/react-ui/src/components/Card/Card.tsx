@@ -16,20 +16,25 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { iconSize } from '@dxos/ui-theme';
-import { type Density, type SlottableProps } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface, iconSize } from '@dxos/ui-theme';
+import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { composable, composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
-import { Button, IconButton } from '../Button';
-import { Column, type ColumnRootProps } from '../Column';
-import { Icon } from '../Icon';
-import { Image, type ImageProps } from '../Image';
-import { Menu } from '../Menu';
-import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
+import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider } from '../../providers/DensityProvider/index.ts';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Button, IconButton } from '../Button/index.ts';
+import { Column, type ColumnRootProps } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Image, type ImageProps } from '../Image/index.ts';
+import { Menu } from '../Menu/index.ts';
+import {
+  type ToolbarActionIconButtonProps,
+  type ToolbarDragHandleProps,
+  type ToolbarMenuProps,
+} from '../Toolbar/index.ts';
 
 //
 // Root
@@ -41,6 +46,8 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
+  /** Material-style elevation, 0–5, onto the surface ladder; the card is `raised` (3) by default. */
+  'elevation'?: ElevationLevel;
   /**
    * Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
    * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`.
@@ -76,7 +83,7 @@ type CardRootProps = {
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
   (
-    { children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap = 'sm', density, ...props },
+    { children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap = 'sm', density, elevation, ...props },
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps(props);
@@ -88,11 +95,19 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
         gutter={gutter}
         subgrid={subgrid}
         gap={gap}
-        classNames={tx('card.root', { border, fullWidth }, className)}
+        classNames={tx('card.root', { border, fullWidth, surface: elevationSurface(elevation) }, className)}
         role={role ?? 'group'}
       >
-        <div {...rest} {...(id && { 'data-object-id': id })} ref={forwardedRef}>
-          {children}
+        <div
+          {...rest}
+          {...(id && { 'data-object-id': id })}
+          {...elevationAttrs(elevation)}
+          data-density={density}
+          ref={forwardedRef}
+        >
+          {/* As in Toolbar.Root: the attribute cascades `--dx-control`, but controls that stamp their
+              own `data-density` from context would shadow it, so the context is provided too. */}
+          {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
         </div>
       </Column.Root>
     );
@@ -375,7 +390,13 @@ CardSection.displayName = CARD_SECTION_NAME;
 
 const CARD_ROW_NAME = 'Card.Row';
 
-type CardRowProps = { fullWidth?: boolean };
+type CardRowProps = {
+  fullWidth?: boolean;
+  /** A selectable row (a stats table); the row itself is the target, its cells carry no controls. */
+  onClick?: MouseEventHandler<HTMLDivElement>;
+  /** The selected row, exposed as `aria-current`. */
+  current?: boolean;
+};
 
 /**
  * A row inside a Card.
@@ -385,7 +406,7 @@ type CardRowProps = { fullWidth?: boolean };
  *   `Card.Block` placement is inert in this mode.
  */
 const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, fullWidth, style, ...props }, forwardedRef) => {
+  ({ children, asChild, fullWidth, current, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
 
@@ -393,6 +414,7 @@ const CardRow = slottable<HTMLDivElement, CardRowProps>(
       <ark.div
         asChild={asChild}
         {...rest}
+        aria-current={current ? 'true' : undefined}
         style={{ ...iconSize(4), ...style }}
         className={tx('card.row', { fullWidth }, className)}
         ref={forwardedRef}

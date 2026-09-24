@@ -10,7 +10,8 @@ import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
-import { Invoke } from './definitions';
+import { Invoke } from './definitions.ts';
+import { FunctionError } from './errors.ts';
 
 export default Invoke.pipe(
   Operation.withHandler(
@@ -20,7 +21,7 @@ export default Invoke.pipe(
 
       const spaceId = Obj.getDatabase(loaded)?.spaceId;
       if (!spaceId) {
-        return yield* Effect.fail(new Error('Function is not in a space.'));
+        return yield* Effect.fail(new FunctionError({ message: 'Function is not in a space.' }));
       }
 
       const functionsService = FunctionsServiceClient.fromClient(client);

@@ -27,9 +27,9 @@ import {
   extractQuestionsStage,
   persistMessageStage,
   topicsStage,
-} from './stages';
-import { ExtractedQuestionStore, MessageStore, QuestionStore } from './stores';
-import { type DetectOptions } from './topics/detect-topics';
+} from './stages/index.ts';
+import { ExtractedQuestionStore, MessageStore, QuestionStore } from './stores/index.ts';
+import { type DetectOptions } from './topics/detect-topics.ts';
 
 export type RunOptions = {
   /** Stop after this many crawl steps (pause); re-invoking over the same stores resumes. */

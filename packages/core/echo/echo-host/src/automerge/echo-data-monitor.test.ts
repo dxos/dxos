@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { EchoDataMonitor } from './echo-data-monitor';
+import { EchoDataMonitor } from './echo-data-monitor.ts';
 
 describe('EchoDataMonitorTest', () => {
   test('connectionsCount', async () => {

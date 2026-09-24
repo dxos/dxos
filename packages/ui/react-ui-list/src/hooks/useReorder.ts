@@ -18,6 +18,8 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type ReactNode, type RefCallback, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { type Root, createRoot } from 'react-dom/client';
 
 /**
  * Internal payload key. We attach this to every draggable's data so the root monitor can
@@ -53,8 +55,12 @@ export type UseReorderListOptions<T> = {
   getInitialData?: (item: T, index: number) => Record<string, unknown>;
   /** Overrides the default `canDrop` (which matches payloads tagged with this list's id). */
   canDrop?: (args: { source: ElementDragPayload }) => boolean;
-  /** Renderer for a custom native drag preview. */
-  getDragPreview?: (item: T) => ReactNode;
+  /**
+   * The native drag preview: `'clone'` snapshots the row itself into a detached container, a
+   * renderer draws something else for the item. Either replaces the browser's own image, which for
+   * a row in a scrolling column can take the preceding siblings along.
+   */
+  dragPreview?: 'clone' | ((item: T) => ReactNode);
 };
 
 export type ReorderActive<T> = { id: string; item: T; container: HTMLElement } | null;
@@ -98,7 +104,7 @@ export const useReorderList = <T>({
   readonly = false,
   getInitialData,
   canDrop,
-  getDragPreview,
+  dragPreview,
 }: UseReorderListOptions<T>): UseReorderListReturn<T> => {
   const listIdRef = useRef<string | null>(null);
   if (!listIdRef.current) {
@@ -118,8 +124,8 @@ export const useReorderList = <T>({
   canDropRef.current = canDrop;
   const getInitialDataRef = useRef(getInitialData);
   getInitialDataRef.current = getInitialData;
-  const getDragPreviewRef = useRef(getDragPreview);
-  getDragPreviewRef.current = getDragPreview;
+  const dragPreviewRef = useRef(dragPreview);
+  dragPreviewRef.current = dragPreview;
   const readonlyRef = useRef(readonly);
   readonlyRef.current = readonly;
 
@@ -206,7 +212,7 @@ export const useReorderList = <T>({
                 ...(getInitialDataRef.current?.(current.item, current.index) ?? {}),
               };
             },
-            onGenerateDragPreview: getDragPreviewRef.current
+            onGenerateDragPreview: dragPreviewRef.current
               ? ({ nativeSetDragImage, source }) => {
                   const rect = source.element.getBoundingClientRect();
                   setCustomNativeDragPreview({
@@ -214,10 +220,24 @@ export const useReorderList = <T>({
                     getOffset: ({ container }) => ({ x: 20, y: container.getBoundingClientRect().height / 2 }),
                     render: ({ container }) => {
                       container.style.width = `${rect.width}px`;
-                      onItemState({ type: 'preview', container });
                       const current = lookup();
+                      const preview = dragPreviewRef.current;
+                      // Filled synchronously: the browser snapshots the preview when `dragstart`
+                      // returns, and a state-driven portal would commit after that (and be
+                      // overwritten by `onDragStart` in the same batch besides). A clone carries the
+                      // row's resolved images and text; a renderer gets its own root.
+                      let root: Root | undefined;
+                      if (typeof preview === 'function') {
+                        root = createRoot(container);
+                        const element = preview(current.item);
+                        flushSync(() => root?.render(element));
+                      } else {
+                        container.appendChild(source.element.cloneNode(true));
+                      }
+                      onItemState({ type: 'preview', container });
                       setActive({ id, item: current.item, container });
                       return () => {
+                        root?.unmount();
                         onItemState(IDLE);
                         setActive(null);
                       };

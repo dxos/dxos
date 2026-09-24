@@ -13,64 +13,96 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+
+import { useTours } from '#hooks';
+import { meta } from '#meta';
+import { HelpOperation } from '#types';
 
 // The surface registration constrains incoming data to
 // `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
 // `data: 'help'`, parent article is an ECHO object) but this component only
 // consumes `companionTo`, so we pick it off the article shape rather than
 // requiring callers to thread the rest.
-export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo'>;
+export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo' | 'attendableId'>;
 
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
-export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
+export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
+  const { invokePromise } = useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
+  const createEntriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
+
+  const typename = Obj.getTypename(companionTo);
+  const tours = useTours(companionTo);
 
   const { content, screenshots } = useMemo(() => {
     const empty = { content: '', screenshots: [] as readonly string[] };
-    const typename = Obj.getTypename(companionTo);
     if (!typename) {
       return empty;
     }
 
-    // Find the module whose contributed schemas include this typename.
-    const owningModuleId = Object.entries(schemasByModule).find(([, contributions]) =>
-      contributions.some((schemas) => schemas.some((schema) => Type.getTypename(schema) === typename)),
-    )?.[0];
-    if (!owningModuleId) {
+    // Several plugins may register the same schema (inbox registers Project for its mailboxes);
+    // the one that also offers to create the type is the one that owns it.
+    const registrarModuleIds = Object.entries(schemasByModule)
+      .filter(([, contributions]) =>
+        contributions.some((schemas) => schemas.some((schema) => Type.getTypename(schema) === typename)),
+      )
+      .map(([moduleId]) => moduleId);
+    if (registrarModuleIds.length === 0) {
       return empty;
     }
-
-    // Map module id → plugin.
-    const owningPlugin = manager
+    const creatorPluginIds = new Set(
+      manager
+        .getPlugins()
+        .filter((plugin) =>
+          plugin.modules.some((module) =>
+            (createEntriesByModule[module.id] ?? []).some((entry) => entry.id === typename),
+          ),
+        )
+        .map((plugin) => plugin.meta.profile.key),
+    );
+    const registrars = manager
       .getPlugins()
-      .find((plugin) => plugin.modules.some((module) => module.id === owningModuleId));
+      .filter((plugin) => plugin.modules.some((module) => registrarModuleIds.includes(module.id)));
+    const owningPlugin = registrars.find((plugin) => creatorPluginIds.has(plugin.meta.profile.key)) ?? registrars[0];
     return {
       content: owningPlugin?.meta.profile.description ?? '',
       screenshots: (owningPlugin?.meta.profile.screenshots ?? [])
         .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
         .filter(Boolean),
     };
-  }, [companionTo, manager, schemasByModule]);
+  }, [typename, manager, schemasByModule, createEntriesByModule]);
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
-        <Toolbar.Root />
+        <Toolbar.Root>
+          {tours.map((tour) => (
+            <Toolbar.IconButton
+              key={tour.id}
+              icon='ph--path--regular'
+              label={toLocalizedString(tour.label, t)}
+              onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id, subjectId: attendableId })}
+              data-testid='supportPlugin.startCompanionTour'
+            />
+          ))}
+        </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
+          <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
                 <Carousel.Content classNames='w-full'>

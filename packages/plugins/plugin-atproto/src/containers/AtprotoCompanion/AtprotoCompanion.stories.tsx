@@ -13,7 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Client } from '@dxos/client';
 import { DXN, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -25,9 +25,9 @@ import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/sche
 import { translations } from '#translations';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
-import { hashRecord } from '../../hash';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
-import { AtprotoCompanion } from './AtprotoCompanion';
+import { hashRecord } from '../../hash.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
+import { AtprotoCompanion } from './AtprotoCompanion.tsx';
 
 const NOTE_COLLECTION = 'com.example.note';
 
@@ -39,7 +39,7 @@ class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atpro
     title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     secret: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', lens: demoLens }),
   ),
 ) {}

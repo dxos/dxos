@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type SpaceDigest } from '../../replicants/client-replicant';
+import { type SpaceDigest } from '../../replicants/client-replicant.ts';
 
 /**
  * The orchestrator's belief about the fleet: what should be true once everything has replicated.

@@ -9,8 +9,8 @@ import { ClientService } from '@dxos/client';
 import { SpaceState } from '@dxos/client/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { TestLayer } from '../testing';
-import { syncAllToEdge } from './space';
+import { TestLayer } from '../testing/index.ts';
+import { syncAllToEdge } from './space.ts';
 
 describe('syncAllToEdge', () => {
   test('drains every space, not just the default one', ({ expect }) =>

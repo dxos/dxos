@@ -10,12 +10,12 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useId, useThemeContext } from '@dxos/react-ui';
 
-import { Viewport } from '../../components';
-import { ConfirmReset } from '../../steps';
-import { stepStyles } from '../../styles';
-import { JoinHeading } from './JoinHeading';
-import { useJoinMachine } from './joinMachine';
-import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
+import { Viewport } from '../../components/index.ts';
+import { ConfirmReset } from '../../steps/index.ts';
+import { stepStyles } from '../../styles/index.ts';
+import { JoinHeading } from './JoinHeading.tsx';
+import { useJoinMachine } from './joinMachine.ts';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps.ts';
 import {
   AdditionMethodChooser,
   IdentityAdded,
@@ -23,7 +23,7 @@ import {
   InvitationAuthenticator,
   InvitationInput,
   InvitationRescuer,
-} from './steps';
+} from './steps/index.ts';
 
 // TODO(burdon): Needs to be reimplemented.
 export const JoinPanelImpl = ({
@@ -215,7 +215,7 @@ export const JoinPanel = ({
   }, [joinService]);
 
   // TODO(wittjosiah): Workaround, not a fix. The defect is in the join machine: `identity` enters it as
-  //   a one-time context snapshot, so a panel mounting while a `client.reset()` settles routes on the
+  //   a one-time context snapshot, so a panel mounting while an identity deletion settles routes on the
   //   outgoing identity into `resettingIdentity`, a state with no automatic exit. The machine should
   //   react to identity clearing rather than needing this effect to re-issue the disposition from
   //   outside it. Doing that means editing the machine's routing, which is riskier than this is worth
@@ -433,10 +433,14 @@ export const JoinPanel = ({
   const onHaloDone = useCallback(() => {
     propsOnDone?.({
       identityKey:
-        joinState.context.identity?.identityKey ?? toPublicKey(joinState.context.halo.invitation?.identityKey) ?? null,
+        toPublicKey(joinState.context.identity?.identityKey) ??
+        toPublicKey(joinState.context.halo.invitation?.identityKey) ??
+        null,
       swarmKey: toPublicKey(joinState.context.halo.invitation?.swarmKey) ?? null,
       spaceKey:
-        joinState.context.identity?.spaceKey ?? toPublicKey(joinState.context.halo.invitation?.spaceKey) ?? null,
+        toPublicKey(joinState.context.identity?.spaceKey) ??
+        toPublicKey(joinState.context.halo.invitation?.spaceKey) ??
+        null,
       target: joinState.context.halo.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);
@@ -452,7 +456,7 @@ export const JoinPanel = ({
 
   const onConfirmResetStorage = useCallback(
     () =>
-      client.reset().then(() => {
+      client.halo.deleteIdentity().then(() => {
         joinSend({ type: 'resetIdentity' });
       }),
     [client, joinSend],

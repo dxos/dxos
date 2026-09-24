@@ -10,7 +10,9 @@ POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
 # resolves to -- a hub from another environment mints magic links no redemption can resolve.
 DX_HUB_URL="https://preview.dxos.network/hub/"
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
-DX_OTEL_ENDPOINT=/api/otel
+# Absolute so native builds, which serve their own frontend, reach this channel's deployment.
+DX_FEEDBACK_LOGS_ENDPOINT=https://dev.composer.space/api/feedback-logs
+DX_OTEL_ENDPOINT=https://dev.composer.space/api/otel
 # Stamped on every metric, log and trace as `deployment.environment`; without it every
 # deployed client reports `unknown` and production is indistinguishable from preview.
 DX_ENVIRONMENT=dev

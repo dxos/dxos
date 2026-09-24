@@ -16,7 +16,7 @@ import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
@@ -37,29 +37,30 @@ import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
+import { AssistantOperation } from '#types';
 
-import { TaskSlashCommands } from '../../commands';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
 import {
-  ChatActivity,
   ChatStatus,
-  ChatStatusStack,
+  ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-} from '../ChatPrompt';
-import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
+} from '../ChatPrompt/index.ts';
+import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue/index.ts';
 import {
   ChatContextProvider,
   type ChatContextValue,
   ChatReportContextProvider,
   type ChatRequestTiming,
   useChatContext,
-} from './context';
-import { type ChatEvent } from './events';
-import { SurfaceWidget } from './SurfaceWidget';
-import { projectAlarms, projectThread, resolveRewind } from './thread';
+} from './context.ts';
+import { type ChatEvent } from './events.ts';
+import { objectCardWidget } from './ObjectCardWidget.tsx';
+import { SurfaceWidget } from './SurfaceWidget.tsx';
+import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root
@@ -344,12 +345,14 @@ const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
   PropsWithChildren<{
     companionTo?: Obj.Unknown;
+    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+    switcher?: ChatSwitcher;
   }>;
 
 const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, ...props }, forwardedRef) => {
+  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-    const menuActions = useChatToolbarActions({ chat, companionTo });
+    const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
     return (
       <ActionToolbar
@@ -488,8 +491,25 @@ type ChatThreadProps = ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
+  // Embedded objects resolve against the chat's database (the fallback one while it is transient).
+  const objectImage = useMemo(() => objectCardWidget(db), [db]);
+  // A block reference's chip reads the object's name once it is loaded — resolved through the
+  // database's own ref, which honours the URI's space and the DXN forms — and the package default's
+  // bare "Object" until then; the thread re-renders as the message's blocks settle.
+  const getObjectLabel = useCallback(
+    (uri: URI.URI): string => {
+      let object: Obj.Unknown | undefined;
+      try {
+        object = db?.makeRef<Obj.Unknown>(uri).target;
+      } catch {
+        object = undefined;
+      }
+      return (object && Obj.getLabel(object)) || 'Object';
+    },
+    [db],
+  );
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
   // The toast renders whatever action the error declares (data-driven) rather than branching on type.
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
@@ -557,6 +577,8 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         model={model}
         viewType={viewType}
         registry={chatRegistry}
+        objectImage={objectImage}
+        getObjectLabel={getObjectLabel}
         userHue={userHue}
         tailLines={tailLines}
         debug={debug}
@@ -695,7 +717,9 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-          <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+          {/* The same surface and border as the prompt below, so the two read as one shell. Sized to
+              its rows up to five tasks plus the edit strip; only a longer list scrolls. */}
+          <ChatTaskList classNames='shrink-0 max-h-[calc(6*2rem+1px)] dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
@@ -721,7 +745,7 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+  const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
   const { t } = useTranslation(meta.profile.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
@@ -758,17 +782,54 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     Task.update(task, patch);
   }, []);
 
-  // Delete is a contributed action rather than fixed chrome, matching `TaskSetArticle`: a row shows
-  // one trailing affordance whatever ends up on the list.
+  // Through the operation rather than `Task.answer`, so the conversation that asked is resumed.
+  const { invokePromise } = useOperationInvoker();
+  const handleQuestionAnswer = useCallback(
+    (task: Task.Task, questionId: string, answer: string) => {
+      const spaceId = Obj.getDatabase(task)?.spaceId;
+      if (spaceId) {
+        // The operation reports a refused write in its result, not only by rejecting, so both are checked.
+        invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId })
+          .then((result) => {
+            if (result.error || !result.data?.accepted) {
+              log.warn('question was not answered', { task: task.id, question: questionId, error: result.error });
+            }
+          })
+          .catch((err) => log.catch(err));
+      }
+    },
+    [invokePromise],
+  );
+
+  // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
+  // delegation, status), so the row asks for the work the way the reader would, by ordinal — the
+  // number the row shows, and the one `/task:run` and the agent's selectors resolve.
+  const handleExecute = useCallback(
+    (task: Task.Task) => {
+      const ordinal = tasks.findIndex(({ id }) => id === task.id) + 1;
+      event.emit({ type: 'submit', text: t('execute-task.prompt', { ordinal }) });
+    },
+    [tasks, event, t],
+  );
+
+  // Contributed actions rather than fixed chrome, matching `TaskSetArticle`: two items, so the row
+  // shows one overflow menu rather than a bare delete button.
   const getTaskActions = useCallback(
     (task: Task.Task) => [
+      createMenuAction(`execute-${task.id}`, () => handleExecute(task), {
+        label: t('execute-task.label'),
+        icon: 'ph--play--regular',
+        // A finished task has nothing left to implement.
+        disabled: task.status === 'done' || task.status === 'cancelled',
+        testId: 'tasks.task.execute',
+      }),
       createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
         label: t('delete-task.label'),
-        icon: 'ph--x--regular',
+        icon: 'ph--trash--regular',
         testId: 'tasks.task.delete',
       }),
     ],
-    [handleDelete, t],
+    [handleExecute, handleDelete, t],
   );
 
   if (!chat) {
@@ -778,11 +839,14 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <TaskList.Root
       tasks={tasks}
+      // The clicked row is highlighted, and the edit strip below edits it rather than creating.
+      selectable
       showGroupLabels={false}
       showOrdinals
       showEstimates
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
+      onQuestionAnswer={handleQuestionAnswer}
       getTaskActions={getTaskActions}
     >
       <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
@@ -803,14 +867,45 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 const CHAT_QUEUE_NAME = 'Chat.Queue';
 
-type ChatQueueProps = Omit<NaturalChatQueueProps, 'queued' | 'onCancel'>;
+/**
+ * How long a prompt must sit in the queue before the queue shows it. A prompt sent to an idle agent
+ * is taken up within a frame or two, so showing it at once flashes a row that is gone before it can
+ * be read; only one that is actually waiting behind a running turn earns a row.
+ */
+const QUEUE_REVEAL_DELAY = 1_000;
+
+type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
   const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
-  return <NaturalChatQueue {...props} queued={queued} onCancel={onCancel} />;
+  const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
+
+  return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
 };
 
 ChatQueue.displayName = CHAT_QUEUE_NAME;
+
+//
+// Activity
+//
+
+const CHAT_ACTIVITY_NAME = 'Chat.Activity';
+
+/**
+ * The activity line bound to the chat's processor and the chat's pending alarms: what the agent is
+ * doing, for as long as it is doing anything. The line itself takes resolved values, so it lives
+ * beside the prompt with the rest of the presentational parts and only the binding is here.
+ */
+const ChatActivity = ({ classNames }: ThemedClassName) => {
+  const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
+  const activity = useAtomValue(processor.activity);
+
+  // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
+  // wait in front of the reader.
+  return <NaturalChatActivity classNames={classNames} activity={activity} wakeAt={alarms[0]?.wakeAt} />;
+};
+
+ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
 // Chat
@@ -824,7 +919,6 @@ export const Chat = {
   Queue: ChatQueue,
   Activity: ChatActivity,
   Status: ChatStatus,
-  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };

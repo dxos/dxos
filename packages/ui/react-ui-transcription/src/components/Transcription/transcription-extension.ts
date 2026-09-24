@@ -10,7 +10,7 @@ import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type Message } from '@dxos/types';
 
-import { EditorChunkDocument, type TranscriptModel } from '../../model';
+import { EditorChunkDocument, type TranscriptModel } from '../../model/index.ts';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.

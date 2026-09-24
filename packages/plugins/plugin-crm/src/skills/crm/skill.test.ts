@@ -18,7 +18,7 @@ import { Message, Organization, Person } from '@dxos/types';
 import { EMAIL_FIXTURES, makeEmailMessage } from '#testing';
 import { ProfileOf } from '#types';
 
-import CrmSkill from './skill';
+import CrmSkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

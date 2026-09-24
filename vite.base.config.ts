@@ -481,6 +481,18 @@ export type WorkerdOptions = {
   setupFiles?: string[];
   timeout?: number;
   plugins?: Plugin[];
+  /**
+   * Extra miniflare configuration merged over the defaults, for a binding the runtime only
+   * provides when it is declared — `workerLoaders`, KV, R2. Compatibility date and flags stay
+   * under their own options, so passing them here has no effect.
+   */
+  miniflare?: Record<string, unknown>;
+  /**
+   * Entry module of the worker under test, which `SELF` dispatches to. It runs in the SAME isolate
+   * as the tests, so a test reaches it through ordinary module state — which is what makes `SELF`
+   * usable as an outbound target for code the test itself is driving.
+   */
+  main?: string;
 };
 
 export type StorybookOptions = {
@@ -510,6 +522,18 @@ export type NodeOptions = {
 
 export type BrowserOptions = {
   browserName: string;
+  /**
+   * Overrides which suites run in the browser. Defaults to every test file, which suits packages
+   * whose whole suite is browser-safe; a package with node-only suites (native addons, `node:`
+   * APIs) narrows this to the files it actually wants a browser for.
+   */
+  include?: string[];
+  /**
+   * Extra deps to pre-bundle, on top of the shared list below. A dep only a worker bundle or a
+   * dynamic import pulls in is discovered mid-run, and the re-optimize reloads the page under the
+   * running suite — naming it here keeps the run stable.
+   */
+  optimizeDeps?: string[];
   nodeExternal?: boolean;
   injectGlobals?: boolean;
   plugins?: Plugin[];
@@ -580,7 +604,8 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
-        instances: [{ browser: 'chromium' }],
+        // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
+        instances: [{ browser: process.env.DX_STORYBOOK_BROWSER || 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
@@ -622,6 +647,8 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
 
 const createBrowserProject = ({
   browserName,
+  include,
+  optimizeDeps = [],
   nodeExternal = false,
   injectGlobals = true,
   plugins = [],
@@ -660,6 +687,7 @@ const createBrowserProject = ({
         '@dxos/log > @dxos/util > @hazae41/symbol-dispose-polyfill',
         '@dxos/log > @dxos/keys > ulidx',
         '@dxos/log > lodash.defaultsdeep',
+        ...optimizeDeps,
       ],
       esbuildOptions: {
         plugins: [
@@ -683,7 +711,7 @@ const createBrowserProject = ({
         LOG_CONFIG: 'log-config.yaml',
       },
 
-      include: [
+      include: include ?? [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
         '!**/src/**/__snapshots__/**',
@@ -721,6 +749,8 @@ const createWorkerdProject = ({
   setupFiles = [],
   timeout,
   plugins = [],
+  miniflare = {},
+  main,
 }: WorkerdOptions = {}) =>
   defineProject({
     plugins: [
@@ -735,7 +765,10 @@ const createWorkerdProject = ({
       // fail for every `vite build`. A dynamic import stays an `import()` the bundler preserves,
       // and vite awaits promise-valued entries in the plugins array.
       import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
-        cloudflareTest({ miniflare: { compatibilityDate, compatibilityFlags } }),
+        cloudflareTest({
+          ...(main !== undefined ? { main } : {}),
+          miniflare: { ...miniflare, compatibilityDate, compatibilityFlags },
+        }),
       ),
     ],
     test: {

@@ -5,8 +5,8 @@
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { type Mutable } from '../common/proxy';
-import { getSchema } from '../common/types';
+import { type Mutable } from '../common/proxy/index.ts';
+import { getSchema } from '../common/types/index.ts';
 
 /**
  * Set a deeply nested property on an object.

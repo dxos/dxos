@@ -5,8 +5,8 @@
 import { appendFileSync, mkdirSync, openSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { type LogFilter, LogLevel } from '../config';
-import { type LogProcessor, shouldLog } from '../context';
+import { type LogFilter, LogLevel } from '../config.ts';
+import { type LogProcessor, shouldLog } from '../context.ts';
 
 // Amount of time to retry writing after encountering EAGAIN before giving up.
 const EAGAIN_MAX_DURATION = 1000;

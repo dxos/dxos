@@ -9,7 +9,7 @@ import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { entries, keys } from '@dxos/util';
 
-import { DependentList, Input, PackageList, StatusBar } from './components';
+import { DependentList, Input, PackageList, StatusBar } from './components/index.ts';
 import {
   type LockfileResult,
   type PackageId,
@@ -20,7 +20,7 @@ import {
   findLockfile,
   loadLockfile,
   setAllToVersion,
-} from './lockfile';
+} from './lockfile/index.ts';
 
 const App = () => {
   const { stdout } = useStdout();

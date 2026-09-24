@@ -7,9 +7,9 @@ import { type Extension } from '@codemirror/state';
 import { type ParseWrapper, parseMixed } from '@lezer/common';
 import { type BlockParser } from '@lezer/markdown';
 
-import { escapeRegExpSource } from '../../../util';
-import { createMarkdownExtensions } from '../markdown';
-import { type XmlWidgetRegistry } from './xml-tags';
+import { escapeRegExpSource } from '../../../util/index.ts';
+import { createMarkdownExtensions } from '../markdown/index.ts';
+import { type XmlWidgetRegistry } from './xml-tags.ts';
 
 export type ExtendedMarkdownOptions = {
   registry?: XmlWidgetRegistry;

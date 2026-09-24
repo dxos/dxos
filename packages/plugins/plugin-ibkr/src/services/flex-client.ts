@@ -6,7 +6,7 @@ import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 
 import { Ibkr } from '#types';
 
-import { FLEX_BASE_URL } from '../constants';
+import { FLEX_BASE_URL } from '../constants.ts';
 
 export type FlexReport = {
   positions: Ibkr.Position[];

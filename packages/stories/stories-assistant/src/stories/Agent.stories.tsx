@@ -13,20 +13,21 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
+import { concat } from '@dxos/util';
 
-import { AgentModule, StoryRole } from '../modules';
-import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { AgentModule, StoryRole } from '../modules/index.ts';
+import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 /**
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse
  * (Bash is absent from `allowedTools`, so `dontAsk` denies it), and a closing word to assert on.
  */
-const PROMPT = [
-  'Use the Read tool to read the file agent-fixture.md in the current directory,',
-  'and state the MAGIC_TOKEN value it contains.',
-  'Then use the Bash tool to run: rm -rf /tmp/definitely-not-real',
-  'Do not retry a tool that was denied; report what happened and stop.',
-].join(' ');
+const PROMPT = concat`
+  Use the Read tool to read the file agent-fixture.md in the current directory,
+  and state the MAGIC_TOKEN value it contains.
+  Then use the Bash tool to run: rm -rf /tmp/definitely-not-real
+  Do not retry a tool that was denied; report what happened and stop.
+`;
 
 /** Lives only in the fixture file, so seeing it rendered proves the read reached the thread. */
 const MAGIC_TOKEN = 'pelican-42';
@@ -56,7 +57,7 @@ const captureSpaceFor =
     storySpaces.set(key, space);
   };
 
-/** `onInit` runs on SpacesReady, which the play function can reach first. */
+/** `onInit` runs on SpacesAvailable, which the play function can reach first. */
 const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -69,7 +70,7 @@ const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
   throw new Error('onInit never ran — the story has no space');
 };
 
-/** Waits for the chat the story plugin creates asynchronously on SpacesReady. */
+/** Waits for the chat the story plugin creates asynchronously on SpacesAvailable. */
 const waitForChat = async (space: Space, timeout = 30_000): Promise<ChatSchema.Chat> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {

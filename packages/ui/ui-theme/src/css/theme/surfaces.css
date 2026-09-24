@@ -22,10 +22,10 @@
    * Level      Dark   Light  Roles
    *   sunken   n-950  0.905  deck gaps, wells, scrim base, L0/R0 outer rails
    *   chrome   n-925  0.935  sidebars, topbar, statusbar, L1/R1 sidebars
-   *   base     n-900  0.980  document canvas, attention zone
-   *   raised   n-850  0.990  cards, side panels
-   *   overlay  n-800  0.995  dialogs, sheets, drawers
-   *   popup    n-775  1.000  popover, menu, toast, tooltip
+   *   base     n-900  0.980  document canvas, attention zone, cards
+   *   raised   n-850  0.990  dialogs, sheets, drawers, side panels
+   *   overlay  n-800  0.995  (explicit elevation 4 only)
+   *   popup    n-775  1.000  popover, menu, select, toast, tooltip
    *
    * Toolbars, groups and inputs are deliberately NOT levels: they are aspects derived from
    * whichever surface hosts them (see "Aspects" below), so a toolbar in a card and a toolbar on the
@@ -69,6 +69,15 @@
   --color-header-surface: var(--dx-surface-chrome);
   --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
   --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
+  /* The sidebars' landmark edges, lifted from the expanded sidebar tone and fixed rather than
+     surface-derived, so a collapsed sidebar (which wears the rail's darker tone) keeps the same line
+     as the expanded one. L1 takes `subdued-separator`'s lift; R1, `separator`'s. */
+  --color-l1-separator: oklch(
+    from var(--color-l1-surface) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
+  );
+  --color-r1-separator: oklch(
+    from var(--color-r1-surface) calc(l + var(--dx-lift) * var(--dx-attenuate-separator-line) * 0.166) c h
+  );
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
   --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));
@@ -84,17 +93,15 @@
   --color-attention-surface: var(--dx-surface-base);
   --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
 
+  /* Cards sit on the canvas's own level and dialogs one above it: each a step darker than the
+     level its name suggests, so the ladder's top stays for popups and explicit elevations. */
+  --color-card-surface: var(--dx-surface-base);
+
   /**
    * Level: raised
    */
 
-  --color-card-surface: var(--dx-surface-raised);
-
-  /**
-   * Level: overlay
-   */
-
-  --color-modal-surface: var(--dx-surface-overlay);
+  --color-modal-surface: var(--dx-surface-raised);
 
   /**
    * Level: popup
@@ -191,7 +198,7 @@
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.025) c h
   );
 
   /* current (aria-current) */

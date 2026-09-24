@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Filter, Registry } from '@dxos/echo';
 
-import { QuerySkills } from './definitions';
+import { QuerySkills } from './definitions.ts';
 
 export default QuerySkills.pipe(
   Operation.withHandler(

@@ -33,9 +33,9 @@ import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { command } from '../command';
-import { useThreadContext } from '../context';
-import { type MessageMetadata } from '../types';
+import { command } from '../command.ts';
+import { useThreadContext } from '../context.ts';
+import { type MessageMetadata } from '../types.ts';
 
 const avatarSize = 7;
 

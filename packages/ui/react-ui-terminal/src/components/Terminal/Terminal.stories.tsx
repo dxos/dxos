@@ -15,8 +15,8 @@ import { userEvent } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { runCommand, waitForTerminal } from '../../testing';
-import { Terminal } from './Terminal';
+import { runCommand, waitForTerminal } from '../../testing.ts';
+import { Terminal } from './Terminal.tsx';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -31,16 +31,16 @@ const RESET = '\x1b[0m';
 const greet = Command.make(
   'greet',
   {
-    name: Args.string('name'),
-    loud: Options.boolean('loud').pipe(Options.withDescription('Shout the greeting.')),
+    name: Args.String('name'),
+    loud: Options.Boolean('loud').pipe(Options.withDefault(false), Options.withDescription('Shout the greeting.')),
   },
   ({ name, loud }) => Console.log(loud ? `HELLO, ${name.toUpperCase()}!` : `Hello, ${name}.`),
 ).pipe(Command.withDescription('Greet someone by name.'));
 
 const ask = Command.make('ask', {}, () =>
   Effect.gen(function* () {
-    const name = yield* Prompt.text({ message: 'What is your name?' });
-    const color = yield* Prompt.select({
+    const name = yield* Prompt.String({ message: 'What is your name?' });
+    const color = yield* Prompt.Select({
       message: 'Pick a color',
       choices: [
         { title: 'Cyan', value: CYAN },

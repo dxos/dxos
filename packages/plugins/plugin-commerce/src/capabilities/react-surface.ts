@@ -12,7 +12,7 @@ import { Position } from '@dxos/util';
 
 import { Provider, Result, Search } from '#types';
 
-import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '../containers';
+import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '../containers/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

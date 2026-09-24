@@ -38,9 +38,9 @@ import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
 
-import { createComputeGraph } from '../hooks';
-import { type ComputeShape } from '../shapes';
-import { resolveComputeNode } from './node-defs';
+import { createComputeGraph } from '../hooks/index.ts';
+import { type ComputeShape } from '../shapes/index.ts';
+import { resolveComputeNode } from './node-defs.ts';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -159,6 +159,18 @@ export class ComputeGraphController extends Resource {
     private readonly _graph: ComputeGraphModel,
   ) {
     super();
+  }
+
+  /**
+   * Runs the graph once so a circuit shows its state as soon as it is opened; without this the
+   * trigger nodes only ever fire from {@link setOutput}, leaving a freshly loaded graph inert.
+   */
+  protected override async _open(): Promise<void> {
+    try {
+      await this.exec();
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   toJSON() {

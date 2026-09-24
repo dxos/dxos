@@ -4,8 +4,8 @@
 
 import { type CleanupFn } from '@dxos/async';
 
-import { getObjectCore } from './echo-object-utils';
-import { isEchoObject } from './echo-object-utils';
+import { getObjectCore } from './echo-object-utils.ts';
+import { isEchoObject } from './echo-object-utils.ts';
 
 export type Selection = any[];
 

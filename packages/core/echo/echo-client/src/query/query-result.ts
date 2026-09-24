@@ -7,14 +7,31 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type Entity, Query, QueryAST, type QueryResult } from '@dxos/echo';
 import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
-import { type QueryContext, type SourceEntry } from './query-context';
+import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
+
+/**
+ * True when any part of the query asks for deleted entities.
+ *
+ * `.options({ deleted })` produces a node that scoping wraps further, so the flag can sit at any
+ * depth rather than on the root.
+ */
+const _queryIncludesDeleted = (query: QueryAST.Query): boolean => {
+  let includesDeleted = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && (node.options.deleted === 'include' || node.options.deleted === 'only')) {
+      includesDeleted = true;
+    }
+  });
+  return includesDeleted;
+};
 
 /**
  * Predicate based query.
@@ -137,18 +154,33 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
+    // Idempotent: results are cached and shared per query, so a caller releasing twice would
+    // otherwise stop the query under every other subscriber and leave the count negative.
+    let subscribed = true;
     const unsubscribe = () => {
+      if (!subscribed) {
+        log.warn('query unsubscribed twice', { query: Query.pretty(this._query) });
+        return;
+      }
+      subscribed = false;
       log('unsubscribe', { query: Query.pretty(this._query), active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
     };
 
-    // Fire the initial event synchronously when authoritative results are already available: either
-    // a source can produce them synchronously, or this (cached/reused) result already computed them
-    // during a prior subscription. Only defer when an async-only query has no results yet (e.g. a
-    // fresh feed query served by the index), so subscribers don't observe a spurious empty snapshot.
-    if (callback && opts?.fire && (this._queryContext.isSynchronous() || this._objectCache !== undefined)) {
+    // Fire the initial event synchronously when there is something true to report: every source has
+    // answered, this (cached/reused) result was already computed during a prior subscription, or the
+    // working set already holds matches. An empty snapshot from a query the index has not answered
+    // yet is deferred: a subscriber that creates a default object when it sees none would otherwise
+    // act on an answer that was never given.
+    if (
+      callback &&
+      opts?.fire &&
+      (!this._queryContext.hasPendingSources() ||
+        this._objectCache !== undefined ||
+        (this._queryContext.isSynchronous() && this._queryContext.getResults().length > 0))
+    ) {
       try {
         callback(this);
       } catch (err) {
@@ -187,25 +219,30 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const results = this._queryContext.getResults();
     const presented = this._presentResults(results);
 
-    const changed = presented.grouped
-      ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
-        // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
-        !_groupsEqual(
-          this._objectCache as unknown as GroupResult[] | undefined,
-          presented.objects as unknown as GroupResult[],
-        )
-      : !this._objectCache ||
-        this._objectCache.length !== presented.objects.length ||
-        this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
+    const changed =
+      presented.kind === 'groups'
+        ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
+          // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
+          !_groupsEqual(
+            this._objectCache as unknown as GroupResult[] | undefined,
+            presented.objects as unknown as GroupResult[],
+          )
+        : presented.kind === 'records'
+          ? !this._resultCache ||
+            this._resultCache.length !== presented.entries.length ||
+            this._resultCache.some((entry, index) => entry.id !== presented.entries[index].id)
+          : !this._objectCache ||
+            this._objectCache.length !== presented.objects.length ||
+            this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
 
     log('recomputeResult', { changed });
 
-    // An aggregate query assembles its group records fresh on every recompute, so an unchanged result
+    // An aggregate or change query assembles its records fresh on every recompute, so an unchanged result
     // still yields a new array — and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
     // on every render, which would then see a new reference for identical data. Hold the previous
     // arrays in that case only: on the flat path `changed` compares ids and order alone, so pinning
     // would serve stale entities and stale per-row match metadata.
-    if (!presented.grouped || changed) {
+    if (presented.kind === 'entities' || changed) {
       this._resultCache = presented.entries;
       this._objectCache = presented.objects;
     }
@@ -218,23 +255,59 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * uniformly across all entries or none), assembles flat aggregate records instead of deduped rows.
    */
   private _presentResults(entries: SourceEntry<T>[]): {
+    kind: 'entities' | 'groups' | 'records';
     objects: T[];
     entries: QueryResult.EntityEntry<T>[];
-    grouped: boolean;
   } {
+    const { kept, removed } = this._collapseDuplicates(entries);
+    entries = kept;
+
     if (entries.length > 0 && entries[0].group !== undefined) {
-      const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
-      // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
-      // return type), but this class is written generically over the row type — aggregation is a
-      // presentation transform applied on top of row-level entries, with the row type erased at runtime.
+      const { groups, entries: groupEntries } = _assembleGroups(
+        entries,
+        _groupAggregatesFromQuery(this._query.ast),
+        removed,
+      );
       return {
-        objects: groups as unknown as T[],
+        kind: 'groups',
+        objects: _asResultRows<T>(groups),
         entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
-        grouped: true,
       };
     }
 
-    return { objects: this._uniqueObjects(entries), entries, grouped: false };
+    if (entries.length > 0 && entries[0].record !== undefined) {
+      return { kind: 'records', objects: _asResultRows<T>(entries.map((entry) => entry.record)), entries };
+    }
+
+    return { kind: 'entities', objects: this._uniqueObjects(entries), entries };
+  }
+
+  /**
+   * Drop entities whose tombstone the index has not caught up with yet — the failure this
+   * prevents is code that reads `results.length` or asserts a singleton and breaks on a
+   * merged-away duplicate it did not create.
+   *
+   * Read-only by design: the merge itself runs in the worker off the indexing stream (see
+   * `echo-host`'s convergence-key merge), and its tombstones leave query results through ordinary
+   * deleted-filtering once re-indexed. This filter only covers the gap in between — cached
+   * reactive-query entries hydrated before the re-index. It keys on the deleted flag rather
+   * than `mergedInto` (the merge writes both in one change) so that it can never hide a live
+   * entity: a loser resurrected by `db.add` stays visible until the worker re-tombstones it,
+   * instead of becoming a live-but-unqueryable zombie.
+   */
+  private _collapseDuplicates(entries: SourceEntry<T>[]): { kept: SourceEntry<T>[]; removed: SourceEntry<T>[] } {
+    // A query that explicitly asks for tombstones is asking to see what was merged away, so
+    // filtering would defeat it — this is how a diagnostic inspects the losers.
+    if (_queryIncludesDeleted(this._query.ast)) {
+      return { kept: entries, removed: [] };
+    }
+
+    const kept: SourceEntry<T>[] = [];
+    const removed: SourceEntry<T>[] = [];
+    for (const entry of entries) {
+      (isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted() ? removed : kept).push(entry);
+    }
+    return { kept, removed };
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {
@@ -295,6 +368,13 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 type GroupResult = { [field: string]: unknown };
 
 /**
+ * Boundary cast: T is a plain record for aggregate and change queries (`Query.RecordResult`), but
+ * this class is written generically over the entity type — records are a presentation transform
+ * applied on top of row-level entries, with the row type erased at runtime.
+ */
+const _asResultRows = <T>(rows: readonly unknown[]): T[] => rows as unknown as T[];
+
+/**
  * Buckets flat row-level entries into flat aggregate records, in the order groups first appear in
  * `entries`. The host/local query sources already deliver an aggregate query's entries with groups
  * contiguous and correctly ordered (see `AggregateStep`); this only needs to re-derive that grouping
@@ -307,12 +387,14 @@ type GroupResult = { [field: string]: unknown };
 const _assembleGroups = (
   entries: SourceEntry[],
   aggregates: readonly QueryAST.GroupAggregate[],
+  removed: SourceEntry[] = [],
 ): { groups: GroupResult[]; entries: QueryResult.Entry<GroupResult>[] } => {
   const seenIds = new Set<unknown>();
   const order: string[] = [];
   const keys = new Map<string, Record<string, unknown>>();
   const members = new Map<string, unknown[]>();
   const counts = new Map<string, number>();
+  const sourceAggregates = new Map<string, Record<string, AggregateValue>>();
 
   for (const entry of entries) {
     if (!entry.group) {
@@ -334,20 +416,47 @@ const _assembleGroups = (
       counts.set(serializedKey, entry.group.count);
       order.push(serializedKey);
     }
+    if (entry.group.aggregates !== undefined) {
+      sourceAggregates.set(serializedKey, entry.group.aggregates);
+    }
     if (entry.result != null) {
       members.get(serializedKey)!.push(entry.result);
     }
+  }
+
+  // Tombstones the collapse dropped are still inside the server-side `count`; subtract them so the
+  // count agrees with the members it is reported alongside.
+  const removedIds = new Map<string, Set<unknown>>();
+  for (const entry of removed) {
+    const objectId = entry.result?.id;
+    if (!entry.group || objectId == null) {
+      continue;
+    }
+    const serializedKey = JSON.stringify(entry.group.key);
+    const count = counts.get(serializedKey);
+    const ids = removedIds.get(serializedKey) ?? new Set<unknown>();
+    if (count === undefined || ids.has(objectId)) {
+      continue;
+    }
+    ids.add(objectId);
+    removedIds.set(serializedKey, ids);
+    counts.set(serializedKey, count - 1);
   }
 
   const groups = order.map((serializedKey): GroupResult => {
     const groupMembers = members.get(serializedKey)!;
     // Group-key fields are already keyed by their result-field name; spread them flat.
     const record: GroupResult = { ...keys.get(serializedKey)! };
+    const computed = sourceAggregates.get(serializedKey);
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
+      if (QueryAST.isGroupKeyAggregate(aggregate)) {
         continue; // Group-key fields come from the spread above.
       }
-      record[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
+      // A collapsed group has no members to reduce; the source's value is the only one there is.
+      record[aggregate.name] =
+        computed !== undefined && aggregate.kind !== 'items'
+          ? computed[aggregate.name]
+          : _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
     }
     return record;
   });
@@ -359,7 +468,12 @@ const _assembleGroups = (
 const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly unknown[], count: number): unknown => {
   switch (aggregate.kind) {
     case 'group':
+    case 'type':
+    case 'timestamp':
+    case 'time':
       return undefined; // Group-key fields are assembled from the source key, not here.
+    case 'sum':
+      return GroupBy.sum(members.map((value) => getDeep(value as Record<string, unknown>, [aggregate.property])));
     case 'items':
       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
     case 'count':

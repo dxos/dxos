@@ -9,7 +9,7 @@ import columnify from 'columnify';
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { relativeTime } from '../util';
+import { relativeTime } from '../util/index.ts';
 
 const formatPullRequest = (pull_requests?: any) => {
   return pull_requests?.[0]?.head.ref ?? '';

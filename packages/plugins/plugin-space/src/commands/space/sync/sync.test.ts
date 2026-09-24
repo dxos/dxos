@@ -11,7 +11,7 @@ import { ClientService } from '@dxos/client';
 import { SpaceState } from '@dxos/client/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './sync';
+import { handler } from './sync.ts';
 
 describe('spaces sync', () => {
   // TODO(wittjosiah): Need to create a mock edge to sync with.

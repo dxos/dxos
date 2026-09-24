@@ -14,19 +14,18 @@ import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { useProjectionModel, useTableModel } from '../../hooks';
-import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
-import { Table } from '../../types';
-import { Table as TableComponent } from './Table';
+import { useProjectionModel, useTableModel } from '../../hooks/index.ts';
+import { type TableFeatures, TablePresentation, type TableRow } from '../../model/index.ts';
+import { Table } from '../../types/index.ts';
+import { Table as TableComponent } from './Table.tsx';
 
 random.seed(1);
 const generator: ValueGenerator = random as any;

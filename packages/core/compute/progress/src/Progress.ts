@@ -27,6 +27,8 @@ export type TaskProgress = {
   readonly status: TaskStatus;
   readonly startedAt?: string;
   readonly updatedAt: string;
+  /** When `current` last moved forward, which is what {@link deriveEta} rates a run by. */
+  readonly progressedAt?: string;
   readonly elapsedMs?: number;
   /** Producer-supplied estimate of remaining time (ms); see {@link deriveEta}. */
   readonly estimatedMs?: number;
@@ -41,12 +43,12 @@ type MutableTask = {
   -readonly [Key in keyof TaskProgress]: TaskProgress[Key];
 };
 
-export type ProgressSnapshot = {
+export type Snapshot = {
   readonly updatedAt: string;
   readonly tasks: readonly TaskProgress[];
 };
 
-/** Handle for updating one task; returned by {@link ProgressApi.task}. */
+/** Handle for updating one task; returned by {@link Api.task}. */
 export interface TaskHandle {
   /** Advance the item index by `by` (default 1). */
   readonly advance: (by?: number) => void;
@@ -83,11 +85,11 @@ export interface TaskHandle {
  * A live progress registry. It is subscribable — every mutation notifies listeners, so a reactive
  * consumer (e.g. a browser panel) updates instantly while file/log sinks throttle.
  */
-export interface ProgressApi {
+export interface Api {
   /**
    * Registers (or resumes) a task and marks it running; returns a handle to update it.
    * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
-   * {@link ProgressApi.cancel}.
+   * {@link Api.cancel}.
    */
   readonly task: (
     name: string,
@@ -97,19 +99,19 @@ export interface ProgressApi {
   readonly seed: (tasks: readonly { name: string; total?: number; label?: string }[]) => void;
   /** Invokes the task's registered `onCancel` handler (no-op if absent). */
   readonly cancel: (name: string) => void;
-  readonly snapshot: () => ProgressSnapshot;
+  readonly snapshot: () => Snapshot;
   /** Subscribe to snapshots; returns an unsubscribe. The listener fires on every change. */
-  readonly subscribe: (listener: (snapshot: ProgressSnapshot) => void) => () => void;
+  readonly subscribe: (listener: (snapshot: Snapshot) => void) => () => void;
 }
 
 /** Construct a standalone progress registry. */
-export const make = (): ProgressApi => {
+export const make = (): Api => {
   const tasks = new Map<string, MutableTask>();
   const cancelHandlers = new Map<string, () => void>();
-  const listeners = new Set<(snapshot: ProgressSnapshot) => void>();
+  const listeners = new Set<(snapshot: Snapshot) => void>();
   const now = (): string => new Date().toISOString();
 
-  const snapshot = (): ProgressSnapshot => ({
+  const snapshot = (): Snapshot => ({
     updatedAt: now(),
     tasks: [...tasks.values()].map((task) => ({ ...task })),
   });
@@ -124,15 +126,19 @@ export const make = (): ProgressApi => {
   };
 
   const touch = (task: MutableTask, mutate: (task: MutableTask) => void): void => {
+    const before = task.current;
     mutate(task);
     task.updatedAt = now();
+    if (task.current > before) {
+      task.progressedAt = task.updatedAt;
+    }
     if (task.startedAt) {
       task.elapsedMs = Date.parse(task.updatedAt) - Date.parse(task.startedAt);
     }
     emit();
   };
 
-  const task: ProgressApi['task'] = (name, options = {}) => {
+  const task: Api['task'] = (name, options = {}) => {
     const started = now();
     const entry: MutableTask = tasks.get(name) ?? { name, current: 0, status: 'pending', updatedAt: started };
     entry.label = options.label ?? entry.label;
@@ -141,6 +147,7 @@ export const make = (): ProgressApi => {
     entry.status = 'running';
     entry.startedAt = entry.startedAt ?? started;
     entry.updatedAt = started;
+    entry.progressedAt = entry.progressedAt ?? started;
     if (options.onCancel) {
       cancelHandlers.set(name, options.onCancel);
       entry.cancellable = true;
@@ -164,6 +171,8 @@ export const make = (): ProgressApi => {
         touch(entry, (item) => {
           item.phase = phase;
           item.current = 0;
+          // A phase starts its own clock: the count resets, so the stall window does too.
+          item.progressedAt = now();
           item.total = options.total;
           if (options.note !== undefined) {
             item.note = options.note;
@@ -186,11 +195,11 @@ export const make = (): ProgressApi => {
     };
   };
 
-  const cancel: ProgressApi['cancel'] = (name) => {
+  const cancel: Api['cancel'] = (name) => {
     cancelHandlers.get(name)?.();
   };
 
-  const seed: ProgressApi['seed'] = (defs) => {
+  const seed: Api['seed'] = (defs) => {
     for (const def of defs) {
       if (!tasks.has(def.name)) {
         tasks.set(def.name, {
@@ -206,7 +215,7 @@ export const make = (): ProgressApi => {
     emit();
   };
 
-  const subscribe: ProgressApi['subscribe'] = (listener) => {
+  const subscribe: Api['subscribe'] = (listener) => {
     listeners.add(listener);
     return () => void listeners.delete(listener);
   };
@@ -215,15 +224,32 @@ export const make = (): ProgressApi => {
 };
 
 /**
+ * A run that has gone this long without moving, or twice its average per-item time if that is
+ * longer, is stalled. The floor keeps a bursty producer from flickering between an estimate and
+ * none; the multiple lets a slow one keep its estimate between items.
+ */
+const STALL_FLOOR_MS = 5_000;
+
+/**
  * Estimated remaining time (ms): the producer's `estimatedMs` if present, else a naive linear
  * estimate `elapsedMs / current × (total − current)` when the total and some progress are known;
- * `undefined` when it cannot be estimated.
+ * `undefined` when it cannot be estimated, or when the run has stalled — a rate is only worth
+ * projecting while the count is moving, and projecting a stalled run reports an estimate that
+ * grows with every touch and never arrives.
  */
 export const deriveEta = (task: TaskProgress): number | undefined => {
   if (task.estimatedMs !== undefined) {
     return task.estimatedMs;
   }
-  if (task.total !== undefined && task.current > 0 && task.current < task.total && task.elapsedMs !== undefined) {
-    return (task.elapsedMs / task.current) * (task.total - task.current);
+  if (task.total === undefined || task.current <= 0 || task.current >= task.total || task.elapsedMs === undefined) {
+    return undefined;
   }
+  const perItemMs = task.elapsedMs / task.current;
+  if (task.progressedAt !== undefined) {
+    const sinceProgressMs = Date.parse(task.updatedAt) - Date.parse(task.progressedAt);
+    if (sinceProgressMs > Math.max(STALL_FLOOR_MS, 2 * perItemMs)) {
+      return undefined;
+    }
+  }
+  return perItemMs * (task.total - task.current);
 };

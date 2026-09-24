@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import type * as Observability from '@dxos/observability/Observability';
 
-import * as SupportService from './SupportService';
+import * as SupportService from './SupportService.ts';
 
 const observabilityWith = (support: Observability.Observability['support']): Observability.Observability =>
   ({ support }) as unknown as Observability.Observability;
@@ -63,7 +63,7 @@ describe('submitSupportReport', () => {
   test('skips the logs entirely when the reporter opted out', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ ticketId: 'ticket-2' }))),
+      vi.fn(async () => new Response(JSON.stringify({ ticketId: 'ticket-2', threadUrl: 'https://discord.test/t' }))),
     );
     const uploadLogs = vi.fn(async () => 'never');
     const flushLogs = vi.fn(async () => {});
@@ -78,6 +78,26 @@ describe('submitSupportReport', () => {
     expect(error).toBeUndefined();
     expect(uploadLogs).not.toHaveBeenCalled();
     expect(flushLogs).not.toHaveBeenCalled();
+  });
+
+  test('refuses a success that names no public thread, since nobody would see the report', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ticketId: 'ticket-3' }))),
+    );
+    const { error } = await run(
+      SupportService.submitSupportReport({
+        endpoint: 'https://edge.test/discord',
+        observability: observabilityWith({
+          uploadLogs: async () => undefined,
+          sessionContext: () => undefined,
+          flushLogs: async () => {},
+        }),
+        report: { title: 'Broken', body: 'It broke.' },
+      }),
+    );
+
+    expect(error?.name).toBe('SupportSubmitError');
   });
 
   test('fails with a tagged error when the service rejects the report', async () => {
@@ -125,7 +145,13 @@ describe('submitSupportIssue', () => {
           sessionContext: () => ({ distinctId: 'did:dx:me', widgetSessionId: 'w-1', replayUrl: 'https://r' }),
           flushLogs,
         }),
-        report: { title: 'Broken', body: 'It broke.', type: 'bug', includeLogs: true },
+        report: {
+          title: 'Broken',
+          body: 'It broke.',
+          type: 'bug',
+          includeLogs: true,
+          labels: ['Composer Feedback Form'],
+        },
         did: 'did:dx:me',
       }),
     );
@@ -134,7 +160,12 @@ describe('submitSupportIssue', () => {
     expect(value).toEqual(issue);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://edge.test/discord/issue');
-    expect(JSON.parse(String(init.body))).toMatchObject({ title: 'Broken', did: 'did:dx:me', logKey: 'logs/1.ndjson' });
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      title: 'Broken',
+      did: 'did:dx:me',
+      logKey: 'logs/1.ndjson',
+      labels: ['Composer Feedback Form'],
+    });
     await vi.waitFor(() => expect(flushLogs).toHaveBeenCalledWith({ reportId: 'r-1' }));
   });
 

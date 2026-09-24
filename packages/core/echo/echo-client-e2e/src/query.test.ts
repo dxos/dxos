@@ -44,7 +44,7 @@ const getFeedUriOrThrow = (feed: Feed.Feed): EID.EID => {
 };
 
 // Tag ids are the URIs of Tag objects; meta stores them as refs.
-const tags = ['echo:/TAGRED', 'echo:/TAGGREEN', 'echo:/TAGBLUE'];
+const tags = ['echo:///TAGRED', 'echo:///TAGGREEN', 'echo:///TAGBLUE'];
 const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
@@ -377,6 +377,117 @@ describe('Query', () => {
     });
   });
 
+  describe.each(['memory', 'sql'] as const)('changes (%s executor)', (queryExecutor) => {
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
+    const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
+
+    test('a space-wide count by day follows new edits', async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush({ indexes: true });
+
+      let rows: readonly { day: number | null; changes: number; ops: number }[] = [];
+      const unsubscribe = db
+        .query(
+          Query.select(Filter.changes()).aggregate({
+            day: Aggregate.time('time', 'day'),
+            changes: Aggregate.count(),
+            ops: Aggregate.sum('ops'),
+          }),
+        )
+        .subscribe((result) => {
+          rows = result.results;
+        });
+      onTestFinished(unsubscribe);
+
+      await waitForCondition({ condition: () => total(rows) > 0, timeout: 5000 });
+      const before = total(rows);
+      expect(rows.every((row) => row.ops >= row.changes)).to.be.true;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+      await waitForCondition({ condition: () => total(rows) > before, timeout: 5000 });
+    });
+
+    test("an object's history comes back as frozen change records, newest first", async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      for (const value of [2, 3]) {
+        Obj.update(object, (object) => {
+          object.value = value;
+        });
+      }
+      await db.flush({ indexes: true });
+
+      const changes = await db
+        .query(Query.select(Filter.changes(object)).orderBy(Order.property('time', 'desc')).limit(2))
+        .run();
+
+      expect(changes).to.have.length(2);
+      expect(changes[0].time).to.be.greaterThanOrEqual(changes[1].time);
+      for (const change of changes) {
+        expect(change).to.include({ source: 'document' });
+        expect(change).to.include.keys('key', 'time', 'actor', 'seq', 'ops');
+        expect(Object.isFrozen(change)).to.be.true;
+        expect(Reflect.set(change, 'ops', 0)).to.be.false;
+      }
+    });
+
+    test("the index and a replay agree on an object's changes", async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+
+      const [indexed, replayed] = await Promise.all([
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({ changes: Aggregate.count(), ops: Aggregate.sum('ops') }),
+          )
+          .run(),
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({
+              actor: Aggregate.group('actor'),
+              changes: Aggregate.count(),
+              ops: Aggregate.sum('ops'),
+            }),
+          )
+          .run(),
+      ]);
+
+      expect(total(indexed)).to.be.greaterThan(0);
+      expect(total(replayed)).to.equal(total(indexed));
+      expect(replayed.reduce((sum, row) => sum + row.ops, 0)).to.equal(indexed[0].ops);
+    });
+
+    test('sums and time buckets apply to ordinary objects', async () => {
+      const db = await createDatabase();
+      const day = Date.UTC(2026, 0, 2);
+      db.add(Obj.make(TestSchema.Expando, { at: day + 1_000, amount: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day + 2_000, amount: 3 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day - 1_000, amount: 7 }));
+      await db.flush({ indexes: true });
+
+      const rows = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Expando))
+            .aggregate({ day: Aggregate.time('at', 'day'), amount: Aggregate.sum('amount') })
+            .orderBy(Order.property('day', 'asc')),
+        )
+        .run();
+
+      expect(rows.map(({ day, amount }) => ({ day, amount }))).to.deep.equal([
+        { day: day - 86_400_000, amount: 7 },
+        { day, amount: 5 },
+      ]);
+    });
+  });
+
   describe('aggregate', () => {
     test('groups by a single property, with per-group counts', async () => {
       const { db } = await builder.createDatabase();
@@ -451,6 +562,40 @@ describe('Query', () => {
       // A group smaller than the limit is returned whole.
       expect(byKey.get('b')?.count).to.equal(1);
       expect(byKey.get('b')?.items).to.have.length(1);
+    });
+
+    test('a count by type and hour is answered without members and agrees with the loaded rows', async () => {
+      const startedAt = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Ship it' }));
+      // Counted from index rows, a child still has to follow its deleted parent out of the result.
+      const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: parent, title: 'Orphaned' }));
+      db.remove(parent);
+      await db.flush({ indexes: true });
+      const loaded = await db.query(Filter.everything()).run();
+
+      const rows = await db
+        .query(
+          Query.select(Filter.everything()).aggregate({
+            type: Aggregate.type(),
+            hour: Aggregate.updated('hour'),
+            count: Aggregate.count(),
+          }),
+        )
+        .run();
+
+      // The hour may turn between the edits and this assertion, so accept either side of a boundary.
+      const hours = new Set([startedAt, Math.floor(Date.now() / 3_600_000) * 3_600_000]);
+      const countOf = (typename: string) => rows.find((row) => String(row.type).includes(typename))?.count;
+      expect(rows).to.have.length(2);
+      expect(countOf(Type.getTypename(TestSchema.Person))).to.equal(2);
+      expect(countOf(Type.getTypename(TestSchema.Task))).to.equal(1);
+      expect(rows.every((row) => hours.has(Number(row.hour)))).to.be.true;
+      expect(rows.every((row) => !('items' in row))).to.be.true;
+      expect(rows.reduce((total, row) => total + row.count, 0)).to.equal(loaded.length);
     });
 
     test('a coalesce group key gives each member without the leading property its own group', async () => {
@@ -831,8 +976,11 @@ describe('Query', () => {
         let lastResult = await subscribeAndWaitForFirstResult(query);
         expect(lastResult).to.have.length(1);
 
+        // Without `items` the working set declines the aggregate, so the host answers after its
+        // index round trip, which `db.flush({ updates: true })` does not await — poll.
         db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
         await db.flush({ updates: true });
+        await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
         lastResult = query.results;
 
         expect(lastResult).to.have.length(2);
@@ -840,6 +988,10 @@ describe('Query', () => {
 
         db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
         await db.flush({ updates: true });
+        await waitForCondition({
+          condition: () => query.results.find((group) => group.category === 'a')?.count === 2,
+          timeout: 2000,
+        });
         lastResult = query.results;
 
         expect(lastResult.find((group) => group.category === 'a')?.count).to.equal(2);
@@ -889,6 +1041,8 @@ describe('Query', () => {
 
         db.remove(obj);
         await db.flush({ updates: true });
+        // Host-routed (no `items`), so the removal lands after the index round trip — poll.
+        await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
         expect(lastResult).to.have.length(1);
@@ -1691,7 +1845,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const withFeeds: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -1735,7 +1889,7 @@ describe('Query', () => {
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
       await db.appendToFeed(feed, [traceTask]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const results: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -2178,8 +2332,8 @@ describe('Query', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const important = 'echo:/TAGIMPORTANT';
-      const investor = 'echo:/TAGINVESTOR';
+      const important = 'echo:///TAGIMPORTANT';
+      const investor = 'echo:///TAGINVESTOR';
       const importantRef = Ref.fromURI(URI.make(important));
       const investorRef = Ref.fromURI(URI.make(investor));
 
@@ -2712,7 +2866,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
 
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
@@ -2739,13 +2893,48 @@ describe('Query', () => {
   });
 
   describe('indexer2 text search', () => {
+    test('flush waits for the full-text index', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred tokenization' }));
+      await db.flush({ secondaryIndexes: true });
+
+      // The full-text index lags the primary pass, so a flush that did not wait for it would leave
+      // records for this to index.
+      expect(await host.updateSecondaryIndexes()).toEqual(0);
+    });
+
+    test('the deferred pass invalidates a live text query', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      const query = db.query(Query.select(Filter.text('deferred invalidation', { type: 'full-text' })));
+      const matched = new Trigger();
+      const unsubscribe = query.subscribe(() => {
+        if (query.results.length > 0) {
+          matched.wake();
+        }
+      });
+      onTestFinished(unsubscribe);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred invalidation' }));
+      // Primary pass only: the trigram index still has nothing to match, so the subscription above
+      // is left holding an empty result that only the catch-up below can fill.
+      await db.flush();
+      await host.updateSecondaryIndexes();
+
+      await matched.wait();
+      expect(query.results).toHaveLength(1);
+    });
+
     test('full-text search via indexer2', async () => {
       const { db } = await builder.createDatabase();
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // TODO(mykola): Defalut to full-text
       const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
@@ -2784,7 +2973,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Python for Data Science' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
       expect(objects).toHaveLength(2);
@@ -2799,7 +2988,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Partial word "Script" should match "TypeScript".
       {
@@ -2834,7 +3023,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Words in different order should still match.
       {
@@ -2858,7 +3047,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'Quarterly planning' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Quarterly Reviewer' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Unrelated Name' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Unscoped matches both entities containing the term.
       {
@@ -2907,7 +3096,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Poll until indexer2 has processed the document.
       {
@@ -2919,7 +3108,7 @@ describe('Query', () => {
       Obj.update(obj, (obj) => {
         obj.title = 'Updated Title';
       });
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Verify search results.
       {
@@ -2979,7 +3168,7 @@ describe('Query', () => {
       console.timeEnd('create');
 
       console.time('flush');
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
       console.timeEnd('flush');
 
       console.time('query');
@@ -3009,7 +3198,7 @@ describe('Query', () => {
       ]);
 
       // Wait for indexing.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Search in specific queue.
       {
@@ -3054,7 +3243,7 @@ describe('Query', () => {
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Search with allFeedsFromSpaces: true should return both space and queue objects.
       {
@@ -3081,7 +3270,7 @@ describe('Query', () => {
       const feed = db.add(Feed.make({}));
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
       await db.appendToFeed(feed, [task]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const obj: TestSchema.Task = await db
         .query(
@@ -3105,7 +3294,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming' })); // No match.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
       const entries = await query.runEntries();
@@ -3128,7 +3317,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank descending (best matches first) - default direction.
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
@@ -3158,7 +3347,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank ascending (worst matches first).
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
@@ -3210,7 +3399,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank descending and limit to top 2 results.
       const query = db.query(
@@ -3243,7 +3432,7 @@ describe('Query', () => {
         db.add(object);
       }
 
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
     });
 
     test('fires only once when new objects are added', async () => {
@@ -3978,6 +4167,89 @@ describe('Query', () => {
       Obj.setParent(chat, undefined);
       await db.flush({ updates: true });
       await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
+  describe('Filter.mnemonic', () => {
+    test('selects the object whose mnemonic matches', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const mnemonic = Obj.getMnemonic(target);
+      expect(mnemonic).toEqual(target.id.slice(-6).toUpperCase());
+
+      const objects = await db.query(Query.select(Filter.mnemonic(mnemonic))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Target']);
+    });
+
+    test('matching is case-insensitive', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.mnemonic(Obj.getMnemonic(target).toLowerCase()))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Target']);
+    });
+
+    test('combines with a type filter', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Person' }));
+      await db.flush();
+
+      const mnemonic = Obj.getMnemonic(person);
+      const matching = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.mnemonic(mnemonic))))
+        .run();
+      expect(matching.map((obj) => obj.name)).toEqual(['Person']);
+
+      // The same mnemonic under a type the object does not have matches nothing.
+      const mismatched = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.mnemonic(mnemonic))))
+        .run();
+      expect(mismatched).toHaveLength(0);
+    });
+
+    test('negation excludes the named object', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.not(Filter.mnemonic(Obj.getMnemonic(target))))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Other']);
+    });
+
+    test('an unused mnemonic matches nothing', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.mnemonic('ZZZZZZ'))).run();
+      expect(objects).toHaveLength(0);
+    });
+
+    test('a malformed mnemonic is rejected', async ({ expect }) => {
+      expect(() => Filter.mnemonic('nope')).toThrow();
+      // I, L, O and U are not in the Crockford base32 alphabet ULIDs use.
+      expect(() => Filter.mnemonic('ABCDEI')).toThrow();
+    });
+
+    test('a newly added object appears in a live mnemonic query', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = Obj.make(TestSchema.Expando, { name: 'Target' });
+      const mnemonic = Obj.getMnemonic(target);
+
+      const query = db.query(Query.select(Filter.mnemonic(mnemonic)));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 0, timeout: 2000 });
+
+      db.add(target);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+      expect(query.results.map((obj) => obj.name)).toEqual(['Target']);
     });
   });
 

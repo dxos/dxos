@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { id, isWellFormedId, isWellFormedIdPart } from './id';
+import { id, isWellFormedId, isWellFormedIdPart } from './id.ts';
 
 describe('id', () => {
   test('accepts a three-part id', ({ expect }) => {

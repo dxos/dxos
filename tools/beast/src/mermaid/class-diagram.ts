@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Cardinality, type ClassDefinition } from '../ts';
-import { type Diagram } from './diagram';
+import { Cardinality, type ClassDefinition } from '../ts/index.ts';
+import { type Diagram } from './diagram.ts';
 
 /**
  * https://mermaid-js.github.io/mermaid/#/classDiagram

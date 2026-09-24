@@ -10,8 +10,16 @@ import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { type Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../../types';
-import { factViewerTheme } from './FactViewer.theme';
+import {
+  type Group,
+  factualityColor,
+  formatDate,
+  formatTerm,
+  graphToTreeNode,
+  groupFacts,
+  termKey,
+} from '../../types.ts';
+import { factViewerTheme } from './FactViewer.theme.ts';
 
 const styles = factViewerTheme.styles();
 

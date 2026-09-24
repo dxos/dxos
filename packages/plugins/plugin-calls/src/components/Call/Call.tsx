@@ -11,10 +11,10 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { useDebugMode } from '#hooks';
 import { CallsCapabilities } from '#types';
 
-import { type CallManager } from '../../calls';
-import { AudioStream } from '../Media';
-import { ParticipantGrid } from '../Participant';
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { type CallManager } from '../../calls/index.ts';
+import { AudioStream } from '../Media/index.ts';
+import { ParticipantGrid } from '../Participant/index.ts';
+import { Toolbar, type ToolbarProps } from './Toolbar.tsx';
 
 //
 // Root

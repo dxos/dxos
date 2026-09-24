@@ -27,8 +27,8 @@ import {
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
-import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths';
-import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
+import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths.ts';
+import { dedupeSupersededDrafts, orderThreadItems } from '../../util/index.ts';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
@@ -245,7 +245,11 @@ export const MessageArticle = ({
   // Per-message delete action, backed by the space operation for removing objects.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
-      void invoker.invokePromise(SpaceOperation.RemoveObjects, { objects: [message] });
+      void invoker.invokePromise(
+        SpaceOperation.RemoveObjects,
+        { objects: [message] },
+        { spaceId: Obj.getDatabase(message)?.spaceId },
+      );
     },
     [invoker],
   );

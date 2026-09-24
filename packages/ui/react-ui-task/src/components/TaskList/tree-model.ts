@@ -144,7 +144,14 @@ export const createTaskTreeModel = (
         label: groupLabel(node, translationKey),
         // `group` makes `Tree` render a section header and splice the node out of the collection's
         // topology, so the keyboard never lands on a header.
-        ...(node.status ? { disposition: 'group' as const } : { testId: 'taskList.item' }),
+        ...(node.status
+          ? { disposition: 'group' as const }
+          : {
+              testId: 'taskList.item',
+              // The selection fill already marks the row, so a focus ring on top of it reads as a
+              // second, conflicting highlight; unselected rows keep the ring for keyboard travel.
+              className: 'data-[selected]:ring-0',
+            }),
       }),
       isOpen: (node) => !collapsed?.has(node.id),
     },

@@ -7,11 +7,11 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 
-import { withLayout, withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Panel } from '../Panel';
-import { Toolbar } from '../Toolbar';
-import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Panel } from '../Panel/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer.tsx';
 
 type StoryArgs = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
 

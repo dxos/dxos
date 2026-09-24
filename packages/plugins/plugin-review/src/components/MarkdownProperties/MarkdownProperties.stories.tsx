@@ -28,7 +28,7 @@ import { Branch, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
 
-import { MarkdownProperties } from './MarkdownProperties';
+import { MarkdownProperties } from './MarkdownProperties.tsx';
 
 const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.makeMeta({

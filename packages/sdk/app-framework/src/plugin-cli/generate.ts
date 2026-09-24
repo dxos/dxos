@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { type BarrelMember, parseBarrel } from './barrel';
+import { type BarrelMember, parseBarrel } from './barrel.ts';
 import {
   collectFreeIdentifiers,
   parseFile,
@@ -13,7 +13,7 @@ import {
   rewriteRelativeSpecifiers,
   topLevelImportDeclarations,
   topLevelLocalDeclarations,
-} from './ts-util';
+} from './ts-util.ts';
 
 export type GenerateResult = {
   pluginDir: string;

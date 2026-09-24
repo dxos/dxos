@@ -13,4 +13,8 @@ import { meta } from '#meta';
  */
 export const Initialized = ActivationEvent.make(`${meta.profile.key}.event.initialized`);
 export const IdentityCreated = ActivationEvent.make(`${meta.profile.key}.event.identityCreated`);
-export const SpacesReady = ActivationEvent.make(`${meta.profile.key}.event.spacesReady`);
+/**
+ * Runtime event: the space list is observable. The spaces themselves may still be opening, so a
+ * module that reads a space's properties waits for that space rather than for this.
+ */
+export const SpacesAvailable = ActivationEvent.make(`${meta.profile.key}.event.spacesAvailable`);

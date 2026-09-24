@@ -12,8 +12,8 @@ import { html, nothing } from 'lit';
 import { random } from '@dxos/random';
 
 import { defaultRowSize } from './defs.js';
-import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
-import { colToA1Notation, rowToA1Notation } from './util';
+import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types.ts';
+import { colToA1Notation, rowToA1Notation } from './util.ts';
 
 export default {
   title: 'dx-grid',

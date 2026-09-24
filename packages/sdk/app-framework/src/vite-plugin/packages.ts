@@ -41,7 +41,6 @@ const THIRD_PARTY_SHARED_PACKAGES = [
 export const DEFAULT_PACKAGES = [
   // packages/common
   '@dxos/async',
-  '@dxos/codec-protobuf',
   '@dxos/context',
   '@dxos/crypto',
   '@dxos/debug',

@@ -2,16 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';
@@ -39,7 +41,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
           },
         );
       } else {
-        await client.halo.createIdentity({ displayName: value }).then(
+        await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: value })).then(
           (identity) => {
             send?.({ type: 'selectIdentity' as const, identity });
           },

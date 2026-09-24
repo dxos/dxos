@@ -14,9 +14,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import AgentSkillDef from '../skill';
-import * as AgentSkillOperations from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import AgentSkillDef from '../skill.ts';
+import * as AgentSkillOperations from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

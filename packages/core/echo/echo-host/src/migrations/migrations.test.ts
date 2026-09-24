@@ -3,21 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-import { MIGRATIONS as CHUNKS, MIGRATIONS_TABLE as CHUNKS_TABLE } from './chunks';
 import chunksInit from './chunks/0001_init.sql?raw';
-import { MIGRATIONS as HEADS, MIGRATIONS_TABLE as HEADS_TABLE } from './heads';
+import { MIGRATIONS as CHUNKS, MIGRATIONS_TABLE as CHUNKS_TABLE } from './chunks/index.ts';
 import headsInit from './heads/0001_init.sql?raw';
-import { MIGRATIONS as SPACE_STATE, MIGRATIONS_TABLE as SPACE_STATE_TABLE } from './space-state';
+import { MIGRATIONS as HEADS, MIGRATIONS_TABLE as HEADS_TABLE } from './heads/index.ts';
 import spaceStateInit from './space-state/0001_init.sql?raw';
+import { MIGRATIONS as SPACE_STATE, MIGRATIONS_TABLE as SPACE_STATE_TABLE } from './space-state/index.ts';
 
 const STORES = [
   { name: 'chunks', init: chunksInit, manifest: CHUNKS, table: CHUNKS_TABLE },
@@ -29,10 +28,7 @@ type Manifest = (typeof STORES)[number]['manifest'];
 
 /** Mirrors each store's `migrate`, so the tests exercise the production configuration. */
 const migrate = (manifest: Manifest, table: string) =>
-  Migrator.make({})({ loader: Migrator.fromRecord(manifest), table }).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
-    Effect.orDie,
-  );
+  Migrator.make({})({ loader: Migrator.fromRecord(manifest), table }).pipe(Effect.orDie);
 
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
 const ids = (manifest: Manifest) =>
@@ -71,7 +67,7 @@ describe('echo-host migrations', () => {
           yield* SqlMigrations.apply(init);
           expect(yield* migrate(manifest, table)).toEqual(ids(manifest));
           expect(yield* migrate(manifest, table)).toEqual([]);
-        }).pipe(Effect.provide(SqlTransaction.layer.pipe(Layer.provideMerge(layerMemory))), Effect.orDie),
+        }).pipe(Effect.provide(layerMemory), Effect.orDie),
       );
     });
   }

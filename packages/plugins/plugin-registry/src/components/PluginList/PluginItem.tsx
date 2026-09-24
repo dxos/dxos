@@ -24,7 +24,7 @@ import { getStyles } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
@@ -38,6 +38,8 @@ export type PluginItemProps = {
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
+  /** Whether this device's answer for this plugin differs from the account's. */
+  deviceOnly?: boolean;
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;
   /**
@@ -61,6 +63,7 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
+  readOnly?: boolean;
 };
 
 export const PluginItem = ({
@@ -69,6 +72,7 @@ export const PluginItem = ({
   installing,
   enabled = [],
   extraTags,
+  deviceOnly,
   onClick,
   onChange,
   onInstall,
@@ -78,6 +82,7 @@ export const PluginItem = ({
   hasSettings: hasSettingsProp,
   onSettings,
   failure,
+  readOnly,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
@@ -157,6 +162,14 @@ export const PluginItem = ({
         <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
           <span className='text-lg truncate'>{name ?? id}</span>
           {failure && <PluginFailureBadge failure={failure} />}
+          {deviceOnly && (
+            <Icon
+              data-testid={`pluginList.${id}.deviceOnly`}
+              icon='ph--monitor--regular'
+              size={4}
+              classNames='shrink-0 text-description'
+            />
+          )}
         </div>
 
         <div>
@@ -209,7 +222,7 @@ export const PluginItem = ({
               </Button>
             ) : (
               <Field.Root id={inputId}>
-                <Field.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
+                <Field.Switch classNames='self-center' checked={isEnabled} disabled={readOnly} onClick={handleChange} />
               </Field.Root>
             )}
           </div>

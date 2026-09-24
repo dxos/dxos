@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 
 import { ProjectCapabilities } from '#types';
 
-import { scaffoldProject } from './scaffold';
+import { scaffoldProject } from './scaffold.ts';
 
 /**
  * Default template: the default instructions brief; a subject (when created from an object's context)

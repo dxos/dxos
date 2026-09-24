@@ -9,14 +9,13 @@ import * as Schema from 'effect/Schema';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
-import type * as Harness from '../session/Harness';
-import { HarnessContextError } from '../util/errors';
-import * as Chat from './Chat';
+import type * as Harness from '../session/Harness.ts';
+import { HarnessContextError } from '../util/errors.ts';
+import * as Chat from './Chat.ts';
 
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
@@ -30,8 +29,8 @@ import * as Chat from './Chat';
  * the Agent *schema*, which core plugins reference for operation definitions, so the runtime loads
  * only when an agent operation actually runs.
  */
-const aiContextRuntime = () => import('../session/AiContext');
-const harnessRuntime = () => import('../session/Harness');
+const aiContextRuntime = () => import('../session/AiContext.ts');
+const harnessRuntime = () => import('../session/Harness.ts');
 
 export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.2.0'))(
   Schema.Struct({
@@ -62,7 +61,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * receives when the agent is applied to it. Owned: `SetParent` cascades it with the agent.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Schema.annotate({ title: 'Instructions' }),
     ),
   }).pipe(
@@ -76,7 +75,11 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
  */
 export const loadInstructions = (
   agent: Agent,
-): Effect.Effect<{ text: string; instructions: Instructions.Instructions }, EntityNotFoundError, Database.Service> =>
+): Effect.Effect<
+  { text: string; instructions: Instructions.Instructions },
+  EchoError.EntityNotFoundError,
+  Database.Service
+> =>
   Effect.gen(function* () {
     const instructions = yield* Database.load(agent.instructions);
     const text = yield* Database.load(instructions.text).pipe(
@@ -192,7 +195,7 @@ export const makeInitialized = (
  * @param agent - The agent whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
  */
-export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
+export const resetChatHistory = (agent: Agent): Effect.Effect<void, EchoError.EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     const existingChat = yield* loadChat(agent);
     if (!existingChat) {

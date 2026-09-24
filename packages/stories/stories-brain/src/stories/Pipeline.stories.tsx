@@ -68,10 +68,10 @@ import {
   type OutputDetail,
   type PipelineInfo,
   type StatItem,
-} from '../components';
-import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
-import { StoryRole } from '../modules';
-import { StoryModulesPlugin } from '../testing/modules';
+} from '../components/index.ts';
+import { PIPELINE_RUN, PipelineStoryContext } from '../modules/index.ts';
+import { StoryRole } from '../modules/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -510,7 +510,8 @@ const meta = {
       // TODO(burdon): From const.
       space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
       space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
-      await space.db.flush({ indexes: true });
+      // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+      await space.db.flush({ indexes: true, secondaryIndexes: true });
     },
     plugins: [
       SpacePlugin({}),

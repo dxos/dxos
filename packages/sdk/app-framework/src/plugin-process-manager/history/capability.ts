@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { OperationInvoker } from '@dxos/operation';
 
-import { Capabilities } from '../../common';
-import { Capability } from '../../core';
-import * as HistoryTracker from './history-tracker';
-import * as UndoRegistry from './undo-registry';
+import { Capabilities } from '../../common/index.ts';
+import { Capability } from '../../core/index.ts';
+import * as HistoryTracker from './history-tracker.ts';
+import * as UndoRegistry from './undo-registry.ts';
 
 //
 // Capability Module - contributes both UndoRegistry and HistoryTracker.

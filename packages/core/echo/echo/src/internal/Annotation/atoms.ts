@@ -7,23 +7,23 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Annotation from '../../Annotation';
-import type * as Entity from '../../Entity';
-import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
-import { subscribe } from '../common/proxy/reactive';
-import { isEntity } from '../Entity';
-import { get as getAnnotation } from './entity-dictionary';
+import type * as Annotation from '../../Annotation.ts';
+import type * as Entity from '../../Entity.ts';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
+import { subscribe } from '../common/proxy/reactive.ts';
+import { isEntity } from '../Entity/index.ts';
+import { get as getAnnotation } from './entity-dictionary.ts';
 
 /**
  * Atom family for an annotation value on an entity instance.
  * Mirrors the object-property atom family: re-emits a fresh reference whenever the entity changes
  * (so an in-place array mutation is observed) and dedupes primitive values via `!==`.
  */
-const annotationFamily = Atom.family((target: Entity.Unknown) =>
-  Atom.family(<T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<T>> => {
-    const read = (): Option.Option<T> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
+const annotationFamily = Atom.family(
+  ([target, annotation]: readonly [Entity.Unknown, Annotation.Annotation<any>]): Atom.Atom<Option.Option<any>> => {
+    const read = (): Option.Option<any> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
 
-    return Atom.make<Option.Option<T>>((get) => {
+    return Atom.make<Option.Option<any>>((get) => {
       let previous = read();
 
       const unsubscribe = subscribe(target, () => {
@@ -36,8 +36,8 @@ const annotationFamily = Atom.family((target: Entity.Unknown) =>
       get.addFinalizer(() => unsubscribe());
 
       return previous;
-    }).pipe(Atom.keepAlive);
-  }),
+    });
+  },
 );
 
 /**
@@ -70,7 +70,7 @@ const annotationPropertyFamily = Atom.family(
       get.addFinalizer(() => unsubscribe());
 
       return previous;
-    }).pipe(Atom.keepAlive);
+    });
   },
 );
 
@@ -87,7 +87,7 @@ export const makeAtom = <T>(
   annotation: Annotation.Annotation<T>,
 ): Atom.Atom<Option.Option<T>> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  return annotationFamily(target)(annotation);
+  return annotationFamily([target, annotation]);
 };
 
 /**

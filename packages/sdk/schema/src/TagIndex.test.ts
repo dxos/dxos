@@ -13,7 +13,7 @@ import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import * as TagIndex from './TagIndex';
+import * as TagIndex from './TagIndex.ts';
 
 /** A minimal item standing in for an immutable feed object. */
 const Item = Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0'))(

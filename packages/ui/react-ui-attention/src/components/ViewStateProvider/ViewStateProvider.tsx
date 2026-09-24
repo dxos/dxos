@@ -7,9 +7,9 @@ import React, { type PropsWithChildren, useContext } from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { createDefaultBackends } from '../../core';
-import { ViewState } from '../../types';
-import { ViewStateContextProvider } from './view-state-hooks';
+import { createDefaultBackends } from '../../core/index.ts';
+import { ViewState } from '../../types/index.ts';
+import { ViewStateContextProvider } from './view-state-hooks.ts';
 
 /** Provides the per-context UI state manager. Replaces the former `SelectionProvider`. */
 export const ViewStateProvider = ({

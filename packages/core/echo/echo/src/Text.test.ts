@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import * as Obj from './Obj';
-import { TestSchema } from './testing';
-import * as Text from './Text';
+import * as Obj from './Obj.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Text from './Text.ts';
 
 describe('Text', () => {
   describe('update', () => {

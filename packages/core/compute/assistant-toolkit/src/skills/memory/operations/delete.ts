@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { DeleteMemory } from './definitions';
+import { DeleteMemory } from './definitions.ts';
 
 export default DeleteMemory.pipe(
   Operation.withHandler(

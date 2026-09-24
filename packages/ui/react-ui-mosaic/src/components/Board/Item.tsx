@@ -12,10 +12,10 @@ import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Focus } from '../Focus';
-import { Mosaic, type MosaicTileProps } from '../Mosaic';
-import { useBoardColumn } from './BoardColumnContext';
-import { useBoard } from './BoardContext';
+import { Focus } from '../Focus/index.ts';
+import { Mosaic, type MosaicTileProps } from '../Mosaic/index.ts';
+import { useBoardColumn } from './BoardColumnContext.ts';
+import { useBoard } from './BoardContext.ts';
 
 const BOARD_ITEM_NAME = 'Board.Item';
 

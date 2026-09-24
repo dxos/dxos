@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -11,8 +12,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
-import { buildArchive, histogram } from '../testing';
-import * as SampleSpace from './SampleSpace';
+import { buildArchive, histogram } from '../testing/index.ts';
+import * as SampleSpace from './SampleSpace.ts';
 
 const ORG_SEEDS = [
   { key: 'acme', name: 'Acme' },
@@ -103,6 +104,25 @@ describe('definition', () => {
   });
 });
 
+describe('makeTemplate', () => {
+  test('takes its name, icon and hue from the definition', ({ expect }) => {
+    const template = SampleSpace.makeTemplate({ id: 'com.example.template', definition });
+    expect(template.label).toBe('Sample');
+    expect(template.icon).toBe('potted-plant');
+    expect(template.hue).toBe('amber');
+  });
+
+  test('drops an icon the picker cannot produce, rather than offering a blank', ({ expect }) => {
+    // The Phosphor spelling is the near-miss: a consumer wraps a bare name as `ph--<name>--regular`.
+    const template = SampleSpace.makeTemplate({
+      id: 'com.example.template',
+      icon: 'ph--potted-plant--regular',
+      definition,
+    });
+    expect(template.icon).toBeUndefined();
+  });
+});
+
 describe('clock', () => {
   test('resolves offsets against the reference date, not the wall clock', ({ expect }) => {
     const clock = SampleSpace.makeClock('2026-05-20T15:00:00Z');
@@ -153,8 +173,12 @@ describe('applyTo', () => {
 
     const root = await EffectEx.runPromise(
       Effect.flatMap(SampleSpace.Root, ({ get }) => get).pipe(
-        Effect.provide(SampleSpace.layer({ properties: space.properties, reference: definition.reference })),
-        Effect.provide(Database.layer(space.db)),
+        Effect.provide(
+          Layer.provideMerge(
+            SampleSpace.layer({ properties: space.properties, reference: definition.reference }),
+            Database.layer(space.db),
+          ),
+        ),
       ),
     );
     expect(root.objects.map((ref) => ref.target?.id)).toContain(result.collection.id);

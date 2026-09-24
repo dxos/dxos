@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './App';
-export * from './HomeSection';
-export * from './NamePopover';
-export * from './PluginManager';
-export * from './Surface';
+export * from './App/index.ts';
+export * from './HomeSection/index.ts';
+export * from './NamePopover/index.ts';
+export * from './PluginManager/index.ts';
+export * from './Surface/index.ts';

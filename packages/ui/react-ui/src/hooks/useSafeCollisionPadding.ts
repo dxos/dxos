@@ -4,8 +4,8 @@
 
 import { useMemo } from 'react';
 
-import { type SafeAreaPadding } from './useSafeArea';
-import { useThemeContext } from './useThemeContext';
+import { type SafeAreaPadding } from './useSafeArea.ts';
+import { useThemeContext } from './useThemeContext.ts';
 
 /** A uniform inset, or one per side; Zag's `overflowPadding` takes one number, so the widest side wins. */
 export type CollisionPadding = number | Partial<Record<'top' | 'right' | 'bottom' | 'left', number>>;

@@ -4,7 +4,7 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { create } from './create';
+import { create } from './create/index.ts';
 
 export const invitation = Command.make('invitation').pipe(
   Command.withDescription('Manage account invitation codes.'),

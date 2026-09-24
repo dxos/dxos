@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from './scopes';
+import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from './scopes.ts';
 
 /**
  * Pins the Google OAuth scope sets to the ones declared on the Google Cloud Console consent

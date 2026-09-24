@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 
-import { DeferredTask, scheduleTask } from './task-scheduling';
-import { sleep } from './timeout';
+import { DeferredTask, scheduleTask } from './task-scheduling.ts';
+import { sleep } from './timeout.ts';
 
 describe('task-scheduling', () => {
   describe('scheduleTask', () => {

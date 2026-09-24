@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { type Event } from '@dxos/async';
 import { isTruthy } from '@dxos/util';
 
-import { type ChatEvent } from '../components/Chat/events';
+import { type ChatEvent } from '../components/Chat/events.ts';
 
 /**
  * CodeMirror keymap shared by the chat document (Thread) and the prompt editor — pressing

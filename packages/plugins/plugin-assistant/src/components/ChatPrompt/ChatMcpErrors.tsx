@@ -9,7 +9,7 @@ import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { type AiChatProcessor } from '../../processor';
+import { type AiChatProcessor } from '../../processor/index.ts';
 
 export type ChatMcpErrorsProps = ThemedClassName<{
   processor: AiChatProcessor;
@@ -41,7 +41,7 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
               <li key={`${error.url}::${error.protocol}`} className='truncate'>
                 <span className='font-mono'>{error.url}</span>
                 {' — '}
-                <span>{error.message}</span>
+                <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
               </li>
             ))}
           </ul>

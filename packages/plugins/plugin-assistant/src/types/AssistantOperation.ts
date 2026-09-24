@@ -9,11 +9,13 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Chat from '@dxos/assistant/Chat';
-import { AgentService } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { ContentBlock, Task } from '@dxos/types';
 
 export const CreateChat = Operation.make({
   meta: {
@@ -139,16 +141,64 @@ export const RunPromptInChat = Operation.make({
     // An agent already runs inside a session; handing it one that starts another is a footgun.
     skipRegistry: true,
   },
-  services: [Capability.Service, Database.Service, AgentService],
+  services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
     chat: Schema.optional(Type.getSchema(Chat.Chat)),
     // The object whose companion chat should run the prompt — the way to name a companion chat that
     // has not been persisted yet, which a caller outside the page (an agent) cannot hold.
     companionTo: Schema.optional(Obj.Unknown),
     prompt: Schema.String,
+    /**
+     * How the turn is attributed. `synthetic` marks a prompt the system raised on the reader's
+     * behalf — a resumed agent must be able to tell one from something a person typed, since only
+     * the latter is an instruction it owes an answer to.
+     *
+     * @default 'user'
+     */
+    disposition: Schema.optional(ContentBlock.Disposition),
   }),
   output: Schema.Void,
 });
+
+/**
+ * Records a reader's answer to a question in a task's history and resumes the conversation that
+ * asked it.
+ *
+ * The resume is a synthetic prompt naming the question rather than the answer itself: the answer is
+ * already durable in the task's history, and an agent that reads it back there sees the record
+ * itself rather than a copy frozen into a message.
+ */
+export const AnswerQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.answerQuestion'),
+    name: 'Answer Question',
+    description: 'Answer a question an agent asked, and resume the conversation that asked it.',
+    icon: 'ph--question--regular',
+    // The asker is the agent; handing it the tool to answer itself is a footgun.
+    skipRegistry: true,
+  },
+  // Not `Capability.Service`: the resume goes through `RunPromptInChat`, which declares the
+  // services it needs itself, so requiring them here too would fail a caller that only records.
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+    /** Id of the question's entry in the task's history. */
+    question: Schema.String,
+    answer: Schema.String.annotate({ description: "The chosen option's title, or free-form text." }),
+  }),
+  output: Schema.Struct({
+    /**
+     * False when the answer was blank, the question is not in the task's history, or it was already
+     * answered — nothing was written.
+     */
+    accepted: Schema.Boolean,
+    /**
+     * Whether the asking conversation was woken. Separate from `accepted` because the answer is
+     * durable either way, and conflating them would show a resumed agent that is still blocked.
+     */
+    resumed: Schema.Boolean,
+  }),
+}).pipe(Operation.mutation('write'));
 
 export const SkillForm = Schema.Struct({
   key: Schema.String,

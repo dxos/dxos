@@ -7,6 +7,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
@@ -22,9 +23,9 @@ import {
   type KanbanCardProps,
   type KanbanColumnProps,
   useKanbanBoard,
-} from './context';
-import { KanbanCard } from './KanbanCard';
-import { KanbanColumn } from './KanbanColumn';
+} from './context.ts';
+import { KanbanCard } from './KanbanCard.tsx';
+import { KanbanColumn } from './KanbanColumn.tsx';
 
 // TODO(burdon): Rename Kanban.
 
@@ -61,7 +62,7 @@ export const KanbanBoardRoot = ({
   const { t } = useTranslation(meta.profile.key);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
-  const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;
+  const [view] = useObject(kanban?.spec.kind === 'view' ? kanban.spec.view : undefined);
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
     // Items-variant kanbans use the property name itself as the pivot field

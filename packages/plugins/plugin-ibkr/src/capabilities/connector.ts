@@ -10,7 +10,7 @@ import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants';
+import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants.ts';
 
 const IbkrTokenForm = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({

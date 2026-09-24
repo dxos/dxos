@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Browser, type ConsoleMessage, type Page } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Locator, type Page } from '@playwright/test';
 
 import { Trigger, sleep } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
-import { type FILTER } from '../constants';
+import { type FILTER } from '../constants.ts';
 
-export const INITIAL_URL = 'http://localhost:9006/';
+// 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a page
+// served over IPv6 loopback, which strands every invitation.
+export const INITIAL_URL = 'http://127.0.0.1:9006/';
 
 export class AppManager {
   page!: Page;
@@ -32,9 +34,17 @@ export class AppManager {
     this._close = close;
     this.page.on('console', (message) => this._onConsoleMessage(message));
     this.shell = new ShellManager(this.page);
-    await this.newTodo().waitFor({ state: 'visible' });
-    await this.page.getByTestId('placeholder').waitFor({ state: 'hidden' });
+    await this._waitForBoot(this.newTodo());
+    await this._waitForBoot(this.page.getByTestId('list'));
     this._initialized = true;
+  }
+
+  /** Waits for `locator` or the root error element, which replaces the whole app; a boot failure throws its text. */
+  private async _waitForBoot(locator: Locator): Promise<void> {
+    await locator.or(this.appError()).waitFor({ state: 'visible' });
+    if (await this.appError().isVisible()) {
+      throw new Error(`todomvc failed to boot: ${await this.appError().innerText()}`);
+    }
   }
 
   async close(): Promise<void> {
@@ -42,6 +52,10 @@ export class AppManager {
   }
 
   // Getters
+
+  appError() {
+    return this.page.getByTestId('app-error');
+  }
 
   newTodo() {
     return this.page.getByTestId('new-todo');

@@ -36,20 +36,20 @@ import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
-import { ProcessManagerService } from './process-manager-service';
-import { type PersistedProcess, ProcessStore } from './process-store';
-import { createProcessTraceService } from './process-trace';
-import * as ProcessHandle from './ProcessHandle';
-import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { layer as storageServiceLayer } from './storage-service-layer';
+import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import { type PersistedProcess, ProcessStore } from './process-store.ts';
+import { createProcessTraceService } from './process-trace.ts';
+import * as ProcessHandle from './ProcessHandle.ts';
+import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
+import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
 export {
   type ProcessIdGenerator,
   SequentialProcessIdGenerator as SequentialIdGenerator,
   SequentialProcessIdGenerator,
   UUIDProcessIdGenerator,
-} from './process-id';
+} from './process-id.ts';
 
 export { ProcessOperationInvoker };
 
@@ -65,6 +65,8 @@ const makeLoopbackRpcClient = (
   scope: Scope.Scope,
 ): Effect.Effect<RpcClient.RpcClient<any>> =>
   RpcTest.makeClient(rpcs).pipe(Effect.provide(rpcHandlers), Effect.provideService(Scope.Scope, scope));
+
+const FINISHED_PROCESS_RETENTION = 200;
 
 /**
  * Shared no-op RPC client for handles that expose no live RPC surface (e.g. dormant persisted handles).
@@ -353,6 +355,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
 
+  readonly #finished: Process.Info[] = [];
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
   /**
@@ -444,7 +447,24 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Info[] {
-    return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
+    return [...this.#finished, ...[...this.#handles.values()].map((handle) => handle.snapshotProcessInfo())];
+  }
+
+  #release(pid: Process.ID): void {
+    const handle = this.#handles.get(pid);
+    if (!handle) {
+      return;
+    }
+    this.#handles.delete(pid);
+    this.#finished.push(handle.snapshotProcessInfo());
+    if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
+      this.#finished.shift();
+    }
+    this.#refreshProcessTree();
+  }
+
+  #isFinished(pid: Process.ID): boolean {
+    return this.#finished.some((info) => info.pid === pid);
   }
 
   #refreshProcessTree(): void {
@@ -470,6 +490,7 @@ export class ProcessManagerImpl implements Manager {
           }
         }
         this.#handles.clear();
+        this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
         log('lifecycle: manager suspended', { suspended: handleCount });
@@ -630,7 +651,7 @@ export class ProcessManagerImpl implements Manager {
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
-            } else {
+            } else if (!this.#isFinished(handle.parentId)) {
               log.warn('lifecycle: parent missing for child exit', {
                 parentPid: handle.parentId,
                 childPid: handle.pid,
@@ -644,8 +665,8 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
         setState: (state: Process.State) => this.#store.setState(id, state),
         removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
-        deleteRecord: () => this.#store.deleteProcess(id),
+        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
@@ -846,8 +867,8 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
         setState: (state: Process.State) => this.#store.setState(id, state),
         removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
-        deleteRecord: () => this.#store.deleteProcess(id),
+        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.

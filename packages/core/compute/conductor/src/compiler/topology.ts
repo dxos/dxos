@@ -8,8 +8,8 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types';
-import { pickProperty } from '../util';
+import { type ComputeGraphModel, type ComputeNode, type ComputeNodeMeta } from '../types/index.ts';
+import { pickProperty } from '../util/index.ts';
 
 /**
  * Structure derived from the compute graph.

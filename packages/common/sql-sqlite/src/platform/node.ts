@@ -14,7 +14,7 @@ import { readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import * as SqlExport from '../SqlExport';
+import * as SqlExport from '../SqlExport.ts';
 
 // Effect 4's node client dropped `export`, and `node:sqlite` exposes no `serialize`, so SQLite's
 // online backup into a scratch file is the remaining way to take a consistent snapshot.

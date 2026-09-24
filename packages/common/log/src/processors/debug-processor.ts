@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { type LogProcessor } from '../context';
+import { type LogProcessor } from '../context.ts';
 
 export const DEBUG_PROCESSOR: LogProcessor = (config, entry) => {
   console.log(inspect(entry, false, null, true));

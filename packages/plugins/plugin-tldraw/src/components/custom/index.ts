@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './CustomMenu';
-export * from './CustomStylePanel';
-export * from './CustomToolbar';
-export * from './DottedGrid';
-export * from './MeshGrid';
+export * from './CustomMenu.tsx';
+export * from './CustomStylePanel.tsx';
+export * from './CustomToolbar.tsx';
+export * from './DottedGrid.tsx';
+export * from './MeshGrid.tsx';

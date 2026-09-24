@@ -72,8 +72,8 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../hooks';
-import { listTheme } from '../List.theme';
+import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../hooks/index.ts';
+import { listTheme } from '../List.theme.ts';
 import {
   LISTBOX_ITEM_NAME,
   type ListboxItemContextValue,
@@ -81,8 +81,8 @@ import {
   ListboxProvider,
   useListboxContext,
   useListboxItemContext,
-} from './ListboxContext';
-import { ListItemContent, type ListItemContentProps } from './ListItemContent';
+} from './ListboxContext.ts';
+import { ListItemContent, type ListItemContentProps } from './ListItemContent.tsx';
 
 const styles = listTheme.styles();
 

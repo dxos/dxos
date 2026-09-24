@@ -15,7 +15,7 @@ import { DynamicRuntime, EffectEx, Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Scheduler from './scheduler';
+import * as Scheduler from './scheduler.ts';
 
 // @import-as-namespace
 

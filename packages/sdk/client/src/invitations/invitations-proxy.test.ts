@@ -15,7 +15,7 @@ import {
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { InvitationsProxy } from './invitations-proxy';
+import { InvitationsProxy } from './invitations-proxy.ts';
 
 type InvitationsService = NonNullable<ClientServices['InvitationsService']>;
 

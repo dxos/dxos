@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 
 import { CodeOperation } from '#types';
 
-import { type LoadedFile, compileEntry, executeScript } from '../compiler';
+import { type LoadedFile, compileEntry, executeScript } from '../compiler/index.ts';
 
 /**
  * F-12a: build the project, then execute the emitted entry script inside a

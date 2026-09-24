@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { AnimatedBorder } from './AnimatedBorder';
+import { AnimatedBorder } from './AnimatedBorder.tsx';
 
 const meta = {
   title: 'ui/react-ui-components/AnimatedBorder',

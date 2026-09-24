@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Book } from '#types';
 
-import { BookArticle } from './BookArticle';
+import { BookArticle } from './BookArticle.tsx';
 
 const meta = {
   title: 'plugins/plugin-library/BookArticle',

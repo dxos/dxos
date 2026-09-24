@@ -10,9 +10,9 @@ import { type LogRecordExporter } from '@opentelemetry/sdk-logs';
 
 import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from '@dxos/log';
 
-import { OtelLogs, convertLevel } from './logs';
-import { type OtelDestination } from './otel';
-import { contextForTrace } from './trace-context';
+import { OtelLogs, convertLevel } from './logs.ts';
+import { type OtelDestination } from './otel.ts';
+import { contextForTrace } from './trace-context.ts';
 
 export type Init = {
   type: 'otel-init';

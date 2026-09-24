@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as Stage from './Stage';
+import * as Stage from './Stage.ts';
 
 describe('Stage.map', () => {
   test('applies the function to each item in order (concurrency 1)', async ({ expect }) => {

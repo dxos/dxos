@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { PasskeyError } from '#types';
 
-import { RedeemPasskey } from './definitions';
+import { RedeemPasskey } from './definitions.ts';
 
 /** Signed challenge presented to EDGE in exchange for admitting this device. */
 type Assertion = {

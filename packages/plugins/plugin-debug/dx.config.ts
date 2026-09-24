@@ -11,8 +11,9 @@ export default Config2.make({
     name: 'Debug',
     author: 'DXOS',
     description: trim`
-      DebugPlugin bundles developer debugging utilities for DXOS Composer under a Debug node in the
-      SYSTEM navigation group (a sibling of the Devtools inspector).
+      DebugPlugin bundles developer debugging utilities for DXOS Composer in a floating debug panel
+      opened from the status bar: a navtree over a hidden debug category of the app graph, with the
+      console, the log viewer, the Devtools inspector, and the tools below as its pages.
 
       Test-data generation is available via a SpaceGenerator article surface: developers can
       create configurable batches of synthetic ECHO objects into any space collection, with a

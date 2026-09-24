@@ -9,8 +9,8 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createTask from './create-task';
-import deleteTask from './delete-task';
+import createTask from './create-task.ts';
+import deleteTask from './delete-task.ts';
 
 describe('delete-task', () => {
   it.effect('sweeps the task and its sub-tasks out of the array', () =>

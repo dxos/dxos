@@ -12,7 +12,7 @@ import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
 import { Alarm, Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ServiceNotAvailableError } from '@dxos/compute';
@@ -42,11 +42,11 @@ import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AgentService as AgentServiceRuntime } from '../agent-service';
-import { traceSinkPrettyLayer } from './trace-pretty-print';
+import { AgentService as AgentServiceRuntime } from '../agent-service/index.ts';
+import { traceSinkPrettyLayer } from './trace-pretty-print.ts';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+  aiServicePreset?: AiServicePreset;
 
   /**
    * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
@@ -81,7 +81,7 @@ interface TestLayerOptions {
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
-  agent?: AgentServiceRuntime.AgentServiceOptions;
+  agent?: AgentServiceRuntime.Options;
 
   /**
    * Extra services to make available in the service resolver.
@@ -125,8 +125,8 @@ export const AssistantTestLayer = (
   const resolvedProvider: DXN.DXN =
     options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
-  const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
-  agentOptions.model ??= resolvedModel;
+  const agentOptions: AgentServiceRuntime.Options = { ...options.agent };
+  agentOptions.defaultModel ??= resolvedModel;
   agentOptions.provider ??= resolvedProvider;
 
   // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
@@ -154,7 +154,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder, agentServiceHolder)),
-    Layer.provideMerge(AiService.model(DXN.getName(resolvedModel), { provider: resolvedProvider })),
+    Layer.provideMerge(AiService.languageModel(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??

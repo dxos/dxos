@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
@@ -19,14 +20,14 @@ import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
-import { GITHUB_SOURCE } from '../constants';
+import { GITHUB_SOURCE } from '../constants.ts';
 import {
   GitHubProjectMissingError,
   GitHubRepoInaccessibleError,
   GitHubRepoUnresolvedError,
   formatGitHubSyncFailure,
-} from '../errors';
-import { GitHubApi } from '../services';
+} from '../errors.ts';
+import { GitHubApi } from '../services/index.ts';
 
 const { mergeField, snapshotField } = ConnectorSync;
 
@@ -737,7 +738,7 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
         },
         pushed: pushResult,
       };
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromAccessToken(binding.spec.source))),
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromAccessToken(binding.spec.source)))),
   );
 
   // Write sync state onto the binding.

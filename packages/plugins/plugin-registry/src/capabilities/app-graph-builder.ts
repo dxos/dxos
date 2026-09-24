@@ -20,8 +20,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
-import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories';
-import { REGISTRY_ID } from '../paths';
+import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { PLUGINS_SEGMENT, REGISTRY_ID } from '../paths.ts';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
@@ -72,6 +72,8 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'registry',
         match: GraphNodeMatcher.whenRoot,
+        // Breaks the `Position.first` tie with the settings node so the registry pins above it.
+        position: Position.first,
         // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
         // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
         connector: () =>
@@ -91,7 +93,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'categories',
-        url: { key: 'category', kind: 'item', path: [] },
+        url: { key: 'category', kind: 'item', path: [], workspace: (workspace) => workspace === REGISTRY_ID },
         match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
@@ -155,7 +157,7 @@ export default Capability.makeModule(
         : []),
       AppGraphBuilder.createExtension({
         id: 'plugins',
-        url: { key: 'registry', kind: 'item', path: [] },
+        url: { key: 'registry', kind: 'item', path: [PLUGINS_SEGMENT] },
         match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
@@ -196,7 +198,15 @@ export default Capability.makeModule(
               });
             });
 
-          return Effect.succeed([...installedNodes, ...registryNodes]);
+          // Under their own hidden node, so a plugin's id can never be mistaken for a category's.
+          return Effect.succeed([
+            AppGraphNode.make({
+              id: PLUGINS_SEGMENT,
+              type: `${meta.profile.key}.plugins`,
+              properties: { disposition: 'hidden' },
+              nodes: [...installedNodes, ...registryNodes],
+            }),
+          ]);
         },
       }),
     ]);

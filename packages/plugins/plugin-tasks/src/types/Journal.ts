@@ -7,17 +7,16 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { updateText } from '@dxos/echo-client';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
-import { getDateString, parseDateString } from './TasksUtil';
+import { getDateString, parseDateString } from './TasksUtil.ts';
 
 export class JournalEntry extends Type.makeObject<JournalEntry>(DXN.make('org.dxos.type.journalEntry', '0.1.0'))(
   Schema.Struct({
     id: Schema.String,
     date: Schema.String,
     content: Ref.Ref(Text.Text),
-  }).pipe(HiddenAnnotation.set(true)),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 
 export class Journal extends Type.makeObject<Journal>(DXN.make('org.dxos.type.journal', '0.1.0'))(

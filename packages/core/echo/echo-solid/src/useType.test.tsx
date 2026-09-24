@@ -10,7 +10,7 @@ import { DXN, Type, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useType } from './useType';
+import { useType } from './useType.ts';
 
 describe('useType', () => {
   let testBuilder: EchoTestBuilder;

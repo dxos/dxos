@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { JOIN_DIALOG } from '../constants';
-import { JoinIdentity } from './definitions';
+import { JOIN_DIALOG } from '../constants.ts';
+import { JoinIdentity } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof JoinIdentity> = JoinIdentity.pipe(
   Operation.withHandler(

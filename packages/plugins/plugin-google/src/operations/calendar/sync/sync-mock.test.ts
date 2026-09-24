@@ -18,9 +18,9 @@ import { Event, Organization, Person } from '@dxos/types';
 
 import { GoogleCalendarApi } from '#services';
 
-import { GOOGLE_CALENDAR_CONNECTOR_ID, GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { generateCalendarDataset, generateRecurringSeries } from '../../../testing/calendar-fixtures';
-import { type SyncCalendarProps, syncCalendar } from './sync';
+import { GOOGLE_CALENDAR_CONNECTOR_ID, GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
+import { generateCalendarDataset, generateRecurringSeries } from '../../../testing/calendar-fixtures.ts';
+import { type SyncCalendarProps, syncCalendar } from './sync.ts';
 
 /**
  * Google Calendar sync against a mocked API — the offline peer of the Gmail sync suite, driven

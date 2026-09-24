@@ -5,9 +5,9 @@
 // Import from submodules, not the `../actions` / `../picker` barrels: those transitively pull
 // `webextension-polyfill` (via the registry), which throws when this extractor is loaded in the
 // content script's node test environment.
-import { type Snapshot } from '../actions/types';
-import { harvestFavicon, harvestHints } from '../picker/harvest';
-import { type Extractor } from './types';
+import { type Snapshot } from '../actions/types.ts';
+import { harvestFavicon, harvestHints } from '../picker/harvest.ts';
+import { type Extractor } from './types.ts';
 
 export const MAX_HTML_LENGTH = 500_000;
 

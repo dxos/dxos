@@ -4,7 +4,7 @@
 
 import { type Database, Tag } from '@dxos/echo';
 
-import { JMAP_DOMAIN } from '../../constants';
+import { JMAP_DOMAIN } from '../../constants.ts';
 
 /**
  * The pre-rename source, matched as a fallback so folders synced before the rename keep their tag

@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as AtprotoCapabilities from './AtprotoCapabilities';
-export * as AtprotoEvents from './AtprotoEvents';
-export * as AtprotoPublication from './AtprotoPublication';
+export * as AtprotoCapabilities from './AtprotoCapabilities.ts';
+export * as AtprotoEvents from './AtprotoEvents.ts';
+export * as AtprotoPublication from './AtprotoPublication.ts';

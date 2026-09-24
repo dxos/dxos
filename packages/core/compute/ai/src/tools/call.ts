@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
-import * as AiTelemetry from '../AiTelemetry';
+import * as AiTelemetry from '../AiTelemetry.ts';
 
 // TODO(burdon): Not Used?
 export const callTools: <Tools extends Record<string, Tool.Any>>(

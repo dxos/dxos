@@ -16,7 +16,8 @@ import { getPort } from 'get-port-please';
 
 import { openBrowser } from '#platform';
 
-import { CommandConfig } from '../services';
+import { CommandConfig } from '../services/index.ts';
+import { PlatformError } from '../util/errors.ts';
 
 /** Default timeout for a full browser round-trip. */
 export const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
@@ -39,6 +40,9 @@ const getRelayPageHtml = (authUrl: string) => `
 </html>
 `;
 
+/** The `error` param is attacker-controlled, and this page is served from the loopback origin. */
+const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
+
 type CallbackOutcome = { success: true; params: Record<string, string> } | { success: false; reason: string };
 
 /**
@@ -60,6 +64,11 @@ export type LocalCallbackServer = {
 export type LocalCallbackServerOptions = {
   /** Heading shown on the page the browser lands on. Defaults to an authentication wording. */
   readonly successMessage?: string;
+  /**
+   * Rejects a callback without consuming the one-shot result, so a request that is not the awaited
+   * one (another local process, a page probing loopback ports) cannot end the wait.
+   */
+  readonly accept?: (params: Record<string, string>) => boolean;
 };
 
 /**
@@ -74,10 +83,12 @@ export type LocalCallbackServerOptions = {
  */
 export const startLocalCallbackServer = (
   callbackPath: `/${string}`,
-  { successMessage = 'Authentication successful! You can close this window.' }: LocalCallbackServerOptions = {},
+  { successMessage = 'Authentication successful! You can close this window.', accept }: LocalCallbackServerOptions = {},
 ): Effect.Effect<LocalCallbackServer, Error> =>
   Effect.gen(function* () {
-    const port = yield* Effect.promise(() => getPort({ random: true }));
+    // Probed on IPv4 loopback only: with no host, get-port-please also tries every other interface
+    // and fails outright on machines without IPv6.
+    const port = yield* Effect.promise(() => getPort({ random: true, host: '127.0.0.1' }));
     const origin = `http://localhost:${port}`;
     const received = yield* Ref.make(false);
     const outcome = yield* Ref.make<Option.Option<CallbackOutcome>>(Option.none());
@@ -112,20 +123,28 @@ export const startLocalCallbackServer = (
 
           const request = yield* HttpServerRequest.HttpServerRequest;
           const params = parseUrl(request.url).searchParams;
-          const error = params.get('error');
-          if (error) {
-            yield* Ref.set(outcome, Option.some({ success: false, reason: error }));
-            yield* Ref.set(received, true);
-            return HttpServerResponse.text(`<html><body><h1>Authentication failed</h1><p>${error}</p></body></html>`, {
-              status: 400,
-              headers: { 'Content-Type': 'text/html' },
-            });
-          }
-
           const captured: Record<string, string> = {};
           for (const [key, value] of params.entries()) {
             captured[key] = value;
           }
+          // Before the error branch too: an unexpected `?error=` must not end the wait either.
+          if (accept && !accept(captured)) {
+            return HttpServerResponse.text('Not the expected callback.', { status: 400 });
+          }
+
+          const error = params.get('error');
+          if (error) {
+            yield* Ref.set(outcome, Option.some({ success: false, reason: error }));
+            yield* Ref.set(received, true);
+            return HttpServerResponse.text(
+              `<html><body><h1>Authentication failed</h1><p>${escapeHtml(error)}</p></body></html>`,
+              {
+                status: 400,
+                headers: { 'Content-Type': 'text/html' },
+              },
+            );
+          }
+
           yield* Ref.set(outcome, Option.some({ success: true, params: captured }));
           yield* Ref.set(received, true);
           return HttpServerResponse.text(`<html><body><h1>${successMessage}</h1></body></html>`, {
@@ -140,10 +159,12 @@ export const startLocalCallbackServer = (
     const verbose = yield* Effect.serviceOption(CommandConfig).pipe(
       Effect.map(Option.match({ onNone: () => false, onSome: (config) => config.verbose })),
     );
+    // Loopback only, like the probe above: the callback carries a credential, so nothing off this
+    // machine should reach it, and Bun's dual-stack default fails to bind without IPv6.
     const serverLayer = HttpRouter.serve(routes, {
       disableLogger: !verbose,
       disableListenLog: !verbose,
-    }).pipe(Layer.provide(BunHttpServer.layer({ port })));
+    }).pipe(Layer.provide(BunHttpServer.layer({ port, hostname: '127.0.0.1' })));
     const scope = yield* Scope.make();
     yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 
@@ -158,15 +179,17 @@ export const startLocalCallbackServer = (
           }
           const result = yield* Ref.get(outcome);
           return yield* Option.match(result, {
-            onNone: () => Effect.fail(new Error('Callback received but no result.')),
+            onNone: () => Effect.fail(new PlatformError({ message: 'Callback received but no result.' })),
             onSome: (value) =>
               value.success
                 ? Effect.succeed(value.params)
-                : Effect.fail(new Error(`Callback reported a failure: ${value.reason}`)),
+                : Effect.fail(new PlatformError({ message: `Callback reported a failure: ${value.reason}` })),
           });
         }),
         Effect.sleep(`${timeoutMs} millis`).pipe(
-          Effect.flatMap(() => Effect.fail(new Error('Timed out waiting for the browser callback.'))),
+          Effect.flatMap(() =>
+            Effect.fail(new PlatformError({ message: 'Timed out waiting for the browser callback.' })),
+          ),
         ),
       );
 

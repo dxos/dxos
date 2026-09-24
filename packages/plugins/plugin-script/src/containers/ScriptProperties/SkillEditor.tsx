@@ -11,7 +11,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Field, Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Button, Field, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -80,9 +80,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
   }, [db, existingSkill, fnKey, skillKey, object.name, instructions]);
 
   return (
-    <Flex column>
-      <Form.Section title={t('skill-editor.label')} description={t('skill-editor.description')} />
-
+    <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
       <Field.Root>
         <Field.Label>{t('skill-instructions.label')}</Field.Label>
         <Field.Textarea
@@ -99,7 +97,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
           {t(existingSkill ? 'update-skill.label' : 'create-skill.label')}
         </Button>
       </div>
-    </Flex>
+    </Form.FieldSet>
   );
 };
 

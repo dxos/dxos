@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { translations } from '../../translations';
-import { AssistantToolbar, MessageChrome, MessageChromeProvider, PromptToolbar } from './MessageChrome';
+import { translations } from '../../translations.ts';
+import { AssistantToolbar, MessageChrome, MessageChromeProvider, PromptToolbar } from './MessageChrome.tsx';
 
 /**
  * The per-message frame and the two toolbars it hangs under a row.

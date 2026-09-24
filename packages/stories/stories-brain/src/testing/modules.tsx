@@ -4,7 +4,7 @@
 
 import { makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 
-import { moduleSurfaces } from '../modules';
+import { moduleSurfaces } from '../modules/index.ts';
 
 /** Contributes the brain story module surfaces so a story can drive them from a `ModuleContainer` layout. */
 export const StoryModulesPlugin = () => makeModuleSurfacesPlugin('org.dxos.plugin.brain.story.modules', moduleSurfaces);

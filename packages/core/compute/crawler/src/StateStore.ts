@@ -10,11 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { type SqlTransaction } from '@dxos/sql-sqlite';
-
-import { type StateError } from './errors';
-import { makeSql, migrate } from './internal/state-store-sql';
-import type * as Type from './types';
+import { type StateError } from './errors.ts';
+import { makeSql, migrate } from './internal/state-store-sql.ts';
+import type * as Type from './types.ts';
 
 export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 
@@ -47,16 +45,15 @@ export class StateStore extends Context.Service<StateStore, Service>()('@dxos/cr
 export const layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
 
 /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
-export const layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-  Layer.effect(
-    StateStore,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate().pipe(Effect.orDie);
-      return makeSql(sql);
-    }),
-  );
+export const layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient> = Layer.effect(
+  StateStore,
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+    yield* migrate().pipe(Effect.orDie);
+    return makeSql(sql);
+  }),
+);
 
 export const pushTargets = (...args: Parameters<Service['pushTargets']>) =>
   StateStore.use((store) => store.pushTargets(...args));

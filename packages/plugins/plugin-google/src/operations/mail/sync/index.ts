@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './sync-provider';
+export * from './sync-provider.ts';
 
-export { default } from './handler';
+export { default } from './handler.ts';

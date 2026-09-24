@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
-import { ATTENDABLE_ATTRIBUTE, type Attention, AttentionManager } from '../../types/Attention';
+import { ATTENDABLE_ATTRIBUTE, type Attention, AttentionManager } from '../../types/Attention.ts';
 
 // Kept out of `AttentionProvider.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so the context and hooks exported beside them force a full page reload on every edit.
@@ -24,46 +24,42 @@ export const [AttentionContextProvider, useAttentionContext] = createContext<Att
 
 export const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
+/** Stable, so `useSyncExternalStore` does not see a new value on every read. */
+const NO_ATTENDED: readonly string[] = [];
+
+/** Stable for the same reason as `NO_ATTENDED`. */
+const noopUnsubscribe = () => {};
+
 /**
  * Subscribe to the attention state for a qualified graph ID.
+ * Reads synchronously, so the first render and any update fired from a layout effect land before paint.
  */
 // TODO(burdon): Unify with selection state and change to contextId?
 export const useAttention = (attendableId?: string): Attention => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
-  const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);
-  useEffect(() => {
-    if (!attendableId || !attention) {
-      setState(UNKNOWN_ATTENDABLE);
-      return;
-    }
+  const subscribe = useCallback(
+    (onStoreChange: () => void) =>
+      !attendableId || !attention ? noopUnsubscribe : attention.subscribe(attendableId, onStoreChange),
+    [attention, attendableId],
+  );
+  const getSnapshot = useCallback(
+    () => (attendableId && attention ? attention.get(attendableId) : UNKNOWN_ATTENDABLE),
+    [attention, attendableId],
+  );
 
-    const currentState = attention.get(attendableId);
-    setState(currentState);
-
-    return attention.subscribe(attendableId, (newState) => {
-      setState(newState);
-    });
-  }, [attention, attendableId]);
-
-  return state;
+  return useSyncExternalStore(subscribe, getSnapshot);
 };
 
-export const useAttended = () => {
+/** The attended ids, outermost last, as {@link Attention.getAttendables} collected them from the DOM. */
+export const useAttended = (): readonly string[] => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
-  const [current, setCurrent] = useState<readonly string[]>([]);
-  useEffect(() => {
-    if (!attention) {
-      return;
-    }
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => (!attention ? noopUnsubscribe : attention.subscribeCurrent(onStoreChange)),
+    [attention],
+  );
+  const getSnapshot = useCallback(() => (attention ? attention.getCurrent() : NO_ATTENDED), [attention]);
 
-    setCurrent(attention.getCurrent());
-
-    return attention.subscribeCurrent((newCurrent) => {
-      setCurrent(newCurrent);
-    });
-  }, [attention]);
-
-  return current;
+  return useSyncExternalStore(subscribe, getSnapshot);
 };
 
 /**

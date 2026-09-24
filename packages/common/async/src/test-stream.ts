@@ -2,16 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Duplex } from 'node:stream';
+import { Event } from './events.ts';
+import { asyncTimeout } from './timeout.ts';
 
-import { Event } from './events';
-import { asyncTimeout } from './timeout';
+const encoder = new TextEncoder();
+
+const toBytes = (data: Uint8Array | string): Uint8Array => (typeof data === 'string' ? encoder.encode(data) : data);
+
+const concat = (first: Uint8Array, second: Uint8Array): Uint8Array => {
+  const result = new Uint8Array(first.length + second.length);
+  result.set(first);
+  result.set(second, first.length);
+  return result;
+};
+
+const equal = (first: Uint8Array, second: Uint8Array): boolean =>
+  first.length === second.length && first.every((byte, index) => byte === second[index]);
 
 /**
- * Duplex stream for testing.
- * If this stream is piped into another stream, use `push` to send data, and `assertReceivedAsync` to assert the received data.
+ * Duplex byte stream for testing.
+ * If this stream is connected to another stream, use `push` to send data, and `assertReceivedAsync` to assert the
+ * received data.
  */
-export class TestStream extends Duplex {
+export class TestStream {
   static async assertConnectivity(
     stream1: TestStream,
     stream2: TestStream,
@@ -26,23 +39,31 @@ export class TestStream extends Duplex {
     ]);
   }
 
-  private _received = Buffer.alloc(0);
-  private _onWrite = new Event();
+  #controller!: ReadableStreamDefaultController<Uint8Array>;
+  #received: Uint8Array = new Uint8Array(0);
+  #onWrite = new Event();
 
-  override _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
-    this._received = Buffer.concat([this._received, chunk]);
-    this._onWrite.emit();
-    callback();
+  readonly readable = new ReadableStream<Uint8Array>({
+    start: (controller) => {
+      this.#controller = controller;
+    },
+  });
+
+  readonly writable = new WritableStream<Uint8Array>({
+    write: (chunk) => {
+      this.#received = concat(this.#received, chunk);
+      this.#onWrite.emit();
+    },
+  });
+
+  push(data: Uint8Array | string): void {
+    this.#controller.enqueue(toBytes(data));
   }
 
-  override _read(size: number): void {
-    // noop
-  }
-
-  assertReceivedAsync(data: Buffer | string, { timeout = 200 }: { timeout?: number } = {}): Promise<void> {
-    const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
+  assertReceivedAsync(data: Uint8Array | string, { timeout = 200 }: { timeout?: number } = {}): Promise<void> {
+    const expected = toBytes(data);
     return asyncTimeout(
-      this._onWrite.waitForCondition(() => this._received.equals(dataBuffer)),
+      this.#onWrite.waitForCondition(() => equal(this.#received, expected)),
       timeout,
     );
   }

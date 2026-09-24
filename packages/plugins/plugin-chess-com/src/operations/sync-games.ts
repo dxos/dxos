@@ -14,7 +14,7 @@ import * as Game from '@dxos/plugin-game/Game';
 
 import { ChessComAccount, ChessComOperation } from '#types';
 
-import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
+import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services/index.ts';
 
 const gameForeignId = (uuid: string): string => `game/${uuid}`;
 

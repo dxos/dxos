@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
 import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -16,14 +16,14 @@ import { Message, type Transcript } from '@dxos/types';
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
 
-import { renderByline } from '../../util';
+import { renderByline } from '../../util/index.ts';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
 export const TranscriptionArticle = ({ role, subject: transcript, attendableId }: TranscriptionArticleProps) => {
   const db = Obj.getDatabase(transcript);
   const members = useMembers(db?.spaceId);
-  const feed = transcript.feed.target;
+  const feed = useResolveRef(transcript.feed);
   const messages = useQuery(
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),

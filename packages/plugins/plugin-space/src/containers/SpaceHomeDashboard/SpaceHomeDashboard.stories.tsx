@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -20,18 +20,21 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard';
+import { SpaceHomeDashboard, type SpaceStatId } from './SpaceHomeDashboard.tsx';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular' }),
+  ),
 ) {}
 
 class Note extends Type.makeObject<Note>(DXN.make('org.dxos.type.test.note', '0.1.0'))(
   Schema.Struct({
     content: Schema.optional(Schema.String),
-  }).pipe(LabelAnnotation.set(['content']), Annotation.IconAnnotation.set({ icon: 'ph--note--regular' })),
+  }).pipe(Annotation.LabelAnnotation.set(['content']), Annotation.IconAnnotation.set({ icon: 'ph--note--regular' })),
 ) {}
 
 const OBJECT_COUNT = 24;
@@ -90,7 +93,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const valueOf = (id: SpaceStatId) => canvas.getByTestId(`space-home-dashboard.${id}`).textContent;
+
+    // The seeded objects plus the space's own properties object, which is its third type.
+    await canvas.findByTestId('space-home-dashboard.objects', {}, { timeout: 10_000 });
+    await waitFor(() => expect(valueOf('objects')).toBe(String(OBJECT_COUNT + 1)), { timeout: 10_000 });
+    await expect(valueOf('types')).toBe('3');
+    await waitFor(() => expect(valueOf('active-days')).toBe('1'), { timeout: 10_000 });
+    await expect(canvasElement.querySelectorAll('[data-level]:not([data-level="0"])')).toHaveLength(1);
+  },
+};
 
 /** Subset of stat cards via the `stats` prop; the default renders all. */
 export const Subset: Story = {

@@ -12,7 +12,7 @@ import { translations } from '#translations';
 import landscapeUrl from '../../../fixtures/landscape.pdf?url';
 import longUrl from '../../../fixtures/long.pdf?url';
 import pdfUrl from '../../../fixtures/test.pdf?url';
-import { PdfCanvas } from './PdfCanvas';
+import { PdfCanvas } from './PdfCanvas.tsx';
 
 const meta = {
   title: 'plugins/plugin-file/components/PdfCanvas',

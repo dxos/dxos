@@ -14,8 +14,8 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
-import { GitHubApi } from '../services';
+import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for GitHub.

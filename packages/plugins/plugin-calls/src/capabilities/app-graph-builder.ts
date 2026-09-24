@@ -23,6 +23,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'activeCall',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: (node, get) => {
           const [call] = get(callManagerAtom);

@@ -10,8 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref, Registry } from '@dxos/echo';
 
-import * as Magazine from './Magazine';
-import * as Subscription from './Subscription';
+import * as Magazine from './Magazine.ts';
+import * as Subscription from './Subscription.ts';
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
 /**

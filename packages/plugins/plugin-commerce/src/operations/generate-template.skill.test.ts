@@ -17,9 +17,9 @@ import { EntityId } from '@dxos/keys';
 
 import { Provider } from '#types';
 
-import { SearchOperationHandlerSet } from '../operations';
-import { ProviderSkill } from '../skills';
-import { extractResults } from '../util';
+import { SearchOperationHandlerSet } from '../operations/index.ts';
+import { ProviderSkill } from '../skills/index.ts';
+import { extractResults } from '../util/index.ts';
 
 // Cleaned capture of a real AutoTrader UK results page (raw save is gitignored). The mocked edge
 // proxy returns this for AnalyzeProvider's fetch, so the agent reasons over genuine markup with no

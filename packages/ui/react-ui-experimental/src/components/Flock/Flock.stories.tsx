@@ -9,8 +9,8 @@ import React, { useContext, useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Flock, type FlockColoring, type FlockStartingPosition } from './Flock';
-import { FlockModel } from './FlockModel';
+import { Flock, type FlockColoring, type FlockStartingPosition } from './Flock.tsx';
+import { FlockModel } from './FlockModel.ts';
 
 const StoryFlock = () => {
   const {

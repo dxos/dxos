@@ -14,8 +14,8 @@ import * as Credential from '@dxos/compute/Credential';
 
 import { GoogleMail } from '#apis';
 
-import { GoogleApiError } from '../errors';
-import { GoogleCredentials } from './google-credentials';
+import { GoogleApiError } from '../errors.ts';
+import { GoogleCredentials } from './google-credentials.ts';
 
 /**
  * The requirements the underlying {@link GoogleMail} request functions carry (auth token + HTTP

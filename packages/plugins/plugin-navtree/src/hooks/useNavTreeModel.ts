@@ -2,123 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
-import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { Path, type TreeModel } from '@dxos/react-ui-list';
-import { mx } from '@dxos/ui-theme';
+import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
+import { type TreeModel } from '@dxos/react-ui-list';
 
 import { NavTreeNode } from '#types';
 
-import { filterItems } from '../util';
-import { useNavTreeState } from './useNavTreeState';
+import { useNavTreeState } from './useNavTreeState.ts';
 
-// TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
-const isVisibleChild = (node: AppGraphNode.Node): boolean =>
-  node.type !== DeckSchema.PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
-
-/** Create an atom family for item display props keyed by path. */
-const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
-  Atom.family((pathKey: string) => {
-    const path = Path.parts(pathKey);
-    const id = Path.last(pathKey);
-    return Atom.make((get) => {
-      const nodeOpt = get(graph.node(id));
-      const node = Option.getOrElse(nodeOpt, () => undefined);
-      if (!node) {
-        return { id, label: id };
-      }
-      const safeChildren = get(graph.connections(node.id, 'child')).filter((child) => !path.includes(child.id));
-      const visibleChildren = safeChildren.filter(isVisibleChild);
-      const parentOf =
-        visibleChildren.length > 0
-          ? visibleChildren.map((child) => child.id)
-          : node.properties.role === 'branch'
-            ? []
-            : undefined;
-      const parentId = path.length >= 2 ? path[path.length - 2] : undefined;
-      const parentNode = parentId ? Option.getOrElse(get(graph.node(parentId)), () => undefined) : undefined;
-      const droppable =
-        node.properties.droppable === false || parentNode?.properties.childrenDroppable === false ? false : undefined;
-
-      const disposition = node.properties.disposition as string | undefined;
-      const isGroup = disposition === 'group';
-
-      return {
-        id: node.id,
-        parentOf: isGroup ? undefined : parentOf,
-        disposition,
-        disabled: isGroup || node.properties.disabled,
-        draggable: isGroup ? false : node.properties.draggable,
-        droppable: isGroup ? false : droppable,
-        label: node.properties.label ?? node.id,
-        className: mx(node.properties.className, node.properties.modified && 'italic'),
-        headingClassName: node.properties.headingClassName,
-        icon: node.properties.icon,
-        iconHue: node.properties.iconHue,
-        testId: node.properties.testId,
-        count: node.properties.count,
-        modifiedCount: node.properties.modifiedCount,
-      };
-    }).pipe(Atom.keepAlive);
-  });
-
-/** Create an atom family for outbound child IDs keyed by parent ID (pre-sorted by position on write). */
-const createChildIdsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
-  Atom.family((id: string) =>
-    Atom.make((get) => get(graph.connections(id, 'child')).map((child) => child.id)).pipe(Atom.keepAlive),
-  );
-
-/** Create an atom family for item resolution keyed by ID. */
-const createItemFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
-  Atom.family((id: string) =>
-    Atom.make((get) => {
-      const node = Option.getOrElse(get(graph.node(id)), () => undefined);
-      return node && filterItems(node) ? node : undefined;
-    }).pipe(Atom.keepAlive),
-  );
-
-/** Create an atom family for open state keyed by path. */
-const createItemOpenFamily = (getItemAtom: ReturnType<typeof useNavTreeState>['getItemAtom']) =>
-  Atom.family((pathKey: string) => {
-    const path = Path.parts(pathKey);
-    const stateAtom = getItemAtom(path);
-    return Atom.make((get) => get(stateAtom).open).pipe(Atom.keepAlive);
-  });
-
-/** Create an atom family for current (selected) state keyed by path. */
-const createItemCurrentFamily = (getItemAtom: ReturnType<typeof useNavTreeState>['getItemAtom']) =>
-  Atom.family((pathKey: string) => {
-    const path = Path.parts(pathKey);
-    const stateAtom = getItemAtom(path);
-    return Atom.make((get) => get(stateAtom).current).pipe(Atom.keepAlive);
-  });
-
-/**
- * Creates a TreeModel backed by the app graph and navtree state.
- */
+/** The graph tree model with the navtree's persisted open/current state. */
 export const useNavTreeModel = (rootId: string): TreeModel<NavTreeNode.NavTreeItemGraphNode> => {
-  const { graph } = useAppGraph();
   const { getItemAtom } = useNavTreeState();
-
-  const itemPropsFamily = useMemo(() => createItemPropsFamily(graph), [graph]);
-  const childIdsFamily = useMemo(() => createChildIdsFamily(graph), [graph]);
-  const itemFamily = useMemo(() => createItemFamily(graph), [graph]);
-  const itemOpenFamily = useMemo(() => createItemOpenFamily(getItemAtom), [getItemAtom]);
-  const itemCurrentFamily = useMemo(() => createItemCurrentFamily(getItemAtom), [getItemAtom]);
-
-  return useMemo(
+  const state = useMemo(
     () => ({
-      item: (id: string) => itemFamily(id),
-      itemProps: (path: string[]) => itemPropsFamily(Path.create(...path)),
-      itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
-      itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
-      childIds: (parentId?: string) => childIdsFamily(parentId ?? rootId),
+      itemOpen: (path: string[]) => Atom.make((get) => get(getItemAtom(path)).open).pipe(Atom.keepAlive),
+      itemCurrent: (path: string[]) => Atom.make((get) => get(getItemAtom(path)).current).pipe(Atom.keepAlive),
     }),
-    [itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily, childIdsFamily, rootId],
+    [getItemAtom],
   );
+  return useGraphTreeModel(rootId, state);
 };

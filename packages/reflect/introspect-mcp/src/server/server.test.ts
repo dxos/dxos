@@ -16,7 +16,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { type Introspector, createIntrospector } from '@dxos/introspect';
 
-import { createServer } from './server';
+import { createServer } from './server.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__fixtures__');

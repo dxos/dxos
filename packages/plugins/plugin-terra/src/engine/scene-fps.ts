@@ -9,7 +9,7 @@ import { type AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTe
 import { Control } from '@babylonjs/gui/2D/controls/control';
 import { TextBlock } from '@babylonjs/gui/2D/controls/textBlock';
 
-import { createFullscreenUi } from './scene-gui';
+import { createFullscreenUi } from './scene-gui.ts';
 
 // Controls are authored against the ADT's ideal coordinate space (see idealHeight below),
 // not device pixels, so these sizes read the same on hi-DPI displays as on standard ones.

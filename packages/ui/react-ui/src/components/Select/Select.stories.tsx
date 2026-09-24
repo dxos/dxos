@@ -8,9 +8,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { withLayoutVariants } from '../../testing';
-import { Select } from './Select';
+import { withTheme } from '../../testing/index.ts';
+import { withLayoutVariants } from '../../testing/index.ts';
+import { Select } from './Select.tsx';
 
 random.seed(1234);
 

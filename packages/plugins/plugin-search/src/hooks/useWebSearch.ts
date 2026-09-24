@@ -11,8 +11,8 @@ import { type SearchResult } from '@dxos/react-ui-search';
 import { getIconAnnotation } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { search } from '../search';
-import { getStringProperty } from './sync';
+import { search } from '../search/index.ts';
+import { getStringProperty } from './sync.ts';
 
 export type UseWebSearchProps = {
   query?: string;

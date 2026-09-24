@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 
-import { DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from './constants';
+import { DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from './constants.ts';
 
 /**
  * Config object for a read-only ATProto-backed channel. Referenced from

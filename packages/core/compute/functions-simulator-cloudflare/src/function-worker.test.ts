@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { FunctionWorker, makeJsModule } from './function-worker';
+import { FunctionWorker, makeJsModule } from './function-worker.ts';
 
 describe('FunctionWorker', async () => {
   test('hello world', async () => {

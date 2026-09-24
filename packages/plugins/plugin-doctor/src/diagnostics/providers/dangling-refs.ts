@@ -6,8 +6,8 @@ import { Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces, labelObject, queryAllObjects } from '../helpers';
-import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
+import { getReadySpaces, labelObject, queryAllObjects } from '../helpers.ts';
+import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
  * Walk all properties of every object in every space, collect Ref values and try to load

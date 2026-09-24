@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { BeaconStatusIndicator } from './BeaconStatusIndicator';
+export { BeaconStatusIndicator } from './BeaconStatusIndicator.tsx';

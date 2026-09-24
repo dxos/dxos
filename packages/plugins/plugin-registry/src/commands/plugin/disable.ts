@@ -10,8 +10,8 @@ import * as Command from 'effect/unstable/cli/Command';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
 
-import { saveEnabledPlugins } from '../../storage';
-import { CorePluginError, PluginNotFoundError } from './errors';
+import { saveEnabledPlugins } from '../../storage.ts';
+import { CorePluginError, PluginNotFoundError } from './errors.ts';
 
 export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const { json, profile } = yield* CommandConfig;
@@ -47,7 +47,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 export const disable = Command.make(
   'disable',
   {
-    id: Args.string('id').pipe(Args.withDescription('The ID of the plugin to disable.')),
+    id: Args.String('id').pipe(Args.withDescription('The ID of the plugin to disable.')),
   },
   handler,
 ).pipe(Command.withDescription('Disable a plugin.'));

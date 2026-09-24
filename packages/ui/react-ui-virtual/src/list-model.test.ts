@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ListModel } from './list-model';
+import { ListModel } from './list-model.ts';
 
 const create = (count = 5) =>
   new ListModel<{ id: string }>({

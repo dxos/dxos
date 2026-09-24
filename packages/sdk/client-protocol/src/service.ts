@@ -4,7 +4,7 @@
 
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
-import { getBufService } from '@dxos/protocols/buf-service';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import type { QueryInvitationsResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -30,26 +30,25 @@ import type {
   SubscribeToMetadataResponse,
   SubscribeToSpacesResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type { IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import type {
+  QueryRequest as EchoQueryRequest,
+  QueryResponse as EchoQueryResponse,
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
+import type { SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import type {
+  QueryRequest as EdgeQueryRequest,
+  JoinRequest,
+  LeaveRequest,
+  Message,
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import type {
   Credential,
   DeviceProfileDocument,
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import type {
-  QueryRequest as EchoQueryRequest,
-  QueryResponse as EchoQueryResponse,
-} from '@dxos/protocols/proto/dxos/echo/query';
-import type { SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import type {
-  QueryRequest as EdgeQueryRequest,
-  JoinRequest,
-  LeaveRequest,
-  Message,
-} from '@dxos/protocols/proto/dxos/edge/signal';
-import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
-import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { AppService as AppServiceDesc, ShellService as ShellServiceDesc } from '@dxos/protocols/buf/dxos/iframe_pb';
 import type {
   DataService as RpcDataService,
   DevicesService as RpcDevicesService,
@@ -65,7 +64,7 @@ import type {
 import type { RequestOptions } from '@dxos/protocols/service-contract';
 import { type ServiceBundle } from '@dxos/rpc';
 
-import { type ClientServicesRpc } from './service-rpc';
+import { type ClientServicesRpc } from './service-rpc.ts';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
@@ -208,7 +207,7 @@ export interface DataServicePromise {
     options?: RequestOptions,
   ) => Promise<void>;
   reIndexHeads: (request: RpcDataService.ReIndexHeadsRequest, options?: RequestOptions) => Promise<void>;
-  updateIndexes: (request: void, options?: RequestOptions) => Promise<void>;
+  updateIndexes: (request: RpcDataService.UpdateIndexesRequest, options?: RequestOptions) => Promise<void>;
   subscribeSpaceSyncState: (
     request: RpcDataService.GetSpaceSyncStateRequest,
     options?: RequestOptions,
@@ -312,7 +311,7 @@ export interface SpacesServicePromise {
   subscribeMessages: (
     request: RpcSpacesService.SubscribeMessagesRequest,
     options?: RequestOptions,
-  ) => Stream<GossipMessage>;
+  ) => Stream<RpcSpacesService.SubscribeMessagesResponse>;
   writeCredentials: (request: RpcSpacesService.WriteCredentialsRequest, options?: RequestOptions) => Promise<void>;
   queryCredentials: (request: RpcSpacesService.QueryCredentialsRequest, options?: RequestOptions) => Stream<Credential>;
   createEpoch: (request: RpcSpacesService.CreateEpochRequest, options?: RequestOptions) => Promise<CreateEpochResponse>;
@@ -386,6 +385,8 @@ export interface ClientServicesProvider {
   close(): Promise<unknown>;
 }
 
+type AppService = BufService<typeof AppServiceDesc>;
+
 export type AppServiceBundle = {
   AppService: AppService;
 };
@@ -393,6 +394,8 @@ export type AppServiceBundle = {
 export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
   AppService: getBufService<AppService>('dxos.iframe.AppService'),
 };
+
+type ShellService = BufService<typeof ShellServiceDesc>;
 
 export type ShellServiceBundle = {
   ShellService: ShellService;

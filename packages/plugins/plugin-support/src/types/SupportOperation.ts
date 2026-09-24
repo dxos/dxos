@@ -10,20 +10,20 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
 
-import * as Support from './Support';
-import { SupportIssueResult, SupportReportResult } from './SupportService';
+import * as Support from './Support.ts';
+import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
 export const IssueType = Schema.Literals(['bug', 'feature']).annotate({
   title: 'Type',
-  description: 'Whether this is a bug report or a feature request.',
+  description: 'Bug report or a feature request.',
 });
 export type IssueType = Schema.Schema.Type<typeof IssueType>;
 
 export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Low priority']).annotate({
   title: 'Severity',
-  description: 'How disruptive the issue is.',
+  description: 'Level of impact.',
 });
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
@@ -67,6 +67,9 @@ export const SupportRequest = Schema.Struct({
   ),
   // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
   version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  // Hidden — set by callers filing on the team's behalf (the debug console) so the issue lands
+  // under the same Linear label the PostHog submissions sync under.
+  labels: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 });
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
@@ -91,7 +94,7 @@ export const SubmitIssue = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitIssue'),
     name: 'File Linear Issue',
-    description: 'Files a report as a Linear issue with logs attached. Internal accounts only.',
+    description: 'Files a report as a Linear issue with logs attached.',
     icon: 'ph--bug--regular',
   },
   services: [Capability.Service],

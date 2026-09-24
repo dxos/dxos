@@ -6,22 +6,21 @@ import * as Schema from 'effect/Schema';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Filter, Query, Type, View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Query, Type, View } from '@dxos/echo';
 import { Format } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TypeEnum } from '@dxos/echo/Format';
 import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
-import { toJsonSchema } from '@dxos/echo/JsonSchema';
-import { Ref } from '@dxos/echo/Ref';
+import * as Ref from '@dxos/echo/Ref';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { TestSchema } from '../testing';
-import { ViewModel } from '../types';
+import { TestSchema } from '../testing/index.ts';
+import { ViewModel } from '../types/index.ts';
 
 const createFieldId = View.createFieldId;
-import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection';
+import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection.ts';
 
 const getFieldId = (projection: View.Projection, path: string): string => {
   const field = projection.fields.find((field) => field.path === path);
@@ -142,10 +141,10 @@ describe('ProjectionModel', () => {
         name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
         salary: Format.Currency({ code: 'usd', decimals: 2 }),
-        organization: Ref(TestSchema.Organization),
+        organization: Ref.Ref(TestSchema.Organization),
       }),
     );
-    const jsonSchema = toJsonSchema(schema);
+    const jsonSchema = JsonSchema.toJsonSchema(schema);
 
     const view = await ViewModel.makeWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -878,7 +877,7 @@ describe('ProjectionModel', () => {
   // TODO(burdon): Fix.
   test.skip('create view from static organization schema', async ({ expect }) => {
     const schema = TestSchema.Organization;
-    const jsonSchema = toJsonSchema(schema);
+    const jsonSchema = JsonSchema.toJsonSchema(schema);
 
     const view = ViewModel.make({ query: Query.select(Filter.type(schema)), jsonSchema });
     const projection = new ProjectionModel({

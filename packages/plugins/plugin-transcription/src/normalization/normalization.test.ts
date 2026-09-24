@@ -17,7 +17,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Actor, Message } from '@dxos/types';
 
-import { type MessageWithRangeId, sentenceNormalization } from './normalization';
+import { type MessageWithRangeId, sentenceNormalization } from './normalization.ts';
 
 const sender: Actor.Actor = {
   identityDid: 'did:key:123',

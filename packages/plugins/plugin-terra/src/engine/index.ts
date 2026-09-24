@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './noise';
-export * from './cubed-sphere';
-export * from './terrain';
-export * from './biomes';
-export * from './palette';
-export * from './generate-planet';
-export * from './planet-cache';
-export * from './scene-manager';
-export * from './scene-fps';
-export * from './scene-gui';
+export * from './noise.ts';
+export * from './cubed-sphere.ts';
+export * from './terrain.ts';
+export * from './biomes.ts';
+export * from './palette.ts';
+export * from './generate-planet.ts';
+export * from './planet-cache.ts';
+export * from './scene-manager.ts';
+export * from './scene-fps.ts';
+export * from './scene-gui.ts';

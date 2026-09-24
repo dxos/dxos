@@ -8,8 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Filter, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import * as Entity from '@dxos/echo/Entity';
 import { type URI } from '@dxos/keys';
 
 export const TypeInputOptions = Schema.Struct({
@@ -46,7 +45,7 @@ export const isUserType = (type: Type.AnyEntity, options?: { includeHidden?: boo
     return false;
   }
   if (!options?.includeHidden) {
-    const hidden = HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+    const hidden = Annotation.HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
     if (hidden) {
       return false;
     }
@@ -87,8 +86,8 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
     }
 
     const effectSchema = Type.getSchema(type);
-    const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
-    const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
+    const relation = Annotation.getTypeAnnotation(effectSchema)?.kind === Entity.Kind.Relation;
+    const hidden = Annotation.HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
     if (relation || hidden) {
       if (!includeHiddenType) {
         continue;

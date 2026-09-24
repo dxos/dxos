@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { EID, EntityId, URI } from '@dxos/keys';
 
-import { ForeignKey } from '../foreign-key';
+import { ForeignKey } from '../foreign-key.ts';
 
 // Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
 // Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
@@ -246,6 +246,33 @@ export interface FilterHasParent extends Schema.Schema.Type<typeof FilterHasPare
 export const FilterHasParent: Schema.Codec<FilterHasParent> = FilterHasParent_;
 
 /**
+ * Filter objects by mnemonic — the human-memorable short form of an object's id
+ * (its last 6 characters, uppercased). Matching is a local predicate on the id,
+ * so it needs no index.
+ */
+const FilterMnemonic_ = Schema.Struct({
+  type: Schema.Literal('mnemonic'),
+  /** Normalized (uppercase) mnemonic. */
+  mnemonic: Schema.String,
+});
+
+export interface FilterMnemonic extends Schema.Schema.Type<typeof FilterMnemonic_> {}
+export const FilterMnemonic: Schema.Codec<FilterMnemonic> = FilterMnemonic_;
+
+/**
+ * Select Automerge changes rather than objects: one record per change to the documents holding
+ * `targets`, or to every document in the space when `targets` is absent. Only the host answers it,
+ * and it cannot be combined with object predicates.
+ */
+const FilterChanges_ = Schema.Struct({
+  type: Schema.Literal('changes'),
+  targets: Schema.optional(Schema.Array(EID.Schema)),
+});
+
+export interface FilterChanges extends Schema.Schema.Type<typeof FilterChanges_> {}
+export const FilterChanges: Schema.Codec<FilterChanges> = FilterChanges_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union([
@@ -261,6 +288,8 @@ export const Filter = Schema.Union([
   FilterTextSearch,
   FilterChildOf,
   FilterHasParent,
+  FilterMnemonic,
+  FilterChanges,
   FilterNot,
   FilterAnd,
   FilterOr,
@@ -488,6 +517,11 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  *   ordering, independent of any `orderBy` clause elsewhere in the query (which orders the whole
  *   input stream / the resulting groups, not this aggregate's member selection).
  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
+ * - `type` partitions members by their type URI; the field carries the URI string.
+ * - `timestamp` partitions members by the UTC hour or day a system timestamp falls in; the field
+ *   carries the start of that interval in unix ms.
+ * - `time` is `timestamp` over a unix-ms member `property` instead of a system timestamp.
+ * - `sum` adds a numeric member `property`; non-numeric values count as 0.
  */
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
@@ -509,6 +543,21 @@ const GroupAggregateItems_ = Schema.Struct({
   order: Schema.optional(Schema.Array(Order)),
 });
 const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
+const GroupAggregateType_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('type') });
+const GroupAggregateTimestamp_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('timestamp'),
+  field: Schema.Literals(['createdAt', 'updatedAt']),
+  unit: Schema.Literals(['hour', 'day']),
+});
+
+const GroupAggregateTime_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('time'),
+  property: Schema.String,
+  unit: Schema.Literals(['hour', 'day']),
+});
+const GroupAggregateSum_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('sum'), property: Schema.String });
 
 const GroupAggregate_ = Schema.Union([
   GroupAggregateGroup_,
@@ -516,7 +565,20 @@ const GroupAggregate_ = Schema.Union([
   GroupAggregateMin_,
   GroupAggregateItems_,
   GroupAggregateCount_,
+  GroupAggregateType_,
+  GroupAggregateTimestamp_,
+  GroupAggregateTime_,
+  GroupAggregateSum_,
 ]);
+
+/** Aggregate kinds that contribute a component to the group key. */
+export const isGroupKeyAggregate = (
+  aggregate: GroupAggregate,
+): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' | 'time' }> =>
+  aggregate.kind === 'group' ||
+  aggregate.kind === 'type' ||
+  aggregate.kind === 'timestamp' ||
+  aggregate.kind === 'time';
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;

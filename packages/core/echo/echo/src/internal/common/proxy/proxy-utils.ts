@@ -4,9 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { defineHiddenProperty } from './define-hidden-property';
-import { createPropertyDeleteError, createPropertySetError } from './errors';
-import { type ReactiveHandler } from './proxy-types';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { createPropertyDeleteError, createPropertySetError } from './errors.ts';
+import { type ReactiveHandler } from './proxy-types.ts';
 
 /**
  * Carries a proxy on its own target, so `value[symbolProxy] === value` identifies a proxy: read through
@@ -139,11 +139,6 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
 };
 
 /**
- * The variant's write logic, reached only once a mutation is known to be allowed.
- */
-const writeHandlerOf = (target: object): ReactiveHandler<any> | undefined => Reflect.get(target, symbolReactiveHandler);
-
-/**
  * The mutable view of `value`, memoized on its target beside the read-only proxy. Handed to an
  * `Obj.update` callback, and reached from there by navigation: the `get` trap below hands back the
  * mutable twin of any nested proxy, so `obj.rec.list` inside a callback is mutable all the way down
@@ -230,21 +225,21 @@ const MUTABLE_PROXY_HANDLER: ProxyHandler<any> = {
     return isProxy(value) ? getMutableProxy(value) : value;
   },
   set: (target, property, value, receiver) => {
-    const handler = writeHandlerOf(target);
+    const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
     const stored = normalizeForStorage(value);
     return handler?.set
       ? handler.set(target, property, stored, receiver)
       : Reflect.set(target, property, stored, receiver);
   },
   defineProperty: (target, property, attributes) => {
-    const handler = writeHandlerOf(target);
+    const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
     const stored = { ...attributes, value: normalizeForStorage(attributes.value) };
     return handler?.defineProperty
       ? handler.defineProperty(target, property, stored)
       : Reflect.defineProperty(target, property, stored);
   },
   deleteProperty: (target, property) => {
-    const handler = writeHandlerOf(target);
+    const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
     return handler?.deleteProperty
       ? handler.deleteProperty(target, property)
       : Reflect.deleteProperty(target, property);
@@ -284,21 +279,21 @@ const assertReadOnly = (property: string | symbol, createError: (property: strin
 const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
   set: (target, property, value, receiver) => {
     assertReadOnly(property, createPropertySetError);
-    const handler = writeHandlerOf(target);
+    const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
     return handler?.set
       ? handler.set(target, property, value, receiver)
       : Reflect.set(target, property, value, receiver);
   },
   defineProperty: (target, property, attributes) => {
     assertReadOnly(property, createPropertySetError);
-    const handler = writeHandlerOf(target);
+    const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
     return handler?.defineProperty
       ? handler.defineProperty(target, property, attributes)
       : Reflect.defineProperty(target, property, attributes);
   },
   deleteProperty: (target, property) => {
     assertReadOnly(property, createPropertyDeleteError);
-    const handler = writeHandlerOf(target);
+    const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
     return handler?.deleteProperty
       ? handler.deleteProperty(target, property)
       : Reflect.deleteProperty(target, property);

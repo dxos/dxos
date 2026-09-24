@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useActions';
-export * from './useLoadDescendents';
-export * from './useNavTreeModel';
-export * from './useNavTreeState';
+export * from './useActions.ts';
+export * from './useLoadDescendents.ts';
+export * from './useNavTreeModel.ts';
+export * from './useNavTreeState.ts';

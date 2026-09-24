@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { ConnectorSpec } from '#types';
 
-import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
+import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog.tsx';
 
 const availableTargets: ConnectorSpec.RemoteTarget[] = [
   { id: 'board-1', name: 'Product Roadmap', description: 'Quarterly planning board.' },

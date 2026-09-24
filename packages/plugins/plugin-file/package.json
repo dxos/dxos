@@ -107,6 +107,16 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
+    "./StagedUpload": {
+      "source": "./src/StagedUpload.ts",
+      "types": "./dist/types/src/StagedUpload.d.ts",
+      "import": "./dist/lib/StagedUpload.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -126,6 +136,12 @@
       ],
       "Settings": [
         "dist/types/src/types/Settings.d.ts"
+      ],
+      "StagedUpload": [
+        "dist/types/src/StagedUpload.d.ts"
+      ],
+      "skills": [
+        "dist/types/src/skills/index.d.ts"
       ]
     }
   },
@@ -143,7 +159,9 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -162,7 +180,6 @@
     "react-dropzone": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",

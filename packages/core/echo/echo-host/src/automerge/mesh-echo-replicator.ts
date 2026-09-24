@@ -17,9 +17,9 @@ import {
   type AutomergeReplicator,
   type AutomergeReplicatorContext,
   type ShouldAdvertiseProps,
-} from './echo-replicator';
-import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
-import { getSpaceIdFromCollectionId } from './space-collection';
+} from './echo-replicator.ts';
+import { MeshReplicatorConnection } from './mesh-echo-replicator-connection.ts';
+import { getSpaceIdFromCollectionId } from './space-collection.ts';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-host.
 
@@ -105,14 +105,19 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
         existingConnections.splice(index, 1);
 
+        // A closed connection's extension is destroyed, so promoting it would hand the adapter a peer
+        // it can never write to (DX-1279).
+        const liveConnections = existingConnections.filter((candidate) => !candidate.isClosed);
+        this._connectionsPerPeer.set(connection.peerId, liveConnections);
+
         if (connection.isEnabled) {
           this._context?.onConnectionClosed(connection);
           connection.disable();
 
           // Promote the next connection to enabled
-          if (existingConnections.length > 0) {
-            this._context?.onConnectionOpen(existingConnections[0]);
-            existingConnections[0].enable();
+          if (liveConnections.length > 0) {
+            this._context?.onConnectionOpen(liveConnections[0]);
+            liveConnections[0].enable();
           }
         }
       },

@@ -4,8 +4,8 @@
 
 import { type Dimension } from '@dxos/react-ui-canvas';
 
-import { type CanvasBoard } from '../../types';
-import { type Anchor } from '../anchors';
+import { type CanvasBoard } from '../../types/index.ts';
+import { type Anchor } from '../anchors.ts';
 
 // Kept out of `Anchor.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so constants and helpers exported beside them force a full page reload on every edit.

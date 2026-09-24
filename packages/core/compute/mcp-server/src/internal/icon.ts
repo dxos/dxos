@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ICON_DARK_BASE64, ICON_LIGHT_BASE64, ICON_SIZE } from './icon-data';
+import { ICON_DARK_BASE64, ICON_LIGHT_BASE64, ICON_SIZE } from './icon-data.ts';
 
 /**
  * The mark, for a host that can serve it. Kept apart from {@link identity} because only an HTTP

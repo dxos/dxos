@@ -11,7 +11,7 @@ import { runInContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { DEFAULT_REDIS_TCP_CONNECTION, DEFAULT_WEBSOCKET } from './defaults';
+import { DEFAULT_REDIS_TCP_CONNECTION, DEFAULT_WEBSOCKET } from './defaults.ts';
 
 export type WebSocketRedisProxyProps = {
   /**

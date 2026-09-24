@@ -7,8 +7,8 @@ import { type HierarchyPointNode, tree as d3Tree, hierarchy, linkHorizontal } fr
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector.ts';
 
 export type GraphTreeProjectorOptions = GraphRadialProjectorOptions & {
   /** Id of the root node, placed at the centre. When unset, falls back to a ring. */

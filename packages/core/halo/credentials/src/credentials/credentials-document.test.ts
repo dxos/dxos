@@ -2,18 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create, toBinary } from '@bufbuild/protobuf';
+import { anyPack } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { bufRegistry } from '@dxos/protocols/buf-registry';
+import { ClaimSchema, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import {
   CREDENTIALS_DOCUMENT_TYPE,
   type CredentialsDocument,
   isCredentialsDocument,
   orderCredentials,
-} from './credentials-document';
+} from './credentials-document.ts';
 
 describe('credentials document', () => {
   test('orders by issuance date, breaking ties on id', () => {
@@ -29,7 +33,7 @@ describe('credentials document', () => {
 
   test('converges regardless of the order entries were appended in', () => {
     const first = credential('2026-01-01T00:00:00.000Z');
-    const second = credential('2026-01-02T00:00:00.000Z', [first.id!]);
+    const second = credential('2026-01-02T00:00:00.000Z', [requirePublicKey(first.id)]);
 
     const forwards = orderCredentials(entries([first, second]));
     const backwards = orderCredentials(entries([second, first]));
@@ -40,7 +44,7 @@ describe('credentials document', () => {
   test('a parent is processed before its child even when issued later', () => {
     // Clock skew across devices can date a parent after its child; the signed dependency wins.
     const parent = credential('2026-01-05T00:00:00.000Z');
-    const child = credential('2026-01-01T00:00:00.000Z', [parent.id!]);
+    const child = credential('2026-01-01T00:00:00.000Z', [requirePublicKey(parent.id)]);
 
     const ordered = orderCredentials(entries([child, parent]));
     expect(ordered.map(({ id }) => id)).to.deep.equal([keyOf(parent), keyOf(child)]);
@@ -88,30 +92,32 @@ describe('credentials document', () => {
   });
 });
 
-const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
-
 const credential = (
   issuanceDate: string,
   parentCredentialIds: PublicKey[] = [],
   type = 'dxos.halo.credentials.SpaceMember',
-): Credential => ({
-  id: PublicKey.random(),
-  issuer: PublicKey.random(),
-  issuanceDate: new Date(issuanceDate),
-  parentCredentialIds,
-  subject: {
-    id: PublicKey.random(),
-    assertion: { '@type': type },
-  },
-});
+): Credential => {
+  const desc = bufRegistry.getMessage(type);
+  invariant(desc, `Assertion type is missing from the registry: ${type}`);
+  return create(CredentialSchema, {
+    id: fromPublicKey(PublicKey.random()),
+    issuer: fromPublicKey(PublicKey.random()),
+    issuanceDate: fromDate(new Date(issuanceDate)),
+    parentCredentialIds: parentCredentialIds.map(fromPublicKey),
+    subject: create(ClaimSchema, {
+      id: fromPublicKey(PublicKey.random()),
+      assertion: anyPack(desc, create(desc, {})),
+    }),
+  });
+};
 
-const keyOf = (credential: Credential) => credential.id!.toHex();
+const keyOf = (credential: Credential) => requirePublicKey(credential.id).toHex();
 
 const document = (credentials: Credential[]): CredentialsDocument => ({
   type: CREDENTIALS_DOCUMENT_TYPE,
   spaceId: SpaceId.random(),
   credentials: Object.fromEntries(
-    credentials.map((credential) => [keyOf(credential), credentialCodec.encode(credential)]),
+    credentials.map((credential) => [keyOf(credential), toBinary(CredentialSchema, credential)]),
   ),
 });
 

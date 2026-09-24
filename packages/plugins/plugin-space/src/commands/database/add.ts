@@ -16,14 +16,24 @@ import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, sp
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Error as EchoError, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import {
+  Annotation,
+  Collection,
+  Database,
+  type Error as EchoError,
+  Entity,
+  Filter,
+  Obj,
+  Query,
+  Scope,
+  Type,
+} from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
-import { printObject } from './util';
+import { SpaceOperationError } from '../../operations/errors.ts';
+import { printObject } from './util.ts';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
 export const add: Command.Command<
@@ -36,7 +46,7 @@ export const add: Command.Command<
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.string('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
+    typename: Options.String('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
   },
   ({ typename }) =>
     Effect.gen(function* () {
@@ -69,13 +79,13 @@ export const add: Command.Command<
       });
       const metadata = resolve(selectedTypename);
       if (!metadata) {
-        return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
+        return yield* Effect.fail(new SpaceOperationError({ message: `Unknown typename: ${selectedTypename}` }));
       }
 
       const result = yield* metadata.createObject({}, { db, target: collection });
       const object = result.object;
       if (!Obj.isObject(object)) {
-        return yield* Effect.fail(new Error(`Invalid object: ${object}`));
+        return yield* Effect.fail(new SpaceOperationError({ message: `Invalid object: ${object}` }));
       }
 
       if (json) {
@@ -101,8 +111,8 @@ const selectTypename = Effect.fn(function* (
   const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
     .run;
   const types = allTypes
-    .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-    .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+    .filter((schema) => !Annotation.HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => Annotation.getTypeAnnotation(Type.getSchema(schema))?.kind !== Entity.Kind.Relation)
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 
   const choices = types.map((schema) => ({
@@ -112,7 +122,7 @@ const selectTypename = Effect.fn(function* (
     description: Type.getTypename(schema),
   }));
 
-  const selected = yield* Prompt.select({
+  const selected = yield* Prompt.Select({
     message: 'Select a type:',
     choices,
   });

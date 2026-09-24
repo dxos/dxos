@@ -4,7 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const FileArticle: ComponentType<any> = lazy(() => import('./FileArticle'));
-export const FileProperties: ComponentType<any> = lazy(() => import('./FileProperties'));
+export const FileArticle: ComponentType<any> = lazy(() => import('./FileArticle/index.ts'));
+export const FileCard: ComponentType<any> = lazy(() => import('./FileCard/index.ts'));
+export const FileProperties: ComponentType<any> = lazy(() => import('./FileProperties/index.ts'));
 
-export * from './FileSettings';
+export * from './FileSettings/index.ts';

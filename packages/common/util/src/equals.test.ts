@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { shallowEqual } from './equals';
+import { shallowEqual } from './equals.ts';
 
 describe('shallowEqual', () => {
   test('same reference', ({ expect }) => {

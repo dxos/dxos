@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { Provider, Result, SearchOperation } from '#types';
 
-import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util';
+import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util/index.ts';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */
 export const buildResults = (provider: Provider.Provider, body: string): ResultData[] => {

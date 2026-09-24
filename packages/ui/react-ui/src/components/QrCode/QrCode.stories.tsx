@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../testing';
-import { QrCode, type QrCodeProps } from './QrCode';
+import { withTheme } from '../../testing/index.ts';
+import { QrCode, type QrCodeProps } from './QrCode.tsx';
 
 const DefaultStory = (props: QrCodeProps) => (
   <div className='w-64 text-description'>

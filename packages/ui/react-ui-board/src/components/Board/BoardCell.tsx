@@ -18,9 +18,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useBoardContext } from './BoardContext';
-import { type GridConstraints, type GridPosition, applyConstraints } from './engine';
-import { cellRect } from './geometry';
+import { useBoardContext } from './BoardContext.ts';
+import { type GridConstraints, type GridPosition, applyConstraints } from './engine.ts';
+import { cellRect } from './geometry.ts';
 
 type DragState = 'idle' | 'dragging';
 

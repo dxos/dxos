@@ -25,13 +25,13 @@ import * as ServiceResolver$ from '@dxos/compute/ServiceResolver';
 import * as Trace$ from '@dxos/compute/Trace';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
-import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core/index.ts';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
-} from '../plugin-process-manager';
-import type { Surface } from '../ui';
+} from '../plugin-process-manager/index.ts';
+import type { Surface } from '../ui/index.ts';
 
 /**
  * @category Capability

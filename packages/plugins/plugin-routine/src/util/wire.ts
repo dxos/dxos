@@ -7,7 +7,7 @@ import * as Routine from '@dxos/compute/Routine';
 import type * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 
-import { runInstructionsRef } from './run-instructions';
+import { runInstructionsRef } from './run-instructions.ts';
 
 /** Strip a stale `instructions` binding from a trigger input. */
 const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {

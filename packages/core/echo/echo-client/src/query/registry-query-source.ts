@@ -8,8 +8,8 @@ import { type QueryResult, type Registry } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 
-import { type QuerySource } from './graph-query-context';
-import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util';
+import { type QuerySource } from './graph-query-context.ts';
+import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util.ts';
 
 /**
  * QuerySource backed by the in-process registry.
@@ -47,6 +47,11 @@ export class RegistryQuerySource implements QuerySource {
       return [];
     }
     return this.#match(simple.filter);
+  }
+
+  /** The in-process registry is matched on read, so this source never has an answer outstanding. */
+  isPending(): boolean {
+    return false;
   }
 
   /** The in-process registry is matched synchronously. */
@@ -106,7 +111,7 @@ export class RegistryQuerySource implements QuerySource {
           id: object.id,
           result: object,
           match: { rank: 1 },
-          resolution: { source: 'local' as const, time: 0 },
+          resolution: { source: 'registry' as const, time: 0 },
         },
       ];
     });

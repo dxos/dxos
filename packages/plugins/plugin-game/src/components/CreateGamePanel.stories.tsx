@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { GameCapabilities } from '#types';
 
-import { CreateGamePanel } from './CreateGamePanel';
+import { CreateGamePanel } from './CreateGamePanel.tsx';
 
 // Two dummy variants for the story — no real ECHO state required, just the shape
 // the picker reads (label, icon, inputSchema). createVariant is a no-op since we

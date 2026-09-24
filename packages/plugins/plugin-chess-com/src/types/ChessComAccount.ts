@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
 /** Foreign-key source for Chess.com account and game objects. */
@@ -28,24 +27,24 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ch
       title: 'Username',
       description: 'Chess.com username.',
     }),
-    playerId: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    profileUrl: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    followers: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    country: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    lastOnline: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    joined: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-    status: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    isStreamer: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
-    verified: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
-    league: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    playerId: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    profileUrl: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    followers: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    country: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    lastOnline: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    joined: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    status: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    isStreamer: Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    verified: Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    league: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     streamingPlatforms: Schema.mutable(Schema.Array(Schema.String)).pipe(
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
     /** Backing queue of synced {@link org.dxos.type.game} objects. */
-    games: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    games: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['username']),
+    Annotation.LabelAnnotation.set(['username']),
     Annotation.IconAnnotation.set({ icon: 'ph--horse--regular', hue: 'green' }),
     FactoryAnnotation.set(((values) => makeAccount(values)) as FactoryFn),
   ),

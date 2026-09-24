@@ -16,7 +16,7 @@ import { ProjectCapabilities, ProjectOperation } from '#types';
 
 // Leaf import: the templates barrel pulls `inbox-research` (plugin-inbox/plugin-routine) into the
 // bundle, which a worker registering this handler cannot load.
-import { defaultTemplate } from '../templates/default';
+import { defaultTemplate } from '../templates/default.ts';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOperation.Create.pipe(
   Operation.withHandler(

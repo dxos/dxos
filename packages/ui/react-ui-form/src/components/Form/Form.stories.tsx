@@ -21,10 +21,16 @@ import { hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
-import { Organization, Person, TestLayout } from '../../testing';
-import { type ExcludeId, omitId } from '../../util';
-import { Form, type FormRootProps } from './Form';
+import {
+  AutofillAnnotation,
+  HueAnnotation,
+  OptionsLookupAnnotation,
+  autofill,
+  optionsLookup,
+} from '../../annotations.ts';
+import { Organization, Person, TestLayout } from '../../testing/index.ts';
+import { type ExcludeId, omitId } from '../../util/index.ts';
+import { Form, type FormRootProps } from './Form.tsx';
 
 type StoryArgs<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
 
@@ -65,8 +71,9 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport scroll>
             <Form.Content>
-              <Form.Section title='Section' description='This is a [section description](https://dxos.org).' />
-              <Form.FieldSet />
+              <Form.FieldSet label='Section' description='This is a [section description](https://dxos.org).'>
+                <Form.Fields />
+              </Form.FieldSet>
               <Form.Actions />
             </Form.Content>
           </Form.Viewport>
@@ -461,7 +468,7 @@ const ReactiveBufferedStory = () => {
           <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
             <Form.Viewport>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>

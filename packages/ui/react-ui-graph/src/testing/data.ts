@@ -6,7 +6,7 @@ import * as GraphEdge from '@dxos/graph/GraphEdge';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { random } from '@dxos/random';
 
-import { type TestNode } from './model';
+import { type TestNode } from './model.ts';
 
 // https://www.npmjs.com/package/random#setting-a-randomness-seed
 export const seed = (seed: number) => random.seed(seed);

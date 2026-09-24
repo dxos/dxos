@@ -17,8 +17,8 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { omitId } from '../../util';
-import { ObjectPicker } from './ObjectPicker';
+import { omitId } from '../../util/index.ts';
+import { ObjectPicker } from './ObjectPicker.tsx';
 
 random.seed(1);
 

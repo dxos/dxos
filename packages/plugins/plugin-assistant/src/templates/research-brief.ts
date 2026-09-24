@@ -4,7 +4,7 @@
 
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { makeScheduledRoutine } from './scaffold';
+import { makeScheduledRoutine } from './scaffold.ts';
 
 /** The research skill drives the brief; web-search, markdown, and database tools support it. */
 const SKILL_KEYS = [

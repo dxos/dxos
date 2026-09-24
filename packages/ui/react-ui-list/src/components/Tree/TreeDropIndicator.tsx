@@ -5,7 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
-import { DEFAULT_INDENTATION } from './helpers';
+import { DEFAULT_INDENTATION } from './helpers.ts';
 
 // Tree-item instruction indicator. Atlaskit's `react-drop-indicator` ships `box`/`list-item`
 // renderers but no `tree-item` one, so this stays a small Tailwind port (theme-aware via
@@ -13,6 +13,9 @@ import { DEFAULT_INDENTATION } from './helpers';
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
 
 type InstructionType = Exclude<Instruction, { type: 'instruction-blocked' }>['type'];
+
+/** What a drop does: `move` relocates the item, `link` adds a reference and leaves it where it is, `reject` blocks it. */
+export type DropKind = 'move' | 'link' | 'reject';
 type Orientation = 'sibling' | 'child';
 
 const edgeToOrientationMap: Record<InstructionType, Orientation> = {
@@ -25,21 +28,26 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
   'reparent': 'sibling',
 };
 
-const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
-  sibling:
-    'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
-  child: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
+const orientationStyles: Record<
+  Orientation,
+  Record<Exclude<DropKind, 'reject'>, HTMLAttributes<HTMLElement>['className']>
+> = {
+  sibling: {
+    move: 'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
+    link: 'h-0 border-t-[length:var(--line-thickness)] border-dashed border-accent-bg left-(--horizontal-indent) right-0 before:left-(--negative-terminal-size)',
+  },
+  child: {
+    move: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
+    link: 'inset-0 border-[length:var(--line-thickness)] border-dashed before:invisible',
+  },
 };
 
-// The line sits just INSIDE the row's edge rather than straddling it. A branch's content box
-// carries `overflow-y-clip` for the disclosure animation, so a line offset outside the row is
-// clipped away for the last child in every branch — present in the DOM, invisible on screen, which
-// reads as "there is no drop target after the last row".
+// The line sits in the gap between rows, so below one row and above the next draw on the same pixels.
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
-  'reorder-above': 'top-0 before:top-(--offset-terminal)',
-  'reorder-below': 'bottom-0 before:bottom-(--offset-terminal)',
+  'reorder-above': 'top-(--line-offset) before:top-(--offset-terminal)',
+  'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-bg',
-  'reparent': 'bottom-0 before:bottom-(--offset-terminal)',
+  'reparent': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
 };
 
 const strokeSize = 2;
@@ -49,11 +57,12 @@ const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 /** Props for {@link TreeDropIndicator}. */
 export type TreeDropIndicatorProps = {
   instruction: Instruction;
+  kind?: Exclude<DropKind, 'reject'>;
   gap?: number;
 };
 
 /** Themed drop indicator for a tree-item pragmatic-dnd `Instruction` (sibling reorder / make-child). */
-export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorProps) => {
+export const TreeDropIndicator = ({ instruction, kind = 'move', gap = 0 }: TreeDropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
@@ -80,7 +89,7 @@ export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorPro
           '--horizontal-indent': `${indentLevel * DEFAULT_INDENTATION + 4}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
+      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation][kind]} ${instructionStyles[desiredInstruction.type]}`}
     ></div>
   );
 };

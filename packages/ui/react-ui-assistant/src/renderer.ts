@@ -6,7 +6,7 @@ import { type URI } from '@dxos/keys';
 import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { type ChatView } from './types';
+import { type ChatView } from './types.ts';
 
 export type CreateRendererOptions = {
   /** Resolves a reference's display label; the tag carries the DXN either way. */
@@ -147,7 +147,7 @@ const blockToMarkdown = (
       if (message.sender.role === 'user') {
         return tag('prompt', block.text, block);
       }
-      return block.text.trim() || undefined;
+      return linkBareObjectUris(block.text, getObjectLabel).trim() || undefined;
     }
 
     case 'summary':
@@ -271,3 +271,31 @@ export const estimateRow = (message: Message.Message): number => {
 
   return height;
 };
+
+/** Code fences and spans, which a URI rewrite must leave alone. */
+const CODE = /(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g;
+
+/** A bare object URI in prose, with the `@` the model is told it may prefix an in-text reference with. */
+const BARE_OBJECT_URI = /(^|\s)@?(echo:\/\/[A-Za-z0-9]+(?:\/[A-Za-z0-9]+)?)(?=$|[\s.,;:!?)])/gm;
+
+/**
+ * Bare `echo://…` URIs in the model's prose become the markdown forms the editor renders: one alone
+ * on its line is the object shown, so it becomes an embed; one inside a sentence becomes a link.
+ * The model writes the bare form at least as readily as either, and unrewritten it is just text.
+ */
+export const linkBareObjectUris = (text: string, getObjectLabel: (uri: URI.URI) => string): string =>
+  text
+    .split(CODE)
+    .map((segment, index) =>
+      index % 2 === 1
+        ? segment
+        : segment.replace(BARE_OBJECT_URI, (match, lead: string, uri: string, offset: number, whole: string) => {
+            const label = getObjectLabel(uri as URI.URI);
+            const lineStart = whole.lastIndexOf('\n', offset) + 1;
+            const lineEnd = whole.indexOf('\n', offset + match.length);
+            const line = whole.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim();
+            const alone = line === match.trim();
+            return `${lead}${alone ? '!' : ''}[${label}](${uri})`;
+          }),
+    )
+    .join('');

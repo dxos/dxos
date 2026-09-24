@@ -10,6 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
 import { Button, ButtonGroup, Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -32,13 +33,13 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      subject: [getRoutinesSettingsPath(db.spaceId)],
       workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('calendar-sync.label')}</Field.Label>
         {/* TODO(burdon): Replace custom components with Field.Switch. */}
@@ -62,7 +63,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
           </ButtonGroup>
         </Flex>
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

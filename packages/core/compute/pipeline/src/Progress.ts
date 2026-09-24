@@ -13,13 +13,13 @@ import { Progress as ProgressCore } from '@dxos/progress';
 // app-toolkit ProgressRegistry capability share one implementation.
 export type TaskStatus = ProgressCore.TaskStatus;
 export type TaskProgress = ProgressCore.TaskProgress;
-export type ProgressSnapshot = ProgressCore.ProgressSnapshot;
+export type ProgressSnapshot = ProgressCore.Snapshot;
 export type TaskHandle = ProgressCore.TaskHandle;
-export type ProgressApi = ProgressCore.ProgressApi;
+export type ProgressApi = ProgressCore.Api;
 export const make = ProgressCore.make;
 export const deriveEta = ProgressCore.deriveEta;
 
-export class Progress extends Context.Service<Progress, ProgressCore.ProgressApi>()('@dxos/pipeline/Progress') {}
+export class Progress extends Context.Service<Progress, ProgressCore.Api>()('@dxos/pipeline/Progress') {}
 
 /** A fresh in-memory registry. */
 export const layer: Layer.Layer<Progress> = Layer.sync(Progress, () => ProgressCore.make());

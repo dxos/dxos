@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Collection, DXN, Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { buildSearchFilter, buildSearchQuery, byRelevance, toSearchResults } from './search-query';
+import { buildSearchFilter, buildSearchQuery, byRelevance, toSearchResults } from './search-query.ts';
 
 /** A type declaring no `IconAnnotation`, to exercise the fallback. */
 const Unadorned = Type.makeObject(DXN.make('com.example.type.unadorned', '0.1.0'))(

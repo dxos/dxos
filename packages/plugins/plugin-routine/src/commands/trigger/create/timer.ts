@@ -16,8 +16,9 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 
-import { Cron, Enabled, Input } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
+import { RoutineCommandError } from '../../errors.ts';
+import { Cron, Enabled, Input } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction } from '../util.ts';
 
 // trigger create timer --cron "0 0 * * *" --functionId <functionId>
 export const timer = Command.make(
@@ -40,12 +41,12 @@ export const timer = Command.make(
       const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
-        return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
       }
 
       const cron = yield* Option.match(options.cron, {
         onNone: () =>
-          Prompt.text({
+          Prompt.String({
             message: 'Enter cron expression:',
           }).pipe(Prompt.run),
         onSome: (value) => Effect.succeed(value),
@@ -60,7 +61,7 @@ export const timer = Command.make(
       // Always prompt for enabled if functionId is not provided.
       const enabled = yield* Option.match(options.functionId, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Enable the trigger?',
             initial: true,
           }).pipe(Prompt.run),

@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import { fromBinary } from '@bufbuild/protobuf';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 
-import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-services';
+import { Storage } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import type { EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
-import { exportOpfsSqlite } from './opfs-export';
-
-const EchoMetadataCodec = compatCodec<EchoMetadata>(EchoMetadataSchema);
+import { exportOpfsSqlite } from './opfs-export.ts';
 
 const HALO_FEED_PARTS = ['key', 'secret_key', 'data', 'tree', 'bitfield', 'signatures'] as const;
 
@@ -75,10 +75,10 @@ const decodeMainMetadata = (bytes: Uint8Array | undefined): EchoMetadata | undef
   if (!payload?.byteLength) {
     return undefined;
   }
-  return EchoMetadataCodec.decode(payload);
+  return fromBinary(EchoMetadataSchema, payload);
 };
 
-const formatPublicKey = (key: PublicKey | undefined): string | undefined => key?.toHex();
+const formatPublicKey = (key: BufPublicKey | undefined): string | undefined => toPublicKey(key)?.toHex();
 
 const truncatePublicKeyHex = (hex: string): string => {
   try {
@@ -130,12 +130,12 @@ export const runSqlStorageDiagnostics = async (
   const exportStarted = performance.now();
   const databaseBytes = await exportOpfsSqlite();
   const asyncExportBytes = databaseBytes.byteLength;
-  const validSqliteHeader = isValidSqliteDatabase(databaseBytes);
+  const validSqliteHeader = Storage.isValidSqliteDatabase(databaseBytes);
   log(`  ${asyncExportBytes.toLocaleString()} bytes (${(performance.now() - exportStarted).toFixed(0)} ms)`);
   log(`  header: ${validSqliteHeader ? 'valid SQLite 3' : 'invalid'}`);
   log('');
 
-  log(`SQLite (in-memory copy of ${OPFS_SQLITE_DB_FILENAME})`);
+  log(`SQLite (in-memory copy of ${Storage.OPFS_SQLITE_DB_FILENAME})`);
 
   const sqlResult = await Effect.gen(function* () {
     const sql = yield* SqliteClient.SqliteClient;

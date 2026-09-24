@@ -7,9 +7,9 @@ import browser from 'webextension-polyfill';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { PAGE_ACTIONS_STORAGE_KEY, type PageActionsRegistry } from '../../core';
-import { translations } from '../../translations';
-import { PageActions } from './PageActions';
+import { PAGE_ACTIONS_STORAGE_KEY, type PageActionsRegistry } from '../../core/index.ts';
+import { translations } from '../../translations.ts';
+import { PageActions } from './PageActions.tsx';
 
 // Seed the cached registry the component reads from `browser.storage` (stubbed in Storybook).
 const registry: PageActionsRegistry = {

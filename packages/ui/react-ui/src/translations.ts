@@ -19,6 +19,8 @@ export const translations = [
         'floating-panel.maximize.label': 'Maximize',
         'floating-panel.restore.label': 'Restore',
 
+        'drawer.resize.label': 'Resize drawer',
+
         'system-button.star.label': 'Star',
         'system-button.unstar.label': 'Unstar',
         'system-button.bookmark.label': 'Bookmark',
@@ -33,6 +35,7 @@ export const translations = [
         'system-button.upload.label': 'Upload',
         'system-button.download.label': 'Download',
         'system-button.clipboard.label': 'Copy',
+        'system-button.copied.label': 'Copied',
 
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',

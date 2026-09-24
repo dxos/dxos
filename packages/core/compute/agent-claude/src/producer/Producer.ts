@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { Feed } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import * as Client from '../client/Client';
+import * as Client from '../client/Client.ts';
 
 export type MakeOptions = {
   feed: Feed.Feed;

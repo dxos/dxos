@@ -8,7 +8,7 @@ import { type Key, type Obj } from '@dxos/echo';
 import { type ObjectUpdateCallback, useObject } from '@dxos/echo-react';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useSpace } from './useSpaces';
+import { useSpace } from './useSpaces.ts';
 
 /**
  * Subscribe to a space's properties with reactive updates.

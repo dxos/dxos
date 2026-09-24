@@ -41,6 +41,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -87,6 +90,9 @@
     },
     {
       "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-file"
     },
     {
       "path": "../../plugins/plugin-game"

@@ -19,8 +19,8 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
-import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
+import * as Binding from '../../Binding.ts';
+import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors.ts';
 
 describe('reconcileCursors', () => {
   let builder: EchoTestBuilder;

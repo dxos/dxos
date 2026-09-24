@@ -14,8 +14,8 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { LinearOperation } from '#types';
 
-import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
-import { LinearApi } from '../services';
+import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants.ts';
+import { LinearApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for Linear.

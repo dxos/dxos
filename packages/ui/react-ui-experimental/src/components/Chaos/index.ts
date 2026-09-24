@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './shader-presets';
+export * from './shader-presets.ts';
 
-export * from './Chaos';
+export * from './Chaos.tsx';

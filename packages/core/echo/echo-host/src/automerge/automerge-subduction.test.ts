@@ -26,7 +26,7 @@ import {
 } from '@automerge/automerge-subduction';
 import { beforeAll, describe, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
 class AsyncQueue<T> {
@@ -102,6 +102,51 @@ const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
  * used in tests only to satisfy the `head` parameter of `Subduction.addCommit`.
  */
 const commitIdOf = (seed: number): CommitId => CommitId.fromBytes(new Uint8Array(32).fill(seed));
+
+/**
+ * Wraps a storage so a test can await the arrival of a sedimentree's bytes. Propagation is a
+ * best-effort send with no delivery ack, so the receiver's own save is the only concrete state an
+ * assertion can be ordered after.
+ */
+const withSaveSignal = (storage: MemoryStorage) => {
+  const arrivals = new Map<string, Trigger>();
+  const arrival = (sedimentreeId: SedimentreeId): Trigger => {
+    const key = sedimentreeId.toString();
+    let trigger = arrivals.get(key);
+    if (!trigger) {
+      trigger = new Trigger();
+      arrivals.set(key, trigger);
+    }
+    return trigger;
+  };
+
+  // The save paths subduction takes on receipt. The trigger latches, so bytes that land before the
+  // await still resolve it.
+  const saveMethods = new Set(['saveCommit', 'saveFragment', 'saveBatchAll']);
+  const proxy = new Proxy(storage, {
+    get: (target, property) => {
+      const value = Reflect.get(target, property, target);
+      if (typeof value !== 'function') {
+        return value;
+      }
+      if (!saveMethods.has(String(property))) {
+        return value.bind(target);
+      }
+      return (sedimentreeId: SedimentreeId, ...rest: unknown[]) => {
+        const result = value.apply(target, [sedimentreeId, ...rest]);
+        void Promise.resolve(result).then((saved) => {
+          // `saveBatchAll` answers with the number of records written; an empty batch is not an arrival.
+          if (saved !== 0) {
+            arrival(sedimentreeId).wake();
+          }
+        });
+        return result;
+      };
+    },
+  });
+
+  return { storage: proxy, saved: (sedimentreeId: SedimentreeId) => arrival(sedimentreeId).wait() };
+};
 
 const storageKeyToString = (key: StorageKey): string => key.join('\0');
 
@@ -245,10 +290,7 @@ class CountingStorageAdapter implements StorageAdapterInterface {
   }
 }
 
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('automerge-subduction', () => {
+describe('automerge-subduction', () => {
   beforeAll(async () => {
     await initSubduction();
   });
@@ -348,7 +390,8 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
     const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage() });
-    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage() });
+    const signalB = withSaveSignal(new MemoryStorage());
+    const subductionB = new Subduction({ signer: signerB, storage: signalB.storage });
 
     const [transportA, transportB] = createMemoryTransportPair();
 
@@ -371,15 +414,18 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     const result = await subductionA.syncWithAllPeers(sid, true);
     expect(result.entries().length).toBeGreaterThan(0);
 
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
+    // Propagation is a best-effort send that does not block on peer acks, so the push is still in
+    // flight when `syncWithAllPeers` resolves.
+    await signalB.saved(sid);
+    expect(await subductionB.getBlobs(sid)).toHaveLength(1);
   }, 10_000);
 
   test('syncs between two subduction instances using connectTransport', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
     const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage(), serviceName: 'test-service' });
-    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage(), serviceName: 'test-service' });
+    const signalB = withSaveSignal(new MemoryStorage());
+    const subductionB = new Subduction({ signer: signerB, storage: signalB.storage, serviceName: 'test-service' });
 
     const [transportA, transportB] = createMemoryTransportPair();
 
@@ -396,16 +442,17 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     await subductionA.syncWithAllPeers(sid, false);
 
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
-    expect(blobsOnB[0]).toEqual(new Uint8Array([4, 5, 6]));
+    await signalB.saved(sid);
+    expect((await subductionB.getBlobs(sid))[0]).toEqual(new Uint8Array([4, 5, 6]));
   }, 10_000);
 
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
-    const subductionA = new Subduction({ signer: signerA, storage: new MemoryStorage() });
-    const subductionB = new Subduction({ signer: signerB, storage: new MemoryStorage() });
+    const signalA = withSaveSignal(new MemoryStorage());
+    const signalB = withSaveSignal(new MemoryStorage());
+    const subductionA = new Subduction({ signer: signerA, storage: signalA.storage });
+    const subductionB = new Subduction({ signer: signerB, storage: signalB.storage });
 
     const sidA = SedimentreeId.fromBytes(new Uint8Array(32).fill(1));
     const sidB = SedimentreeId.fromBytes(new Uint8Array(32).fill(2));
@@ -420,69 +467,69 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
 
     // Commits are added after connecting: a sedimentree present before
     // `addConnection` is not picked up by a later full sync, so seed both
-    // sides on the live connection. A single `fullSyncWithAllPeers` then
-    // exchanges fingerprints bidirectionally — each peer ends up with both.
+    // sides on the live connection. A full sync pushes the caller's own trees
+    // but does not pull the peer's, so each side runs its own.
     await subductionA.addCommit(sidA, commitIdOf(5), [], new Uint8Array([10, 20]));
     await subductionB.addCommit(sidB, commitIdOf(6), [], new Uint8Array([30, 40]));
     await subductionA.fullSyncWithAllPeers();
+    await subductionB.fullSyncWithAllPeers();
 
-    const blobsAonB = await subductionB.getBlobs(sidA);
-    const blobsBonA = await subductionA.getBlobs(sidB);
-    expect(blobsAonB).toHaveLength(1);
-    expect(blobsAonB[0]).toEqual(new Uint8Array([10, 20]));
-    expect(blobsBonA).toHaveLength(1);
-    expect(blobsBonA[0]).toEqual(new Uint8Array([30, 40]));
+    await signalB.saved(sidA);
+    await signalA.saved(sidB);
+    expect((await subductionB.getBlobs(sidA))[0]).toEqual(new Uint8Array([10, 20]));
+    expect((await subductionA.getBlobs(sidB))[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
 
   // After B drops handshake state and rehydrates from durable storage, does
   // subduction re-handshake on the reused logical channel when A pushes?
   // Empirical answer: no — A's auto-broadcast does not reach B'.
-  test(
-    'does not auto-rehydrate handshake on a logical connection where one end dropped it',
-    { timeout: 15_000 },
-    async ({ expect }) => {
-      const signerA = MemorySigner.generate();
-      const signerB = MemorySigner.generate();
-      const storageA = new MemoryStorage();
-      const storageB = new MemoryStorage();
-      const [transportA, transportB] = createMemoryTransportPair();
+  test('does not auto-rehydrate handshake on a logical connection where one end dropped it', async ({ expect }) => {
+    const signerA = MemorySigner.generate();
+    const signerB = MemorySigner.generate();
+    const storageA = new MemoryStorage();
+    const signalB = withSaveSignal(new MemoryStorage());
+    const storageB = signalB.storage;
+    const [transportA, transportB] = createMemoryTransportPair();
 
-      const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
-      let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
+    const subA = new Subduction({ signer: signerA, storage: storageA, serviceName: 'svc' });
+    let subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
 
-      const [authA, authB] = await Promise.all([
-        AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
-        AuthenticatedTransport.accept(transportB, signerB),
-      ]);
-      await subA.addConnection(authA);
-      await subB.addConnection(authB);
+    const [authA, authB] = await Promise.all([
+      AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
+      AuthenticatedTransport.accept(transportB, signerB),
+    ]);
+    await subA.addConnection(authA);
+    await subB.addConnection(authB);
 
-      const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
-      await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
-      await expect.poll(() => subB.getBlobs(sid).then((bs) => bs.length), { timeout: 5_000 }).toEqual(1);
+    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
+    // `addCommit` broadcasts only to peers subscribed to the sedimentree, so B
+    // subscribes before A writes.
+    await subB.syncWithAllPeers(sid, true);
+    await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
+    await signalB.saved(sid);
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
 
-      // Simulate B crash: clearing the queue's waiters halts the orphaned
-      // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
-      // `disconnectFromPeer` — those send a graceful goodbye A would observe.
-      await transportB.disconnect();
-      subB.free();
+    // Simulate B crash: clearing the queue's waiters halts the orphaned
+    // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
+    // `disconnectFromPeer` — those send a graceful goodbye A would observe.
+    await transportB.disconnect();
+    subB.free();
 
-      subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
-      expect(await subB.getConnectedPeerIds()).toHaveLength(0);
-      expect(await subA.getConnectedPeerIds()).toHaveLength(1);
+    subB = new Subduction({ signer: signerB, storage: storageB, serviceName: 'svc' });
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
+    expect(await subB.getConnectedPeerIds()).toHaveLength(0);
+    expect(await subA.getConnectedPeerIds()).toHaveLength(1);
 
-      await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
-      await sleep(500);
+    await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
+    await sleep(500);
 
-      // TODO(mykola): When subduction-core grows channel-level handshake
-      // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
-      expect(await subB.getBlobs(sid)).toHaveLength(1);
+    // TODO(mykola): When subduction-core grows channel-level handshake
+    // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
+    expect(await subB.getBlobs(sid)).toHaveLength(1);
 
-      subA.free();
-      subB.free();
-    },
-  );
+    subA.free();
+    subB.free();
+  });
 
   test('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
     const storage = new CountingStorageAdapter(new MemoryStorageAdapter());

@@ -16,7 +16,7 @@ import { CallsCapabilities, CallsEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [CallsCapabilities.Manager],
   // The manager provider rides the client-initialized event, so the feature demand alone is
   // not enough for the pull to find it.
@@ -37,7 +37,7 @@ export const CallManager = Capability.lazyModule(
     activatesOn: ClientEvents.Initialized,
     environments: [],
   },
-  () => import('./call-manager'),
+  () => import('./call-manager.ts'),
 );
 export const CallTransport = Capability.lazyModule(
   'CallTransport',
@@ -47,12 +47,12 @@ export const CallTransport = Capability.lazyModule(
     activatesOn: ClientEvents.Initialized,
     environments: [],
   },
-  () => import('./call-transport'),
+  () => import('./call-transport.ts'),
 );
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.ts'), {
   activatesOn: ClientEvents.Initialized,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.activeCall', 'org.dxos.role.devtoolsOverview'],
 });
 export const Translations = AppCapability.translations(translations, { environments: ['node'] });

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './DependentList';
-export * from './Input';
-export * from './PackageList';
-export * from './StatusBar';
+export * from './DependentList.tsx';
+export * from './Input.tsx';
+export * from './PackageList.tsx';
+export * from './StatusBar.tsx';

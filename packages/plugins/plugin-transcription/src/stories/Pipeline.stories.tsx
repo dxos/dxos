@@ -37,7 +37,6 @@ import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
@@ -104,7 +103,7 @@ const StoryGraphPlugin = () =>
         'AppGraphBuilder',
         // After the client is ready: a connector that throws before it subscribes to anything
         // reactive never re-runs, so an extension registered at startup would stay empty for good.
-        { activatesOn: ClientEvents.SpacesReady, provides: [AppCapabilities.AppGraphBuilder] },
+        { activatesOn: ClientEvents.SpacesAvailable, provides: [AppCapabilities.AppGraphBuilder] },
         Effect.fnUntraced(function* () {
           const capabilities = yield* Capability.Service;
           const extensions = yield* AppGraphBuilder.createExtension({
@@ -157,7 +156,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
+  const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
@@ -330,7 +329,8 @@ const meta = {
               yield* enableQueryIndexes(client.services.services);
               yield* Effect.promise(() => seedTestData(defaultSpace));
               defaultSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              // `makeDatabaseLookup` searches the full-text index, which lags the indexing pass until a flush drains it.
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
         SpacePlugin({}),

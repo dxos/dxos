@@ -10,13 +10,13 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
-import { HypercoreFactory } from './hypercore-factory';
+import { RawHypercoreFactory } from './hypercore-factory.ts';
 
 describe('Streams', () => {
   test('reads from stream', async () => {
-    const factory = new HypercoreFactory<string>();
+    const factory = new RawHypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
-    const core = factory.createFeed(publicKey, { secretKey });
+    const core = factory.createHypercore(publicKey, { secretKey });
 
     const numBlocks = 10;
     const [closed, setClosed] = latch();
@@ -54,9 +54,9 @@ describe('Streams', () => {
   });
 
   test('feed closed while stream is open', async () => {
-    const factory = new HypercoreFactory<string>();
+    const factory = new RawHypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
-    const core = factory.createFeed(publicKey, { secretKey });
+    const core = factory.createHypercore(publicKey, { secretKey });
 
     const [closed, setClosed] = latch({ count: 1 });
     {

@@ -11,13 +11,15 @@ import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
-import { translations } from '../translations';
+import { translations } from '../translations.ts';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [AttentionCapabilities.Attention],
 });
-export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const NavigationTargetResolver = AppCapability.navigationResolver(
+  () => import('./navigation-target-resolver.ts'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -26,10 +28,10 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],
 });
 export const Translations = AppCapability.translations(translations);

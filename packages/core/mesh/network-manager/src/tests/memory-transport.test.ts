@@ -8,10 +8,10 @@ import { describe, test } from 'vitest';
 import { PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
-import { TestBuilder } from '../testing';
-import { FullyConnectedTopology } from '../topology';
-import { basicTestSuite } from './basic-test-suite';
-import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
+import { TestBuilder } from '../testing/index.ts';
+import { FullyConnectedTopology } from '../topology/index.ts';
+import { basicTestSuite } from './basic-test-suite.ts';
+import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils.ts';
 
 describe('Memory transport', () => {
   const testBuilder = new TestBuilder();

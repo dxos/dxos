@@ -7,7 +7,7 @@
 import { type Database, Obj, Ref, type Tag } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 
-import * as TagIndex from './TagIndex';
+import * as TagIndex from './TagIndex.ts';
 
 /**
  * Unified tag handling for objects whether their tags live on the object (mutable database objects)

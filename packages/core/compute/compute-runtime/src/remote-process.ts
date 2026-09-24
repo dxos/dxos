@@ -7,5 +7,5 @@
  * Composer's budgeted eager boot graph (`composer-app:check-boot-budget`).
  */
 
-export * as RemoteProcessHandle from './RemoteProcessHandle';
-export * as RemoteProcessInfo from './remote-process-info';
+export * as RemoteProcessHandle from './RemoteProcessHandle.ts';
+export * as RemoteProcessInfo from './remote-process-info.ts';

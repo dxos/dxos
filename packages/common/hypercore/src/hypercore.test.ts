@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 
 import { createKeyPair } from '@dxos/crypto';
 
-import { type ValueCodec, createCodecEncoding } from './crypto';
-import { HypercoreFactory } from './hypercore-factory';
+import { type ValueCodec, createCodecEncoding } from './crypto.ts';
+import { RawHypercoreFactory } from './hypercore-factory.ts';
 
 type TestItem = {
   key: string;
@@ -25,9 +25,9 @@ const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec
 
 describe('Hypercore', () => {
   test('create, append, and close a feed', async () => {
-    const factory = new HypercoreFactory<string>();
+    const factory = new RawHypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
-    const core = factory.createFeed(publicKey, { secretKey });
+    const core = factory.createHypercore(publicKey, { secretKey });
 
     {
       // Check open is idempotent.
@@ -61,9 +61,9 @@ describe('Hypercore', () => {
   });
 
   test('encoding with typed hypercore', async () => {
-    const factory = new HypercoreFactory<TestItem>();
+    const factory = new RawHypercoreFactory<TestItem>();
     const { publicKey, secretKey } = createKeyPair();
-    const core = factory.createFeed(publicKey, { secretKey, valueEncoding });
+    const core = factory.createHypercore(publicKey, { secretKey, valueEncoding });
 
     {
       const append = promisify(core.append.bind(core));

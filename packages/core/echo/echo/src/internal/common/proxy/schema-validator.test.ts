@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { SchemaAST } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator } from './schema-validator.ts';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
@@ -199,21 +199,21 @@ describe('schema-validator', () => {
   describe('assertExactProperties', () => {
     test('rejects extra properties on a closed struct', () => {
       const Person = Schema.Struct({ name: Schema.String });
-      expect(() => SchemaValidator.assertExactProperties(Person, { name: 'Alice', extra: true })).to.throw(
+      expect(() => SchemaValidator.assertExactProperties(Person.ast, { name: 'Alice', extra: true })).to.throw(
         /Unknown property: extra/,
       );
     });
 
     test('allows extra properties when the schema has an index signature', () => {
       const Expando = Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]);
-      expect(() => SchemaValidator.assertExactProperties(Expando, { custom: 'value' })).not.to.throw();
+      expect(() => SchemaValidator.assertExactProperties(Expando.ast, { custom: 'value' })).not.to.throw();
     });
 
     test('rejects extra nested properties', () => {
       const schema = Schema.Struct({
         nested: Schema.Struct({ field: Schema.Number }),
       });
-      expect(() => SchemaValidator.assertExactProperties(schema, { nested: { field: 1, extra: true } })).to.throw(
+      expect(() => SchemaValidator.assertExactProperties(schema.ast, { nested: { field: 1, extra: true } })).to.throw(
         /Unknown property: nested.extra/,
       );
     });
@@ -225,11 +225,11 @@ describe('schema-validator', () => {
       ]);
       const schema = Schema.Struct({ spec });
       const target = { spec: { kind: 'feed' as const, feed: 'echo:/feed', extra: true } };
-      expect(() => SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path))).to.throw(
+      expect(() => SchemaValidator.assertExactProperties(schema.ast, target, (path) => getDeep(target, path))).to.throw(
         /Unknown property: spec.extra/,
       );
       expect(() =>
-        SchemaValidator.assertExactProperties(schema, { spec: { kind: 'feed' as const } }, (path) =>
+        SchemaValidator.assertExactProperties(schema.ast, { spec: { kind: 'feed' as const } }, (path) =>
           getDeep({ spec: { kind: 'feed' as const } }, path),
         ),
       ).not.to.throw();

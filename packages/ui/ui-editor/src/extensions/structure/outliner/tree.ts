@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, StateField, type Transaction } from '@codemirror/state';
 import { Facet } from '@codemirror/state';
 import { type SyntaxNode } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
-import { type Range } from '../../../types';
+import { type Range } from '../../../types/index.ts';
 
 /**
  * Represents a single item in the tree.
@@ -196,6 +196,11 @@ export type TreeOptions = {};
  * NOTE: Requires markdown parser to be enabled.
  */
 export const outlinerTree = (_options: TreeOptions = {}): Extension => {
+  // Outlines are small, so the whole document is parsed before the tree is read: a partial parse leaves
+  // the last item with its content start inside the marker, and anything positioned by it lands under
+  // the checkbox.
+  const PARSE_BUDGET_MS = 50;
+
   const buildTree = (state: EditorState): Tree => {
     let tree: Tree | undefined;
     let parent: Item | undefined;
@@ -207,7 +212,7 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
     // Array to track previous siblings at each level.
     const prevSiblings: (Item | undefined)[] = [];
 
-    syntaxTree(state).iterate({
+    (ensureSyntaxTree(state, state.doc.length, PARSE_BUDGET_MS) ?? syntaxTree(state)).iterate({
       enter: (node) => {
         switch (node.name) {
           case 'Document': {
@@ -217,8 +222,13 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
           }
           case 'BulletList': {
             invariant(current);
-            parent = current;
-            if (current) {
+            invariant(tree);
+            // A list under the document is its own island: it hangs off the root beside earlier lists
+            // rather than under the last item parsed, and the prose between lists belongs to no item.
+            parent = node.node.parent?.name === 'Document' ? tree : current;
+            if (parent === tree) {
+              tree.lineRange.to = tree.node.from;
+            } else {
               current.lineRange.to = current.node.from;
             }
             prevSiblings[++level] = undefined;
@@ -227,11 +237,13 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
           case 'ListItem': {
             invariant(parent);
 
-            // Include all content up to the next sibling or the end of the document.
+            // Include all content up to the next sibling, or to the end of the enclosing list: what
+            // follows the list (prose, another list) is not this item's continuation.
             const nextSibling = node.node.nextSibling ?? node.node.parent?.nextSibling;
+            const listEnd = node.node.parent?.to ?? state.doc.length;
             const docRange: Range = {
               from: state.doc.lineAt(node.from).from,
-              to: nextSibling ? nextSibling.from - 1 : state.doc.length,
+              to: nextSibling ? Math.min(nextSibling.from - 1, listEnd) : listEnd,
             };
 
             current = {
@@ -254,9 +266,9 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
             // Update previous siblings array at current level.
             prevSiblings[level] = current;
 
-            // Update previous item (not sibling).
+            // Update previous item (not sibling); never past its own list's end.
             if (prev) {
-              prev.lineRange.to = prev.contentRange.to = current.lineRange.from - 1;
+              prev.lineRange.to = prev.contentRange.to = Math.min(prev.lineRange.to, current.lineRange.from - 1);
             }
             prev = current;
 
@@ -271,7 +283,9 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
           case 'ListMark': {
             invariant(current);
             current.type = 'bullet';
-            current.contentRange.from = node.from + '- '.length;
+            // Content starts after the marker and its space; a bare `-` being typed has no space yet, so
+            // the start is clamped to the item's end rather than pointing past the document.
+            current.contentRange.from = Math.min(node.to + 1, current.contentRange.to);
             break;
           }
           case 'Task': {
@@ -281,7 +295,7 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
           }
           case 'TaskMarker': {
             invariant(current);
-            current.contentRange.from = node.from + '[ ] '.length;
+            current.contentRange.from = Math.min(node.to + 1, current.contentRange.to);
             break;
           }
         }
@@ -305,7 +319,8 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
         return buildTree(state);
       },
       update: (value: Tree | undefined, tr: Transaction) => {
-        if (!tr.docChanged) {
+        // The parser also finishes asynchronously in a transaction of its own, with no document change.
+        if (!tr.docChanged && syntaxTree(tr.state) === syntaxTree(tr.startState)) {
           return value;
         }
 

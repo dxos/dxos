@@ -21,7 +21,7 @@ import {
   isHandlerLike,
   makeToolResolverFromOperations,
   projectFunctionToTool,
-} from './services';
+} from './services.ts';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();
@@ -196,6 +196,38 @@ describe('projectFunctionToTool', () => {
     });
     expect(decoded.properties).toEqual({ any: 1 });
   });
+
+  // v4 nests a rest signature under `allOf`; the recorded corpus states it on the node itself.
+  test('a struct with a rest signature is advertised as an open object', ({ expect }) => {
+    const Draft = Operation.make({
+      meta: { key: DXN.make('com.example.operation.test.draft') },
+      input: Schema.Struct({
+        drafts: Schema.Array(
+          Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+            Schema.Record(Schema.String, Schema.Unknown),
+          ]),
+        ),
+      }),
+      output: Schema.Void,
+    });
+
+    expect(Tool.getJsonSchema(projectFunctionToTool(Draft))).toEqual({
+      type: 'object',
+      properties: {
+        drafts: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { '@type': { type: 'string' } },
+            required: ['@type'],
+            additionalProperties: true,
+          },
+        },
+      },
+      required: ['drafts'],
+      additionalProperties: false,
+    });
+  });
 });
 
 describe('makeToolResolverFromOperations', () => {
@@ -217,8 +249,12 @@ describe('makeToolResolverFromOperations', () => {
       const resolver = yield* ToolResolverService;
       return yield* body((id) => resolver.resolve(ToolId.make(id)));
     }).pipe(
-      Effect.provide(makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry)))),
-      Effect.provide(OpaqueToolkit.providerLayer(OpaqueToolkit.empty)),
+      Effect.provide(
+        Layer.provideMerge(
+          makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry))),
+          OpaqueToolkit.providerLayer(OpaqueToolkit.empty),
+        ),
+      ),
       EffectEx.runPromise,
     );
 

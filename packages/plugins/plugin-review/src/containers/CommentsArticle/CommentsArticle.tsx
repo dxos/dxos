@@ -14,7 +14,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
@@ -31,8 +31,8 @@ import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
-import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { currentObjectId, getMessageMetadata } from '../../util';
+import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
+import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -226,28 +226,21 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // from `anchors` + `state.current`, both reactive, involves no timing.
   const currentThreadId = currentObjectId(state.current);
 
-  // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
-  // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
-  // (a newly created draft autofocusing, a re-render restoring focus), and moving the document caret
-  // there would retarget the comment they create next.
+  // Attention (a thread taking focus) records it as current and brings its plank into view without taking
+  // focus from the thread; the anchored content is left alone, since focus lands there unasked.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getURI(thread);
-      // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
-      // on a stale spelling, so a freshly persisted comment never shows the marker. A direct write,
-      // never an invocation: attention is passive (a re-render restoring focus, a draft
-      // autofocusing), and applied at event time it loses to any later intent — which is the point.
+      // Recorded unconditionally, so a freshly persisted comment's new spelling shows the marker. A reveal
+      // re-scrolls the deck, so only a newly current thread asks for one.
       const sameThread = currentObjectId(state.current) === thread.id;
       registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       if (sameThread) {
-        // Re-revealing the plank pulls focus there ~170ms later, which lands mid-keystroke in an
-        // open message edit and loses the typed text.
         return;
       }
 
-      // Scroll plank into view (deck handler).
-      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId, focus: false });
     },
     [state.current, invokePromise, registry, stateAtom, attendableId],
   );
@@ -372,8 +365,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
   // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
-  const mainText = markdownDoc?.content.target;
-  const [base = ''] = useObject(markdownDoc?.content, 'content');
+  const mainText = useResolveRef(markdownDoc?.content);
 
   const routeSuggestion = useCallback(
     async (
@@ -528,7 +520,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       >
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Tabs.Tablist classNames='p-0'>
+            <Tabs.Tablist>
               <Tabs.Button classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
               </Tabs.Button>
@@ -543,7 +535,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
-                base={base}
+                base={mainText}
                 authorLabels={authorLabels}
                 authorHues={authorHues}
                 onAccept={handleAcceptSuggestion}

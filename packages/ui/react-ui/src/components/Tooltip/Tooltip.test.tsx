@@ -6,9 +6,9 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import React, { type PropsWithChildren, forwardRef } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../providers';
-import { defaultTx } from '../../theme';
-import { Tooltip } from './Tooltip';
+import { ThemeProvider } from '../../providers/index.ts';
+import { defaultTx } from '../../theme/index.ts';
+import { Tooltip, type TooltipSide } from './Tooltip.tsx';
 
 /**
  * A single provider serves every trigger in the app, so these pin the two consequences of that: the
@@ -86,22 +86,81 @@ describe('Tooltip', () => {
     // A trigger re-render drags whatever it wraps via `asChild` with it, so this must stay at zero.
     expect(renders).toEqual([]);
   });
+
+  test('the content is placed on the active trigger side', async ({ expect }) => {
+    render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
+    const [first, second] = screen.getAllByRole('button');
+    const placement = () =>
+      document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
+
+    // `fireEvent` flushes React updates inside `act` before the machine's queued event runs, which would hide a
+    // placement rendered too late; native dispatch keeps the browser's ordering.
+    const reactGlobal = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    const actEnvironment = reactGlobal.IS_REACT_ACT_ENVIRONMENT;
+    reactGlobal.IS_REACT_ACT_ENVIRONMENT = false;
+    try {
+      const pointer = (element: HTMLElement, type: string) =>
+        element.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'mouse' }));
+
+      pointer(first, 'pointermove');
+      await waitFor(() => expect(placement()).toEqual('right'));
+
+      pointer(first, 'pointerout');
+      pointer(second, 'pointermove');
+      await waitFor(() => expect(placement()).toEqual('left'));
+    } finally {
+      reactGlobal.IS_REACT_ACT_ENVIRONMENT = actEnvironment;
+    }
+  });
+
+  test('the open tooltip follows a change to its trigger side', async ({ expect }) => {
+    const { rerender } = render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
+    const [first] = screen.getAllByRole('button');
+    const placement = () =>
+      document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
+
+    fireEvent.pointerMove(first, { pointerType: 'mouse' });
+    await waitFor(() => expect(placement()).toEqual('right'));
+
+    rerender(<Harness sides={['bottom', 'left']} />);
+    await waitFor(() => expect(placement()).toEqual('bottom'));
+  });
+
+  test('clicking another trigger switches to its side', async ({ expect }) => {
+    render(<Harness sides={['right', 'left']} />, { wrapper: Wrapper });
+    const [first, second] = screen.getAllByRole('button');
+    const placement = () =>
+      document.querySelector('[data-scope="tooltip"][data-part="content"]')?.getAttribute('data-placement');
+
+    fireEvent.pointerMove(first, { pointerType: 'mouse' });
+    await waitFor(() => expect(placement()).toEqual('right'));
+
+    // A keyboard-activated click reaches the trigger with no pointer move before it.
+    fireEvent.click(second);
+    await waitFor(() => expect(second.getAttribute('aria-describedby')).toBeTruthy());
+    await waitFor(() => expect(placement()).toEqual('left'));
+  });
 });
 
 type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
 
 // `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
-const Harness = ({ onRender, describedBy }: HarnessProps) => (
+const Harness = ({ onRender, describedBy, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
   <Tooltip.Provider delayDuration={0} disableHoverableContent>
-    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} />
-    <CountingTrigger label='second' onRender={onRender} />
+    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} side={sides[0]} />
+    <CountingTrigger label='second' onRender={onRender} side={sides[1]} />
   </Tooltip.Provider>
 );
 
 // The counter belongs on the child, not here: a context change re-renders the consumer rather than
 // whoever rendered it, and `Slot` clones the child on each trigger render, as `IconButton` does.
-const CountingTrigger = ({ label, onRender, describedBy }: { label: string } & HarnessProps) => (
-  <Tooltip.Trigger asChild content={`${label} tip`}>
+const CountingTrigger = ({
+  label,
+  onRender,
+  describedBy,
+  side,
+}: { label: string; side?: TooltipSide } & HarnessProps) => (
+  <Tooltip.Trigger asChild content={`${label} tip`} side={side}>
     <CountingButton label={label} onRender={onRender} describedBy={describedBy} />
   </Tooltip.Trigger>
 );

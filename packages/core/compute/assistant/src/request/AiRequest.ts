@@ -36,10 +36,10 @@ import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { getOperationFromTool } from '../tool-runtime/services';
-import { type AiAssistantError, CompleteBlock, PartialBlock, emitRequestPhase } from '../util';
-import { formatSystemPrompt, formatUserPrompt } from './format';
-import { GenerationObserver } from './observer';
+import { getOperationFromTool } from '../tool-runtime/services.ts';
+import { type AiAssistantError } from '../util/index.ts';
+import { formatSystemPrompt, formatUserPrompt } from './format.ts';
+import { GenerationObserver } from './observer.ts';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -211,7 +211,7 @@ export class Request {
           role: message.sender.role!,
           block: JSON.stringify(block),
         });
-        yield* Trace.write(CompleteBlock, {
+        yield* Trace.write(Trace.CompleteBlock, {
           messageId: message.id,
           role: message.sender.role!,
           block,
@@ -275,7 +275,7 @@ export class Request {
         if (tokenCount > this._options.summarizationThreshold) {
           // A summarization pass is itself a model round-trip, so it can dominate the wait before
           // the turn the reader asked for even starts.
-          yield* emitRequestPhase('summarizing');
+          yield* Trace.emitRequestPhase('summarizing');
           const summary = yield* AiSummarizer.summarize([...this._history]);
           yield* this._submitMessage(summary);
         }
@@ -328,7 +328,7 @@ export class Request {
         history: this._history.length,
       });
 
-      yield* emitRequestPhase('encoding-prompt');
+      yield* Trace.emitRequestPhase('encoding-prompt');
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
@@ -353,7 +353,7 @@ export class Request {
       let attempt = 0;
       const stream = Stream.unwrap(
         Effect.gen(function* () {
-          yield* emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          yield* Trace.emitRequestPhase('contacting-provider', { attempt: ++attempt });
           return openStream();
         }),
       );
@@ -384,7 +384,7 @@ export class Request {
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
                 log('emit ephemeral message', { id: currentMessageId, type: block._tag });
-                yield* Trace.write(PartialBlock, {
+                yield* Trace.write(Trace.PartialBlock, {
                   messageId: currentMessageId,
                   role: 'assistant',
                   block,
@@ -461,12 +461,17 @@ export class Request {
       if (toolCalls.length === 0) {
         return;
       }
-      const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
-        if (!toolkit) {
-          throw new Error('No toolkit provided');
-        }
-        return callTool(toolkit, block);
-      });
+      const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) =>
+        Effect.gen(function* () {
+          if (!toolkit) {
+            throw new Error('No toolkit provided');
+          }
+          // Tool execution is where an agentic turn spends most of its time, and it produces no
+          // streamed content, so the tool's name is the only progress the reader has.
+          yield* Trace.emitRequestPhase('calling-tool', { detail: block.name });
+          return yield* callTool(toolkit, block);
+        }),
+      );
 
       yield* this._submitMessage(
         Obj.make(Message.Message, {

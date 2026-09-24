@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { ScrollFollower } from './follow';
-import { type Placement } from './placement';
+import { ScrollFollower } from './follow.ts';
+import { type Placement } from './placement.ts';
 
 /** Distance from the end within which the reader counts as being at it. */
 const STICKY_THRESHOLD = 32;
@@ -28,6 +28,13 @@ export type FollowHandle = {
    * second scroll listener in the host would fork the threshold.
    */
   atEnd: boolean;
+  /**
+   * Whether the follow is armed — the feed is, or will be, scrolling itself to keep the tail in
+   * view. Published so a host can hold back an affordance that only makes sense once the reader
+   * has left: while a turn streams the tail outruns the glide a frame at a time, and `atEnd` alone
+   * flickers with it.
+   */
+  following: boolean;
   /**
    * A navigation is the reader answering "do you want the tail?" — and it must answer *before* the
    * scroll moves. The intent is otherwise withdrawn by the scroll event the jump raises, which is
@@ -95,11 +102,21 @@ export const useFollow = ({
   const following = useRef(!!enabled);
   // A feed shorter than its viewport never scrolls, so it starts at its end and no event says so.
   const [atEnd, setAtEnd] = useState(true);
+  // The intent, mirrored as state for the handle; the ref stays what the correction reads, since a
+  // render must not sit between a gesture and the decision.
+  const [followingState, setFollowingState] = useState(!!enabled);
+  const setFollowing = useCallback((next: boolean) => {
+    following.current = next;
+    setFollowingState(next);
+  }, []);
   const wasEnabled = useRef(enabled);
   if (wasEnabled.current !== enabled) {
     wasEnabled.current = enabled;
     following.current = !!enabled;
   }
+  useEffect(() => {
+    setFollowingState(following.current);
+  }, [enabled]);
 
   // Read through a ref by the stable callbacks below: the count changes on every append, and a
   // handle rebuilt per append republishes every controller derived from it — a host that stores
@@ -205,9 +222,9 @@ export const useFollow = ({
       // pinned feed streaming for minutes re-renders nothing.
       setAtEnd(end);
       if (end) {
-        following.current = true;
+        setFollowing(true);
       } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
-        following.current = false;
+        setFollowing(false);
         follower?.cancel();
       }
     };
@@ -226,7 +243,7 @@ export const useFollow = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollerRef.current, enabled, axis, reserve, follower]);
+  }, [scrollerRef.current, enabled, axis, reserve, follower, setFollowing]);
 
   // The correction. Following is a navigation, not a correction in the §7 sense: the content the
   // reader is pinned to has moved, so the scroll has to as well.
@@ -329,15 +346,15 @@ export const useFollow = ({
   const onNavigate = useCallback(
     (index: number) => {
       const wants = index >= countRef.current - 1;
-      following.current = !!enabled && wants;
+      setFollowing(!!enabled && wants);
       if (!wants) {
         follower?.cancel();
       }
     },
-    [enabled, follower],
+    [enabled, follower, setFollowing],
   );
 
-  // Stable across appends, so controllers built over it do not churn per model change; `atEnd`
-  // changes only when the reader crosses the threshold, which is not an append.
-  return useMemo(() => ({ atEnd, onNavigate }), [atEnd, onNavigate]);
+  // Stable across appends, so controllers built over it do not churn per model change; `atEnd` and
+  // `following` change only when the reader crosses the threshold or turns back, which is not an append.
+  return useMemo(() => ({ atEnd, following: followingState, onNavigate }), [atEnd, followingState, onNavigate]);
 };

@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { QuestionStore } from '@dxos/pipeline-discord';
 
-import { QuestionsPanel } from '../components';
-import { CrawlerStores } from '../testing';
+import { QuestionsPanel } from '../components/index.ts';
+import { CrawlerStores } from '../testing/index.ts';
 
 /** LEFT (bottom): standing questions the crawl attempts as targets drain (from the crawler runtime). */
 export const QuestionsModule = () => {

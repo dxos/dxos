@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './state';
-export * from './keys';
+export * from './state.ts';
+export * from './keys.ts';

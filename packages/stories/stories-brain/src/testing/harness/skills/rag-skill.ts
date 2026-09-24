@@ -12,7 +12,7 @@ import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { VectorStore } from '../internal/vector';
+import { VectorStore } from '../internal/vector.ts';
 
 export const RAG_SKILL_KEY = 'org.dxos.stories-brain.skill.rag';
 

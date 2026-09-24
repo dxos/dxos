@@ -7,7 +7,7 @@ import { createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vf
 
 import { invariant } from '@dxos/invariant';
 
-import { builtIns, systemDefinitions } from './eval';
+import { builtIns, systemDefinitions } from './eval.ts';
 
 /**
  * Default system definitions.

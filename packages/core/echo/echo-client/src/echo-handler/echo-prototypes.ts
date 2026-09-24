@@ -72,6 +72,7 @@ import {
   EntityMetaSchema,
   EventId,
   type JsonSchemaType,
+  type LoadOptions,
   MetaId,
   ObjectBranchId,
   ObjectDatabaseId,
@@ -112,10 +113,10 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { deepMapValues, defaultMap } from '@dxos/util';
 
-import * as Doc from '../automerge/Doc';
-import { type ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-import { getBody, getHeader } from './devtools-formatter';
+import * as Doc from '../automerge/Doc.ts';
+import { type ObjectCore } from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { getBody, getHeader } from './devtools-formatter.ts';
 import {
   type ProxyTarget,
   TargetKey,
@@ -123,7 +124,7 @@ import {
   symbolInternals,
   symbolNamespace,
   symbolPath,
-} from './echo-proxy-target';
+} from './echo-proxy-target.ts';
 
 const META_NAMESPACE = 'meta';
 
@@ -340,7 +341,8 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Cod
   return rebuilt;
 };
 
-export const getVersion = (target: ProxyTarget): Obj.Version => {
+/** Backs the `ObjectVersionId` slot, i.e. `Obj.version`. The only version accessor in this package. */
+const getVersion = (target: ProxyTarget): Obj.Version => {
   const accessor = target[symbolInternals].getDocAccessor();
   const doc = accessor.handle.doc();
   invariant(doc);
@@ -433,8 +435,8 @@ class CoreRefResolver implements RefResolver {
     return this.#database()?.resolveSync(uri, load, onLoad) ?? this.pinned(uri);
   }
 
-  async resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined> {
-    return (await this.#database()?.resolveLegacy(uri)) ?? this.pinned(uri);
+  async resolveLegacy(uri: URI.URI, options?: LoadOptions): Promise<AnyProperties | undefined> {
+    return (await this.#database()?.resolveLegacy(uri, options)) ?? this.pinned(uri);
   }
 
   async resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined> {

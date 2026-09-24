@@ -7,18 +7,16 @@ import type * as Types from 'effect/Types';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Format, Obj, Type, View } from '@dxos/echo';
+import { Format, JsonSchema, Obj, Type, View } from '@dxos/echo';
 import { TypeEnum, formatToType, typeToFormat } from '@dxos/echo/Format';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { type Mutable } from '@dxos/echo/Obj';
-import { SchemaEx } from '@dxos/effect';
+import { AtomEx, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
-import { PropertySchema, type PropertyType } from './format';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util/index.ts';
+import { PropertySchema, type PropertyType } from './format.ts';
 
 export const VIEW_FIELD_LIMIT = 32;
 
@@ -35,13 +33,13 @@ export type FieldProjection = {
  * Contains separate callbacks for projection and schema mutations
  * since Obj.update() cannot be nested.
  * Note: Callbacks return void because Obj.update() returns void.
- * Uses Mutable<T> to allow mutations within the callbacks since schemas are readonly by default.
+ * Uses Obj.Mutable<T> to allow mutations within the callbacks since schemas are readonly by default.
  */
 export type ProjectionChangeCallback = {
   /** Callback to wrap projection mutations. */
-  projection: (mutate: (mutableProjection: Mutable<View.Projection>) => void) => void;
+  projection: (mutate: (mutableProjection: Obj.Mutable<View.Projection>) => void) => void;
   /** Callback to wrap schema mutations. */
-  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchemaType>) => void) => void;
+  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchema.JsonSchema>) => void) => void;
 };
 
 /**
@@ -52,8 +50,8 @@ export type ProjectionChangeCallback = {
  * @param schema - Optional persisted `Type.AnyEntity`. If not provided, schema mutations will throw.
  */
 export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntity): ProjectionChangeCallback => ({
-  // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
-  projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+  // Inside Obj.update, v is Obj.Mutable<View.View>, so v.projection is already mutable.
+  projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Obj.Mutable<View.Projection>)),
   schema:
     schema == null
       ? () => {
@@ -69,9 +67,9 @@ export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntit
  */
 export const createDirectChangeCallback = (
   projection: View.Projection,
-  schema: Types.DeepMutable<JsonSchemaType>,
+  schema: Types.DeepMutable<JsonSchema.JsonSchema>,
 ): ProjectionChangeCallback => ({
-  projection: (mutate) => mutate(projection as Mutable<View.Projection>),
+  projection: (mutate) => mutate(projection as Obj.Mutable<View.Projection>),
   schema: (mutate) => mutate(schema),
 });
 
@@ -84,7 +82,7 @@ export type ProjectionModelProps = {
   /** The View object (for subscriptions). */
   view: View.View;
   /** The base JSON schema of the data being projected. */
-  baseSchema: JsonSchemaType;
+  baseSchema: JsonSchema.JsonSchema;
   /**
    * Callbacks to wrap mutations in Obj.update().
    * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
@@ -102,7 +100,7 @@ export class ProjectionModel {
 
   private readonly _registry: Registry.AtomRegistry;
   private readonly _view: View.View;
-  private readonly _baseSchema: JsonSchemaType;
+  private readonly _baseSchema: JsonSchema.JsonSchema;
   private readonly _change: ProjectionChangeCallback;
 
   // Internal atoms.
@@ -112,7 +110,7 @@ export class ProjectionModel {
   private readonly _hiddenFieldsAtom: Atom.Atom<readonly View.FieldType[]>;
   private readonly _allFieldsAtom: Atom.Atom<readonly View.FieldType[]>;
 
-  constructor({ registry = Registry.make(), view, baseSchema, change }: ProjectionModelProps) {
+  constructor({ registry = AtomEx.makeRegistry(), view, baseSchema, change }: ProjectionModelProps) {
     this._registry = registry;
     this._view = view;
     this._baseSchema = baseSchema;
@@ -246,7 +244,9 @@ export class ProjectionModel {
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
-    const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: Format.TypeFormat.None };
+    const jsonProperty: JsonSchema.JsonSchema = this._baseSchema.properties[field.path] ?? {
+      format: Format.TypeFormat.None,
+    };
     const { type: schemaType, format: schemaFormat = Format.TypeFormat.None, annotations, ...rest } = jsonProperty;
 
     const unwrappedProperty =
@@ -406,7 +406,7 @@ export class ProjectionModel {
       invariant(property);
       invariant(format);
 
-      const jsonProperty: Mutable<JsonSchemaType> = {};
+      const jsonProperty: Obj.Mutable<JsonSchema.JsonSchema> = {};
 
       if (referenceSchema) {
         Object.assign(jsonProperty, createSchemaReference(referenceSchema));
@@ -435,7 +435,7 @@ export class ProjectionModel {
           format,
           ...jsonProperty,
           ...rest,
-        } as Types.DeepMutable<JsonSchemaType>;
+        } as Types.DeepMutable<JsonSchema.JsonSchema>;
         if (isRename) {
           delete baseSchema.properties[sourcePropertyName!];
 

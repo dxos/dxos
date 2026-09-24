@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as Blob from './Blob';
+import * as Blob from './Blob.ts';
 
 describe('Blob', () => {
   test('inline data schema roundtrip', ({ expect }) => {

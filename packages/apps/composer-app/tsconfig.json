@@ -82,6 +82,12 @@
       "path": "../../core/compute/agent-claude"
     },
     {
+      "path": "../../core/compute/agent-code-mode"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -92,6 +98,9 @@
     },
     {
       "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../e2e/perf-harness"
     },
     {
       "path": "../../plugins/plugin-assistant"
@@ -121,6 +130,9 @@
       "path": "../../plugins/plugin-calls"
     },
     {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -131,6 +143,9 @@
     },
     {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-cloudflare"
     },
     {
       "path": "../../plugins/plugin-code"
@@ -205,6 +220,9 @@
       "path": "../../plugins/plugin-heygen"
     },
     {
+      "path": "../../plugins/plugin-higgsfield"
+    },
+    {
       "path": "../../plugins/plugin-ibkr"
     },
     {
@@ -224,6 +242,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-labeler"
     },
     {
       "path": "../../plugins/plugin-lametric"
@@ -391,6 +412,9 @@
       "path": "../../plugins/plugin-typefully"
     },
     {
+      "path": "../../plugins/plugin-typesafe"
+    },
+    {
       "path": "../../plugins/plugin-video"
     },
     {
@@ -412,6 +436,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/client-services"
     },
     {
@@ -427,10 +454,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/shell"
+      "path": "../../sdk/worker-framework"
     },
     {
-      "path": "../../sdk/worker-framework"
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-primitives/react-error-boundary"

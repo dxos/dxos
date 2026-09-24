@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import { IdentityContract } from '@dxos/client-services';
 import { runDedicatedWorker } from '@dxos/client/worker';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -10,14 +13,14 @@ import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityC
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { isTauri } from '@dxos/util';
 
-import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util';
-import { initAutomergeWasm } from '../util/automerge-wasm';
+import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util/index.ts';
 
 // This worker hosts echo and can saturate its own loop, so the log sink runs in a nested
 // worker of its own. The IdbLogStore is the read handle for observability exports; the
 // nested worker owns writes and eviction.
 const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES, evictionInterval: 0 });
-const observabilityWorker = new Worker(new URL('./observability-worker', import.meta.url), {
+const observabilityWorker = new Worker(new URL('./observability-worker.ts', import.meta.url), {
   type: 'module',
   name: 'dxos-observability',
 });
@@ -39,11 +42,14 @@ runDedicatedWorker({
     // initialized before it runs (see util/automerge-wasm.ts).
     await initAutomergeWasm();
   },
-  onStart: async (host) => {
+  onStart: async (stack) => {
     const instance = await observability;
     if (instance) {
+      const identityManager = await EffectEx.runPromise(
+        stack.getServiceResolver().resolve(IdentityContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+      );
       await EffectEx.runPromise(
-        instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(host.identityManager)),
+        instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),
       );
     }
   },

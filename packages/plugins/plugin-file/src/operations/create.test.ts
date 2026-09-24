@@ -17,7 +17,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
 
-import { FileTooLargeError, UnsupportedFileTypeError } from './create';
+import { FileTooLargeError, UnsupportedFileTypeError } from './create.ts';
 
 describe('FileOperation.Create', () => {
   test('uploads a small PNG to the default (inline) backend', async ({ expect }) => {
@@ -141,6 +141,6 @@ const setup = async () => {
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return { harness, defaultSpace };
 };

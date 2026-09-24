@@ -32,10 +32,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -373,7 +373,7 @@ feat F-7: Camera and Navigation
 ## Acceptance
 
 ```mdl
-test T-1: Place voxel on ground
+scenario T-1: Place voxel on ground
   given: editor open, tool mode is add, selectedHue is blue
   when: user clicks an empty cell on the ground plane
   then:
@@ -382,7 +382,7 @@ test T-1: Place voxel on ground
 ```
 
 ```mdl
-test T-2: Place voxel on face
+scenario T-2: Place voxel on face
   given: a voxel exists at (0, 0, 0), tool mode is add
   when: user clicks the top face of that voxel
   then:
@@ -391,7 +391,7 @@ test T-2: Place voxel on face
 ```
 
 ```mdl
-test T-3: Remove voxel
+scenario T-3: Remove voxel
   given: a voxel exists at (1, 1, 0), tool mode is remove
   when: user clicks that voxel
   then:
@@ -400,7 +400,7 @@ test T-3: Remove voxel
 ```
 
 ```mdl
-test T-4: Out-of-bounds placement rejected
+scenario T-4: Out-of-bounds placement rejected
   given: grid is 32×32, tool mode is add
   when: user attempts to place a voxel at (20, 20, 0) which is outside the half-extent
   then:
@@ -409,7 +409,7 @@ test T-4: Out-of-bounds placement rejected
 ```
 
 ```mdl
-test T-5: Generate shape via toolbar
+scenario T-5: Generate shape via toolbar
   given: editor open, selectedHue is red, selectedPosition is (2, 2, 0)
   when: user clicks the "Generate shape" button
   then:
@@ -418,7 +418,7 @@ test T-5: Generate shape via toolbar
 ```
 
 ```mdl
-test T-6: op:generateShape — sphere
+scenario T-6: op:generateShape — sphere
   given: a World with empty voxels
   when: op:generateShape called with shape=sphere, origin=(0,0,0), hue=green
   then:
@@ -427,7 +427,7 @@ test T-6: op:generateShape — sphere
 ```
 
 ```mdl
-test T-7: Life simulation tick
+scenario T-7: Life simulation tick
   given: a glider pattern seeded at origin, lifeRunning is true
   when: 500ms elapses
   then:
@@ -436,7 +436,7 @@ test T-7: Life simulation tick
 ```
 
 ```mdl
-test T-8: Collaborative sync
+scenario T-8: Collaborative sync
   given: two peers share the same ECHO space, one has the World open
   when: peer A places a voxel
   then:
@@ -445,7 +445,7 @@ test T-8: Collaborative sync
 ```
 
 ```mdl
-test T-9: op:queryWorld
+scenario T-9: op:queryWorld
   given: a World with 5 voxels, gridX=32, gridY=32, blockSize=1
   when: op:queryWorld is called
   then:
@@ -457,7 +457,7 @@ test T-9: op:queryWorld
 ```
 
 ```mdl
-test T-10: Card read-only mode
+scenario T-10: Card read-only mode
   given: a World with several voxels
   when: VoxelCard is rendered
   then:
@@ -469,11 +469,11 @@ test T-10: Card read-only mode
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Build and query a shape agent-only
+test QA-1: Build and query a shape agent-only
   desc: |
     The core voxel round-trip through the four agent-callable operations — query an empty world,
     generate a shape, remove part of it, and query again to confirm the mutation. All four steps
@@ -486,15 +486,15 @@ flow QA-1: Build and query a shape agent-only
     - space: a space is open
     - collection: a collection in that space, to create into
     - plugin-voxel is enabled — it ships only in the experimental set; it is OFF by default
-    - no World named "QA World" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no World named "QA World" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the world
       do: In the navtree, click + on a collection and choose Voxel. Name it "QA World".
       capture: created
       expect: a World named "QA World" appears under the collection with an empty voxel map
       note: |
         NO `invoke` — there is no create operation, only the navtree factory
-        (`capabilities/create-object.ts`). This one human-only step is why the flow is
+        (`capabilities/create-object.ts`). This one human-only step is why the test is
         `actors: both` rather than `agent`, even though every remaining step invokes a real
         operation.
     - name: Confirm the world starts empty
@@ -557,8 +557,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

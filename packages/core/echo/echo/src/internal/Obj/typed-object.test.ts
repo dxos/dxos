@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Type from '../../Type';
-import { EchoObjectSchema } from '../Entity';
+import * as Type from '../../Type.ts';
+import { EchoObjectSchema } from '../Entity/index.ts';
 
 const Organization = Schema.Struct({
   name: Schema.String,

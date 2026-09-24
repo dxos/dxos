@@ -12,8 +12,8 @@ import * as Stream from 'effect/Stream';
 
 import { IdentityDid, SpaceId } from '@dxos/keys';
 
-import { type SpaceError } from './errors';
-import * as Invitation from './Invitation';
+import { type SpaceError } from './errors.ts';
+import * as Invitation from './Invitation.ts';
 
 /**
  * Capability level granted to a space member, matching the Keyhive `Access` enum. Ordered; each

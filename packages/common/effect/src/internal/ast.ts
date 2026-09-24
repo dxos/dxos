@@ -11,8 +11,8 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type JsonPath, type JsonProp } from './json-path';
-import * as Compat from './schema-ast';
+import { type JsonPath, type JsonProp } from './json-path.ts';
+import * as Compat from './schema-ast.ts';
 
 /** Annotation keys are strings in v4 (they were symbols in v3). */
 export type AnnotationKey = string;
@@ -381,16 +381,18 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Union': {
       return new SchemaAST.Union(
         ast.types.map((type) => f(type, undefined)),
-        ast.mode,
+        ast.options,
         ast.annotations,
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Arrays': {
@@ -402,6 +404,7 @@ export const mapAst = (
         ast.checks,
         ast.encoding,
         ast.context,
+        ast.encodingChecks,
       );
     }
     case 'Suspend': {

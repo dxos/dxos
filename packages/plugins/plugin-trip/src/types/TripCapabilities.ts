@@ -8,8 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import type * as BookingSearch from './BookingSearch';
-import type * as Routing from './Routing';
+import type * as BookingSearch from './BookingSearch.ts';
+import type * as Routing from './Routing.ts';
 
 /**
  * Plugins contribute booking providers via this capability. Multiple plugins

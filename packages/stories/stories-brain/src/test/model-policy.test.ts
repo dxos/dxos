@@ -10,7 +10,7 @@ import {
   parseModelPolicyEnv,
   resolveModel,
   resolveModelName,
-} from '../testing/harness';
+} from '../testing/harness/index.ts';
 
 // Deterministic coverage for the model-policy map — no fixture / model required.
 

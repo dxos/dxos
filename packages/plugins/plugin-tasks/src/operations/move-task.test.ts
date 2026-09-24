@@ -9,8 +9,8 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createTask from './create-task';
-import moveTask from './move-task';
+import createTask from './create-task.ts';
+import moveTask from './move-task.ts';
 
 describe('move-task', () => {
   it.effect('reorders within the set, since array order is the task order', () =>

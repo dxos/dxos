@@ -24,9 +24,9 @@ import { log } from '@dxos/log';
 import { Button, Field, Flex, Icon, Menu, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../../meta';
-import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared';
-import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types';
+import { meta } from '../../../meta.ts';
+import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();

@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { TypeArticle as default } from './TypeArticle';
+export { TypeArticle as default } from './TypeArticle.tsx';

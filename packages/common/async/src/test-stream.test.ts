@@ -4,12 +4,13 @@
 
 import { test } from 'vitest';
 
-import { TestStream } from './test-stream';
+import { TestStream } from './test-stream.ts';
 
 test('TestStream', async () => {
   const stream1 = new TestStream();
   const stream2 = new TestStream();
-  stream1.pipe(stream2).pipe(stream1);
+  void stream1.readable.pipeTo(stream2.writable).catch(() => {});
+  void stream2.readable.pipeTo(stream1.writable).catch(() => {});
 
   stream1.push('ping');
   stream2.push('pong');

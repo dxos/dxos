@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import * as Doc from './Doc';
-import { decode as defaultDecode, encode as defaultEncode, getDeep, rebasePath } from './record';
+import * as Doc from './Doc.ts';
+import { decode as defaultDecode, encode as defaultEncode, getDeep, rebasePath } from './record.ts';
 
 export type BaseElement = { id: string };
 

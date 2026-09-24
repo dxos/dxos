@@ -9,8 +9,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { makeTestDeck } from '../../testing';
-import { Flashcard } from './Flashcard';
+import { makeTestDeck } from '../../testing.ts';
+import { Flashcard } from './Flashcard.tsx';
 
 const FlashcardStory = () => {
   const { words } = useMemo(() => makeTestDeck(), []);

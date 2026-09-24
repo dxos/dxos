@@ -31,8 +31,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 |--------|--------------------------------|
 | `type` | `org.dxos.mdl.type@1.0`        |
 | `feat` | `org.dxos.mdl.feat@1.0`        |
+| `scenario` | `org.dxos.mdl.scenario@1.0`    |
 | `test` | `org.dxos.mdl.test@1.0`        |
-| `flow` | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -378,7 +378,7 @@ feat F-8: Page Actions Registry & Invocation
 ## Acceptance
 
 ```mdl
-test T-1: Settings atom registered
+scenario T-1: Settings atom registered
   given: plugin activated
   then:
     - the Settings capability is available via Capability.get
@@ -388,14 +388,14 @@ test T-1: Settings atom registered
 ```
 
 ```mdl
-test T-2: Toggling enabled persists
+scenario T-2: Toggling enabled persists
   given: settings surface rendered
   when: user toggles the `enabled` switch off
   then: subsequent reads of the atom observe enabled === false
 ```
 
 ```mdl
-test T-3: List request returns descriptors
+scenario T-3: List request returns descriptors
   given: contributed picker actions (Person, Organization, Note)
   when: handleListEvent receives { version: 1, id: 'r1' }
   then:
@@ -405,14 +405,14 @@ test T-3: List request returns descriptors
 ```
 
 ```mdl
-test T-4: Invalid list request is rejected
+scenario T-4: Invalid list request is rejected
   given: page-actions listeners installed
   when: handleListEvent receives a malformed detail (missing id)
   then: ack is { ok: false, error: 'invalidPayload' }
 ```
 
 ```mdl
-test T-5: Valid person invoke creates Person
+scenario T-5: Valid person invoke creates Person
   given: a registered add-person action and an active space
   when: |
     handleInvokeEvent receives { version: 1, actionId: <add-person>,
@@ -424,7 +424,7 @@ test T-5: Valid person invoke creates Person
 ```
 
 ```mdl
-test T-6: Organization mapping falls back to og:title
+scenario T-6: Organization mapping falls back to og:title
   given: a snapshot with hints.ogTitle = 'DXOS' and hints.h1 undefined
   when: AddOrganizationFromSnapshot is invoked
   then:
@@ -433,7 +433,7 @@ test T-6: Organization mapping falls back to og:title
 ```
 
 ```mdl
-test T-7: Missing name is allowed
+scenario T-7: Missing name is allowed
   given: a snapshot with no hints and empty selection text
   when: the add-person action is invoked
   then:
@@ -442,7 +442,7 @@ test T-7: Missing name is allowed
 ```
 
 ```mdl
-test T-8: Unsupported envelope version
+scenario T-8: Unsupported envelope version
   given: page-actions listeners installed
   when: handleInvokeEvent receives { version: 2, id: 'r2', ... }
   then:
@@ -451,7 +451,7 @@ test T-8: Unsupported envelope version
 ```
 
 ```mdl
-test T-9: Invalid invoke payload is rejected
+scenario T-9: Invalid invoke payload is rejected
   given: page-actions listeners installed
   when: handleInvokeEvent receives a version-1 detail missing `actionId`
   then:
@@ -460,14 +460,14 @@ test T-9: Invalid invoke payload is rejected
 ```
 
 ```mdl
-test T-10: Unknown action
+scenario T-10: Unknown action
   given: no action registered with id 'nope'
   when: handleInvokeEvent receives a valid request with actionId = 'nope'
   then: ack is { ok: false, error: 'unknownAction' }
 ```
 
 ```mdl
-test T-11: No active space
+scenario T-11: No active space
   given: the active space cannot be resolved
   when: a valid invoke request arrives
   then:
@@ -476,7 +476,7 @@ test T-11: No active space
 ```
 
 ```mdl
-test T-12: Operation failure
+scenario T-12: Operation failure
   given: the target operation returns an error (or throws)
   when: a valid invoke request arrives
   then:
@@ -488,18 +488,18 @@ test T-12: Operation failure
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 Note: this document declares no `op` blocks, so the operations below are referenced by their full
 runtime key rather than `[op:...]` — see `src/types/CrxOperation.ts`.
 
 ```mdl
-flow QA-1: Add a Person from a page snapshot
+test QA-1: Add a Person from a page snapshot
   desc: |
     The core snapshot → object mapping (F-6.1), standing in for the browser extension's picker,
     which an agent cannot drive — the extension is a separate, unautomatable browser process. This
-    flow invokes the target operation directly with a synthetic snapshot, exactly as the plugin's
+    test invokes the target operation directly with a synthetic snapshot, exactly as the plugin's
     own invoke handler does after resolving `{ snapshot, target }` (F-5.6).
   actors: agent
   covers: [F-3.1, F-5.6, F-6.1, T-5]
@@ -509,9 +509,9 @@ flow QA-1: Add a Person from a page snapshot
     - space: a space is open
     - plugin-crx is enabled — it is OFF by default (not in `getDefaults` and not in the dev-only
       default set; see `packages/apps/composer-app/src/plugin-defs.tsx`)
-    - no Person named "QA Snapshot Person" exists — ABORT rather than reusing one this flow did
+    - no Person named "QA Snapshot Person" exists — ABORT rather than reusing one this test did
       not create
-  test:
+  steps:
     - name: Add the person from a snapshot
       do: |
         (Real path, not automatable here: with the extension installed, open the popup on a page
@@ -537,7 +537,7 @@ flow QA-1: Add a Person from a page snapshot
 ```
 
 ```mdl
-flow QA-2: Accept-extension-actions toggle gates invocation
+test QA-2: Accept-extension-actions toggle gates invocation
   desc: |
     The settings enforcement path (F-2c.1) — no operation exists for the settings atom itself
     (it is a plain app-framework settings store), so this step is human-only.
@@ -548,7 +548,7 @@ flow QA-2: Accept-extension-actions toggle gates invocation
     - an identity exists
     - plugin-crx is enabled — it is OFF by default (see QA-1)
     - the Settings panel's CRX section is reachable
-  test:
+  steps:
     - name: Disable "Accept extension actions"
       do: Open Settings, find the CRX section, and toggle "Accept extension actions" off.
       expect: the toggle shows off and the preference persists across a reload
@@ -568,7 +568,7 @@ flow QA-2: Accept-extension-actions toggle gates invocation
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -579,7 +579,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -588,8 +588,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

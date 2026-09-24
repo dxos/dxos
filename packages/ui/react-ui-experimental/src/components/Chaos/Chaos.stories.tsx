@@ -11,9 +11,9 @@ import { Button } from '@dxos/react-ui';
 import { useAudioStream } from '@dxos/react-ui-audio';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ShaderOptions } from '../../shaders';
-import { Chaos, type ChaosProps } from './Chaos';
-import { defaultShaderOptions, shaderPresets } from './shader-presets';
+import { type ShaderOptions } from '../../shaders/index.ts';
+import { Chaos, type ChaosProps } from './Chaos.tsx';
+import { defaultShaderOptions, shaderPresets } from './shader-presets.ts';
 
 type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };
 

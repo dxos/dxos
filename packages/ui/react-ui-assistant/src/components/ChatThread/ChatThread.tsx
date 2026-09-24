@@ -20,13 +20,13 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
-import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { assistantRegistry } from '../../registry';
-import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
-import { translationKey } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
+import { assistantRegistry } from '../../registry.tsx';
+import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
+import { translationKey } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
 
 //
 // Context
@@ -63,6 +63,8 @@ type ChatThreadRootProps = PropsWithChildren<
     viewType?: ChatView;
     /** Extends {@link assistantRegistry}; the host's entries win (e.g. a real `surface` widget). */
     registry?: XmlWidgetRegistry;
+    /** The block widget for an object embedded as a card (`![label](echo://…)`); the host's, since only it can render one. */
+    objectImage?: WidgetDef<ObjectLinkProps>;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
@@ -86,6 +88,7 @@ const ChatThreadRoot = ({
   model,
   viewType,
   registry,
+  objectImage,
   getObjectLabel,
   userHue,
   tailLines,
@@ -117,11 +120,13 @@ const ChatThreadRoot = ({
         streaming={streaming}
         showContext={viewType !== 'summary'}
         debug={debug}
+        userHue={userHue}
       >
         <MessageList.Root
           model={model}
           renderer={renderer}
           registry={merged}
+          objectImage={objectImage}
           Chrome={MessageChrome}
           estimateSize={estimateRow}
           debug={debug}
@@ -205,20 +210,23 @@ const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
  */
 const ScrollToBottom = () => {
   const { t } = useTranslation(translationKey);
-  const { atEnd, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
+  const { atEnd, following, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
+  // Hidden while the list follows the tail itself: a streaming turn outruns the glide a frame at a
+  // time, and `atEnd` alone would blink the button through every response.
+  const hidden = atEnd || following;
 
   return (
     <IconButton
-      icon='ph--arrow-down--regular'
-      iconOnly
-      label={t('scroll-to-bottom.label')}
       variant='primary'
-      size={4}
-      disabled={atEnd}
-      aria-hidden={atEnd}
+      icon='ph--arrow-line-down--regular'
+      iconOnly
+      density='sm'
+      label={t('scroll-to-bottom.label')}
+      disabled={hidden}
+      aria-hidden={hidden}
       classNames={[
-        'absolute bottom-2 right-4 z-10 transition-opacity duration-300',
-        atEnd && 'opacity-0 pointer-events-none',
+        'absolute bottom-2 left-1/2 -translate-x-1/2 z-10 transition-opacity duration-300',
+        hidden && 'opacity-0 pointer-events-none',
       ]}
       data-testid='assistant.thread.scroll-to-bottom'
       onClick={() => scrollToBottom({ behavior: 'smooth' })}

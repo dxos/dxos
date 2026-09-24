@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
-import { FIELD_NAME } from './FieldContext';
+import { FIELD_NAME } from './FieldContext.ts';
 
 // Kept out of `Input.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

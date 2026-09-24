@@ -9,19 +9,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components';
-import { ABOUT_DIALOG, AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants';
-import { SampleSettings, WelcomeContainer } from '../containers';
-import { meta } from '../meta';
+import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components/index.ts';
+import { ABOUT_DIALOG, AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
+import { WelcomeContainer } from '../containers/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: SampleSettings,
-      }),
       Surface.create({
         id: 'welcome',
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),

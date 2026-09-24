@@ -16,8 +16,8 @@ import {
   type OAuthServerProvider,
   createFetchOAuthInitiator,
   performOAuthFlow as performOAuthFlowShared,
-} from './oauth-flow';
-import { type OAuthPreset } from './util';
+} from './oauth-flow.ts';
+import { type OAuthPreset } from './util.ts';
 
 /**
  * Bun-based OAuth callback server provider for CLI usage. Wraps the shared callback server in

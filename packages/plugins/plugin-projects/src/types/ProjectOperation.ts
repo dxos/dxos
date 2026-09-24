@@ -65,6 +65,35 @@ export const DelegateTaskToChat = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Renders one task as a self-contained prompt for an external coding agent and copies it to the
+ * clipboard — the task's content, its addresses (task, task set, project, space), and what the
+ * project is about, so a session started from it can reach the live objects rather than work from a
+ * transcription.
+ *
+ * The prompt tells the agent to assign itself to the task first, which is what makes the handoff
+ * visible in the app: the row shows `started` and an assistant assignee the moment the agent picks
+ * it up, exactly as an in-app delegation does.
+ */
+export const CopyTaskPrompt = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.copyTaskPrompt'),
+    name: 'Copy Task Prompt',
+    description:
+      'Builds an agent prompt for a task (content, addresses, project context) and copies it to the clipboard.',
+    icon: 'ph--clipboard-text--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task).annotate({ description: 'The task to write a prompt for.' }),
+  }),
+  // Returned as well as copied: a host with no clipboard (a headless client, an agent calling the
+  // verb) still gets the prompt, and the copy is the UI affordance on top of it.
+  output: Schema.Struct({
+    prompt: Schema.String,
+  }),
+}).pipe(Operation.mutation('none'));
+
 export const Create = Operation.make({
   meta: {
     // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would

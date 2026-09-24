@@ -4,7 +4,7 @@
 
 import * as Operation from '@dxos/compute/Operation';
 
-import type * as UndoMapping from './undo-mapping';
+import type * as UndoMapping from './undo-mapping.ts';
 
 //
 // Public Interface

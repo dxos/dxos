@@ -8,33 +8,29 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Database, DXN, EID, Filter, Format, Obj, Query, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { type EntityId } from '@dxos/echo/Key';
+import { EntityId } from '@dxos/echo/Key';
 import { type MakeRequired } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as Milestone from './Milestone';
+import * as Actor from './Actor.ts';
+import * as Milestone from './Milestone.ts';
+
+export type Option<T> = { id: T; title: string; color?: string; icon?: string };
+
+export const NullOption: Option<any> = { id: 'none', title: 'None' };
 
 //
 // Priority
 //
 
-export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
+export const Priority = Schema.Literals(['low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-/**
- * `icon` sits beside `color` so a row, its picker and the form's select cannot name the same
- * priority with different glyphs. The ramp is neutral — shape carries the level — which is what
- * leaves `urgent` the only coloured one and so the only one findable in a long list. The extra
- * field is inert to `SelectOption`, which carries id/title/color and ignores the rest.
- */
-export const PriorityOptions: { id: Priority; title: string; color: string; icon: string }[] = [
-  { id: 'none', title: 'None', color: 'gray', icon: 'ph--dot--regular' },
-  { id: 'low', title: 'Low', color: 'gray', icon: 'px--bar-low--regular' },
-  { id: 'medium', title: 'Medium', color: 'gray', icon: 'px--bar-medium--regular' },
-  { id: 'high', title: 'High', color: 'gray', icon: 'px--bar-high--regular' },
+export const PriorityOptions: Option<Priority>[] = [
+  { id: 'low', title: 'Low', color: 'sky', icon: 'px--bar-low--regular' },
+  { id: 'medium', title: 'Medium', color: 'sky', icon: 'px--bar-medium--regular' },
+  { id: 'high', title: 'High', color: 'sky', icon: 'px--bar-high--regular' },
   { id: 'urgent', title: 'Urgent', color: 'rose', icon: 'ph--exclamation-mark--fill' },
 ];
 
@@ -45,18 +41,12 @@ export const PriorityOptions: { id: Priority; title: string; color: string; icon
 export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
 export type Estimate = Schema.Schema.Type<typeof Estimate>;
 
-/**
- * `none` is a row so a picker built from this table can clear the field. It is not an `Estimate` —
- * an unset estimate is the absent property, not a literal — so it is the one id a writer maps to
- * `null` rather than passing through.
- */
-export const EstimateOptions: { id: Estimate | 'none'; title: string; color: string }[] = [
-  { id: 'none', title: 'None', color: 'gray' },
-  { id: 'xs', title: 'XS', color: 'gray' },
-  { id: 's', title: 'S', color: 'gray' },
-  { id: 'm', title: 'M', color: 'gray' },
-  { id: 'l', title: 'L', color: 'gray' },
-  { id: 'xl', title: 'XL', color: 'gray' },
+export const EstimateOptions: Option<Estimate | 'none'>[] = [
+  { id: 'xs', title: 'XS', color: 'neutral' },
+  { id: 's', title: 'S', color: 'neutral' },
+  { id: 'm', title: 'M', color: 'neutral' },
+  { id: 'l', title: 'L', color: 'neutral' },
+  { id: 'xl', title: 'XL', color: 'neutral' },
 ];
 
 //
@@ -66,54 +56,139 @@ export const EstimateOptions: { id: Estimate | 'none'; title: string; color: str
 export const Status = Schema.Literals([
   'todo',
   'backlog',
-  'duplicate',
   'started',
   'review',
   'done',
+  'duplicate',
   'blocked',
   'cancelled',
   'failed',
 ]);
 export type Status = Schema.Schema.Type<typeof Status>;
 
-export const StatusOptions: { id: Status; title: string; color: string }[] = [
-  { id: 'todo', title: 'Todo', color: 'gray' },
-  { id: 'backlog', title: 'Backlog', color: 'gray' },
-  { id: 'duplicate', title: 'Duplicate', color: 'gray' },
-  { id: 'started', title: 'Started', color: 'sky' },
-  { id: 'review', title: 'In Review', color: 'cyan' },
-  { id: 'done', title: 'Done', color: 'green' },
-  { id: 'blocked', title: 'Blocked', color: 'rose' },
-  { id: 'cancelled', title: 'Cancelled', color: 'rose' },
-  { id: 'failed', title: 'Failed', color: 'rose' },
+/**
+ * `icon` beside `color`, as for {@link PriorityOptions}: the row, its picker and the form's select
+ * all draw a status from this one table. Shape carries the status; the hue is the one its title is
+ * painted in.
+ */
+export const StatusOptions: Option<Status>[] = [
+  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--square--regular' },
+  { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
+  { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
+  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
+  { id: 'done', title: 'Done', color: 'green', icon: 'ph--check--regular' },
+  { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
+  { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
+  { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
+  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--warning-diamond--regular' },
 ];
 
 /**
  * What happened to a task, as recorded in its {@link History}. Deliberately coarser than the field
  * set: an entry says a task was assigned, not which field carried it, so the log stays readable
  * when the shape of a task changes.
+ *
+ * `question` and `answer` are the exchange that blocks and unblocks a task: they live in the log
+ * rather than as separate objects so the whole story of a task reads in one place, in order.
  */
-export const Event = Schema.Literals(['created', 'updated']);
+export const Event = Schema.Literals(['created', 'updated', 'question', 'answer']);
 export type Event = Schema.Schema.Type<typeof Event>;
 
-/**
- * One line of a task's activity log. `description` is the human-readable record ("status changed
- * from todo to done"), so a reader needs nothing but the entry to understand what happened; the
- * `event` is what a filter or an icon keys on.
- */
-export const HistoryEntry = Schema.Struct({
+/** Fields every history entry carries, whatever its event. */
+const HistoryEntryBase = {
+  /**
+   * Stable within the task's log, so a later entry can point back at an earlier one (an `answer`
+   * names the `question` it answers) without depending on array position.
+   */
+  id: EntityId.annotate({ title: 'ID' }),
   date: Format.DateTime.annotate({ title: 'Date' }),
   actor: Schema.optional(Actor.Actor.annotate({ title: 'Actor' })),
-  event: Event.annotate({ title: 'Event' }),
+};
+
+/**
+ * One pre-baked answer an asker offers. `title` is the key — it is what a reader clicks and what
+ * lands in {@link AnswerEntry.answer} — so an option carries no id of its own: a question with two
+ * options reading the same is a badly written question, not a shape to model around.
+ */
+export const AnswerOption = Schema.Struct({
+  title: Schema.String.annotate({ title: 'Title' }),
+  /** Expanded rationale, shown under the option. */
   description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
-}).annotate({ title: 'History Entry' });
+}).annotate({ title: 'Answer Option' });
+export type AnswerOption = Schema.Schema.Type<typeof AnswerOption>;
+
+/**
+ * A change to the task itself. `description` is the human-readable record ("status changed from
+ * todo to done"), so a reader needs nothing but the entry to understand what happened; the `event`
+ * is what a filter or an icon keys on.
+ *
+ * One struct per event rather than one struct over both: ECHO validates a union by a single literal
+ * tag per member, and a member whose tag is itself a union of literals is ambiguous to it.
+ */
+const makeChangeEntry = <E extends 'created' | 'updated'>(event: E) =>
+  Schema.Struct({
+    ...HistoryEntryBase,
+    // Optional here only: change entries were logged before entries carried ids, and a required id
+    // would fail every task holding one. Nothing refers to a change entry by id.
+    id: Schema.optional(HistoryEntryBase.id),
+    event: Schema.Literal(event).annotate({ title: 'Event' }),
+    description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
+  }).annotate({ title: event === 'created' ? 'Created Entry' : 'Updated Entry' });
+
+export const CreatedEntry = makeChangeEntry('created');
+export type CreatedEntry = Schema.Schema.Type<typeof CreatedEntry>;
+
+export const UpdatedEntry = makeChangeEntry('updated');
+export type UpdatedEntry = Schema.Schema.Type<typeof UpdatedEntry>;
+
+export type ChangeEntry = CreatedEntry | UpdatedEntry;
+
+/**
+ * A question an agent put to a person about this task. It is open until an {@link AnswerEntry}
+ * names its `id`; there is no flag on the question to fall out of step with that.
+ *
+ * `options` are a convenience, never a constraint — a surface rendering this MUST also accept
+ * free-form text, since the point of asking is that the asker did not know.
+ */
+export const QuestionEntry = Schema.Struct({
+  ...HistoryEntryBase,
+  event: Schema.Literal('question').annotate({ title: 'Event' }),
+  /** The question itself, as put to the reader. */
+  text: Schema.String.annotate({ title: 'Question' }),
+  /** Why it is being asked — what the agent is blocked on, in one or two sentences. */
+  context: Schema.optional(Schema.String.annotate({ title: 'Context' })),
+  /** Suggested answers. May be empty; free-form is always allowed. */
+  options: Schema.optional(Schema.Array(AnswerOption).annotate({ title: 'Options' })),
+  /**
+   * The conversation feed to resume once answered. Held as an unknown ref because the feed's type
+   * lives in `@dxos/assistant`, which depends on this package.
+   */
+  conversation: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
+}).annotate({ title: 'Question Entry' });
+export type QuestionEntry = Schema.Schema.Type<typeof QuestionEntry>;
+
+/** A person's answer to an earlier {@link QuestionEntry} in the same log. */
+export const AnswerEntry = Schema.Struct({
+  ...HistoryEntryBase,
+  event: Schema.Literal('answer').annotate({ title: 'Event' }),
+  /** The `id` of the question entry this answers. */
+  questionId: EntityId.annotate({ title: 'Question' }),
+  /** The chosen option's `title`, or free-form text. */
+  answer: Schema.String.annotate({ title: 'Answer' }),
+}).annotate({ title: 'Answer Entry' });
+export type AnswerEntry = Schema.Schema.Type<typeof AnswerEntry>;
+
+/** One line of a task's activity log, discriminated by `event`. */
+export const HistoryEntry = Schema.Union([CreatedEntry, UpdatedEntry, QuestionEntry, AnswerEntry]).annotate({
+  title: 'History Entry',
+});
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
 
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.5.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'lorem.words',
         args: [{ min: 3, max: 10 }],
       }),
@@ -121,7 +196,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     description: Schema.optional(
       Schema.String.pipe(
         Schema.annotate({ title: 'Description' }),
-        GeneratorAnnotation.set({
+        Annotation.GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],
         }),
@@ -146,7 +221,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['todo', 'started', 'done']],
       }),
@@ -164,7 +239,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     // TODO(burdon): Customize or opinionated?
     priority: Priority.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [Priority.literals],
       }),
@@ -181,7 +256,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     estimate: Estimate.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [Estimate.literals],
       }),
@@ -235,7 +310,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
     // backref here: enumeration stays one array read and a move stays one field write.
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
   ),
 ) {}
@@ -304,7 +379,8 @@ const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): bool
     a.email === b.email &&
     a.identityDid === b.identityDid &&
     a.role === b.role &&
-    refEntityId(a.contact) === refEntityId(b.contact)
+    refEntityId(a.contact) === refEntityId(b.contact) &&
+    refEntityId(a.subject) === refEntityId(b.subject)
   );
 };
 
@@ -318,8 +394,22 @@ const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0,
 export const appendHistory = (task: Task, entry: HistoryEntry): void => {
   Obj.update(task, (task) => {
     task.history ??= [];
-    task.history.push(entry);
+    task.history.push(mutableEntry(entry));
   });
+};
+
+/**
+ * A copy of `entry` the task can own. ECHO refuses to store a record another object already owns — an
+ * actor that is also the task's assignee, say — and the stored array is mutable where the schema
+ * type is read-only, so the nested records are copied rather than shared.
+ */
+const mutableEntry = (entry: HistoryEntry) => {
+  const actor = entry.actor ? { actor: { ...entry.actor } } : {};
+  if (!isQuestionEntry(entry)) {
+    return { ...entry, ...actor };
+  }
+  const { options, ...rest } = entry;
+  return { ...rest, ...actor, ...(options ? { options: options.map((option) => ({ ...option })) } : {}) };
 };
 
 /**
@@ -346,7 +436,7 @@ const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
  */
-export const update = (task: Task, requested: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
+export const update = (task: Task, requested: Edit, options: EditOptions = {}): ChangeEntry | undefined => {
   const changes: Edit =
     requested.status === undefined
       ? requested
@@ -386,7 +476,8 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     return undefined;
   }
 
-  const entry: HistoryEntry = {
+  const entry: UpdatedEntry = {
+    id: EntityId.random(),
     date: options.date ?? new Date().toISOString(),
     ...(options.actor ? { actor: options.actor } : {}),
     event: 'updated',
@@ -432,21 +523,21 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
       }
     }
     task.history ??= [];
-    task.history.push(entry);
+    task.history.push(mutableEntry(entry));
   });
 
   return entry;
 };
 
 /** Moves a task to `status`, recording the transition it actually made (see {@link finishStatus}). */
-export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
+export const setStatus = (task: Task, status: Status, options?: EditOptions): ChangeEntry | undefined =>
   update(task, { status }, options);
 
 /**
  * Closes a task on a reviewer's say-so — the one write that may reach `done` past named reviewers.
  * Reserved for a surface that acts for a person; never wire an agent tool to it.
  */
-export const approve = (task: Task, options?: EditOptions): HistoryEntry | undefined =>
+export const approve = (task: Task, options?: EditOptions): ChangeEntry | undefined =>
   update(task, { status: 'done' }, { ...options, approve: true });
 
 /**
@@ -465,12 +556,100 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
   });
 };
 
-/** Assigns a task, or unassigns it with `null`. */
-export const setAssignee = (
+//
+// Questions. A question and its answer are two history entries joined by id, so the exchange sits
+// in the task's log in the order it happened, and "answered" is derived rather than stored.
+//
+
+/** A question entry paired with its answer, if it has one yet. */
+export type QuestionThread = { question: QuestionEntry; answer?: AnswerEntry };
+
+export const isChangeEntry = (entry: HistoryEntry): entry is ChangeEntry =>
+  entry.event === 'created' || entry.event === 'updated';
+
+export const isQuestionEntry = (entry: HistoryEntry): entry is QuestionEntry => entry.event === 'question';
+
+export const isAnswerEntry = (entry: HistoryEntry): entry is AnswerEntry => entry.event === 'answer';
+
+/**
+ * Every question in a log, oldest first, each with its answer. Takes the log rather than the task so
+ * a React snapshot — the shape a row actually renders from — answers the same way. Only the first
+ * answer to a question counts: the asker was resumed on it, so a later one describes a decision it
+ * never saw.
+ */
+export const getQuestions = (history: readonly HistoryEntry[] | undefined): QuestionThread[] => {
+  const answers = new Map<string, AnswerEntry>();
+  for (const entry of history ?? []) {
+    if (isAnswerEntry(entry) && !answers.has(entry.questionId)) {
+      answers.set(entry.questionId, entry);
+    }
+  }
+
+  return (history ?? []).filter(isQuestionEntry).map((question) => {
+    const answer = answers.get(question.id);
+    return answer ? { question, answer } : { question };
+  });
+};
+
+/** The questions in a log that nobody has answered yet. */
+export const getPendingQuestions = (history: readonly HistoryEntry[] | undefined): QuestionEntry[] =>
+  getQuestions(history).flatMap(({ question, answer }) => (answer ? [] : [question]));
+
+export type AskProps = Pick<QuestionEntry, 'text' | 'context' | 'options' | 'conversation'> &
+  Pick<EditOptions, 'actor' | 'date'>;
+
+/**
+ * Records a question on the task. Leaves the status alone: whether a question blocks the work is
+ * the asker's call, made with {@link setStatus} so the log records that transition too.
+ */
+export const ask = (task: Task, { text, context, options, conversation, actor, date }: AskProps): QuestionEntry => {
+  const entry: QuestionEntry = {
+    id: EntityId.random(),
+    date: date ?? new Date().toISOString(),
+    ...(actor ? { actor } : {}),
+    event: 'question',
+    text: text.trim(),
+    ...(context ? { context } : {}),
+    ...(options && options.length > 0 ? { options } : {}),
+    ...(conversation ? { conversation } : {}),
+  };
+  appendHistory(task, entry);
+  return entry;
+};
+
+/**
+ * Records an answer to one of the task's questions. Refused — returning `undefined` and writing
+ * nothing — when the text is blank, the question is not in this task's log, or it is already
+ * answered: a blank answer would resume an agent with nothing to go on, and a second one would
+ * resume it against a decision it never saw.
+ */
+export const answer = (
   task: Task,
-  assignee: Actor.Actor | null,
-  options?: EditOptions,
-): HistoryEntry | undefined => update(task, { assignee }, options);
+  questionId: string,
+  text: string,
+  { actor, date }: Pick<EditOptions, 'actor' | 'date'> = {},
+): AnswerEntry | undefined => {
+  const trimmed = text.trim();
+  const thread = getQuestions(task.history).find(({ question }) => question.id === questionId);
+  if (trimmed === '' || !thread || thread.answer) {
+    return undefined;
+  }
+
+  const entry: AnswerEntry = {
+    id: EntityId.random(),
+    date: date ?? new Date().toISOString(),
+    ...(actor ? { actor } : {}),
+    event: 'answer',
+    questionId: thread.question.id,
+    answer: trimmed,
+  };
+  appendHistory(task, entry);
+  return entry;
+};
+
+/** Assigns a task, or unassigns it with `null`. */
+export const setAssignee = (task: Task, assignee: Actor.Actor | null, options?: EditOptions): ChangeEntry | undefined =>
+  update(task, { assignee }, options);
 
 //
 // Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping and

@@ -9,8 +9,9 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useDebugLog } from '../DebugOverlay';
-import { MobileLayoutProvider } from './MobileLayoutContext';
+import { useDebugLog } from '../DebugOverlay/index.ts';
+import { MobileLayoutProvider } from './MobileLayoutContext.ts';
+import { describeScrollTarget } from './scroll-target.ts';
 
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
 const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
@@ -128,12 +129,10 @@ const useAutoScroll = () => {
     };
 
     const detectContainerScroll = (event: Event) => {
-      const el = event.target as HTMLElement;
-      if (el === document.documentElement || el === document.body) {
-        return;
+      const description = describeScrollTarget(event.target);
+      if (description) {
+        dbg(`scroll: ${description}`);
       }
-
-      dbg(`scroll: ${el.tagName}.${Array.from(el.classList).slice(0, 2).join('.')} top=${el.scrollTop.toFixed(0)}`);
     };
 
     return combine(

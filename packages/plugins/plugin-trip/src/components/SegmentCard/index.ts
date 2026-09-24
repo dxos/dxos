@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SegmentCard';
-export * from './SegmentEditableCard';
+export * from './SegmentCard.tsx';
+export * from './SegmentEditableCard.tsx';

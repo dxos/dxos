@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { stepVelocity } from './follow';
+import { stepVelocity } from './follow.ts';
 
 const maxSpeed = 1_600;
 const acceleration = 3_200;

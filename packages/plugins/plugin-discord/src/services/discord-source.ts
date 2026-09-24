@@ -12,8 +12,8 @@ import { type Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants';
-import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord';
+import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants.ts';
+import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord.ts';
 
 const MESSAGE_PAGE_LIMIT = 100;
 const GUILD_PAGE_LIMIT = 200;

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { DebugModel } from './debug-model';
+import { DebugModel } from './debug-model.ts';
 
 describe('DebugModel', () => {
   test('reads every registered probe in one pass', () => {

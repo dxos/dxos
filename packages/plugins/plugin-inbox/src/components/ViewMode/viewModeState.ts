@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { ViewState } from '@dxos/react-ui-attention';
 
-import { VIEW_MODES, type ViewMode } from './viewMode';
+import { VIEW_MODES, type ViewMode } from './viewMode.ts';
 
 /**
  * The message body view mode as per-context UI state, sticky per conversation and keyed by the

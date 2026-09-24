@@ -13,7 +13,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { exportFeedMessages, replaceFeed, resetMailbox } from './archive';
+import { exportFeedMessages, replaceFeed, resetMailbox } from './archive.ts';
 
 describe('feed archive', () => {
   let builder: EchoTestBuilder;

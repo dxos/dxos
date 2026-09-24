@@ -2,14 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+/// <reference types="@vitest/browser-playwright" />
+
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { cleanup, render, screen } from '@testing-library/react';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React from 'react';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import React, { StrictMode, Suspense, use, useState } from 'react';
 import { afterEach, describe, test } from 'vitest';
+import { cdp } from 'vitest/browser';
 
-import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../types';
-import { createMenuAction } from '../util';
-import { makeMenuActions, useMenuContribution, useMenuItems } from './useMenuActions';
+import { MenuBuilder } from '../builder.ts';
+import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../types.ts';
+import { createMenuAction } from '../util.ts';
+import { makeMenuActions, useMenuBuilder, useMenuContribution, useMenuItems } from './useMenuActions.ts';
 
 const createMenu = (baseItems: MenuItem[] = []): MenuActions => {
   const baseItemsAtom = Atom.make<MenuItem[] | null>(baseItems);
@@ -160,3 +166,86 @@ describe('useMenuContribution', () => {
     expect(screen.queryByText('Contributed Action')).toBeNull();
   });
 });
+
+describe('useMenuBuilder', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  test('once unmounted, leaves nothing in the registry', async ({ expect }) => {
+    const registry = Registry.make();
+    const renderToolbar = (label: string) => (
+      <StrictMode>
+        <RegistryContext.Provider value={registry}>
+          <Toolbar label={label} />
+        </RegistryContext.Provider>
+      </StrictMode>
+    );
+
+    const { rerender, unmount } = render(renderToolbar('one'));
+    rerender(renderToolbar('two'));
+    rerender(renderToolbar('three'));
+    expect(screen.getByTestId('item-0').textContent).toBe('three');
+
+    unmount();
+    await expect.poll(() => collectedSize(registry)).toBe(0);
+  });
+
+  test('a render that never commits leaves nothing in the registry', async ({ expect }) => {
+    const registry = Registry.make();
+    render(
+      <RegistryContext.Provider value={registry}>
+        <Suspense fallback={null}>
+          <Toolbar label='one' />
+          <Suspend />
+        </Suspense>
+      </RegistryContext.Provider>,
+    );
+    expect(screen.queryByTestId('item-0')).toBeNull();
+    await expect.poll(() => collectedSize(registry)).toBe(0);
+  });
+
+  test('renders when its dependencies change on every render', ({ expect }) => {
+    const Unstable = () => {
+      const menu = useMenuBuilder(
+        () =>
+          MenuBuilder.make()
+            .action('act', { label: 'act' }, () => {})
+            .build(),
+        [{}],
+      );
+      return <Consumer menu={menu} />;
+    };
+
+    render(
+      <RegistryContext.Provider value={Registry.make()}>
+        <Unstable />
+      </RegistryContext.Provider>,
+    );
+    expect(screen.getByTestId('item-0').textContent).toBe('act');
+  });
+});
+
+/** Its action closes over component state, as a real menu's does, so the graph can reach the fiber. */
+const Toolbar = ({ label }: { label: string }) => {
+  const [, setClicks] = useState(0);
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action('act', { label }, () => setClicks((clicks) => clicks + 1))
+        .build(),
+    [label],
+  );
+  return <Consumer menu={menu} />;
+};
+
+/** Registry size once garbage is collected, which releases the atoms a graph model owns. */
+const collectedSize = async (registry: Registry.AtomRegistry) => {
+  await cdp().send('HeapProfiler.collectGarbage');
+  return registry.getNodes().size;
+};
+
+const never = new Promise<never>(() => {});
+
+/** Suspends forever, so the boundary it sits in never commits. */
+const Suspend = () => use(never);

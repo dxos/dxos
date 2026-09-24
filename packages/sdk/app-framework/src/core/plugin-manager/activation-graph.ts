@@ -8,8 +8,8 @@ import * as GraphEdge from '@dxos/graph/GraphEdge';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import type * as Capability from '../capability';
-import type * as Plugin from '../plugin';
+import type * as Capability from '../capability.ts';
+import type * as Plugin from '../plugin.ts';
 
 //
 // Pure ordering logic for the activation scheduler, built on the shared `@dxos/graph` model.

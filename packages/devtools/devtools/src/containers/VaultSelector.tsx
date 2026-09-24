@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Select } from '../components';
+import { Select } from '../components/index.ts';
 
 type Target = { value: string; label: string };
 

@@ -20,17 +20,23 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
-import * as Database from '../../Database';
-import type * as Type from '../../Type';
+import * as Database from '../../Database.ts';
+import type * as Type from '../../Type.ts';
 import {
   ReferenceAnnotationId,
   getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
-import { type JsonSchemaType } from '../JsonSchema';
-import * as RefAtoms from './atoms';
+} from '../Annotation/annotations.ts';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
+} from '../common/types/index.ts';
+import { ObjectDeletedId } from '../common/types/model-symbols.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
+import * as RefAtoms from './atoms.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -172,6 +178,17 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
 };
 
 /**
+ * Disposition of a deleted target, mirroring the query option of the same name.
+ */
+export type LoadOptions = {
+  deleted?: 'exclude' | 'include';
+};
+
+/** Reads the deletion marker off a value of unconstrained target type. */
+const isTargetDeleted = (target: unknown): boolean =>
+  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
+
+/**
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
@@ -216,13 +233,13 @@ export interface Ref<T> extends Pipeable.Pipeable {
    *   uses: {@link load}
    *   related: org.dxos.echo-react.useObjectReactive
    */
-  load(): Promise<T>;
+  load(options?: LoadOptions): Promise<T>;
 
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
 
-  tryLoad(): Promise<T | undefined>;
+  tryLoad(options?: LoadOptions): Promise<T | undefined>;
 
   /**
    * Subscribe to the ref's resolution event.
@@ -333,6 +350,18 @@ export type JsonSchemaReferenceInfo = {
 const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String }) as unknown as Schema.Codec<EncodedReference> &
   Schema.Struct<{ readonly '/': Schema.String }>;
 
+/** The `identifier` annotation every ref declaration carries, naming the type it points at. */
+const refIdentifier = (target: string): string => `Ref<${target}>`;
+
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`, which would replace a ref property with a `$ref` and strip the annotations readers key
+ * off; generators use this to keep refs inline while still naming genuinely recursive schemas.
+ */
+export const isRefIdentifier = (identifier: string | undefined): boolean => identifier?.startsWith('Ref<') ?? false;
+
 /**
  * @internal
  */
@@ -356,8 +385,17 @@ export const createEchoReferenceSchema = (
 
   // Effect 4 splits what v3's three-parameter `declare` did into two steps: `declare` states the
   // decoded type, `encodeTo` attaches the wire form and the transformation between them.
-  // TODO(dmaretskyi): Add name and description.
   const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
+    .annotate({
+      // Without an `identifier` Effect renders every rejection of a ref field as the placeholder
+      // `Expected <Declaration>`, which names neither the target type nor that a reference was
+      // wanted; `InvalidOperationInput` interpolates that message verbatim to remote callers.
+      // `identifier` only, since `title` and `description` travel into the generated JSON schema
+      // and would overwrite whatever the field's own annotations say. Built from the same value as
+      // `$ref` so it survives a JSON-schema round trip, which reconstructs the schema from `echoUri`
+      // where the original had only a typename.
+      identifier: refIdentifier(referenceInfo.schema.$ref),
+    })
     .pipe(
       Schema.encodeTo(
         // The JSON-schema keys live on the encoded node: `toJsonSchemaDocument` serializes the
@@ -368,7 +406,7 @@ export const createEchoReferenceSchema = (
           $ref: JSON_SCHEMA_ECHO_REF_ID,
           reference: referenceInfo,
         }),
-        SchemaTransformation.transformOrFail({
+        SchemaTransformation.transformEffect({
           decode: (encoded) =>
             Effect.gen(function* () {
               const dbService = yield* Effect.serviceOption(Database.Service);
@@ -476,7 +514,7 @@ export interface RefResolver {
    * Resolver ref asynchronously.
    * @deprecated Use {@link resolve} with `{ source: 'network' }`. Removed in Task 11.
    */
-  resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined>;
+  resolveLegacy(uri: URI.URI, options?: LoadOptions): Promise<AnyProperties | undefined>;
 
   /**
    * @deprecated Use {@link resolve} + `Type.getSchema`. Removed in Task 11.
@@ -585,27 +623,25 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  async load(): Promise<T> {
-    if (this.#target) {
-      return this.#target;
-    }
-    invariant(this.#resolver, 'Resolver is not set');
-    const obj = await this.#resolver.resolveLegacy(this.#uri);
+  async load(options?: LoadOptions): Promise<T> {
+    const obj = await this.tryLoad(options);
     if (obj == null) {
       throw new Error('Object not found');
     }
-    return obj as T;
+    return obj;
   }
 
   /**
    * @inheritdoc
    */
-  async tryLoad(): Promise<T | undefined> {
+  async tryLoad(options?: LoadOptions): Promise<T | undefined> {
     if (this.#target) {
-      return this.#target;
+      // An inlined target never reaches the resolver, so it is checked here instead.
+      const hidden = options?.deleted !== 'include' && isTargetDeleted(this.#target);
+      return hidden ? undefined : this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    return (await this.#resolver.resolveLegacy(this.#uri)) as T | undefined;
+    return (await this.#resolver.resolveLegacy(this.#uri, options)) as T | undefined;
   }
 
   /**

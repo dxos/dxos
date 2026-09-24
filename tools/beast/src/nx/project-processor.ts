@@ -5,7 +5,7 @@
 import path from 'path';
 import { type ClassDeclaration, Project } from 'ts-morph';
 
-import { type WorkspaceProcessor } from '../nx';
+import { type WorkspaceProcessor } from '../nx/index.ts';
 
 /**
  * Process Nx project and package.

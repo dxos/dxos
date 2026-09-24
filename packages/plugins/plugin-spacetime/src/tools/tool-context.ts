@@ -7,8 +7,8 @@ import type { Manifold } from 'manifold-3d';
 
 import { Model, Scene } from '#types';
 
-import { type getManifold } from '../engine';
-import { type EditorState } from './editor-state';
+import { type getManifold } from '../engine/index.ts';
+import { type EditorState } from './editor-state.ts';
 
 /** Selection granularity mode. */
 export type SelectionMode = 'object' | 'face';

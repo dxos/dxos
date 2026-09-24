@@ -18,7 +18,7 @@ import { TagIndex, Text } from '@dxos/schema';
 
 import { CrmOperation } from '#types';
 
-import { crmPipeline } from './crm-pipeline';
+import { crmPipeline } from './crm-pipeline.ts';
 
 describe('crm pipeline project template', () => {
   let builder: EchoTestBuilder;

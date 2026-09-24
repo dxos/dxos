@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { type ComputeGraph, ComputeGraphModel, type ComputeNode } from '../types';
-import type * as Sequence from './Sequence';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
+import { type ComputeGraph, ComputeGraphModel, type ComputeNode } from '../types/index.ts';
+import type * as Sequence from './Sequence.ts';
 
 /**
  * Compile a sequence into a compute graph.

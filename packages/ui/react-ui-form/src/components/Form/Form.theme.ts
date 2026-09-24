@@ -16,50 +16,34 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    section: 'flex flex-col py-form-section-gap first:pt-0',
-    group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
-    sectionHeader: '',
-    sectionTitle: 'text-lg',
-    sectionDescription: 'text-description',
-    // A `<fieldset>`: laid out as a column so its legend (floated by the fieldset theme) is a child
-    // in flow rather than the browser's border-drawn legend.
     fieldSet: 'flex flex-col',
     fieldSetLegend: 'w-full',
+    fieldSetTitle: '',
+    fieldSetDescription: 'text-description',
+    // Padding under whichever of legend or description comes last.
+    fieldSetHeader: '',
+    fieldSetActions: 'ms-auto flex items-center',
+    // The folding body of a collapsible field set.
+    fieldSetBody: 'flex flex-col',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
     // Height comes from the label cell (`Field.Label` is a control-height row); this only lays the
     // columns out and centres the trailing cells against it.
     fieldLabel: 'grid grid-cols-[1fr_auto_auto_auto] items-center',
-    fieldLabelText: '',
-    fieldDescription: 'text-description',
+    fieldLabelText: 'text-sm text-description',
+    fieldDescription: 'text-sm text-green-500',
     fieldControl: '',
     fieldValidation: '',
     // Action bar (cancel/save), equal-width columns flowing horizontally.
     actions: 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding',
     // Standalone submit row (full-width primary button).
     submit: 'flex w-full pt-form-padding',
-    // Collapsible field-set body: indented column of sub-fields.
-    fieldSetBody: 'flex flex-col px-trim-sm pb-trim-sm',
-    // Bordered container wrapping a collapsible nested group, plus its top spacing.
-    fieldSetBox: 'flex flex-col border border-subdued-separator rounded-sm',
-    fieldSetBoxOuter: '',
   },
   variants: {
     variant: {
       default: {},
       settings: {
         content: 'dx-document',
-        // Gap on the section spaces its direct children — section title/description and, for action
-        // panels, the `Form.Field`s placed directly in the section (which have no `fieldSet` wrapper).
-        section: 'py-form-section-gap! gap-trim-md',
-        sectionHeader: 'pb-form-section-gap',
-        sectionTitle: 'px-trim-md text-xl',
-        sectionDescription: 'px-trim-md',
-        // No top padding: the section gap already separates the field set from the title above it.
-        fieldSet: 'flex flex-col gap-trim-md',
-        // Nested groups render their sub-fields through `fieldSetBody`, so it needs the same gap as
-        // `fieldSet` — otherwise fields inside a group sit flush while their top-level siblings don't.
-        fieldSetBody: 'flex flex-col gap-trim-md px-trim-sm pb-trim-sm',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
@@ -79,9 +63,110 @@ const formStyles = tv({
         fieldValidation: '[grid-area:validation]',
       },
     },
+    // Where the row lays its label; the theme decides how, and the settings card keeps its grid.
+    labelPlacement: {
+      above: {},
+      beside: {},
+    },
+    // Whether a legend renders at all; an unlabelled field set has nothing to hang its top space on.
+    labelled: {
+      true: {},
+      false: {},
+    },
+    // A nested field set is a bordered `group` (a struct's fields) or a titled `section` of free content.
+    appearance: {
+      group: {},
+      section: {
+        fieldSetTitle: 'text-lg',
+        fieldSetLegend: 'pb-trim-sm',
+        fieldSetHeader: 'pb-trim-sm',
+      },
+    },
+    // A top-level field set is a titled section; a nested one is an indented, bordered group.
+    depth: {
+      // The section's top space sits on the legend: WebKit lays a rendered legend at the fieldset's
+      // border edge, ignoring its padding-block-start.
+      root: {
+        fieldSet: 'pb-form-section-gap',
+        fieldSetLegend: 'pt-form-section-gap',
+        fieldSetTitle: 'text-lg',
+      },
+      nested: {},
+    },
   },
+  compoundVariants: [
+    {
+      // The legend sits above the box, like a field's label above its control; the body is the box.
+      depth: 'nested',
+      appearance: 'group',
+      class: {
+        fieldSetBody: 'border border-subdued-separator rounded-sm px-trim-sm py-trim-sm',
+      },
+    },
+    {
+      // The control leads and the label follows it on one line; description and error span both.
+      variant: 'default',
+      labelPlacement: 'beside',
+      class: {
+        field: 'grid grid-cols-[auto_1fr] items-center gap-x-2 mt-2',
+        fieldDescription: 'col-span-2',
+        fieldValidation: 'col-span-2',
+      },
+    },
+    {
+      labelled: false,
+      depth: 'root',
+      class: {
+        fieldSet: 'pt-form-section-gap',
+      },
+    },
+    {
+      variant: 'default',
+      depth: 'root',
+      class: {
+        fieldSet: '[&:first-child>legend]:pt-0 first:pt-0',
+      },
+    },
+    {
+      variant: 'settings',
+      depth: 'root',
+      class: {
+        // The gap spaces the section's direct children: its header and every field or group in it.
+        fieldSet: 'pb-form-section-gap! gap-trim-md',
+        fieldSetHeader: 'pb-form-section-gap',
+        fieldSetActions: 'px-trim-md',
+        fieldSetTitle: 'px-trim-md text-xl',
+        fieldSetDescription: 'px-trim-md',
+        fieldSetBody: 'gap-trim-md',
+      },
+    },
+    {
+      variant: 'settings',
+      depth: 'nested',
+      class: {
+        // The same gap as the root, or fields inside a group sit flush while their siblings do not.
+        fieldSetBody: 'gap-trim-md',
+      },
+    },
+    {
+      variant: 'settings',
+      depth: 'nested',
+      appearance: 'section',
+      class: {
+        // Inset to the root title's edge; a section after another adds the root's gap again to read as a break.
+        fieldSet: '[fieldset+&]:pt-trim-md',
+        fieldSetTitle: 'px-trim-md',
+        fieldSetDescription: 'px-trim-md',
+        fieldSetBody: 'px-trim-md',
+      },
+    },
+  ],
   defaultVariants: {
     variant: 'default',
+    labelPlacement: 'above',
+    labelled: true,
+    appearance: 'group',
+    depth: 'root',
   },
 });
 

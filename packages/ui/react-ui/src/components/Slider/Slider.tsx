@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 
 type SliderProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'div'>, 'defaultValue' | 'dir' | 'onChange' | 'aria-labelledby'>
@@ -89,7 +89,7 @@ const Slider = forwardRef<HTMLDivElement, SliderProps>(
         name={name}
         // The machine names each thumb from this list, by index.
         aria-label={thumbLabels ?? (ariaLabel !== undefined ? [ariaLabel] : undefined)}
-        // Told the thumb's size (h-3 w-3), the machine positions it from the first render instead of
+        // Told the thumb's size (size-3), the machine positions it from the first render instead of
         // hiding it until a measurement lands.
         thumbSize={THUMB_SIZE}
         className={tx('slider.root', styleProps, classNames)}

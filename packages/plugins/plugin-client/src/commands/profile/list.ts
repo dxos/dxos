@@ -13,7 +13,7 @@ import { CommandConfig, printList } from '@dxos/cli-util';
 import { Config } from '@dxos/client';
 import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
 
-import { printProfile } from './util';
+import { printProfile } from './util.ts';
 
 export const list = Command.make(
   'list',

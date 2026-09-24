@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type Node, type Side } from '../../types';
+import { type Node, type Side } from '../../types/index.ts';
 
 const POSITION: Record<Side, Position> = {
   top: Position.Top,

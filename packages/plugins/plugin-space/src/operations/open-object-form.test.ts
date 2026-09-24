@@ -24,8 +24,8 @@ import { ComplexMap } from '@dxos/util';
 import { SpacePlugin } from '#plugin';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import type { ObjectFormHandle } from '../util';
-import { TestObject } from './testing';
+import type { ObjectFormHandle } from '../util/index.ts';
+import { TestObject } from './testing.ts';
 
 /**
  * `OpenObjectForm` returns what the dialog produced, which means the handler has to stay suspended
@@ -63,7 +63,10 @@ describe('SpaceOperation.OpenObjectForm', () => {
     const { harness, db } = await setup((handle) => {
       handle.dismiss();
       handle.retain();
-      setTimeout(() => handle.settle(object), 10);
+      // A later task, not a synchronous one: the draft object is only ready after the
+      // dismiss/retain dance settles, same as it would be in the real flow. A microtask defers it
+      // deterministically, without racing `dismiss`'s own internal (already-cleared) timer.
+      queueMicrotask(() => handle.settle(object));
     });
     await using _harness = harness;
 
@@ -106,7 +109,6 @@ const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugi
 
 const ephemeralState = () =>
   Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    awaiting: undefined,
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},
@@ -122,7 +124,7 @@ const setup = async (onOpen: (handle: ObjectFormHandle) => void) => {
 
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   const space = await client.spaces.create();
   await space.waitUntilReady();
 

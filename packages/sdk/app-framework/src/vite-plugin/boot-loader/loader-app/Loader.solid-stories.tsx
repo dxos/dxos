@@ -7,8 +7,27 @@ import './boot-loader.css';
 import { onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-import { Loader } from './Loader';
-import { createLoaderStore } from './store';
+import { CHANNELS, channelMarkFilter } from '@dxos/brand/channels';
+
+// The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`, which also owns each
+// channel's colour; a channel recolours the mark with that filter rather than shipping a copy.
+// eslint-disable-next-line import/no-relative-packages
+import composerIcon from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
+import { Loader } from './Loader.tsx';
+import { DEFAULT_SPRITE_PATH, createLoaderStore } from './store.ts';
+
+/** How the ring's mark reads: released, as each channel recolours it, or absent. */
+const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {
+  none: {},
+  production: { svg: composerIcon },
+  ...Object.fromEntries(
+    CHANNELS.map((channel) => [channel, { svg: composerIcon, filter: channelMarkFilter(channel) }]),
+  ),
+};
+
+type StoryArgs = {
+  mark: keyof typeof MARKS;
+};
 
 /**
  * The boot loader, mounted from the same component the inlined bundle uses, so the two cannot drift.
@@ -16,9 +35,11 @@ import { createLoaderStore } from './store';
  * The backdrop `#boot-loader` is static markup injected into `index.html` by `bootLoaderPlugin`, not
  * rendered by this component — the decorator below stands in for it.
  */
-const meta: Meta = {
+const meta: Meta<StoryArgs> = {
   title: 'sdk/app-framework/BootLoader',
   parameters: { layout: 'fullscreen' },
+  args: { mark: 'production' },
+  argTypes: { mark: { control: 'select', options: Object.keys(MARKS) } },
   decorators: [
     (Story: any) => (
       <div id='boot-loader' style={{ position: 'fixed', inset: '0' }}>
@@ -30,7 +51,7 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<StoryArgs>;
 
 /**
  * A representative slice of the enabled plugin set, taken from real `dx.config.ts` meta so the
@@ -49,8 +70,9 @@ const PLUGINS = [
 
 /** Normal startup: the ring creeps, statuses append, plugin icons light, then the host reports ready. */
 export const Default: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.pushStatus({ humanized: 'Loading plugins', range: { index: 12, total: 80 } }), 400),
@@ -64,8 +86,29 @@ export const Default: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
+};
+
+export const Dev: Story = {
+  ...Default,
+  args: { mark: 'dev' },
+};
+
+export const Preview: Story = {
+  ...Default,
+  args: { mark: 'preview' },
+};
+
+export const Staging: Story = {
+  ...Default,
+  args: { mark: 'staging' },
+};
+
+/** The ring alone, as a build without a mark renders it. */
+export const NoMark: Story = {
+  ...Default,
+  args: { mark: 'none' },
 };
 
 /**
@@ -73,8 +116,9 @@ export const Default: Story = {
  * activates and fades in. Registered-but-never-activated plugins draw nothing.
  */
 export const PluginActivation: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Activating plugins…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       store.setPlugins(PLUGINS);
       store.setProgress(0.5);
@@ -88,7 +132,7 @@ export const PluginActivation: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
 
@@ -100,8 +144,9 @@ export const PluginActivation: Story = {
  * the wiring is visible without a host attached.
  */
 export const Stalled: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.setProgress(0.35), 500),
@@ -115,14 +160,15 @@ export const Stalled: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
 
 /** The offer is withdrawn if startup completes after all — `ready()` clears it. */
 export const StalledThenReady: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.stalled(() => console.log('abort pressed')), 1_000),
@@ -132,6 +178,6 @@ export const StalledThenReady: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };

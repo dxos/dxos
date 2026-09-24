@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SentenceBuffer, splitSentences } from './sentence-buffer';
+import { SentenceBuffer, splitSentences } from './sentence-buffer.ts';
 
 const block = (text: string, started = 's') => ({ _tag: 'transcript' as const, started, text });
 

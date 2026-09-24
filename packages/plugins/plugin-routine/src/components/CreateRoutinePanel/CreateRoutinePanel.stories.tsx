@@ -21,7 +21,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { RoutineCapabilities } from '#types';
 
-import { CreateRoutinePanel } from './CreateRoutinePanel';
+import { CreateRoutinePanel } from './CreateRoutinePanel.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions];
 

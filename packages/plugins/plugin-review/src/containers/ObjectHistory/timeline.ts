@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Commit } from '@dxos/react-ui-components';
+import { type Commit } from '@dxos/react-ui-trace';
 import { type Text } from '@dxos/schema';
 import { Branch, type History, Version, diffSpans, diffStats } from '@dxos/versioning';
 

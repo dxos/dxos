@@ -20,7 +20,7 @@ import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type Tool, ToolList } from './ToolList';
+import { type Tool, ToolList } from './ToolList.tsx';
 
 // Fixture: representative subset of the @dxos/introspect-mcp tools so the
 // story has realistic content without depending on the actual schemas at

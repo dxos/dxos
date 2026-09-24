@@ -5,8 +5,8 @@
 import { ToggleGroup as ToggleGroupPrimitive } from '@ark-ui/react/toggle-group';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button';
-import { IconButton, type IconButtonProps } from './IconButton';
+import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button.tsx';
+import { IconButton, type IconButtonProps } from './IconButton.tsx';
 
 type ToggleGroupCommonProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'dir' | 'onChange'> & {
   disabled?: boolean;

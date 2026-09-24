@@ -10,7 +10,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type MessageChromeProps, type MessageRenderer, chatRenderer, defaultRenderer } from '../';
+import { type MessageChromeProps, type MessageRenderer, chatRenderer, defaultRenderer } from '../index.ts';
 import {
   BareEditorItem,
   DecoratedEditorItem,
@@ -18,8 +18,8 @@ import {
   MarkdownProbeItem,
   TextItem,
   ThemedEditorItem,
-} from './controls';
-import { chatRegistry } from './widgets';
+} from './controls.tsx';
+import { chatRegistry } from './widgets.tsx';
 
 const UNIFORM_CONTROLS = {
   'uniform-text': TextItem,

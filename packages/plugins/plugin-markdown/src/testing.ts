@@ -13,7 +13,7 @@ import { HasSubject } from '@dxos/types';
 import { MarkdownOperationHandlerSet } from '#operations';
 import { Markdown } from '#types';
 
-export * as MarkdownPlugin from './MarkdownPlugin.testing';
+export * as MarkdownPlugin from './MarkdownPlugin.testing.ts';
 
 export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;
 

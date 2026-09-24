@@ -9,5 +9,5 @@ import * as TripEvents from '@dxos/plugin-trip/TripEvents';
 export const RoutingService = Capability.lazyModule(
   'RoutingService',
   { provides: [TripCapabilities.RoutingService], activatesOn: TripEvents.Start },
-  () => import('./routing-service'),
+  () => import('./routing-service.ts'),
 );

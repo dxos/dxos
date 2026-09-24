@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { useMagazinePostData } from '#atoms';
 import { Magazine, Subscription } from '#types';
 
-import { formatDate } from '../../util/date';
+import { formatDate } from '../../util/date.ts';
 
 export type MagazineTileProps = {
   post: Subscription.Post;

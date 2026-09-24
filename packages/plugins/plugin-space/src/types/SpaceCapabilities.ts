@@ -9,7 +9,6 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
@@ -20,8 +19,8 @@ import { type ComplexMap, type Position } from '@dxos/util';
 import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
-import * as Settings from './Settings';
-import * as SpaceSchema from './SpaceSchema';
+import * as Settings from './Settings.ts';
+import * as SpaceSchema from './SpaceSchema.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
@@ -52,7 +51,6 @@ export type MergePreview = {
 
 /** Ephemeral space plugin state (not persisted). */
 export type SpaceEphemeralState = {
-  awaiting: string | undefined;
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
   viewersByObject: Record<string, ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>>;
@@ -100,27 +98,6 @@ export type OnCreateSpace = (params: {
 }) => Effect.Effect<void, Error, Operation.Service>;
 export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${meta.profile.key}.capability.onSpaceCreated`);
 
-/**
- * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
- * the content to write once the space exists.
- *
- * `apply` is a bound closure rather than a definition, so a consumer needs only "put this content in
- * that space" without dragging the builder and its schema into the dialog that lists it.
- */
-export type SpaceTemplate = Readonly<{
-  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
-  id: string;
-  /** Name for the picker, and the default space name when the template is chosen. */
-  label: string;
-  /** One line on what the template creates. */
-  description?: string;
-  icon?: string;
-  hue?: string;
-  /** Registers the content's types on the client, then writes it into the new space. */
-  apply: (params: { readonly client: Client; readonly space: Space }) => Promise<void>;
-}>;
-export const SpaceTemplate = Capability.make<SpaceTemplate>()(`${meta.profile.key}.capability.spaceTemplate`);
-
 export type OnTypeAdded = (params: {
   db: Database.Database;
   type: Type.AnyEntity;
@@ -162,7 +139,7 @@ export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySp
 
 /** Props passed to a `CreateObjectEntry.customPanel`. */
 export type CreateObjectCustomPanelProps = {
-  target: Database.Database | Collection.Collection;
+  target: Database.Database | Obj.Unknown;
   initialFormValues?: Record<string, any>;
   onCreateObject: (data: Record<string, any>) => void | Promise<void>;
 };

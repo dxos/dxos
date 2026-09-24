@@ -13,7 +13,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 
-import { QueryResultCache } from '../query';
+import { QueryResultCache } from '../query/index.ts';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
@@ -307,7 +307,7 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
       // `executeQuery` only knows `Entity.Unknown`; the caller's `T` is verified by `#query`'s own
       // filter/select AST at construction time, not by the compiler.
       result: entity as T,
-      resolution: { source: 'local', time: 0 },
+      resolution: { source: 'registry', time: 0 },
     }));
   }
 

@@ -13,6 +13,7 @@ package dxos.mesh.swarm;
  * Use for:
  * - Initial peer discovery (initiate session id between two peers).
  * - RTC negotiation (SDP offer/answer and ICE).
+ * - Ending a session before its transport connects.
  */
 message SwarmMessage {
   /// Swarm identifier.
@@ -35,10 +36,16 @@ message MessageData {
      */
     Signal signal = 3;
     SignalBatch signal_batch = 4;
+    Close close = 5;
   }
 }
 
 message Offer {
+}
+
+/// The sender ended the session before its transport connected.
+message Close {
+  string reason = 1;
 }
 
 message Answer {

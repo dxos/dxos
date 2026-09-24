@@ -57,7 +57,10 @@ export const RunHarness = Operation.make({
       description: 'The task handed to the harness, as the operator would type it.',
     }),
     model: Schema.optional(Schema.String).annotate({
-      description: 'DeepSeek model id, e.g. "deepseek-chat". Passed as DEEPSEEK_MODEL.',
+      description:
+        'DeepSeek model id, e.g. "deepseek-v4-flash" or "deepseek-v4-pro". Passed as DEEPSEEK_MODEL; ' +
+        'the harness chooses its own default when omitted. One id serves both thinking and ' +
+        'non-thinking mode — there is no separate reasoner model.',
     }),
     args: Schema.optional(Schema.Array(Schema.String)).annotate({
       description: 'Extra CLI arguments, inserted before the prompt.',

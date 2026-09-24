@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as References from 'effect/References';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -18,23 +19,27 @@ import { DXOS_VERSION } from '@dxos/client';
 import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
+import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
+import { FileSkill } from '@dxos/plugin-file/skills';
+import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
-import { analyticsStdio } from './analytics';
-import { makeLocalServer } from './local-server';
-import { SpaceToolkit, spaceHandlers } from './space-tools';
-import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
+import { analyticsStdio } from './analytics.ts';
+import { handshakeAttribution } from './legacy-initialize-analytics.ts';
+import { makeLocalServer } from './local-server.ts';
+import { SpaceToolkit, spaceHandlers } from './space-tools.ts';
+import { WATCH_CHILD_ENV, formatReady } from './watch-protocol.ts';
 
 /**
  * Names of the statically-defined tools; the projection refuses to build if one of them collides
- * with a name it defines. `whoami` is the last of them — the operation verbs are not tools at all
- * any more, but rows `queryOperations` returns and `invokeOperation` dispatches, and the session's
- * identity is the one fact a plugin operation cannot reach, since EDGE resolves it from an OAuth
- * grant rather than from a local client.
+ * with a name it defines. The operation verbs are not tools at all, but rows `queryOperations`
+ * returns and `invokeOperation` dispatches; these two are what an operation cannot reach. `whoami`
+ * reports the session's identity, which EDGE resolves from an OAuth grant rather than a local
+ * client, and `createUpload` mints a URL on a listener owned by this process.
  */
-const STATIC_TOOL_NAMES = ['whoami'] as const;
+const STATIC_TOOL_NAMES = ['whoami', 'createUpload'] as const;
 
 declare global {
   /**
@@ -52,7 +57,7 @@ declare global {
  * What `--watch` reloads on differs by build, so the description does too: from source the whole
  * imported graph is live, while the binary can only change through its dev-installed plugins.
  */
-const watchOption = Options.boolean('watch').pipe(
+const watchOption = Options.Boolean('watch').pipe(
   Options.withDescription(
     globalThis.DX_CLI_BUNDLED
       ? 'Restart the server when a dev-installed plugin changes.'
@@ -81,7 +86,7 @@ export const serve = Command.make(
     if (watch) {
       // Imported here rather than at the top so the supervisor is absent from the module graph of
       // the child it supervises, which would otherwise reload itself on every one of its own edits.
-      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch'));
+      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch.ts'));
       return yield* runWatchSupervisor();
     }
 
@@ -92,7 +97,13 @@ export const serve = Command.make(
     yield* manager.activate(AppActivationEvents.AssistantStart);
     yield* manager.activate(ProjectsEvents.Start);
 
-    const server = yield* makeLocalServer();
+    const uploads = new LocalUpload.Stage();
+    const server = yield* makeLocalServer({
+      // FilePlugin is not activated here (it is mostly UI), so its skill is served directly — without
+      // it no skill owns `file.createFromUpload` and the operation is invisible to the caller.
+      skills: [FileSkill],
+      overrides: [StagedUpload.createFromUploadHandler(uploads)],
+    });
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
@@ -100,10 +111,22 @@ export const serve = Command.make(
     // serves — it just reports nothing.
     const observability = Option.getOrUndefined(yield* Capability.getOption(ObservabilityCapabilities.Observability));
     const capture = observability && (yield* observability.isAvailable('mcp')) ? observability.mcp : undefined;
-    const stdio = capture ? McpServer.stdio.pipe(Layer.provide(analyticsStdio(capture))) : McpServer.stdio;
+    const stdio = capture
+      ? McpServer.stdio.pipe(
+          Layer.provide(
+            analyticsStdio(capture, [
+              // TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support.
+              handshakeAttribution,
+            ]),
+          ),
+        )
+      : McpServer.stdio;
 
-    const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
-      Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),
+    const staticToolkits = Layer.mergeAll(
+      McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server)))),
+      McpServer.toolkit(LocalUpload.UploadToolkit).pipe(
+        Layer.provide(LocalUpload.UploadToolkit.toLayer(LocalUpload.handlers(uploads))),
+      ),
     );
 
     // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor
@@ -128,13 +151,20 @@ export const serve = Command.make(
           McpServer.layerStdio({
             name: McpServer.identity.name,
             version: DXOS_VERSION,
-            protocols: [McpProtocol.v2025_06_18],
+            protocols: [
+              // TODO(wittjosiah): Remove when dx mcp serve drops 2025-era MCP support.
+              // First, because a request carrying no version before `initialize` falls back to the first adapter.
+              McpProtocol.v2025_06_18,
+              McpProtocol.v2026_07_28,
+            ],
           }),
         ),
         Layer.provide(stdio),
       ),
-    );
+    ).pipe(Effect.ensuring(Effect.promise(() => uploads.close())));
   }),
 ).pipe(
   Command.withDescription("Run the DXOS MCP server locally over stdio, against this profile's identity and spaces."),
+  // stdout carries the protocol, so Effect's logger, which reports tool defects, writes to stderr.
+  Command.provideSync(References.LogToStderr, true),
 );

@@ -13,7 +13,7 @@ import { AccessToken } from '@dxos/link';
 
 import { Sandbox } from '#types';
 
-import { mergeExecEnv, resolveSandboxCredentialEnv } from './sandbox-env';
+import { mergeExecEnv, resolveSandboxCredentialEnv } from './sandbox-env.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

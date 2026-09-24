@@ -9,12 +9,12 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import * as Type from '../../../Type';
-import { EchoObjectSchema } from '../../Entity';
-import { getSchema } from '../types';
-import { makeObject } from './make-object';
-import { change } from './reactive';
+import * as Obj from '../../../Obj.ts';
+import * as Type from '../../../Type.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
+import { getSchema } from '../types/index.ts';
+import { makeObject } from './make-object.ts';
+import { change } from './reactive.ts';
 
 const Organization = Schema.Struct({
   name: Schema.String,

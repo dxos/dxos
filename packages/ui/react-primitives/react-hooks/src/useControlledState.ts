@@ -4,7 +4,7 @@
 
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
-import { useDynamicRef } from './useDynamicRef';
+import { useDynamicRef } from './useDynamicRef.ts';
 
 /**
  * A stateful hook with a controlled value.

@@ -34,7 +34,6 @@ export default Capability.makeModule(
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-      awaiting: undefined,
       sdkMigrationRunning: {},
       navigableCollections: false,
       viewersByObject: {},

@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Ibkr } from '#types';
 
-import { extractFundamentalsFromEdgar } from './extract-edgar-fundamentals';
+import { extractFundamentalsFromEdgar } from './extract-edgar-fundamentals.ts';
 
 const factsFixture = readFileSync(
   fileURLToPath(new URL('./__fixtures__/sec-companyfacts-aapl.json', import.meta.url)),

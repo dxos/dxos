@@ -11,10 +11,8 @@ import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import { StoreError } from '../errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message';
+import { StoreError } from '../errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message/index.ts';
 
 /** A crawled message persisted outside ECHO — the pipeline's replayable working set. */
 export type StoredMessage = {
@@ -51,13 +49,9 @@ const fail = (message: string) => (cause: unknown) => new StoreError({ message, 
 
 /**
  * Applies any migrations this database has not recorded yet.
- *
- * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
- * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
  */
-const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
   Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -88,50 +82,49 @@ const toMessage = (row: Row): StoredMessage => ({
 
 export class MessageStore extends Context.Service<MessageStore, Service>()('@dxos/pipeline-discord/MessageStore') {}
 
-export const layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-  Layer.effect(
-    MessageStore,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate().pipe(Effect.orDie);
-      return {
-        has: (id) =>
-          sql<{ found: number }>`SELECT COUNT(*) AS found FROM message WHERE id = ${id}`.pipe(
-            Effect.map((rows) => Number(rows[0]?.found ?? 0) > 0),
-            Effect.mapError(fail('Failed to read message')),
-          ),
-        put: (message) =>
-          sql`INSERT INTO message (id, target_id, author_id, author_label, text, created_at, parent_id, raw)
+export const layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient> = Layer.effect(
+  MessageStore,
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+    yield* migrate().pipe(Effect.orDie);
+    return {
+      has: (id) =>
+        sql<{ found: number }>`SELECT COUNT(*) AS found FROM message WHERE id = ${id}`.pipe(
+          Effect.map((rows) => Number(rows[0]?.found ?? 0) > 0),
+          Effect.mapError(fail('Failed to read message')),
+        ),
+      put: (message) =>
+        sql`INSERT INTO message (id, target_id, author_id, author_label, text, created_at, parent_id, raw)
           VALUES (${message.id}, ${message.targetId}, ${message.authorId}, ${message.authorLabel ?? null},
             ${message.text}, ${message.createdAt ?? null}, ${message.parentId ?? null}, ${message.raw})
           ON CONFLICT(id) DO UPDATE SET target_id = excluded.target_id, author_id = excluded.author_id,
             author_label = excluded.author_label, text = excluded.text, created_at = excluded.created_at,
             parent_id = excluded.parent_id, raw = excluded.raw`.pipe(
-            Effect.asVoid,
-            Effect.mapError(fail('Failed to persist message')),
-          ),
-        get: (id) =>
-          sql<Row>`SELECT * FROM message WHERE id = ${id}`.pipe(
-            Effect.map((rows) => (rows[0] ? toMessage(rows[0]) : undefined)),
-            Effect.mapError(fail('Failed to read message')),
-          ),
-        listByTarget: (targetId, options) =>
-          (options?.limit !== undefined
-            ? sql<Row>`SELECT * FROM message WHERE target_id = ${targetId} ORDER BY id ASC LIMIT ${options.limit}`
-            : sql<Row>`SELECT * FROM message WHERE target_id = ${targetId} ORDER BY id ASC`
-          ).pipe(
-            Effect.map((rows) => rows.map(toMessage)),
-            Effect.mapError(fail('Failed to list messages')),
-          ),
-        count: () =>
-          sql<{ found: number }>`SELECT COUNT(*) AS found FROM message`.pipe(
-            Effect.map((rows) => Number(rows[0]?.found ?? 0)),
-            Effect.mapError(fail('Failed to count messages')),
-          ),
-      };
-    }),
-  );
+          Effect.asVoid,
+          Effect.mapError(fail('Failed to persist message')),
+        ),
+      get: (id) =>
+        sql<Row>`SELECT * FROM message WHERE id = ${id}`.pipe(
+          Effect.map((rows) => (rows[0] ? toMessage(rows[0]) : undefined)),
+          Effect.mapError(fail('Failed to read message')),
+        ),
+      listByTarget: (targetId, options) =>
+        (options?.limit !== undefined
+          ? sql<Row>`SELECT * FROM message WHERE target_id = ${targetId} ORDER BY id ASC LIMIT ${options.limit}`
+          : sql<Row>`SELECT * FROM message WHERE target_id = ${targetId} ORDER BY id ASC`
+        ).pipe(
+          Effect.map((rows) => rows.map(toMessage)),
+          Effect.mapError(fail('Failed to list messages')),
+        ),
+      count: () =>
+        sql<{ found: number }>`SELECT COUNT(*) AS found FROM message`.pipe(
+          Effect.map((rows) => Number(rows[0]?.found ?? 0)),
+          Effect.mapError(fail('Failed to count messages')),
+        ),
+    };
+  }),
+);
 
 export const layerMemory: Layer.Layer<MessageStore> = Layer.sync(MessageStore, () => {
   const byId = new Map<string, StoredMessage>();

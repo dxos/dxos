@@ -10,7 +10,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 
-import { mapDevices, printDevices } from '../util';
+import { mapDevices, printDevices } from '../util.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;

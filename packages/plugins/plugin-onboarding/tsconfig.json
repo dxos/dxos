@@ -13,7 +13,6 @@
     "vitest.config.ts"
   ],
   "include": [
-    "scripts",
     "src"
   ],
   "references": [
@@ -25,6 +24,9 @@
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/graph"
@@ -75,9 +77,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/migrations"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -91,9 +90,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-table"

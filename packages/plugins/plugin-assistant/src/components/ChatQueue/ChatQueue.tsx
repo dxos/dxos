@@ -12,7 +12,7 @@ import { meta } from '#meta';
 
 export type ChatQueueProps = ThemedClassName<{
   /** Queued input awaiting processing, in append order. */
-  queued: readonly Message.Message[];
+  messages: readonly Message.Message[];
   onCancel?: (message: Message.Message) => void;
 }>;
 
@@ -22,21 +22,15 @@ export type ChatQueueProps = ThemedClassName<{
  * Queued input is durable feed state rather than a client-side buffer, so it survives a reload and
  * shows on every peer; cancelling removes the record, which is what takes it out of the queue.
  */
-export const ChatQueue = ({ classNames, queued, onCancel }: ChatQueueProps) => {
-  if (queued.length === 0) {
+export const ChatQueue = ({ classNames, messages, onCancel }: ChatQueueProps) => {
+  if (messages.length === 0) {
     return null;
   }
 
   return (
     <Listbox.Root>
-      {/*
-       * Rows hug their content and align right, so the stack reads as pending input rather than a
-       * panel. `w-full` is load-bearing: right-aligned in a flex column the list would otherwise take
-       * its max-content width and overflow to the LEFT, where the composer's clip cuts off the start
-       * of each prompt.
-       */}
       <Listbox.Content classNames={['w-full gap-1 items-end', classNames]}>
-        {queued.map((message) => (
+        {messages.map((message) => (
           <QueuedItem key={message.id} message={message} onCancel={onCancel} />
         ))}
       </Listbox.Content>

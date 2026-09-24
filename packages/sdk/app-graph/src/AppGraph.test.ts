@@ -12,17 +12,17 @@ import { assert, describe, expect, onTestFinished, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
-import * as Node from './AppGraphNode';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
+import * as Node from './AppGraphNode.ts';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'org.dxos.type.example';
 const CHILD_RELATION_KEY = Graph.relationKey('child');
-const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Node.childRelation('inbound'));
+const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Graph.inverseRelation(Node.child));
 const ACTIONS_RELATION_KEY = Graph.relationKey('action');
-const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Node.actionRelation('inbound'));
+const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Graph.inverseRelation(Node.action));
 
 describe('Graph', () => {
   test('getGraph', () => {
@@ -86,6 +86,11 @@ describe('Graph', () => {
 
     Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     expect(count).toEqual(2);
+  });
+
+  test('getNodeOrThrow throws NotFoundError for a missing node', () => {
+    const graph = Graph.make({ registry: Registry.make() });
+    expect(() => Graph.getNodeOrThrow(graph, EXAMPLE_ID)).toThrow(GraphNode.NotFoundError);
   });
 
   test('remove node', () => {
@@ -312,7 +317,7 @@ describe('Graph', () => {
     const targetEdges = registry.get(graph.edges(exampleId(2)));
     expect(targetEdges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
     expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([exampleId(1)]);
-    const reverseConnections = registry.get(graph.connections(exampleId(2), Node.actionRelation('inbound')));
+    const reverseConnections = registry.get(graph.connections(exampleId(2), Graph.inverseRelation(Node.action)));
     expect(reverseConnections.map(({ id }) => id)).toEqual([exampleId(1)]);
   });
 
@@ -347,9 +352,13 @@ describe('Graph', () => {
     const nodeKey = graph.node(exampleId(1));
 
     let node: Option.Option<Node.Node> = Option.none();
-    const cancel = registry.subscribe(nodeKey, (n) => {
-      node = n;
-    });
+    const cancel = registry.subscribe(
+      nodeKey,
+      (n) => {
+        node = n;
+      },
+      { immediate: true },
+    );
     onTestFinished(() => cancel());
 
     expect(node).toEqual(Option.none());
@@ -479,6 +488,17 @@ describe('Graph', () => {
     });
   });
 
+  test('json skips a node removed without its edges', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: GraphNode.RootId, type: Node.RootType, nodes: [{ id: 'test1', type: 'test' }] });
+    const cancel = registry.subscribe(graph.json(), () => {});
+    onTestFinished(() => cancel());
+
+    Graph.removeNode(graph, 'test1');
+    expect(registry.get(graph.json())).to.deep.equal({ id: GraphNode.RootId, type: Node.RootType });
+  });
+
   test('get path', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
@@ -604,7 +624,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'test2',
-        relation: Node.childRelation('inbound'),
+        relation: Graph.inverseRelation(Node.child),
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -621,7 +641,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'action',
-        relation: Node.actionRelation('inbound'),
+        relation: Graph.inverseRelation(Node.action),
         visitor: (node) => {
           nodes.push(node.id);
         },
@@ -844,7 +864,7 @@ describe('Graph', () => {
     expect(expandCalls).to.deep.equal([]);
 
     Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });
-    expect(expandCalls).to.deep.equal([[childId, Node.childRelation()]]);
+    expect(expandCalls).to.deep.equal([[childId, Node.child]]);
   });
   test('waitForPath curried', async () => {
     const graph = Graph.make();
@@ -855,5 +875,42 @@ describe('Graph', () => {
     });
     const path = await Graph.waitForPath(graph, { target: exampleId(1) }, { timeout: 1000 });
     expect(path).to.deep.equal(['root', exampleId(1)]);
+  });
+});
+
+describe('registry lifetime', () => {
+  test('a graph pins its nodes only while retained', async () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} });
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(false);
+
+    const release = Graph.retain(graph);
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} });
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(true);
+    expect(registry.getNodes().has(graph.node(exampleId(2)))).toBe(true);
+
+    release();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().has(graph.node(exampleId(1)))).toBe(false);
+    expect(registry.getNodes().has(graph.node(exampleId(2)))).toBe(false);
+  });
+
+  test('readers leave nothing in the registry once they unsubscribe', async () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNodes(graph, [
+      { id: exampleId(1), type: EXAMPLE_TYPE, data: null, properties: {} },
+      { id: exampleId(2), type: EXAMPLE_TYPE, data: null, properties: {} },
+    ]);
+    Graph.addEdges(graph, [{ source: GraphNode.RootId, target: exampleId(1), relation: 'child' }]);
+    const before = registry.getNodes().size;
+    const unsubscribe = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), () => {});
+    expect(registry.get(graph.connections(GraphNode.RootId, 'child')).map((node) => node.id)).toEqual([exampleId(1)]);
+
+    unsubscribe();
+    // The registry drops unobserved nodes on its scheduler, not synchronously.
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(registry.getNodes().size).toBe(before);
   });
 });

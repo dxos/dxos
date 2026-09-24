@@ -9,20 +9,22 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { ContentBlock } from '@dxos/types';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
-import { ChatNotSpecifiedError } from '../errors';
-import { defaultPreset } from '../processor';
+import { ChatNotSpecifiedError } from '../errors.ts';
+import { defaultPreset, providerForModel } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt }) {
+      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt, disposition }) {
         // Activation first: the state and session providers this reads come from lazy modules that
         // otherwise activate only once the assistant UI has been opened, so a caller arriving through
         // an operation alone (an agent) would find them missing.
@@ -49,11 +51,25 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
           yield* Effect.promise(() => db.flush());
         }
         const preset = yield* chatPreset;
-        const session = yield* getSession(chat, {
-          model: preset?.model,
-          provider: preset?.provider,
+        // As the chat's own UI does before its first request: the process reads the model off the
+        // chat, so a chat without one is stamped with the model its picker would show.
+        if (!chat.model && preset) {
+          Obj.update(chat, (chat) => {
+            chat.model = Ref.fromURI(preset.model);
+          });
+        }
+        // The model is the chat's, so the provider has to be the one that serves THAT model rather
+        // than whichever the settings now name — a chat outlives a provider change.
+        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? preset?.model;
+        const session = yield* AgentService.getSession(chat, {
+          provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
+          location: chat.remote ? 'edge' : 'local',
         });
-        yield* session.submitPrompt(prompt);
+        // A plain string is submitted as-is so the default path keeps its existing shape; a stated
+        // disposition needs the block form, which is the only place it can be carried.
+        yield* session.submitPrompt(
+          disposition === undefined ? prompt : [ContentBlock.Text.make({ text: prompt, disposition })],
+        );
       }),
     ),
   );

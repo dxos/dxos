@@ -10,11 +10,11 @@ import { type TestCase } from '#types';
 
 /** Icon and colour per status; `blocked` reads distinctly from `failed` because nothing was tested. */
 const presentation: Record<TestCase.Status, { icon: string; classNames: string }> = {
-  passed: { icon: 'ph--check-circle--regular', classNames: 'text-greenText' },
-  failed: { icon: 'ph--x-circle--regular', classNames: 'text-redText' },
-  blocked: { icon: 'ph--prohibit--regular', classNames: 'text-orangeText' },
+  passed: { icon: 'ph--check-circle--regular', classNames: 'text-green-text' },
+  failed: { icon: 'ph--x-circle--regular', classNames: 'text-red-text' },
+  blocked: { icon: 'ph--prohibit--regular', classNames: 'text-orange-text' },
   skipped: { icon: 'ph--minus-circle--regular', classNames: 'text-subdued' },
-  running: { icon: 'ph--spinner--regular', classNames: 'text-blueText' },
+  running: { icon: 'ph--spinner--regular', classNames: 'text-blue-text' },
 };
 
 export type StatusBadgeProps = { status: TestCase.Status; label?: boolean };

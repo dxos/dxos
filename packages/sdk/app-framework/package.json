@@ -167,6 +167,7 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

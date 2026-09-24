@@ -11,9 +11,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import AddTagHandler from './add-tag';
-import RemoveTagHandler from './remove-tag';
-import { TestObject, makeTestLayer, taggedIds } from './testing';
+import AddTagHandler from './add-tag.ts';
+import RemoveTagHandler from './remove-tag.ts';
+import { TestObject, makeTestLayer, taggedIds } from './testing.ts';
 
 const TestLayer = makeTestLayer(AddTagHandler, RemoveTagHandler);
 

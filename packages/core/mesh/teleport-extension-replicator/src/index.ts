@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './replicator-extension';
+export * from './replicator-extension.ts';

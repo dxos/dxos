@@ -38,10 +38,10 @@ import {
 import { meta } from '#meta';
 import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
-import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
-import { useSelectThreadOnCellFocus } from '../../integrations';
-import { useSheetContext } from '../SheetRoot';
-import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
+import { type RangeController, rangeExtension, sheetExtension } from '../../extensions/index.ts';
+import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
+import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 

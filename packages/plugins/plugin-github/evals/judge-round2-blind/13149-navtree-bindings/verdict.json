@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "Moves scope fix -> reconciliation skip -> stale-closure fix -> shared-hotkey conflict -> environment exclusion -> test coverage, each building on the last with the core bug first.",
+      "why": "Grounds the reconciliation rationale in the diff's own metric ('every store mutation notifies every subscriber') and the conflict-check fix in the code comment's stated N²/2 warning volume.",
+      "load": "Each diff block is preceded by its own paragraph of explanation (one-to-one prose-to-code pairing), so a reviewer never has to hold several unexplained blocks in mind at once.",
+      "trust": "Every claim traces to a line the patch shows (e.g. the 'parent's id is already the full scope path' comment, the N²/2 conflict-check comment), and the two new browser tests are described exactly as the test file asserts them."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Follows the same core-then-consequences arc as A, additionally surfacing the hotkeys.test.tsx comment removal that A omits entirely.",
+      "why": "Explains the scope, reconciliation and staleness fixes accurately, but the conflict-check justification ('only one scope is ever active at a time') is the document's own inference, not a claim the diff or its comment actually makes.",
+      "load": "Mostly a clean single pass, but the final section stacks three diff citations (vite.config, moon.yml, test file) behind one shared paragraph instead of pairing each with its own explanation, asking more of the reader per block.",
+      "trust": "Accurate on the concrete mechanics (scope, reconciliation, closure, and the removed 'conflictBehavior: warn' justification in hotkeys.test.tsx) but adds the unsupported 'only one scope is ever active at a time' rationale."
+    }
+  }
+}

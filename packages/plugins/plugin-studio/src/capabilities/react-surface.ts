@@ -10,14 +10,14 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
-import { ArtifactCard, ImageVariant, VideoVariant } from '#components';
-import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } from '#containers';
+import { ImageVariant, MediaArtifactCard, VideoVariant } from '#components';
+import { FrameCompanion, GalleryArticle, LightboxArticle, MediaArtifactArticle, StoryboardArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
-import { Artifact, Lightbox } from '#types';
+import { Lightbox, MediaArtifact, Storyboard } from '#types';
 
-import { ARTIFACTS_NODE_DATA } from '../constants';
+import { FRAME_COMPANION } from '../constants.ts';
 
-const isArtifact = Obj.instanceOf(Artifact.Artifact);
+const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
 /** A Collection is a studio gallery when its (loaded) members are all Artifacts and at least one is. */
 const isArtifactCollection = (collection?: Collection.Collection): boolean => {
@@ -41,17 +41,26 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'artifactArticle',
-        filter: AppSurface.object(AppSurface.Article, Artifact.Artifact),
-        component: ArtifactArticle,
+        filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
+        component: MediaArtifactArticle,
+        // `nodeId` rides along for an article nested in another (a storyboard frame) — see the article.
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
+      }),
+      Surface.create({
+        id: 'storyboardArticle',
+        filter: AppSurface.object(AppSurface.Article, Storyboard.Storyboard),
+        component: StoryboardArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-
-      // Virtual "Artifacts" navtree node → the browse/create hub (bound by data sentinel, not an object).
+      // The storyboard's frame companion (see the `frame` node in the graph builder).
       Surface.create({
-        id: 'artifactsArticle',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.subject === ARTIFACTS_NODE_DATA),
-        component: ArtifactsArticle,
-        props: ({ role, data: { attendableId, properties } }) => ({ role, attendableId, properties }),
+        id: 'frameCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FRAME_COMPANION),
+          AppSurface.companion(AppSurface.Article, Storyboard.Storyboard),
+        ),
+        component: FrameCompanion,
+        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
       }),
       Surface.create({
         id: 'galleryArticle',
@@ -69,11 +78,11 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
-      // Card rendering of an Artifact (cover thumbnail) — composes Artifacts into collections/boards.
+      // Card rendering of a MediaArtifact (cover thumbnail) — composes Artifacts into collections/boards.
       Surface.create({
         id: 'artifactCard',
-        filter: AppSurface.object(AppSurface.CardContent, Artifact.Artifact),
-        component: ArtifactCard,
+        filter: AppSurface.object(AppSurface.CardContent, MediaArtifact.MediaArtifact),
+        component: MediaArtifactCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
 

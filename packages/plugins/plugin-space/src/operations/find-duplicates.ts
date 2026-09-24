@@ -8,7 +8,7 @@ import { findDuplicates } from '@dxos/extractor';
 
 import { SpaceOperation } from '#types';
 
-import { resolveIdentitySpec } from './helpers';
+import { resolveIdentitySpec } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.FindDuplicates> = SpaceOperation.FindDuplicates.pipe(
   Operation.withHandler(

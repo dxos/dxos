@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { readFileContent, writeFileContent } from '../../util';
+import { readFileContent, writeFileContent } from '../../util.ts';
 
 const COMPOSER_CONFIG_DIR = '.composer';
 const FILEMAP_FILE = 'filemap.json';

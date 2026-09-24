@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import '../components/MapSurface';
+import '../components/MapSurface/index.ts';
 
 import * as Effect from 'effect/Effect';
 

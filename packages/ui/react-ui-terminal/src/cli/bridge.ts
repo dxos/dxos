@@ -5,7 +5,7 @@
 import type { IDisposable, Terminal as XtermTerminal } from '@xterm/xterm';
 import type * as Terminal from 'effect/Terminal';
 
-import { decodeInput } from './input';
+import { decodeInput } from './input.ts';
 
 export type InputHandler = (input: Terminal.UserInput) => void;
 

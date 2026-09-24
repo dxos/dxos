@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import type * as PageAction from '@dxos/plugin-crx/PageAction';
 import { Text } from '@dxos/schema';
 
@@ -23,11 +22,11 @@ export class Bookmark extends Type.makeObject<Bookmark>(DXN.make('org.dxos.type.
     excerpt: Schema.optional(Schema.String),
     summary: Ref.Ref(Text.Text).pipe(
       Schema.annotate({ description: 'Generated summary.' }),
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
   ),
 ) {}

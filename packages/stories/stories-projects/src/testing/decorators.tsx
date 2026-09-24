@@ -13,6 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { mockAiService } from '@dxos/extractor/testing';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Builder, InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -29,7 +30,7 @@ import { TagIndex, Text } from '@dxos/schema';
 import { StoryAiPlugin, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { moduleSurfaces } from '../modules';
+import { moduleSurfaces } from '../modules/index.ts';
 
 /** Shared CSF parameters for this package's stories (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -119,7 +120,8 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
       SpacePlugin({}),
       InboxPlugin(),
       ProjectsPlugin.make(),
-      // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
+      // Both declared in Projects' `dependsOn`, so the manager refuses to resolve it without them.
+      AssistantPlugin.make(),
       TasksPlugin.make(),
       RoutinePlugin.make(),
       makeModuleSurfacesPlugin('org.dxos.plugin.projects.story.modules', moduleSurfaces),

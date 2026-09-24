@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './graph-renderer';
-export * from './labels';
-export * from './linker';
-export * from './renderer';
+export * from './graph-renderer.ts';
+export * from './labels.ts';
+export * from './linker.ts';
+export * from './renderer.ts';

@@ -9,8 +9,8 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
-import { defineObjectMigration } from './object-migration';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { defineObjectMigration } from './object-migration.ts';
 
 let builder: EchoTestBuilder;
 

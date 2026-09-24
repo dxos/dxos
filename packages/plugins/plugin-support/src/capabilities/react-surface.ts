@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Hints, Keyshortcuts } from '@dxos/plugin-deck/DeckRole';
-import { SpaceHomeContent } from '@dxos/plugin-space/SpaceSurface';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
 
 import {
@@ -19,15 +19,15 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
-  SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
+  SupportHomeCompanion,
   SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
 import { Support } from '#types';
 
-import { SHORTCUTS_DIALOG } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -40,13 +40,6 @@ export default Capability.makeModule(() =>
         ),
         component: SupportArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-      Surface.create({
-        id: 'spaceHomeWelcome',
-        filter: Surface.makeFilter(SpaceHomeContent),
-        position: Position.first,
-        component: SpaceHomeWelcome,
-        props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'feedback',
@@ -75,7 +68,15 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
         ),
         component: SupportCompanion,
-        props: ({ data: { companionTo } }) => ({ companionTo }),
+        props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
+      }),
+      Surface.create({
+        id: 'homeHelpCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'help'),
+          AppSurface.companion(AppSurface.Article, SpaceSchema.SPACE_HOME_NODE_TYPE),
+        ),
+        component: SupportHomeCompanion,
       }),
       Surface.create({
         id: 'hints',

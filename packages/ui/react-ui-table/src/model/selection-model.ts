@@ -7,7 +7,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Resource } from '@dxos/context';
 
-import { type TableRow } from './table-model';
+import { type TableRow } from './table-model.ts';
 
 export type SelectionMode = 'single' | 'multiple';
 

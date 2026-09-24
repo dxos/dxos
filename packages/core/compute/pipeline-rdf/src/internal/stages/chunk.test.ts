@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { chunk } from './chunk';
+import { chunk } from './chunk.ts';
 
 describe('chunk', () => {
   test('empty/whitespace text yields no chunks', ({ expect }) => {

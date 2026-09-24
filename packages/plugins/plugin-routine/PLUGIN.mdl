@@ -35,10 +35,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|-------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`      |
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
-| `test`      | `org.dxos.mdl.test@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.1`        |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
 
 ## Types
 
@@ -338,7 +338,7 @@ feat F-6: Create Trigger From Template
 ## Acceptance
 
 ```mdl
-test T-1: Create trigger via AutomationPanel
+scenario T-1: Create trigger via AutomationPanel
   given: AutomationPanel rendered for a space with no triggers
   when: user clicks "New Trigger"
   then:
@@ -347,7 +347,7 @@ test T-1: Create trigger via AutomationPanel
 ```
 
 ```mdl
-test T-2: Save new trigger
+scenario T-2: Save new trigger
   given: TriggerEditor open with blank Trigger
   when: user fills in a function and spec, then saves
   then:
@@ -357,7 +357,7 @@ test T-2: Save new trigger
 ```
 
 ```mdl
-test T-3: Edit existing trigger
+scenario T-3: Edit existing trigger
   given: AutomationPanel listing one trigger
   when: user clicks the trigger row
   then:
@@ -367,7 +367,7 @@ test T-3: Edit existing trigger
 ```
 
 ```mdl
-test T-4: Enable/disable toggle
+scenario T-4: Enable/disable toggle
   given: AutomationPanel showing trigger with enabled = false
   when: user flips the toggle
   then:
@@ -376,7 +376,7 @@ test T-4: Enable/disable toggle
 ```
 
 ```mdl
-test T-5: Force run timer trigger (local)
+scenario T-5: Force run timer trigger (local)
   given: timer trigger enabled, trigger.remote unset
   when: user clicks the force-run button
   then:
@@ -385,7 +385,7 @@ test T-5: Force run timer trigger (local)
 ```
 
 ```mdl
-test T-6: Dispatcher lifecycle on kill-switch change
+scenario T-6: Dispatcher lifecycle on kill-switch change
   given: space triggersDisabled unset, dispatcher running
   when: space.properties.triggersDisabled changes to true
   then:
@@ -394,7 +394,7 @@ test T-6: Dispatcher lifecycle on kill-switch change
 ```
 
 ```mdl
-test T-7: CreateTriggerFromTemplate with timer
+scenario T-7: CreateTriggerFromTemplate with timer
   given: db contains Script "daily-summary", space triggersDisabled unset
   when: op:CreateTriggerFromTemplate invoked with template={type:"timer",cron:"0 8 * * *"}, scriptName="daily-summary"
   then:
@@ -405,7 +405,7 @@ test T-7: CreateTriggerFromTemplate with timer
 ```
 
 ```mdl
-test T-8: CreateTriggerFromTemplate with feed
+scenario T-8: CreateTriggerFromTemplate with feed
   given: db contains a Feed object "email-feed"
   when: op:CreateTriggerFromTemplate invoked with template={type:"feed",feed:<email-feed>}
   then:
@@ -417,11 +417,11 @@ test T-8: CreateTriggerFromTemplate with feed
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a routine and run it
+test QA-1: Create a routine and run it
   desc: The core automation round-trip — create a Routine from a template, then run it on demand.
   actors: agent
   covers: [F-1.1, F-1.2, T-2]
@@ -429,8 +429,8 @@ flow QA-1: Create a routine and run it
   given:
     - an identity exists
     - space: a space is open
-    - no Routine named "QA Routine" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Routine named "QA Routine" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the routine
       do: In the navtree, click + on a collection and choose Routine (or Prompt). Name it "QA Routine".
       invoke: org.dxos.operation.routine.createAutomation { db: $given.space.db, templateId: "blank", name: "QA Routine" }
@@ -450,7 +450,7 @@ flow QA-1: Create a routine and run it
 ```
 
 ```mdl
-flow QA-2: Timer trigger from a template
+test QA-2: Timer trigger from a template
   desc: Wire a timer-spec Trigger from a lightweight template — the entrypoint used by Skill actions.
   actors: both
   covers: [F-6.1, F-6.3, T-7]
@@ -458,7 +458,7 @@ flow QA-2: Timer trigger from a template
   given:
     - an identity exists
     - space: a space is open, with plugin-script's TriggersDisabled unset
-  test:
+  steps:
     - name: Create a timer trigger
       do: From a Skill's suggested action, click "Automate this".
       invoke: [op:CreateTriggerFromTemplate] { db: $given.space.db, template: { type: "timer", cron: "0 8 * * *" }, enabled: false }
@@ -506,8 +506,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -20,8 +20,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Booking, BookingSearch, Segment, Trip, TripCapabilities } from '#types';
 
-import { TripPlugin } from '../../testing';
-import { BookingSearch as BookingSearchComponent } from './BookingSearch';
+import { TripPlugin } from '../../testing.ts';
+import { BookingSearch as BookingSearchComponent } from './BookingSearch.tsx';
 
 const STUB_OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight' as const,

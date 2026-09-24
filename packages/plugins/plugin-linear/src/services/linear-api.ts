@@ -18,8 +18,8 @@ import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 import { type Task } from '@dxos/types';
 
-import { LINEAR_API_URL } from '../constants';
-import { LinearGraphQLError } from '../errors';
+import { LINEAR_API_URL } from '../constants.ts';
+import { LinearGraphQLError } from '../errors.ts';
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
 type LinearCredentialsValue = {

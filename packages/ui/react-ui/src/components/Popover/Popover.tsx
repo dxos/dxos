@@ -24,11 +24,12 @@ import React, {
 } from 'react';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
-import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
+import { DX_POPOVER_CONTENT_ATTR, type ElevationLevel } from '@dxos/ui-types';
 
-import { useElevationContext, usePositioning, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { ColumnContext } from '../Column';
+import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { ColumnContext } from '../Column/index.ts';
 import {
   POPOVER_NAME,
   type PopoverContentHandlers,
@@ -39,7 +40,7 @@ import {
   type PopoverPointerDownOutsideEvent,
   PopoverProvider,
   usePopoverContext,
-} from './PopoverContext';
+} from './PopoverContext.ts';
 
 /** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
 const prevents = (handler: ((event: Event) => void) | undefined) => {
@@ -202,13 +203,20 @@ const CONTENT_NAME = 'Popover.Content';
 
 type PopoverContentProps = ThemedClassName<ComponentPropsWithRef<typeof PopoverPrimitive.Content>> &
   PopoverPlacementOptions &
-  PopoverContentHandlers;
+  PopoverContentHandlers & {
+    /** Material-style elevation, 0–5, onto the surface ladder; a popover is `popup` (5) by default. */
+    elevation?: ElevationLevel;
+    /** Outline the content with the separator; the arrow follows it. */
+    border?: boolean;
+  };
 
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
   (
     {
       classNames,
       children,
+      elevation: elevationProp,
+      border,
       side,
       align,
       sideOffset,
@@ -268,7 +276,8 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
         <PopoverPrimitive.Content
           {...props}
           {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
-          className={tx('popover.content', { elevation }, classNames)}
+          {...elevationAttrs(elevationProp)}
+          className={tx('popover.content', { border, elevation, surface: elevationSurface(elevationProp) }, classNames)}
           ref={forwardedRef}
         >
           {children}
@@ -302,11 +311,29 @@ const ARROW_NAME = 'Popover.Arrow';
 
 type PopoverArrowProps = ThemedClassName<ComponentPropsWithRef<typeof PopoverPrimitive.Arrow>>;
 
+/**
+ * The tip is drawn rather than taken from the machine: its rotated-square tip is two CSS borders
+ * meeting the content's outline, and the joint between a diagonal border band and a straight line
+ * is never clean. Here the outline is one stroked path — the content's line for four px, the
+ * chevron, and the line again — so the corners are mitred by the rasteriser and the arrow's edges
+ * are the outline continued. It is drawn pointing right for a popover on the left, and turned per
+ * side by `positioning.css`.
+ *
+ * Coordinates are in the machine's 12px arrow box, which `positioning.css` centres on the outline's
+ * outer edge, at 6. The path runs along that edge and is stroked at twice the outline's width, and
+ * the svg is clipped to the arrow's outer shape, so exactly one width shows inside the edge whatever
+ * the width is (see the theme). The fill covers the outline under the chevron so it opens into it.
+ */
+const ARROW_SHAPE = 'polygon(4px -4px, 6px -4px, 6px 0, 12px 6px, 6px 12px, 6px 16px, 4px 16px)';
+
 const PopoverArrow = forwardRef<HTMLDivElement, PopoverArrowProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <PopoverPrimitive.Arrow {...props} className={tx('popover.arrow', {}, classNames)} ref={forwardedRef}>
-      <PopoverPrimitive.ArrowTip />
+      <svg viewBox='0 0 12 12' aria-hidden='true' style={{ clipPath: ARROW_SHAPE }}>
+        <path d='M4 -4H6V0L12 6L6 12V16H4Z' stroke='none' />
+        <path d='M6 -4V0L12 6L6 12V16' fill='none' />
+      </svg>
     </PopoverPrimitive.Arrow>
   );
 });

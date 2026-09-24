@@ -25,10 +25,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-----------|-------------------------------|
 | `type`    | `org.dxos.mdl.type@1.0`      |
 | `feat`    | `org.dxos.mdl.feat@1.0`      |
-| `test`    | `org.dxos.mdl.test@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
 | `op`      | `org.dxos.mdl.op@1.0`        |
 | `service` | `org.dxos.mdl.service@1.0`   |
-| `flow`    | `org.dxos.mdl.flow@1.0`      |
+| `test`    | `org.dxos.mdl.test@1.0`      |
 
 ### Existing types used by this plugin
 
@@ -186,7 +186,7 @@ feat F-7: Resilience
 ## Acceptance
 
 ```mdl
-test T-1: Connector entry maps apiKey to AccessToken.token
+scenario T-1: Connector entry maps apiKey to AccessToken.token
   given: a submitted apiKey "test-key"
   when: op:SubmitTypefullyCredentials invoked with { apiKey: "test-key" }
   then:
@@ -196,14 +196,14 @@ test T-1: Connector entry maps apiKey to AccessToken.token
 ```
 
 ```mdl
-test T-2: Connector entry rejects a blank API key
+scenario T-2: Connector entry rejects a blank API key
   given: a submitted apiKey "   " (whitespace only)
   when: op:SubmitTypefullyCredentials invoked
   then: rejects with an Error whose message contains "requires an API key"; no AccessToken or Connection is built
 ```
 
 ```mdl
-test T-3: createDraft POSTs with X-API-KEY Bearer auth
+scenario T-3: createDraft POSTs with X-API-KEY Bearer auth
   given: a Connection whose AccessToken.token === "test-key"
   when: service.createDraft(connection, { text: "Hello world" })
   then:
@@ -214,13 +214,13 @@ test T-3: createDraft POSTs with X-API-KEY Bearer auth
 ```
 
 ```mdl
-test T-4: createDraft forwards scheduledAt as schedule-date
+scenario T-4: createDraft forwards scheduledAt as schedule-date
   when: service.createDraft(connection, { text: "later", scheduledAt: "2026-01-25T10:00:00Z" })
   then: request body includes "schedule-date" === "2026-01-25T10:00:00Z"
 ```
 
 ```mdl
-test T-5: listDrafts GETs recently-published
+scenario T-5: listDrafts GETs recently-published
   when: service.listDrafts(connection)
   then:
     - GET https://api.typefully.com/v1/drafts/recently-published/ issued with X-API-KEY Bearer auth
@@ -228,14 +228,14 @@ test T-5: listDrafts GETs recently-published
 ```
 
 ```mdl
-test T-6: getDraft, updateDraft, deleteDraft reject without any network call
+scenario T-6: getDraft, updateDraft, deleteDraft reject without any network call
   given: fetch is stubbed to throw if called
   when: service.getDraft / service.updateDraft / service.deleteDraft invoked
   then: each rejects with an instance of Publisher.PublisherError; fetch is never invoked
 ```
 
 ```mdl
-test T-7: PublishDraft against Typefully — create-once, no re-publish
+scenario T-7: PublishDraft against Typefully — create-once, no re-publish
   given: an unlinked Draft published via plugin-blogger's op:PublishDraft against a Typefully Connection
   then:
     - first call: createDraft runs; the Draft's foreign key is set to the returned Typefully id
@@ -244,14 +244,14 @@ test T-7: PublishDraft against Typefully — create-once, no re-publish
 ```
 
 ```mdl
-test T-8: ImportDrafts against Typefully fails on any unlinked remote draft
+scenario T-8: ImportDrafts against Typefully fails on any unlinked remote draft
   given: plugin-blogger's op:ImportDrafts invoked against a Typefully Connection whose listDrafts result includes at least one remote draft not yet linked to a local Draft
   then: the operation fails with PublisherError raised from getDraft — ImportDrafts cannot currently pull unlinked Typefully drafts into local Posts
   tags: [known-limitation, derived]
 ```
 
 ```mdl
-test T-9: UnpublishDraft against Typefully fails once linked
+scenario T-9: UnpublishDraft against Typefully fails once linked
   given: a Draft linked to a Typefully remote id
   when: plugin-blogger's op:UnpublishDraft invoked
   then: deleteDraft rejects with PublisherError; the foreign key is NOT cleared
@@ -262,15 +262,15 @@ test T-9: UnpublishDraft against Typefully fails once linked
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect Typefully, publish once, and confirm the no-republish limitation
+test QA-1: Connect Typefully, publish once, and confirm the no-republish limitation
   desc: >
     plugin-typefully has no ECHO object type or navtree surface of its own — it is a
     Publisher.PublisherService implementation consumed through plugin-blogger's Publication/Post
-    UI. This flow drives that composed round-trip and checks F-6's derived, previously-untested
+    UI. This test drives that composed round-trip and checks F-6's derived, previously-untested
     finding: a second sync on the same post fails rather than re-publishing.
   actors: human
   covers: [F-1.2, F-1.3, F-3.1, F-6.1, F-6.2]
@@ -283,15 +283,15 @@ flow QA-1: Connect Typefully, publish once, and confirm the no-republish limitat
     - plugin-blogger is enabled, so Publication/Post creation and op:SyncPosts are available
     - publication: a blog Publication exists in the space, with one unpublished Post named "QA Post"
     - a real Typefully API key, obtained from https://typefully.com/settings/integrations
-  test:
+  steps:
     - name: Submit the Typefully API key
       do: Open Settings -> Connections, choose Typefully, and paste the API key.
       expect: a Connection (source "typefully.com") and an AccessToken holding the key now exist
       blocked: |
         `credentialForm.onSubmit` is a plain UI callback, not an `Operation.make` with a `key` —
         there is nothing to `invoke`, and no automated run in this environment holds a live
-        Typefully API key to submit even by hand. Every later step in this flow depends on the
-        Connection this step creates, so the flow cannot proceed past here unattended.
+        Typefully API key to submit even by hand. Every later step in this test depends on the
+        Connection this step creates, so the test cannot proceed past here unattended.
       capture: connection
     - name: Publish the post (first sync — creates the remote draft)
       do: With "QA Post" open, choose Publish -> Typefully.
@@ -304,7 +304,7 @@ flow QA-1: Connect Typefully, publish once, and confirm the no-republish limitat
         F-6 requirements name `op:PublishDraft` / `op:ImportDrafts` / `op:UnpublishDraft`, but no
         such operations exist in plugin-blogger's source — the three verbs were unified into this
         one bidirectional `syncPosts`. F-6 is stale against the current implementation; confirming
-        this drove the choice to write this flow around `syncPosts` rather than the named ops.
+        this drove the choice to write this test around `syncPosts` rather than the named ops.
     - name: Publish again (second sync — expected to fail)
       do: Choose Publish -> Typefully a second time on the now-linked "QA Post".
       invoke: org.dxos.operation.blogger.syncPosts { publication: $given.publication, connection: $connection.connection }
@@ -348,8 +348,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

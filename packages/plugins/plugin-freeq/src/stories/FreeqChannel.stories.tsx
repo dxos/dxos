@@ -25,8 +25,8 @@ import { Channel, Message, Thread } from '@dxos/types';
 import { FreeqPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { FREEQ_BACKEND_KIND } from '../constants';
-import { FreeqChannel, makeFreeqChannel } from '../types';
+import { FREEQ_BACKEND_KIND } from '../constants.ts';
+import { FreeqChannel, makeFreeqChannel } from '../types.ts';
 
 /** Live freeq server + channel the demo connects to (guest read; no handle). */
 const DEMO_SERVER_URL = 'wss://irc.freeq.at/irc';

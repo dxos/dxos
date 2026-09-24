@@ -18,7 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useExpandPath } from '../hooks';
+import { useExpandPath } from '../hooks.ts';
 
 export type HomeProps = {};
 
@@ -61,14 +61,15 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const name = toLocalizedString(data.properties.label, t);
+  const pending = data.properties.pending === true;
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);
 
   useExpandPath(data.id);
 
   const handleSelect = useCallback(
-    () => invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id }),
-    [invokePromise, data.id],
+    () => (pending ? undefined : invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id })),
+    [invokePromise, data.id, pending],
   );
 
   // Register this workspace with the search context.
@@ -93,6 +94,8 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
+      aria-disabled={pending || undefined}
+      aria-busy={pending || undefined}
       // The search list auto-selects the first row for keyboard nav; a coarse (touch) pointer has no
       // keyboard focus to reflect, so the highlight would just read as an unexplained random row.
       classNames={mx('dx-focus-ring', isSelected && 'bg-selected-surface pointer-coarse:bg-transparent')}
@@ -116,9 +119,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
           <Avatar.Label asChild>
             <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
           </Avatar.Label>
-          <Card.Block end>
-            <Icon icon='ph--caret-right--regular' />
-          </Card.Block>
+          <Card.Block end>{!pending && <Icon icon='ph--caret-right--regular' />}</Card.Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

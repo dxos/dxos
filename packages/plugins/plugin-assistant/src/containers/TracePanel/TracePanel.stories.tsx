@@ -22,20 +22,25 @@ import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { ViewStateProvider } from '@dxos/react-ui-attention';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
+import {
+  PLAYBACK_INTERVAL_MS,
+  STEP_STORAGE_KEY,
+  runScenario,
+  subAgentDelegationFixture,
+  useLocalStorageNumber,
+} from '@dxos/react-ui-trace/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { buildExecutionGraph } from '#execution-graph';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
-import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
-import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, runScenario, useLocalStorageNumber } from './testing';
-import { TracePanel } from './TracePanel';
+import { initClientFromSpaceSnapshot } from '../../testing/snapshot.ts';
+import { TracePanel } from './TracePanel.tsx';
 
 type BaseStoryArgs = PropsWithChildren<{
   toolbar: ReactNode;
@@ -52,13 +57,7 @@ const JsonInspectorPanel = ({ data }: { data: unknown }) => (
   <ScrollContainer.Root pin>
     <ScrollContainer.Content thin>
       <ScrollContainer.Viewport>
-        <Syntax.Root data={data}>
-          <Syntax.Content>
-            <Syntax.Viewport>
-              <Syntax.Code classNames='text-xs' />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
+        <JsonHighlighter data={data} classNames='text-xs' />
       </ScrollContainer.Viewport>
       <ScrollContainer.ScrollDownButton />
       <ScrollContainer.Fade />
@@ -129,7 +128,10 @@ const DefaultStory = () => {
         </Toolbar.Root>
       }
     >
-      <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+      {/* The process selection is view state, which needs a provider to hold it. */}
+      <ViewStateProvider>
+        <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+      </ViewStateProvider>
     </BaseStory>
   );
 };
@@ -156,7 +158,7 @@ const SnapshotStory = () => {
 // Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()` (see
 // TracePanel). External JSON → typed at this boundary; `buildExecutionGraph` only reads
 // `meta`/`events`, so the plain data shape is sufficient.
-const subAgentMessages = subAgentFixture as unknown as Trace.Message[];
+const subAgentMessages = subAgentDelegationFixture as unknown as Trace.Message[];
 
 const FixtureStory = () => {
   const sortedMessages = useMemo(
@@ -182,6 +184,7 @@ const TimelinePlayback = ({
   const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
   const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+  const [timelineViewport, setTimelineViewport] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setStep((current) => Math.min(Math.max(current, 0), total));
@@ -300,8 +303,14 @@ const TimelinePlayback = ({
         <div className='min-h-0'>
           <ScrollContainer.Root pin>
             <ScrollContainer.Content thin>
-              <ScrollContainer.Viewport>
-                <Timeline branches={branches} commits={commits} showTimestamp onSelect={setSelectedCommit} />
+              <ScrollContainer.Viewport ref={setTimelineViewport}>
+                <Timeline
+                  branches={branches}
+                  commits={commits}
+                  showTimestamp
+                  scroller={timelineViewport}
+                  onSelect={setSelectedCommit}
+                />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
               <ScrollContainer.Fade />

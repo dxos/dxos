@@ -13,7 +13,7 @@ under a configured root. Nothing is mounted outside a vite dev server.
 | Term | URI                        |
 |------|----------------------------|
 | `op` | `org.dxos.mdl.op@1.1`      |
-| `flow` | `org.dxos.mdl.flow@1.0`  |
+| `test` | `org.dxos.mdl.test@1.0`  |
 
 ## Operations
 
@@ -54,11 +54,11 @@ op edits
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Run a shell command and apply an edit
+test QA-1: Run a shell command and apply an edit
   desc: |
     The plugin has no ECHO types and no navtree/article surface — it is two raw tools
     (`bash`, `edits`) exposed to the assistant. There is no human gesture other than prompting
@@ -73,7 +73,7 @@ flow QA-1: Run a shell command and apply an edit
     - the vite dev server's harness route is reachable (this plugin only functions there — "Nothing
       is mounted outside a vite dev server")
     - a scratch file the harness root can write to, not otherwise used by this space's QA fixtures
-  test:
+  steps:
     - name: Run a shell command
       do: Ask the assistant to run `echo qa-computer-check` via the Coding (Dev) tool.
       invoke: org.dxos.operation.computer.runBash { script: "echo qa-computer-check" }

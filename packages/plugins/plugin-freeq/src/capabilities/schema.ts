@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { FreeqChannel } from '../types';
+import { FreeqChannel } from '../types.ts';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,

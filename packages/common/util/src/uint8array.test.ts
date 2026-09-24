@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { arrayToBuffer, arrayToString, bufferToArray, stringToArray } from './uint8array';
+import { arrayToBuffer, arrayToString, bufferToArray, stringToArray } from './uint8array.ts';
 
 describe('uint8array', () => {
   test('arrayToBuffer', () => {

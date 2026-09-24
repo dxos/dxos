@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 
-import { ContextRemove } from './definitions';
+import { ContextRemove } from './definitions.ts';
 
 export default ContextRemove.pipe(
   Operation.withHandler(

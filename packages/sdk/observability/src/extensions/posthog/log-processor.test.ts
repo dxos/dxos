@@ -15,7 +15,7 @@ vi.mock('posthog-js', () => ({
   },
 }));
 const { default: posthog } = await import('posthog-js');
-const { logProcessor } = await import('./log-processor');
+const { logProcessor } = await import('./log-processor.ts');
 
 const baseConfig: LogConfig = {
   options: {},

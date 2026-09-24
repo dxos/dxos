@@ -8,7 +8,7 @@ import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
 import { Message } from '@dxos/types';
 import { hexToFallback } from '@dxos/util';
 
-import { type MessageMetadata } from './types';
+import { type MessageMetadata } from './types.ts';
 
 const generator: ValueGenerator = random as any;
 

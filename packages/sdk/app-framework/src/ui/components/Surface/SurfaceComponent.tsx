@@ -26,16 +26,16 @@ import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useStable } from '@dxos/react-hooks';
 import { Position, shallowEqual } from '@dxos/util';
 
-import { ActivationEvents, Capabilities, Role } from '../../../common';
-import { type PluginManager } from '../../../core';
-import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
-import { SurfaceContext } from './context';
-import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
-import { type SurfaceManager } from './SurfaceManager';
-import { useSurfaceManager } from './SurfaceManagerContext';
-import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
-import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types';
+import { ActivationEvents, Capabilities, Role } from '../../../common/index.ts';
+import { type PluginManager } from '../../../core/index.ts';
+import { useOptionalPluginManager, usePluginManager } from '../PluginManager/index.ts';
+import { SurfaceContext } from './context.ts';
+import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug.tsx';
+import { type SurfaceManager } from './SurfaceManager.ts';
+import { useSurfaceManager } from './SurfaceManagerContext.ts';
+import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics.ts';
+import { useSurfaceProfilerCallback } from './SurfaceProfilerContext.tsx';
+import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types.ts';
 
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
@@ -186,7 +186,9 @@ const SurfaceContextProvider = memo(
 
     // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
     // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
-    if (isSurfaceWrapperEnabled()) {
+    // A profiler provider (the devtools plugin) needs the wrapper in production too: its Surfaces card
+    // and highlight overlay read the mount registry the wrapper populates.
+    if (isSurfaceWrapperEnabled() || onProfilerRender) {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>

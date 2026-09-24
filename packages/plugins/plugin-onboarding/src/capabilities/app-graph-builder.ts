@@ -13,8 +13,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position } from '@dxos/util';
 
-import { ABOUT_DIALOG } from '../constants';
-import { meta } from '../meta';
+import { ABOUT_DIALOG } from '../constants.ts';
+import { meta } from '../meta.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

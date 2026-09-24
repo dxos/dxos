@@ -5,7 +5,7 @@
 import { type ElementDragPayload } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { describe, expect, test } from 'vitest';
 
-import { type DndTileData, getSourceData } from './types';
+import { type DndTileData, getSourceData } from './types.ts';
 
 // getSourceData only reads `source.data`; a minimal typed payload avoids casting the whole shape.
 const payload = (data: Record<string, unknown>): ElementDragPayload =>

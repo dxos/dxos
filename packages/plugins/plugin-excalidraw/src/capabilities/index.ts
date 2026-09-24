@@ -15,15 +15,15 @@ import { ExcalidrawCapabilities } from '#types';
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
   { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
-  () => import('./drawing-variant'),
+  () => import('./drawing-variant.ts'),
 );
 
-export const ExcalidrawSettings = AppCapability.settings(() => import('./settings'), {
+export const ExcalidrawSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [ExcalidrawCapabilities.Settings],
 });
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
 export const Translations = AppCapability.translations(translations);

@@ -5,15 +5,23 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
-import { type Density, type Elevation } from '@dxos/ui-types';
+import {
+  type ChromaticPalette,
+  type Density,
+  type Elevation,
+  type MessageValence,
+  type NeutralPalette,
+} from '@dxos/ui-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon } from '../Icon';
-import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext.ts';
 
 type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof ark.button>> & {
-  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence';
+  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence' | 'tag';
+  /** The `tag` variant's palette, as on `Tag`; ignored by the other variants. */
+  hue?: ChromaticPalette | NeutralPalette | MessageValence;
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
@@ -30,6 +38,7 @@ const Button = memo(
         density: densityProp,
         elevation: elevationProp,
         variant = 'default',
+        hue,
         asChild,
         caretDown,
         ...props
@@ -46,6 +55,7 @@ const Button = memo(
           ref={ref}
           {...props}
           data-variant={variant}
+          data-hue={variant === 'tag' ? (hue ?? 'neutral') : undefined}
           data-density={density}
           data-props={inGroup ? 'grouped' : ''}
           className={tx(

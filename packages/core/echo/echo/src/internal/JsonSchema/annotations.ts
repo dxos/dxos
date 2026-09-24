@@ -4,9 +4,9 @@
 
 import { SchemaAST } from '@dxos/effect';
 
-import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../Annotation/annotations';
-import { CurrencyAnnotationId, FormatAnnotationId } from '../Format';
-import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../JsonSchema';
+import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../Annotation/annotations.ts';
+import { CurrencyAnnotationId, FormatAnnotationId } from '../Format/index.ts';
+import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../JsonSchema/index.ts';
 
 //
 // This file configures annotations for JSON encoding/decoding.

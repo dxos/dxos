@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { PipelineRuntime, type RunOptions } from './runtime';
-import { makeCorrectionStage, makeExtractionStage, makeSummarizationStage } from './stages';
-import { type Stage } from './types';
+import { PipelineRuntime, type RunOptions } from './runtime/index.ts';
+import { makeCorrectionStage, makeExtractionStage, makeSummarizationStage } from './stages/index.ts';
+import { type Stage } from './types/index.ts';
 
 export type TranscriptionPipelineOptions = Omit<RunOptions, 'stages'> & {
   /** Ordered stages to run; defaults to the standard correction → extraction → summarization set. */

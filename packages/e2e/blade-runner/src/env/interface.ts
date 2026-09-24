@@ -2,7 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReplicantBrain, type ReplicantClass, type ReplicantProps, type ReplicantRuntimeProps } from '../plan';
+import {
+  type ReplicantBrain,
+  type ReplicantClass,
+  type ReplicantProps,
+  type ReplicantRuntimeProps,
+} from '../plan/index.ts';
 
 // TODO(mykola): R with `spec.ts`
 export interface CommonTestEnv {

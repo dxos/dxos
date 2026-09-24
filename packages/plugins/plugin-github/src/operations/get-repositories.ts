@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -10,7 +11,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { GitHubOperation } from '#types';
 
-import { GitHubApi } from '../services';
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's
@@ -44,7 +45,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
             description: repo.description ?? undefined,
           }));
           return { targets };
-        }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromConnection(connection)));
+        }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromConnection(connection))));
       }, Effect.provide(FetchHttpClient.layer)),
     ),
   );

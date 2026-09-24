@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import * as Error from './Error';
-import * as internal from './internal';
-import * as Obj from './Obj';
+import * as Error from './Error.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
 
 /**
  * A key path addressing a string value within an object, mirroring `Obj.getValue` / `Obj.setValue`.

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Menu';
+export * from './Menu.tsx';
 export {
   type MenuAlign,
   type MenuContentHandlers,
@@ -10,4 +10,4 @@ export {
   type MenuSelectHandler,
   type MenuSide,
   useMenuContext,
-} from './MenuContext';
+} from './MenuContext.ts';

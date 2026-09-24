@@ -12,11 +12,11 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 
-import type * as Database from './Database';
-import type * as EntityModule from './Entity';
-import * as internal from './internal';
-import * as typeInternal from './internal/Type';
-import type * as RelationModule from './Relation';
+import type * as Database from './Database.ts';
+import type * as EntityModule from './Entity.ts';
+import * as internal from './internal/index.ts';
+import * as typeInternal from './internal/Type/index.ts';
+import type * as RelationModule from './Relation.ts';
 
 //
 // Internal types (not exported)
@@ -41,7 +41,7 @@ interface BaseTypeEntity<A> {
    * Object id. Like all ECHO entities, type entities always carry an id —
    * stamped at construction for in-memory (static) declarations and assigned by
    * the database once persisted. The id does NOT determine the entity's URI:
-   * static types resolve to their typename DXN, persisted types to `echo:/<id>`
+   * static types resolve to their typename DXN, persisted types to `echo:///<id>`
    * (see `getTypeURIFromSpecifier`).
    */
   readonly id: EntityId;
@@ -406,7 +406,7 @@ export type AnyRef = Schema.Codec<internal.Ref<any>, EncodedReference>;
  * Returns the URI identifying a type entity. Always defined.
  *
  * - Static `Type.Obj` / `Type.Relation` → typename DXN (e.g. `dxn:com.example.type.person:0.1.0`).
- * - Persisted `Type.Type` instance (has `id`) → local `EID` (`echo:/<objectId>`).
+ * - Persisted `Type.Type` instance (has `id`) → local `EID` (`echo:///<objectId>`).
  * - In-memory `Type.Type` draft (has `id`, no typename) → local `EID`.
  *
  * When `options.prefer === 'named'` the result is forced to a DXN — for
@@ -514,7 +514,7 @@ const stripTypenamePrefix = (value: string): string => {
     return value.slice('dxn:'.length);
   }
   // Strip the `echo:` scheme along with any leading slashes so every local form
-  // (`echo:/<id>`, `echo:///<id>`) and the qualified `echo://<space>/<id>` collapse consistently.
+  // (`echo:///<id>`, `echo:///<id>`) and the qualified `echo://<space>/<id>` collapse consistently.
   if (value.startsWith('echo:')) {
     return value.slice('echo:'.length).replace(/^\/+/, '');
   }

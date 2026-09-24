@@ -12,7 +12,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { ParquetReadError, type ParquetRow, parquetSource } from './parquet';
+import { ParquetReadError, type ParquetRow, parquetSource } from './parquet.ts';
 
 // git clone https://huggingface.co/datasets/corbt/enron-emails
 

@@ -38,18 +38,20 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:",
+    "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",

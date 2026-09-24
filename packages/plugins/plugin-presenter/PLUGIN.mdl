@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -185,7 +185,7 @@ feat F-4: Plugin Settings
 ## Acceptance
 
 ```mdl
-test T-1: Document presenter opens in fullscreen
+scenario T-1: Document presenter opens in fullscreen
   given: a Markdown document exists in the workspace
   when: user invokes TogglePresentation (keyboard or action menu)
   then:
@@ -195,7 +195,7 @@ test T-1: Document presenter opens in fullscreen
 ```
 
 ```mdl
-test T-2: Slide navigation via Reveal.js
+scenario T-2: Slide navigation via Reveal.js
   given: a Markdown document with three `---`-separated sections
   when: DocumentArticle renders the document
   then:
@@ -204,14 +204,14 @@ test T-2: Slide navigation via Reveal.js
 ```
 
 ```mdl
-test T-3: Exit returns to document view
+scenario T-3: Exit returns to document view
   given: DocumentArticle is open in fullscreen
   when: user presses Escape
   then: Composer navigates back to the document article view
 ```
 
 ```mdl
-test T-4: Collection slideshow renders per-item surfaces
+scenario T-4: Collection slideshow renders per-item surfaces
   given: a Collection with two Markdown documents and settings.presentCollections = true
   when: CollectionArticle mounts
   then:
@@ -220,7 +220,7 @@ test T-4: Collection slideshow renders per-item surfaces
 ```
 
 ```mdl
-test T-5: Collection slide advance
+scenario T-5: Collection slide advance
   given: CollectionArticle at slide 0 with a three-item collection
   when: user clicks the next-slide control in Pager
   then:
@@ -230,14 +230,14 @@ test T-5: Collection slide advance
 ```
 
 ```mdl
-test T-6: Collections hidden when setting disabled
+scenario T-6: Collections hidden when setting disabled
   given: settings.presentCollections is false (default)
   when: app graph is built for a Collection node
   then: no Presenter companion node is created for the collection
 ```
 
 ```mdl
-test T-7: Keyboard shortcut registered
+scenario T-7: Keyboard shortcut registered
   given: a Markdown document node is focused in the app graph
   then:
     - action with key TogglePresentation is present on the node
@@ -248,11 +248,11 @@ test T-7: Keyboard shortcut registered
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Present a document and exit
+test QA-1: Present a document and exit
   desc: The core presenter round-trip — create a document with slide separators, toggle presentation mode on, then off.
   actors: both
   covers: [F-1.1, F-1.3, F-2.1, F-2.2, T-1, T-3]
@@ -264,8 +264,8 @@ flow QA-1: Present a document and exit
     - plugin-presenter is enabled — it is OFF by default (absent from `getDefaults` in
       `plugin-defs.tsx`), though the plugin itself is registered unconditionally so it always
       appears in the plugin registry to enable manually
-    - no document named "QA Slides" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no document named "QA Slides" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create a document with slides
       do: In the navtree, click + on a collection and choose Markdown. Name it "QA Slides".
       invoke: org.dxos.operation.markdown.createDraft { name: "QA Slides", content: "# Slide one\n\n---\n\n# Slide two\n" }
@@ -325,8 +325,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -76,34 +76,43 @@
   --animate-slide-up-and-fade: slide-up-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-slide-right-and-fade: slide-right-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
 
+  /** Both directions of a tree branch's disclosure, and anything that has to land with them. */
+  --duration-tree-disclosure: 200ms;
+
   /**
    * Tree disclosure (enter only — Ark's BranchContent hides immediately on collapse).
    * Height animates where `interpolate-size: allow-keywords` is supported (the element opts in);
    * elsewhere block-size flips discretely mid-animation and the fade carries the reveal.
+   * The clip rides in the keyframes so it exists only while the height moves: a branch clipped
+   * at rest cuts whatever its first and last rows paint outside their box — a focus ring, a drop line.
    */
   @keyframes tree-disclose {
     from {
       opacity: 0;
       block-size: 0;
+      overflow-y: clip;
     }
     to {
       opacity: 1;
       block-size: auto;
+      overflow-y: clip;
     }
   }
-  --animate-tree-disclose: tree-disclose 200ms ease-out;
+  --animate-tree-disclose: tree-disclose var(--duration-tree-disclosure) ease-out;
   @keyframes tree-conceal {
     from {
       opacity: 1;
       block-size: auto;
+      overflow-y: clip;
     }
     to {
       opacity: 0;
       block-size: 0;
+      overflow-y: clip;
     }
   }
-  /* `forwards` holds the collapsed frame until the model close lands and the machine hides the content. */
-  --animate-tree-conceal: tree-conceal 200ms ease-in forwards;
+  /* `forwards` holds the collapsed frame until the machine hides the content. */
+  --animate-tree-conceal: tree-conceal var(--duration-tree-disclosure) ease-in forwards;
 
   /**
    * Popover/hover-card fade+zoom (shadcn-style).

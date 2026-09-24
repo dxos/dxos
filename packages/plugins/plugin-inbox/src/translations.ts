@@ -71,6 +71,8 @@ export const translations = [
 
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
+        'message-companion.label': 'Message',
+        'no-message-selected.message': 'Select a message.',
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
         'mailbox-sync.label': 'Mailbox Sync',

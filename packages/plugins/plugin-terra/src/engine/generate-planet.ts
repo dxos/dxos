@@ -4,11 +4,11 @@
 
 import seedrandom from 'seedrandom';
 
-import { type ClimateConfig, classify } from './biomes';
-import { FACE_UPS, add, cross, dot, faceBasis, normalize, scale, sub, unitOnFace } from './cubed-sphere';
-import { type NoiseConfig, type Vec3, makeSampler } from './noise';
-import { colorFor } from './palette';
-import { type TerrainConfig, radiusAt, seaRadius as seaRadiusOf } from './terrain';
+import { type ClimateConfig, classify } from './biomes.ts';
+import { FACE_UPS, add, cross, dot, faceBasis, normalize, scale, sub, unitOnFace } from './cubed-sphere.ts';
+import { type NoiseConfig, type Vec3, makeSampler } from './noise.ts';
+import { colorFor } from './palette.ts';
+import { type TerrainConfig, radiusAt, seaRadius as seaRadiusOf } from './terrain.ts';
 
 export type TerraConfigValues = NoiseConfig &
   TerrainConfig &

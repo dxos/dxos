@@ -9,13 +9,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Field } from '../Field';
-import { ScrollArea } from '../ScrollArea';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Field } from '../Field/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog.tsx';
 
-type StoryArgs = Pick<DialogContentProps, 'size'> &
+type StoryArgs = Pick<DialogContentProps, 'size' | 'elevation'> &
   Partial<{
     title: string;
     description: string;
@@ -28,14 +28,14 @@ type StoryArgs = Pick<DialogContentProps, 'size'> &
  * Standard Dialog with non-scrolling content in Dialog.Body.
  * Dialog.Body propagates the Column grid via subgrid. Children auto-center via --dx-col.
  */
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
+const DefaultStory = ({ size, elevation, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content size={size}>
+        <Dialog.Content size={size} elevation={elevation}>
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
@@ -66,14 +66,14 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
  * The ScrollArea breaks out of Body's gutter padding via `--gutter`
  * and applies its own asymmetric padding (accounting for scrollbar width).
  */
-const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
+const ScrollingStory = ({ size, elevation, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content size={size}>
+        <Dialog.Content size={size} elevation={elevation}>
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
@@ -105,6 +105,9 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme()],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -222,6 +225,49 @@ export const TestOpenClose: StoryObj = {
     await waitFor(async () => expect(dialog.contains(document.activeElement)).toBe(true));
     await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(dialogElement()).toBeNull());
+  },
+};
+
+/**
+ * Unmounts when a long task holds the frame past its exit animation, so `animationend` fires before the presence
+ * machine listens. Pins `patches/@zag-js__presence@1.43.3.patch`; `patches/README.md` says when it can go.
+ */
+export const TestCloseDuringLongTask: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Closing dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    const dialog = await waitFor(async () => {
+      const element = dialogElement();
+      await expect(element).not.toBeNull();
+      invariant(element);
+      return element;
+    });
+    await waitFor(async () => expect(dialog.getAnimations()).toHaveLength(0));
+    const observer = new MutationObserver(() => {
+      if (dialog.getAttribute('data-state') !== 'closed') {
+        return;
+      }
+      observer.disconnect();
+      getComputedStyle(dialog).animationName;
+      const until = performance.now() + 600;
+      while (performance.now() < until) {}
+    });
+    observer.observe(dialog, { attributes: true, attributeFilter: ['data-state'] });
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(dialogElement()).toBeNull(), { timeout: 3_000 });
   },
 };
 

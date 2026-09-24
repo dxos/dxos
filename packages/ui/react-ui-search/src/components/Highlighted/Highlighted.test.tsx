@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { Highlighted } from './Highlighted';
+import { Highlighted } from './Highlighted.tsx';
 
 describe('Highlighted', () => {
   test('wraps matched substrings in <mark>', () => {

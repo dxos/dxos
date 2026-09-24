@@ -34,6 +34,7 @@ import React, {
 } from 'react';
 
 import { Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type WindowController, useListModel, useWindow } from '@dxos/react-ui-virtual';
 import {
   getStyles,
   hoverableControls,
@@ -43,29 +44,43 @@ import {
 } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
-import { Path } from '../../util';
-import { DROP_INDENTATION, indentTrack } from './helpers';
-import { type TreeData, isTreeDataFor } from './tree-data';
+import { Path } from '../../util/index.ts';
+import { DROP_INDENTATION, indentTrack } from './helpers.ts';
+import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
   type HeadingRenderer,
   type IconRenderer,
+  type RowActivation,
+  type SelectModifiers,
   type TreeItemDataProps,
   type TreeModel,
   type TreeNodeEntry,
   type TreeRenderContextValue,
   TreeRenderProvider,
   useTreeRender,
-} from './TreeContext';
-import { TreeDropDebug } from './TreeDropDebug';
-import { TreeDropIndicator } from './TreeDropIndicator';
-import { TreeItemToggle } from './TreeItemToggle';
+} from './TreeContext.ts';
+import { TreeDropDebug } from './TreeDropDebug.tsx';
+import { type DropKind, TreeDropIndicator } from './TreeDropIndicator.tsx';
+import { TreeItemToggle } from './TreeItemToggle.tsx';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
 /** How long recorded pointer modifiers stay valid for the machine's selection callback. */
 const MODIFIER_WINDOW = 500;
+
+const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false };
+
+/**
+ * The row track and the grid that lays rows out on it.
+ *
+ * Named because the grid moves: unwindowed it is the tree element, windowed it is the mounted
+ * parent inside it, and a row's `col-[tree-row]` has to resolve against whichever one holds it.
+ */
+const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
+const TREE_GRID = 'grid gap-0.5';
 
 type TreeWalkState<T extends { id: string }> = {
   root: TreeNodeEntry<T>;
@@ -217,8 +232,9 @@ export type TreeProps<T extends { id: string } = any> = {
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
-  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  /** What dropping at an instruction does; `reject` blocks it and `link` draws a dashed indicator. A move when absent. */
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /**
    * Whether a row with no children can be dropped onto to adopt the dragged item. Off by default:
    * in a tree whose leaves are terminal (a navtree's documents) nesting into one is meaningless, so
@@ -259,9 +275,32 @@ export type TreeProps<T extends { id: string } = any> = {
    * and without this it is both invisible and wrong.
    */
   dropAtEnd?: boolean;
+  /**
+   * Mount only the rows in view, windowed with `@dxos/react-ui-virtual`.
+   *
+   * The same mechanism the trace timeline and the message feed use: the placement owns the
+   * measured extents and the scrollbar, and the tree renders the mounted range into a translated
+   * parent. Off by default — a list short enough to render whole gains nothing.
+   *
+   * A tree with a disclosable branch renders whole regardless, because a branch's children are
+   * inside the machine's animated disclosure rather than a flat run of siblings.
+   */
+  virtualize?: boolean;
+  /**
+   * The element that scrolls the tree, when the consumer owns one.
+   *
+   * Optional because a tree is usually inside somebody else's scroller; without it the nearest
+   * scrolling ancestor is used, so windowing does not become a change to every consumer.
+   */
+  scrollerRef?: React.RefObject<HTMLElement | null>;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
-  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
+  /**
+   * A row activation; `current` is the state the row is being taken to. In `multiple` mode a plain
+   * click reports `current: true` without `meta`, meaning the row alone, and a meta-click reports
+   * the toggled state with `meta`, meaning the row on top of the others.
+   */
+  onSelect?: (params: { item: T; path: string[]; current: boolean } & SelectModifiers) => void;
   onItemHover?: (params: { item: T }) => void;
   /**
    * Keydown on the tree container. The escape hatch for gestures the machine does not own — zag
@@ -294,13 +333,15 @@ export const Tree = <T extends { id: string } = any>({
   renderColumns,
   renderIcon,
   renderHeading,
-  blockInstruction,
   canDrop,
+  getDropKind,
   leavesAcceptChildren = false,
   selectionFollowsFocus = false,
   debug = false,
   dropBelowExpanded = false,
   dropAtEnd = false,
+  virtualize = false,
+  scrollerRef,
   canSelect,
   onOpenChange,
   onSelect,
@@ -329,71 +370,45 @@ export const Tree = <T extends { id: string } = any>({
 
   // The machine's callbacks carry no input modifiers, so the last pointer-down's modifiers are
   // captured here and consulted (within a freshness window) when selection changes.
-  const modifiersRef = useRef({ option: false, shift: false, at: 0 });
+  const modifiersRef = useRef<SelectModifiers & { at: number }>({ ...NO_MODIFIERS, at: 0 });
   const handlePointerDownCapture = useCallback((event: PointerEvent) => {
-    modifiersRef.current = { option: event.altKey, shift: event.shiftKey, at: Date.now() };
+    modifiersRef.current = {
+      option: event.altKey,
+      shift: event.shiftKey,
+      meta: event.metaKey || event.ctrlKey,
+      at: Date.now(),
+    };
   }, []);
-  const recentModifiers = useCallback(() => {
-    const { option, shift, at } = modifiersRef.current;
-    return Date.now() - at < MODIFIER_WINDOW ? { option, shift } : { option: false, shift: false };
-  }, []);
-
-  // Values whose branch content is running its conceal animation; the model close commits when the
-  // animation finishes (the machine hides content the instant the controlled value shrinks,
-  // so an animated exit has to precede the commit).
-  const [closingValues, setClosingValues] = useState<ReadonlySet<string>>(() => new Set());
-
-  /** Starts a branch's conceal animation; the model close commits when it ends. */
-  const requestClose = useCallback((value: string) => {
-    setClosingValues((previous) => (previous.has(value) ? previous : new Set(previous).add(value)));
+  const recentModifiers = useCallback((): SelectModifiers => {
+    const { option, shift, meta, at } = modifiersRef.current;
+    return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
-  /**
-   * Flips a branch's disclosure, from the row, the chevron or the keyboard alike.
-   *
-   * Closing goes through the same deferral the chevron uses: committing it here hid the content
-   * before it could animate, so the same gesture read as instant from the row and animated from the
-   * chevron.
-   */
-  const toggleOpen = useCallback(
-    (node: TreeNodeEntry<T>) => {
-      if (node.open) {
-        requestClose(node.value);
-      } else {
-        onOpenChange?.({ item: node.item, path: node.path, open: true });
-      }
-    },
-    [onOpenChange, requestClose],
+  const setOpen = useCallback(
+    (node: TreeNodeEntry<T>, open: boolean) => onOpenChange?.({ item: node.item, path: node.path, open }),
+    [onOpenChange],
+  );
+
+  const toggleOpen = useCallback((node: TreeNodeEntry<T>) => setOpen(node, !node.open), [setOpen]);
+
+  /** The consumer's verdict alone. A disabled row answers no activation at all, which is separate. */
+  const allowsSelect = useCallback(
+    (node: TreeNodeEntry<T>) => canSelect?.({ item: node.item, path: node.path }) ?? true,
+    [canSelect],
   );
 
   const onSelectNode = useCallback(
-    (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => {
-      // A branch that is already current, or an option-activation, toggles instead of selecting.
-      if (node.branch && (modifiers.option || node.current)) {
-        // Closing goes through the same deferral the chevron uses. Calling `onOpenChange` here
-        // committed the close at once, so the machine hid the content before it could animate —
-        // the same gesture read as instant from the row and animated from the chevron.
+    (node: TreeNodeEntry<T>, activation: RowActivation) => {
+      if (node.props.disabled) {
+        return;
+      }
+      if (node.branch && (activation.option || !allowsSelect(node))) {
         toggleOpen(node);
-      } else if (canSelect?.({ item: node.item, path: node.path }) ?? true) {
-        onSelect?.({ item: node.item, path: node.path, current: !node.current, ...modifiers });
+      } else if (allowsSelect(node)) {
+        onSelect?.({ item: node.item, path: node.path, ...activation });
       }
     },
-    [canSelect, onSelect, toggleOpen],
-  );
-
-  const onCommitClose = useCallback(
-    (node: TreeNodeEntry) => {
-      onOpenChange?.({ item: node.item, path: node.path, open: false });
-      setClosingValues((previous) => {
-        if (!previous.has(node.value)) {
-          return previous;
-        }
-        const next = new Set(previous);
-        next.delete(node.value);
-        return next;
-      });
-    },
-    [onOpenChange],
+    [allowsSelect, onSelect, toggleOpen],
   );
 
   const handleExpandedChange = useCallback(
@@ -403,19 +418,17 @@ export const Tree = <T extends { id: string } = any>({
       for (const value of expandedValue) {
         if (!previous.has(value)) {
           const entry = byValue.get(value);
-          entry && onOpenChange?.({ item: entry.item, path: entry.path, open: true });
+          entry && setOpen(entry, true);
         }
       }
-      const removed = expanded.filter((value) => !next.has(value) && byValue.has(value));
-      if (removed.length > 0) {
-        setClosingValues((current) => {
-          const merged = new Set(current);
-          removed.forEach((value) => merged.add(value));
-          return merged;
-        });
+      for (const value of expanded) {
+        if (!next.has(value)) {
+          const entry = byValue.get(value);
+          entry && setOpen(entry, false);
+        }
       }
     },
-    [expanded, byValue, onOpenChange],
+    [expanded, byValue, setOpen],
   );
 
   /** Last row the machine reported focus on — the target `Enter`/`Space` act upon. */
@@ -478,6 +491,12 @@ export const Tree = <T extends { id: string } = any>({
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
+      // A modified activation is the pointer's to report: the machine moves focus first, and
+      // following it here would select (and open) the row a heartbeat before the meta-click says it
+      // wanted a second view of it instead.
+      if (recentModifiers().meta) {
+        return;
+      }
       // Only the row's own focus selects — the arrows, or a click on the row. Focus landing on a
       // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
       // following it selected the row the reader was about to act on: a delete briefly swapped the
@@ -490,10 +509,10 @@ export const Tree = <T extends { id: string } = any>({
       }
       const entry = byValue.get(focusedValue);
       if (entry) {
-        onSelectNode(entry, { option: false, shift: false });
+        onSelectNode(entry, { ...NO_MODIFIERS, current: true });
       }
     },
-    [selectionFollowsFocus, selected, byValue, onSelectNode],
+    [selectionFollowsFocus, selected, byValue, onSelectNode, recentModifiers],
   );
 
   const handleSelectionChange = useCallback(
@@ -505,20 +524,13 @@ export const Tree = <T extends { id: string } = any>({
           : selectedValue.find((candidate) => !previous.has(candidate));
       const entry = value ? byValue.get(value) : undefined;
       if (entry) {
-        onSelectNode(entry, recentModifiers());
+        onSelectNode(entry, { ...recentModifiers(), current: true });
       }
     },
     [selected, byValue, onSelectNode, recentModifiers],
   );
 
-  /**
-   * `Enter`/`Space` on the current branch toggles it.
-   *
-   * The machine emits a selection change only when the selected value actually changes, so
-   * activating the row that is already selected reached nothing — the gesture that toggles by
-   * pointer did nothing by keyboard. Gated on `current` so it mirrors the pointer exactly: the
-   * first activation selects, the second discloses.
-   */
+  /** The machine emits no selection event for a row that is already selected, so `Enter` is taken here. */
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
@@ -532,12 +544,24 @@ export const Tree = <T extends { id: string } = any>({
       }
       const focused = focusedValueRef.current;
       const entry = focused ? byValue.get(focused) : undefined;
-      if (entry?.branch && entry.current) {
-        event.preventDefault();
-        toggleOpen(entry);
+      if (!entry) {
+        return;
+      }
+      if (event.key === ' ') {
+        // The machine refuses every disclosure path it owns for a disabled branch — the chevron's
+        // click and both arrows — and `Space` is the one it leaves to us.
+        if (entry.branch && !entry.props.disabled) {
+          event.preventDefault();
+          toggleOpen(entry);
+        }
+        return;
+      }
+      event.preventDefault();
+      if (!entry.props.disabled && allowsSelect(entry)) {
+        onSelect?.({ item: entry.item, path: entry.path, current: true, ...NO_MODIFIERS, keyboard: true });
       }
     },
-    [onKeyDown, byValue, toggleOpen],
+    [onKeyDown, byValue, toggleOpen, allowsSelect, onSelect],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted
@@ -558,16 +582,16 @@ export const Tree = <T extends { id: string } = any>({
       renderColumns,
       renderIcon,
       renderHeading,
-      blockInstruction,
       canDrop,
+      getDropKind,
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
-      closingValues,
-      commitClose: onCommitClose,
+      canSelect,
+      selectionMode,
       mountedRef,
     }),
     [
@@ -580,18 +604,24 @@ export const Tree = <T extends { id: string } = any>({
       renderColumns,
       renderIcon,
       renderHeading,
-      blockInstruction,
       canDrop,
+      getDropKind,
       leavesAcceptChildren,
       debug,
       dropBelowExpanded,
       onSelectNode,
-      closingValues,
+      canSelect,
+      selectionMode,
       onOpenChange,
       onItemHover,
-      onCommitClose,
     ],
   );
+
+  // The rows the window would mount, or `undefined` when the tree has a branch and renders whole.
+  const units = useMemo(() => (virtualize ? flattenRowUnits(root.children) : undefined), [virtualize, root.children]);
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const scroller = useScroller(treeRef, scrollerRef, !!units);
+  const windowed = !!units && !!scroller;
 
   return (
     <TreeView.Root
@@ -612,6 +642,7 @@ export const Tree = <T extends { id: string } = any>({
       {ariaLabel && <TreeView.Label className='sr-only'>{ariaLabel}</TreeView.Label>}
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
         <TreeView.Tree
+          ref={treeRef}
           // Sets `--dx-control` for the whole subtree, which is what actually sizes a row (the row
           // is one control tall and its toggle track one control wide) — so `density` alone is
           // enough and a consumer needs no `dx-density-*` class of its own.
@@ -620,20 +651,32 @@ export const Tree = <T extends { id: string } = any>({
           // row holds it, which must not draw a focus ring around the whole tree.
           // Row spacing belongs to the container: as a margin on each row it also offset the first
           // row from the tree's top edge, which is space between the tree and its frame, not between rows.
-          className={mx('grid gap-0.5 outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
+          // Windowed, the grid moves to the mounted parent: the tree element becomes the positioning
+          // context the sizer and that parent live in, and holds no rows of its own.
+          className={mx(
+            'outline-none',
+            windowed ? 'relative' : TREE_GRID,
+            ...(Array.isArray(classNames) ? classNames : [classNames]),
+          )}
           // One track: rows, section headers and the end target span it. The consumer's column
           // template is applied per row, behind an indent track, rather than here — a subgrid would
           // share one set of tracks down the tree, and padding a subgrid only shrinks its first
           // track, so nested rows could not indent their leading cells.
-          style={{ gridTemplateColumns: '[tree-row-start] minmax(0, 1fr) [tree-row-end]' }}
+          style={windowed ? undefined : { gridTemplateColumns: TREE_TRACK }}
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
-          {root.children?.map((node) => (
-            <TreeNodeRow key={node.value} node={node} />
-          ))}
-          {dropAtEnd && draggable && (
-            <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
+          {windowed ? (
+            <TreeWindow units={units} scroller={scroller} focusedValue={focusedValue} />
+          ) : (
+            <>
+              {root.children?.map((node) => (
+                <TreeNodeRow key={node.value} node={node} />
+              ))}
+              {dropAtEnd && draggable && (
+                <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
+              )}
+            </>
           )}
         </TreeView.Tree>
       </TreeRenderProvider>
@@ -641,8 +684,98 @@ export const Tree = <T extends { id: string } = any>({
   );
 };
 
+/**
+ * The mounted rows, and a sizer that gives the scrollbar the whole tree's extent.
+ *
+ * The shape `@dxos/react-ui-virtual` asks for, as the trace timeline and the message feed render
+ * it: rows live in a parent that is moved by a transform, so a correction changes one number and
+ * never writes `scrollTop` out from under the reader.
+ */
+const TreeWindow = ({
+  units,
+  scroller,
+  focusedValue,
+}: {
+  units: RowUnit[];
+  scroller: HTMLElement;
+  focusedValue: string | null;
+}) => {
+  const scrollerRef = useRef<HTMLElement | null>(scroller);
+  scrollerRef.current = scroller;
+  const model = useListModel(units, rowUnitId);
+  const controllerRef = useRef<WindowController>(null);
+  const {
+    layout: { visible },
+    windowRef,
+    offset,
+    sizerExtent,
+    first,
+    last,
+  } = useWindow({ scrollerRef, model, extents: nominalExtents, controllerRef });
+
+  // The machine moves focus over the whole collection, including rows this window has not mounted,
+  // so a row it focuses has to be brought into the window before it can take the focus. Nearest
+  // edge, which is what the `scrollIntoView({ block: 'nearest' })` of an unwindowed tree did.
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
+  useEffect(() => {
+    if (!focusedValue) {
+      return;
+    }
+
+    const index = units.findIndex((unit) => unit.kind === 'row' && unit.key === focusedValue);
+    if (index < 0) {
+      return;
+    }
+
+    const { first, last } = visibleRef.current;
+    if (index < first) {
+      controllerRef.current?.scrollToIndex(index, 'start');
+    } else if (index > last) {
+      controllerRef.current?.scrollToIndex(index, 'end');
+    }
+  }, [focusedValue, units]);
+
+  const mounted = [];
+  for (let index = first; index <= last; index++) {
+    const unit = units[index];
+    if (!unit) {
+      continue;
+    }
+
+    mounted.push(
+      unit.kind === 'header' ? (
+        <TreeSectionHeader key={unit.key} label={unit.label} windowIndex={index} objectId={unit.key} />
+      ) : (
+        <TreeNodeRow key={unit.key} node={unit.node} windowIndex={index} />
+      ),
+    );
+  }
+
+  return (
+    <>
+      <div style={{ blockSize: sizerExtent }} />
+      <div
+        ref={windowRef}
+        className={mx('absolute inline-start-0 inline-end-0 top-0', TREE_GRID)}
+        style={{ gridTemplateColumns: TREE_TRACK, transform: `translateY(${offset}px)` }}
+      >
+        {mounted}
+      </div>
+    </>
+  );
+};
+
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
-const TreeSectionHeader = ({ label }: { label: Label }) => {
+const TreeSectionHeader = ({
+  label,
+  windowIndex,
+  objectId,
+}: {
+  label: Label;
+  windowIndex?: number;
+  objectId?: string;
+}) => {
   const { t } = useTranslation();
   const { toggle } = useTreeRender();
   return (
@@ -650,6 +783,8 @@ const TreeSectionHeader = ({ label }: { label: Label }) => {
     // decorative — the group's items remain individually labeled.
     <div
       role='presentation'
+      data-index={windowIndex}
+      data-object-id={objectId}
       className={mx(
         'col-[tree-row] pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none',
         // Cleared past the toggle track so the label starts where the rows' first cell does.
@@ -661,9 +796,13 @@ const TreeSectionHeader = ({ label }: { label: Label }) => {
   );
 };
 
-type TreeNodeRowProps = { node: TreeNodeEntry };
+type TreeNodeRowProps = {
+  node: TreeNodeEntry;
+  /** Position in the mounted window, when the tree is windowed; the window measures rows by it. */
+  windowIndex?: number;
+};
 
-const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
+const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
   if (node.group) {
     return (
       <>
@@ -683,7 +822,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
           <TreeBranchContent node={node} />
         </TreeView.Branch>
       ) : (
-        <TreeNodeRowContent node={node} />
+        <TreeNodeRowContent node={node} windowIndex={windowIndex} />
       )}
     </TreeView.NodeProvider>
   );
@@ -691,25 +830,17 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
 
 TreeNodeRow.displayName = 'Tree.NodeRow';
 
-/** How long past the conceal animation before the close force-commits (animation may never run). */
-const CONCEAL_COMMIT_TIMEOUT = 300;
-
 /**
  * Branch children container. Disclosure animates height (via `interpolate-size`, opacity-only
  * where unsupported) — but only for content inserted after the initial paint, so a tree restoring
  * persisted open state does not animate every branch on load. The gate is stamped at DOM insertion
- * time because lazy-mounted content attaches long after the row first renders. A collapse first
- * runs the conceal animation and only then commits the model close (which is when the machine
- * actually hides the content).
+ * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef, closingValues, commitClose } = useTreeRender();
-  const elementRef = useRef<HTMLDivElement | null>(null);
-  const closing = closingValues.has(node.value);
+  const { mountedRef } = useTreeRender();
 
   const handleRef = useCallback(
     (element: HTMLDivElement | null) => {
-      elementRef.current = element;
       if (element && mountedRef.current) {
         element.dataset.animate = '';
       }
@@ -717,58 +848,20 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
     [mountedRef],
   );
 
-  // The latest entry, read by the close callback without being the effect's identity: a model that
-  // rebuilds on every tick (live data) produces new entry objects, and depending on the object would
-  // clear and re-arm the commit timer indefinitely, stranding the branch in `closingValues`.
-  const nodeRef = useRef(node);
-  nodeRef.current = node;
-
-  useEffect(() => {
-    if (!closing) {
-      return;
-    }
-    const element = elementRef.current;
-    if (!element || element.hidden) {
-      commitClose(nodeRef.current);
-      return;
-    }
-    let done = false;
-    const finish = () => {
-      if (!done) {
-        done = true;
-        commitClose(nodeRef.current);
-      }
-    };
-    const handleAnimationEnd = (event: AnimationEvent) => {
-      if (String(event.animationName).includes('tree-conceal')) {
-        finish();
-      }
-    };
-    element.addEventListener('animationend', handleAnimationEnd);
-    const timer = setTimeout(finish, CONCEAL_COMMIT_TIMEOUT);
-    return () => {
-      element.removeEventListener('animationend', handleAnimationEnd);
-      clearTimeout(timer);
-      // Unmounting mid-conceal (the ref is already detached) would otherwise strand the model
-      // open and the value in `closingValues`; a dep-change re-run keeps the element and re-arms.
-      if (!elementRef.current) {
-        finish();
-      }
-    };
-  }, [closing, node.value, commitClose]);
-
   return (
     <TreeView.BranchContent
       ref={handleRef}
       // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat, and
       // `empty:hidden` keeps a childless branch from occupying a row: even at zero height it would
       // draw the tree's row gap around it, so toggling an empty branch grew the tree by the gap.
+      // The machine sets `hidden` only once the conceal has run, so the two never fight.
       className={mx(
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
         'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
-        'overflow-y-clip [interpolate-size:allow-keywords]',
-        closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
+        '[interpolate-size:allow-keywords]',
+        'data-[animate]:data-[state=open]:animate-tree-disclose',
+        'data-[animate]:data-[state=closed]:animate-tree-conceal',
       )}
     >
       {node.children?.map((child) => (
@@ -818,7 +911,7 @@ TreeEndDropTarget.displayName = 'Tree.EndDropTarget';
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 /** The visible row: branch control or leaf item, with DnD wiring, columns, and the drop indicator. */
-const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
+const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node, windowIndex }) => {
   const {
     treeId,
     draggable: treeDraggable,
@@ -827,14 +920,16 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     density,
     renderColumns: Columns,
     renderHeading: RenderHeading,
-    blockInstruction,
     canDrop,
+    getDropKind,
     leavesAcceptChildren,
     debug,
     dropBelowExpanded,
     onOpenChange,
     onItemHover,
     selectNode,
+    canSelect,
+    selectionMode,
     focusNode,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -842,6 +937,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
   const [dragState, setDragState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
+  const [dropKind, setDropKind] = useState<DropKind>('move');
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { id, value, item, path, level, branch, open, last, current, props } = node;
@@ -858,6 +954,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
   const data = { treeId, id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
+  const selectable = !props.disabled && (canSelect?.({ item, path }) ?? true);
   const isItemDroppable = props.droppable !== false;
   const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
@@ -930,10 +1027,15 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
         const desired = extractInstruction(self.data);
-        const block =
-          desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+        const kind =
+          desired && desired.type !== 'instruction-blocked'
+            ? (getDropKind?.({ instruction: desired, source: source.data as TreeData, target: data }) ?? 'move')
+            : 'move';
         const next: Instruction | null =
-          block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
+          kind === 'reject' && desired && desired.type !== 'instruction-blocked'
+            ? { type: 'instruction-blocked', desired }
+            : desired;
+        setDropKind(kind);
 
         if (source.data.id !== id) {
           if (next?.type === 'make-child' && branch && !open && !cancelExpandRef.current) {
@@ -978,8 +1080,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     level,
     branch,
     open,
-    blockInstruction,
     canDrop,
+    getDropKind,
     onOpenChange,
     onCancelExpand,
     shouldSeedNativeDragData,
@@ -987,16 +1089,35 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
 
   useEffect(() => () => onCancelExpand(), [onCancelExpand]);
 
-  // The machine skips selection events for an already-selected row, so re-activation (toggle a
-  // current branch, scroll a current leaf into view) is handled here.
   const handleClick = useCallback(
     (event: MouseEvent) => {
       if (current) {
         event.preventDefault();
-        selectNode(node, { option: event.altKey, shift: event.shiftKey });
+        selectNode(node, {
+          option: event.altKey,
+          shift: event.shiftKey,
+          meta: event.metaKey || event.ctrlKey,
+          current: true,
+        });
       }
     },
     [current, node, selectNode],
+  );
+
+  const handleClickCapture = useCallback(
+    (event: MouseEvent) => {
+      if (selectionMode !== 'multiple' || event.shiftKey || event.altKey) {
+        return;
+      }
+      if ((event.target as HTMLElement).closest('button, input, textarea, [contenteditable="true"]')) {
+        return;
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      const meta = event.metaKey || event.ctrlKey;
+      selectNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
+    },
+    [selectionMode, node, current, selectNode],
   );
 
   const handleItemHover = useCallback(() => onItemHover?.({ item }), [onItemHover, item]);
@@ -1016,8 +1137,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
       data-testid={props.testId}
+      // Read by the window to measure this row; it reads the id off `data-object-id` above, which
+      // is why a windowed tree is one whose item ids are unique.
+      data-index={windowIndex}
       className={mx(
-        'col-[tree-row] outline-none cursor-pointer select-none',
+        'col-[tree-row] outline-none select-none',
+        selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
+        isItemDraggable && 'active:cursor-grabbing',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
         // copy left behind in place reads as a second row rather than as the one being moved. A
         // branch's children go with it, since the drag start collapses it.
@@ -1028,7 +1154,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         // there reads as selection.
         'hover:bg-hover-surface',
         'data-[selected]:bg-current-surface data-[selected]:text-current-fg',
-        'dx-focus-ring-inset',
+        // Keyboard travel paints the row it lands on rather than ringing it: a ring inside a row
+        // that is already a filled band reads as a second, competing highlight, and the fill says
+        // what selection says — this is the row you are on. Keyed on `:focus-visible` rather than
+        // the machine's `data-focus`, which stays on the tabbable row after the tree loses focus and
+        // would leave a row lit that nothing is pointing at.
+        'dx-focus-ring-none',
+        'focus-visible:bg-current-surface focus-visible:text-current-fg',
         // Highlight the row while a descendant marks an open popover anchor (e.g. inline rename).
         'has-[[data-popover-anchor]]:bg-current-surface',
         hoverableControls,
@@ -1039,9 +1171,11 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         // strength like a focused one's. Both dimmers had a hover and a focus case but no selected
         // case, which left the current row's icons faded — the opposite of what selection means.
         'data-[selected]:[--controls-opacity:1] data-[selected]:[--icons-color:inherit]',
+        'focus-visible:[--icons-color:inherit]',
         props.className,
       )}
       onClick={handleClick}
+      onClickCapture={handleClickCapture}
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >
@@ -1082,7 +1216,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           <TreeNodeHeading item={item} path={path} props={props} />
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-        {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
+        {instruction && (
+          <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
+        )}
         {debug && (
           <TreeDropDebug
             mode={mode}
@@ -1117,8 +1253,7 @@ const TreeNodeHeading = <T extends { id: string }>({
       <div
         data-testid='treeItem.heading'
         className={mx(
-          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) cursor-pointer select-none',
-          props.disabled && 'cursor-default',
+          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) select-none',
           props.headingClassName,
         )}
       >

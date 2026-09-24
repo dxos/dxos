@@ -16,8 +16,8 @@ import { type Diagnostic, linter } from '@codemirror/lint';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { type Tag, TAGS } from '../model';
-import { TemplateParseError, parse } from '../parser';
+import { type Tag, TAGS } from '../model.ts';
+import { TemplateParseError, parse } from '../parser.ts';
 
 /**
  * Completions for the closed tag set, so the editor offers the vocabulary rather than leaving the

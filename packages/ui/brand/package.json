@@ -17,9 +17,21 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./channels": {
+      "source": "./src/channels.ts",
+      "types": "./dist/types/src/channels.d.ts",
+      "import": "./dist/lib/channels.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "channels": [
+        "dist/types/src/channels.d.ts"
+      ]
+    }
+  },
   "files": [
     "assets",
     "dist",

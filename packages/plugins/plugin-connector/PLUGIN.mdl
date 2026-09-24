@@ -22,10 +22,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -353,7 +353,7 @@ feat F-8: Provider Picker in Create Form
 ## Acceptance
 
 ```mdl
-test T-1: OAuth popup flow creates Integration
+scenario T-1: OAuth popup flow creates Integration
   given: a provider registered with oauth scopes; user is in a space
   when: user triggers createIntegration for that provider
   then:
@@ -363,7 +363,7 @@ test T-1: OAuth popup flow creates Integration
 ```
 
 ```mdl
-test T-2: OAuth callback finalizes Integration
+scenario T-2: OAuth callback finalizes Integration
   given: pending entry in memory for accessTokenId X
   when: Edge postMessage arrives with tag=success, accessTokenId=X, accessToken=TOKEN
   then:
@@ -373,7 +373,7 @@ test T-2: OAuth callback finalizes Integration
 ```
 
 ```mdl
-test T-3: OAuth failure discards pending entry
+scenario T-3: OAuth failure discards pending entry
   given: pending entry in memory for accessTokenId X
   when: Edge postMessage arrives with tag=failure
   then:
@@ -383,7 +383,7 @@ test T-3: OAuth failure discards pending entry
 ```
 
 ```mdl
-test T-4: Redirect flow recovery
+scenario T-4: Redirect flow recovery
   given: provider with useRedirectFlow=true; PendingSnapshot written to localStorage for accessTokenId Y
   when: NavigationHandler calls finalizeRedirectFlow({ accessTokenId: Y, accessToken: TOKEN })
   then:
@@ -394,7 +394,7 @@ test T-4: Redirect flow recovery
 ```
 
 ```mdl
-test T-5: Custom token flow
+scenario T-5: Custom token flow
   given: provider with credentialForm that returns kind=complete on submit
   when: user submits the credential form with valid values
   then:
@@ -403,7 +403,7 @@ test T-5: Custom token flow
 ```
 
 ```mdl
-test T-6: SetIntegrationTargets adds and removes
+scenario T-6: SetIntegrationTargets adds and removes
   given: Integration with targets [{remoteId: "A"}, {remoteId: "B"}]
   when: op:SetIntegrationTargets called with selected=[{remoteId: "B"}, {remoteId: "C"}]
   then:
@@ -414,7 +414,7 @@ test T-6: SetIntegrationTargets adds and removes
 ```
 
 ```mdl
-test T-7: Auto-created target preserved by SetIntegrationTargets
+scenario T-7: Auto-created target preserved by SetIntegrationTargets
   given: Integration with target [{object: ref(Mailbox), remoteId: undefined}]
   when: op:SetIntegrationTargets called with selected=[]
   then:
@@ -423,7 +423,7 @@ test T-7: Auto-created target preserved by SetIntegrationTargets
 ```
 
 ```mdl
-test T-8: existingTarget wired to first new target
+scenario T-8: existingTarget wired to first new target
   given: Integration with no targets; existingTarget ref supplied
   when: op:SetIntegrationTargets called with selected=[{remoteId: "X", name: "Inbox"}]
   then:
@@ -432,7 +432,7 @@ test T-8: existingTarget wired to first new target
 ```
 
 ```mdl
-test T-9: Provider picker reflects live registry
+scenario T-9: Provider picker reflects live registry
   given: create-object form for Integration type is open
   when: a second IntegrationProvider capability entry is contributed at runtime
   then:
@@ -441,7 +441,7 @@ test T-9: Provider picker reflects live registry
 ```
 
 ```mdl
-test T-10: onTokenCreated failure does not abort finalize
+scenario T-10: onTokenCreated failure does not abort finalize
   given: provider with onTokenCreated that throws an Error
   when: finalize runs after OAuth success
   then:
@@ -452,16 +452,16 @@ test T-10: onTokenCreated failure does not abort finalize
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Bind an access token to a new Integration and configure targets
+test QA-1: Bind an access token to a new Integration and configure targets
   desc: |
     plugin-connector is core infrastructure (`getCorePlugins` in composer-app), always active —
-    there is no "enable it first" precondition, unlike a content plugin. This flow drives the
+    there is no "enable it first" precondition, unlike a content plugin. This test drives the
     generic create-form path (F-8): an AccessToken already exists (from a prior OAuth or
-    custom-token flow, covered informally by F-2/F-4 — those coordinator flows involve a real
+    custom-token test, covered informally by F-2/F-4 — those coordinator tests involve a real
     popup or redirect and are exercised by a human, not scripted here), and creating the
     Integration/Connection object from it is the one step with a real operation behind it.
   actors: human
@@ -477,8 +477,8 @@ flow QA-1: Bind an access token to a new Integration and configure targets
       persists a bound Connection in the same submit (see `connector-coordinator.ts`), which
       would violate the next precondition
     - no Integration bound to that AccessToken exists yet — ABORT rather than deleting one this
-      flow did not create
-  test:
+      test did not create
+  steps:
     - name: Create the Integration from the token
       do: In the navtree, click + on a collection and choose Integration. Pick the provider in
         the dropdown (F-8's SelectField, populated live from registered IntegrationProvider
@@ -539,8 +539,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

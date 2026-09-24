@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useAsyncFieldEffect';
-export * from './useFormContext';
-export * from './useFormHandler';
-export * from './useKeyHandler';
+export * from './useAsyncFieldEffect.ts';
+export * from './useFormContext.ts';
+export * from './useFormHandler.ts';
+export * from './useKeyHandler.tsx';

@@ -8,8 +8,8 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
-import { alignSegments } from './align-segments';
-import { type RawSegment, type Segmentation, SegmentKind } from './Segmentation';
+import { alignSegments } from './align-segments.ts';
+import { type RawSegment, type Segmentation, SegmentKind } from './Segmentation.ts';
 
 /** Structural analysis is quotation, not reasoning, so the cheapest tier is the right default. */
 export const SEGMENT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
@@ -162,7 +162,7 @@ export const segmentText = (source: string, options: SegmentTextOptions = {}) =>
       LanguageModel.generateObject({ schema: AnalyzedText, prompt: buildPrompt(source, options) }),
     );
     return alignSegments(source, toRawSegments(value), options.target);
-  }).pipe(Effect.provide(AiService.model(SEGMENT_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(SEGMENT_MODEL)));
 
 /**
  * The pluggable analyzer contract, mirroring `Parser` for the editor extension and pipelines.

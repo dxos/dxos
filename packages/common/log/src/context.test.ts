@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LogLevel } from './config';
-import { LogEntry, getContextFromEntry } from './context';
+import { LogLevel } from './config.ts';
+import { LogEntry, getContextFromEntry } from './context.ts';
 
 const meta = { F: 'test.ts', L: 1, S: undefined };
 
@@ -40,5 +40,32 @@ describe('getContextFromEntry', () => {
 
   test('an error without context contributes nothing', ({ expect }) => {
     expect(getContextFromEntry(entry({ context: { error: new Error('boom'), tag: 'x' } }))).toMatchObject({ tag: 'x' });
+  });
+});
+
+describe('computedError', () => {
+  test('keeps the message when the stack is frames only, as in JavaScriptCore and SpiderMonkey', ({ expect }) => {
+    const error = Object.assign(new Error('boom'), { stack: 'fail@app.js:1:2\nrun@app.js:3:4' });
+    expect(entry({ error }).computedError).toBe('Error: boom\nfail@app.js:1:2\nrun@app.js:3:4');
+  });
+
+  test('does not repeat the message a V8 stack already opens with', ({ expect }) => {
+    const error = Object.assign(new Error('boom'), { stack: 'Error: boom\n    at fail (app.js:1:2)' });
+    expect(entry({ error }).computedError).toBe('Error: boom\n    at fail (app.js:1:2)');
+  });
+
+  test('falls back to the name and message when there is no stack', ({ expect }) => {
+    const error = Object.assign(new TypeError('boom'), { stack: '' });
+    expect(entry({ error }).computedError).toBe('TypeError: boom');
+  });
+});
+
+describe('computedContext', () => {
+  test('renders a context Error with its message and cause chain', ({ expect }) => {
+    const root = Object.assign(new Error('no route'), { stack: '' });
+    const cause = Object.assign(new Error('ICE timeout', { cause: root }), { stack: 'connect@worker.js:10:3' });
+    expect(entry({ context: { cause } }).computedContext.cause).toBe(
+      'Error: ICE timeout\nconnect@worker.js:10:3\nCaused by: Error: no route',
+    );
   });
 });

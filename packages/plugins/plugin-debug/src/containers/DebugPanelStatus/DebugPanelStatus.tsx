@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
 import {
@@ -17,7 +19,13 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { DEBUG_PANEL_CONTEXT, DebugPanel, debugPanelAspect } from '../DebugPanel';
+import {
+  DEBUG_PANEL_CONTEXT,
+  DebugPanel,
+  DebugPanelHeader,
+  type DebugPanelMode,
+  debugPanelAspect,
+} from '../DebugPanel/index.ts';
 
 /** Room for the log table to breathe; the console fits itself to whatever it is given. */
 const DEFAULT_SIZE: FloatingPanelSize = { width: 1024, height: 384 };
@@ -33,22 +41,53 @@ export type DebugPanelStatusProps = {
 };
 
 /**
- * Status-bar button opening the debug panel as a floating window over the whole app: dragged,
- * resized, folded to its title bar as the session needs, and left where it was put across reloads. The
- * red dot marks a live agent debug port — an agent can evaluate code in this page — so it must be
- * visible without opening settings.
+ * Status-bar button showing the debug panel: docked, it toggles the deck's bottom drawer; floating,
+ * it opens the panel as a window over the whole app — dragged, resized, folded to its title bar as
+ * the session needs, and left where it was put across reloads. The red dot marks a live agent debug
+ * port — an agent can evaluate code in this page — so it must be visible without opening settings.
  */
 export const DebugPanelStatus = ({ controller = getDebugPortController() }: DebugPanelStatusProps) => {
   const { t } = useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
-  const { position, size = DEFAULT_SIZE } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
+  const { invokePromise } = useOperationInvoker();
+
+  const { position, size = DEFAULT_SIZE, mode = 'docked' } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
   const { update } = useViewStateActions(debugPanelAspect, DEBUG_PANEL_CONTEXT);
+  const label = status.running ? t('debug-port-status.running.label') : t('open-debug-panel.label');
+
+  // Owned here rather than by the window so the drawer's float control can open it: the drawer
+  // only flips the persisted mode, and a docked-to-floating flip while mounted is that request.
+  const [floatingOpen, setFloatingOpen] = useState(false);
+  const previousModeRef = useRef(mode);
+  useEffect(() => {
+    if (previousModeRef.current === 'docked' && mode === 'floating') {
+      setFloatingOpen(true);
+    }
+    previousModeRef.current = mode;
+  }, [mode]);
+
+  const handleToggleDrawer = useCallback(
+    () => void invokePromise(LayoutOperation.UpdateDrawer, { state: 'toggle' }),
+    [invokePromise],
+  );
+  // Docking moves the panel: the window closes before the drawer opens so the two never show at once.
+  const handleModeChange = useCallback(
+    (next: DebugPanelMode) => {
+      setFloatingOpen(false);
+      update((prev) => ({ ...prev, mode: next }));
+      if (next === 'docked') {
+        void invokePromise(LayoutOperation.UpdateDrawer, { state: 'open' });
+      }
+    },
+    [update, invokePromise],
+  );
   const handlePositionChangeEnd = useCallback(
     (next: FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
     [update],
   );
+
   const handleSizeChangeEnd = useCallback(
     (next: FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
     [update],
@@ -72,6 +111,8 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
 
   return (
     <FloatingPanel.Root
+      open={mode === 'floating' && floatingOpen}
+      onOpenChange={setFloatingOpen}
       defaultSize={size}
       minSize={MIN_SIZE}
       getAnchorPosition={getAnchorPosition}
@@ -82,14 +123,19 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
     >
       {/* IconButton is the direct trigger child so the trigger ref/handlers/ARIA attach to the button, not the container. */}
       <StatusBar.Item classNames='relative'>
-        <FloatingPanel.Trigger asChild>
+        {mode === 'floating' ? (
+          <FloatingPanel.Trigger asChild>
+            <IconButton variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
+          </FloatingPanel.Trigger>
+        ) : (
           <IconButton
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly
-            label={status.running ? t('debug-port-status.running.label') : t('open-debug-panel.label')}
+            label={label}
+            onClick={handleToggleDrawer}
           />
-        </FloatingPanel.Trigger>
+        )}
         {status.running && (
           <span
             role='status'
@@ -101,23 +147,21 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       </StatusBar.Item>
       <FloatingPanel.Portal>
         <FloatingPanel.Content>
-          {/* The tab strip lives in the title bar, so the tabs' root spans the header and the body. */}
           <DebugPanel.Root>
             <FloatingPanel.Header classNames='pl-1'>
-              {/* The tabs stand where a title would; the title stays as the window's accessible name. */}
-              <DebugPanel.Tablist />
               <FloatingPanel.DragTrigger>
-                <FloatingPanel.Title classNames='sr-only'>{t('debug-panel.title')}</FloatingPanel.Title>
+                <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
               </FloatingPanel.DragTrigger>
               {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
               <FloatingPanel.Control>
+                <DebugPanelHeader mode={mode} onModeChange={handleModeChange} density='sm' />
                 <FloatingPanel.StageTrigger stage='minimized' />
                 <FloatingPanel.StageTrigger stage='default' />
                 <FloatingPanel.CloseTrigger />
               </FloatingPanel.Control>
             </FloatingPanel.Header>
             <FloatingPanel.Body classNames='grid'>
-              <DebugPanel.Content />
+              <DebugPanel.Body />
             </FloatingPanel.Body>
           </DebugPanel.Root>
           <FloatingPanel.Resizers />

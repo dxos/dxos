@@ -17,7 +17,7 @@ import {
   normalizePhone,
   organizationIdentitySpec,
   personIdentitySpec,
-} from './identity';
+} from './identity.ts';
 
 const GOOGLE = 'google.com/contacts';
 

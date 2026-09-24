@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -109,3 +110,8 @@ export class Rpcs extends RpcGroup.make(
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+/**
+ * Effect service tag for the `SystemService` RPC handlers.
+ */
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/SystemService') {}

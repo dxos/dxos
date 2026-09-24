@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useActivationSignal';
-export * from './useApp';
-export * from './useCapabilities';
-export * from './useLoading';
-export * from './useProcessManagerRuntime';
-export * from './useSettingsState';
-export * from './useSurface';
+export * from './useActivationSignal.ts';
+export * from './useApp.tsx';
+export * from './useCapabilities.ts';
+export * from './useLoading.tsx';
+export * from './useProcessManagerRuntime.ts';
+export * from './useSettingsState.ts';
+export * from './useSurface.ts';

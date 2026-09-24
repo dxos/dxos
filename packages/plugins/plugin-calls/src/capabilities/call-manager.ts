@@ -10,7 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { CallsCapabilities } from '#types';
 
-import { CallManager } from '../calls';
+import { CallManager } from '../calls/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

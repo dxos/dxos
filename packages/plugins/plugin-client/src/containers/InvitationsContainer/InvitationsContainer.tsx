@@ -7,14 +7,14 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Clipboard, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, IconButton, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
 
-import { useHubHttpClient } from '../../hooks';
+import { useHubHttpClient } from '../../hooks/index.ts';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -66,52 +66,51 @@ export const InvitationsContainer = () => {
   const redeemed = list.filter((row) => Boolean(row.redeemedByIdentityDid));
 
   return (
-    <Clipboard.Provider>
-      <Form.Root variant='settings'>
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
-              <Form.Field
+    <Form.Root variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('invitations-section.title')} description={t('invitations-section.description')}>
+            <Form.Field
+              standalone
+              label={t('generate-invitation.label')}
+              description={t('generate-invitation.description', { count: remaining })}
+            >
+              <IconButton
+                icon='ph--plus--regular'
                 label={t('generate-invitation.label')}
-                description={t('generate-invitation.description', { count: remaining })}
-              >
-                <IconButton
-                  icon='ph--plus--regular'
-                  label={t('generate-invitation.label')}
-                  variant='primary'
-                  onClick={handleIssue}
-                  disabled={pending || remaining <= 0}
-                />
-              </Form.Field>
-            </Form.Section>
+                variant='primary'
+                onClick={handleIssue}
+                disabled={pending || remaining <= 0}
+              />
+            </Form.Field>
+          </Form.FieldSet>
 
-            {available.length > 0 ? (
-              <Form.Section title={t('available-invitations.title')}>
-                <Listbox.Root>
-                  <Listbox.Content classNames='gap-1'>
-                    {available.map((row) => (
-                      <AvailableInvitationItem key={row.code} row={row} />
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Form.Section>
-            ) : null}
+          {available.length > 0 ? (
+            <Form.FieldSet label={t('available-invitations.title')}>
+              <Listbox.Root>
+                <Listbox.Content classNames='gap-1'>
+                  {available.map((row) => (
+                    <AvailableInvitationItem key={row.code} row={row} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Form.FieldSet>
+          ) : null}
 
-            {redeemed.length > 0 ? (
-              <Form.Section title={t('redeemed-invitations.title')}>
-                <Listbox.Root>
-                  <Listbox.Content classNames='gap-1'>
-                    {redeemed.map((row) => (
-                      <RedeemedInvitationItem key={row.code} row={row} />
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Form.Section>
-            ) : null}
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Clipboard.Provider>
+          {redeemed.length > 0 ? (
+            <Form.FieldSet label={t('redeemed-invitations.title')}>
+              <Listbox.Root>
+                <Listbox.Content classNames='gap-1'>
+                  {redeemed.map((row) => (
+                    <RedeemedInvitationItem key={row.code} row={row} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Form.FieldSet>
+          ) : null}
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
@@ -122,7 +121,7 @@ const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvita
       <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
     </Flex>
-    <Clipboard.IconButton value={row.code} />
+    <SystemIconButton.Clipboard iconOnly value={row.code} />
   </Listbox.Item>
 );
 

@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
 import CountriesData from '../../../data/countries-110m.js';
-import { Globe } from './Globe';
+import { Globe } from './Globe.tsx';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?

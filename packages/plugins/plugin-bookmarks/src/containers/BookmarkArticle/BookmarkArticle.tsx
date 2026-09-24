@@ -15,7 +15,7 @@ import { Summary } from '#components';
 import { meta } from '#meta';
 import { Bookmark, BookmarkOperation } from '#types';
 
-import { useImageLoads } from '../useImageLoads';
+import { useImageLoads } from '../useImageLoads.ts';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
 

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type { SerializedError } from './edge';
+import type { SerializedError } from './edge/index.ts';
 
 /**
  * Wire protocol for controlling processes hosted by a remote runtime (EDGE).
@@ -19,7 +19,15 @@ import type { SerializedError } from './edge';
  */
 
 /** Runtime state of a process; the wire spelling of `Process.State`. */
-export type ProcessState = 'RUNNING' | 'HYBERNATING' | 'IDLE' | 'TERMINATING' | 'TERMINATED' | 'SUCCEEDED' | 'FAILED';
+export type ProcessState =
+  | 'STARTING'
+  | 'RUNNING'
+  | 'HYBERNATING'
+  | 'IDLE'
+  | 'TERMINATING'
+  | 'TERMINATED'
+  | 'SUCCEEDED'
+  | 'FAILED';
 
 /** Wire form of `Process.Environment`. */
 export interface ProcessEnvironment {
@@ -69,7 +77,20 @@ export interface SpawnProcessRequest {
   parentPid?: string;
   environment?: ProcessEnvironment;
   annotations?: Record<string, unknown>;
+  /** See {@link IdempotencyKey}. A repeat spawn under one key returns the process the first one made. */
+  idempotencyKey?: string;
 }
+
+/**
+ * Deduplication token for a mutating request that may arrive more than once.
+ *
+ * A client that queues commands durably (`QueuedRemoteControl` in `@dxos/compute-runtime`) is
+ * at-least-once by construction: it retries anything whose acknowledgement it never saw, which
+ * without this would spawn a second process or apply an input twice. The host records the key with
+ * the outcome and replays that outcome instead of acting again, which is what makes the pair
+ * exactly-once. A host that has not implemented it ignores the field.
+ */
+export type IdempotencyKey = string;
 
 export interface SpawnProcessResponse {
   info: ProcessInfo;
@@ -89,6 +110,8 @@ export interface ListProcessesResponse {
 /** Input encoded via the process definition's input schema. */
 export interface SubmitInputRequest {
   input: unknown;
+  /** See {@link IdempotencyKey}. A repeat submission under one key is dropped. */
+  idempotencyKey?: string;
 }
 
 //

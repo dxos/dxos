@@ -11,7 +11,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SpaceOperation } from '#types';
 
-import { DefaultSpaceDeletionError } from '../errors';
+import { DefaultSpaceDeletionError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Delete> = SpaceOperation.Delete.pipe(
   Operation.withHandler(

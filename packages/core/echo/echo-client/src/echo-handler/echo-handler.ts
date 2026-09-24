@@ -22,6 +22,7 @@ import {
   Ref,
   RelationSourceId,
   RelationTargetId,
+  SCALAR_META_FIELDS,
   SchemaValidator,
   SelfURIId,
   assertMutable,
@@ -48,11 +49,16 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import * as Doc from '../automerge/Doc';
-import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore, type TargetRefreshScope } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-import { EchoArray } from './echo-array';
-import { isEchoObject, isRootDataObject } from './echo-object-utils';
+import * as Doc from '../automerge/Doc.ts';
+import {
+  type DecodedAutomergePrimaryValue,
+  META_NAMESPACE,
+  ObjectCore,
+  type TargetRefreshScope,
+} from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { EchoArray } from './echo-array.ts';
+import { isEchoObject, isRootDataObject } from './echo-object-utils.ts';
 import {
   adoptInstanceState,
   createInstanceState,
@@ -63,7 +69,7 @@ import {
   handleStoredSchema,
   lookupRef,
   stripShadowingProperties,
-} from './echo-prototypes';
+} from './echo-prototypes.ts';
 import {
   type ProxyTarget,
   TargetKey,
@@ -71,7 +77,7 @@ import {
   symbolInternals,
   symbolNamespace,
   symbolPath,
-} from './echo-proxy-target';
+} from './echo-proxy-target.ts';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -478,7 +484,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     Schema.asserts(propertySchema, value);
-    SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
+    SchemaValidator.assertExactProperties(propertySchema.ast, value, (path) => getDeep(value, path));
     return value;
   }
 
@@ -981,12 +987,16 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   }
 };
 
-const metaNotEmpty = (meta: EntityMeta) =>
-  meta.keys.length > 0 ||
-  meta.tags.length > 0 ||
-  (meta.annotations != null && Object.keys(meta.annotations).length > 0) ||
-  meta.key !== undefined ||
-  meta.version !== undefined;
+const metaNotEmpty = (meta: EntityMeta) => {
+  const fields: Record<string, unknown> = meta;
+  return (
+    meta.keys.length > 0 ||
+    meta.tags.length > 0 ||
+    (meta.annotations != null && Object.keys(meta.annotations).length > 0) ||
+    // Enumerated from the schema, so a newly added meta field cannot be silently left unpersisted.
+    SCALAR_META_FIELDS.some((field) => fields[field] !== undefined)
+  );
+};
 
 /**
  * @internal

@@ -22,13 +22,16 @@ import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
-import type { ObjectCore } from '../core-db';
+import type { ObjectCore } from '../core-db/index.ts';
+import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
   objectId: EntityId;
   spaceId: SpaceId;
   /** Automerge-backed object core. */
   core: ObjectCore;
+  /** The core's body, captured when the item entered the working set — see {@link ObjectCore.isBodyAvailable}. */
+  structure: EntityStructure;
   /** Group key, set by `AggregateStep`. Undefined without an `aggregate` clause; `{}` for one over the whole input. */
   groupKey?: GroupKeyValue;
   /** Named group aggregates, stamped by `AggregateStep`; read by a following group-level `OrderStep`. */
@@ -41,11 +44,11 @@ const WorkingSetItem = Object.freeze({
   },
 
   getProperty(item: WorkingSetItem, property: EntityPropPath): unknown {
-    return getDeep(item.core.getObjectStructure().data, property);
+    return getDeep(item.structure.data, property);
   },
 
   getParentEid(item: WorkingSetItem): EID.EID | undefined {
-    const raw = EntityStructure.getParent(item.core.getObjectStructure())?.['/'];
+    const raw = EntityStructure.getParent(item.structure)?.['/'];
     return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
 
@@ -61,10 +64,25 @@ const WorkingSetItem = Object.freeze({
   getGroupKey(item: WorkingSetItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue {
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
-          WorkingSetItem.getAggregateProperty(item, property),
-        );
+      switch (aggregate.kind) {
+        case 'group':
+          key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+            WorkingSetItem.getAggregateProperty(item, property),
+          );
+          break;
+        case 'type':
+          key[aggregate.name] = EntityStructure.getTypeReference(item.structure)?.['/'] ?? null;
+          break;
+        case 'timestamp':
+          // A core carries no index timestamps; `tryExecute` already declines these plans.
+          key[aggregate.name] = null;
+          break;
+        case 'time':
+          key[aggregate.name] = GroupBy.truncateTime(
+            WorkingSetItem.getAggregateProperty(item, aggregate.property),
+            aggregate.unit,
+          );
+          break;
       }
     }
     return key;
@@ -76,6 +94,7 @@ export type WorkingSetDataProvider = {
   allCores(): ObjectCore[];
   getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
+  areStrongDepsResolved(core: ObjectCore): boolean;
 };
 
 /**
@@ -134,7 +153,7 @@ export class WorkingSetQueryExecutor {
           ? GroupBy.dropGroups(ws, step.skip, _serializeItemGroupKey)
           : ws.slice(step.skip);
       case 'AggregateStep':
-        return this._execAggregateStep(step, ws);
+        return aggregateNeedsIndex(step.aggregates) ? null : this._execAggregateStep(step, ws);
       default:
         return null;
     }
@@ -179,14 +198,19 @@ export class WorkingSetQueryExecutor {
         case 'TypeSelector': {
           // Enumerate all loaded cores; FilterStep enforces any type predicate.
           const cores = this._provider.allCores().filter((core) => this._provider.areStrongDepsSatisfied(core));
-          newItems.push(...cores.map((core) => this._coreToItem(core)));
+          newItems.push(...cores.flatMap((core) => this._coreToItem(core) ?? []));
           break;
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
             const core = this._provider.getCoreById(id, true);
-            if (core && this._provider.areStrongDepsSatisfied(core)) {
-              newItems.push(this._coreToItem(core));
+            // Resolved, not satisfied: an id selector names one object the caller already holds an
+            // id for, so a dependency that is settled unreachable must still surface it. Requiring
+            // satisfaction here left an object that `getObjectById` returns unloadable by its own
+            // reference, with `Ref.tryLoad` waiting on a closure that will never complete.
+            const item = core && this._provider.areStrongDepsResolved(core) ? this._coreToItem(core) : undefined;
+            if (item) {
+              newItems.push(item);
             }
           }
           break;
@@ -194,9 +218,9 @@ export class WorkingSetQueryExecutor {
         case 'IncomingReferenceSelector': {
           // The host resolves this off the index, which has not seen objects added in this session.
           const { targetDXN, property } = step.selector;
-          for (const core of this._provider.allCores()) {
-            if (_structureReferencesTarget(core.getObjectStructure(), targetDXN, property)) {
-              newItems.push(this._coreToItem(core));
+          for (const item of this._allCoreItems()) {
+            if (_structureReferencesTarget(item.structure, targetDXN, property)) {
+              newItems.push(item);
             }
           }
           break;
@@ -241,7 +265,7 @@ export class WorkingSetQueryExecutor {
     return ws.filter((item) =>
       filterMatchDoc(step.filter, {
         id: item.objectId,
-        doc: item.core.getObjectStructure(),
+        doc: item.structure,
         spaceId: item.spaceId,
       }),
     );
@@ -285,10 +309,11 @@ export class WorkingSetQueryExecutor {
 
     // Recurse up the parent chain.
     const parentCore = this._provider.getCoreById(parentId);
-    if (!parentCore) {
+    const parentItem = parentCore && this._coreToItem(parentCore);
+    if (!parentItem) {
       return false;
     }
-    return this._isChildOfAny(this._coreToItem(parentCore), parentObjectIds, remainingDepth - 1);
+    return this._isChildOfAny(parentItem, parentObjectIds, remainingDepth - 1);
   }
 
   private _execFilterDeletedStep(step: QueryPlan.FilterDeletedStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -323,9 +348,9 @@ export class WorkingSetQueryExecutor {
           if (!id) {
             continue;
           }
-          const core = this._provider.getCoreById(id);
-          if (core) {
-            result.push(this._coreToItem(core));
+          const target = this._itemById(id);
+          if (target) {
+            result.push(target);
           }
         }
       }
@@ -334,10 +359,9 @@ export class WorkingSetQueryExecutor {
       // Incoming references: scan all loaded cores for those referencing any ws item.
       const wsIds = new Set(ws.map((item) => item.objectId));
       const result: WorkingSetItem[] = [];
-      for (const core of this._provider.allCores()) {
-        const structure = core.getObjectStructure();
-        if (_structureReferencesAny(structure, wsIds, traversal.property)) {
-          result.push(this._coreToItem(core));
+      for (const item of this._allCoreItems()) {
+        if (_structureReferencesAny(item.structure, wsIds, traversal.property)) {
+          result.push(item);
         }
       }
       return result;
@@ -345,7 +369,7 @@ export class WorkingSetQueryExecutor {
   }
 
   private _collectOutgoingRefs(item: WorkingSetItem, property: EscapedPropPath | null): EncodedReference[] {
-    const structure = item.core.getObjectStructure();
+    const structure = item.structure;
     if (property !== null) {
       // Collect refs at specified property path only.
       const path = EscapedPropPath.unescape(property);
@@ -368,7 +392,7 @@ export class WorkingSetQueryExecutor {
   }
 
   private _execRelationTraversal(traversal: QueryPlan.RelationTraversal, ws: WorkingSetItem[]): WorkingSetItem[] {
-    const all = this._provider.allCores();
+    const all = this._allCoreItems();
 
     switch (traversal.direction) {
       case 'relation-to-source':
@@ -377,8 +401,8 @@ export class WorkingSetQueryExecutor {
         for (const item of ws) {
           const ref =
             traversal.direction === 'relation-to-source'
-              ? EntityStructure.getRelationSource(item.core.getObjectStructure())
-              : EntityStructure.getRelationTarget(item.core.getObjectStructure());
+              ? EntityStructure.getRelationSource(item.structure)
+              : EntityStructure.getRelationTarget(item.structure);
           const raw = ref?.['/'];
           if (!raw) {
             continue;
@@ -391,9 +415,9 @@ export class WorkingSetQueryExecutor {
           if (!id) {
             continue;
           }
-          const core = this._provider.getCoreById(id);
-          if (core) {
-            result.push(this._coreToItem(core));
+          const target = this._itemById(id);
+          if (target) {
+            result.push(target);
           }
         }
         return result;
@@ -403,14 +427,14 @@ export class WorkingSetQueryExecutor {
       case 'target-to-relation': {
         const wsIds = new Set(ws.map((item) => item.objectId));
         const result: WorkingSetItem[] = [];
-        for (const core of all) {
-          if (EntityStructure.getEntityKind(core.getObjectStructure()) !== 'relation') {
+        for (const candidate of all) {
+          if (EntityStructure.getEntityKind(candidate.structure) !== 'relation') {
             continue;
           }
           const ref =
             traversal.direction === 'source-to-relation'
-              ? EntityStructure.getRelationSource(core.getObjectStructure())
-              : EntityStructure.getRelationTarget(core.getObjectStructure());
+              ? EntityStructure.getRelationSource(candidate.structure)
+              : EntityStructure.getRelationTarget(candidate.structure);
           const raw = ref?.['/'];
           if (!raw) {
             continue;
@@ -421,7 +445,7 @@ export class WorkingSetQueryExecutor {
           }
           const id = EID.getEntityId(eid);
           if (id && wsIds.has(id)) {
-            result.push(this._coreToItem(core));
+            result.push(candidate);
           }
         }
         return result;
@@ -433,7 +457,7 @@ export class WorkingSetQueryExecutor {
     if (traversal.direction === 'to-parent') {
       const result: WorkingSetItem[] = [];
       for (const item of ws) {
-        const ref = EntityStructure.getParent(item.core.getObjectStructure());
+        const ref = EntityStructure.getParent(item.structure);
         if (!ref || !EncodedReference.isEncodedReference(ref)) {
           continue;
         }
@@ -445,9 +469,9 @@ export class WorkingSetQueryExecutor {
         if (!id) {
           continue;
         }
-        const core = this._provider.getCoreById(id);
-        if (core) {
-          result.push(this._coreToItem(core));
+        const target = this._itemById(id);
+        if (target) {
+          result.push(target);
         }
       }
       return result;
@@ -455,8 +479,8 @@ export class WorkingSetQueryExecutor {
       // to-children: scan all cores for those whose parent is in the working set.
       const wsIds = new Set(ws.map((item) => item.objectId));
       const result: WorkingSetItem[] = [];
-      for (const core of this._provider.allCores()) {
-        const ref = EntityStructure.getParent(core.getObjectStructure());
+      for (const candidate of this._allCoreItems()) {
+        const ref = EntityStructure.getParent(candidate.structure);
         if (!ref || !EncodedReference.isEncodedReference(ref)) {
           continue;
         }
@@ -466,7 +490,7 @@ export class WorkingSetQueryExecutor {
         }
         const id = EID.getEntityId(eid);
         if (id && wsIds.has(id)) {
-          result.push(this._coreToItem(core));
+          result.push(candidate);
         }
       }
       return result;
@@ -522,9 +546,9 @@ export class WorkingSetQueryExecutor {
   private _compareByOrder(itemA: WorkingSetItem, itemB: WorkingSetItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        // The working set has no queue/insertion order (that lives in the feed index); fall back
-        // to a stable id ordering so results are deterministic.
-        const comparison = itemA.objectId.localeCompare(itemB.objectId);
+        // Code-unit order, as the host sorts: a locale comparison disagrees with it on a
+        // mixed-case pair of ids, and the two sources' results are merged by position.
+        const comparison = itemA.objectId < itemB.objectId ? -1 : itemA.objectId > itemB.objectId ? 1 : 0;
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'rank':
@@ -553,18 +577,38 @@ export class WorkingSetQueryExecutor {
     }
   }
 
-  private _coreToItem(core: ObjectCore): WorkingSetItem {
+  /** Every loaded core that has a body to read. */
+  private _allCoreItems(): WorkingSetItem[] {
+    return this._provider.allCores().flatMap((core) => this._coreToItem(core) ?? []);
+  }
+
+  private _itemById(id: EntityId): WorkingSetItem | undefined {
+    const core = this._provider.getCoreById(id);
+    return core && this._coreToItem(core);
+  }
+
+  /**
+   * Undefined for a core whose body has not landed — such a core is loaded but has nothing to
+   * select, filter or traverse, and every step reads the structure this carries.
+   */
+  private _coreToItem(core: ObjectCore): WorkingSetItem | undefined {
+    const structure = core.getObjectStructure();
+    if (structure === undefined) {
+      return undefined;
+    }
     return {
       // ObjectCore.id is typed as string; this cast is a type-system boundary —
       // entity ids are structurally EntityId strings but the core uses a plain string type.
       objectId: core.id as EntityId,
       spaceId: this._provider.spaceId,
       core,
+      structure,
     };
   }
 }
 
-const MAX_DEPTH_FOR_CHILD_OF_TRACING = 16;
+/** Matches the host executor and `DeletionResolver`, so a child resolves the same on both sides. */
+const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
 
 /** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
 const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;
@@ -583,13 +627,16 @@ const _compareValues = (valueA: unknown, valueB: unknown): number => {
   if (valueB == null) {
     return -1;
   }
+  // Code-unit order, the collation the host's SQLite sort uses.
   if (typeof valueA === 'string' && typeof valueB === 'string') {
-    return valueA.localeCompare(valueB);
+    return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
   }
   if (typeof valueA === 'number' && typeof valueB === 'number') {
     return valueA - valueB;
   }
-  return String(valueA).localeCompare(String(valueB));
+  const stringA = String(valueA);
+  const stringB = String(valueB);
+  return stringA < stringB ? -1 : stringA > stringB ? 1 : 0;
 };
 
 const _filterContainsTimestamp = (filter: QueryAST.Filter): boolean => {

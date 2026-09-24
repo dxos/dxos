@@ -13,7 +13,7 @@ import { WordList } from '#components';
 import { meta } from '#meta';
 import { type Vocabulary, Word } from '#types';
 
-import { useDeckWords } from '../useDeckWords';
+import { useDeckWords } from '../useDeckWords.ts';
 
 /** Row order; `due` and `weakest` are what a learner actually wants before a drill. */
 const ORDERS = [

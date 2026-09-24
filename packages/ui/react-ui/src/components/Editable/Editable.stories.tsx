@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { Editable, type EditableActivation, type EditableBlurBehavior } from './Editable';
-import { useEditable } from './useEditable';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Editable, type EditableActivation, type EditableBlurBehavior } from './Editable.tsx';
+import { useEditable } from './useEditable.ts';
 
 type StoryArgs = {
   label?: string;

@@ -13,7 +13,7 @@ import { describe, test } from 'vitest';
 import { DXN, Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 
-import { automerge } from './automerge';
+import { automerge } from './automerge.ts';
 
 const TestType = Schema.Struct({ text: Schema.String }).pipe(
   Type.makeObject(DXN.make('com.example.test.editor', '0.1.0')),

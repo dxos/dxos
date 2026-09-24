@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSearchListItemContext } from '../context';
+import { useSearchListItemContext } from '../context.ts';
 
 /**
  * Hook to access selection state for custom item renderers.

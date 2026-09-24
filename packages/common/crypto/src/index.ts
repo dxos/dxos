@@ -3,9 +3,9 @@
 //
 
 export * from '#subtle';
-export * from './keys';
-export * from './random';
-export type * from './signer';
-export * from './uuid';
-export * from './validator';
-export * from './verify';
+export * from './keys.ts';
+export * from './random.ts';
+export type * from './signer.ts';
+export * from './uuid.ts';
+export * from './validator.ts';
+export * from './verify.ts';

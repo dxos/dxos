@@ -8,7 +8,7 @@ import { Stage } from '@dxos/pipeline';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import { messageSource } from './facts';
+import { messageSource } from './facts.ts';
 
 // Extract one message's facts WITHOUT persisting them. Distinct from `FactIndexer`, whose closure
 // also writes to the store: here persistence is the sink's responsibility, so a page of facts can

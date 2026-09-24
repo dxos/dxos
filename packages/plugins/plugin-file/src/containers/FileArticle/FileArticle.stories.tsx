@@ -18,7 +18,7 @@ import { translations } from '#translations';
 
 import landscapePdf from '../../../fixtures/landscape.pdf?inline';
 import testPdf from '../../../fixtures/test.pdf?inline';
-import { FileArticle } from './FileArticle';
+import { FileArticle } from './FileArticle.tsx';
 
 /** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
 const PNG_BASE64 =

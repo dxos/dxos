@@ -11,7 +11,7 @@ import {
   NoopRegistry,
   acquireRegistry,
   defaultSources,
-} from './icon-registry';
+} from './icon-registry.ts';
 
 export type IconRegistryProviderProps = PropsWithChildren<{
   /**

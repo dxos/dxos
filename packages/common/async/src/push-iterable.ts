@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { Trigger } from './trigger';
+import { Trigger } from './trigger.ts';
 
 interface PushAsyncIterable<T, TReturn = any> extends AsyncIterable<T, TReturn> {
   /**

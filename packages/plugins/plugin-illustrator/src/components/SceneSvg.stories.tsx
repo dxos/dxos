@@ -5,12 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { MermaidEngine, type Scene, Uml, UmlEngine, UmlGrid, UmlRules, UmlSearch } from '@dxos/diagram';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { MermaidEngine, type Scene, Uml, UmlEngine, UmlGrid, UmlRules, UmlSearch } from '#model';
-
-import { SceneSvg } from './SceneSvg';
+import { SceneSvg } from './SceneSvg.tsx';
 
 const CLASS_DIAGRAM = trim`
   classDiagram

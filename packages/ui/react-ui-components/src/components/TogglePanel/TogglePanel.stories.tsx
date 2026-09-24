@@ -12,10 +12,9 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { random } from '@dxos/random';
 import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';
+import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';
 
 class Generator {
   private readonly _current: Atom.Writable<string>;

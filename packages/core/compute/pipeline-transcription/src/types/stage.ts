@@ -7,7 +7,7 @@ import type * as Effect from 'effect/Effect';
 import { DXN, type Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
-import { type EntityLookup } from './lookup';
+import { type EntityLookup } from './lookup.ts';
 
 /**
  * When a stage's discrete computation fires, relative to the pipeline stream.

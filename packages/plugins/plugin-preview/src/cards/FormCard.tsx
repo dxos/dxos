@@ -119,7 +119,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

@@ -68,6 +68,12 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
     case 'child-of':
       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
+    case 'mnemonic':
+      return `Filter.mnemonic(${JSON.stringify(filter.mnemonic)})`;
+    case 'changes':
+      return filter.targets
+        ? `Filter.changes([${filter.targets.map((target) => JSON.stringify(target)).join(', ')}])`
+        : 'Filter.changes()';
     case 'has-parent':
       return `Filter.hasParent(${filter.value})`;
     case 'not':
@@ -168,18 +174,27 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'aggregate': {
       const aggregates = query.aggregates.map((aggregate) => {
-        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${prettyAggregateArg(aggregate)})`;
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${prettyAggregateName(aggregate)}(${prettyAggregateArg(aggregate)})`;
       });
       return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
     }
   }
 };
 
+/** The `Aggregate.*` constructor that produced an aggregate. */
+const prettyAggregateName = (aggregate: QueryAST.GroupAggregate): string =>
+  aggregate.kind === 'timestamp' ? (aggregate.field === 'updatedAt' ? 'updated' : 'created') : aggregate.kind;
+
 /** Renders one aggregate's constructor argument, mirroring the `Aggregate.*` call that produced it. */
 const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
   switch (aggregate.kind) {
     case 'count':
+    case 'type':
       return '';
+    case 'timestamp':
+      return JSON.stringify(aggregate.unit);
+    case 'time':
+      return `${JSON.stringify(aggregate.property)}, ${JSON.stringify(aggregate.unit)}`;
     case 'items':
       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
     case 'group':
@@ -188,6 +203,7 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
         : `{ coalesce: ${JSON.stringify(aggregate.properties)} }`;
     case 'max':
     case 'min':
+    case 'sum':
       return JSON.stringify(aggregate.property);
   }
 };

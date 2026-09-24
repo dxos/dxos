@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './useGraphModel';
-export * from './useNeighborhoodModel';
+export * from './useGraphModel.ts';
+export * from './useNeighborhoodModel.ts';

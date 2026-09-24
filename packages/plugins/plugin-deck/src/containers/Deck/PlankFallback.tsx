@@ -10,9 +10,6 @@ import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-// TODO(burdon): Show skeleton: https://github.com/dxos/dxos/issues/8259
-export const PlankLoading = () => <Flex center classNames='dx-attention-surface' />;
-
 /** User-facing error fallback for a plank's content Surface. */
 export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -36,7 +33,5 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
     </Flex>
   );
 };
-
-PlankLoading.displayName = 'PlankLoading';
 
 PlankErrorFallback.displayName = 'PlankErrorFallback';

@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { type ContentMap, Mermaid, Uml, UmlGrid } from '@dxos/diagram';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ContentMap, Mermaid, Uml, UmlGrid } from '@dxos/plugin-illustrator/model';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
@@ -15,7 +15,7 @@ import { trim } from '@dxos/util';
 import { applyCommands } from '#model';
 import { Tldraw } from '#types';
 
-import { CanvasComponent } from './Canvas';
+import { CanvasComponent } from './Canvas.tsx';
 
 const FLOWCHART = trim`
   flowchart TB

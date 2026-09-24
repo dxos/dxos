@@ -10,9 +10,9 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { ListModel } from './list-model';
-import { type EdgeDrift } from './placement';
-import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
+import { ListModel } from './list-model.ts';
+import { type EdgeDrift } from './placement.ts';
+import { Window, type WindowAxis, type WindowController, type WindowState } from './Window.tsx';
 
 const EXTENT = (index: number) => 40 + (index % 8) * 30;
 

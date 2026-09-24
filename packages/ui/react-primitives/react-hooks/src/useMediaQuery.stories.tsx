@@ -9,7 +9,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { useMediaQuery } from './useMediaQuery';
+import { useMediaQuery } from './useMediaQuery.ts';
 
 const breakpoints = ['sm', 'md', 'lg', 'xl', '2xl'];
 

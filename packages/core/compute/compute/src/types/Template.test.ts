@@ -9,9 +9,9 @@ import { describe, expect, test } from 'vitest';
 import { registryLayer } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 
-import { FunctionNotFoundError, NoHandlerError } from '../errors';
-import * as Operation from '../Operation';
-import * as Template from './Template';
+import { FunctionNotFoundError, NoHandlerError } from '../errors.ts';
+import * as Operation from '../Operation.ts';
+import * as Template from './Template.ts';
 
 describe('Template', () => {
   describe('make', () => {

@@ -13,7 +13,7 @@ import {
   type OutputDetail,
   type PipelineInfo,
   type StatItem,
-} from '../components';
+} from '../components/index.ts';
 
 /**
  * Progress-registry task name for the pipeline run. Producer (the story provider) registers/advances

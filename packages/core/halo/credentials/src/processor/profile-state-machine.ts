@@ -4,10 +4,10 @@
 
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { getCredentialAssertion } from '../credentials';
-import { type CredentialProcessor } from './credential-processor';
+import { getCredentialAssertion, issuerOf, subjectIdOf } from '../credentials/index.ts';
+import { type CredentialProcessor } from './credential-processor.ts';
 
 export type ProfileStateMachineProps = {
   identityKey: PublicKey;
@@ -25,11 +25,11 @@ export class ProfileStateMachine implements CredentialProcessor {
 
   async processCredential(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.IdentityProfile': {
         if (
-          !credential.issuer.equals(this._params.identityKey) ||
-          !credential.subject.id.equals(this._params.identityKey)
+          !issuerOf(credential).equals(this._params.identityKey) ||
+          !subjectIdOf(credential).equals(this._params.identityKey)
         ) {
           log.warn('Invalid profile credential', { expectedIdentity: this._params.identityKey, credential });
           return;

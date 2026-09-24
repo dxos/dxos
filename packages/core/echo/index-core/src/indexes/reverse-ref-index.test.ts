@@ -7,30 +7,26 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import type { IndexerObject } from './interface';
-import { ReverseRefIndex } from './reverse-ref-index';
+import { EntityMetaIndex } from './entity-meta-index.ts';
+import type { IndexerObject } from './interface.ts';
+import { ReverseRefIndex } from './reverse-ref-index.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_EXAMPLE = DXN.make('com.example.type.example', '0.1.0');
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+}).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('ReverseRefIndex', () => {
   it.effect('should store and query reverse references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -64,7 +60,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle nested references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -108,7 +104,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle array references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -147,7 +143,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should update references on object change', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -210,7 +206,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle objects without references', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -242,7 +238,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should work with documentId instead of queueId', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -275,7 +271,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('indexes references to named entities, keyed without the version', () =>
     Effect.gen(function* () {
-      const reverseRefIndex = new ReverseRefIndex();
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
       yield* reverseRefIndex.migrate();
 
       const sourceObject: IndexerObject = {
@@ -303,6 +299,116 @@ describe('ReverseRefIndex', () => {
 
       const versioned = yield* reverseRefIndex.query({ targetDXN: DXN.make('org.example.operation.foo', '1.0.0') });
       expect(versioned.length).toBe(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('ReverseRefIndex.queryReferrers', () => {
+  const makeDocumentObject = (spaceId: SpaceId, documentId: string, data: Record<string, unknown>): IndexerObject => ({
+    spaceId,
+    queueId: null,
+    queueNamespace: null,
+    documentId,
+    recordId: null,
+    createdAt: null,
+    updatedAt: Date.now(),
+    data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, ...data },
+  });
+
+  /** Index through both indexes, the way the engine does: meta rows first, then reverse refs. */
+  const indexObjects = (metaIndex: EntityMetaIndex, reverseRefIndex: ReverseRefIndex, objects: IndexerObject[]) =>
+    Effect.gen(function* () {
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
+      yield* reverseRefIndex.update(objects);
+    });
+
+  it.effect('joins referrer rows to their document metadata, grouping paths per referrer', () =>
+    Effect.gen(function* () {
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+      yield* reverseRefIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const targetId = EntityId.random();
+      const target = { '/': EID.make({ entityId: targetId }) };
+      const referrer = makeDocumentObject(spaceId, 'doc-referrer', {
+        'owner': target,
+        'nested': { link: target },
+        // A field name containing the path separator must survive the escape round-trip.
+        'dotted.name': target,
+      });
+      yield* indexObjects(metaIndex, reverseRefIndex, [referrer]);
+
+      const referrers = yield* reverseRefIndex.queryReferrers({
+        spaceId,
+        targetDXN: EID.make({ entityId: targetId }),
+      });
+      expect(referrers).toHaveLength(1);
+      expect(referrers[0].objectId).toBe(referrer.data.id);
+      expect(referrers[0].documentId).toBe('doc-referrer');
+      expect([...referrers[0].propPaths].sort()).toEqual([['dotted.name'], ['nested', 'link'], ['owner']]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('excludes referrers from other spaces and queue entities without a document', () =>
+    Effect.gen(function* () {
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      const reverseRefIndex = new ReverseRefIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+      yield* reverseRefIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const targetId = EntityId.random();
+      const target = { '/': EID.make({ entityId: targetId }) };
+      const sameSpace = makeDocumentObject(spaceId, 'doc-same', { owner: target });
+      const otherSpace = makeDocumentObject(SpaceId.random(), 'doc-other', { owner: target });
+      const queueReferrer: IndexerObject = {
+        ...makeDocumentObject(spaceId, '', { owner: target }),
+        documentId: null,
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+      };
+      yield* indexObjects(metaIndex, reverseRefIndex, [sameSpace, otherSpace, queueReferrer]);
+
+      const referrers = yield* reverseRefIndex.queryReferrers({
+        spaceId,
+        targetDXN: EID.make({ entityId: targetId }),
+      });
+      expect(referrers.map(({ objectId }) => objectId)).toEqual([sameSpace.data.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // `propPathNormalized` is what an incoming-reference lookup by property matches on, so it must
+  // name the property regardless of the array position the reference sat at.
+  it.effect('stores the property path with and without array-index segments', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const reverseRefIndex = new ReverseRefIndex(sql);
+      yield* reverseRefIndex.migrate();
+
+      const targetDXN = EID.make({ entityId: EntityId.random() });
+      const sourceObject: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: 1,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          items: [{ assignee: { '/': targetDXN } }],
+        },
+      };
+
+      yield* reverseRefIndex.update([sourceObject]);
+
+      const rows = yield* sql<{ propPath: string; propPathNormalized: string }>`
+        SELECT propPath, propPathNormalized FROM reverseRef WHERE targetDXN = ${targetDXN}`;
+      expect(rows).toEqual([{ propPath: 'items.0.assignee', propPathNormalized: 'items.assignee' }]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

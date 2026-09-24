@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { Field, IconButton, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -12,7 +12,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 export type SpaceSettingsProps = {
   spaces?: Space[];
@@ -24,9 +24,12 @@ export type SpaceSettingsProps = {
   /** Spaces that may be designated as the default; defaults to all of `spaces`. */
   eligibleDefaultSpaces?: Space[];
   onDefaultSpaceChange?: (spaceId: string) => void;
+  /** Controls for the panel's heading row. */
+  scope?: ReactNode;
 };
 
 export const SpaceSettings = ({
+  scope,
   spaces,
   onOpenSpaceSettings,
   settings,
@@ -41,18 +44,16 @@ export const SpaceSettings = ({
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('plugin.name')}>
+          <Form.FieldSet label={t('plugin.name')} actions={scope}>
             <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Field.Root>
-                <Field.Switch
-                  disabled={!onSettingsChange}
-                  checked={settings?.showHidden}
-                  onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
-                />
-              </Field.Root>
+              <Field.Switch
+                disabled={!onSettingsChange}
+                checked={settings?.showHidden}
+                onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
+              />
             </Form.Field>
-          </Form.Section>
-          <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
+          </Form.FieldSet>
+          <Form.FieldSet label={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
               <Select.Root
                 value={defaultSpaceId}
@@ -73,7 +74,11 @@ export const SpaceSettings = ({
                 </Select.Portal>
               </Select.Root>
             </Form.Field>
-            <Form.Field label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
+            <Form.Field
+              standalone
+              label={t('settings.space-list.label')}
+              description={t('settings.space-list.description')}
+            >
               <Listbox.Root>
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
                   {spaces?.map((space) => (
@@ -94,7 +99,7 @@ export const SpaceSettings = ({
                 </Listbox.Content>
               </Listbox.Root>
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

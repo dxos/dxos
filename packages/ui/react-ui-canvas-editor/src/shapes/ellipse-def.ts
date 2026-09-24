@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ShapeDef } from '../components';
-import { type EllipseShape } from '../types';
-import { EllipseComponent } from './Ellipse';
+import { type ShapeDef } from '../components/index.ts';
+import { type EllipseShape } from '../types/index.ts';
+import { EllipseComponent } from './Ellipse.tsx';
 
 // Kept out of `Ellipse.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the factory and shape def exported beside one force a full page reload on every edit.

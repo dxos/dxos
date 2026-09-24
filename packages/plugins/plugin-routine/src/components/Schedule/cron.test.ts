@@ -12,8 +12,8 @@ import {
   scheduleIntervalSeconds,
   scheduleToCron,
   toCron,
-} from './cron';
-import { type ScheduleValue } from './Schedule';
+} from './cron.ts';
+import { type ScheduleValue } from './Schedule.tsx';
 
 describe('toCron', () => {
   test('minutely: every 15 minutes', ({ expect }) => {

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -13,7 +14,7 @@ import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { runAction } from '@dxos/plugin-graph';
 import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';
 
@@ -28,34 +29,32 @@ export default Capability.makeModule(
 
     // TODO(wittjosiah): Factor out.
     const visitor = (seen: Set<string>) => (node: AppGraphNode.Node, path: string[]) => {
-      let shortcut: string | undefined;
-      if (typeof node.properties.keyBinding === 'object') {
-        const availablePlatforms = Object.keys(node.properties.keyBinding);
-        const platform = getHostPlatform();
-        shortcut = availablePlatforms.includes(platform)
-          ? node.properties.keyBinding[platform]
-          : platform === 'ios'
-            ? node.properties.keyBinding.macos // Fallback to macos if ios-specific bindings not provided.
-            : platform === 'linux' || platform === 'unknown'
-              ? node.properties.keyBinding.windows // Fallback to windows if platform-specific bindings not provided.
-              : undefined;
-      } else {
-        shortcut = node.properties.keyBinding;
-      }
+      const shortcut = resolveKeyBinding(node.properties.keyBinding);
 
       if (shortcut && AppGraphNode.isAction(node)) {
-        const scope = path.slice(0, -1).join('/');
-        const id = `${scope}:${node.id}`;
+        // The parent's id is already the full scope path.
+        const parentId = path.at(-2) ?? GraphNode.RootId;
+        const id = `${parentId}:${node.id}`;
         seen.add(id);
-        // Unregister first: the store warns on a duplicate id rather than replacing, and this
-        // re-runs on every graph change.
+        // This re-runs on every graph change, and each store mutation notifies every subscriber.
+        const existing = hotkeyStore.getState().commands.get(id);
+        if (existing?.hotkey === shortcut && JSON.stringify(existing.label) === JSON.stringify(node.properties.label)) {
+          return;
+        }
+
         hotkeyStore.unregister(id);
         hotkeyStore.register({
           id,
           hotkey: shortcut,
-          scopes: [scope],
+          scopes: [parentId],
           label: node.properties.label,
-          action: () => void runAction(invoker, pluginContext, node, { parent: node, caller: KEY_BINDING }),
+          // Resolved when fired, since an unchanged binding keeps the closure it was registered with.
+          action: () => {
+            const current = Option.getOrUndefined(AppGraph.getNode(graph, node.id));
+            if (current && AppGraphNode.isAction(current)) {
+              void runAction(invoker, pluginContext, current, { parent: current, caller: KEY_BINDING });
+            }
+          },
           // Bindings came from graph actions, which fired everywhere; Ark excludes text fields
           // unless a command opts in.
           options: { enableOnFormTags: true, enableOnContentEditable: true },

@@ -4,7 +4,7 @@
 
 import { Obj, Ref } from '@dxos/echo';
 
-import { type MessageOrRef } from './ConversationStack';
+import { type MessageOrRef } from './ConversationStack.tsx';
 
 // Kept out of `ConversationStack.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

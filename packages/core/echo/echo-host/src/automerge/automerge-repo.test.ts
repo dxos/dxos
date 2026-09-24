@@ -38,12 +38,19 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { isNonNullable, range } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { type HandleQueryState } from './handle-state';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { type HandleQueryState } from './handle-state.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
+
+/**
+ * Ceiling for a reload to read back what a previous adapter wrote. Local SQLite, so it lands in
+ * milliseconds; the bound exists so a dropped write reports itself instead of hanging until the
+ * suite's own timeout, which is how this surfaced in CI as an unexplained 15 s stall.
+ */
+const RELOAD_WINDOW_MS = 10_000;
 
 /**
  * Block until the {@link DocumentProgress} reports a state in `awaitStates`.
@@ -651,7 +658,7 @@ describe('AutomergeRepo', () => {
         const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
-        await handle.whenReady();
+        await asyncTimeout(handle.whenReady(), RELOAD_WINDOW_MS);
         expect(handle.doc()?.text).to.equal(text);
         await close();
       }
@@ -663,15 +670,27 @@ describe('AutomergeRepo', () => {
       let url: AutomergeUrl;
 
       {
-        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
+        // Wait for this document's own chunk to land rather than a fixed window: `save` no-ops once
+        // the adapter is closed, so closing on a guess drops the write and the reload below finds
+        // nothing. Keyed on the document id because `afterSave` fires per chunk, and the first one
+        // is not necessarily this document's.
+        let documentId: string | undefined;
+        const saved = new Trigger();
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path, {
+          afterSave: (key) => {
+            if (documentId !== undefined && key[0] === documentId) {
+              saved.wake();
+            }
+          },
+        });
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
+        documentId = handle.documentId;
         handle.change((doc: any) => {
           doc.text = text;
         });
-        // No explicit flush - rely on auto-save.
-        await sleep(200);
+        await asyncTimeout(saved.wait(), RELOAD_WINDOW_MS);
         await close();
       }
 
@@ -679,7 +698,7 @@ describe('AutomergeRepo', () => {
         const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
-        await handle.whenReady();
+        await asyncTimeout(handle.whenReady(), RELOAD_WINDOW_MS);
         expect(handle.doc()?.text).to.equal(text);
         await close();
       }
@@ -1041,6 +1060,7 @@ const createTeleportTestPeer = async (
     },
     onCollectionStateQueried: () => {},
     onCollectionStateReceived: () => {},
+    onConnectionAuthScopeChanged: 'reannounce-peer',
   });
   const repo = new Repo({
     peerId: options?.peerId as PeerId,

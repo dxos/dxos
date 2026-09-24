@@ -11,21 +11,24 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Task } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
-import { inboxResearch } from '../templates';
+import { inboxResearch } from '../templates/index.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
@@ -39,8 +42,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
       urlKey: 'project',
+      // Reading a project's ledger is a chain: the task replaces the task plank rather than growing
+      // the deck, so moving down the list reuses one plank. Declared here rather than as a schema
+      // annotation because `Project` lives in `@dxos/compute`, below `@dxos/app-toolkit`.
+      deck: { levels: [{ key: 'project' }, { key: 'task' }] },
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
+      dropInto: artifacts,
       createObject: (space) =>
         Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
@@ -58,6 +66,8 @@ export default Capability.makeModule(
     const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
     const artifactsExtensions = yield* createProjectArtifactsExtension();
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
+    const taskExtensions = yield* createProjectTasksExtension();
+    const taskCompanionExtensions = yield* createProjectTaskCompanionExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
@@ -66,6 +76,8 @@ export default Capability.makeModule(
       ...chatChildrenExtensions,
       ...artifactsExtensions,
       ...artifactsActionExtensions,
+      ...taskExtensions,
+      ...taskCompanionExtensions,
       ...mailboxExtensions,
     ]);
   }),
@@ -117,7 +129,20 @@ export const createMailboxProjectExtension = () =>
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 
 /** Path segment of the Chats branch. */
-export const CHATS_SEGMENT = 'chats';
+export const SESSIONS_SEGMENT = 'sessions';
+
+/**
+ * One URL binding for everything a project contains, shared with the type section that addresses the
+ * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
+ * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section;
+ * what varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
+ * Every extension under the key must share this one path, or a node's address forks by connector.
+ */
+const PROJECT_URL: AppGraphBuilder.UrlBinding = {
+  key: 'project',
+  kind: 'item',
+  path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
+};
 
 /**
  * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
@@ -143,6 +168,8 @@ export const isChatsBranch = (data: unknown): data is ChatsBranch =>
 export const createProjectChatsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChats',
+    // Selectable, so addressable: the row opens its chats as cards.
+    url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -150,7 +177,7 @@ export const createProjectChatsExtension = () =>
     connector: ({ project, space }) =>
       Effect.succeed([
         AppGraphNode.make({
-          id: CHATS_SEGMENT,
+          id: SESSIONS_SEGMENT,
           type: CHATS_SECTION_TYPE,
           data: { branch: 'chats', project } satisfies ChatsBranch,
           properties: {
@@ -175,13 +202,13 @@ export const createProjectChatsExtension = () =>
  * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
- * The `chat` url key is shared with plugin-assistant's Chats section on purpose — one key spanning
- * several connectors is how plugin-space addresses objects wherever they sit — so the path resolves
- * through whichever project currently parents the chat.
+ * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key,
+ * which reaches a parentless chat by a different path.
  */
 export const createProjectChatsChildrenExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
+    url: PROJECT_URL,
     match: (node) =>
       node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
     connector: (project, get) => {
@@ -196,6 +223,59 @@ export const createProjectChatsChildrenExtension = () =>
           .filter(Obj.instanceOf(Chat.Chat))
           .map((chat) => AppNode.makeObject({ get, db, object: chat, navigable: true }))
           // `makeObject` yields null for an object it cannot resolve a node for.
+          .filter((node): node is NonNullable<typeof node> => node !== null),
+      );
+    },
+  });
+
+/**
+ * A "Task" companion on every project row: the slot the ledger's selected task opens into, so reading
+ * a task keeps the project in front of the reader rather than navigating over it. One fixed slot —
+ * which task it shows is the ledger's selection, read by the surface.
+ */
+export const createProjectTaskCompanionExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectTaskCompanion',
+    relation: AppNode.companion,
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeCompanion({
+          variant: 'task',
+          label: ['task-companion.label', { ns: meta.profile.key }],
+          icon: 'ph--check-circle--regular',
+          data: 'task',
+          position: Position.first,
+        }),
+      ]),
+  });
+
+/**
+ * Every task in the project's set as a hidden child of the project node, so `…/project/<id>/<taskId>`
+ * resolves and a row can open the task as its own plank. Hidden because the ledger is the Tasks tab,
+ * not the nav tree — the nodes exist to be addressed, never listed.
+ *
+ * The node's data is the `Task` object itself, so it picks up the standard object companions and the
+ * `TaskArticle` surface matches it like any other object.
+ */
+export const createProjectTasksExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectTasks',
+    url: PROJECT_URL,
+    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    connector: (project, get) => {
+      const db = Obj.getDatabase(project);
+      const taskSet = project.taskSet && get(project.taskSet.atom);
+      if (!db || !taskSet) {
+        return Effect.succeed([]);
+      }
+
+      // Membership is the parent edge (the set's `tasks` array only orders it), matching how
+      // `TaskSetArticle` reads the same rows.
+      const tasks = get(db.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet))).atom);
+      return Effect.succeed(
+        tasks
+          .map((task) => AppNode.makeObject({ get, db, object: task, disposition: 'hidden' }))
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },
@@ -238,6 +318,9 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
+export const artifacts = (project: Project.Project): ContainerModel.Container =>
+  ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
+
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
 
@@ -265,12 +348,15 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
 export const createProjectArtifactsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
+    // Selectable, so addressable: the row opens its artifacts as cards.
+    url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
         : Option.none(),
-    connector: ({ project, space }) =>
-      Effect.succeed([
+    connector: ({ project, space }) => {
+      const db = Obj.getDatabase(project);
+      return Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
         // would pull @dxos/client into this plugin's dependencies for a value it only passes through.
         AppGraphNode.make({
@@ -291,9 +377,11 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
+            ...(db ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
-      ]),
+      ]);
+    },
   });
 
 /**
@@ -302,10 +390,14 @@ export const createProjectArtifactsExtension = () =>
  *
  * The dialog places the object in the space; the ref array is what makes it the project's, so the
  * link is written here rather than left to the dialog's own placement.
+ *
+ * Addressed as the project's (see {@link PROJECT_URL}), which is a different node from the same object
+ * under its own type section, so an artifact opened from a project comes back to the project.
  */
 export const createProjectArtifactsActionExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
+    url: PROJECT_URL,
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
         ? Option.some({ project: node.data.project, nodeId: node.id })
@@ -316,21 +408,7 @@ export const createProjectArtifactsActionExtension = () =>
         return Effect.succeed([]);
       }
 
-      // Subscribe to the project itself: the children are its ref array, so a new artifact changes no
-      // query this connector would otherwise re-run on.
-      get(Obj.atom(project));
-      const ids = project.artifacts.flatMap((ref) => {
-        const uri = EID.tryParse(ref.uri);
-        const entityId = uri && EID.getEntityId(uri);
-        return entityId ? [entityId] : [];
-      });
-      if (ids.length === 0) {
-        return Effect.succeed([]);
-      }
-
-      // Query rather than read `ref.target`: on a cold load the targets are not in memory yet, and a
-      // sync read would leave the branch permanently empty.
-      const objects = get(db.query(Query.select(Filter.id(...ids))).atom);
+      const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
       return Effect.succeed(
         objects
           .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
@@ -349,7 +427,7 @@ export const createProjectArtifactsActionExtension = () =>
               }
 
               const ref = yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
-                target: db,
+                target: project,
                 targetNodeId: nodeId,
               });
               // Dismissed dialog: nothing was created, so there is nothing to link.

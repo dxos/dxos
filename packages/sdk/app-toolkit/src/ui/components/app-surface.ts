@@ -3,16 +3,18 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import { type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 //
 // Internal type helpers
@@ -337,14 +339,21 @@ export type SettingsData<Props extends {} = {}> = {
 export type SettingsProps<T extends {}, Props extends {} = {}> = {
   settings: T;
   onSettingsChange?: (cb: (current: T) => T) => void;
+  /** Controls for the panel's heading row, such as the settings-scope toggle. */
+  scope?: ReactNode;
 } & Props;
 
-/**
- * Filter: matches a plugin-settings article. When `prefix` is omitted the
- * filter matches any settings subject (used by the generic default settings
- * surface); pass a `prefix` to match a single plugin's settings.
- */
-export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
+export const settings: {
+  /** Filter: matches any plugin-settings article, for the generic settings surface. */
+  (token: Role.Role<any>): Surface.Filter<SettingsData>;
+  /**
+   * Filter: matches one plugin's settings article.
+   *
+   * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
+   * panel; a bespoke article re-implements the panel chrome by hand.
+   */
+  (token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
+} = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -456,6 +465,18 @@ export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardI
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
 
+/**
+ * Card header menu items a type contributes. The surface renders nothing: it registers items with the
+ * host's `menu` via `useMenuContribution`, so hosts render it through `CardMenuSlot`.
+ */
+export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
+
+/** Surface data for the card menu role. */
+export type CardMenuData<Subject = unknown> = {
+  subject: Subject;
+  menu: MenuActions;
+};
+
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
   subject: Subject;
@@ -563,6 +584,9 @@ export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('o
 /** Role token for the `statusIndicator` role (was `status-indicator`). */
 export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
 
+/** The deck's bottom drawer; one contributor renders at a time. */
+export const Drawer: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.drawer');
+
 /**
  * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public
  * contributor plugins can target it without depending on the private devtools plugin.
@@ -604,6 +628,18 @@ export type NavtreeItemEndData<Subject = unknown> = {
 
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
 export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
+
+/** Data for the contact-picker slot on a space's members article. */
+export type ContactPickerData = {
+  space: Space;
+  onAdd: (
+    identityKeys: string[],
+    role: SpaceMember_Role,
+  ) => Promise<{ joinUrl: string; failed: readonly { key: string; error: string }[] }>;
+};
+
+/** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
+export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
 
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');

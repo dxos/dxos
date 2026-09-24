@@ -9,7 +9,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type AdminListInvitationCodesResponse } from '@dxos/protocols';
 
-import { formatHubError, hubApiRequest } from '../util';
+import { HubApiError, formatHubError, hubApiRequest } from '../util.ts';
 
 const statusOf = (row: AdminListInvitationCodesResponse['codes'][number]): string => {
   if (row.revokedAt) {
@@ -26,7 +26,7 @@ export const list = Command.make(
   {},
   Effect.fn(function* () {
     const result = yield* hubApiRequest<AdminListInvitationCodesResponse>('GET', '/api/code').pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))),
+      Effect.catch((error) => Effect.fail(new HubApiError({ message: formatHubError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {

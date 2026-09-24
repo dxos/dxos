@@ -8,7 +8,7 @@ import { Obj, Ref, Tag } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 
-import { omitId } from '../../util';
+import { omitId } from '../../util/index.ts';
 
 /**
  * Form-field key for the synthetic meta-tags array spliced into property/create forms.
@@ -60,7 +60,7 @@ export const filterTagCandidates = <T>(results: readonly T[]): T[] =>
   results.filter((result) => !isTag(result) || Tag.isUserTag(result));
 
 /**
- * A ref's target entity id, ignoring whether the uri is local (`echo:/<id>`) or qualified
+ * A ref's target entity id, ignoring whether the uri is local (`echo:///<id>`) or qualified
  * (`echo://<space>/<id>`) — `Ref.make` produces the former while `Obj.getURI` produces the latter, so
  * the two forms must compare equal. Same reason as `findRefOption`.
  */

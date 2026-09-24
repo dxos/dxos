@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as QaEvents from './QaEvents';
-export * as QaOperation from './QaOperation';
-export * as TestCase from './TestCase';
-export * as TestPlan from './TestPlan';
-export * as TestRun from './TestRun';
+export * as QaEvents from './QaEvents.ts';
+export * as QaOperation from './QaOperation.ts';
+export * as TestCase from './TestCase.ts';
+export * as TestPlan from './TestPlan.ts';
+export * as TestRun from './TestRun.ts';

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createPromptContent } from './prompt';
+import { createPromptContent } from './prompt.ts';
 
 describe('createPromptContent', () => {
   test('returns the bare message when there is no context', ({ expect }) => {

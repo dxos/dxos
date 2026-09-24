@@ -70,6 +70,9 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -148,6 +151,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-search"
     },
     {
@@ -155,6 +161,9 @@
     },
     {
       "path": "../../ui/react-ui-task"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/react-ui-transcription"

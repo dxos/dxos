@@ -6,7 +6,7 @@ import { test } from 'vitest';
 
 import type * as rpc from '@dxos/rpc';
 
-import { type RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port.ts';
 
 // This test will break at compile time if the interface changes.
 test('RpcPort type is assignable to type from @dxos/rpc package', () => {

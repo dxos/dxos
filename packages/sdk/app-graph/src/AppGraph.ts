@@ -11,16 +11,17 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
+import { AtomEx } from '@dxos/effect';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, shallowEqual } from '@dxos/util';
 
 import { scheduleTask } from '#scheduler';
 
-import * as Node from './AppGraphNode';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util';
+import * as Node from './AppGraphNode.ts';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module
@@ -77,6 +78,10 @@ export type Edges = Record<string, string[]>;
 
 export type GraphKindType = 'readable' | 'expandable' | 'writable';
 
+/**
+ * While the graph is retained, a node's atom stays mounted as long as the node is in it. The other accessors are views that a
+ * bare `registry.subscribe` never computes, so it never fires: pass `{ immediate: true }`.
+ */
 export interface BaseGraph extends Pipeable.Pipeable {
   readonly [GraphTypeId]: GraphTypeId;
   readonly [GraphKind]: GraphKindType;
@@ -92,10 +97,6 @@ export interface BaseGraph extends Pipeable.Pipeable {
    * Get the atom key for the node with the given id.
    */
   node(id: string): Atom.Atom<Option.Option<Node.Node>>;
-  /**
-   * Get the atom key for the node with the given id.
-   */
-  nodeOrThrow(id: string): Atom.Atom<Node.Node>;
   /**
    * Get the atom key for the connections of the node with the given id.
    */
@@ -234,6 +235,13 @@ export class GraphImpl implements WritableGraph {
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.AtomRegistry;
+
+  /**
+   * One mount per node while the graph is retained, so a node's atom keeps one identity and its
+   * dependents stay wired. Undefined while nothing retains the graph; see {@link retain}.
+   * @internal
+   */
+  _pins?: Map<string, CleanupFn>;
   readonly _expanded = new Set<string>();
   /** Relation keys a node has held, so an emptied relation still reports an empty list. */
   readonly _relations = new Map<string, Set<string>>();
@@ -271,35 +279,6 @@ export class GraphImpl implements WritableGraph {
     return Option.fromUndefinedOr(this._model.findNode(id)?.data);
   }
 
-  /**
-   * One mount per node in the graph, keeping its atoms alive for as long as the node is.
-   *
-   * The atoms are views over the model, so a dropped atom loses no data — but it does lose its
-   * registry wiring: a family re-creates the atom on the next call, subscribers of the old identity
-   * are stranded, and an atom that has only ever been subscribed to has no parents, so nothing can
-   * invalidate it. The original design pinned every graph atom with `Atom.keepAlive` for the same
-   * reason; a mount is the revocable form — {@link release} cancels it, the registry drops the
-   * atom's node, and the family's weak memoization lets the atom itself be collected.
-   * @internal
-   */
-  readonly _pins = new Map<string, CleanupFn>();
-
-  /** @internal */
-  _pin(id: string): void {
-    if (!this._pins.has(id)) {
-      this._pins.set(id, this._registry.mount(this._node(id)));
-    }
-  }
-
-  /** @internal */
-  _unpin(id: string): void {
-    const cancel = this._pins.get(id);
-    if (cancel) {
-      this._pins.delete(id);
-      cancel();
-    }
-  }
-
   /** The outgoing and inbound edges as the model holds them right now; see {@link Graph._currentNode}. @internal */
   _currentEdges(id: string): Edges {
     return this._computeEdges(id);
@@ -319,14 +298,6 @@ export class GraphImpl implements WritableGraph {
     }
     return edges;
   }
-
-  readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
-    return Atom.make((get) => {
-      const node = get(this._node(id));
-      invariant(Option.isSome(node), `Node not available: ${id}`);
-      return node.value;
-    });
-  });
 
   readonly _edges = Atom.family<string, Atom.Atom<Edges>>((id) => {
     return Atom.make((get) => {
@@ -366,7 +337,7 @@ export class GraphImpl implements WritableGraph {
       if (!id) {
         return [];
       }
-      return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
+      return get(this._connections(connectionKey(id, Node.action))) as (Node.Action | Node.ActionGroup)[];
     }).pipe(withLabel(`graph:actions:${id}`));
   });
 
@@ -376,7 +347,10 @@ export class GraphImpl implements WritableGraph {
       return this._model.toTree(
         id,
         (node, children: any[]) => {
-          const data = node.data ?? failedInvariant(`Node not available: ${node.id}`);
+          const data = node.data;
+          if (!data) {
+            return undefined;
+          }
           return {
             id: data.id,
             type: data.type,
@@ -390,7 +364,7 @@ export class GraphImpl implements WritableGraph {
   });
 
   constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
-    this._registry = registry ?? Registry.make();
+    this._registry = registry ?? AtomEx.makeRegistry();
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
@@ -412,10 +386,6 @@ export class GraphImpl implements WritableGraph {
 
   node(id: string): Atom.Atom<Option.Option<Node.Node>> {
     return this._node(id);
-  }
-
-  nodeOrThrow(id: string): Atom.Atom<Node.Node> {
-    return this._nodeOrThrow(id);
   }
 
   connections(id: string, relation: Node.RelationInput): Atom.Atom<Node.Node[]> {
@@ -446,8 +416,27 @@ export class GraphImpl implements WritableGraph {
    */
   _setNode(id: string, node: Option.Option<Node.Node>): void {
     this._model.setNode({ id, data: Option.getOrUndefined(node) });
-    // After the write, so the atom materializes with the value rather than with `none`.
-    this._pin(id);
+    // After the write, so the atom is computed with the value rather than with `none`.
+    if (this._pins && !this._pins.has(id)) {
+      this._pins.set(id, this._registry.mount(this._node(id)));
+    }
+  }
+
+  /** @internal */
+  _retain(): CleanupFn {
+    invariant(!this._pins, 'Graph is already retained.');
+    const pins = new Map<string, CleanupFn>();
+    for (const { id } of this._model.nodes) {
+      pins.set(id, this._registry.mount(this._node(id)));
+    }
+    this._pins = pins;
+    return () => {
+      if (this._pins !== pins) {
+        return;
+      }
+      pins.forEach((unpin) => unpin());
+      this._pins = undefined;
+    };
   }
 
   /** @internal */
@@ -494,6 +483,12 @@ export const make = (params?: GraphProps): Graph => {
 };
 
 /**
+ * Pins the graph's nodes in its registry, including nodes added later, until the returned function
+ * is called. A graph has one holder at a time.
+ */
+export const retain = (graph: BaseGraph): CleanupFn => getInternal(graph)._retain();
+
+/**
  * Convert the graph to a JSON object.
  */
 export const toJSON = (graph: BaseGraph, id = GraphNode.RootId): object => {
@@ -512,11 +507,11 @@ export const getNode = (graph: BaseGraph, id: string): Option.Option<Node.Node> 
 /**
  * Get the node with the given id from the graph's registry.
  *
- * @throws If the node is Option.none().
+ * @throws {GraphNode.NotFoundError} If the graph has no node with the id.
  */
 export const getNodeOrThrow = (graph: BaseGraph, id: string): Node.Node => {
   const internal = getInternal(graph);
-  return internal._registry.get(internal._nodeOrThrow(id));
+  return Option.getOrThrowWith(internal._registry.get(internal._node(id)), () => new GraphNode.NotFoundError(id));
 };
 
 /**
@@ -675,7 +670,8 @@ export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> 
  *
  * Fires the `onExpand` callback to add connections to the node. That callback subscribes to the node's
  * connector atom immediately, so every matching builder extension runs before this returns — which is why
- * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}.
+ * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}. Their
+ * output reaches the graph on the builder's next flush, not by the time this returns.
  *
  * Expanding a node that is already expanded for the same relation is a no-op.
  */
@@ -700,6 +696,18 @@ export const expandSync = <T extends ExpandableGraph | WritableGraph>(
   if (!expanded) {
     internal._expanded.add(key);
     internal._onExpand?.(id, normalizedRelation);
+  }
+  return graph;
+};
+
+/**
+ * {@link expandSync} the `child` relation of every ancestor of a qualified id, and of the id itself.
+ * A missing ancestor's expand is deferred until it arrives, so a single call populates the whole path.
+ */
+export const expandPath = <T extends ExpandableGraph | WritableGraph>(graph: T, qualifiedId: string): T => {
+  const segments = qualifiedId.split('/');
+  for (let index = 1; index <= segments.length; index++) {
+    expandSync(graph, segments.slice(0, index).join('/'), 'child');
   }
   return graph;
 };
@@ -773,22 +781,22 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
   const internal = getInternal(graph);
   internal._model.batch(() => {
     for (const id of ids) {
-      internal._unpin(id);
+      internal._pins?.get(id)?.();
+      internal._pins?.delete(id);
       internal._relations.delete(id);
-      releaseExpansion(internal, id);
     }
 
+    releaseExpansions(internal, new Set(ids));
     internal._model.release(ids);
   });
 
   return graph;
 };
 
-/** Forgets that any relation of `id` was ever expanded, so the next read expands it again. */
-const releaseExpansion = (internal: GraphImpl, id: string): void => {
+const releaseExpansions = (internal: GraphImpl, ids: ReadonlySet<string>): void => {
   for (const set of [internal._expanded, internal._pendingExpands]) {
-    for (const key of [...set]) {
-      if (primaryParts(key)[0] === id) {
+    for (const key of set) {
+      if (ids.has(primaryParts(key)[0])) {
         set.delete(key);
       }
     }
@@ -907,13 +915,12 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
 
   if (actions) {
     addNodes(graph, actions);
-    const actionRelation = Node.actionRelation();
-    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: actionRelation }));
+    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: Node.action }));
     addEdges(graph, _edges);
     sortEdges(
       graph,
       id,
-      actionRelation,
+      Node.action,
       actions.map((node) => node.id),
     );
   }

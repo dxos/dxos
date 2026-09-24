@@ -14,8 +14,8 @@ import { Position } from '@dxos/util';
 import { KanbanArticle, KanbanProperties } from '#containers';
 import { Kanban } from '#types';
 
-import { PivotColumnAnnotationId } from '../types/KanbanSchema';
-import { PivotColumnField } from './PivotColumnField';
+import { PivotColumnAnnotationId } from '../types/KanbanSchema.ts';
+import { PivotColumnField } from './PivotColumnField.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

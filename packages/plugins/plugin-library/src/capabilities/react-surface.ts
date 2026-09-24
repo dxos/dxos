@@ -13,7 +13,7 @@ import { Position } from '@dxos/util';
 import { BookArticle, BookCard, BookNotesCompanion } from '#containers';
 import { Book } from '#types';
 
-import { NOTES_COMPANION_VARIANT } from './app-graph-builder';
+import { NOTES_COMPANION_VARIANT } from './app-graph-builder.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

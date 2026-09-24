@@ -34,12 +34,7 @@ export const RESOURCE_LOCK_TIMEOUT = 3_000;
 export const LOAD_PROPERTIES_TIMEOUT = 3_000;
 
 /**
- * Timeout for creating new spaces.
- */
-export const CREATE_SPACE_TIMEOUT = 5_000;
-
-/**
- * Timeout for creating new spaces.
+ * Timeout for importing a space.
  */
 export const IMPORT_SPACE_TIMEOUT = 30_000;
 

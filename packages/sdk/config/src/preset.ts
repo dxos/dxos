@@ -4,8 +4,8 @@
 
 import * as Match from 'effect/Match';
 
-import { Config } from './config';
-import { EDGE_URLS } from './edge-services';
+import { Config } from './config.ts';
+import { EDGE_URLS } from './edge-services.ts';
 
 export type ConfigPresetOptions = {
   /**

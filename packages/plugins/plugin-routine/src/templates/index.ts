@@ -11,7 +11,7 @@ import { Ref } from '@dxos/echo';
 
 import { RoutineCapabilities } from '#types';
 
-import { makeRoutine } from '../util';
+import { makeRoutine } from '../util/index.ts';
 
 /**
  * Blank template: an instructions-action routine draft with an empty trigger; the action kind, schedule, and

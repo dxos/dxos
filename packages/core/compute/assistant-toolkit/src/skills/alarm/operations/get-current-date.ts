@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { GetCurrentDate } from './definitions';
+import { GetCurrentDate } from './definitions.ts';
 
 /**
  * Reports the current time from the ambient Effect clock as an ISO-8601 string, so it stays

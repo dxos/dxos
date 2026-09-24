@@ -9,7 +9,7 @@ import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { type GptRealtimeShape } from './gpt-realtime-def';
+import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);
@@ -136,6 +136,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
         icon={isReady ? 'ph--waveform--regular' : isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
         size={16}
         classNames={!isLive && 'cursor-pointer'}
+        onPointerDown={(ev) => ev.stopPropagation()}
         onClick={start}
       />
     </div>

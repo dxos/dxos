@@ -40,7 +40,7 @@ export const Editor = ({ dream }: EditorProps) => {
     <Form.Root schema={schema} values={dream} autoSave onSave={handleSave}>
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

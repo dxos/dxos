@@ -14,14 +14,14 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '#apis';
 
-import { GoogleCredentials } from '../../../services/google-credentials';
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
 
 const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([
     {
       service: 'google.com',
       // TODO(burdon): Rename `credential`.
-      apiKey: Config.redacted('GOOGLE_ACCESS_TOKEN'),
+      apiKey: Config.Redacted('GOOGLE_ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,

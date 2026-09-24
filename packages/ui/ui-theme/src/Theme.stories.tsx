@@ -7,8 +7,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { hues } from '@dxos/ui-types';
 
-import { hueShades } from './defs';
-import { mx } from './util';
+import { hueShades } from './defs.ts';
+import { mx } from './util/index.ts';
 
 // prettier-ignore
 const neutralShades: [number, string][] = [
@@ -278,7 +278,7 @@ export const Animation = {
         <div className='dx-density-lg border border-separator rounded-md'>
           <div
             className={mx(
-              'flex items-center font-mono text-2xl text-test-experimental',
+              'flex items-center font-mono text-2xl text-error-text',
               'p-form-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
             )}
           >

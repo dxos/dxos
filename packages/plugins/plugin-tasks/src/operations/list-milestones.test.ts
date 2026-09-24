@@ -4,16 +4,18 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import listMilestones from './list-milestones';
-import updateTask from './update-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import listMilestones from './list-milestones.ts';
+import updateTask from './update-task.ts';
 
 describe('list-milestones', () => {
   it.effect('sequences the set and reports progress derived from its tasks', () =>
@@ -40,7 +42,14 @@ describe('list-milestones', () => {
       expect(milestones).toEqual([
         { id: milestone.id, name: 'Alpha', description: 'Ships to staging', targetDate: undefined, total: 2, done: 1 },
       ]);
-    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
   );
 
   it.effect(

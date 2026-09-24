@@ -5,7 +5,7 @@
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import { createStaticTreeModel } from './static-tree-model';
+import { createStaticTreeModel } from './static-tree-model.ts';
 
 type Node = { id: string; name?: string; items?: Node[] };
 
@@ -119,5 +119,40 @@ describe('createStaticTreeModel', () => {
 
     expect(registry.get(model.childIds('a'))).toEqual(['a2']);
     expect(registry.get(model.childIds('b'))).toEqual(['a1']);
+  });
+});
+
+describe('atom lifetime', () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve));
+
+  test('a rebuilt model leaves nothing in the registry once its readers unsubscribe', async () => {
+    const registry = Registry.make();
+    const before = registry.getNodes().size;
+    for (let build = 0; build < 3; build++) {
+      const model = make();
+      const unsubscribe = [
+        registry.subscribe(model.childIds('a'), () => {}),
+        registry.subscribe(model.item('a1'), () => {}),
+        registry.subscribe(model.itemProps(['root', 'a']), () => {}),
+        registry.subscribe(model.itemOpen(['root', 'a']), () => {}),
+        registry.subscribe(model.itemCurrent(['root', 'a']), () => {}),
+      ];
+      unsubscribe.forEach((cancel) => cancel());
+    }
+
+    // The registry drops unobserved nodes on its scheduler, not synchronously.
+    await settle();
+    expect(registry.getNodes().size).toBe(before);
+  });
+
+  test('written state survives its atom being dropped and read again', async () => {
+    const registry = Registry.make();
+    const model = make();
+    const path = ['root', 'a'];
+    registry.set(model.stateAtom(path), { open: true, current: true });
+    await settle();
+
+    expect(registry.get(model.itemOpen(path))).toBe(true);
+    expect(registry.get(model.itemCurrent(path))).toBe(true);
   });
 });

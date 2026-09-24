@@ -11,9 +11,9 @@ import { NoHandlerError } from '@dxos/compute/errors';
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { Capabilities } from '../../common';
-import { type Capability } from '../../core';
-import { usePluginManager } from '../components';
+import { Capabilities } from '../../common/index.ts';
+import { type Capability } from '../../core/index.ts';
+import { usePluginManager } from '../components/index.ts';
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);

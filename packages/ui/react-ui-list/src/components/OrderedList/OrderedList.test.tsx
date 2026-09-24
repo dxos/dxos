@@ -7,7 +7,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import * as stories from './OrderedList.stories';
+import * as stories from './OrderedList.stories.tsx';
 
 // Tests exercise the master-detail editor variant directly — the most feature-rich shape
 // of the compound (drag handle + clickable title + expand caret + detail panel + delete).

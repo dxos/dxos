@@ -5,17 +5,17 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
-import { Toggle } from '../Button';
-import { Icon } from '../Icon';
-import { Select } from '../Select';
-import { Toolbar } from './Toolbar';
+import { withTheme } from '../../testing/index.ts';
+import { Toggle } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Select } from '../Select/index.ts';
+import { Toolbar, type ToolbarRootProps } from './Toolbar.tsx';
 
-type StorybookToolbarProps = {};
+type StorybookToolbarProps = Pick<ToolbarRootProps, 'elevation'>;
 
-const DefaultStory = (props: StorybookToolbarProps) => {
+const DefaultStory = ({ elevation }: StorybookToolbarProps) => {
   return (
-    <Toolbar.Root>
+    <Toolbar.Root elevation={elevation}>
       {/* TODO(burdon): Should be fixed width (regardless of selection). */}
       <Select.Root>
         <Toolbar.Button asChild>
@@ -71,6 +71,9 @@ const meta = {
   component: Toolbar as any,
   render: DefaultStory,
   decorators: [withTheme()],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

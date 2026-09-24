@@ -4,7 +4,7 @@
 
 import { type Point } from '@dxos/react-ui-canvas';
 
-import { type Polygon } from '../types';
+import { type Polygon } from '../types/index.ts';
 
 export const rowHeight = 20;
 

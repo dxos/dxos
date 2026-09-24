@@ -89,7 +89,7 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
               'grid dx-fill',
               showInfo && '@4xl:grid-cols-[1fr_320px] gap-8',
               role === AppSurface.Article.role && 'p-4',
-              role === AppSurface.Section.role && 'aspect-square',
+              role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0',
               role === AppSurface.Section.role && showInfo && '@4xl:aspect-auto',
             )}
           >

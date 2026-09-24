@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Testing from 'effect/testing';
+import * as FastCheck from 'fast-check';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -11,18 +11,18 @@ import { EDGE_URLS } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../../env';
+import { type SchedulerEnvImpl } from '../../env/index.ts';
 import {
   type ReplicantBrain,
   type ReplicantsSummary,
   type TestPlan,
   type TestProps,
   onCleanupSignal,
-} from '../../plan';
-import { ClientReplicant } from '../../replicants/client-replicant';
-import { describeError } from '../../util';
-import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
-import { type ClientIndex, type Model, makeFleetModel } from './model';
+} from '../../plan/index.ts';
+import { ClientReplicant } from '../../replicants/client-replicant.ts';
+import { describeError } from '../../util.ts';
+import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands.ts';
+import { type ClientIndex, type Model, makeFleetModel } from './model.ts';
 import {
   BudgetExhausted,
   type EdgeStressResult,
@@ -33,7 +33,7 @@ import {
   assertFullyReplicated,
   cleanupRun,
   isDevLikeTarget,
-} from './system';
+} from './system.ts';
 
 /**
  * How many commands to draw per executable one.
@@ -290,13 +290,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       checkpoints: spec.checkpoints,
       partitions: spec.partitions,
     });
-    const pool = Testing.FastCheck.array(command, {
+    const pool = FastCheck.array(command, {
       minLength: spec.maxCommands,
       maxLength: spec.maxCommands * COMMAND_POOL_FACTOR,
       size: 'max',
     });
 
-    const draws = Testing.FastCheck.sample(pool, {
+    const draws = FastCheck.sample(pool, {
       seed: hashSeed(seed ?? ''),
       numRuns: spec.sampleDraws,
     });

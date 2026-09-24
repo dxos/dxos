@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { ComputeGraphModel } from './model';
+import { ComputeGraphModel } from './model.ts';
 
 describe('graph builder', () => {
   test('graph', ({ expect }) => {

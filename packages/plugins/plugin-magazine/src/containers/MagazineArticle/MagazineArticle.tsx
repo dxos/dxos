@@ -21,8 +21,8 @@ import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { MagazineTile } from './MagazineTile';
-import { useToolbar } from './useToolbar';
+import { MagazineTile } from './MagazineTile.tsx';
+import { useToolbar } from './useToolbar.tsx';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 

@@ -7,9 +7,9 @@ import React, { type PropsWithChildren, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { withLayout, withTheme } from '../../testing';
-import { type ThemedClassName } from '../../util';
-import { Focus } from './Focus';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Focus } from './Focus.tsx';
 
 type Item = { id: string; label: string };
 

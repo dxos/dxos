@@ -12,12 +12,12 @@ import { ClientService } from '@dxos/client';
 import { Entity, Filter, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { printQueueObject } from './util';
+import { printQueueObject } from './util.ts';
 
 export const query = Command.make(
   'query',
   {
-    dxn: Options.string('dxn').pipe(Options.withDescription('DXN of the queue.')),
+    dxn: Options.String('dxn').pipe(Options.withDescription('DXN of the queue.')),
   },
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;

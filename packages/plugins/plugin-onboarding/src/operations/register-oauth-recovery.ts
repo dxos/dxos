@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
-import { RegisterOAuthRecovery } from './definitions';
-import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
+import { RegisterOAuthRecovery } from './definitions.ts';
+import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared.ts';
 
 /**
  * Begins OAuth recovery registration (redirect flow).

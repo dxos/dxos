@@ -14,10 +14,10 @@ displays them in a masonry gallery rendered by plugin-chess game cards.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -113,7 +113,7 @@ feat F-3: Game gallery
 ## Acceptance
 
 ```mdl
-test T-1: Create with username only
+scenario T-1: Create with username only
   given: user enters username "hhhhthrv"
   then:
     - ChessComAccount.username === "hhhhthrv"
@@ -121,7 +121,7 @@ test T-1: Create with username only
 ```
 
 ```mdl
-test T-2: Sync deduplicates games
+scenario T-2: Sync deduplicates games
   given: account with two games already synced
   when: SyncGames runs against the same upstream archive
   then: appended === 0
@@ -129,11 +129,11 @@ test T-2: Sync deduplicates games
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Link a Chess.com account and sync games
+test QA-1: Link a Chess.com account and sync games
   desc: The core round-trip — create the account, sync its archived games, then clear them back out.
   actors: human
   covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.2, F-2.3, T-1, T-2]
@@ -147,11 +147,11 @@ flow QA-1: Link a Chess.com account and sync games
       `manager.enable()` returns without error from the debug port and does not enable it.
     - a Chess.com username with at least one archived game (e.g. a well-known public account)
     - no ChessComAccount for that username exists in the space — ABORT rather than deleting one
-      this flow did not create
+      this test did not create
     - account: the ChessComAccount object the human creates in step 1, resolved by the runner
       after that step so later steps can reference it — there is no create operation to `capture`
       it from
-  test:
+  steps:
     - name: Create the account
       do: In the navtree, click + on a collection and choose Chess.com Account. Enter the username.
       expect: a ChessComAccount with that username appears under the collection, its foreign key

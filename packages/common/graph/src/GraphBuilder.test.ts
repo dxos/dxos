@@ -7,14 +7,24 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import * as GraphBuilder from './GraphBuilder';
-import * as GraphNode from './GraphNode';
+import * as GraphBuilder from './GraphBuilder.ts';
+import * as GraphNode from './GraphNode.ts';
+import * as Retention from './Retention.ts';
 
 const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
   // The caller's registry when one is supplied — reads must go through the registry the builder
   // writes to, or they never see its version bumps.
   const registry = props.registry ?? Registry.make();
   const builder = new GraphBuilder.ModelGraphBuilder<string>({ registry, ...props });
+  // App-graph schedules on macrotasks; on microtasks a collection a flush triggers drains before `await`
+  // returns, which hides ordering bugs.
+  builder._schedule = (callback) =>
+    new Promise((resolve) =>
+      setTimeout(() => {
+        callback();
+        resolve();
+      }),
+    );
   const children = (id: string, relation?: string) => registry.get(builder.children(id, relation)).map(({ id }) => id);
   return { registry, builder, model: builder.graph, children };
 };
@@ -122,6 +132,50 @@ describe('GraphBuilder', () => {
     expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/c']);
   });
 
+  test("an update to a connector's output lands on a microtask, its first output on the scheduler", async () => {
+    const { registry, builder, children } = setup();
+    const state = Atom.make(['a', 'b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: connector((get) => get(state).map((id) => ({ id }))),
+    });
+
+    children(GraphNode.RootId);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal([]);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a', 'root/b']);
+
+    registry.set(state, ['b', 'a']);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/b', 'root/a']);
+  });
+
+  test('an update flush stops at the frame budget and leaves the rest to the scheduler', async () => {
+    const { registry, builder, children } = setup();
+    let flushed = 0;
+    builder._frameBudget = () => ({ hasTime: () => flushed < 1, spend: () => flushed++ });
+    const first = Atom.make(['a']).pipe(Atom.keepAlive);
+    const second = Atom.make(['b']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, [
+      { id: 'children', connector: connector((get) => get(first).map((id) => ({ id }))) },
+      { id: 'siblings', relation: 'sibling', connector: connector((get) => get(second).map((id) => ({ id }))) },
+    ]);
+
+    children(GraphNode.RootId);
+    children(GraphNode.RootId, 'sibling');
+    await GraphBuilder.flush(builder);
+
+    registry.set(first, ['c']);
+    registry.set(second, ['d']);
+    await Promise.resolve();
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/c']);
+    expect(children(GraphNode.RootId, 'sibling')).to.deep.equal(['root/b']);
+
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId, 'sibling')).to.deep.equal(['root/d']);
+  });
+
   test('an unrelated node changing leaves a connector alone', async () => {
     const { registry, builder, model, children } = setup();
     let runs = 0;
@@ -213,21 +267,6 @@ describe('GraphBuilder', () => {
     expect(model.findNode('root/a/x')).to.be.undefined;
     expect(model.findNode('root/a/x/deep')).to.be.undefined;
     expect(model.findNode('root/a/y/deep')?.id).to.equal('root/a/y/deep');
-  });
-
-  test('nodes are attributed to the extension that produced them, inline descendants included', async () => {
-    const { builder, children } = setup();
-    GraphBuilder.addExtension(builder, {
-      id: 'children',
-      connector: connector([{ id: 'a', nodes: [{ id: 'inline' }] }]),
-    });
-
-    children(GraphNode.RootId);
-    await GraphBuilder.flush(builder);
-
-    expect(builder.getNodeExtensionId('root/a')).to.equal('children');
-    expect(builder.getNodeExtensionId('root/a/inline')).to.equal('children');
-    expect(builder.getNodeExtensionId(GraphNode.RootId)).to.be.undefined;
   });
 
   test('every produced node passes through the decorator with its producing extension', async () => {
@@ -335,5 +374,214 @@ describe('GraphBuilder', () => {
 
     expect(model.findNode('seeded')?.id).to.equal('seeded');
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a']);
+  });
+});
+
+describe('retention', () => {
+  const ATTACHED = ['action', 'companion'];
+
+  const tree = () => {
+    const harness = setup();
+    const produce = (relation: string, nodes: (id: string) => GraphBuilder.ModelNodeArg[]) =>
+      GraphBuilder.addExtension(harness.builder, {
+        id: relation,
+        relation,
+        connector: (node) =>
+          Atom.make((get) => Option.match(get(node), { onNone: () => [], onSome: (source) => nodes(source.id) })),
+      });
+    const depth = (id: string) => id.split('/').length;
+    produce('child', (id) =>
+      depth(id) === 1 ? [{ id: 'w0' }, { id: 'w1' }] : depth(id) < 4 ? [{ id: 'c0' }, { id: 'c1' }] : [],
+    );
+    produce('action', (id) => (depth(id) === 1 ? [{ id: 'ra' }] : depth(id) === 2 ? [{ id: 'a' }] : []));
+    produce('companion', (id) => (depth(id) === 1 ? [{ id: 'rk' }] : id.endsWith('/c0') ? [{ id: 'k' }] : []));
+    return harness;
+  };
+
+  const expand = async ({ builder, children }: ReturnType<typeof setup>, ids: readonly string[]) => {
+    for (const id of ids) {
+      children(id);
+      children(id, 'action');
+      children(id, 'companion');
+      await GraphBuilder.flush(builder);
+    }
+  };
+
+  const loaded = async () => {
+    const harness = tree();
+    await expand(harness, [
+      GraphNode.RootId,
+      'root/w0',
+      'root/w1',
+      'root/w0/c0',
+      'root/w0/c1',
+      'root/w1/c0',
+      'root/w1/c1',
+    ]);
+    const retain = async (...answers: (readonly Retention.Region[])[]) => {
+      const atoms = answers.map((regions) => Atom.make(regions).pipe(Atom.keepAlive));
+      GraphBuilder.setRetention(
+        harness.builder,
+        atoms.map((retained) => ({ retained, attached: ATTACHED })),
+      );
+      await GraphBuilder.flush(harness.builder);
+      return atoms;
+    };
+    const present = (id: string) => harness.model.findNode(id) !== undefined;
+    return { ...harness, retain, present };
+  };
+
+  test('nothing is collected while no retention is installed', async () => {
+    const { builder, present } = await loaded();
+    GraphBuilder.setRetention(builder, []);
+    await GraphBuilder.flush(builder);
+    expect(present('root/w1/c0/c0')).to.be.true;
+  });
+
+  test('what no retention reaches is released, and the root keeps its children, actions and companions', async () => {
+    const { builder, retain, present } = await loaded();
+    await retain([]);
+
+    expect(present('root/ra')).to.be.true;
+    expect(present('root/rk')).to.be.true;
+    expect(present('root/w0/a')).to.be.true;
+    expect(present('root/w0/c0')).to.be.false;
+  });
+
+  test('a collection pending when the retentions are removed releases nothing', async () => {
+    const { builder, retain, registry, present } = await loaded();
+    const [answer] = await retain([{ id: 'root/w0' }]);
+    registry.set(answer, []);
+    GraphBuilder.setRetention(builder, []);
+    await GraphBuilder.flush(builder);
+    expect(present('root/w0/c0')).to.be.true;
+  });
+
+  test('depth counts structural levels, and targets of other relations go with their source', async () => {
+    const { retain, present } = await loaded();
+    await retain([{ id: 'root/w1', depth: 1 }]);
+
+    expect(present('root/w0')).to.be.true;
+    expect(present('root/w0/a')).to.be.true;
+    expect(present('root/w0/c0')).to.be.false;
+    expect(present('root/w1/c0/k')).to.be.true;
+    expect(present('root/w1/c0/c0')).to.be.false;
+  });
+
+  test('a relation no retention names as attached costs a level like any other', async () => {
+    const harness = await loaded();
+    const answer = Atom.make<readonly Retention.Region[]>([{ id: 'root/w1', depth: 1 }]).pipe(Atom.keepAlive);
+    GraphBuilder.setRetention(harness.builder, [{ retained: answer, attached: ['companion'] }]);
+    await GraphBuilder.flush(harness.builder);
+
+    expect(harness.present('root/w1/c0/k')).to.be.true;
+    expect(harness.present('root/w0/a')).to.be.false;
+  });
+
+  test('the deepest ask across retentions wins', async () => {
+    const { retain, present } = await loaded();
+    await retain(
+      [{ id: 'root/w1' }],
+      [
+        { id: GraphNode.RootId, depth: 1 },
+        { id: 'root/w1', depth: 1 },
+      ],
+    );
+    expect(present('root/w1/c0/c0')).to.be.true;
+    expect(present('root/w0/c0')).to.be.false;
+  });
+
+  test('a node asked for below a released node goes with it', async () => {
+    const { retain, present } = await loaded();
+    await retain([{ id: 'root/w1/c0/c0' }]);
+    expect(present('root/w1/c0/c0')).to.be.false;
+  });
+
+  test('a node a retained parent also holds stays', async () => {
+    const harness = await loaded();
+    harness.model.addEdge({ id: 'shared', type: 'child', source: 'root/w0', target: 'root/w1/c0', data: { order: 0 } });
+    await harness.retain([{ id: 'root/w0' }]);
+    expect(harness.present('root/w1/c0')).to.be.true;
+    expect(harness.present('root/w1/c1')).to.be.false;
+  });
+
+  test('a node expanded again under the same answer stays loaded until the answer changes', async () => {
+    const harness = await loaded();
+    const { registry, retain, children } = harness;
+    const [answer] = await retain([{ id: 'root/w0' }]);
+    expect(children('root/w1')).to.deep.equal([]);
+
+    await expand(harness, ['root/w1']);
+    registry.set(answer, [{ id: 'root/w0' }]);
+    await GraphBuilder.flush(harness.builder);
+    expect(children('root/w1')).to.deep.equal(['root/w1/c0', 'root/w1/c1']);
+
+    registry.set(answer, []);
+    await GraphBuilder.flush(harness.builder);
+    expect(children('root/w0')).to.deep.equal([]);
+    expect(children('root/w1')).to.deep.equal([]);
+  });
+
+  test('flush waits for a collection the flush itself triggers', async () => {
+    const harness = setup();
+    const { builder, registry, children } = harness;
+    const ids = Atom.make(['w0', 'w1']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: (): GraphBuilder.ModelNodeArg[] => [],
+            onSome: (source) => (source.id === GraphNode.RootId ? get(ids).map((id) => ({ id })) : [{ id: 'c0' }]),
+          }),
+        ),
+    });
+    await expand(harness, [GraphNode.RootId, 'root/w0']);
+
+    GraphBuilder.setRetention(builder, [
+      {
+        retained: Atom.make((get) =>
+          get(builder.children(GraphNode.RootId)).some(({ id }) => id === 'root/w2') ? [] : [{ id: 'root/w0' }],
+        ),
+      },
+    ]);
+    await GraphBuilder.flush(builder);
+    expect(children('root/w0')).to.deep.equal(['root/w0/c0']);
+
+    registry.set(ids, ['w0', 'w1', 'w2']);
+    await GraphBuilder.flush(builder);
+    expect(children('root/w0')).to.deep.equal([]);
+  });
+
+  test('a released node keeps the inline children it was emitted with, and its producer stays live', async () => {
+    const harness = setup();
+    const { builder, registry, children } = harness;
+    const ids = Atom.make(['w']).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: (): GraphBuilder.ModelNodeArg[] => [],
+            onSome: (source) =>
+              source.id === GraphNode.RootId
+                ? get(ids).map((id) => ({ id, nodes: [{ id: 'x' }] }))
+                : source.id === 'root/w/x'
+                  ? [{ id: 'y' }]
+                  : [],
+          }),
+        ),
+    });
+    await expand(harness, [GraphNode.RootId, 'root/w/x']);
+    expect(children('root/w/x')).to.deep.equal(['root/w/x/y']);
+
+    GraphBuilder.setRetention(builder, [{ retained: Atom.make([]) }]);
+    await GraphBuilder.flush(builder);
+    expect(children('root/w')).to.deep.equal(['root/w/x']);
+    expect(children('root/w/x')).to.deep.equal([]);
+
+    registry.set(ids, ['w', 'v']);
+    await GraphBuilder.flush(builder);
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/w', 'root/v']);
   });
 });

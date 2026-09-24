@@ -7,9 +7,9 @@ import type { DropdownMenuItemGroupProperties, MenuActionProperties, MenuItemGro
 
 import { translationKey } from '#translations';
 
-import type { ActionGraphProps } from './hooks';
-import { MenuSeparatorType } from './types';
-import { createMenuAction, createMenuItemGroup } from './util';
+import type { ActionGraphProps } from './hooks/index.ts';
+import { MenuSeparatorType } from './types.ts';
+import { createMenuAction, createMenuItemGroup } from './util.ts';
 
 /** Default trigger for toolbar overflow (⋮) dropdown menus. */
 const overflowMenuProperties = {

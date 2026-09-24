@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions';
+import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions.tsx';
 
 /**
  * Returns a menu item per injected {@link InboxCapabilities.MailboxAction}. Selecting one invokes the

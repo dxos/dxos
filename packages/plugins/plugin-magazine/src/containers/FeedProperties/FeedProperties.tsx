@@ -12,6 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
 import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -70,13 +71,13 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      subject: [getRoutinesSettingsPath(db.spaceId)],
       workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('feed-sync.label')}</Field.Label>
         <Flex align='center'>
@@ -92,7 +93,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
           )}
         </Flex>
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

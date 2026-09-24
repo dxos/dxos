@@ -15,9 +15,9 @@ import { invariant } from '@dxos/invariant';
 import * as Client from '@dxos/worker-framework/Client';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
-import * as Rpc from '../internal/rpc';
-import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';
-import { CounterClientRpcs, CounterRpcs, type TimingStatsSnapshot } from './counter-service';
+import * as Rpc from '../internal/rpc.ts';
+import { COUNTER_LEADER_LOCK_KEY } from './counter-constants.ts';
+import { CounterClientRpcs, CounterRpcs, type TimingStatsSnapshot } from './counter-service.ts';
 
 export type CounterRpc = {
   increment: () => Effect.Effect<number>;

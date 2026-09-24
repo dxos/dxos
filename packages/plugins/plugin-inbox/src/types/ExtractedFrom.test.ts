@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Obj, Relation } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import * as ExtractedFrom from './ExtractedFrom';
+import * as ExtractedFrom from './ExtractedFrom.ts';
 
 describe('ExtractedFrom', () => {
   test('relation links extracted object to source Message', ({ expect }) => {

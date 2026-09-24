@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Shimmer } from './Shimmer';
+import { Shimmer } from './Shimmer.tsx';
 
 const meta = {
   title: 'ui/react-ui-components/Shimmer',

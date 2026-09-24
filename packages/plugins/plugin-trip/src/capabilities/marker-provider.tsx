@@ -15,7 +15,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { Place, Routing, Segment, Trip } from '#types';
 
-import { AIRPORTS } from '../operations/extractor/const';
+import { AIRPORTS } from '../operations/extractor/const.ts';
 
 // TODO(burdon): Factor out to @dxos/schema.
 

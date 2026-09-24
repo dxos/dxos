@@ -16,7 +16,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
 import { translations } from '#translations';
 
-import { ScriptToolbar } from './ScriptToolbar';
+import { ScriptToolbar } from './ScriptToolbar.tsx';
 
 // Create a mock store for stories.
 const createMockStore = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {

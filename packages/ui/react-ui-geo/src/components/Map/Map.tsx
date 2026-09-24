@@ -31,8 +31,8 @@ import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { composable, composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeoMarker } from '../../types';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type GeoMarker } from '../../types.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 // TODO(burdon): react-leaflet v5 is not compatible with react 18.

@@ -7,8 +7,8 @@ import { type NetConnectOpts } from 'node:net';
 
 import { isNode } from '@dxos/util';
 
-import { type RedisOptions } from '../env';
-import { WebSocketConnector } from './websocket-connector';
+import { type RedisOptions } from '../env/index.ts';
+import { WebSocketConnector } from './websocket-connector.ts';
 
 /**
  * Overridable so CI can point the orchestrator at a service container, which is reachable by

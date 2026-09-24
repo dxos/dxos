@@ -13,12 +13,12 @@ import { Field, Toolbar } from '@dxos/react-ui';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
-import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+import { type WidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback, trim } from '@dxos/util';
 
-import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
-import { type TextStreamOptions, textStream } from './testing';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream.tsx';
+import { type TextStreamOptions, textStream } from './testing/index.ts';
 import TEXT from './testing/text.md?raw';
 
 random.seed(123);
@@ -45,8 +45,8 @@ class DOMWidget extends WidgetType {
   }
 }
 
-const ReactWidget = ({ children }: { children: string }) => {
-  return <div className='m-2 p-2 border border-separator rounded'>{children}</div>;
+const ReactWidget = ({ children }: WidgetProps) => {
+  return <div className='m-2 p-2 border border-separator rounded'>{getXmlTextChild(children)}</div>;
 };
 
 const registry: XmlWidgetRegistry = {

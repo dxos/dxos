@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Tag } from '@dxos/echo';
 
-import { completions } from './autocomplete';
+import { completions } from './autocomplete.ts';
 
 const tags: Tag.Map = {
   tag_1: Tag.make({ label: 'important' }),

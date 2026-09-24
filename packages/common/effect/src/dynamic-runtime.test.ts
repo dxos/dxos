@@ -10,9 +10,9 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, expect, test } from 'vitest';
 
-import * as DynamicRuntime from './dynamic-runtime';
-import * as EffectEx from './EffectEx';
-import { runAndForwardErrors } from './internal/errors';
+import * as DynamicRuntime from './dynamic-runtime.ts';
+import * as EffectEx from './EffectEx.ts';
+import { runAndForwardErrors } from './internal/errors.ts';
 
 // Test service tags
 class Database extends Context.Service<Database, { query: (sql: string) => Effect.Effect<string[]> }>()('Database') {}

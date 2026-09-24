@@ -34,7 +34,7 @@ export const methodOption = <T extends string>(
   methods: readonly T[],
   aliases: Readonly<Record<string, T>>,
 ): Options.Flag<T> =>
-  Options.choiceWithValue('method', [
+  Options.ChoiceWithValue('method', [
     ...methods.map((method): [string, T] => [method, method]),
     ...Object.entries(aliases),
   ]);

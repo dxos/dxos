@@ -9,7 +9,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { createProgressRegistry } from './progress-registry';
+import { createProgressRegistry } from './progress-registry.ts';
 import {
   PROGRESS_STATUS_CANCELLED,
   PROGRESS_STATUS_COMPLETE,
@@ -17,7 +17,7 @@ import {
   PROGRESS_STATUS_STALLED,
   createProgressTraceSink,
   resolveTriggerId,
-} from './progress-trace-sink';
+} from './progress-trace-sink.ts';
 
 const statusMessage = (data: Trace.PayloadType<typeof Trace.StatusUpdate>, meta: Trace.Meta = {}): Trace.Message =>
   ({

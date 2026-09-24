@@ -136,17 +136,14 @@ export const generate = Command.make(
   'generate',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    interval: Options.integer('interval').pipe(
+    interval: Options.Int('interval').pipe(
       Options.withDescription('Interval between mutations (ms).'),
       Options.withDefault(0),
     ),
-    jitter: Options.integer('jitter').pipe(Options.withDescription('Interval variance (ms).'), Options.withDefault(0)),
-    objects: Options.integer('objects').pipe(Options.withDescription('Number of objects.'), Options.withDefault(0)),
-    mutations: Options.integer('mutations').pipe(
-      Options.withDescription('Number of mutations.'),
-      Options.withDefault(0),
-    ),
-    epoch: Options.integer('epoch').pipe(Options.withDescription('Number of mutations per epoch.'), Options.optional),
+    jitter: Options.Int('jitter').pipe(Options.withDescription('Interval variance (ms).'), Options.withDefault(0)),
+    objects: Options.Int('objects').pipe(Options.withDescription('Number of objects.'), Options.withDefault(0)),
+    mutations: Options.Int('mutations').pipe(Options.withDescription('Number of mutations.'), Options.withDefault(0)),
+    epoch: Options.Int('epoch').pipe(Options.withDescription('Number of mutations per epoch.'), Options.optional),
   },
   handler,
 )

@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { HANG_FOREVER_MS, type StressFleet, type StressTab } from './stress-fleet';
+import { HANG_FOREVER_MS, type StressFleet, type StressTab } from './stress-fleet.ts';
 
 /** Bounded worker hang, long enough to outlast the leader stale timeout (5s) it is meant to provoke. */
 const HANG_WORKER_MS = 8_000;
@@ -137,18 +137,6 @@ export const STRESS_COMMANDS: readonly StressCommand[] = [
     },
   },
 ];
-
-/** Small, deterministic PRNG (mulberry32) so a run is replayable from its seed alone. */
-export const seededRandom = (seed: number): (() => number) => {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-};
 
 /** Runs one random applicable command. Returns its name, or undefined if none applied. */
 export const runRandomCommand = async (ctx: StressCommandContext): Promise<string | undefined> => {

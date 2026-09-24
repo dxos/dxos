@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isTauri } from './platform';
+import { isTauri } from './platform.ts';
 
 /** WebKit resolves the blob asynchronously, so revoking in the same task aborts the download. */
 const OBJECT_URL_TTL = 30_000;

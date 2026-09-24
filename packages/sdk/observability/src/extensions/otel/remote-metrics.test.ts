@@ -6,8 +6,8 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import type * as OtelMetricsSink from './OtelMetricsSink';
-import { RemoteMetricsForwarder } from './remote-metrics';
+import type * as OtelMetricsSink from './OtelMetricsSink.ts';
+import { RemoteMetricsForwarder } from './remote-metrics.ts';
 
 describe('RemoteMetricsForwarder', () => {
   let forwarder: RemoteMetricsForwarder | undefined;

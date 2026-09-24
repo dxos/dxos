@@ -13,7 +13,7 @@ import {
   EdgarAsOfConceptsAnnotation,
   EdgarFieldAnnotation,
   type EdgarFieldSource,
-} from '../annotations';
+} from '../annotations/index.ts';
 
 type EdgarFact = {
   end: string;

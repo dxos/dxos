@@ -8,9 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
-import { SqlTransaction } from '@dxos/sql-sqlite';
-
-import * as ExtractedQuestionStore from './ExtractedQuestionStore';
+import * as ExtractedQuestionStore from './ExtractedQuestionStore.ts';
 
 const question = (
   over: Partial<ExtractedQuestionStore.ExtractedQuestion> = {},
@@ -54,7 +52,6 @@ describe('ExtractedQuestionStore', () => {
   suite(
     'sql',
     ExtractedQuestionStore.layerSql.pipe(
-      Layer.provideMerge(SqlTransaction.layer),
       Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
     ),
   );

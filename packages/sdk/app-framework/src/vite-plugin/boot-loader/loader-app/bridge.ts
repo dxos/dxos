@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LoaderStore } from './store';
-import { type BootLoaderApi } from './types';
+import { type LoaderStore } from './store.ts';
+import { type BootLoaderApi } from './types.ts';
 
 /**
  * Wrap a reactive {@link LoaderStore} as the imperative `window.__bootLoader`

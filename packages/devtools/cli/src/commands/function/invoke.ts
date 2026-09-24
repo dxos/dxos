@@ -16,21 +16,22 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/edge-compute';
 
-import { printInvokeResult } from './util';
+import { CliError } from '../../util/errors.ts';
+import { printInvokeResult } from './util.ts';
 
 export const invoke = Command.make(
   'invoke',
   {
-    key: Args.string('key').pipe(Args.withDescription('The key of the function to invoke.')),
-    data: Args.string('data').pipe(
+    key: Args.String('key').pipe(Args.withDescription('The key of the function to invoke.')),
+    data: Args.String('data').pipe(
       Args.withDescription('The data to pass to the function.'),
       Args.withSchema(Schema.fromJsonString(Schema.Unknown)),
     ),
-    cpuTimeLimit: Options.integer('cpuTimeLimit').pipe(
+    cpuTimeLimit: Options.Int('cpuTimeLimit').pipe(
       Options.withDescription('The CPU time limit in seconds.'),
       Options.optional,
     ),
-    subrequestsLimit: Options.integer('subrequestsLimit').pipe(
+    subrequestsLimit: Options.Int('subrequestsLimit').pipe(
       Options.withDescription('The subrequests limit for the function.'),
       Options.optional,
     ),
@@ -46,7 +47,7 @@ export const invoke = Command.make(
     // TODO(dmaretskyi): Should we make the keys unique?
     const fn = fns.findLast((fn) => Obj.getMeta(fn).key === key);
     if (!fn) {
-      return yield* Effect.fail(new Error(`Function not found: ${key}`));
+      return yield* Effect.fail(new CliError({ message: `Function not found: ${key}` }));
     }
 
     const edgeClient = createEdgeClient(client);

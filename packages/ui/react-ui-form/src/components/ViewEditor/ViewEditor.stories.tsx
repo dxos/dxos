@@ -9,7 +9,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DXN, EID, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { type Mutable } from '@dxos/echo/Obj';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -18,8 +17,8 @@ import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
-import { ViewEditor, type ViewEditorProps } from './ViewEditor';
+import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing/index.ts';
+import { ViewEditor, type ViewEditorProps } from './ViewEditor.tsx';
 
 const types = [
   { value: Type.getURI(Organization.Organization), label: 'Organization' },
@@ -82,7 +81,7 @@ const DefaultStory = (props: StoryArgs) => {
         const queue = target;
         const query = queue ? Query.fromAst(newQuery).from([Scope.feed(queue)]) : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
-          view.query.ast = query.ast as Mutable<typeof query.ast>;
+          view.query.ast = query.ast as Obj.Mutable<typeof query.ast>;
         });
 
         const typeUri = getTypeURIFromQuery(query.ast);
@@ -97,12 +96,12 @@ const DefaultStory = (props: StoryArgs) => {
           jsonSchema: JsonSchema.toJsonSchema(newSchema),
         });
         Obj.update(view, (view) => {
-          view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
+          view.projection = Obj.getSnapshot(newView).projection as Obj.Mutable<typeof view.projection>;
         });
         setType(() => newSchema);
       } else {
         Obj.update(view, (view) => {
-          view.query.ast = newQuery as Mutable<typeof newQuery>;
+          view.query.ast = newQuery as Obj.Mutable<typeof newQuery>;
         });
       }
     },

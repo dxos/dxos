@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { ConnectionManager } from './ConnectionManager';
-import { type IrcConnection } from './IrcConnection';
+import { ConnectionManager } from './ConnectionManager.ts';
+import { type IrcConnection } from './IrcConnection.ts';
 
 describe('ConnectionManager', () => {
   test('shares one connection across acquires with the same key', ({ expect }) => {

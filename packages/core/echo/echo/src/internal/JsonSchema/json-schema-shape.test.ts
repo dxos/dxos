@@ -7,9 +7,9 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Format from '../../Format';
-import * as Type from '../../Type';
-import { toJsonSchema } from './json-schema';
+import * as Format from '../../Format.ts';
+import * as Type from '../../Type.ts';
+import { toJsonSchema } from './json-schema.ts';
 
 //
 // `toJsonSchema` output is a wire contract, not an internal detail. It is handed to language

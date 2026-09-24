@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 // Organization is referenced in the inferred type of Booking (via Provider.Provider → Ref.Ref(Organization));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -34,7 +33,7 @@ export class Booking extends Type.makeObject<Booking>(DXN.make('org.dxos.type.tr
     source: Schema.Literals(['manual', 'email', 'agent', 'import']).pipe(Schema.optional),
     rawPayload: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['confirmationCode']),
+    Annotation.LabelAnnotation.set(['confirmationCode']),
     Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
   ),
 ) {}

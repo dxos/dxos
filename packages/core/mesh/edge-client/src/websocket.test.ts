@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState } from '@dxos/async';
 
-import { createTestEdgeWsServer } from './testing';
+import { createTestEdgeWsServer } from './testing/index.ts';
 
 describe('WebSocket', () => {
   test('swap `onclose` handler ', async () => {

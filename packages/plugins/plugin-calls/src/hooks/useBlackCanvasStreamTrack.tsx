@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { createBlackCanvasStreamTrack } from '../calls/util/stub-media-streams';
+import { createBlackCanvasStreamTrack } from '../calls/util/stub-media-streams.ts';
 
 export const useBlackCanvasStreamTrack = () => {
   const [blackCanvasStreamTrack, setBlackCanvasStreamTrack] = useState<MediaStreamTrack | undefined>(undefined);

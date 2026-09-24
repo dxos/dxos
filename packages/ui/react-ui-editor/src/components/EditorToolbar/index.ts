@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './types';
+export * from './types.ts';
 
-export * from './EditorToolbar';
-export * from './view-mode';
+export * from './EditorToolbar.tsx';
+export * from './view-mode.ts';

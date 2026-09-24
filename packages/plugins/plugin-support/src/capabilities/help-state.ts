@@ -13,12 +13,13 @@ import { HelpCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const stateAtom = createKvsStore({
-      key: meta.profile.key,
+      key: `${meta.profile.key}.state`,
       schema: HelpCapabilities.StateSchema,
       defaultValue: () => ({
         running: false,
         showHints: true,
         showWelcome: true,
+        seenTours: [],
       }),
     });
 

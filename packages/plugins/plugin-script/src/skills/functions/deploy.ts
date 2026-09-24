@@ -15,7 +15,8 @@ import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute
 import { bundleFunction, initializeBundler } from '@dxos/edge-compute/bundler';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
-import { Deploy } from './definitions';
+import { Deploy } from './definitions.ts';
+import { FunctionError } from './errors.ts';
 
 export default Deploy.pipe(
   Operation.withHandler(
@@ -23,13 +24,13 @@ export default Deploy.pipe(
       const loaded = yield* Database.load(fn);
       const client = yield* ClientService;
       if (!loaded.source) {
-        return yield* Effect.fail(new Error('Function has no source script.'));
+        return yield* Effect.fail(new FunctionError({ message: 'Function has no source script.' }));
       }
       const script = (yield* Database.load(loaded.source)) as Script.Script;
 
       const db = Obj.getDatabase(loaded);
       if (!db || !script.source?.target?.content) {
-        return yield* Effect.fail(new Error('Script source or space not available'));
+        return yield* Effect.fail(new FunctionError({ message: 'Script source or space not available' }));
       }
 
       yield* Effect.promise(() => initializeBundler({ wasmUrl }));
@@ -43,7 +44,7 @@ export default Deploy.pipe(
 
       const identity = client.halo.identity.get();
       if (!identity) {
-        return yield* Effect.fail(new Error('Identity not available.'));
+        return yield* Effect.fail(new FunctionError({ message: 'Identity not available.' }));
       }
 
       const functionsService = FunctionsServiceClient.fromClient(client);

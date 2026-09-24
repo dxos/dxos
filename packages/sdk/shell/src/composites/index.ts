@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './IdentityDialog';
-export * from './JoinDialog';
-export * from './Shell';
-export * from './SpaceDialog';
+export * from './IdentityDialog/index.ts';
+export * from './JoinDialog/index.ts';
+export * from './Shell/index.ts';
+export * from './SpaceDialog/index.ts';

@@ -16,7 +16,7 @@ import { composable, composableProps, composeRefs, useTranslation } from '@dxos/
 
 import { meta } from '#meta';
 
-import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search';
+import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search.ts';
 
 /**
  * pdf.js, loaded on first use rather than on import.
@@ -579,7 +579,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         data-pdf-canvas=''
         {...composableProps(props, {
           classNames: [
-            'dx-fill bg-deck select-text',
+            'dx-fill bg-deck-surface select-text',
             single ? 'overflow-hidden grid place-items-center' : 'overflow-auto',
           ],
         })}

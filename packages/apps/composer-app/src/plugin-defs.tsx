@@ -2,7 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import { type MakeTurnProducer } from '@dxos/agent-runtime';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -10,9 +15,12 @@ import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
 import * as BookmarksPlugin from '@dxos/plugin-bookmarks/BookmarksPlugin';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
@@ -34,6 +42,7 @@ import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
+import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
 import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
 import * as IdeogramPlugin from '@dxos/plugin-ideogram/IdeogramPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -41,6 +50,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
 import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as LabelerPlugin from '@dxos/plugin-labeler/LabelerPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
@@ -79,15 +89,16 @@ import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPl
 import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
 import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
 import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
+import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
 import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
 import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
@@ -109,15 +120,14 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
+    ProjectsPlugin.meta.profile.key,
+    TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
-    // Connector-only, so defaulting it on adds no surface — it just puts DeepSeek in the
-    // Connections service list for anyone who has a key.
-    DeepSeekPlugin.meta.profile.key,
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -137,13 +147,17 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
+      DeepSeekPlugin.meta.profile.key,
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
+      HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
+      LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
+      TypeSafePlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
       LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
@@ -157,7 +171,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
-      TasksPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
@@ -169,6 +182,48 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Deduped: a mobile labs build lists transcription in both sets.
     .filter((key, index, keys) => keys.indexOf(key) === index);
 
+// Loaded on first use so the code-mode sandbox stays out of the main chunk for users who never opt in.
+// The model's code runs in a Web Worker on its own ECHO client, never in the page: a chunk that fails
+// to load or a missing client degrades to the standard producer, not to in-page evaluation.
+const codeModeTurnProducer =
+  (capabilities: CapabilityManager.CapabilityManager): MakeTurnProducer =>
+  (options) => {
+    const standard = (reason: unknown) =>
+      Effect.logWarning('code mode unavailable; using the standard turn producer', reason).pipe(
+        // Already loaded by the agent service that calls this, so the import resolves from cache.
+        Effect.andThen(Effect.promise(() => import('@dxos/agent-runtime'))),
+        Effect.flatMap(({ makeAiSessionTurnProducer }) => makeAiSessionTurnProducer(options)),
+      );
+    return Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
+      Effect.matchEffect({
+        onFailure: standard,
+        onSuccess: ({ EffectDialect, WorkerSandbox, WorkerSandboxBrowser, makeCodeModeTurnProducer }) => {
+          const [client] = capabilities.getAll(ClientCapabilities.Client);
+          if (client === undefined) {
+            return standard('no client to connect the sandbox worker to');
+          }
+          const sandbox = WorkerSandbox.make({
+            // Read per evaluation: the client's rpc surface is replaced on reconnect.
+            echo: () => echoServices(client.services.rpc),
+            spawn: WorkerSandboxBrowser.spawn(
+              () => new Worker(new URL('./workers/code-mode-worker.ts', import.meta.url), { type: 'module' }),
+            ),
+          });
+          return makeCodeModeTurnProducer({ dialect: EffectDialect, sandbox })(options);
+        },
+      }),
+    );
+  };
+
+/** The two services the sandbox worker's ECHO client connects to, served from this tab's client. */
+const echoServices = (rpc: ClientServicesRpc) => {
+  const { DataService, QueryService } = makeHandlersFromRpc(rpc);
+  if (DataService === undefined || QueryService === undefined) {
+    throw new Error('The client does not serve the data and query services.');
+  }
+  return { DataService, QueryService };
+};
+
 /**
  * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
@@ -179,14 +234,15 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin.make(),
+    AssistantPlugin.make({ codeModeTurnProducer }),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
-    BrainPlugin.make(),
     CallsPlugin.make(),
+    CanvasPlugin.make(),
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudePlugin.make(),
+    CloudflarePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
@@ -200,19 +256,15 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     DevtoolsPlugin.make(),
     DiscordPlugin.make(),
     DoctorPlugin.make(),
-    DuffelPlugin.make(),
     ExcalidrawPlugin.make(),
     ExplorerPlugin.make(),
     GamePlugin.make(),
     GooglePlugin.make(),
-    HeyGenPlugin.make(),
-    IbkrPlugin.make(),
-    IdeogramPlugin.make(),
     IllustratorPlugin.make(),
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
-    LaMetricPlugin.make(),
+    LabelerPlugin.make(),
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
@@ -223,7 +275,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
     isTauri && !isMobile && !isPopover && FileSystemPlugin.make(),
-    OsrmPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
@@ -236,9 +287,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     StackPlugin.make(),
-    StreamDeckPlugin.make(),
-    StudioPlugin.make(),
     TablePlugin.make(),
+    TypeSafePlugin.make(),
     TasksPlugin.make(),
     ThreadPlugin.make(),
     TldrawPlugin.make(),
@@ -258,16 +308,26 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
 const experimental: Plugin.Plugin[] = [
   BloggerPlugin.make(),
   BlueskyPlugin.make(),
+  BrainPlugin.make(),
+  DuffelPlugin.make(),
   FilePlugin.make(),
   FreeqPlugin.make(),
   GitHubPlugin.make(),
+  HeyGenPlugin.make(),
+  HiggsfieldPlugin.make(),
+  IbkrPlugin.make(),
+  IdeogramPlugin.make(),
   IrohBeaconPlugin.make(),
+  LaMetricPlugin.make(),
   LinearPlugin.make(),
   LingoPlugin.make(),
+  OsrmPlugin.make(),
   S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
   SpacetimePlugin.make(),
+  StreamDeckPlugin.make(),
+  StudioPlugin.make(),
   TerraPlugin.make(),
   TrelloPlugin.make(),
   TripPlugin.make(),

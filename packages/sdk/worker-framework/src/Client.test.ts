@@ -5,132 +5,30 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
+import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 
-import * as Client from './Client';
-import { WorkerConnectionError } from './errors';
-import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
-import * as Worker from './Worker';
-import * as WorkerProtocol from './WorkerProtocol';
-
-/**
- * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
- * traffic to every connected tab and routes `provide-port` to the requesting tab. Unlike the real
- * coordinator it can be told to drop a tab's first `request-port`, modelling a lost/raced message.
- */
-const createHub = () => {
-  type Entry = { onMessage: Event<WorkerProtocol.CoordinatorMessage> };
-  const entries = new Set<Entry>();
-  const portsByClient = new Map<string, Entry>();
-  const dropOnceFor = new Set<string>();
-
-  const connect = (): WorkerProtocol.WorkerCoordinator => {
-    const onMessage = new Event<WorkerProtocol.CoordinatorMessage>();
-    const entry: Entry = { onMessage };
-    entries.add(entry);
-    return {
-      onMessage,
-      sendMessage: (message: WorkerProtocol.CoordinatorMessage) => {
-        if (message.type === 'request-port') {
-          portsByClient.set(message.clientId, entry);
-          if (dropOnceFor.has(message.clientId)) {
-            dropOnceFor.delete(message.clientId);
-            return; // Simulate the leader never receiving this request.
-          }
-        }
-        if (message.type === 'provide-port') {
-          const target = portsByClient.get(message.clientId);
-          setTimeout(() => target?.onMessage.emit(message));
-          return;
-        }
-        for (const peer of entries) {
-          setTimeout(() => peer.onMessage.emit(message));
-        }
-      },
-    };
-  };
-
-  return {
-    connect,
-    /** Drop the next `request-port` from the given client, forcing recovery via heartbeat re-request. */
-    dropNextRequestPort: (clientId: string) => dropOnceFor.add(clientId),
-  };
-};
-
-/**
- * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop with a no-op
- * runtime — exercises leader election and port exchange without a service runtime.
- */
-const createWorkerFactory = (storageLockKey: string) => () => {
-  const channel = new MessageChannel();
-  channel.port1.start();
-  Worker.run({
-    endpoint: {
-      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
-      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
-      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
-      close: () => channel.port1.close(),
-    },
-    storageLockKey,
-    createRuntime: () =>
-      Effect.succeed({
-        createSession: () => Effect.never,
-      }),
-  });
-  return channel.port2 as WorkerProtocol.WorkerOrPort;
-};
-
-/** Reads the diagnostics the connection merges into a failure. */
-const diagnosticsOf = (error: unknown): Record<string, unknown> =>
-  error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
-    ? { ...error.context }
-    : {};
-
-/**
- * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
- * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
- * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
- */
-const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
-  onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
-  sendMessage: () => {},
-});
-
-type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
-
-const makeConnection = (
-  hub: ReturnType<typeof createHub>,
-  keys: { leaderLockKey: string; storageLockKey: string },
-  leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
-  options: {
-    maxLeaderFailures?: number;
-    createWorker?: () => WorkerProtocol.WorkerOrPort;
-    createCoordinator?: () => WorkerProtocol.WorkerCoordinator;
-  } = {},
-) => {
-  const connectedTrigger = new Trigger<Connected>();
-  const failures: unknown[] = [];
-  const connection = new Client.Connection({
-    createWorker: options.createWorker ?? createWorkerFactory(keys.storageLockKey),
-    createCoordinator: options.createCoordinator ?? (() => hub.connect()),
-    leaderLockKey: keys.leaderLockKey,
-    leaderTimeouts,
-    maxLeaderFailures: options.maxLeaderFailures,
-    onPersistentFailure: (error) => failures.push(error),
-    onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
-      connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
-      return { close: async () => {} };
-    },
-  });
-  return { connection, connected: connectedTrigger.wait(), failures };
-};
+import * as Client from './Client.ts';
+import { WorkerConnectionError, WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import { displaceChannelFor } from './internal/displace-channel.ts';
+import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
+import {
+  type WorkerHandle,
+  createBrokenCoordinator,
+  createHub,
+  createRecordingWorker,
+  createWorkerFactory,
+  diagnosticsOf,
+  makeConnection,
+  postStubSession,
+  uniqueKeys,
+} from './testing/harness.ts';
+import * as Worker from './Worker.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 describe('Connection multi-client', () => {
-  const uniqueKeys = () => {
-    const id = crypto.randomUUID();
-    return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };
-  };
-
   test('leader and a late-joining follower both connect', async () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -272,9 +170,8 @@ describe('Connection multi-client', () => {
       leaderLockKey: keys.leaderLockKey,
       leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
       onConnect: async () => {
-        // Fails only after the worker has handed out ports and claimed the clientId — the shape of a
-        // handle that rejects before `WorkerService.start` registers a tab-liveness lock, so nothing
-        // on the tab side will ever close the session the worker is holding.
+        // Fails only after the worker has handed out ports and claimed the clientId, so the worker is
+        // holding a session for an attempt this tab has given up on.
         if (++attempts === 1) {
           throw new Error('TEST: transient connect failure');
         }
@@ -318,6 +215,181 @@ describe('Connection multi-client', () => {
     expect(String(error)).toContain('TEST: worker creation failed');
     expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
   }, 30_000);
+
+  test.each(['MigrationError', 'AbortError'])(
+    'a worker runtime that fails to start with %s rejects every tab still booting, and nothing retries',
+    async (name) => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      const startError = new BaseError(name, {
+        message: 'TEST: migration failed',
+        cause: new Error('TEST: wasm trap'),
+      });
+      let workersCreated = 0;
+      let workersClosed = 0;
+      const createWorker = createWorkerFactory(keys.storageLockKey, {
+        onClose: () => workersClosed++,
+        createRuntime: () => Effect.fail(startError),
+      });
+      let portRequests = 0;
+      const portTimeout = 200;
+      const tabs = [0, 1].map(() =>
+        makeConnection(
+          hub,
+          keys,
+          { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout, retryBackoff: 10 },
+          {
+            createWorker: () => {
+              workersCreated++;
+              return createWorker();
+            },
+            createCoordinator: () => {
+              const coordinator = hub.connect();
+              return {
+                onMessage: coordinator.onMessage,
+                sendMessage: (message) => {
+                  if (message.type === 'request-port') {
+                    portRequests++;
+                  }
+                  coordinator.sendMessage(message);
+                },
+              };
+            },
+          },
+        ),
+      );
+      onTestFinished(async () => {
+        await Promise.all(tabs.map(({ connection }) => connection.close()));
+      });
+
+      const errors = await asyncTimeout(
+        Promise.all(
+          tabs.map(({ connection }) =>
+            connection.open().then(
+              () => {
+                throw new Error('open() must not resolve: the worker runtime never starts.');
+              },
+              (err: unknown) => err,
+            ),
+          ),
+        ),
+        5_000,
+      );
+
+      for (const error of errors) {
+        invariant(error instanceof Error);
+        expect(error.name).toBe(name);
+        expect(error.message).toBe('TEST: migration failed');
+        invariant(error.cause instanceof Error);
+        expect(error.cause.message).toBe('TEST: wasm trap');
+      }
+      // The follower led once the failed leader let the lock go, and its own worker failed the same way.
+      expect(workersCreated).toBe(2);
+
+      // Each worker exits and gives up its storage and liveness locks instead of serving sessions.
+      await waitForCondition({ condition: () => workersClosed === 2, timeout: 2_000 });
+      await waitForCondition({
+        condition: async () => {
+          const { held } = await navigator.locks.query();
+          return !(held ?? []).some(({ name }) => name?.startsWith(keys.storageLockKey));
+        },
+        timeout: 2_000,
+      });
+
+      // Several port timeouts later, neither the election nor either connect task has gone round again.
+      const portRequestsAtFailure = portRequests;
+      await sleep(portTimeout * 3);
+      expect(portRequests).toBe(portRequestsAtFailure);
+      expect(workersCreated).toBe(2);
+    },
+  );
+
+  test('a start failure after a failed connect attempt rejects open with the start failure', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const startError = new BaseError('StartError', { message: 'TEST: migration failed' });
+    let shutdownFirstWorker: (() => void) | undefined;
+    let workersCreated = 0;
+    const createWorker = createWorkerFactory(keys.storageLockKey, {
+      createRuntime: ({ requestShutdown }) => {
+        if (workersCreated > 1) {
+          return Effect.fail(startError);
+        }
+        shutdownFirstWorker = requestShutdown;
+        return Effect.succeed({ createSession: () => Effect.never });
+      },
+    });
+    const connection = new Client.Connection({
+      createWorker: () => {
+        workersCreated++;
+        return createWorker();
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 10_000, retryBackoff: 10 },
+      // The first worker hands out a port, then dies as the tab fails to connect to it.
+      onConnect: async () => {
+        invariant(shutdownFirstWorker);
+        shutdownFirstWorker();
+        throw new Error('TEST: connect failed');
+      },
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await asyncTimeout(
+      connection.open().then(
+        () => {
+          throw new Error('open() must not resolve: no worker ever connects.');
+        },
+        (err: unknown) => err,
+      ),
+      5_000,
+    );
+
+    invariant(error instanceof Error);
+    expect(error.message).toBe('TEST: migration failed');
+    expect(workersCreated).toBe(2);
+  });
+
+  test(
+    'a leader session that times out closes its worker, so the retry starts one that works',
+    async () => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      // The first worker starts only once its session has given up on it, like a worker stalled past the budget.
+      const lateStart = new Trigger();
+      const lateClosed = new Trigger();
+      const late = createWorkerFactory(keys.storageLockKey, {
+        started: lateStart.wait(),
+        onClose: () => lateClosed.wake(),
+      });
+      const healthy = createWorkerFactory(keys.storageLockKey);
+      let workersCreated = 0;
+      const { connection, connected } = makeConnection(
+        hub,
+        keys,
+        { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 10_000 },
+        { createWorker: () => (++workersCreated === 1 ? late() : healthy()) },
+      );
+      onTestFinished(async () => {
+        await connection.close();
+      });
+      const opened = connection.open();
+
+      await asyncTimeout(lateClosed.wait(), LOCK_OR_RPC_WAIT_TIMEOUT + 2_000);
+      lateStart.wake();
+
+      await asyncTimeout(opened, 10_000);
+      await asyncTimeout(connected, 5_000);
+      expect(workersCreated).toBe(2);
+    },
+    LOCK_OR_RPC_WAIT_TIMEOUT + 30_000,
+  );
 
   test('a tab that never receives a port reports the port timeouts it accrued', async () => {
     const hub = createHub();
@@ -433,6 +505,52 @@ describe('Connection multi-client', () => {
     expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
   }, 30_000);
 
+  test('a connection closed while its leader session opens closes that session and does not lead again', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const first = makeConnection(hub, keys);
+    onTestFinished(async () => {
+      await first.connection.close();
+    });
+    await first.connection.open();
+
+    const workerStarted = new Trigger();
+    const workerClosed = new Trigger();
+    let workersCreated = 0;
+    const createWorker = createWorkerFactory(uniqueKeys().storageLockKey, {
+      started: workerStarted.wait(),
+      onClose: () => workerClosed.wake(),
+    });
+    const second = makeConnection(hub, keys, undefined, {
+      maxLeaderFailures: 1,
+      createWorker: () => {
+        workersCreated++;
+        return createWorker();
+      },
+    });
+    onTestFinished(async () => {
+      await second.connection.close();
+    });
+    await second.connection.open();
+
+    // The follower wins the election once the leader leaves; its worker is held back from starting.
+    await first.connection.close();
+    await waitForCondition({ condition: () => workersCreated === 1, timeout: 5_000 });
+
+    const closing = second.connection.close();
+    await sleep(50);
+    workerStarted.wake();
+    await closing;
+
+    await asyncTimeout(workerClosed.wait(), 2_000);
+    await sleep(200);
+    const { held } = await navigator.locks.query();
+    expect(held?.map((lock) => lock.name)).not.toContain(keys.leaderLockKey);
+    expect(workersCreated).toBe(1);
+    expect(second.failures).toEqual([]);
+  });
+
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -448,3 +566,488 @@ describe('Connection multi-client', () => {
     ).toThrow('maxLeaderFailures must be a positive integer');
   });
 });
+
+describe('Worker session lifetime', () => {
+  test('a session stays open while its tab is connected', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(connection.clientId), 5_000);
+    expect(worker.sessionsOpened).toEqual([connection.clientId]);
+    await sleep(200);
+    expect(worker.sessionsClosed).toEqual([]);
+  });
+
+  test('closing a tab releases its session lock, which closes its session scope', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection: leader } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await leader.close();
+    });
+    await asyncTimeout(leader.open(), 10_000);
+
+    // A follower, so closing it does not also terminate the worker.
+    const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
+    expect(worker.sessionsOpened).toContain(follower.clientId);
+
+    await follower.close();
+    await asyncTimeout(worker.sessionClosed(follower.clientId), 5_000);
+    expect(worker.sessionsClosed).toEqual([follower.clientId]);
+  });
+
+  test('worker shutdown closes every session scope before the runtime scope', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const worker = createRecordingWorker(keys.storageLockKey);
+    const { connection: leader } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await leader.close();
+    });
+    await asyncTimeout(leader.open(), 10_000);
+    const { connection: follower } = makeConnection(hub, keys, undefined, { createWorker: worker.createWorker });
+    onTestFinished(async () => {
+      await follower.close();
+    });
+    await asyncTimeout(follower.open(), 10_000);
+    await asyncTimeout(worker.sessionOpened(leader.clientId), 5_000);
+    await asyncTimeout(worker.sessionOpened(follower.clientId), 5_000);
+
+    const order: string[] = [];
+    void worker.sessionClosed(leader.clientId).then(() => order.push('session'));
+    void worker.sessionClosed(follower.clientId).then(() => order.push('session'));
+    void worker.runtimeClosed().then(() => order.push('runtime'));
+
+    worker.requestShutdown();
+    await asyncTimeout(worker.runtimeClosed(), 5_000);
+    await sleep(0);
+    expect(order).toEqual(['session', 'session', 'runtime']);
+  });
+});
+
+describe('Worker displacement', () => {
+  test('a worker starting while a previous one holds the storage lock displaces it', async () => {
+    const { storageLockKey } = uniqueKeys();
+
+    const incumbent = startBareWorker(storageLockKey);
+    // `listening` is posted from inside the storage lock, so it is proof the incumbent holds it.
+    await asyncTimeout(incumbent.listening, 5_000);
+
+    const successor = startBareWorker(storageLockKey);
+    await asyncTimeout(successor.listening, 5_000);
+    await asyncTimeout(incumbent.closed, 5_000);
+  }, 20_000);
+
+  test('a leader session opens against a storage lock a previous worker still holds', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    // A worker outliving the tab that spawned it — tearing that worker down needs the old tab's main
+    // thread, which is exactly what is unavailable when a leader is evicted for being wedged.
+    const stranded = startBareWorker(keys.storageLockKey);
+    await asyncTimeout(stranded.listening, 5_000);
+
+    const { connection, connected } = makeConnection(hub, keys);
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    // Budgeted past `LOCK_OR_RPC_WAIT_TIMEOUT` so a worker that never takes the storage lock fails
+    // this with the reported "opening worker leader session" timeout rather than a bare test timeout.
+    await asyncTimeout(connection.open(), 25_000);
+    await asyncTimeout(connected, 5_000);
+    await asyncTimeout(stranded.closed, 5_000);
+  }, 40_000);
+
+  test('a wedged worker that ignores displacement is terminated by the tab that owns it', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const { connection, connected } = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected, 5_000);
+
+    // From here the worker services nothing, so it never runs `shutdown` and holds both the storage
+    // and the liveness lock — the cooperative path from #13269 has nothing left to work with.
+    wedgeable.wedge();
+
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const removeProcessor = log.addProcessor(processor);
+    onTestFinished(removeProcessor);
+
+    // The worker another tab spawns for the same storage lock. Its grace period is injected rather
+    // than waited out, so the escalation is observed by the terminations it causes, not by a clock.
+    const successor = startBareWorker(keys.storageLockKey, { displaceGraceTimeout: 50 });
+    await asyncTimeout(wedgeable.terminated, 10_000);
+    await asyncTimeout(successor.listening, 10_000);
+
+    // A forced kill is a fault, so it must reach error telemetry — the PostHog processor forwards
+    // an entry only when it carries an `Error`, which a bare `log.warn` never does.
+    const reported = entries.filter((entry): entry is LogEntry & { error: WorkerTerminationError } => {
+      return entry.error instanceof WorkerTerminationError;
+    });
+    expect(reported).toHaveLength(1);
+    expect(reported[0].level).to.eq(LogLevel.ERROR);
+    expect(reported[0].error.context).to.deep.contain({
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+      raisedBy: 'tab',
+    });
+  }, 30_000);
+
+  test('an escalation terminates the wedged incumbent and no other tab on that storage lock', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    // Tab 1: the worker that holds the storage lock, wedged once it is serving.
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const incumbent = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await incumbent.connection.close();
+    });
+    await asyncTimeout(incumbent.connection.open(), 10_000);
+    await asyncTimeout(incumbent.connected, 5_000);
+    wedgeable.wedge();
+
+    // Tabs 2 and 3: two more tabs listening on the same displacement channel. The escalation is
+    // broadcast, so an issuer-only check has both of them kill their own healthy worker.
+    const bystanders = [
+      startBystanderTab({ leaderLockKey: `${keys.leaderLockKey}-bystander-1`, storageLockKey: keys.storageLockKey }),
+      startBystanderTab({ leaderLockKey: `${keys.leaderLockKey}-bystander-2`, storageLockKey: keys.storageLockKey }),
+    ];
+    for (const bystander of bystanders) {
+      onTestFinished(async () => {
+        await bystander.close();
+      });
+      await asyncTimeout(bystander.open(), 10_000);
+    }
+
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const removeProcessor = log.addProcessor(processor);
+    onTestFinished(removeProcessor);
+
+    // Tab 4's worker, queued behind the wedged incumbent and escalating once its grace expires.
+    const successor = startBareWorker(keys.storageLockKey, { displaceGraceTimeout: 50 });
+    await asyncTimeout(wedgeable.terminated, 10_000);
+    // The successor taking the lock is proof every tab has seen and settled the escalation.
+    await asyncTimeout(successor.listening, 10_000);
+
+    for (const bystander of bystanders) {
+      expect(bystander.wasTerminated()).to.be.false;
+    }
+    // One incident, so exactly one error reaches telemetry — a spurious kill would report its own.
+    const reported = entries.filter((entry) => entry.error instanceof WorkerTerminationError);
+    expect(reported).toHaveLength(1);
+  }, 40_000);
+
+  test('a malformed escalation is ignored, and the well-formed one that follows still lands', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const { connection, connected } = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected, 5_000);
+    wedgeable.wedge();
+
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const removeProcessor = log.addProcessor(processor);
+    onTestFinished(removeProcessor);
+
+    // A `terminate` with no issuer would fail the self-check and kill whatever worker received it.
+    const intruder = new BroadcastChannel(displaceChannelFor(keys.storageLockKey));
+    onTestFinished(() => intruder.close());
+    intruder.postMessage({ action: 'terminate' });
+    intruder.postMessage({ action: 'not-an-action' });
+
+    // The well-formed escalation that follows is the edge the assertions hang on: the kill it causes
+    // carries its issuer, so a kill caused by either message above shows up as a different issuer.
+    intruder.postMessage({
+      action: 'terminate',
+      issuerId: 'well-formed-issuer',
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+    });
+    await asyncTimeout(wedgeable.terminated, 10_000);
+
+    const reported = entries.filter((entry) => entry.error instanceof WorkerTerminationError);
+    expect(reported).toHaveLength(1);
+    expect(diagnosticsOf(reported[0].error)).to.deep.contain({ issuerId: 'well-formed-issuer' });
+  }, 30_000);
+
+  test('a wedged worker behind a handle that cannot be terminated is reported, not silently skipped', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey, { terminable: false });
+    const { connection, connected } = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected, 5_000);
+    wedgeable.wedge();
+
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const removeProcessor = log.addProcessor(processor);
+    onTestFinished(removeProcessor);
+
+    startBareWorker(keys.storageLockKey, { displaceGraceTimeout: 50 });
+    await waitForCondition({
+      condition: () => entries.some((entry) => entry.error instanceof WorkerNotTerminableError),
+      timeout: 10_000,
+    });
+    const failure = entries.find((entry) => entry.error instanceof WorkerNotTerminableError);
+    invariant(failure);
+    expect(failure.level).to.eq(LogLevel.ERROR);
+    expect(diagnosticsOf(failure.error)).to.deep.contain({
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+    });
+    // The escalation could not free the lock, so the successor is still queued — the honest outcome
+    // for a handle with no termination capability, rather than a report of a kill that never happened.
+    expect(entries.filter((entry) => entry.error instanceof WorkerTerminationError)).toHaveLength(0);
+  }, 30_000);
+
+  test('a ready message without the displacement fields still connects, escalation aside', async () => {
+    const keys = uniqueKeys();
+    const livenessLockKey = `${keys.storageLockKey}/liveness/legacy`;
+    const releaseLiveness = new Trigger();
+    const livenessHeld = new Trigger();
+    void navigator.locks.request(livenessLockKey, async () => {
+      livenessHeld.wake();
+      await releaseLiveness.wait();
+    });
+    await asyncTimeout(livenessHeld.wait(), 5_000);
+    onTestFinished(() => {
+      releaseLiveness.wake();
+    });
+
+    // A worker built before `workerId`/`displaceChannel` existed, which a tab can meet across an
+    // app deploy: it cannot be escalated against, but it must still be usable.
+    const createWorker = () => {
+      const channel = new MessageChannel();
+      channel.port1.start();
+      channel.port1.addEventListener('message', (event) => {
+        const message: WorkerProtocol.DedicatedWorkerMessage = (
+          event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>
+        ).data;
+        if (message.type === 'init') {
+          channel.port1.postMessage({ type: 'ready', livenessLockKey });
+        } else if (message.type === 'start-session') {
+          postStubSession(channel.port1, message.clientId);
+        }
+      });
+      channel.port1.postMessage({ type: 'listening' } satisfies WorkerProtocol.DedicatedWorkerMessage);
+      return channel.port2;
+    };
+
+    const { connection } = makeConnection(createHub(), keys, undefined, { createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+  }, 20_000);
+
+  // DX-1293 follow-up: 5s killed workers that were merely slow. The escalating worker is itself
+  // terminated once its tab's `LOCK_OR_RPC_WAIT_TIMEOUT` budget expires, so a grace period at or
+  // above that budget would never fire.
+  test('the displacement grace period is long, and still inside the leader session budget', () => {
+    expect(Worker.DEFAULT_DISPLACE_GRACE_TIMEOUT).toBeGreaterThanOrEqual(10_000);
+    expect(Worker.DEFAULT_DISPLACE_GRACE_TIMEOUT).toBeLessThan(LOCK_OR_RPC_WAIT_TIMEOUT);
+  });
+
+  test('a leader session opens against a storage lock a wedged worker still holds', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const incumbent = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await incumbent.connection.close();
+    });
+    await asyncTimeout(incumbent.connection.open(), 10_000);
+    await asyncTimeout(incumbent.connected, 5_000);
+    wedgeable.wedge();
+
+    // Two tabs each leading their own election over one storage lock: the broken-coordinator-link
+    // state that puts a second worker on a lock the first one still owns.
+    const successorKeys = { leaderLockKey: `${keys.leaderLockKey}-successor`, storageLockKey: keys.storageLockKey };
+    const successor = makeConnection(createHub(), successorKeys, undefined, {
+      createWorker: createWorkerFactory(keys.storageLockKey, { displaceGraceTimeout: 50 }),
+    });
+    onTestFinished(async () => {
+      await successor.connection.close();
+    });
+
+    // Budgeted past `LOCK_OR_RPC_WAIT_TIMEOUT` so a worker that never takes the storage lock fails
+    // this with the reported "opening worker leader session" timeout rather than a bare test timeout.
+    await asyncTimeout(successor.connection.open(), 25_000);
+    await asyncTimeout(successor.connected, 5_000);
+    await asyncTimeout(wedgeable.terminated, 5_000);
+  }, 40_000);
+});
+
+/**
+ * Runs the real worker loop over a MessageChannel with no tab attached, exposing the two protocol
+ * milestones the displacement handshake turns on: `listening` (this worker holds the storage lock
+ * and serves) and the endpoint closing (it stood down).
+ *
+ * Built directly rather than through {@link createWorkerFactory}: a successor built by that factory
+ * has its escalation reach only the incumbent's tab, which disarms the bystander assertions below.
+ */
+const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { displaceGraceTimeout?: number } = {}) => {
+  const channel = new MessageChannel();
+  channel.port1.start();
+  channel.port2.start();
+  const listening = new Trigger();
+  const closed = new Trigger();
+  channel.port2.addEventListener('message', (event) => {
+    if ((event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data.type === 'listening') {
+      listening.wake();
+    }
+  });
+  Worker.run({
+    endpoint: {
+      postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
+      addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
+      removeEventListener: (type, listener) => channel.port1.removeEventListener(type, listener as EventListener),
+      close: () => {
+        channel.port1.close();
+        closed.wake();
+      },
+    },
+    storageLockKey,
+    displaceGraceTimeout,
+    createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
+  });
+  return { listening: listening.wait(), closed: closed.wait() };
+};
+
+/**
+ * A worker that can be wedged the way a busy CPU loop wedges one — nothing delivered into it again,
+ * its displacement channel included — and whose handle carries the `terminate()` capability a real
+ * `Worker` has, so the tab can stand it down without its cooperation.
+ */
+const createWedgeableWorkerFactory = (storageLockKey: string, { terminable = true }: { terminable?: boolean } = {}) => {
+  let handle: WorkerHandle | undefined;
+  const terminated = new Trigger();
+  const createWorker = createWorkerFactory(storageLockKey, {
+    terminable,
+    onCreate: (created) => {
+      handle = created;
+    },
+    onClose: () => terminated.wake(),
+  });
+
+  return {
+    createWorker,
+    wedge: () => {
+      invariant(handle, 'the worker must have been created before it can be wedged');
+      handle.wedge();
+    },
+    terminated: terminated.wait(),
+  };
+};
+
+/**
+ * A tab whose worker is ready and healthy but is not the one holding the storage lock — the
+ * bystander an escalation reaches on any storage lock with three or more tabs.
+ *
+ * Its worker is a stub rather than {@link Worker.run}, because a real worker advertises `ready` only
+ * from inside the storage lock grant, so this state cannot be staged with the real loop; the tab
+ * side under test — the displacement channel listener and what it does with an escalation — is the
+ * production one.
+ */
+const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string }) => {
+  const workerId = `bystander-${crypto.randomUUID()}`;
+  const livenessLockKey = `${keys.storageLockKey}/liveness/${workerId}`;
+  const releaseLiveness = new Trigger();
+  const livenessHeld = new Trigger();
+  void navigator.locks.request(livenessLockKey, async () => {
+    livenessHeld.wake();
+    await releaseLiveness.wait();
+  });
+  const ready = new Trigger();
+  let terminated = false;
+
+  const createWorker = () => {
+    const channel = new MessageChannel();
+    channel.port1.start();
+    channel.port1.addEventListener('message', (event) => {
+      const message: WorkerProtocol.DedicatedWorkerMessage = (
+        event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>
+      ).data;
+      switch (message.type) {
+        case 'init':
+          channel.port1.postMessage({
+            type: 'ready',
+            livenessLockKey,
+            workerId,
+            displaceChannel: displaceChannelFor(keys.storageLockKey),
+          } satisfies WorkerProtocol.DedicatedWorkerMessage);
+          ready.wake();
+          break;
+        case 'ping':
+          channel.port1.postMessage({
+            type: 'pong',
+            nonce: message.nonce,
+          } satisfies WorkerProtocol.DedicatedWorkerMessage);
+          break;
+        case 'start-session':
+          postStubSession(channel.port1, message.clientId);
+          break;
+      }
+    });
+    channel.port1.postMessage({ type: 'listening' } satisfies WorkerProtocol.DedicatedWorkerMessage);
+    return Object.assign(channel.port2, {
+      terminate: () => {
+        terminated = true;
+      },
+    });
+  };
+
+  const { connection } = makeConnection(createHub(), keys, undefined, { createWorker });
+  return {
+    connection,
+    open: async () => {
+      await livenessHeld.wait();
+      await connection.open();
+      await ready.wait();
+    },
+    close: async () => {
+      await connection.close();
+      releaseLiveness.wake();
+    },
+    /** Whether this tab killed its own worker, which only the incumbent's tab may do. */
+    wasTerminated: () => terminated,
+  };
+};

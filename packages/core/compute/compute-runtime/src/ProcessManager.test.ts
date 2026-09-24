@@ -38,13 +38,13 @@ import { invariant } from '@dxos/invariant';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
-import { ProcessStore } from './process-store';
-import * as ProcessManager from './ProcessManager';
-import * as ProcessMonitor from './ProcessMonitor';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
-import { TestDatabaseLayer } from './testing';
+import { ProcessStore } from './process-store.ts';
+import * as ProcessManager from './ProcessManager.ts';
+import * as ProcessMonitor from './ProcessMonitor.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import { TestDatabaseLayer } from './testing/index.ts';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -253,6 +253,17 @@ const makeSumAggregator = () =>
       }),
   );
 
+/** Succeeds on its first input without producing an output. */
+const makeSucceedingExecutable = () =>
+  Process.make({ key: 'test.succeeding', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () => Effect.sync(() => ctx.succeed()),
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
 /**
  * Waits for 500ms and then exits.
  */
@@ -418,8 +429,7 @@ describe('ManagerImpl', () => {
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
         expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -436,8 +446,7 @@ describe('ManagerImpl', () => {
         const span = spaceSpans.find(({ name }) => name === 'Handler.span');
         expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans)))),
     ),
   );
 
@@ -462,8 +471,7 @@ describe('ManagerImpl', () => {
         expect(span).toBeUndefined();
         expect(ancestry).toEqual(['Alarm.handler', 'Process.alarm']);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans)))),
     ),
   );
 
@@ -478,8 +486,7 @@ describe('ManagerImpl', () => {
 
         expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -504,8 +511,7 @@ describe('ManagerImpl', () => {
         );
         expect(handler).toBeDefined();
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -533,8 +539,7 @@ describe('ManagerImpl', () => {
         expect(recordedSpans.map(({ name }) => name)).toContain('ChildEvent.handler');
         yield* parent.terminate();
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans)))),
     ),
   );
 
@@ -553,8 +558,7 @@ describe('ManagerImpl', () => {
           'ProcessOperationInvoker.invoke',
         ]);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans))),
+      Effect.provide(Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans)))),
     ),
   );
 
@@ -576,8 +580,9 @@ describe('ManagerImpl', () => {
         ]);
         expect(unusedRuntimeSpans).toEqual([]);
       },
-      Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      Effect.provide(
+        Layer.provideMerge(TestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+      ),
     ),
   );
 
@@ -856,6 +861,27 @@ describe('ManagerImpl', () => {
     );
 
     it.effect(
+      'a finished process is released, leaving its summary in processTree and nothing in the registry',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+        const registry = yield* Registry.AtomRegistry;
+
+        const handle = yield* manager.spawn(makeWaitingExecutable());
+        yield* handle.terminate();
+
+        const tree = yield* monitor.processTree;
+        expect(tree.map((info) => [info.pid, info.state])).toEqual([[handle.pid, Process.State.TERMINATED]]);
+        const attached = yield* manager.attach(handle.pid).pipe(Effect.exit);
+        expect(Exit.isFailure(attached)).toBe(true);
+
+        yield* Effect.promise(() => new Promise<void>((resolve) => setImmediate(resolve)));
+        expect(registry.getNodes().has(handle.statusAtom)).toBe(false);
+        expect(registry.get(handle.statusAtom).state).toEqual(Process.State.TERMINATED);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
       'processTree records parentPid for child processes',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
@@ -968,6 +994,58 @@ describe('ManagerImpl', () => {
         expect(failures.length).toBeGreaterThanOrEqual(1);
         expect(failures.every((entry) => entry.level === LogLevel.ERROR)).toBe(true);
         expect(failures[0].computedError).toContain('Test Error');
+      }, Effect.provide(TestLayer)),
+    );
+
+    /** The two messages a settled FAILED transition reports under, so the debug lifecycle chatter is ignored. */
+    const LIFECYCLE_OUTCOMES = new Set(['lifecycle: failed', 'lifecycle: cancelled']);
+
+    it.effect(
+      'a user-dismissed prompt reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const dismissed = new Error('No passkey was presented', {
+          cause: new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError'),
+        });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.dismissed', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports).toHaveLength(1);
+        expect(reports[0].level).toEqual(LogLevel.INFO);
+        expect(reports[0].computedError).toContain('No passkey was presented');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'an aborted ceremony reports below error level, other DOMExceptions do not (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const aborted = new Error('aborted', { cause: new DOMException('signal aborted', 'AbortError') });
+        const unsupported = new Error('unsupported', {
+          cause: new DOMException('no authenticator', 'NotSupportedError'),
+        });
+
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            yield* manager.spawn(failWith('test.aborted', aborted));
+            yield* manager.spawn(failWith('test.unsupported', unsupported));
+          }),
+        );
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO, LogLevel.ERROR]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a domain error that declares itself a cancellation reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        // Mirrors `PasskeyError.Dismissed`, which the platform can raise without any DOMException.
+        const dismissed = Object.assign(new Error('No passkey was presented'), { cancellation: true as const });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.marked', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO]);
       }, Effect.provide(TestLayer)),
     );
   });
@@ -1134,6 +1212,38 @@ describe('ProcessOperationInvoker', () => {
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
       expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a finished process reads as terminal by the time its outputs close',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSucceedingExecutable());
+      // The first read after the stream ends is what the invoker bases its verdict on.
+      const collector = yield* handle.subscribeOutputs().pipe(
+        Stream.runDrain,
+        Effect.map(() => handle.status.state),
+        Effect.forkChild,
+      );
+      yield* handle.submitInput(undefined);
+      expect(yield* Fiber.join(collector)).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an invocation still running at shutdown is interrupted, not a defect',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const fiber = yield* invoker.invokeFiber(SlowChild, { value: 1 });
+      // The handler is mid-flight when the app goes away.
+      yield* Queue.take(SlowChildGate.taskSignal);
+      yield* manager.shutdown();
+      const output = yield* fiber.await;
+      expect(Exit.isFailure(output) && Cause.hasInterruptsOnly(output.cause)).toEqual(true);
     }, Effect.provide(TestLayer)),
   );
 });
@@ -1405,7 +1515,6 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const monitor = yield* Process.ProcessMonitorService;
-      const manager = yield* ProcessManager.Service;
 
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
@@ -1416,16 +1525,12 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       );
       yield* fiber.await;
 
-      // The parent op spawns the child via Operation.invoke; locate the
-      // child's handle through the process tree and assert its environment
-      // carries both inherited fields.
       const tree = yield* monitor.processTree;
       const childInfo = tree.find((node) => node.parentPid === fiber.pid);
       if (!childInfo) {
         throw new Error('child process not present in process tree');
       }
-      const childHandle = yield* manager.attach(childInfo.pid);
-      expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
+      expect(childInfo.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
   );
 });
@@ -1835,8 +1940,9 @@ describe('durability', () => {
 
         expect(rearmSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
-      Effect.provide(DurabilityTestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      Effect.provide(
+        Layer.provideMerge(DurabilityTestLayer, Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+      ),
     ),
   );
 
@@ -2317,3 +2423,15 @@ const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.
     const remove = log.addProcessor(processor);
     return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
   });
+
+// A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
+// DOMException sits on `cause` rather than being the failing value itself.
+const failWith = (key: string, error: Error) =>
+  Process.make({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.sync(() => ctx.fail(error)),
+      onInput: () => Effect.void,
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );

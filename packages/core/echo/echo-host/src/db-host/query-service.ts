@@ -15,18 +15,17 @@ import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
-import { type QueryService } from '@dxos/protocols/rpc';
+import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type AutomergeHost } from '../automerge';
-import { QueryExecutor } from '../query';
-import { type InvalidationHint, mergeHints } from './invalidation-hint';
-import type { SpaceStateManager } from './space-state-manager';
+import { type AutomergeHost } from '../automerge/index.ts';
+import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
+import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
+import type { SpaceStateManager } from './space-state-manager.ts';
 
 export type QueryServiceProps = {
-  indexEngine: IndexEngine;
+  /** Read on each query: the host builds its engine when it opens, after this service is constructed. */
+  indexEngine: () => IndexEngine;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
@@ -37,6 +36,18 @@ export type QueryServiceProps = {
    * fallback, so the index is their only source of truth.
    */
   updateIndexes: () => Promise<void>;
+
+  /**
+   * True once every indexed object has a snapshot. The compiled executor reads that store rather
+   * than loading documents, so while it is still filling after upgrade a query awaits indexing
+   * before its first execution. Ignored on the in-memory path, which loads documents itself.
+   */
+  hasCompleteSnapshots?: () => Promise<boolean>;
+
+  /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
+  executor?: QueryExecutorMode;
+  /** Resolved lazily, like `indexEngine`: the client exists only once the host is open. */
+  sql: () => SqlClient.SqlClient;
 };
 
 /**
@@ -56,7 +67,7 @@ type ActiveQuery = {
   /** Query reads from at least one feed scope, so its first result must await indexing. */
   feedScoped: boolean;
 
-  sendResults: (results: QueryResult[]) => void;
+  sendResults: (results: QueryService.QueryResult[]) => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -81,6 +92,21 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   /** Reactive queries currently registered, across every space. */
   get 'activeQueryCount'(): number {
     return this._queries.size;
+  }
+
+  'getQueryTraces'(): ExecutionTrace[] {
+    return Array.from(this._queries, (query) => query.executor.trace);
+  }
+
+  /** Cached once true: the store only ever finishes filling, so the check need not repeat. */
+  #snapshotsKnownComplete = false;
+
+  async #snapshotsComplete(): Promise<boolean> {
+    if (this.#snapshotsKnownComplete || !this._params.hasCompleteSnapshots) {
+      return true;
+    }
+    this.#snapshotsKnownComplete = await this._params.hasCompleteSnapshots();
+    return this.#snapshotsKnownComplete;
   }
 
   // 'all' = catch-all; null = no pending hint.
@@ -135,7 +161,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  ['QueryService.setConfig'](_request: IndexConfig): Effect.Effect<void, Error> {
+  ['QueryService.setConfig'](_request: QueryService.IndexConfig): Effect.Effect<void, Error> {
     // No-op: SQL indexer doesn't need explicit configuration.
     return Effect.void;
   }
@@ -148,8 +174,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return Effect.sync(() => log.warn('reindex() is deprecated and no longer has any effect'));
   }
 
-  ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {
-    return EffectEx.streamFromEmitter<QueryResponse, Error>((emit) => {
+  ['QueryService.execQuery'](
+    request: QueryService.QueryRequest,
+  ): EffectStream.Stream<QueryService.QueryResponse, Error> {
+    return EffectEx.streamFromEmitter<QueryService.QueryResponse, Error>((emit) => {
       const ctx = Context.default();
       const queryEntry = this._createQuery(
         ctx,
@@ -160,7 +188,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
-        if (queryEntry.feedScoped) {
+        const readsSnapshotStore = queryEntry.executor.compiled;
+        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
         queryEntry.open = true;
@@ -193,20 +222,22 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
 
   private '_createQuery'(
     ctx: Context,
-    request: QueryRequest,
-    onResults: (respose: QueryResponse) => void,
+    request: QueryService.QueryRequest,
+    onResults: (respose: QueryService.QueryResponse) => void,
     onError: (err: Error) => void,
     onClose: () => void,
   ): ActiveQuery {
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
-        indexEngine: this._params.indexEngine,
+        indexEngine: this._params.indexEngine(),
         runtime: this._params.runtime,
         automergeHost: this._params.automergeHost,
         queryId: request.queryId ?? raise(new Error('query id required')),
         query: parsedQuery,
         reactivity: request.reactivity,
+        executor: this._params.executor,
+        sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
       }),
       dirty: true,

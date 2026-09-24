@@ -11,9 +11,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ChatEditor, type ChatEditorProps } from './ChatEditor';
-import { type CommandData, commands } from './commands';
-import { type ReferenceData } from './references';
+import { ChatEditor, type ChatEditorProps } from './ChatEditor.tsx';
+import { type CommandData, commands } from './commands.ts';
+import { type ReferenceData } from './references.ts';
 
 const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
@@ -74,15 +74,15 @@ export const WithSuggestions: Story = {
 // TODO(burdon): Replace.
 const references: ReferenceData[] = [
   {
-    uri: 'echo:/AAAAAAAA',
+    uri: 'echo:///AAAAAAAA',
     label: 'Meeting Notes',
   },
   {
-    uri: 'echo:/BBBBBBBB',
+    uri: 'echo:///BBBBBBBB',
     label: 'Project Plan',
   },
   {
-    uri: 'echo:/CCCCCCCC',
+    uri: 'echo:///CCCCCCCC',
     label: 'Meeting Plan',
   },
 ];

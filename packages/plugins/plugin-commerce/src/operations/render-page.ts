@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { SearchOperation } from '#types';
 
-import { fetchPage, isCrxRenderAvailable } from '../util';
+import { fetchPage, isCrxRenderAvailable } from '../util/index.ts';
 
 /**
  * Render bridge handler. Runs in the plugin's (main-thread) operation host, where `window` and the

@@ -9,9 +9,9 @@ import * as Option from 'effect/Option';
 import * as CliError from 'effect/unstable/cli/CliError';
 import * as Command from 'effect/unstable/cli/Command';
 
-import type { TerminalBridge } from './bridge';
-import { readLineResult } from './line-editor';
-import { rewriteHelpAliases, tokenize } from './tokenize';
+import type { TerminalBridge } from './bridge.ts';
+import { readLineResult } from './line-editor.ts';
+import { rewriteHelpAliases, tokenize } from './tokenize.ts';
 
 const EXIT_COMMANDS = ['exit', 'quit'];
 

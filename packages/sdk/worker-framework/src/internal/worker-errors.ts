@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { WorkerError } from '../errors';
+import { WorkerError } from '../errors.ts';
 
 /** Which worker an `ErrorEvent` came from, for the synthesized message. */
 export type WorkerKind = 'dedicated' | 'coordinator';

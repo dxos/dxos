@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './match';
+export * from './match.ts';

@@ -7,13 +7,13 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, type Entity, Feed, Type, View } from '@dxos/echo';
+import { Database, type Entity, Feed, Hypergraph, Type, View } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type { DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder } from './echo-test-builder';
+import type { DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder } from './echo-test-builder.ts';
 
 const testBuilder = EffectEx.acquireReleaseResource(() => new EchoTestBuilder());
 
@@ -43,7 +43,7 @@ export const TestDatabaseLayer = ({
   spaceKey,
   storagePath,
   onInit,
-}: TestDatabaseOptions = {}): Layer.Layer<Database.Service, never, never> =>
+}: TestDatabaseOptions = {}): Layer.Layer<Database.Service | Hypergraph.Service, never, never> =>
   Layer.effectContext(
     Effect.gen(function* () {
       types ??= [];
@@ -81,6 +81,11 @@ export const TestDatabaseLayer = ({
         }
       }
 
-      return Context.make(Database.Service, Database.makeService(db));
+      // Both, because a test that exercises an operation should not have to know whether it reaches
+      // its data through the one space it was given or through the graph that spans them. The graph
+      // here holds exactly this peer's space, so a cross-space query finds one space's worth.
+      return Context.make(Database.Service, Database.makeService(db)).pipe(
+        Context.add(Hypergraph.Service, Hypergraph.makeService(db.graph)),
+      );
     }),
   );

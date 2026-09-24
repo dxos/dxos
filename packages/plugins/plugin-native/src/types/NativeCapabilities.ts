@@ -12,10 +12,9 @@ import { meta } from '#meta';
 
 // Inline imports to avoid `Settings` / `Update` namespace aliases colliding with the
 // capability constants exported below.
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
-// Re-exported rather than declared: the web contributes the same capability from `plugin-pwa`, so a
-// settings surface resolves one identifier and gets whichever platform is present. A second identifier
-// here would mean two rows that can never both be right.
+// Re-exported rather than declared: plugin-pwa contributes the same capability, so a settings surface
+// resolves one identifier and gets whichever platform is present.
 export { UpdateManager } from '@dxos/app-toolkit/AppCapabilities';

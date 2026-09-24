@@ -10,8 +10,8 @@ import { Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { getObjectCore } from '../echo-handler';
-import { EchoTestBuilder } from '../testing';
+import { getObjectCore } from '../echo-handler/index.ts';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 const Operation = Type.makeObject(DXN.make('com.example.type.operation', '0.1.0'))(
   Schema.Struct({

@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /** Properties stored for each voxel. */
 export const VoxelProps = Schema.Struct({
@@ -37,7 +36,10 @@ export class World extends Type.makeObject<World>(DXN.make('org.dxos.type.voxel'
     blockSize: Schema.optional(Schema.Number),
     /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
     voxels: Schema.optional(Schema.Record(Schema.String, VoxelProps)),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'neutral' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'neutral' }),
+  ),
 ) {}
 
 const DEFAULT_GRID_SIZE = 32;

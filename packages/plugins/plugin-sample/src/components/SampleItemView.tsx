@@ -40,7 +40,7 @@ export const SampleItemView = ({ name, description, status, onValuesChanged }: S
     <Form.Root schema={formSchema} values={values} onValuesChanged={handleValuesChanged}>
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

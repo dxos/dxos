@@ -10,8 +10,8 @@ import pkgUp from 'pkg-up';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
-import { type ProcessInfo, type WatchDogProps } from './watchdog';
+import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils.ts';
+import { type ProcessInfo, type WatchDogProps } from './watchdog.ts';
 
 const scriptDir = typeof __dirname === 'string' ? __dirname : dirname(new URL(import.meta.url).pathname);
 

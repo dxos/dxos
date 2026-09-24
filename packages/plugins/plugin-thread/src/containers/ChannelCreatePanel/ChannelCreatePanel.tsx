@@ -42,7 +42,7 @@ export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities
     >
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Submit />
         </Form.Content>
       </Form.Viewport>

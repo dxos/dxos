@@ -9,10 +9,10 @@ import { Obj } from '@dxos/echo';
 
 import { Magazine, Subscription } from '#types';
 
-import { getImageUrl, getSnippet } from '../util/post-content';
-import { postCurationAtom } from './post-curation';
-import { postReadAtom } from './post-read';
-import { postTagsAtom } from './post-tags';
+import { getImageUrl, getSnippet } from '../util/post-content.ts';
+import { postCurationAtom } from './post-curation.ts';
+import { postReadAtom } from './post-read.ts';
+import { postTagsAtom } from './post-tags.ts';
 
 /** Aggregate per-Post display data folded from the Post + its source Subscription's per-Post slice. */
 export type MagazinePostData = {

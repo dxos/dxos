@@ -13,7 +13,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { buildViewIndex, checkPendingMigration } from './shared';
+import { buildViewIndex, checkPendingMigration } from './shared.ts';
 
 const TestContact = Type.makeObject(DXN.make('com.example.type.contact', '0.1.0'))(
   Schema.Struct({

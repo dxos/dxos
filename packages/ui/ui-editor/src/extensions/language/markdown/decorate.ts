@@ -9,13 +9,14 @@ import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
-import { type HeadingLevel, markdownTheme } from '../../../styles';
-import { type RenderCallback } from '../../../types';
-import { wrapWithCatch } from '../../../util';
-import { adjustChanges } from './changes';
-import { image } from './image';
-import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
-import { table } from './table';
+import { type HeadingLevel, markdownTheme } from '../../../styles/index.ts';
+import { type RenderCallback } from '../../../types/index.ts';
+import { wrapWithCatch } from '../../../util/index.ts';
+import { isWidgetLink } from '../../widgets/link-widgets.ts';
+import { adjustChanges } from './changes.ts';
+import { image } from './image.ts';
+import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles.ts';
+import { table } from './table.ts';
 
 /** The anchor every link form renders as, so a bare address is styled like a bracketed one. */
 const linkMark = (url: string, withButton = false) =>
@@ -32,7 +33,15 @@ const linkMark = (url: string, withButton = false) =>
     },
   });
 
-export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
+export type NodeData =
+  | {
+      name: 'Link';
+      url: string;
+    }
+  | {
+      name: 'Image';
+      url: string;
+    };
 
 export interface DecorateOptions {
   /**
@@ -42,7 +51,10 @@ export interface DecorateOptions {
   numberedHeadings?: { from: number; to?: number };
   // TODO(burdon): Additional padding for each line.
   listPaddingLeft?: number;
-  // TODO(burdon): Use consistently.
+  /**
+   * Leaves a link or image undecorated. A link some registered link widget claims (`objectLinks`,
+   * a plugin's matcher) is always left to the widget, without being named here.
+   */
   skip?: (node: NodeData) => boolean;
   // TODO(burdon): Remove.
   renderLinkButton?: RenderCallback<{ url: string }>;
@@ -551,7 +563,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const editing = editingRange(state, node, focus);
         if (urlNode && marks.length >= 2) {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
-          if (options.skip?.({ name: 'Link', url })) {
+          if (isWidgetLink(state, url) || options.skip?.({ name: 'Link', url })) {
             break;
           }
           if (!editing) {
@@ -591,6 +603,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           break;
         }
 
+        // Not gated on a link widget's claim: widgets replace `[label](url)` and image nodes, never a
+        // bare URL, which would otherwise render as neither a link nor a chip.
         const text = state.sliceDoc(node.from, node.to);
         const url = normalizeUrl(text);
         if (!url || options.skip?.({ name: 'Link', url })) {

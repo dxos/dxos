@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './DuffelBookingService';
-export * from './DuffelClient';
-export * from './duffel-mapping';
+export * from './DuffelBookingService.ts';
+export * from './DuffelClient.ts';
+export * from './duffel-mapping.ts';

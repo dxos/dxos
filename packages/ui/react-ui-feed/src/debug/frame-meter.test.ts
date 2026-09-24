@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { rateAtQuantile } from './frame-meter';
+import { rateAtQuantile } from './frame-meter.ts';
 
 /** A pass as a list of frame durations (ms), in the histogram the meter keeps. */
 const histogram = (durations: number[]): { buckets: Uint32Array; frames: number } => {

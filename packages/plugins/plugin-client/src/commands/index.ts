@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './account';
-export * from './config';
-export * from './device';
-export * from './edge';
-export * from './halo';
-export * from './profile';
+export * from './account/index.ts';
+export * from './config/index.ts';
+export * from './device/index.ts';
+export * from './edge/index.ts';
+export * from './halo/index.ts';
+export * from './profile/index.ts';

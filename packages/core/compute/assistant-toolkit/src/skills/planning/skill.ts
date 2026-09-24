@@ -8,7 +8,7 @@ import * as Template from '@dxos/compute/Template';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { AssignTasks, PlanReminder, UpdateTasks } from './operations/definitions';
+import { AskQuestion, PlanReminder, UpdateTasks } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.planning';
 
@@ -18,7 +18,7 @@ const make = () =>
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
     agentCanEnable: true,
-    tools: Skill.toolDefinitions({ operations: [UpdateTasks, AssignTasks] }),
+    tools: Skill.toolDefinitions({ operations: [UpdateTasks, AskQuestion] }),
     instructions: Template.make({
       source: trim`
         {{! Planning }}
@@ -27,13 +27,15 @@ const make = () =>
         Before answering any question about tasks — or acting on a task referenced by number or
         title — read the current checklist first (call the get-agent-context tool when available;
         otherwise the update-tasks result echoes it). Ordinals like "task 1" refer to that
-        numbered list. Track your work with update-tasks: the title is the key, keep exactly one
-        task started at a time, and mark a task done as soon as it completes.
+        numbered list, and each line carries the task's ref.
+        Track your work with update-tasks: address an existing task by its ref, set create only to
+        make a new one, keep exactly one task started at a time, and mark a task done as soon as it
+        completes. Starting a task assigns it to you.
         Do only what the user asked: if they name a specific task or subset, complete exactly
         that and stop — never start unrequested tasks on your own.
-        A task that already exists elsewhere is put on (or taken off) this conversation's
-        checklist with assign-tasks, which changes membership only — it never creates, edits or
-        deletes a task.
+        A task that already exists elsewhere (a project's task, a sub-task of one you were given) is
+        worked through its own ref — never recreate it with create. assign puts it on this checklist
+        and makes you its assignee; unassign takes it off and clears the assignee, never deleting it.
       `,
     }),
     // At the end of every request, remind the agent to keep working while its plan has open tasks.

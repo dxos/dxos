@@ -5,8 +5,8 @@
 import { DatabaseDirectory, EntityStructure } from '@dxos/echo-protocol';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { Type } from '../index';
-import { TestSchema } from './test-schema';
+import { Type } from '../index.ts';
+import { TestSchema } from './test-schema.ts';
 
 // Lazy init: Cloudflare workers disallow non-determinism at module scope (e.g. random keys).
 let cachedSpaceId: SpaceId | undefined;

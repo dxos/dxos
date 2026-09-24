@@ -2,18 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'stream';
 import { onTestFinished } from 'vitest';
 
-import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';
+import { type HypercoreCreateOptions, HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { Teleport } from '@dxos/teleport';
+import { Teleport, connectDuplexStreams } from '@dxos/teleport';
 import { range } from '@dxos/util';
 
-import { ReplicatorExtension } from './replicator-extension';
+import { ReplicatorExtension } from './replicator-extension.ts';
 
 export class TestBuilder {
   createAgent(): TestAgent {
@@ -25,12 +24,12 @@ export class TestBuilder {
 export class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
   public keyring = new Keyring(this.storage.createDirectory('keyring'));
-  public feedStore = new FeedStore({
-    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
+  public hypercoreStore = new HypercoreStore({
+    factory: new HypercoreFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
   });
 
   async createWriteFeed(numBlocks = 0) {
-    const feed = await this.feedStore.openFeed(await this.keyring.createKey(), { writable: true });
+    const feed = await this.hypercoreStore.openHypercore(await this.keyring.createKey(), { writable: true });
 
     for (const i of range(numBlocks)) {
       await feed.append(Buffer.from(`data-${i}`));
@@ -39,8 +38,8 @@ export class TestAgent {
     return feed;
   }
 
-  createReadFeed(key: PublicKey, opts?: FeedOptions) {
-    return this.feedStore.openFeed(key, opts);
+  createReadFeed(key: PublicKey, opts?: HypercoreCreateOptions) {
+    return this.hypercoreStore.openHypercore(key, opts);
   }
 }
 
@@ -54,16 +53,8 @@ export const createStreamPair = async () => {
   const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
   const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
 
-  pipeline(peer1.stream, peer2.stream, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      log.catch(err);
-    }
-  });
-  pipeline(peer2.stream, peer1.stream, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      log.catch(err);
-    }
-  });
+  // An aborted pipe is how a closed peer surfaces here, so it is logged rather than raised.
+  connectDuplexStreams(peer1.stream, peer2.stream, (err) => log('stream pair pipe ended', { err }));
   onTestFinished(() => peer1.close());
   onTestFinished(() => peer2.close());
 

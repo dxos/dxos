@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
-import * as Instructions from './Instructions';
-import * as Project from './Project';
-import * as Routine from './Routine';
+import * as Instructions from './Instructions.ts';
+import * as Project from './Project.ts';
+import * as Routine from './Routine.ts';
 
 // Stand-in `Obj.Unknown` type for context objects, mirroring the ad-hoc test types used in
 // `AiContext.test.ts` — no database needed since `Ref.make` inlines the target.

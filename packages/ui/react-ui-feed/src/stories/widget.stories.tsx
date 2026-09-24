@@ -7,7 +7,7 @@ import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../testing';
+import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
 
 /**
  * A widget the reader opened stays open when its row leaves the window and comes back.

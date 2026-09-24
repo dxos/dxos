@@ -18,16 +18,15 @@ import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { useTestTableModel } from '../../testing';
-import { Table } from '../../types';
-import { Table as TableComponent } from './Table';
+import { useTestTableModel } from '../../testing/index.ts';
+import { Table } from '../../types/index.ts';
+import { Table as TableComponent } from './Table.tsx';
 
 const Example = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.

@@ -12,7 +12,7 @@ import { describe } from 'vitest';
 import { Identity } from '@dxos/halo';
 import { PublicKey, SpaceId } from '@dxos/keys';
 
-import { currentOf, makeClientLayer, pollUntil } from './testing';
+import { currentOf, makeClientLayer, pollUntil } from './testing.ts';
 
 describe('Identity', () => {
   it.effect(

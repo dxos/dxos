@@ -5,7 +5,7 @@
 import { VanillaMachine } from '@zag-js/vanilla';
 import { describe, test } from 'vitest';
 
-import { parse } from './parser';
+import { parse } from './parser.ts';
 import {
   type LogEntry,
   type ModuleDef,
@@ -23,8 +23,8 @@ import {
   unmountCapabilities,
   varDecls,
   viewModules,
-} from './system';
-import { type MultiSelectApi, type MultiSelectSchema, connect, multiSelectMachine } from './testing';
+} from './system.ts';
+import { type MultiSelectApi, type MultiSelectSchema, connect, multiSelectMachine } from './testing/index.ts';
 
 const registry: Registry<never> = {
   schemas: {},
@@ -170,8 +170,8 @@ describe('dispatch', () => {
 // Render-level tests use a string renderer to keep the assertions framework-free.
 //
 
-const makeStringRenderer = (): import('./render').Renderer<string | null> => {
-  type Props = import('./render').RenderProps<string | null>;
+const makeStringRenderer = (): import('./render.ts').Renderer<string | null> => {
+  type Props = import('./render.ts').RenderProps<string | null>;
   const echoTag = (tag: string) => (props: Props) =>
     `${tag}(${String(props.data.text ?? props.props.label ?? '')}${props.children.join(',')})`;
   // Structural tags render nothing, mirroring the React renderer's null entries; the `Renderer`
@@ -285,8 +285,8 @@ describe('modules', () => {
   });
 
   test('a use alias binds module state; an unknown export is an inline error, not silence', async ({ expect }) => {
-    const { BindingResolutionError } = await import('./model');
-    const { render } = await import('./render');
+    const { BindingResolutionError } = await import('./model.ts');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     const modules = viewModules(withCounter, { [COUNTER]: { count: 5 } });
 
@@ -299,7 +299,7 @@ describe('modules', () => {
     expect(render(node, { modules }, renderer)).toBe('container(display(10))');
 
     // Bypasses the registry's export table only at the binding site: constructed directly.
-    const bad: import('./model').Node = {
+    const bad: import('./model.ts').Node = {
       tag: 'container',
       children: [
         { tag: 'use', props: { module: COUNTER, as: 'counter' } },
@@ -312,7 +312,7 @@ describe('modules', () => {
   });
 
   test('let from= binds a module capability into the scope, read-only for template operations', async ({ expect }) => {
-    const { render } = await import('./render');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     const modules = viewModules(withCounter, { [COUNTER]: { count: 7 } });
     const node = parse(
@@ -496,7 +496,7 @@ describe('vars', () => {
   });
 
   test('a declared var resolves from the host-supplied values', async ({ expect }) => {
-    const { render } = await import('./render');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     const node = parse(
       '<container>' +
@@ -508,11 +508,11 @@ describe('vars', () => {
   });
 
   test('an undeclared host value never resolves — the signature closes the namespace', async ({ expect }) => {
-    const { BindingResolutionError } = await import('./model');
-    const { render } = await import('./render');
+    const { BindingResolutionError } = await import('./model.ts');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     // Constructed directly: the parser rejects the undeclared binding statically.
-    const node: import('./model').Node = {
+    const node: import('./model.ts').Node = {
       tag: 'container',
       children: [
         { tag: 'var', props: { name: 'title', type: 'org.dxos.type.Text' } },
@@ -548,7 +548,7 @@ describe('vars', () => {
 
 describe('switch/match', () => {
   test('renders only the match equal to the resolved on binding', async ({ expect }) => {
-    const { render } = await import('./render');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     const node = parse(
       '<container id="view">' +
@@ -568,7 +568,7 @@ describe('switch/match', () => {
 
 describe('show/fallback', () => {
   test('present renders the children, absent renders the fallback children', async ({ expect }) => {
-    const { render } = await import('./render');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     const node = parse(
       '<container id="tasks">' +
@@ -590,7 +590,7 @@ describe('show/fallback', () => {
 
 describe('lexical resolution', () => {
   test('a slot name resolves through the enclosing scope frame to published state', async ({ expect }) => {
-    const { render } = await import('./render');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     const node = parse(
       '<container id="tasks">' +
@@ -603,11 +603,11 @@ describe('lexical resolution', () => {
   });
 
   test('an undeclared name at render surfaces inline through onError, or throws without one', async ({ expect }) => {
-    const { BindingResolutionError } = await import('./model');
-    const { render } = await import('./render');
+    const { BindingResolutionError } = await import('./model.ts');
+    const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
     // Constructed directly — the parser would have rejected the undeclared binding already.
-    const node: import('./model').Node = { tag: 'display', data: { text: { from: 'state', path: ['title'] } } };
+    const node: import('./model.ts').Node = { tag: 'display', data: { text: { from: 'state', path: ['title'] } } };
 
     expect(() => render(node, {}, renderer)).toThrow(BindingResolutionError);
     expect(render(node, {}, renderer, { onError: (error) => `error(${error.message})` })).toBe(

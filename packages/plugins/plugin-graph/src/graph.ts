@@ -10,11 +10,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
 // TODO(wittjosiah): Remove or restore graph caching.
-// import { meta } from './meta';
+// import { meta } from './meta.ts';
 
 // const KEY = `${meta.id}.app-graph`;
 
@@ -30,7 +31,7 @@ export default Capability.makeModule(
     // produces their nodes (see `AppGraphBuilder.UrlGrammar`).
     const builder = AppGraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
       anchorKey: UrlPath.WORKSPACE_KEY,
-      linkedKey: UrlPath.COMPANION_KEY,
+      linked: { key: UrlPath.COMPANION_KEY, relation: AppNode.companion },
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());
@@ -56,6 +57,13 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
+    const retentionAtom = yield* Capability.atom(AppCapabilities.AppGraphRetention);
+    const unsubscribeRetention = registry.subscribe(
+      retentionAtom,
+      (retentions) => AppGraphBuilder.setRetention(builder, retentions),
+      { immediate: true },
+    );
+
     // await builder.initialize();
     void AppGraph.expandSync(builder.graph, GraphNode.RootId, 'child');
 
@@ -65,6 +73,9 @@ export default Capability.makeModule(
       Effect.sync(() => {
         // clearInterval(interval);
         unsubscribe();
+        unsubscribeRetention();
+        AppGraphBuilder.setRetention(builder, []);
+        AppGraphBuilder.destroy(builder);
       }),
     );
     return Capability.contribute(AppCapabilities.AppGraph, builder);

@@ -128,11 +128,6 @@
       "source": "./src/SupportPlugin.ts",
       "types": "./dist/types/src/SupportPlugin.d.ts",
       "import": "./dist/lib/SupportPlugin.mjs"
-    },
-    "./Tour": {
-      "source": "./src/types/Tour.ts",
-      "types": "./dist/types/src/types/Tour.d.ts",
-      "import": "./dist/lib/Tour.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -155,9 +150,6 @@
       ],
       "SupportOperation": [
         "dist/types/src/types/SupportOperation.d.ts"
-      ],
-      "Tour": [
-        "dist/types/src/types/Tour.d.ts"
       ]
     }
   },
@@ -172,17 +164,18 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/brand": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
@@ -199,10 +192,7 @@
     "@effect/atom-react": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
-    "html-to-image": "catalog:",
-    "react-floater": "catalog:",
-    "react-joyride": "catalog:",
-    "type-fest": "catalog:"
+    "html-to-image": "catalog:"
   },
   "devDependencies": {
     "@dxos/observability": "workspace:*",

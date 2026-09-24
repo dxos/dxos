@@ -9,6 +9,7 @@ import * as Stream from 'effect/Stream';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { ClientCapabilities } from '#types';
 
@@ -41,7 +42,9 @@ export default Capability.makeModule(
                 // the WebSocket connection, not this object; it only affects point-to-point filtering.
                 const peer = {
                   peerKey:
-                    client.halo.device?.deviceKey.toHex() ?? client.halo.identity.get()?.identityKey.toHex() ?? '',
+                    toPublicKey(client.halo.device?.deviceKey)?.toHex() ??
+                    toPublicKey(client.halo.identity.get()?.identityKey)?.toHex() ??
+                    '',
                 };
                 return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta

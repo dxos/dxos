@@ -9,8 +9,8 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Clients';
 

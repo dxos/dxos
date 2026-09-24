@@ -11,7 +11,7 @@ import { Icon } from '@dxos/react-ui';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
-import { StatusBadge } from '../StatusBadge';
+import { StatusBadge } from '../StatusBadge/index.ts';
 
 export type RunResultsProps = { run: TestRun.TestRun };
 
@@ -109,7 +109,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
       {snapshot.summary && <p className='text-subdued text-sm'>{snapshot.summary}</p>}
 
       {error && (
-        <p className='text-redText text-sm' role='alert' data-testid='qa.run.error'>
+        <p className='text-red-text text-sm' role='alert' data-testid='qa.run.error'>
           {error}
         </p>
       )}

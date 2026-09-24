@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -38,7 +39,6 @@
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

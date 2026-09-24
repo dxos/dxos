@@ -40,6 +40,9 @@ permissions:
 
 env:
   CN_APPLICATION: dxos/composer
+  # A brew auto-update can fail and take the `brew install` that triggered it down with it.
+  HOMEBREW_NO_AUTO_UPDATE: '1'
+  HOMEBREW_NO_ENV_HINTS: '1'
   # Released binaries are built from source, never restored from a cache any CI job can write to.
   # Empty disables moon's remote cache; set here rather than via the setup action's
   # `remote-cache` input because this workflow does not use that action.
@@ -143,11 +146,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq webkit2gtk-4.1
 
-      - uses: tecolicom/actions-use-homebrew-tools@v1
-        if: matrix.os == 'depot-macos-latest'
-        with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
-
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
@@ -168,16 +166,10 @@ jobs:
           moon-version: '2.5.2'
           proto-version: '0.60.2'
 
+      # No Rust cache. It would restore a `target/` any CI job can write to into a signed, notarized
+      # release, the same reason MOON_REMOTE_HOST is empty above.
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          # The lone crate is composer-app's, so at the repo root rust-cache's `cargo metadata` finds no
-          # Cargo.toml; it keys on an empty lockfile hash and restores its own `~/.cargo/bin` snapshot over
-          # rustup's, leaving `cargo` a symlink to `rustup-init` ("unexpected argument 'metadata'"). Pointing
-          # it at the crate would fix the key but restore a `target/` any CI job can write to into a signed,
-          # notarized release — the same reason MOON_REMOTE_HOST is empty above.
-          cache: false
+        uses: dtolnay/rust-toolchain@stable
 
       # `cargo metadata` is the first thing `tauri build`/`tauri ios init` run, ~10 min into the job.
       # Assert it here so a toolchain that resolves to the wrong binary fails in a second, with the
@@ -253,9 +245,6 @@ jobs:
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
-          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
@@ -276,11 +265,13 @@ jobs:
       - name: Fetch Ollama runtime
         run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)
 
-      # Ollama's sibling libraries live under Contents/MacOS/ via `bundle.macOS.files`, which Tauri
-      # never signs (its nested-code walk only covers framework/xpc/app subfolders), so pre-sign
-      # them here. Skips mlx.metallib — not Mach-O, so it can't survive Tauri's `xattr -crs`; that's
-      # handled separately via sidecar/ollama-metal.framework (see fetch-ollama.mjs).
-      - name: Sign Ollama runtime libraries
+      # The ollama launcher and its sibling libraries ship under Contents/Resources/ via
+      # `bundle.macOS.files`, which Tauri never signs (its nested-code walk only covers
+      # framework/xpc/app subfolders), so sign them here, deliberately with no entitlements (see
+      # plugin-native's capabilities/ollama.ts for why it is not a Tauri sidecar). Skips
+      # mlx.metallib — not Mach-O, so it can't survive Tauri's `xattr -crs`; that's handled
+      # separately via sidecar/ollama-metal.framework (see fetch-ollama.mjs).
+      - name: Sign Ollama runtime
         if: matrix.os == 'depot-macos-latest'
         run: |
           find packages/apps/composer-app/src-tauri/sidecar/ollama-runtime -type f -print0 |
@@ -311,6 +302,20 @@ jobs:
           NODE_ENV: production
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      # macOS kills the ollama launcher at exec if it claims the app's restricted entitlements (see
+      # plugin-native's capabilities/ollama.ts). Assert the shipped launcher claims none, so that
+      # regression fails the release rather than the user's first chat.
+      - name: Verify Ollama launcher signature
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
+          launcher="$app/Contents/Resources/ollama"
+          codesign --verify --strict "$launcher"
+          entitlements=$(codesign -d --entitlements - --xml "$launcher" 2>/dev/null)
+          if [ -n "$entitlements" ]; then
+            echo "::error::ollama launcher is signed with entitlements: $entitlements" && exit 1
+          fi
 
       - name: Upload assets
         timeout-minutes: 30
@@ -358,9 +363,9 @@ jobs:
           filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
-      - uses: tecolicom/actions-use-homebrew-tools@v1
-        with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz xcodegen
+      # The only tool ios-init.sh needs that the runner image does not ship.
+      - name: Install xcodegen
+        run: brew install xcodegen
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
@@ -386,15 +391,10 @@ jobs:
           moon-version: '2.5.2'
           proto-version: '0.60.2'
 
-      - name: Install stable toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          # Disabled for the reasons spelled out in build_tauri's copy of this step.
-          cache: false
-
-      - name: Install iOS target
-        run: rustup target add aarch64-apple-ios
+          targets: aarch64-apple-ios
 
       - name: Verify Rust toolchain
         run: |
@@ -430,9 +430,6 @@ jobs:
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
-          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 

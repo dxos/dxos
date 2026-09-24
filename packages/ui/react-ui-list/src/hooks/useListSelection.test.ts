@@ -6,7 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 import { type FocusEvent, type MouseEvent } from 'react';
 import { describe, test, vi } from 'vitest';
 
-import { useListSelection } from './useListSelection';
+import { useListSelection } from './useListSelection.ts';
 
 describe('useListSelection', () => {
   describe('single mode', () => {

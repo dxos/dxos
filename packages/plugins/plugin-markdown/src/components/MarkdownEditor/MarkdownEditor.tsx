@@ -15,7 +15,7 @@ import {
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { type XmlWidgetState } from '@dxos/ui-editor';
+import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
@@ -29,11 +29,11 @@ import {
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
-} from './MarkdownEditorContent';
+} from './MarkdownEditorContent.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
-} from './MarkdownEditorToolbar';
+} from './MarkdownEditorToolbar.tsx';
 
 //
 // Context
@@ -74,6 +74,10 @@ export type MarkdownEditorProviderProps = Merge<
   Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectLink'>
 >;
 
+/**
+ * Builds the editor's extensions and menu options and shares them with `MarkdownEditor.Content` and
+ * `MarkdownEditor.Toolbar`. `attendableId` reaches the extensions so inline embeds nest under it.
+ */
 export const MarkdownEditorProvider = ({
   children,
   id,
@@ -94,7 +98,7 @@ export const MarkdownEditorProvider = ({
   onViewModeChange,
 }: MarkdownEditorProviderProps) => {
   // Widget portals driven by xmlTags.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
@@ -102,6 +106,7 @@ export const MarkdownEditorProvider = ({
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
+    attendableId,
     object,
     compact,
     viewMode,

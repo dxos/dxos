@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Note, Sequence, Track } from '#types';
 
-import { SequenceGrid } from './SequenceGrid';
+import { SequenceGrid } from './SequenceGrid.tsx';
 
 const SEQUENCE_LENGTH = 16; // beats
 const BEATS_PER_CELL = 0.25;

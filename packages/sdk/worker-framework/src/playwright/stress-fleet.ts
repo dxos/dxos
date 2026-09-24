@@ -4,7 +4,7 @@
 
 import { type BrowserContext, type Page } from '@playwright/test';
 
-import type { StressStatus } from './harness/stress-harness';
+import type { StressStatus } from './harness/stress-harness.ts';
 
 /**
  * How long a tab may take to reach `connected`. Generous: leader election, worker spawn, and (on the

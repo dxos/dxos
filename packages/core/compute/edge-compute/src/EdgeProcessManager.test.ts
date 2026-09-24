@@ -7,13 +7,13 @@ import * as Layer from 'effect/Layer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test, vi } from 'vitest';
 
-import { RemoteProcessManager } from '@dxos/compute-runtime';
+import { RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 
-import * as EdgeProcessManager from './EdgeProcessManager';
+import * as EdgeProcessManager from './EdgeProcessManager.ts';
 
 describe('EdgeProcessManager', () => {
   test('cancel force-cancels the trigger run on the edge client', async () => {
@@ -30,8 +30,12 @@ describe('EdgeProcessManager', () => {
 
     await EffectEx.runPromise(
       program.pipe(
-        Effect.provide(EdgeProcessManager.fromEdgeClient(edgeClient)),
-        Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+        Effect.provide(
+          EdgeProcessManager.fromEdgeClient(edgeClient).pipe(
+            Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+            Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+          ),
+        ),
       ),
     );
 
@@ -48,8 +52,12 @@ describe('EdgeProcessManager', () => {
 
     const result = await EffectEx.runPromise(
       program.pipe(
-        Effect.provide(EdgeProcessManager.layer),
-        Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+        Effect.provide(
+          EdgeProcessManager.layer.pipe(
+            Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+            Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+          ),
+        ),
       ),
     );
 

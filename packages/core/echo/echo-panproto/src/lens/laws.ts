@@ -4,8 +4,8 @@
 
 import { Obj } from '@dxos/echo';
 
-import { readSource } from './mapping';
-import { type AnyLens, type Write } from './types';
+import { readSource } from './mapping.ts';
+import { type AnyLens, type Write } from './types.ts';
 
 //
 // The GetPut law over the base object: reading a view and putting it straight back must change

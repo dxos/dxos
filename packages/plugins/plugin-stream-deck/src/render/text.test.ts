@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { escapeXml, wrapText } from './text';
+import { escapeXml, wrapText } from './text.ts';
 
 describe('escapeXml', () => {
   test('escapes every XML metacharacter', ({ expect }) => {

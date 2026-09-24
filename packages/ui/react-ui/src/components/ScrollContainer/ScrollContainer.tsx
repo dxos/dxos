@@ -20,11 +20,11 @@ import { useMergeRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { composable, composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
-import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext.ts';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -256,9 +256,10 @@ const ScrollContainerPinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTML
 
 const FADE_NAME = 'ScrollContainer.Fade';
 
-type ScrollContainerFadeProps = {};
+/** `classNames` sizes the gradient; a list of short rows wants a fade of about one row, not the default. */
+type ScrollContainerFadeProps = ThemedClassName;
 
-function ScrollContainerFade() {
+function ScrollContainerFade({ classNames }: ScrollContainerFadeProps) {
   const { overflow } = useScrollContainerContext(FADE_NAME);
 
   return (
@@ -269,6 +270,7 @@ function ScrollContainerFade() {
         'z-10 absolute top-0 inset-x-0 h-24 w-full',
         'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
         'bg-gradient-to-b from-(--color-base-surface) to-transparent pointer-events-none',
+        classNames,
       )}
     />
   );

@@ -9,12 +9,14 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EntityMetaIndex } from './entity-meta-index';
-import type { IndexerObject } from './interface';
+import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
+import { IndexTracker } from '../index-tracker.ts';
+import { backfillNormalizedIds } from '../migrations/entity-meta/0009_backfill_normalized_ids.ts';
+import { EntityMetaIndex } from './entity-meta-index.ts';
+import type { IndexerObject } from './interface.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
@@ -24,19 +26,53 @@ const TYPE_WITH_UNDERSCORE = DXN.make('com.example.type.personextra', '0.1.0');
 const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.make('com.example.type.personextra');
 const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.make('com.example.type.personaextra', '0.1.0');
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-  Layer.provideMerge(Reactivity.layer),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+}).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('EntityMetaIndex', () => {
+  // 0008 adds the normalized id columns without filling them, and the primary pass only rewrites a
+  // row when its object next changes — so the backfill is what keeps the compiled query path, which
+  // joins through these columns, from silently missing pre-upgrade objects.
+  it.effect('backfills the normalized id columns for rows written before they existed', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const index = new EntityMetaIndex(sql);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const otherSpaceId = SpaceId.random();
+      const parentId = EntityId.random();
+      const crossSpaceParentId = EntityId.random();
+      const localRecordId = 9001;
+      const crossSpaceRecordId = 9002;
+
+      // A row as it stood before 0008: the EID columns are set, the normalized ones are not.
+      for (const [recordId, parent, parentSpaceId] of [
+        [localRecordId, parentId, spaceId],
+        [crossSpaceRecordId, crossSpaceParentId, otherSpaceId],
+      ] as const) {
+        yield* sql`INSERT INTO objectMeta (recordId, spaceId, objectId, documentId, queueId, queueNamespace, entityKind, typeDXN, deleted, version, parent, parentId, sourceId, targetId)
+          VALUES (${recordId}, ${spaceId}, ${EntityId.random()}, ${'doc'}, ${''}, ${''}, ${'object'}, ${TYPE_PERSON.toString()}, 0, 1,
+            ${EID.make({ spaceId: parentSpaceId, entityId: parent })}, NULL, NULL, NULL)`;
+      }
+
+      yield* backfillNormalizedIds;
+
+      const rows = yield* sql<{ recordId: number; parentId: string | null }>`
+        SELECT recordId, parentId FROM objectMeta WHERE recordId IN (${localRecordId}, ${crossSpaceRecordId}) ORDER BY recordId`;
+      // A local reference is normalized to its bare id; a cross-space one stays NULL, which is what
+      // keeps the compiler's same-space joins from colliding on an id from another space.
+      expect(rows).toEqual([
+        { recordId: localRecordId, parentId },
+        { recordId: crossSpaceRecordId, parentId: null },
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should match versioned types when queried by versionless type', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -72,7 +108,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('resolves a legacy single-slash type-identifier row when queried by the canonical form', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
       const sql = yield* SqlClient.SqlClient;
 
@@ -112,7 +148,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should not treat LIKE wildcards in versionless type queries', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -166,7 +202,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should store and update object metadata', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -263,7 +299,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should support queryAll/queryTypes/queryRelations', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -390,7 +426,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should set createdAt and updatedAt from source timestamp on insert and updatedAt on update', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -431,7 +467,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should query by time range', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -494,7 +530,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('should round-trip queueNamespace and persist it through updates', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -530,9 +566,118 @@ describe('EntityMetaIndex', () => {
       expect(afterUpdate[0].queueNamespace).toBe('trace');
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('indexes a string convergence key and treats any other shape as no key', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const keyed = EntityId.random();
+      const malformed = EntityId.random();
+      const makeItem = (id: EntityId, meta: unknown): IndexerObject => ({
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: `doc-${id}`,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        // Parsed from JSON because the malformed meta shape under test has no static type.
+        data: JSON.parse(JSON.stringify({ id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false, '@meta': meta })),
+      });
+
+      yield* index.update([
+        makeItem(keyed, { keys: [], convergenceKey: 'example.com/thing/a' }),
+        makeItem(malformed, { keys: [], convergenceKey: 42 }),
+      ]);
+
+      const rows = yield* index.queryByConvergenceKeys(spaceId, ['example.com/thing/a', '42']);
+      expect(rows.map((row) => row.objectId)).toEqual([keyed]);
+      const all = yield* index.queryAll({ spaceIds: [spaceId] });
+      expect(all.find((row) => row.objectId === malformed)?.convergenceKey).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('cursors under retired index names are purged so pre-convergenceKey data re-indexes', () =>
+    Effect.gen(function* () {
+      // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,
+      // `reverseRef`); rows it indexed hold NULL keys and re-indexing is per-object, so those
+      // cursors must not survive the upgrade — the bumped names re-present every document.
+      // Simulate the old vintage: its own init created the table before the retirement
+      // migration existed, so the rows are in place when the migrations first run here.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE indexCursor (
+        indexName TEXT NOT NULL,
+        spaceId TEXT NOT NULL DEFAULT '',
+        sourceName TEXT NOT NULL,
+        resourceId TEXT NOT NULL DEFAULT '',
+        cursor,
+        PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
+      )`;
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
+      yield* tracker.updateCursors([
+        { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'reverseRef', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      yield* tracker.migrate();
+
+      expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toEqual([]);
+      expect(yield* tracker.queryCursors({ indexName: 'reverseRef' })).toEqual([]);
+      // `fts6` is retired too: that leg became the object snapshot store, and re-presenting every
+      // document under the new name is what fills the new table.
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a fresh database keeps its index cursors across migration', () =>
+    Effect.gen(function* () {
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
+      yield* tracker.migrate();
+
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+      yield* tracker.updateCursors([
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      // Re-running the migrations (every startup does) must not wipe progress under live names.
+      yield* index.migrate();
+      yield* tracker.migrate();
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('convergence-key intents survive until cleared, bounded by the id captured at read time', () =>
+    Effect.gen(function* () {
+      const store = new ConvergenceKeyIntentStore(yield* SqlClient.SqlClient);
+      yield* store.migrate();
+
+      const spaceId = SpaceId.random();
+      yield* store.record([
+        { spaceId, convergenceKey: 'example.com/thing/a' },
+        { spaceId, convergenceKey: 'example.com/thing/b' },
+        { spaceId, convergenceKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
+      ]);
+
+      const { maxId, intents } = yield* store.take();
+      expect([...(intents.get(spaceId) ?? [])].sort()).toEqual(['example.com/thing/a', 'example.com/thing/b']);
+
+      // A key recorded after the read (a concurrent indexing pass) must survive the clear.
+      yield* store.record([{ spaceId, convergenceKey: 'example.com/thing/a' }]);
+      yield* store.clear(spaceId, 'example.com/thing/a', maxId);
+      yield* store.clear(spaceId, 'example.com/thing/b', maxId);
+
+      const remaining = yield* store.take();
+      expect([...(remaining.intents.get(spaceId) ?? [])]).toEqual(['example.com/thing/a']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('windows a queue read by cursor position and limit', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -602,7 +747,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('the natural cap orders by code unit, which is what the executor sorts by', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -635,7 +780,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('a queue read is scoped to its space, so a colliding queue id cannot leak', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       // The same queue id in two spaces — the case a bare `queueId` match cannot tell apart.
@@ -674,7 +819,7 @@ describe('EntityMetaIndex', () => {
 
   it.effect('caps a queue read in natural order without a cursor', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
@@ -724,6 +869,77 @@ describe('EntityMetaIndex', () => {
         window: { kind: 'natural', direction: 'asc', limit: 2, deleted: false },
       });
       expect(live.map((row) => row.objectId)).toEqual(objectIds.slice(2, 4));
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // The query compiler joins `parentId`/`sourceId`/`targetId` to `objectId` within one space, so a
+  // reference into another space must not be normalized to an id that may collide there.
+  it.effect('fills the normalized id columns for local references only', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const index = new EntityMetaIndex(sql);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const otherSpaceId = SpaceId.random();
+      const parentId = EntityId.random();
+      const sourceId = EntityId.random();
+      const targetId = EntityId.random();
+
+      const object: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_PARENT]: EID.make({ entityId: parentId }),
+        },
+      };
+      const relation: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_RELATION,
+          [ATTR_RELATION_SOURCE]: EID.make({ entityId: sourceId }),
+          [ATTR_RELATION_TARGET]: EID.make({ spaceId: otherSpaceId, entityId: targetId }),
+        },
+      };
+      const qualifiedParent: IndexerObject = {
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_PARENT]: EID.make({ spaceId, entityId: parentId }),
+        },
+      };
+
+      yield* index.update([object, relation, qualifiedParent]);
+
+      type NormalizedIds = { parentId: string | null; sourceId: string | null; targetId: string | null };
+      const rowFor = (objectId: string) =>
+        sql<NormalizedIds>`SELECT parentId, sourceId, targetId FROM objectMeta WHERE objectId = ${objectId}`;
+
+      expect(yield* rowFor(object.data.id)).toEqual([{ parentId, sourceId: null, targetId: null }]);
+      expect(yield* rowFor(relation.data.id)).toEqual([{ parentId: null, sourceId, targetId: null }]);
+      // A reference qualified with the row's own space is still local.
+      expect(yield* rowFor(qualifiedParent.data.id)).toEqual([{ parentId, sourceId: null, targetId: null }]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

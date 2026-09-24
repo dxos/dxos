@@ -29,7 +29,7 @@ const range: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
 
 const thumb: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
   mx(
-    'block h-3 w-3 shrink-0 rounded-full bg-base-surface border-2 border-accent-bg shadow-sm transition-colors dx-focus-ring',
+    'block size-3 shrink-0 rounded-full bg-base-surface border-2 border-accent-bg shadow-sm transition-colors dx-focus-ring',
     // The machine sets the along-axis offset and transform inline; the cross axis is ours.
     orientation === 'vertical' ? 'left-0' : 'top-0',
     'hover:bg-hover-surface',

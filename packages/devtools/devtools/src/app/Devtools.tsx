@@ -5,7 +5,7 @@
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { DevtoolsContextProvider, useRoutes } from '../hooks';
+import { DevtoolsContextProvider, useRoutes } from '../hooks/index.ts';
 
 const Routes = () => {
   return useRoutes();

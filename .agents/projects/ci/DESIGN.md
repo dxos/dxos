@@ -222,12 +222,11 @@ list is hand-maintained.
 
 ### Running a campaign, and attributing a red cell
 
-One dispatch of `Check` with `e2e: true` produces the 6 cells (9 before the composer/rest matrix); `workflow_dispatch` keys its
+One dispatch of `Check` (`only: e2e` to skip the other jobs) produces the 6 cells (9 before the composer/rest matrix); `workflow_dispatch` keys its
 concurrency group on `github.run_id`, so dispatches do not cancel each other and ten can run at once.
 
-**Count a run only if** the dispatch response echoed `inputs:{"e2e":"true"}` **and** the run contains
-6 `e2e (browser, shard)` jobs — a wrong parameter name (`workflow_inputs`) yields a run that looks
-normal and silently skips e2e.
+**Count a run only if** it contains 6 `e2e (browser, shard)` jobs. With `only: e2e` a wrong parameter
+name (`workflow_inputs`) falls back to `all`, so the run still counts but pays for every other job.
 
 **Attribute a failure by grepping the job log for `✘`,** never from the Trunk summary: a cell can exit
 1 while Trunk reports 100% pass, whenever a moon task fails without emitting an XML row. Reconcile

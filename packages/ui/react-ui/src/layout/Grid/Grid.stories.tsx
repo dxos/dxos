@@ -7,8 +7,8 @@ import React from 'react';
 
 import { type ChromaticPalette } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing';
-import { Grid } from './Grid';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Grid } from './Grid.tsx';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
   <div data-hue={hue} className='dx-callout p-2 text-sm font-mono border rounded-sm'>

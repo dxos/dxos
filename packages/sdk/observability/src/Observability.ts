@@ -12,13 +12,13 @@ import { type CleanupFn, SubscriptionList } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as ObservabilityExtension from './ObservabilityExtension';
+import * as ObservabilityExtension from './ObservabilityExtension.ts';
 
-export * from './storage';
+export * from './storage/index.ts';
 
 const attachAiCapture = async (observability: Observability): Promise<CleanupFn> => {
-  const { AiSpanProcessor, contentCaptureAllowed } = await import('./ai/AiObservability');
-  const { Otel } = await import('./extensions');
+  const { AiSpanProcessor, contentCaptureAllowed } = await import('./ai/AiObservability.ts');
+  const { Otel } = await import('./extensions/index.ts');
   return Otel.addSpanProcessor(
     new AiSpanProcessor({
       captureInference: (inference) => observability.ai.captureInference(inference),

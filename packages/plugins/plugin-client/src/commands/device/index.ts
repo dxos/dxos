@@ -4,9 +4,9 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { info } from './info';
-import { list } from './list';
-import { update } from './update';
+import { info } from './info/index.ts';
+import { list } from './list/index.ts';
+import { update } from './update/index.ts';
 
 export const device = Command.make('device').pipe(
   Command.withDescription('Manage HALO devices.'),

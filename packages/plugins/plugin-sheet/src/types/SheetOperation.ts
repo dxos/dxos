@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import * as Sheet from './Sheet';
+import * as Sheet from './Sheet.ts';
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
 const Axis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);

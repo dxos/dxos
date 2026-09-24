@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Cypher, type CypherContext, type EncryptedPayload, type FeedMetadata } from './cypher';
+import { type Cypher, type CypherContext, type EncryptedPayload, type FeedMetadata } from './cypher.ts';
 
 /** AES-256-GCM, the only algorithm here — WebCrypto's only AEAD and the one Cloudflare Workers offer. */
 const AES_GCM = { name: 'AES-GCM', length: 256 } as const;

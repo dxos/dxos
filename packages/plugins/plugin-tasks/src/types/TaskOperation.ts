@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Format, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
@@ -67,10 +68,13 @@ export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
-    description: 'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field.',
+    description:
+      'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
+      'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
+      'creating the session record in the space if it is not there yet.',
     icon: 'ph--pencil-simple--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
@@ -81,6 +85,25 @@ export const UpdateTask = Operation.make({
     priority: Schema.optional(Schema.NullOr(Task.Priority)),
     estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
     assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
+    /**
+     * Assign the task to a coding-agent session, by the harness session id — one call, rather than
+     * looking the session object up first and composing the actor by hand.
+     *
+     * An agent's actor is the object it IS, so the assignee it produces carries a `subject` ref to
+     * the session; a bare `{ role: 'assistant' }` would record that AN assistant owns the task but
+     * not which run, and a session's own check-in finds its open tasks by that ref. The session is
+     * created in the task's space when this id is not recorded there yet, so an agent can claim
+     * work on its first call.
+     */
+    remoteSession: Schema.optional(
+      Schema.Struct({
+        sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
+        title: Schema.optional(Schema.String),
+        repo: Schema.optional(Schema.String),
+        branch: Schema.optional(Schema.String),
+        worktree: Schema.optional(Schema.String),
+      }),
+    ),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
@@ -91,6 +114,74 @@ export const UpdateTask = Operation.make({
   // `database.objectCreate`.
   output: Schema.Struct({
     task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Files a question on a task and blocks the task on it — the task-addressed counterpart of the chat's
+ * planning tool, for an agent that has a task ref but no conversation (one driving the MCP verbs).
+ * The question is an entry in the task's own history, so the person answering sees it on the task.
+ */
+export const AskQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.askQuestion'),
+    name: 'Ask Question',
+    description:
+      'Ask the user a question you cannot answer yourself about one task, and block the task on it. ' +
+      'The question is recorded in the task history, where the user answers it. Offer likely answers ' +
+      'in `options`; the user may still type their own. Refused while the task already has an ' +
+      "unanswered question. Read the answer back later from the task's `history`: the entry with " +
+      '`event: "answer"` whose `questionId` is the id this returns.',
+    icon: 'ph--question--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    question: Schema.String.annotate({ description: 'The question, as put to the user.' }),
+    context: Schema.optional(
+      Schema.String.annotate({ description: 'Why you are asking — what you are blocked on, in a sentence or two.' }),
+    ),
+    options: Schema.optional(
+      Schema.Array(Task.AnswerOption).annotate({
+        description: 'Suggested answers. Omit when you have no plausible candidates.',
+      }),
+    ),
+    /** Who is asking; recorded on the question and on the status change it causes. */
+    actor: Schema.optional(Actor.Actor),
+  }),
+  // JSON snapshot, not a live object — see the create/update verbs above.
+  output: Schema.Struct({
+    /** Id of the question's entry in the task's history. */
+    questionId: Schema.String,
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Records a person's answer to a question in a task's history. It only writes the answer: waking a
+ * chat that asked is the assistant plugin's own `AnswerQuestion`, and an agent that asked over the
+ * MCP reads the answer back from the task.
+ */
+export const AnswerQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.answerQuestion'),
+    name: 'Answer Question',
+    description: "Answer a question in a task's history.",
+    icon: 'ph--check-circle--regular',
+    // The asker is an agent; handing it the tool to answer its own question is a footgun.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    /** Id of the question's entry in the task's history. */
+    question: Schema.String,
+    answer: Schema.String.annotate({ description: "The chosen option's title, or free-form text." }),
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    /** False when the answer was blank, the question is unknown, or it was already answered. */
+    accepted: Schema.Boolean,
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -111,6 +202,30 @@ export const TaskRestorePoint = Schema.Struct({
 });
 
 export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
+
+/**
+ * Records an object the task produced — a file, a document, a sheet — on `Task.artifacts`. Its own
+ * verb because membership is compared by entity id, so adding the same object twice is a no-op,
+ * which a generic patch of the ref array cannot promise.
+ */
+export const AddArtifact = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.addArtifact'),
+    name: 'Add Task Artifact',
+    description:
+      'Attach an existing object (e.g. a File created by file.createFromUpload) to a task as an artifact ' +
+      'the task produced. Adding the same object twice is a no-op.',
+    icon: 'ph--paperclip--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    object: Ref.Ref(Obj.Unknown).annotate({ description: 'The object to attach, e.g. the File from an upload.' }),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
 
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { AudioStream, type AudioStreamProps } from './AudioStream';
+import { AudioStream, type AudioStreamProps } from './AudioStream.tsx';
 
 const DefaultStory = (props: AudioStreamProps) => (
   <div className='p-4 text-sm text-description'>

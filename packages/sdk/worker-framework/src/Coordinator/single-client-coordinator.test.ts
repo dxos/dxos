@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as WorkerProtocol from '../WorkerProtocol';
-import { SingleClient } from './single-client-coordinator';
+import * as WorkerProtocol from '../WorkerProtocol.ts';
+import { SingleClient } from './single-client-coordinator.ts';
 
 describe('SingleClient coordinator', () => {
   test('echoes messages back to sender', async ({ expect }) => {

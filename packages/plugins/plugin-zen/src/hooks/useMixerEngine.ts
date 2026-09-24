@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { MixerEngine } from '../generator/mixer';
+import { MixerEngine } from '../generator/mixer.ts';
 
 export type UseMixerEngineResult = {
   engine: MixerEngine;

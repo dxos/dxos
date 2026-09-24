@@ -17,7 +17,7 @@ import {
   posTokenAt,
   setAnalysis,
   spanDiverged,
-} from './pos';
+} from './pos.ts';
 
 describe('posAnalysisField', () => {
   test('setAnalysis adds a span', ({ expect }) => {

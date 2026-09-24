@@ -9,7 +9,7 @@ import { TestExtension, TestExtensionWithStreams } from '@dxos/teleport';
 import type { TeleportExtension, TestStreamStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { createTeleportProtocolFactory } from '../wire-protocol';
+import { createTeleportProtocolFactory } from '../wire-protocol.ts';
 
 export type TestTeleportExtension = {
   name: string;

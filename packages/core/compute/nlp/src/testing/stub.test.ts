@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { stubParse, stubTag } from './stub';
+import { stubParse, stubTag } from './stub.ts';
 
 describe('stubTag', () => {
   test('tags closed-class words from the lexicon and splits sentences', ({ expect }) => {

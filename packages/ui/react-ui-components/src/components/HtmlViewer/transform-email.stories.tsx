@@ -7,9 +7,9 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Html } from './Html';
-import { Compare, EMAIL_SAMPLES, SampleFrame } from './testing';
-import { emailDialect } from './transform-email';
+import { Html } from './Html.tsx';
+import { Compare, EMAIL_SAMPLES, SampleFrame } from './testing.tsx';
+import { emailDialect } from './transform-email.ts';
 
 //
 // The email dialect. Every story here is a light/dark comparison, because that is the judgement the

@@ -21,10 +21,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -259,7 +259,7 @@ feat F-5: Settings
 ## Acceptance
 
 ```mdl
-test T-1: Upload image inline
+scenario T-1: Upload image inline
   given: only the inline BackendDescriptor is registered
   when: user uploads a 1 MB PNG via the Create Object form
   then:
@@ -269,7 +269,7 @@ test T-1: Upload image inline
 ```
 
 ```mdl
-test T-2: Reject oversized file
+scenario T-2: Reject oversized file
   given: inline backend selected, 4 MB limit
   when: user uploads a 5 MB JPEG
   then:
@@ -279,7 +279,7 @@ test T-2: Reject oversized file
 ```
 
 ```mdl
-test T-3: Reject unsupported MIME type
+scenario T-3: Reject unsupported MIME type
   given: inline backend registered
   when: user uploads a .zip file
   then:
@@ -288,7 +288,7 @@ test T-3: Reject unsupported MIME type
 ```
 
 ```mdl
-test T-4: Preview inline image
+scenario T-4: Preview inline image
   given: a File whose data Ref resolves to a Blob with data._tag === 'inline' and type === 'image/png'
   when: FileArticle is rendered
   then:
@@ -297,21 +297,21 @@ test T-4: Preview inline image
 ```
 
 ```mdl
-test T-5: Preview PDF
+scenario T-5: Preview PDF
   given: a File with type === 'application/pdf' and a Blob resolved to an HTTP or data URL
   when: FilePreview is rendered
   then: an <iframe> element is rendered with the file URL as src
 ```
 
 ```mdl
-test T-6: Backend fallback to inline
+scenario T-6: Backend fallback to inline
   given: Settings.backend is 'wnfs' but no BackendDescriptor with storage 'wnfs' is registered
   when: op:Create is invoked
   then: the inline backend is used and the file is stored inline
 ```
 
 ```mdl
-test T-7: External blob resolved via a registered BlobBackend's getUrl
+scenario T-7: External blob resolved via a registered BlobBackend's getUrl
   given: a File whose data Ref resolves to a Blob with data._tag === 'external' and a
     BlobBackend registered on the ECHO Hypergraph that resolves the Blob's URI scheme
     and implements getUrl
@@ -323,7 +323,7 @@ test T-7: External blob resolved via a registered BlobBackend's getUrl
 ```
 
 ```mdl
-test T-8: External blob without getUrl falls back to reading bytes
+scenario T-8: External blob without getUrl falls back to reading bytes
   given: a File whose data Ref resolves to an external Blob whose registered
     BlobBackend implements get but not getUrl
   when: FileArticle is rendered
@@ -334,7 +334,7 @@ test T-8: External blob without getUrl falls back to reading bytes
 ```
 
 ```mdl
-test T-9: No backend error
+scenario T-9: No backend error
   given: no BackendDescriptor capability is registered
   when: op:Create is invoked
   then: NoBackendError is returned
@@ -344,14 +344,14 @@ test T-9: No backend error
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-file is on by default (`FilePlugin.meta.profile.key` is in `getDefaults`; see
 `packages/apps/composer-app/src/plugin-defs.tsx`).
 
 ```mdl
-flow QA-1: Upload an image and preview it
+test QA-1: Upload an image and preview it
   desc: The core file round-trip — upload an inline image via the Create Object form, place it, and read the preview back.
   actors: both
   covers: [F-1.1, F-1.3, F-3.1, F-3.2, T-1, T-4]
@@ -361,8 +361,8 @@ flow QA-1: Upload an image and preview it
     - space: a space is open
     - collection: a collection in that space, to create into
     - only the inline BackendDescriptor is registered (default)
-    - no File named "qa-image.png" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no File named "qa-image.png" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Upload the image
       do: In the navtree, click + on a collection and choose File. Drop a small PNG (e.g. 10 KB) named "qa-image.png".
       invoke: |
@@ -400,7 +400,7 @@ flow QA-1: Upload an image and preview it
 ```
 
 ```mdl
-flow QA-2: Reject an oversized or unsupported upload
+test QA-2: Reject an oversized or unsupported upload
   desc: The two rejection paths (F-1.4, F-1.5) — a validation round-trip that must leave no ECHO write behind.
   actors: agent
   covers: [F-1.4, F-1.5, T-2, T-3]
@@ -409,7 +409,7 @@ flow QA-2: Reject an oversized or unsupported upload
     - an identity exists
     - space: a space is open
     - only the inline BackendDescriptor is registered (4 MB cap applies)
-  test:
+  steps:
     - name: Reject an unsupported MIME type
       do: In the Create Object form, attempt to upload a .zip file.
       invoke: |
@@ -458,8 +458,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

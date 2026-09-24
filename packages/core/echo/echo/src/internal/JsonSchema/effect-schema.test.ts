@@ -16,7 +16,8 @@ import { log } from '@dxos/log';
  *   2020-12, rather than one flat draft-07 object;
  * - custom annotations are no longer merged from a `jsonSchema` annotation -- the keys are annotated
  *   directly and opted in per key at generation time;
- * - a check's keywords are nested under `allOf` instead of being merged into the node.
+ * - a check's keywords are merged into the node when they do not collide with one already there,
+ *   and only the colliding ones are nested under `allOf`.
  */
 const toJsonSchema = (schema: Schema.Top, keys: ReadonlyArray<string> = []) =>
   Schema.toJsonSchemaDocument(schema, { includeAnnotationKey: (key) => keys.includes(key) }).schema;
@@ -30,12 +31,17 @@ test('custom annotation keys are emitted when opted in', () => {
   expect(toJsonSchema(type)).toEqual({ type: 'string' });
 });
 
-test('a check contributes its keywords under allOf', () => {
-  const type = Schema.String.check(Schema.isMinLength(3));
-
-  expect(toJsonSchema(type)).toEqual({
+test('a check contributes its keywords to the node, and nests only the colliding ones', () => {
+  expect(toJsonSchema(Schema.String.check(Schema.isMinLength(3)))).toEqual({
     type: 'string',
-    allOf: [{ minLength: 3 }],
+    minLength: 3,
+  });
+
+  // `minLength` is already stated, so the second check cannot restate it in place.
+  expect(toJsonSchema(Schema.String.check(Schema.isMinLength(3), Schema.isMinLength(5)))).toEqual({
+    type: 'string',
+    minLength: 3,
+    allOf: [{ minLength: 5 }],
   });
 });
 

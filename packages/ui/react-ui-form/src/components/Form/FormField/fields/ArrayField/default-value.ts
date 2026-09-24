@@ -4,7 +4,7 @@
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
-import { getNumericConstraints } from '../NumberField';
+import { getNumericConstraints } from '../NumberField/index.ts';
 
 // Kept out of `ArrayField.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

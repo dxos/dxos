@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './follow';
-export * from './list-model';
-export * from './placement';
-export * from './useFollow';
-export * from './useListModel';
-export * from './Window';
+export * from './follow.ts';
+export * from './list-model.ts';
+export * from './placement.ts';
+export * from './useFollow.ts';
+export * from './useListModel.ts';
+export * from './Window.tsx';

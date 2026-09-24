@@ -92,6 +92,11 @@
       "types": "./dist/types/src/types/ProjectOperation.d.ts",
       "import": "./dist/lib/ProjectOperation.mjs"
     },
+    "./ProjectView": {
+      "source": "./src/types/ProjectView.ts",
+      "types": "./dist/types/src/types/ProjectView.d.ts",
+      "import": "./dist/lib/ProjectView.mjs"
+    },
     "./ProjectsEvents": {
       "source": "./src/types/ProjectsEvents.ts",
       "types": "./dist/types/src/types/ProjectsEvents.d.ts",
@@ -162,6 +167,7 @@
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
@@ -169,6 +175,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
+    "@dxos/react-ui-trace": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
@@ -181,8 +188,8 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",

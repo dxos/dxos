@@ -2,8 +2,12 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-_Resume: Phase 1 (Deus.QA) materialized 2026-08-23 — dialect, DESIGN section, execution skill, and
-a verified flow. Next: APP.mdl, then re-run QA-1 through the skill to test the contract itself._
+_Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09.
+Three smoke runs are in and **app:QA-1 is `passing` 11/11** (run 3). Runs 1 and 2 failed `after` 2,
+which identified an ordering defect in `DataSpaceManager._tombstoneSpace`; that is fixed on this
+branch, as is a `$stepErrors` binding for the dialect, and run 3 confirms both against the real app.
+Next: land the PR, `--tag nightly`, register the Routines, `sweep 8`. Sessions that run the app must
+be in the `DXOS` cloud environment._
 
 ## Goal
 
@@ -13,7 +17,8 @@ and an agent tester execute from the same source. Flows live in a `## QA` sectio
 
 ### Major goal — the QA routine
 
-Part (c) has a front door: `/dxos:qa run <flow>`. Parts (a) and (b) do not yet.
+Part (c) has a front door: `/dxos:qa run <plugin> <testId>` and `run --suite|--tag`. Part (a) is
+the spec-sync Routine (`agents/routines/spec-sync.md`); (b) has no front door yet.
 
 A Claude routine (skill + command) that closes the loop for any plugin:
 
@@ -24,12 +29,124 @@ A Claude routine (skill + command) that closes the loop for any plugin:
       keys and services, and chess's `startGame` has no runtime counterpart at all. A single
       `key?: NSID` cannot express either. Split the spec operation, or define one-to-many binding
       semantics, before writing the reconciler.
-- [ ] **(b) Propose candidate flows** — read `feat`/`req`/`test` blocks with no `covers:` pointing
-      at them and draft flows that would exercise them, for human triage.
-- [ ] **(c) Run the plan** — execute selected flows against a live Composer through the debug
-      port and report a per-step pass/fail table.
+- [ ] **(b) Propose candidate tests** — read `feat`/`req`/`scenario` blocks with no `covers:` pointing
+      at them and draft tests that would exercise them, for human triage.
+- [x] **(c) Run the plan** — execute selected tests against a live Composer through the debug
+      port and report a per-step pass/fail table (`composer-qa` skill, `/dxos:qa run`).
 
 Each part is independently useful; (c) is the one that needs the language to be right first.
+
+## Phase 2: QA framework unification — 2026-09-08 — PR #12986
+
+Decisions (all by the user, one at a time):
+
+- **Naming is xUnit + Gherkin.** The old given/when/then `test` block is `scenario` (Gherkin's
+  Scenario, under `feat`); the executable case is `test QA-n` with stages `before` / `steps` /
+  `after` (vitest's own terms); `suite` is a container by reference with `tags:`, selected by name
+  or tag. Suites are order-independent by construction and have no `before` of their own.
+- **One operation per step; the snapshot is the agent's eyes.** The runner takes
+  `org.dxos.operation.debug.snapshot` after every step and binds it as `$snapshot` for `assert`;
+  `$<capture>.snapshot` is the state after an earlier step. Extend the snapshot rather than
+  screenshot.
+- **The spec mirrors the code**: one `op` per runtime key; a design-only op keeps its block with
+  `status: unimplemented`.
+- **App-level tests live in `packages/apps/composer-app/spec/APP.mdl`**; plugin specs move to
+  `plugin-xxx/spec/PLUGIN.mdl` later (below).
+- **Reports from a Routine go on the `qa` branch**, synced from main at the start of each run, with
+  the commit hash, time and environment in the header.
+
+Done:
+
+- [x] Mechanical rename across 93 `.mdl` files: `test T-n` → `scenario T-n`, `flow QA-n` →
+      `test QA-n`, stage `test:` → `steps:`, `ext test` → `ext scenario`, Extensions tables.
+- [x] `lang/qa.mdl` 1.1: `test` / `step` / `suite`, `$snapshot`, `space:` on a step, input literal
+      resolvers (`Obj`, `Ref`, `Space`, `$uri.objectId`), `status: blocked` in the enum, Execution
+      Rules 11–12 (snapshot after every step; a suite continues past a failed test).
+- [x] `docs/DESIGN.md` Deus.Std `scenario` + Deus.QA rewritten; `core.mdl`, template, examples.
+- [x] `src/extension/constants.ts` block types: + `scenario`, `suite`; − `flow` (23 parser tests
+      green).
+- [x] `.agents/skills/composer-qa` replaces `qa` + `running-qa-flows`; `composer-debug` trimmed to
+      the read-only transport reference; `/qa` command removed; `/dxos:qa` gains `suites`,
+      `run --suite|--tag`, `snapshot`; `scripts/list-tests.mjs` (was `list-flows.mjs`) parses
+      suites and resolves tags.
+- [x] `composer-app/spec/APP.mdl`: QA-1..4 from `testing/scripts/basics.md` (deleted), suites
+      `smoke`, `basics`, `assistant`, `editor`; `testing/README.md`, `reports/TEMPLATE.md` rewritten;
+      `bin/qa-browser.mjs` moved to `testing/bin/`; `REMOTE.md` folded into the Routine.
+- [x] `agents/routines/composer-qa.md` (nightly / on-merge QA) and `agents/routines/spec-sync.md`
+      (incremental + sweep), with `.agents/spec-sync.yml` as the sync state.
+
+Later (tracked, not started):
+
+- [x] **Run `--tag smoke` live** — 2026-09-09, child session in the `DXOS` cloud environment (full
+      network, setup script wrapped so a failure logs to `/tmp/claude-setup.log` instead of killing
+      the session). `app:QA-1` 10/11: `steps` 8/8, `after` 2 fails. Report committed at
+      `testing/reports/2026-09-09-2047-smoke.md`; QA-1 corrected (`queryObjects` returns
+      `{ results: [{ dxn, typename, label }] }`; `after` judged by identity) and set `failing`.
+- [x] **App defect, `app:QA-1.after.2`: `space.delete` stranded a space whenever closing it failed.**
+      `DataSpaceManager._tombstoneSpace` appended the tombstone before `space.close()`; the close
+      waits on `EdgeSignalManager.leave`, threw, and skipped `space.delete()` and the live-list
+      removal, so the space stayed `SPACE_CLOSED` and a retry was a no-op until reload. Two runs with
+      different transports gave the identical end state — a 10 s timeout with EDGE unreachable, a
+      5.6 s `Edge connection closed.` with EDGE reachable — which is what identified the ordering
+      rather than the environment. **Fixed on this branch** at the user's direction rather than in a
+      separate PR: the close is now best-effort and the deletion completes regardless. Of the two
+      candidate fixes, tolerating the failed close is the right one — `markSpaceDeleted` records the
+      SpaceDeleted credential BEFORE `_tombstoneSpace` runs, so the deletion has already replicated
+      and aborting would leave the credential and the local list disagreeing. Covered by
+      `data-space-manager.test.ts` "markSpaceDeleted removes the space even when teardown fails",
+      which reproduces the timeout and fails without the fix (verified by reverting it); changeset
+      added.
+- [x] Harness: `testing/bin/qa-browser.mjs` launched Chromium without the sandbox proxy flags, so
+      every HTTPS request from the page reset (E-1/E-3 in the report, and the trigger of `after` 2).
+      Fixed: `--proxy-server`, `--proxy-bypass-list`, `--ssl-version-max=tls1.2` under
+      `CLAUDE_CODE_REMOTE`. QA-2 also carried the old `queryObjects` shape; fixed, still unverified.
+- [x] Re-run `--tag smoke` with the proxy fix — 2026-09-09, run 2 (`testing/reports/2026-09-09-2315-smoke.md`):
+      9/11 under the tightened asserts. The proxy fix held (`ERR_CONNECTION_RESET` 55 → 0, `errors: []`
+      through every `steps` step), and `after` 2 still failed — this time on `Edge connection closed.`
+      after 5.6 s while EDGE dropped the socket on a ~6 s loop — leaving the identical stranded state.
+      Two different transport failures, one stranded space: the ordering in
+      `DataSpaceManager._tombstoneSpace` is the defect, not the environment.
+- [x] **`$stepErrors` added to the dialect.** CodeRabbit's fifth finding on run 1's report — steps
+      marked pass whose `assert` returned false — was a contract conflict, not a fudged verdict:
+      Execution Rule 11 says a non-empty `errors` fails nothing by itself, while the asserts wrote
+      `$snapshot.errors.length === 0` against a snapshot cumulative from the run's start, so one
+      background error at step 1 falsified every step after it. The runner now also binds
+      `$stepErrors` — only what was logged since the previous step's snapshot — and a pass/fail error
+      clause uses that; `$snapshot.errors` stays cumulative for the report. `qa.mdl` Field rule 5 and
+      Execution Rule 11, `APP.mdl` (13 clauses), the `composer-qa` skill and `DESIGN.md`.
+- [x] **Re-ran `--tag smoke` — 11/11** (run 3, `testing/reports/2026-09-10-0045-smoke.md`). The fix
+      was exercised rather than bypassed: the teardown failed with the same `Edge connection closed.`
+      that stranded run 2 (`space teardown failed; deleting anyway` in the server log) and the
+      deletion completed anyway — 4.6 s, no error, the space gone from both the snapshot and the live
+      client list. `$stepErrors` empty at every step, and the cumulative channel too. QA-1 is
+      `passing`. `client-services` must be rebuilt before serving: the browser loads its `dist`.
+- [ ] **The snapshot's `errors` is narrower than the page console.** `since: 0` reported zero errors
+      for a session whose server log carries several `console.error` lines (`SwarmNetworkManager`,
+      among others); a synthetic `ErrorEvent` IS captured, so the buffer is live and the gap is
+      upstream — those call sites do not go through `log.error`. Consistent across all three runs. A
+      green `$stepErrors` is therefore not proof that nothing went wrong, which is why the runbook
+      still requires reading the server log per test. Either route those errors through the log
+      pipeline or say so in `qa.mdl`.
+- [ ] `--tag nightly` for QA-2, QA-3 and the two markdown tests.
+- [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
+      `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
+- [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `list-tests.mjs`,
+      `tools/qa-lint/*`, the `composer-plugins` skill, the template and every path in docs.
+- [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental. Inputs
+      from the PR #12986 review (CodeRabbit, 2026-09-08), all pre-existing content the rename only
+      exposed: assistant QA-1 `op:CreateChat` lacks its `db` input and asserts `typeof $result ===
+'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
+      strings to `op:submitMove` and reads `$result.pgn`; file T-5 asserts an `<iframe>` against a
+      canvas contract; inbox QA-1's `after` uses an unbound `$created`; slack QA-1's `after` passes
+      `$discovered` and `$given.space` to `removeObjects`; space's spec declares no
+      `space.delete` although its QA-1 invokes it; tasks T-2/T-3/T-6 repeat `when`/`then`; and 24
+      appendices define `op@1.0` while their tables declare `op@1.1`.
+- [ ] **Migrate `scenario` content**: 542 given/when/then blocks; fold each into its `feat`'s `req`
+      or promote to a runnable `test` where an operation exists. Authoring, done per plugin by the
+      sweep, not a rename.
+- [ ] `APP.mdl` structure sections (`node`, `deck`, `plank`, `surface` per `app.mdl`).
+- [ ] Snapshot additions as tests need them (navtree selection, editor selection, dialog state).
+- [ ] `qa-lint`: `plugin-deepseek` QA-2 references `$given.space` without binding it (pre-existing on main).
 
 ## Phase 1: Deus.QA dialect
 

@@ -83,6 +83,17 @@ export const DocumentUpdate = Schema.Struct({
    * give up on a load without waiting on the network.
    */
   requesting: Schema.optional(Schema.Boolean),
+  /**
+   * Set by the host when it cannot produce this document at all — the data
+   * plane it reads has no bytes for the id and no other source to fetch them
+   * from. The client settles the corresponding `DocHandleProxy` as
+   * `'unavailable'` and rejects its `whenReady()`, so a load fails at once
+   * instead of waiting on bytes that are not coming. A host that is still
+   * fetching sends `requesting` instead; a document whose bytes arrive later
+   * (replication catching up) is delivered as a normal `mutation` update and
+   * returns the handle to `'ready'`.
+   */
+  unavailable: Schema.optional(Schema.Boolean),
 });
 export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate> {}
 
@@ -135,6 +146,15 @@ export const ReIndexHeadsRequest = Schema.Struct({
   documentIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface ReIndexHeadsRequest extends Schema.Schema.Type<typeof ReIndexHeadsRequest> {}
+
+export const UpdateIndexesRequest = Schema.Struct({
+  /**
+   * Also index the secondary-index backlog (full text). Off by default: it lags the primary pass
+   * by design, and only a caller that reads it back needs to wait for it.
+   */
+  secondaryIndexes: Schema.optional(Schema.Boolean),
+});
+export interface UpdateIndexesRequest extends Schema.Schema.Type<typeof UpdateIndexesRequest> {}
 
 export const GetSpaceSyncStateRequest = Schema.Struct({
   spaceId: Schema.String,
@@ -206,6 +226,8 @@ export const HostLoadedStats = Schema.Struct({
   documentsTotal: Schema.Number,
   /** Active reactive queries registered with the host, across every space. */
   queriesTotal: Schema.Number,
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  leases: Schema.Number,
 });
 export interface HostLoadedStats extends Schema.Schema.Type<typeof HostLoadedStats> {}
 
@@ -321,6 +343,7 @@ export class Rpcs extends RpcGroup.make(
    * Wait for any pending index updates.
    */
   Rpc.make('updateIndexes', {
+    payload: UpdateIndexesRequest,
     error: serviceError,
   }),
   // TODO(dmaretskyi): Stream subscription.

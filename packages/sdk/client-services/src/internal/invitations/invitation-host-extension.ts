@@ -1,0 +1,334 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
+import { type Mutex, type MutexGuard, Trigger, asyncTimeout, scheduleTask } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
+import { randomBytes, verify } from '@dxos/crypto';
+import { InvariantViolation, invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type AdmissionRequest,
+  type AdmissionResponse,
+  AuthenticationResponse_Status,
+  AuthenticationResponseSchema,
+  IntroductionResponseSchema,
+  InvitationHostService as InvitationHostServiceDesc,
+  type InvitationOptions,
+  InvitationOptions_Role,
+  InvitationOptionsSchema,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+
+import type { FlowLockHolder } from './invitation-state.ts';
+
+type InvitationHostService = BufService<typeof InvitationHostServiceDesc>;
+import { stateToString, tryAcquireBeforeContextDisposed } from './utils.ts';
+
+/// Timeout for the options exchange.
+const OPTIONS_TIMEOUT = 10_000;
+
+export const MAX_OTP_ATTEMPTS = 3;
+
+type InvitationHostExtensionCallbacks = {
+  activeInvitation: Invitation | null;
+
+  // Deliberately not async to not block the extensions opening.
+  onOpen: (ctx: Context, extensionCtx: ExtensionContext) => void;
+  onError: (error: Error) => void;
+
+  onStateUpdate: (newState: Invitation_State) => void;
+
+  admit: (request: AdmissionRequest) => Promise<AdmissionResponse>;
+};
+
+/**
+ * Host's side for a connection to a concrete peer in p2p network during invitation.
+ */
+export class InvitationHostExtension
+  extends RpcExtension<
+    { InvitationHostService: InvitationHostService },
+    { InvitationHostService: InvitationHostService }
+  >
+  implements FlowLockHolder
+{
+  /**
+   * @internal
+   */
+  private _ctx = new Context();
+  private _remoteOptions?: InvitationOptions;
+  private _remoteOptionsTrigger = new Trigger();
+
+  private _challenge?: Buffer = undefined;
+
+  public guestProfile?: ProfileDocument = undefined;
+
+  public authenticationPassed = false;
+
+  /**
+   * Retry counter for SHARED_SECRET authentication method.
+   */
+  public authenticationRetry = 0;
+
+  /**
+   * Resolved when admission is completed.
+   */
+  public completedTrigger = new Trigger<PublicKey>();
+
+  /**
+   * Held to allow only one invitation flow at a time to be active.
+   */
+  private _invitationFlowLock: MutexGuard | null = null;
+  /**
+   * The last state THIS connection tried to set, as opposed to the invitation-wide shared state.
+   * Records the attempt, not the guard's acceptance, so the two can differ when a write was rejected.
+   */
+  private _lastSetState: Invitation_State = Invitation_State.INIT;
+
+  constructor(
+    private readonly _invitationFlowMutex: Mutex,
+    private readonly _callbacks: InvitationHostExtensionCallbacks,
+  ) {
+    super({
+      requested: {
+        InvitationHostService: getBufService<InvitationHostService>('dxos.halo.invitations.InvitationHostService'),
+      },
+      exposed: {
+        InvitationHostService: getBufService<InvitationHostService>('dxos.halo.invitations.InvitationHostService'),
+      },
+    });
+  }
+
+  private _setState(state: Invitation_State): void {
+    this._lastSetState = state;
+    this._callbacks.onStateUpdate(state);
+  }
+
+  public hasFlowLock(): boolean {
+    return this._invitationFlowLock != null;
+  }
+
+  protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
+    return {
+      // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
+      // Perhaps in the future we will have more complex logic here.
+      InvitationHostService: {
+        options: async (options) => {
+          invariant(!this._remoteOptions, 'Remote options already set.');
+          this._remoteOptions = options;
+          if (options.role === InvitationOptions_Role.GUEST && this.hasFlowLock()) {
+            this._setState(Invitation_State.CONNECTED);
+          }
+          this._remoteOptionsTrigger.wake();
+          return create(EmptySchema, {});
+        },
+
+        introduce: async (request) => {
+          const { profile, invitationId } = request;
+          log('introducing host invitation');
+
+          const invitation = this._requireActiveInvitation();
+          this._assertInvitationState(Invitation_State.CONNECTED);
+          if (invitationId !== invitation?.invitationId) {
+            log.warn('incorrect invitationId', { expected: invitation.invitationId, actual: invitationId });
+            this._callbacks.onError(new Error('Incorrect invitationId.'));
+            scheduleTask(this._ctx, () => this.close());
+            // TODO(dmaretskyi): Better error handling.
+            return create(IntroductionResponseSchema, { authMethod: Invitation_AuthMethod.NONE });
+          }
+
+          log.verbose('guest introduced themselves', { guestProfile: profile });
+          this.guestProfile = profile;
+          this._setState(Invitation_State.READY_FOR_AUTHENTICATION);
+          this._challenge =
+            invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
+
+          log('introduced host invitation');
+          return create(IntroductionResponseSchema, {
+            authMethod: invitation.authMethod,
+            challenge: this._challenge,
+          });
+        },
+
+        authenticate: async ({ authCode: code, signedChallenge }) => {
+          log('authenticating host invitation');
+
+          const invitation = this._requireActiveInvitation();
+          log.verbose('received authentication request', { authCode: code });
+          let status = AuthenticationResponse_Status.OK;
+
+          this._assertInvitationState([Invitation_State.AUTHENTICATING, Invitation_State.READY_FOR_AUTHENTICATION]);
+          this._setState(Invitation_State.AUTHENTICATING);
+
+          switch (invitation.authMethod) {
+            case Invitation_AuthMethod.NONE: {
+              log('authentication not required');
+              return create(AuthenticationResponseSchema, { status: AuthenticationResponse_Status.OK });
+            }
+
+            case Invitation_AuthMethod.SHARED_SECRET: {
+              if (invitation.authCode) {
+                if (this.authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+                  status = AuthenticationResponse_Status.INVALID_OPT_ATTEMPTS;
+                } else if (code !== invitation.authCode) {
+                  status = AuthenticationResponse_Status.INVALID_OTP;
+                } else {
+                  this.authenticationPassed = true;
+                }
+              }
+              break;
+            }
+
+            case Invitation_AuthMethod.KNOWN_PUBLIC_KEY: {
+              const guestPublicKey = toPublicKey(invitation.guestKeypair?.publicKey);
+              if (!guestPublicKey) {
+                status = AuthenticationResponse_Status.INTERNAL_ERROR;
+                break;
+              }
+              const isSignatureValid =
+                this._challenge &&
+                verify(this._challenge, Buffer.from(signedChallenge ?? []), guestPublicKey.asBuffer());
+              if (isSignatureValid) {
+                this.authenticationPassed = true;
+              } else {
+                status = AuthenticationResponse_Status.INVALID_SIGNATURE;
+              }
+              break;
+            }
+
+            default: {
+              log.error('invalid authentication method', { authMethod: invitation.authMethod });
+              status = AuthenticationResponse_Status.INTERNAL_ERROR;
+              break;
+            }
+          }
+
+          if (![AuthenticationResponse_Status.OK, AuthenticationResponse_Status.INVALID_OTP].includes(status)) {
+            this._callbacks.onError(new Error(`Authentication failed, with status=${status}`));
+            scheduleTask(this._ctx, () => this.close());
+            return create(AuthenticationResponseSchema, { status });
+          }
+
+          log('authenticated host invitation', { status });
+          return create(AuthenticationResponseSchema, { status });
+        },
+
+        admit: async (request) => {
+          log('admitting guest');
+          const invitation = this._requireActiveInvitation();
+
+          try {
+            // Check authenticated.
+            if (isAuthenticationRequired(invitation)) {
+              this._assertInvitationState(Invitation_State.AUTHENTICATING);
+              if (!this.authenticationPassed) {
+                throw new Error('Not authenticated');
+              }
+            }
+
+            const response = await this._callbacks.admit(request);
+
+            log('admitted guest');
+            return response;
+          } catch (err: any) {
+            this._callbacks.onError(err);
+            throw err;
+          }
+        },
+      },
+    };
+  }
+
+  override async onOpen(context: ExtensionContext): Promise<void> {
+    await super.onOpen(context);
+
+    try {
+      log.verbose('host acquire lock');
+      this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
+      log.verbose('host lock acquired');
+      this._setState(Invitation_State.CONNECTING);
+      const optionsAcknowledged = this.rpc.InvitationHostService.options(
+        create(InvitationOptionsSchema, { role: InvitationOptions_Role.HOST }),
+      );
+      void optionsAcknowledged.catch(() => {});
+      log.verbose('options sent');
+      await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
+      log.verbose('options received');
+      if (this._remoteOptions?.role !== InvitationOptions_Role.GUEST) {
+        throw new InvalidInvitationExtensionRoleError({
+          context: {
+            expected: InvitationOptions_Role.GUEST,
+            remoteOptions: this._remoteOptions,
+            remotePeerId: context.remotePeerId,
+          },
+        });
+      }
+      // Only while the flow is still where this method left it. When `options` and `introduce` are
+      // dispatched in one drain — the overtaking this whole path exists to survive — the handlers
+      // have already carried the state past CONNECTED, and re-emitting it here would rewind them.
+      if (this._lastSetState === Invitation_State.CONNECTING) {
+        this._setState(Invitation_State.CONNECTED);
+      }
+      // Bounded like the trigger above: a guest that never acknowledges must fail the invitation,
+      // not leave it displayed as live with `onOpen` never reached.
+      await cancelWithContext(this._ctx, asyncTimeout(optionsAcknowledged, OPTIONS_TIMEOUT));
+      this._callbacks.onOpen(this._ctx, context);
+    } catch (err: any) {
+      if (this._invitationFlowLock != null) {
+        this._callbacks.onError(err);
+      }
+      if (!this._ctx.disposed) {
+        context.close(err);
+      }
+    }
+  }
+
+  private _requireActiveInvitation(): Invitation {
+    const invitation = this._callbacks.activeInvitation;
+    if (invitation == null) {
+      scheduleTask(this._ctx, () => this.close());
+      throw new Error('Active invitation not found');
+    }
+    return invitation;
+  }
+
+  private _assertInvitationState(stateOrMany: Invitation_State | Invitation_State[]): void {
+    const invitation = this._requireActiveInvitation();
+    const validStates = Array.isArray(stateOrMany) ? stateOrMany : [stateOrMany];
+    if (!validStates.includes(invitation.state)) {
+      scheduleTask(this._ctx, () => this.close());
+      throw new InvariantViolation(
+        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]`,
+      );
+    }
+  }
+
+  override async onClose(): Promise<void> {
+    await this._destroy();
+  }
+
+  override async onAbort(): Promise<void> {
+    await this._destroy();
+  }
+
+  private async _destroy(): Promise<void> {
+    await this._ctx.dispose();
+    if (this._invitationFlowLock != null) {
+      this._invitationFlowLock?.release();
+      this._invitationFlowLock = null;
+      log.verbose('invitation flow lock released');
+    }
+  }
+}
+
+export const isAuthenticationRequired = (invitation: Invitation) =>
+  invitation.authMethod !== Invitation_AuthMethod.NONE;

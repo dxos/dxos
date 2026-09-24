@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as SampleCapabilities from './SampleCapabilities';
-export * as SampleEvents from './SampleEvents';
-export * as SampleItem from './SampleItem';
-export * as SampleOperation from './SampleOperation';
-export * as Settings from './Settings';
+export * as SampleCapabilities from './SampleCapabilities.ts';
+export * as SampleEvents from './SampleEvents.ts';
+export * as SampleItem from './SampleItem.ts';
+export * as SampleOperation from './SampleOperation.ts';
+export * as Settings from './Settings.ts';

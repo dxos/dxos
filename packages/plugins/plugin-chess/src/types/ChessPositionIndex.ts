@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import * as Game from '@dxos/plugin-game/Game';
 
 /** Side the reviewed player may play in indexed games. */
@@ -16,7 +15,7 @@ export type Side = Schema.Schema.Type<typeof Side>;
 
 /** Games that reached a normalized FEN while the reviewed player was on this side. */
 export const PositionEntry = Schema.Struct({
-  games: Schema.mutable(Schema.Array(Ref.Ref(Game.Game))).pipe(FormInputAnnotation.set(false)),
+  games: Schema.mutable(Schema.Array(Ref.Ref(Game.Game))).pipe(Annotation.FormInputAnnotation.set(false)),
 });
 
 export type PositionEntry = Schema.Schema.Type<typeof PositionEntry>;
@@ -42,7 +41,7 @@ export class PositionIndex extends Type.makeObject<PositionIndex>(
   DXN.make('org.dxos.type.chess.positionIndex', '0.1.0'),
 )(
   Schema.Struct({
-    index: Index.pipe(FormInputAnnotation.set(false)),
+    index: Index.pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--map-trifold--regular', hue: 'amber' })),
 ) {}
 

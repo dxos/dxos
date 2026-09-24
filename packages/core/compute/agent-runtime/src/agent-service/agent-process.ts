@@ -17,14 +17,12 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
-  AgentRequestBegin,
-  AgentRequestEnd,
+  AiContext,
   Alarm,
   HarnessControl,
   type PendingState,
   SessionStore,
   SkillHooks,
-  emitRequestPhase,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -35,16 +33,19 @@ import * as Credential from '@dxos/compute/Credential';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import * as Skill from '@dxos/compute/Skill';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type DelegationStrategy } from './delegation-strategy';
-import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
+import { type DelegationStrategy } from './delegation-strategy.ts';
+import { loadSpaceMcpServers } from './mcp-servers.ts';
+import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
   // TODO(burdon): Instructions?
@@ -57,8 +58,8 @@ export interface AgentProcessOptions {
    */
   makeTurnProducer?: MakeTurnProducer;
 
-  /** Model identifier. */
-  model?: DXN.DXN;
+  /** Model used when the chat the process is bound to has not selected one. */
+  defaultModel?: DXN.DXN;
 
   /**
    * The catalog's shared model ids are served by several providers, so resolution needs the provider
@@ -81,14 +82,18 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * Provider for space-level MCP server configs, called on each turn.
-   */
-  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+
+/**
+ * How long to wait before re-reading a queue that contradicts a write this process just made, and
+ * how many times. A hosted runtime serves the read from an eventually-consistent index, and the lag
+ * measured on EDGE is single-digit milliseconds — the cap is what keeps a write that never lands
+ * from waking the agent forever.
+ */
+const UNSEEN_WRITE_RETRY_MS = 250;
+const MAX_UNSEEN_WRITE_WAKES = 20;
 
 /**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
@@ -101,6 +106,25 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // Accepts plain text or content blocks.
       input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
       output: Schema.Void,
+      // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
+      // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
+      // back empty on a host that did not happen to register them itself: the prompt appends fine and
+      // the agent then finds nothing to do. `Chat`/`Feed` are resolved by DXN at startup.
+      // `AiContext.Binding` and `Skill` belong here for the same reason the rest do: the host
+      // registers exactly these with the process's database, and a typed query for a type it does
+      // not know matches nothing. Without them a hosted agent reads its own skill bindings back
+      // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
+      // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
+      types: [
+        Chat.Chat,
+        Feed.Feed,
+        Message.Message,
+        Alarm.Alarm,
+        AiContext.Binding,
+        Skill.Skill,
+        McpServer.McpServer,
+        AccessToken.AccessToken,
+      ],
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
@@ -139,6 +163,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
+        let ackedEntries: string[] = [...(yield* AckedEntriesCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -152,12 +177,28 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // execution path are stale after reload and would cause onAlarm to drop them.
         yield* toolCallManager.reconcileWithInputQueue(toolResults);
 
+        // Alarms written by this incarnation, keyed by id, until a read confirms the index has them.
+        // `wakes` counts reads that did not show the alarm, which is what distinguishes an index
+        // still catching up from one that is gone — a due time cannot: an alarm set for an instant
+        // already past reads as "due" on the very first look, before the index has had any chance.
+        const unseenAlarms = new Map<string, { wakeAt: number; wakes: number }>();
+
         // Schedules the process alarm from durable state: immediately when work is queued, at the
         // earliest pending alarm otherwise, not at all when idle.
         const reconcileAlarmWith = (state: PendingState): Effect.Effect<void> => {
+          // An alarm this incarnation wrote leaves the unseen set once the read can see it; until
+          // then it is the only record of a wake, so arming from the read alone would arm nothing.
+          for (const alarm of state.pendingAlarms) {
+            unseenAlarms.delete(alarm.id);
+          }
+          const observed = state.pendingAlarms[0]?.wakeAt;
+          const wakeAts = [
+            ...(observed != null ? [observed] : []),
+            ...[...unseenAlarms.values()].map(({ wakeAt }) => wakeAt),
+          ];
           const delay = computeAlarmDelay({
             hasPendingWork: toolResults.length > 0 || state.pendingMessages.length > 0,
-            wakeAt: state.pendingAlarms[0]?.wakeAt ?? null,
+            wakeAt: wakeAts.length > 0 ? Math.min(...wakeAts) : null,
             now: now(),
           });
           return delay != null ? ctx.setAlarm(delay) : Effect.void;
@@ -178,8 +219,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const strategy = Option.fromNullishOr(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
-        const requestModelLayer = AiService.model(
-          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-5.default',
+        // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
+        // recovered from the chat on rehydration like the instructions are.
+        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
+        const requestModelLayer = AiService.languageModel(
+          model ? DXN.getName(model) : 'com.anthropic.model.claude-opus-5.default',
           {
             provider: options.provider,
           },
@@ -212,6 +256,29 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           });
         });
 
+        // Whether this incarnation has actually run a turn. An empty queue means two different things:
+        // after a turn it means the work drained and the process should finish, but on a fresh spawn
+        // it is simply a conversation nobody has spoken to yet — `onSpawn` discards what it inherits,
+        // so a new process ALWAYS starts empty. Completing on the latter ends the agent before the
+        // prompt that spawned it arrives, and `submitInput` then drops that prompt on a finished
+        // handle, leaving the reader with no reply and no error.
+        let turnRan = false;
+
+        // Queue entries this incarnation wrote but has not yet read back. A hosted process's queue
+        // read is served by the space INDEX, which is eventually consistent: the agent appends a
+        // prompt and, milliseconds later, its own read returns empty — the index catches up a beat
+        // afterwards, but by then the agent has already concluded there is no work and gone idle,
+        // and nothing looks again. Locally the same read is served from the resident feed handle, so
+        // this never happens off a hosted runtime. Counted rather than flagged so a burst of prompts
+        // is not mistaken for one.
+        // Held by id, not counted: a resumed process can dequeue an OLDER entry it did not write,
+        // and a bare count would treat that as its own write becoming visible — zeroing the budget
+        // while this incarnation's prompt is still unread, so the next empty read completes the
+        // process and drops it. In memory because it describes this incarnation's writes only; a
+        // later one re-reads the feed from scratch.
+        const unseenWriteIds = new Set<string>();
+        let unseenWriteWakes = 0;
+
         const pendingWork = (state: PendingState): boolean =>
           isAgentWorkPending({
             toolResults,
@@ -221,9 +288,30 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             toolCallManager,
           });
 
+        // A turn that ends with an alarm pending leaves the process resident, and the reader is then
+        // waiting on the wake rather than on the turn — so the last stage of that turn is no longer
+        // what is happening.
+        const reportSleeping = (state: PendingState): Effect.Effect<void, never, Trace.TraceService> =>
+          state.pendingAlarms.length > 0 ? Trace.emitRequestPhase('sleeping') : Effect.void;
+
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
+            // A result reported inside the turn it belongs to is still sitting in the queue; it is
+            // not outstanding work, and counting it as such keeps the agent from ever completing —
+            // the head-drop at the top of `onAlarm` cannot help, because nothing arms another wake.
+            for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
+              log('drop tool result reported within its turn', { pid });
+            }
             if (pendingWork(state)) {
+              yield* reportSleeping(state);
+              return;
+            }
+
+            if (!turnRan) {
+              // Idle, not done: stay resident so the prompt this process was spawned for can still
+              // land. Ahead of the hooks below, which are end-of-REQUEST hooks — there has been no
+              // request to end. Nothing is scheduled; the next `onInput` arms the alarm.
+              log('agent idle before its first turn, staying resident');
               return;
             }
 
@@ -234,6 +322,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             if (pendingWork(after)) {
               log('agent work enqueued by end-request hook, continuing');
               yield* reconcileAlarmWith(after);
+              yield* reportSleeping(after);
               return;
             }
 
@@ -262,24 +351,28 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           // durable effect to the feed inline.
           rpcHandlers: yield* HarnessControl.toHandlers({
             setAlarm: Effect.fn(function* ({ at, message }) {
-              yield* sessionStore.setAlarm(feed, {
+              const alarm = yield* sessionStore.setAlarm(feed, {
                 wakeAt: DateTime.toEpochMillis(at),
                 message: message ?? undefined,
               });
+              // Reconciling reads the feed back through the eventually-consistent index, so a wake
+              // whose record has not landed yet arms nothing and nothing looks again.
+              unseenAlarms.set(alarm.id, { wakeAt: alarm.wakeAt, wakes: 0 });
               yield* reconcileAlarm;
             }),
             enqueueMessage: Effect.fn(function* ({ content }) {
-              yield* sessionStore.enqueueMessage(
-                feed,
-                Message.make({ sender: { role: 'user' }, blocks: [...content] }),
-              );
+              const message = Message.make({ sender: { role: 'user' }, blocks: [...content] });
+              yield* sessionStore.enqueueMessage(feed, message);
+              unseenWriteIds.add(message.id);
               yield* ctx.setAlarm(0);
             }),
           }),
           onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
             log('agent onInput received', { backlog: toolResults.length });
             const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
-            yield* sessionStore.enqueueMessage(feed, Message.make({ sender: { role: 'user' }, blocks: content }));
+            const message = Message.make({ sender: { role: 'user' }, blocks: content });
+            yield* sessionStore.enqueueMessage(feed, message);
+            unseenWriteIds.add(message.id);
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
           }),
@@ -290,7 +383,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // Earliest point the agent can report to a reader who is already waiting: draining the
               // queue below reads the feed, which is itself part of the wait. An empty wake emits it
               // too, but that path returns in milliseconds and the turn settling clears the line.
-              yield* emitRequestPhase('preparing');
+              yield* Trace.emitRequestPhase('preparing');
 
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
@@ -305,14 +398,41 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 prompt = toolResultPrompt(toolResult);
               } else {
                 const state = yield* sessionStore.loadPending(feed);
-                const message = state.pendingMessages[0];
-                const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now());
+                // An id still in the pending set has not caught up yet; one that has left it is
+                // durably acked and no longer needs remembering.
+                const stillPending = new Set([
+                  ...state.pendingMessages.map((message) => message.id),
+                  ...state.pendingAlarms.map((alarm) => alarm.id),
+                ]);
+                if (ackedEntries.some((id) => !stillPending.has(id))) {
+                  ackedEntries = ackedEntries.filter((id) => stillPending.has(id));
+                  yield* AckedEntriesCell.set(ackedEntries);
+                }
+                const acked = new Set(ackedEntries);
+                const message = state.pendingMessages.find((candidate) => !acked.has(candidate.id));
+                const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now() && !acked.has(alarm.id));
+                // An alarm this incarnation wrote that enough reads have failed to show is gone —
+                // cancelled, or delivered on an earlier wake — and must stop contributing a due
+                // time, or reconciling would re-arm for it forever. Bounded by reads rather than by
+                // the due time, which would drop an already-due alarm before the index caught up.
+                for (const [id, entry] of unseenAlarms) {
+                  if (state.pendingAlarms.some((alarm) => alarm.id === id)) {
+                    continue;
+                  }
+                  entry.wakes++;
+                  if (entry.wakes >= MAX_UNSEEN_WRITE_WAKES) {
+                    unseenAlarms.delete(id);
+                  }
+                }
                 if (message !== undefined) {
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
+                  unseenWriteIds.delete(message.id);
+                  unseenWriteWakes = 0;
                   dequeued = message;
                   prompt = [...message.blocks];
                 } else if (dueAlarm !== undefined) {
                   log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt });
+                  unseenAlarms.delete(dueAlarm.id);
                   dequeued = dueAlarm;
                   prompt = [
                     ContentBlock.Text.make({
@@ -320,6 +440,29 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       disposition: 'synthetic',
                     }),
                   ];
+                } else if (unseenWriteIds.size > 0 && unseenWriteWakes < MAX_UNSEEN_WRITE_WAKES) {
+                  // Read-your-writes over an eventually-consistent read: this incarnation appended an
+                  // entry the query has not caught up to, so look again shortly rather than conclude
+                  // the queue is drained. Bounded, so a write that never materialises degrades to the
+                  // idle path instead of waking forever.
+                  unseenWriteWakes++;
+                  log('agent onAlarm empty queue with an unread write, waking again', {
+                    unseenWrites: unseenWriteIds.size,
+                    attempt: unseenWriteWakes,
+                  });
+                  yield* ctx.setAlarm(UNSEEN_WRITE_RETRY_MS);
+                  return;
+                } else if (unseenWriteIds.size > 0) {
+                  // Retry budget spent and a write this incarnation made is still unread. The bound
+                  // stops the waking, but completing here would drop that prompt for good — there is
+                  // no guaranteed upper bound on index lag — so the process stays resident instead,
+                  // to be woken by the next input or alarm.
+                  log.warn('agent giving up on an unread write, staying resident', {
+                    unseenWrites: unseenWriteIds.size,
+                    wakes: unseenWriteWakes,
+                  });
+                  yield* reconcileAlarmWith(state);
+                  return;
                 } else {
                   log('agent onAlarm empty queue', {});
                   yield* reconcileAlarmWith(state);
@@ -337,30 +480,33 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('begin request', { prompt });
               log('trace agent request begin');
-              yield* Trace.write(AgentRequestBegin, {});
+              yield* Trace.write(Trace.AgentRequestBegin, {});
               yield* session
                 .runTurn({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
-                  mcpServers: options.getMcpServers?.(),
+                  mcpServers: yield* loadSpaceMcpServers(),
                 })
                 .pipe(
                   Effect.onExit((exit) =>
-                    Trace.write(AgentRequestEnd, {
+                    Trace.write(Trace.AgentRequestEnd, {
                       status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                       error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                     }),
                   ),
                 );
               log('end request');
+              turnRan = true;
               yield* ToolResultsCell.set(toolResults);
 
               // Ack only now: the turn is what the queue entry was for, so a process that dies before
               // this point must find the entry still pending and redeliver it.
               if (dequeued !== undefined) {
                 yield* sessionStore.ack(feed, dequeued);
+                ackedEntries = [...ackedEntries, dequeued.id];
+                yield* AckedEntriesCell.set(ackedEntries);
               }
               const after = yield* sessionStore.loadPending(feed);
 
@@ -373,6 +519,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   const pid = yield* delegation.spawn;
                   delegations.push({ pid, id: delegation.id });
                   log('delegated work', { pid, id: delegation.id });
+                  yield* Trace.write(Trace.DelegationSpawned, { taskId: delegation.id, pid: String(pid) });
                 }
                 if (pending.length > 0) {
                   yield* DelegationsCell.set(delegations);
@@ -421,6 +568,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                     const pid = yield* next.spawn;
                     delegations.push({ pid, id: next.id });
                     log('delegated work', { pid, id: next.id });
+                    yield* Trace.write(Trace.DelegationSpawned, { taskId: next.id, pid: String(pid) });
                   }
                   if (pending.length > 0) {
                     yield* DelegationsCell.set(delegations);
@@ -519,6 +667,25 @@ type Delegation = Schema.Schema.Type<typeof Delegation>;
 const DelegationsCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
+).pipe(StorageService.withDefault(() => []));
+
+/**
+ * Ids of queue entries this process has ACKED, held until the ack is visible in the feed read.
+ *
+ * The ack is a feed append and a hosted process reads the feed back through the eventually
+ * consistent space index, so `loadPending` keeps returning an entry whose ack has not landed yet —
+ * and `loadPending` deliberately includes in-flight entries, so that an interrupted turn is
+ * redelivered. Without this the two combine into a redelivery loop: the agent re-runs the same turn
+ * on every wake, forever. Durable rather than in-memory because the isolate does not survive
+ * between turns, and pruned as soon as the entry leaves the pending set, so it cannot grow
+ * unbounded.
+ *
+ * This does NOT weaken at-least-once delivery: an entry is recorded only after its turn ran, which
+ * is the same point the ack is written, so a crash before that still redelivers.
+ */
+const AckedEntriesCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
+  'ackedEntries',
 ).pipe(StorageService.withDefault(() => []));
 
 const ToolCallState = Schema.Struct({

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -16,9 +17,9 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
+import { GenerationService, MediaArtifact, StudioCapabilities, Variant } from '#types';
 
-import generateHandler from './generate';
+import generateHandler from './generate.ts';
 
 const IDEOGRAM_SOURCE = 'ideogram.ai';
 
@@ -86,7 +87,7 @@ describe('generate', () => {
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
-      types: [Artifact.Artifact, Variant.Variant],
+      types: [MediaArtifact.MediaArtifact, Variant.Variant],
     }));
   });
 
@@ -94,10 +95,10 @@ describe('generate', () => {
     await builder.close();
   });
 
-  const addArtifact = (kind = 'image'): Artifact.Artifact => db.add(Artifact.make({ kind }));
+  const addArtifact = (kind = 'image'): MediaArtifact.MediaArtifact => db.add(MediaArtifact.make({ kind }));
 
   const run = (
-    artifact: Artifact.Artifact,
+    artifact: MediaArtifact.MediaArtifact,
     {
       services = [],
       creds = [],
@@ -114,8 +115,7 @@ describe('generate', () => {
   ) =>
     generateHandler.handler({ artifact: Ref.make(artifact), provider, config, variant }).pipe(
       Effect.provideService(Capability.Service, capabilityService(...services)),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(configuredCredentialsLayer(creds)),
+      Effect.provide(Layer.provideMerge(Database.layer(db), configuredCredentialsLayer(creds))),
       // opaqueHandler erases the context; the layers above satisfy it at runtime.
       (effect) => effect as Effect.Effect<{ count: number }, unknown, never>,
       EffectEx.runPromise,

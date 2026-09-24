@@ -6,23 +6,31 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { join } from '../../../util';
-import { createMarkdownExtensions } from '../../language/markdown';
-import { blockSelectionField } from '../blocks';
-import { getDropIndent, getExtent, moveBlocks, replaceBlocks, selectAllItems, selectDown, selectUp } from './dnd';
-import { outlinerTree, treeFacet } from './tree';
+import { join } from '../../../util/index.ts';
+import { createMarkdownExtensions } from '../../language/markdown/index.ts';
+import { blockSelectionField } from '../blocks/index.ts';
+import {
+  canDragItem,
+  getDropIndent,
+  getExtent,
+  moveBlocks,
+  replaceBlocks,
+  selectAllItems,
+  selectDown,
+  selectUp,
+} from './dnd.ts';
+import { outlinerTree, treeFacet } from './tree.ts';
 
 const LINES = ['- [ ] 1', '- [ ] 2', '  - [ ] 2.1', '  - [ ] 2.2', '    - 2.2.1', '  - [ ] 2.3', '- [ ] 3'];
 const DOC = join(...LINES);
 const extensions = [createMarkdownExtensions(), outlinerTree(), blockSelectionField];
 
 const getPos = (line: number) => LINES.slice(0, line).reduce((acc, text) => acc + text.length + 1, 0);
-const makeState = () => EditorState.create({ doc: DOC, extensions });
 
 // Runs `fn` against a fresh view (destroyed after, so pending measures can't leak between cases — the
 // former flakiness that had this suite gated out of CI) and returns the resulting document.
 const withView = (fn: (view: EditorView) => void): string => {
-  const view = new EditorView({ state: makeState() });
+  const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
   try {
     fn(view);
     return view.state.doc.toString();
@@ -34,13 +42,15 @@ const withView = (fn: (view: EditorView) => void): string => {
 describe('outliner blocks', () => {
   test('getExtent spans the whole subtree', ({ expect }) => {
     // Item "2" (line 1) owns 2.1, 2.2 (with 2.2.1), and 2.3 — lines 1..5.
-    const extent = getExtent(makeState(), { from: getPos(1), to: getPos(1) });
-    expect(makeState().doc.sliceString(extent.from, extent.to)).to.eq(join(...LINES.slice(1, 6)));
+    const extent = getExtent(EditorState.create({ doc: DOC, extensions }), { from: getPos(1), to: getPos(1) });
+    expect(EditorState.create({ doc: DOC, extensions }).doc.sliceString(extent.from, extent.to)).to.eq(
+      join(...LINES.slice(1, 6)),
+    );
   });
 
   test('getExtent of a leaf is the item itself', ({ expect }) => {
-    const extent = getExtent(makeState(), { from: getPos(6), to: getPos(6) });
-    expect(makeState().doc.sliceString(extent.from, extent.to)).to.eq(LINES[6]);
+    const extent = getExtent(EditorState.create({ doc: DOC, extensions }), { from: getPos(6), to: getPos(6) });
+    expect(EditorState.create({ doc: DOC, extensions }).doc.sliceString(extent.from, extent.to)).to.eq(LINES[6]);
   });
 
   test('moving a nested item to the top level re-roots its subtree indentation', ({ expect }) => {
@@ -64,7 +74,7 @@ describe('outliner blocks', () => {
   });
 
   test('selectAllItems selects every item anchor', ({ expect }) => {
-    const view = new EditorView({ state: makeState() });
+    const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
     try {
       selectAllItems(view);
       const tree = view.state.facet(treeFacet);
@@ -84,7 +94,7 @@ describe('outliner blocks', () => {
   });
 
   test('selectDown / selectUp extend the block selection by one item', ({ expect }) => {
-    const view = new EditorView({ state: makeState() });
+    const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
     try {
       view.dispatch({ selection: EditorSelection.cursor(getPos(0) + 6) });
 
@@ -138,5 +148,15 @@ describe('outliner drag reindent', () => {
     } finally {
       view.destroy();
     }
+  });
+});
+
+describe('canDragItem', () => {
+  test('only an item with content gets a grip', ({ expect }) => {
+    const doc = join('- [ ] A', '- [ ] ', '', 'Prose');
+    const state = EditorState.create({ doc, extensions });
+    expect(canDragItem(state, { from: 0, to: 7 })).to.eq(true);
+    expect(canDragItem(state, { from: 8, to: 14 })).to.eq(false);
+    expect(canDragItem(state, { from: 16, to: 21 })).to.eq(false);
   });
 });

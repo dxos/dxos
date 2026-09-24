@@ -3,20 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { describe, test } from 'vitest';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import { beforeAll, describe, test } from 'vitest';
 
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { RuntimeProvider } from '@dxos/effect';
 import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { AutomergeHost } from '../automerge';
-import { QueryExecutor } from '../query/query-executor';
-import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
-import { SpaceStateManager } from './space-state-manager';
+import { AutomergeHost } from '../automerge/index.ts';
+import { QueryExecutor } from '../query/query-executor.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { SpaceStateManager } from './space-state-manager.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -48,13 +51,29 @@ const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const,
 /** Never run, so a `never`-typed placeholder satisfies every dependency's `RuntimeProvider<R>`. */
 const testRuntime = Effect.never;
 
-/** Real but never-opened QueryExecutor dependencies, shared across the fixtures below. */
-const testDeps = {
-  indexEngine: new IndexEngine(),
-  runtime: testRuntime,
-  automergeHost: new AutomergeHost({ runtime: testRuntime }),
-  spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
+/**
+ * Real but never-opened QueryExecutor dependencies, shared across the fixtures below. The index
+ * engine holds a client, and resolving one is asynchronous, so the fixture is built in `beforeAll`
+ * — no query in this file reaches the engine.
+ */
+let testDeps: {
+  indexEngine: IndexEngine;
+  runtime: typeof testRuntime;
+  automergeHost: AutomergeHost;
+  spaceStateManager: SpaceStateManager;
 };
+
+beforeAll(async () => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+  testDeps = {
+    indexEngine: new IndexEngine(sql),
+    runtime: testRuntime,
+    automergeHost: new AutomergeHost({ runtime: testRuntime }),
+    spaceStateManager: new SpaceStateManager({ runtime: testRuntime }),
+  };
+  return () => dispose();
+});
 
 /** Creates a QueryExecutor whose plan and cached scopes come only from `query`, via extractScopes(). */
 const makeExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>

@@ -6,28 +6,23 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
 import * as Result from 'effect/Result';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { FeedStore } from './feed-store';
-import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher';
+import { FeedStore } from './feed-store.ts';
+import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher.ts';
 
 const Block = FeedProtocol.Block;
 type Block = FeedProtocol.Block;
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 
-const TestLayer = SqlTransaction.layer.pipe(
-  Layer.provideMerge(
-    SqliteClient.layer({
-      filename: ':memory:',
-    }),
-  ),
-);
+const TestLayer = SqliteClient.layer({
+  filename: ':memory:',
+});
 
 // ActorIds.
 const ALICE = 'alice';
@@ -184,6 +179,72 @@ describe('Feed V2', () => {
 
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].feedId).toBe(feedId);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append notifies on committed blocks even when the cursor token write fails', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      // The cursor token is written after the blocks commit, so its failure must not silence them.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DROP TABLE cursor_tokens`;
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      const exit = yield* Effect.exit(
+        feed.append({
+          spaceId,
+          feedNamespace: WellKnownNamespaces.data,
+          blocks: [
+            {
+              feedId,
+              actorId: ALICE,
+              sequence: 0,
+              prevActorId: null,
+              prevSequence: null,
+              position: null,
+              timestamp: 0,
+              data: new Uint8Array([1]),
+            },
+          ],
+        }),
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(notified).toEqual([spaceId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('assigning a position announces a block change, not only a sync state change', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const [block] = yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+      ]);
+      const notified: string[] = [];
+      feed.onNewBlocks.on((event) => void notified.push(event.spaceId));
+
+      yield* feed.setPosition({
+        spaceId,
+        blocks: [
+          {
+            feedId,
+            actorId: block.actorId,
+            sequence: block.sequence,
+            position: 0,
+            feedNamespace: WellKnownNamespaces.data,
+          },
+        ],
+      });
+
+      // A feed subscription serves the position, so a push that assigns one has to wake it.
+      expect(notified).toEqual([spaceId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -790,6 +851,19 @@ describe('FeedStore server token', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('serves a space token from memory after its first read', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      const token = yield* feed.getServerToken(spaceId);
+
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM cursor_tokens WHERE spaceId = ${spaceId}`;
+      expect(yield* feed.getServerToken(spaceId)).toBe(token);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('honours position for a client that sends a matching token or none', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
@@ -842,18 +916,61 @@ describe('FeedStore server token', () => {
         feedNamespace: WellKnownNamespaces.data,
         lastPulledPosition: 2,
         serverToken: 'old',
+        blocksToPull: 5,
       });
+
+      const changed: string[] = [];
+      const blocksChanged: string[] = [];
+      feed.onSyncStateChanged.on((event) => void changed.push(event.spaceId));
+      feed.onNewBlocks.on((event) => void blocksChanged.push(event.spaceId));
 
       yield* feed.resetSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, serverToken: 'new' });
 
+      expect(changed).toEqual([spaceId]);
+      // Stripping positions changes what a feed subscription serves, not just the sync state.
+      expect(blocksChanged).toEqual([spaceId]);
       expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
         lastPulledPosition: -1,
         serverToken: 'new',
+        // The estimate belonged to the server whose positions were just discarded.
+        blocksToPull: 0,
       });
       const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
       expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('the backlog estimate survives a restart', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      yield* feed.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 1,
+        blocksToPull: 7,
+      });
+
+      // A second store over the same database stands in for a restart: the estimate is a row, not
+      // process state, so a cold start no longer reports a drained namespace.
+      const restarted = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const syncState = yield* restarted.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data });
+
+      expect(syncState.blocksToPull).toBe(7);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  const replicatedBlock = (feedId: string, actorId: string, sequence: number, position: number): Block => ({
+    feedId,
+    actorId,
+    sequence,
+    prevActorId: null,
+    prevSequence: null,
+    position,
+    timestamp: 0,
+    data: new Uint8Array([sequence]),
+  });
 
   const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
     feed.appendLocal(

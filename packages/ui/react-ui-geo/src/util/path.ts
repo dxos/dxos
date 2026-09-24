@@ -6,7 +6,7 @@ import { type GeoGeometryObjects, geoCircle as d3GeoCircle } from 'd3';
 import { type Point, type Polygon, type Position } from 'geojson';
 import { type LatLngLiteral } from 'leaflet';
 
-import type { Vector } from '../hooks';
+import type { Vector } from '../hooks/index.ts';
 
 export const positionToRotation = ([lng, lat]: [number, number], tilt = 0): Vector => [-lng, tilt - lat, 0];
 

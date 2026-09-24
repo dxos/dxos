@@ -6,16 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
+import { type ContentMap, Ui } from '@dxos/diagram';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ContentMap, Ui } from '@dxos/plugin-illustrator/model';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { applyCommands } from '#model';
 import { Tldraw } from '#types';
 
-import { CanvasComponent } from './Canvas';
+import { CanvasComponent } from './Canvas.tsx';
 
 // MOSAIC (Model-Oriented System for Adaptive Interface Composition) phase-1 spike: a schema
 // compiles to a low-fidelity form schematic — ASCII on the left, the same drawing on the canvas.

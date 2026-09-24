@@ -12,14 +12,14 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 
-import { McpProtocolError, ToolCallResult, initialize, request } from './client';
-import { requireSession, serverUrlOption } from './util';
+import { McpProtocolError, ToolCallResult, initialize, request } from './client.ts';
+import { requireSession, serverUrlOption } from './util.ts';
 
 export const call = Command.make(
   'call',
   {
-    tool: Args.string('tool').pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
-    input: Options.string('input').pipe(
+    tool: Args.String('tool').pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
+    input: Options.String('input').pipe(
       Options.withDescription('Tool arguments as JSON.'),
       Options.withSchema(Schema.fromJsonString(Schema.Unknown)),
       Options.optional,

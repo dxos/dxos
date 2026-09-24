@@ -10,8 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import * as Game from '@dxos/plugin-game/Game';
 
-import * as Chess from './Chess';
-import * as PlayerReview from './PlayerReview';
+import * as Chess from './Chess.ts';
+import * as PlayerReview from './PlayerReview.ts';
 
 export const Move = Operation.make({
   meta: {

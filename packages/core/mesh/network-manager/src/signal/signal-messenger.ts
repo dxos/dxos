@@ -5,7 +5,13 @@
 import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { type PeerInfo } from '@dxos/messaging';
-import { type Answer, type Offer, type Signal, type SignalBatch } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import {
+  type Answer,
+  type Close,
+  type Offer,
+  type Signal,
+  type SignalBatch,
+} from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 export interface OfferMessage {
   author: PeerInfo;
@@ -20,7 +26,15 @@ export interface SignalMessage {
   recipient: PeerInfo;
   topic: PublicKey;
   sessionId: PublicKey;
-  data: { signal?: Signal; signalBatch?: SignalBatch };
+  data: { signal: Signal; signalBatch?: never } | { signal?: never; signalBatch: SignalBatch };
+}
+
+export interface CloseMessage {
+  author: PeerInfo;
+  recipient: PeerInfo;
+  topic: PublicKey;
+  sessionId: PublicKey;
+  data: { close: Close };
 }
 
 /**
@@ -36,4 +50,9 @@ export interface SignalMessenger {
    * Reliably send a signal to a peer.
    */
   signal(ctx: Context, msg: SignalMessage): Promise<void>;
+
+  /**
+   * Tell a peer that a session ended before its transport connected.
+   */
+  close(ctx: Context, msg: CloseMessage): Promise<void>;
 }

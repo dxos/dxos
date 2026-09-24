@@ -8,11 +8,18 @@ import { log } from '@dxos/log';
 import { TransportKind } from '@dxos/network-manager';
 import { defaultMap, range } from '@dxos/util';
 
-import { BORDER_COLORS, type LogReader, type SerializedLogEntry, getReader, renderPNG, showPNG } from '../analysys';
-import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { TransportReplicant } from '../replicants/transport-replicant';
-import { TestBuilder as SignalTestBuilder } from '../test-builder';
+import {
+  BORDER_COLORS,
+  type LogReader,
+  type SerializedLogEntry,
+  getReader,
+  renderPNG,
+  showPNG,
+} from '../analysys/index.ts';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { TransportReplicant } from '../replicants/transport-replicant.ts';
+import { TestBuilder as SignalTestBuilder } from '../test-builder.ts';
 
 export type TransportTestSpec = {
   replicants: number;

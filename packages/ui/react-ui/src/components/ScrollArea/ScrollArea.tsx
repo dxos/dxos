@@ -8,10 +8,10 @@ import React, { CSSProperties, useMemo, useState } from 'react';
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { composable, composableProps, slottable } from '../../util';
-import { ScrollAreaThumbs } from './ScrollAreaThumbs';
-import { type ScrollbarDensity, scrollbar } from './scrollbar';
+import { useThemeContext } from '../../hooks/index.ts';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
+import { type ScrollbarDensity, scrollbar } from './scrollbar.ts';
 
 //
 // Context

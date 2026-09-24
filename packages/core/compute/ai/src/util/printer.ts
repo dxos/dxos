@@ -10,7 +10,7 @@ import { inspect } from 'node:util';
 
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { ToolFormatter } from '../ToolFormatter';
+import { ToolFormatter } from '../ToolFormatter.ts';
 
 type Mode = 'text' | 'json';
 

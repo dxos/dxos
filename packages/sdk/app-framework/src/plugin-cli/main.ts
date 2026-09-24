@@ -4,7 +4,7 @@
 
 import path from 'node:path';
 
-import { generate } from './generate';
+import { generate } from './generate.ts';
 
 // TODO(wittjosiah): Roll into dx cli? Once we stop shipping non-core plugins bundled into the cli
 //  it might be light weight enough to support this use case.

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { type AppSurface, useUpdateRow } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope, useUpdateRow } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -16,12 +16,7 @@ import { Settings } from '#types';
 
 export type PwaSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
-/**
- * The web's update panel, and the permanent home for an update the refresh toast is easy to miss.
- *
- * Deliberately the same `useUpdateRow` the desktop app renders: both platforms contribute the same
- * `UpdateManager`, so the only thing that differs is which one answered.
- */
+/** The web counterpart of NativeSettings: same row, same capability, whichever platform contributed it. */
 export const PwaSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(AppCapabilities.UpdateManager);
@@ -31,11 +26,14 @@ export const PwaSettings = () => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Field label={t('settings.updates.label')} description={description}>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
+            <Form.Field standalone label={t('settings.updates.label')} description={description}>
               {button}
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

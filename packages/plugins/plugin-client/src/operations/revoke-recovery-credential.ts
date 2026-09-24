@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
-import { RevokeRecoveryCredential } from './definitions';
+import { RevokeRecoveryCredential } from './definitions.ts';
 
 /**
  * Revoke one recovery credential.

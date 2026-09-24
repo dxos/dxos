@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
-import { DensityContext } from './DensityContext';
+import { DensityContext } from './DensityContext.ts';
 
 export type DensityProviderProps = PropsWithChildren<{
   density?: Density;

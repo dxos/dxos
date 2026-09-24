@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './OrderedList';
+export * from './OrderedList.tsx';

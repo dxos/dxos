@@ -11,11 +11,11 @@ import { expect } from 'vitest';
 import { type Type } from '@dxos/crawler';
 import { Pipeline } from '@dxos/pipeline';
 
-import { DiscordPipeline } from '../pipeline';
-import { replayStream } from '../replay';
-import { ExtractedQuestionStore } from '../stores';
-import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing';
-import { detectQuestions, extractQuestionsStage } from './extract-questions';
+import { DiscordPipeline } from '../pipeline.ts';
+import { replayStream } from '../replay.ts';
+import { ExtractedQuestionStore } from '../stores/index.ts';
+import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing/index.ts';
+import { detectQuestions, extractQuestionsStage } from './extract-questions.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 

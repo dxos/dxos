@@ -4,6 +4,6 @@
 
 // Public API exports.
 
-export * as SamplePlugin from './SamplePlugin';
+export * as SamplePlugin from './SamplePlugin.ts';
 export * from '#meta';
 export * from '#types';

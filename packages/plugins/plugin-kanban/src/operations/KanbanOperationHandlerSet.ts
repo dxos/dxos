@@ -6,8 +6,8 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { KanbanOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  KanbanOperation.DeleteCard.pipe(Operation.lazyHandler(() => import('./delete-card'))),
-  KanbanOperation.DeleteCardField.pipe(Operation.lazyHandler(() => import('./delete-card-field'))),
-  KanbanOperation.RestoreCard.pipe(Operation.lazyHandler(() => import('./restore-card'))),
-  KanbanOperation.RestoreCardField.pipe(Operation.lazyHandler(() => import('./restore-card-field'))),
+  KanbanOperation.DeleteCard.pipe(Operation.lazyHandler(() => import('./delete-card.ts'))),
+  KanbanOperation.DeleteCardField.pipe(Operation.lazyHandler(() => import('./delete-card-field.ts'))),
+  KanbanOperation.RestoreCard.pipe(Operation.lazyHandler(() => import('./restore-card.ts'))),
+  KanbanOperation.RestoreCardField.pipe(Operation.lazyHandler(() => import('./restore-card-field.ts'))),
 ]);

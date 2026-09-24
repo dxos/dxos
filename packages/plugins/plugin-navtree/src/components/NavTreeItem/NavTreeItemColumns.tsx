@@ -9,10 +9,10 @@ import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';
 
-import { NAV_TREE_ITEM } from '../NavTree';
-import { useNavTreeContext } from '../NavTreeContext';
-import { type NavTreeItemColumnsProps } from '../types';
-import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction';
+import { NAV_TREE_ITEM } from '../NavTree/index.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { type NavTreeItemColumnsProps } from '../types.ts';
+import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction.tsx';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
   const { t } = useTranslation(meta.profile.key);

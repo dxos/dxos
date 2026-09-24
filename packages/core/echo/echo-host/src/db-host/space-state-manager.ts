@@ -2,7 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type DocumentId,
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+} from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -11,25 +16,22 @@ import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type DocumentLease } from '../automerge/document-lease';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state';
-import { DatabaseRoot } from './database-root';
-
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { type DocumentLease } from '../automerge/document-lease.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
+import { DatabaseRoot } from './database-root.ts';
 
 export type SpaceStateManagerProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 export class SpaceStateManager extends Resource {
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   private readonly _roots = new Map<DocumentId, DatabaseRoot>();
   private readonly _rootBySpace = new Map<SpaceId, DocumentId>();
@@ -48,14 +50,12 @@ export class SpaceStateManager extends Resource {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -106,6 +106,21 @@ export class SpaceStateManager extends Resource {
       return undefined;
     }
     return this._roots.get(documentId);
+  }
+
+  isBranchDocument(documentId: DocumentId): boolean {
+    for (const root of this._roots.values()) {
+      const doc = root.doc();
+      if (!doc) {
+        continue;
+      }
+      for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
+        if (isValidAutomergeUrl(url) && interpretAsDocumentId(url) === documentId) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

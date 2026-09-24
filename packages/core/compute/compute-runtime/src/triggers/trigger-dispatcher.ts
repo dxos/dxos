@@ -22,21 +22,32 @@ import * as Struct from 'effect/Struct';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { RunAgainError } from '@dxos/compute';
+import { NoHandlerError, RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
+import {
+  Annotation,
+  Database,
+  Error as EchoError,
+  Entity,
+  Feed,
+  Filter,
+  Obj,
+  Query,
+  QueryResult,
+  Ref,
+} from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as ProcessManager from '../ProcessManager';
-import { filterReadyFeedItems } from './feed-position';
-import { createInvocationPayload } from './input-builder';
-import { type TriggerState, TriggerStateStore } from './trigger-state-store';
+import * as ProcessManager from '../ProcessManager.ts';
+import { filterReadyFeedItems } from './feed-position.ts';
+import { createInvocationPayload } from './input-builder.ts';
+import { type TriggerState, TriggerStateStore } from './trigger-state-store.ts';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -83,6 +94,15 @@ export interface TriggerDispatcherOptions {
    * @default 30 seconds
    */
   failureCooldown?: Duration.Duration;
+
+  /**
+   * How long a trigger whose stored reference no longer resolves (deleted target, unregistered
+   * operation handler) is parked before the reference is probed again. Longer than
+   * {@link failureCooldown}: a stale reference is repaired by a user action (re-enabling a plugin,
+   * restoring an object), not by retrying sooner.
+   * @default 15 minutes
+   */
+  staleReferenceRetryInterval?: Duration.Duration;
 }
 
 export interface InvokeTriggerOptions {
@@ -139,6 +159,18 @@ interface RuntimeTriggerState {
   };
 
   /**
+   * Set while the trigger's stored reference does not resolve — its target object is deleted or no
+   * handler is registered for its operation — which no amount of re-running repairs. Distinct from
+   * {@link cooldownUntil}, which parks a trigger whose operation ran and failed.
+   */
+  staleReference?: {
+    error: Error;
+
+    /** When the reference is probed again, so a repair resumes dispatch without a restart. */
+    until: Date;
+  };
+
+  /**
    * Result of the most recent invocation of this trigger.
    */
   lastResult?: Exit.Exit<unknown> | null;
@@ -174,6 +206,12 @@ export type TriggerRuntimeStatus = {
    * Whether a re-invocation is pending from {@link RunAgainError}.
    */
   retryPending: boolean;
+
+  /**
+   * Set while the trigger is parked on a reference that no longer resolves, so the UI can say the
+   * trigger is broken rather than merely idle.
+   */
+  staleReference?: { error: Error; until: Date };
 
   /**
    * Result of the most recent invocation, if any.
@@ -245,8 +283,10 @@ export class TriggerDispatcher extends Context.Service<
      */
     getCurrentTime(): Date;
   }
->()('@dxos/functions/TriggerDispatcher') {
-  static layer = (
+>()('@dxos/functions/TriggerDispatcher') {}
+
+export namespace TriggerDispatcher {
+  export const layer = (
     options: Omit<TriggerDispatcherOptions, 'services'>,
   ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
     Layer.effect(
@@ -288,6 +328,42 @@ const cronPeriod = (cron: Cron.Cron, now: Date): Duration.Duration | undefined =
 /** See {@link TriggerDispatcherOptions.livePollInterval}. */
 const DEFAULT_LIVE_POLL_INTERVAL = Duration.minutes(1);
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
+
+/** See {@link TriggerDispatcherOptions.staleReferenceRetryInterval}. */
+const DEFAULT_STALE_REFERENCE_RETRY_INTERVAL = Duration.minutes(15);
+
+/**
+ * Errors that mean a stored trigger reference no longer resolves: its target object is deleted, or
+ * no handler is registered for its operation (e.g. the plugin that contributed it was disabled).
+ * Matched by name so an error rebuilt across the process boundary still counts.
+ */
+const STALE_REFERENCE_ERROR_NAMES: ReadonlySet<string> = new Set([
+  EchoError.EntityNotFoundError.name,
+  NoHandlerError.name,
+]);
+
+/** Walks the `cause` chain, since the process boundary wraps the originating error. */
+const isStaleReferenceError = (value: unknown): boolean => {
+  let current: unknown = value;
+  while (current instanceof Error) {
+    if (STALE_REFERENCE_ERROR_NAMES.has(current.name)) {
+      return true;
+    }
+    current = current.cause;
+  }
+  return false;
+};
+
+/**
+ * Whether a failure is an unresolvable reference rather than an operation that ran and failed —
+ * the distinction that decides between parking the trigger and arming the failure cooldown.
+ */
+const isStaleReferenceCause = (cause: Cause.Cause<unknown>): boolean =>
+  cause.reasons.some((reason) =>
+    Cause.isFailReason(reason)
+      ? isStaleReferenceError(reason.error)
+      : Cause.isDieReason(reason) && isStaleReferenceError(reason.defect),
+  );
 
 class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
@@ -355,6 +431,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   }).pipe(Atom.keepAlive);
   private _maxConcurrency: number;
   private _failureCooldown: Duration.Duration;
+  private _staleReferenceRetryInterval: Duration.Duration;
 
   /**
    * Global concurrency limiter shared across all invocation paths (timer, feed, subscription,
@@ -376,6 +453,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
+    this._staleReferenceRetryInterval = options.staleReferenceRetryInterval ?? DEFAULT_STALE_REFERENCE_RETRY_INTERVAL;
     this._concurrencyLimiter = Semaphore.makeUnsafe(this._maxConcurrency);
   }
 
@@ -391,6 +469,40 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     }
     return true;
   };
+
+  /**
+   * Whether the trigger is parked on a reference that did not resolve. Self-clearing once the probe
+   * interval elapses, so a restored object or a re-registered handler resumes dispatch.
+   */
+  private _hasStaleReference = (triggerId: string): boolean => {
+    const entry = this._runtimeState.get(triggerId);
+    if (!entry?.staleReference) {
+      return false;
+    }
+    if (entry.staleReference.until.getTime() <= this.getCurrentTime().getTime()) {
+      entry.staleReference = undefined;
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * Park a trigger whose stored reference does not resolve. The dispatcher cannot repair the
+   * reference, so the trigger is held out of scheduled dispatch and surfaced on the observable
+   * state instead of re-running and re-throwing on every tick.
+   */
+  private _markStaleReference = (trigger: Trigger.Trigger, error: Error): void => {
+    const entry = this._getOrCreateRuntimeState(trigger);
+    const until = new Date(this.getCurrentTime().getTime() + Duration.toMillis(this._staleReferenceRetryInterval));
+    entry.staleReference = { error, until };
+    entry.cooldownUntil = undefined;
+    entry.retry = undefined;
+    log.warn('trigger reference is stale; parking trigger', { triggerId: trigger.id, until, error });
+  };
+
+  /** Why scheduled dispatch skips this trigger, if it does. */
+  private _skipReason = (triggerId: string): 'cooldown' | 'stale-reference' | undefined =>
+    this._isInCooldown(triggerId) ? 'cooldown' : this._hasStaleReference(triggerId) ? 'stale-reference' : undefined;
 
   /**
    * Return the runtime-state entry for a trigger, creating a bare one if absent. Callers that
@@ -418,6 +530,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       nextExecution: entry.nextExecution,
       cooldownUntil: entry.cooldownUntil,
       retryPending: entry.retry !== undefined,
+      staleReference: entry.staleReference,
       lastResult: entry.lastResult,
     }));
     registry.update(this._state, Struct.evolve({ triggers: () => triggers }));
@@ -603,6 +716,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         runtimeState.cooldownUntil = undefined;
         runtimeState.retry = { event, enqueuedAt: this._retrySequence++ };
         log('trigger requested re-invocation', { triggerId: trigger.id });
+      } else if (isStaleReferenceCause(result.cause)) {
+        // The reference, not the run, is broken: re-running cannot repair it, so park the trigger
+        // rather than letting the cooldown re-fire and re-throw it forever.
+        this._markStaleReference(trigger, EffectEx.causeToError(result.cause));
       } else {
         // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
         //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
@@ -669,8 +786,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                   // Update next execution time using Effect's Cron
                   entry.nextExecution = Cron.next(entry.cron, now);
 
-                  if (this._isInCooldown(triggerId)) {
-                    log('skipping trigger in cooldown', { triggerId });
+                  const skipReason = this._skipReason(triggerId);
+                  if (skipReason) {
+                    log('skipping trigger', { triggerId, reason: skipReason });
                     continue;
                   }
                   triggersToInvoke.push(entry.trigger);
@@ -698,8 +816,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               if (spec?.kind !== 'feed' || !isSelected(trigger.id)) {
                 continue;
               }
-              if (this._isInCooldown(trigger.id)) {
-                log('skipping trigger in cooldown', { triggerId: trigger.id });
+              const skipReason = this._skipReason(trigger.id);
+              if (skipReason) {
+                log('skipping trigger', { triggerId: trigger.id, reason: skipReason });
                 continue;
               }
               const feedRef = spec.feed;
@@ -707,7 +826,19 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                 log('skipping feed trigger with no feed reference', { triggerId: trigger.id });
                 continue;
               }
-              const feed = yield* Database.load(feedRef).pipe(Effect.orDie);
+              // A deleted feed parks this one trigger; dying here would abort the whole pass and
+              // take every healthy trigger in it down with the stale one.
+              const feed = yield* Database.load(feedRef).pipe(
+                Effect.catchTag('EntityNotFoundError', (error) =>
+                  Effect.sync(() => {
+                    this._markStaleReference(trigger, error);
+                    return undefined;
+                  }),
+                ),
+              );
+              if (!feed) {
+                continue;
+              }
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
@@ -771,8 +902,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               if (spec?.kind !== 'subscription' || !isSelected(trigger.id)) {
                 continue;
               }
-              if (this._isInCooldown(trigger.id)) {
-                log('skipping trigger in cooldown', { triggerId: trigger.id });
+              const skipReason = this._skipReason(trigger.id);
+              if (skipReason) {
+                log('skipping trigger', { triggerId: trigger.id, reason: skipReason });
                 continue;
               }
 
@@ -782,7 +914,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               // `Obj.isDeleted` branch below: the database emits a real tombstone, and a feed
               // removal (`Feed.remove`) now also produces a queryable tombstone that retains the
               // object's type/body (the index merges the `{ id, '@deleted': true }` block onto the
-              // prior snapshot — see `FtsIndex.update` / `EntityMetaIndex.update`).
+              // prior snapshot — see `ObjectSnapshotIndex.update` / `EntityMetaIndex.update`).
               const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
@@ -870,6 +1002,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       // order; a retry that re-requests re-runs is re-enqueued with a fresh sequence number so it
       // lands again at the tail. With `untilExhausted`, keep draining until no retries remain.
       invocations.push(...(yield* this._drainRetries({ untilExhausted })));
+
+      // Publish once the pass has finished, so state the pass itself changed — a trigger parked on
+      // a stale reference without ever being invoked — reaches the UI.
+      this._publishRuntimeStatuses(yield* Registry.AtomRegistry);
 
       return invocations;
     }).pipe(
@@ -1141,7 +1277,19 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
             if (!spec.feed) {
               return undefined;
             }
-            const feed = yield* Database.load(spec.feed).pipe(Effect.orDie);
+            // Dying here would fail the whole `refreshTriggers` pass, so every other trigger's
+            // schedule and reactive source would go unreconciled behind one deleted feed.
+            const feed = yield* Database.load(spec.feed).pipe(
+              Effect.catchTag('EntityNotFoundError', (error) =>
+                Effect.sync(() => {
+                  this._markStaleReference(trigger, error);
+                  return undefined;
+                }),
+              ),
+            );
+            if (!feed) {
+              return undefined;
+            }
             const cursor = readFeedCursor(trigger);
             // One item past the cursor is enough to know there is work; the dispatch that follows
             // reads the pages it needs. Watching the whole feed would restore the full scan this

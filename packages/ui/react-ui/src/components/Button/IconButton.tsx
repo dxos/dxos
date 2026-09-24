@@ -4,22 +4,23 @@
 
 import React, { forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon, type IconProps } from '../Icon';
-import { Tooltip, type TooltipSide } from '../Tooltip';
-import { Button, type ButtonProps } from './Button';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
+import { Button, type ButtonProps } from './Button.tsx';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Partial<Pick<IconProps, 'icon' | 'size'>> & {
     label: string;
     noTooltip?: boolean;
     iconOnly?: boolean;
-    square?: boolean; // TODO(burdon): Should be automatic in style?
-    /** Removes inline padding while keeping the control's height. */
-    compact?: boolean;
     iconEnd?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
+    /** @deprecated Remove (should be automatic in style.) */
+    square?: boolean;
+    /** Removes inline padding while keeping the control's height. */
+    compact?: boolean;
     tooltipSide?: TooltipSide;
   };
 

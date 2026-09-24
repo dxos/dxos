@@ -16,7 +16,8 @@
     "allow-list-audio-inputs",
     "allow-set-preferred-audio-input",
     "allow-start-microphone-bridge",
-    "allow-stop-microphone-bridge"
+    "allow-stop-microphone-bridge",
+    "allow-take-web-process-terminations"
   ],
   "platforms": ["iOS"],
   "windows": ["main"]

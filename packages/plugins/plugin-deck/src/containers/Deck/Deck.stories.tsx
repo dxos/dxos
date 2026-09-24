@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,12 +16,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
@@ -45,7 +48,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import { Deck } from './Deck';
+import { Deck } from './Deck.tsx';
 
 type StoryItem = { id: string; title: string; icon: string };
 
@@ -56,6 +59,8 @@ const STORY_ITEMS: StoryItem[] = [
   { id: 'story-item-4', title: 'Tasks', icon: 'ph--check-square--regular' },
   { id: 'story-item-5', title: 'References', icon: 'ph--bookmarks--regular' },
   { id: 'story-item-6', title: 'Archive', icon: 'ph--archive--regular' },
+  // Past every seeded `count` in this file, so "open next" always has an unopened target.
+  { id: 'story-item-7', title: 'Backlog', icon: 'ph--tray--regular' },
 ];
 
 // Seeded, so every plank's content is the same on each run — a plank that regenerated its text would
@@ -79,6 +84,12 @@ const STORY_CONTENT: Record<string, string> = Object.fromEntries(
 );
 
 const contentFor = (title: string): string => STORY_CONTENT[title] ?? `# ${title}`;
+
+/**
+ * Story nodes hang off a workspace node rather than off root, since `PathResolution.representNode` binds
+ * a node to a URL only in the `root/<workspace>/<id>` shape.
+ */
+const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
 
 /**
  * A plank's article: a real markdown editor rather than placeholder copy, so the deck is exercised
@@ -144,7 +155,7 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
       {LAUNCHER_MESSAGES.map((message) => (
         <button
           key={message.id}
-          className='rounded-sm border border-separator p-3 text-start hover:bg-hoverSurface'
+          className='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
           data-testid='story.launcher.row'
           data-selected={selected === message.id}
           onClick={() => handleOpen(message.id)}
@@ -156,9 +167,55 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 };
 
+const REVEAL_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-5`;
+
+/** Reveals a plank from outside the deck, and marks the button once the deck's effects have run. */
+const TestRevealControls = () => {
+  const { invokePromise } = useOperationInvoker();
+  const reveal = useCallback(
+    async (button: HTMLButtonElement, focus?: boolean) => {
+      delete button.dataset.revealed;
+      await invokePromise(LayoutOperation.ScrollIntoView, { subject: REVEAL_PLANK_ID, focus });
+      // The state update renders in the first frame; the deck's effects have run by the second.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      button.dataset.revealed = 'true';
+    },
+    [invokePromise],
+  );
+
+  return (
+    <div className='fixed bottom-2 start-2 z-10 flex gap-2'>
+      <button data-testid='story.reveal' onClick={(event) => void reveal(event.currentTarget)}>
+        Reveal
+      </button>
+      <button data-testid='story.reveal-without-focus' onClick={(event) => void reveal(event.currentTarget, false)}>
+        Reveal without focus
+      </button>
+    </div>
+  );
+};
+
+/** Opens one more plank beside the seeded ones. */
+const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
+  const { invokePromise } = useOperationInvoker();
+  const handleClick = useCallback(() => {
+    if (targetId) {
+      void invokePromise(LayoutOperation.Open, { subject: [targetId], disposition: 'add' });
+    }
+  }, [invokePromise, targetId]);
+
+  return (
+    <div className='fixed bottom-2 end-2 z-10'>
+      <button data-testid='story.open-next' onClick={handleClick} disabled={!targetId}>
+        Open next
+      </button>
+    </div>
+  );
+};
+
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -170,8 +227,8 @@ const storyDeckSettings = Capability.makeModule(() =>
 
 // In-memory deck state so each story starts from a clean deck; the real `DeckState()` capability
 // persists to localStorage, which otherwise leaks planks between stories.
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
@@ -194,6 +251,7 @@ const storyDeckState = Capability.makeModule(() =>
       toasts: [],
       currentUndoId: undefined,
       scrollIntoView: undefined,
+      open: {},
     }).pipe(Atom.keepAlive);
 
     const layoutAtom = Atom.make((get) => {
@@ -201,21 +259,23 @@ const storyDeckState = Capability.makeModule(() =>
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        active: open.active,
+        inactive: open.inactive,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
@@ -233,7 +293,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-state',
     activatesOn: ActivationEvents.Startup,
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),
@@ -294,8 +359,26 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       Effect.fnUntraced(function* () {
         const extensions = yield* Effect.all([
           AppGraphBuilder.createExtension({
-            id: 'storyItems',
+            id: 'storyWorkspace',
+            // A node id may not contain '/' (`GraphNode.qualifyId`'s invariant), so the workspace segment
+            // has to come from a real intermediate node rather than be folded into each item's id.
             match: GraphNodeMatcher.whenRoot,
+            connector: () =>
+              Effect.succeed([
+                AppGraphNode.make({
+                  id: DeckSchema.DEFAULT_DECK_ID,
+                  type: 'story-workspace',
+                  data: { id: DeckSchema.DEFAULT_DECK_ID },
+                  properties: { label: 'Story workspace' },
+                }),
+              ]),
+          }),
+          AppGraphBuilder.createExtension({
+            id: 'storyItems',
+            // A URL binding, so `LayoutOperation.Open` round-trips a story item through the deck's real
+            // navigate-then-project path rather than seeding `active` directly.
+            url: { key: 'item', kind: 'item', path: [] },
+            match: GraphNodeMatcher.whenNodeType('story-workspace'),
             connector: () =>
               Effect.succeed([
                 ...STORY_ITEMS.map((item) =>
@@ -338,6 +421,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           // plank to plank as attention changes.
           AppGraphBuilder.createExtension({
             id: 'storyItemCompanions',
+            relation: AppNode.companion,
             match: (node) =>
               node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
             connector: (node) =>
@@ -366,12 +450,21 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 );
 
 type StoryArgs = {
+  /** Renders controls that reveal a plank from outside the deck. */
+  revealControls?: boolean;
+  /** Renders a control that opens the first unseeded story item as a new plank. */
+  openNextControl?: boolean;
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
   sidebarState?: DeckSchema.StoredDeckState['sidebarState'];
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
+  /**
+   * Seed no `companionPlanks` entry at all — the "reader has never opened or closed one" state. Takes
+   * precedence over `companionPlanks`.
+   */
+  uninitializedCompanions?: boolean;
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
   launcher?: boolean;
   /**
@@ -391,7 +484,10 @@ const DefaultStory = ({
   count = 0,
   sidebarState = 'closed',
   companionPlanks = NO_COMPANIONS,
+  uninitializedCompanions = false,
   launcher = false,
+  revealControls = false,
+  openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: StoryArgs) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
@@ -402,15 +498,19 @@ const DefaultStory = ({
   }, [settingsOverrides, updateSettings]);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
-  const { state, deck, updateState } = useDeckState();
+  const { state, deck, updateState, updateEphemeral } = useDeckState();
 
-  // Subscribe to the root's children so the `whenRoot` connector runs and materializes the story
-  // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
-  // The graph qualifies connector node ids with their parent path (e.g. `root/story-item-1`), so the
-  // seeded `active` list holds the materialized ids rather than the bare `STORY_ITEMS` ids.
-  const rootChildren = useConnections(graph, GraphNode.RootId, 'child');
-  const items = useMemo(() => rootChildren.filter((node) => node.type === 'story-item'), [rootChildren]);
-  const launcherNode = useMemo(() => rootChildren.find((node) => node.type === 'story-launcher'), [rootChildren]);
+  // Only root expands automatically at graph-capability startup, so this story owns expanding the
+  // workspace level the way `useLoadDescendents` does for a navtree branch, or no plank's `useNode` ever
+  // resolves. The graph qualifies connector node ids with their parent path (e.g.
+  // `root/default/story-item-1`), so the seeded `active` list holds the materialized ids.
+  useState(() => AppGraph.expandSync(graph, STORY_WORKSPACE_ID, 'child'));
+  const workspaceChildren = useConnections(graph, STORY_WORKSPACE_ID, 'child');
+  const items = useMemo(() => workspaceChildren.filter((node) => node.type === 'story-item'), [workspaceChildren]);
+  const launcherNode = useMemo(
+    () => workspaceChildren.find((node) => node.type === 'story-launcher'),
+    [workspaceChildren],
+  );
 
   // Seed the deck's active planks in one shot rather than opening them one by one: each `Open` schedules
   // its own scroll-into-view, so a multi-plank deck would visibly page from plank to plank on load.
@@ -431,17 +531,42 @@ const DefaultStory = ({
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
+        [current.activeDeck]: {
+          ...current.decks[current.activeDeck],
+          // Omitting the key rather than writing `[]` is what exercises the "reader has never decided"
+          // state `isCompanionOpen` special-cases.
+          ...(uninitializedCompanions ? {} : { companionPlanks: open }),
+        },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
+    // What is open is the URL's, and there is no URL here, so the story writes it where the projection
+    // would have.
+    updateEphemeral((current) => ({
+      ...current,
+      open: { ...current.open, [state.activeDeck]: { active, inactive: [] } },
+    }));
+  }, [
+    items,
+    count,
+    sidebarState,
+    companionPlanks,
+    uninitializedCompanions,
+    launcher,
+    launcherNode,
+    updateState,
+    updateEphemeral,
+  ]);
 
   return (
-    <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
-      <Deck.Content>
-        <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
-      </Deck.Content>
-    </Deck.Root>
+    <>
+      {revealControls && <TestRevealControls />}
+      {openNextControl && <TestOpenNextControls targetId={items[count]?.id} />}
+      <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
+        <Deck.Content>
+          <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
+        </Deck.Content>
+      </Deck.Root>
+    </>
   );
 };
 
@@ -526,7 +651,7 @@ export const ManyPlanksWithCompanion: Story = {
 
 /** Attends a plank by focusing it — attention is focus-driven, and a click would have to land on a plank that may be folded. */
 const attendPlank = async (canvasElement: HTMLElement, position: number) => {
-  const id = `root/story-item-${position}`;
+  const id = `${STORY_WORKSPACE_ID}/story-item-${position}`;
   const plank = canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"]`);
   await expect(plank, `no plank for ${id}`).not.toBeNull();
   plank?.focus();
@@ -544,6 +669,32 @@ const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
       .filter((title): title is string => !!title),
   ),
 ];
+
+// A reveal that leaves focus where it is brings the plank forward without focusing it; a plain reveal
+// focuses it.
+export const RevealWithoutFocus: Story = {
+  tags: ['test'],
+  args: { count: 6, revealControls: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+    const plank = () =>
+      canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${REVEAL_PLANK_ID}"]`);
+    await waitFor(() => expect(plank()).not.toBeNull());
+
+    const withoutFocus = await canvas.findByTestId('story.reveal-without-focus');
+    withoutFocus.focus();
+    withoutFocus.click();
+    await waitFor(() => expect(withoutFocus).toHaveAttribute('data-revealed', 'true'));
+    await expect(document.activeElement).toBe(withoutFocus);
+
+    const reveal = await canvas.findByTestId('story.reveal');
+    reveal.focus();
+    reveal.click();
+    await waitFor(() => expect(reveal).toHaveAttribute('data-revealed', 'true'));
+    await waitFor(() => expect(plank()?.contains(document.activeElement)).toBe(true));
+  },
+};
 
 // Companions are per-plank state: every plank whose companion is open renders it beside that plank, and
 // attention plays no part in what is laid out. Planks 1 and 3 start open here, plank 2 closed. (This
@@ -571,6 +722,57 @@ export const CompanionPerPlank: Story = {
     await attendPlank(canvasElement, 1);
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
+
+    // Every plank sits in a splitter panel, companion or not: a companion resolves a commit after its
+    // plank mounts, so a shape that varied with it would unmount the plank and everything it holds.
+    const planks = canvasElement.querySelectorAll<HTMLElement>('[data-testid="deck.plank"]');
+    await expect(planks).toHaveLength(3);
+    for (const plank of planks) {
+      await expect(plank.closest('[data-scope="splitter"][data-part="panel"]')).not.toBeNull();
+    }
+  },
+};
+
+/**
+ * Runs `interaction` with a workspace URL the deck can parse, restoring whatever Storybook had there.
+ * These stories seed their planks directly, so nothing has written a URL for the deck's operations to
+ * resolve a workspace from.
+ */
+const withWorkspaceUrl = async (interaction: () => Promise<void>) => {
+  const previous = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  window.history.replaceState(null, '', `/${UrlPath.WORKSPACE_KEY}/${DeckSchema.DEFAULT_DECK_ID}`);
+  try {
+    await interaction();
+  } finally {
+    window.history.replaceState(null, '', previous);
+  }
+};
+
+export const CompanionsClosedUntilOpened: Story = {
+  tags: ['test'],
+  args: { count: 3, uninitializedCompanions: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    // A stacked deck that has recorded no decision either way shows no companion.
+    await expect(showingCompanionsFor(canvasElement)).toEqual([]);
+
+    // The control appears only once the plank's companion edges have loaded (an async graph expansion
+    // on mount).
+    const firstPlankId = `${STORY_WORKSPACE_ID}/story-item-1`;
+    const findCompanionButton = () =>
+      canvasElement.querySelector<HTMLElement>(
+        `[data-testid="deck.plank"][data-attendable-id="${firstPlankId}"] [data-testid="plankHeading.companion"]`,
+      );
+    await waitFor(() => expect(findCompanionButton(), 'no companion control for the first plank').not.toBeNull());
+
+    await withWorkspaceUrl(async () => {
+      // The companion anchors to the attended plank, so the clicked plank has to hold attention first.
+      await attendPlank(canvasElement, 1);
+      findCompanionButton()?.click();
+      await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview']));
+    });
   },
 };
 
@@ -607,5 +809,79 @@ export const SidebarClosedAtDesktop: Story = {
 
     // `closed` parks the sidebar at `-start-[100vw]`; the rail has to be on screen to be usable.
     await expect(sidebar.getBoundingClientRect().left).toBeGreaterThanOrEqual(0);
+  },
+};
+
+const NEW_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-7`;
+const ATTENDED_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-1`;
+
+const plankTitle = (canvasElement: HTMLElement, id: string) =>
+  canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"] h1[data-attention]`);
+
+/**
+ * Opening a plank lands attention on it and on nothing else.
+ *
+ * Asserted over the whole interaction rather than its outcome, since either fault corrects itself a
+ * moment later: a `MutationObserver` batch is what the browser would have painted after one task, and
+ * `focusin` catches a focus move that reverts within a commit, which the attention attribute never shows.
+ */
+export const OpenAttendsTheNewPlank: Story = {
+  tags: ['test'],
+  // Enough planks that the deck overflows; with nothing off screen the hysteresis never runs.
+  args: { count: 6, openNextControl: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    // Something has to hold attention first, for losing it to mean anything.
+    await attendPlank(canvasElement, 1);
+    await waitFor(() => expect(plankTitle(canvasElement, ATTENDED_PLANK_ID)).toHaveAttribute('data-attention', 'true'));
+
+    const viewport = await canvas.findByTestId('deck.viewport');
+    await expect(viewport.scrollWidth).toBeGreaterThan(viewport.clientWidth);
+
+    const newPlank = () =>
+      canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${NEW_PLANK_ID}"]`);
+
+    const unattended: string[] = [];
+    const observer = new MutationObserver(() => {
+      const plank = newPlank();
+      if (plank && plank.querySelector('h1[data-attention]')?.getAttribute('data-attention') !== 'true') {
+        unattended.push(NEW_PLANK_ID);
+      }
+    });
+    observer.observe(canvasElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-attention', 'data-w-attention-source'],
+    });
+
+    const misfocused: string[] = [];
+    const onFocusIn = (event: FocusEvent) => {
+      const id = (event.target as HTMLElement | null)?.closest('[data-object-id]')?.getAttribute('data-object-id');
+      if (newPlank() && id && id !== NEW_PLANK_ID) {
+        misfocused.push(id);
+      }
+    };
+    canvasElement.addEventListener('focusin', onFocusIn, { capture: true });
+
+    try {
+      await withWorkspaceUrl(async () => {
+        (await canvas.findByTestId('story.open-next')).click();
+        await waitFor(async () => {
+          const plank = newPlank();
+          await expect(plank?.querySelector('h1[data-attention]')).toHaveAttribute('data-attention', 'true');
+          await expect(plank?.contains(document.activeElement)).toBe(true);
+        });
+      });
+    } finally {
+      observer.disconnect();
+      canvasElement.removeEventListener('focusin', onFocusIn, { capture: true });
+    }
+
+    await expect(unattended).toEqual([]);
+    await expect(misfocused).toEqual([]);
+    await expect(plankTitle(canvasElement, ATTENDED_PLANK_ID)).toHaveAttribute('data-attention', 'false');
   },
 };

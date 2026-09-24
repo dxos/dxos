@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Clipboard, Field, Flex, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -106,14 +106,12 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Field.Root>
-              <Field.Input
-                value={getValue()}
-                onChange={handleChange}
-                placeholder={t('display-name-input.placeholder')}
-                classNames='w-64 max-w-full min-w-0'
-              />
-            </Field.Root>
+            <Field.Input
+              value={getValue()}
+              onChange={handleChange}
+              placeholder={t('display-name-input.placeholder')}
+              classNames='w-64 max-w-full min-w-0'
+            />
           </Form.Field>
         );
       },
@@ -125,7 +123,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Field label={label} description={t('icon.description')}>
+          <Form.Field standalone label={label} description={t('icon.description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
@@ -144,7 +142,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Field label={label} description={t('hue.description')}>
+          <Form.Field standalone label={label} description={t('hue.description')}>
             <Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </Flex>
@@ -155,14 +153,12 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <Field.Root>
-              <ButtonGroup classNames='w-full'>
-                {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
+            <ButtonGroup classNames='w-full'>
+              {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
                     stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
-                <Field.Input value={getValue()} disabled classNames='w-full min-w-0' />
-                <Clipboard.IconButton value={getValue() ?? ''} />
-              </ButtonGroup>
-            </Field.Root>
+              <Field.Input value={getValue()} disabled classNames='w-full min-w-0' />
+              <SystemIconButton.Clipboard iconOnly value={getValue() ?? ''} />
+            </ButtonGroup>
           </Form.Field>
         );
       },
@@ -171,23 +167,21 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <Clipboard.Provider>
-      <Form.Root
-        variant='settings'
-        schema={UserProfile}
-        values={values}
-        fieldMap={fieldMap}
-        onValuesChanged={handleChange}
-      >
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.Section title={t('profile.label')} description={t('profile.description')}>
-              <Form.FieldSet />
-            </Form.Section>
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Clipboard.Provider>
+    <Form.Root
+      variant='settings'
+      schema={UserProfile}
+      values={values}
+      fieldMap={fieldMap}
+      onValuesChanged={handleChange}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('profile.label')} description={t('profile.description')}>
+            <Form.Fields />
+          </Form.FieldSet>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

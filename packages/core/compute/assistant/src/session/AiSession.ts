@@ -11,12 +11,12 @@ import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
+import type * as Scope from 'effect/Scope';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
@@ -30,14 +30,13 @@ import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
-import { ToolExecutionServices } from '../tool-runtime';
-import { McpServerError, emitRequestPhase } from '../util';
-import * as AiContext from './AiContext';
-import * as Harness from './Harness';
-import { SessionStore } from './SessionStore';
-import * as SkillHooks from './SkillHooks';
-import { createToolkit } from './toolkit';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
+import { ToolExecutionServices } from '../tool-runtime/index.ts';
+import * as AiContext from './AiContext.ts';
+import * as Harness from './Harness.ts';
+import { SessionStore } from './SessionStore.ts';
+import * as SkillHooks from './SkillHooks.ts';
+import { createToolkit } from './toolkit.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
@@ -48,7 +47,7 @@ export type RunProps<R = never> = {
   /**
    * Space-level MCP servers to connect alongside skill-defined ones.
    */
-  mcpServers?: readonly McpServer.McpServer[];
+  mcpServers?: readonly McpToolkit.Options[];
 
   /**
    * When false, messages from this request are not appended to the feed or persisted to trace.
@@ -206,7 +205,7 @@ export class Session extends Resource {
         serializePrompt(params.prompt),
       );
 
-      yield* emitRequestPhase('loading-history');
+      yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -242,11 +241,12 @@ export class Session extends Resource {
       });
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
-      do {
+      // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
+      const runIteration = Effect.gen({ self: this }, function* () {
         yield* Effect.promise(() => this.context.sync());
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
-        yield* emitRequestPhase('building-toolkit');
+        yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           skills: currentSkills,
@@ -263,16 +263,19 @@ export class Session extends Resource {
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
-          break;
+          return 'done' as const;
         }
         // A paused server-tool turn (e.g. Anthropic `pause_turn`) resumes with another request and
         // no local tool execution; the trailing server tool call must be left intact for the provider.
         if (finishReason === 'pause') {
-          continue;
+          return 'continue' as const;
         }
 
         yield* request.runTools({ toolkit });
-      } while (true);
+        return 'continue' as const;
+      }).pipe(Effect.scoped);
+
+      while ((yield* runIteration) !== 'done') {}
 
       log('result', {
         messages: request.pending.length,
@@ -309,18 +312,13 @@ export class Session extends Resource {
 
 const connectMcpServers = (
   skills: readonly Skill.Skill[],
-  spaceMcpServers: readonly McpServer.McpServer[] = [],
-): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+  spaceServers: readonly McpToolkit.Options[] = [],
+): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService | Scope.Scope> => {
+  const skillServers: McpToolkit.Options[] = pipe(
     skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
-  const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
-    url,
-    protocol,
-    apiKey,
-  }));
   const allServers = [...skillServers, ...spaceServers];
   if (allServers.length === 0) {
     // Naming a phase that has nothing to do would misreport where the wait actually is.
@@ -345,10 +343,11 @@ const connectMcpServers = (
               protocol: error.protocol,
               message: error.message,
             });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: error.url,
               protocol: error.protocol,
               message: error.message,
+              unauthorized: error.unauthorized,
             });
           }),
         ),
@@ -358,7 +357,7 @@ const connectMcpServers = (
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);
             log.warn('Unexpected MCP defect', { url: options.url, message });
-            yield* Trace.write(McpServerError, {
+            yield* Trace.write(Trace.McpServerError, {
               url: options.url,
               protocol: options.protocol,
               message: `Unexpected MCP failure: ${message}`,
@@ -380,7 +379,7 @@ const connectMcpServers = (
 
   return Effect.gen(function* () {
     // Reported before the connections are opened, since opening them is the wait being reported.
-    yield* emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
+    yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
     return yield* connect;
   });
 };

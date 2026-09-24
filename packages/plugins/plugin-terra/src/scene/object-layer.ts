@@ -10,11 +10,11 @@ import { type Scene } from '@babylonjs/core/scene';
 
 import { TerraObject } from '#types';
 
-import { scale } from '../engine';
-import { type SimObject } from '../sim';
-import { easeHeading } from './heading';
-import { createObjectForm } from './object-forms';
-import { SCALE_FACTOR, objectFrame } from './orientation';
+import { scale } from '../engine/index.ts';
+import { type SimObject } from '../sim/index.ts';
+import { easeHeading } from './heading.ts';
+import { createObjectForm } from './object-forms.ts';
+import { SCALE_FACTOR, objectFrame } from './orientation.ts';
 
 /** Every kind `createObjectForm` builds a base mesh for, in a fixed iteration order. */
 const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank', 'rocket'];

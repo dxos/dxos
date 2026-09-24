@@ -8,7 +8,7 @@ import React, { type ComponentProps, forwardRef } from 'react';
 
 import { useControllableState, useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, useListContext } from './ListContext';
+import { LIST_NAME, useListContext } from './ListContext.ts';
 import {
   LIST_ITEM_NAME,
   type ListItemElement,
@@ -16,7 +16,7 @@ import {
   type ListItemProps,
   ListItemProvider,
   useListItemContext,
-} from './ListItemContext';
+} from './ListItemContext.ts';
 
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, ...props }, forwardedRef) => {

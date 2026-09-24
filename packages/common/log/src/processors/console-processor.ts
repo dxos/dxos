@@ -7,8 +7,8 @@ import { inspect } from 'node:util';
 
 import { getPrototypeSpecificInstanceId, pickBy } from '@dxos/util';
 
-import { type LogConfig, LogLevel, shortLevelName } from '../config';
-import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
+import { type LogConfig, LogLevel, shortLevelName } from '../config.ts';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context.ts';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',

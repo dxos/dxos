@@ -61,10 +61,25 @@
       }
     }
 
+    /* A tag-shaped button: `dx-tag` (added by the theme) supplies the hue colours, this drops the
+     * control geometry; hover is a brightness shift because the tag palette has no hover step. */
+    &[data-variant='tag'] {
+      @apply inline-flex m-0 rounded-sm text-xs font-semibold cursor-pointer;
+      min-block-size: auto;
+      padding-inline: 0.25rem;
+      &:hover {
+        filter: brightness(0.94);
+      }
+      .dark &:hover {
+        filter: brightness(1.12);
+      }
+    }
+
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
-      &:hover {
+      /* The tag variant keeps its hue on hover, so the surface hover is not applied to it. */
+      &:not([data-variant='tag']):hover {
         @apply bg-hover-surface;
       }
 

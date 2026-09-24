@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { type OAuthClientProvider, UnauthorizedError } from '@modelcontextprotocol/sdk/client/auth.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 // SSEClientTransport is marked @deprecated in the SDK in favor of StreamableHTTP, but the
 // SDK itself notes that clients should keep supporting both while servers migrate.
@@ -14,6 +15,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type * as Scope from 'effect/Scope';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -30,6 +32,8 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
     url: Schema.String,
     protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
+    /** The server refused the request for want of (valid) credentials: sign in or set a key. */
+    unauthorized: Schema.optional(Schema.Boolean),
   },
 ) {}
 
@@ -41,15 +45,22 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
 
-export interface McpToolkitOptions {
+export interface Options {
   url: string;
   protocol: 'sse' | 'http';
+  /** Sent as a Bearer token. Ignored when `authProvider` is set. */
   apiKey?: string;
+  /** OAuth (MCP authorization); supplies the access token and refreshes it on a 401. */
+  authProvider?: OAuthClientProvider;
 }
 
-export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
+export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError, Scope.Scope> =>
   Effect.gen(function* () {
-    const { client, protocol } = yield* connectWithFallback(options);
+    // Closed with the scope: an open client holds a connection (its SSE stream) to the server, and a
+    // browser allows only six per host over HTTP/1.1, so clients leaked across turns stall the next.
+    const { client, protocol } = yield* Effect.acquireRelease(connectWithFallback(options), ({ client }) =>
+      Effect.tryPromise(() => client.close()).pipe(Effect.ignore),
+    );
 
     const { tools } = yield* Effect.tryPromise({
       try: () => client.listTools(),
@@ -58,29 +69,28 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
           url: options.url,
           protocol,
           message: `Failed to list MCP tools: ${formatCause(cause)}`,
+          unauthorized: isUnauthorized(cause),
         }),
     });
     if (tools.length === 0) {
       return OpaqueToolkit.empty;
     }
 
-    const effectTools = tools.map((mcpTool) => {
-      const parameters: any = {};
-      for (const [key, value] of Object.entries(mcpTool.inputSchema.properties ?? {})) {
-        if (mcpTool.inputSchema.required?.includes(key)) {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value }));
-        } else {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value })).pipe(Schema.optional);
-        }
-      }
-
-      return Tool.make(sanitizeToolName(mcpTool.name), {
+    // Dynamic tools carry the server's own JSON Schema to the provider verbatim, exactly as
+    // operation tools do (see `projectFunctionToTool`): `Tool.make` takes an Effect schema, and
+    // handing it a fields record instead leaves the tool with no parameter AST, which then throws
+    // inside `Response.StreamPart` on the first model turn that lists the tool.
+    const effectTools = tools.map((mcpTool) =>
+      Tool.dynamic(sanitizeToolName(mcpTool.name), {
         description: mcpTool.description ?? `MCP tool: ${mcpTool.name}`,
-        parameters,
+        parameters: mcpTool.inputSchema,
         success: Schema.String,
         failure: Schema.Never,
-      });
-    });
+      })
+        // A server's schema rarely meets a provider's strict mode (every key required, no extra
+        // properties), and one non-conforming tool rejects the whole request.
+        .annotate(Tool.Strict, false),
+    );
 
     const toolkit = Toolkit.make(...effectTools);
 
@@ -108,6 +118,26 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
   }).pipe(Effect.withSpan('McpToolkit.make'));
 
 /**
+ * Connects, lists the server's tools and disconnects — a connection check that leaves nothing open.
+ */
+export const probe = (options: Options): Effect.Effect<{ tools: string[] }, McpConnectionError> =>
+  Effect.acquireUseRelease(
+    connectWithFallback(options),
+    ({ client, protocol }) =>
+      Effect.tryPromise({
+        try: () => client.listTools(),
+        catch: (cause) =>
+          new McpConnectionError({
+            url: options.url,
+            protocol,
+            message: `Failed to list MCP tools: ${formatCause(cause)}`,
+            unauthorized: isUnauthorized(cause),
+          }),
+      }).pipe(Effect.map(({ tools }) => ({ tools: tools.map((tool) => tool.name) }))),
+    ({ client }) => Effect.tryPromise(() => client.close()).pipe(Effect.ignore),
+  ).pipe(Effect.withSpan('McpToolkit.probe'));
+
+/**
  * Returns true when the error (or its wrapped cause) contains a 405 status code.
  *
  * `Effect.tryPromise` wraps thrown errors in `Cause.UnknownError`, which in v4 carries the original
@@ -119,6 +149,30 @@ export const is405 = (error: unknown): boolean => {
 };
 
 /**
+ * True when the server rejected the request for credentials: a 401 status, or the SDK giving up on
+ * authorization it could not complete without the user.
+ */
+export const isUnauthorized = (error: unknown): boolean => {
+  const cause = Cause.isUnknownError(error) ? error.cause : error;
+  if (cause instanceof UnauthorizedError) {
+    return true;
+  }
+  // Both transports' errors carry the HTTP status as `code`.
+  return typeof cause === 'object' && cause !== null && 'code' in cause && cause.code === 401;
+};
+
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/** Whether a Bearer credential may be sent to `url`: HTTPS, or a server on this machine. */
+export const isSecureUrl = (url: string): boolean => {
+  if (!URL.canParse(url)) {
+    return false;
+  }
+  const { protocol, hostname } = new URL(url);
+  return protocol === 'https:' || (protocol === 'http:' && LOOPBACK_HOSTS.has(hostname));
+};
+
+/**
  * Connects to an MCP server, falling back to the alternate transport on 405 errors.
  * Per the MCP spec, a 405 indicates the server uses the other transport protocol.
  * Returns the connected Client (a fresh instance is created for the fallback attempt).
@@ -127,16 +181,25 @@ export const is405 = (error: unknown): boolean => {
  * the misconfigured server) without breaking the surrounding effect.
  */
 const connectWithFallback = (
-  options: McpToolkitOptions,
-): Effect.Effect<{ client: Client; protocol: McpToolkitOptions['protocol'] }, McpConnectionError> =>
+  options: Options,
+): Effect.Effect<{ client: Client; protocol: Options['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
+    if ((options.apiKey || options.authProvider) && !isSecureUrl(options.url)) {
+      return yield* Effect.fail(
+        new McpConnectionError({
+          url: options.url,
+          protocol: options.protocol,
+          message: 'Credentials are only sent over HTTPS (or to a loopback address).',
+        }),
+      );
+    }
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
-    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.result);
+    const primary = yield* connectClient(options, options.protocol).pipe(Effect.result);
     if (primary._tag === 'Success') {
       return { client: primary.success, protocol: options.protocol };
     }
     if (is405(primary.failure)) {
-      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.result);
+      const fallback = yield* connectClient(options, fallbackProtocol).pipe(Effect.result);
       if (fallback._tag === 'Success') {
         return { client: fallback.success, protocol: fallbackProtocol };
       }
@@ -145,6 +208,7 @@ const connectWithFallback = (
           url: options.url,
           protocol: fallbackProtocol,
           message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.failure)}`,
+          unauthorized: isUnauthorized(fallback.failure),
         }),
       );
     }
@@ -153,48 +217,48 @@ const connectWithFallback = (
         url: options.url,
         protocol: options.protocol,
         message: `Failed to connect via ${options.protocol}: ${formatCause(primary.failure)}`,
+        unauthorized: isUnauthorized(primary.failure),
       }),
     );
   });
 
-const connectClient = (url: string, protocol: McpToolkitOptions['protocol'], apiKey?: string) =>
+const connectClient = (options: Options, protocol: Options['protocol']) =>
   Effect.tryPromise(() => {
     const client = new Client(CLIENT_INFO);
-    const transport = createTransport(url, protocol, apiKey);
+    const transport = createTransport(options, protocol);
     return client.connect(transport).then(() => client);
   });
 
-/**
- * Renders a thrown value to a short string for inclusion in error messages.
- * `Effect.tryPromise` wraps thrown errors in `UnknownException`; unwrap when present.
- */
-const formatCause = (error: unknown): string => {
-  const inner = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
-  if (inner instanceof Error) {
-    return inner.message;
-  }
-  if (Cause.isCause(error)) {
-    return Cause.pretty(error);
-  }
+/** Longest message a connection error carries: a challenge page in the body would otherwise be it. */
+const MESSAGE_LIMIT = 200;
 
-  return String(inner);
+/**
+ * Renders a thrown value to a short string for inclusion in error messages. `Effect.tryPromise` wraps
+ * a throw in `UnknownError`, which in v4 carries the original on `cause`; the message is the
+ * transport's own (an HTTP status and the start of the body), cut so a server's error page cannot
+ * become the message.
+ */
+export const formatCause = (error: unknown): string => {
+  const inner = Cause.isUnknownError(error) ? error.cause : error;
+  const message = inner instanceof Error ? inner.message : Cause.isCause(error) ? Cause.pretty(error) : String(inner);
+  return message.length > MESSAGE_LIMIT ? `${message.slice(0, MESSAGE_LIMIT)}…` : message;
 };
 
 /**
  * Creates a transport for the given MCP server URL and protocol.
  */
 const createTransport = (
-  url: string,
-  protocol: McpToolkitOptions['protocol'],
-  apiKey?: string,
+  { url, apiKey, authProvider }: Options,
+  protocol: Options['protocol'],
 ): SSEClientTransport | StreamableHTTPClientTransport => {
   const urlObj = new URL(url);
-  const requestInit: RequestInit | undefined = apiKey ? { headers: { Authorization: `Bearer ${apiKey}` } } : undefined;
+  const requestInit: RequestInit | undefined =
+    apiKey && !authProvider ? { headers: { Authorization: `Bearer ${apiKey}` } } : undefined;
   switch (protocol) {
     case 'sse':
-      return new SSEClientTransport(urlObj, { requestInit });
+      return new SSEClientTransport(urlObj, { requestInit, authProvider });
     case 'http':
-      return new StreamableHTTPClientTransport(urlObj, { requestInit });
+      return new StreamableHTTPClientTransport(urlObj, { requestInit, authProvider });
     default: {
       const _exhaustive: never = protocol;
       return invariant(false, `Unsupported MCP transport protocol: ${_exhaustive}`) as never;

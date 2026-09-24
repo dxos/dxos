@@ -11,7 +11,7 @@ import {
   type ContextType,
   type UnknownContext,
   createContext,
-} from './protocol';
+} from './protocol.ts';
 
 describe('protocol', () => {
   describe('createContext', () => {

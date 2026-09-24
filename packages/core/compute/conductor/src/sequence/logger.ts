@@ -6,7 +6,7 @@ import chalk from 'chalk';
 
 import { log } from '@dxos/log';
 
-import { type SequenceEvent, type SequenceLogger } from './types';
+import { type SequenceEvent, type SequenceLogger } from './types.ts';
 
 // Force chalk colors on for tests.
 chalk.level = 2;

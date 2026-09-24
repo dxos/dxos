@@ -23,7 +23,7 @@ import { MagazinePlugin } from '#plugin';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { PostArticle } from './PostArticle';
+import { PostArticle } from './PostArticle.tsx';
 
 const SAMPLE_MARKDOWN = `# Local-first software
 

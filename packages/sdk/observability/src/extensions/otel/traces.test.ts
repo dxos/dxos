@@ -6,8 +6,8 @@ import { ROOT_CONTEXT, context, trace } from '@opentelemetry/api';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { afterEach, describe, test } from 'vitest';
 
-import { activeTraceContext } from './trace-context';
-import { OtelTraces } from './traces';
+import { activeTraceContext } from './trace-context.ts';
+import { OtelTraces } from './traces.ts';
 
 describe('OtelTraces', () => {
   afterEach(() => context.disable());

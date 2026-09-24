@@ -1,0 +1,241 @@
+---
+id: org.dxos.app.composer.perf
+name: Composer Performance
+version: 0.1.0
+---
+
+Performance flows: journeys measured rather than asserted. Each `test` here is the top-level
+description of a flow whose stages a Playwright spec drives and instruments — this document says
+what the flow is and what "too slow" would mean, and
+[`src/playwright/perf-projects.spec.ts`](../src/playwright/perf-projects.spec.ts) is the same flow
+as executable stages. A step's `id` IS the stage id the harness records, so the description and the
+numbers join without a second mapping to keep in sync.
+
+Functional QA lives in [`APP.mdl`](./APP.mdl). Nothing here gates a merge: the flows run nightly
+from `main` and trend into PostHog.
+
+## Extensions
+
+| Term    | URI                      |
+| ------- | ------------------------ |
+| `test`  | `org.dxos.mdl.test@1.0`  |
+| `step`  | `org.dxos.mdl.step@1.0`  |
+| `suite` | `org.dxos.mdl.suite@1.0` |
+
+The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/qa.mdl).
+
+## Measurement contract
+
+What the harness (`@dxos/perf-harness`) records per stage, and the rules that make two runs
+comparable at all:
+
+- **Two modes, never mixed.** `measure` reads counters at stage boundaries and runs the V8 sampling
+  profiler, writing no profiles, so that per-realm CPU is trended; it is the sole mode trended.
+  `diagnose` adds a screencast and keeps the profiles. The line between them is the SCREENCAST:
+  measured on one flow, profiler-only costs +2.6% against `measure` — below the run-to-run noise —
+  while adding the screencast costs +47%, because it encodes a JPEG per frame and waits on an ack
+  before the next. Note also that Playwright's own Network domain makes Blink retain response
+  bodies in EVERY mode (the finding behind `scripts/memory/plain-soak.mjs`), so the absolute
+  footprint is inflated by an unmeasured constant while a trend across runs stays valid.
+- **Per stage:** wall ms; total CPU ms across every Chrome process (`SystemInfo.getProcessInfo`);
+  CPU per REALM from the profiler, the only instrument that reaches a worker — process CPU folds a
+  dedicated worker into its renderer, and the `Performance` domain does not exist on a worker target
+  at all; the page main thread's `script`/`layout`/`recalcStyle` split; JS heap per target after a
+  forced GC; the renderers' private footprint, with Chrome's own processes reported separately;
+  DOM node and listener counts; network bytes
+  split code-load vs API; long tasks and TBT for the page, and timer-drift lag per realm.
+- **Recorded on every row, or the trend is noise:** serving mode (`vite preview` over a production
+  bundle — `vite serve` costs ~2.5x on the main thread), plugin set, profile state (first-run
+  performs onboarding and loads a different module set), settle time, and which instruments were
+  attached. Per `scripts/memory/README.md` §"Comparing runs".
+- **Memory means four different things** that differ by 3-5x. The trended one is the renderers'
+  private footprint: it counts wasm linear memory, where automerge documents live outside every
+  JS-heap reading, and unlike RSS it is disjoint per process, so the renderers can be added. A peak
+  of RSS summed over the whole process tree, which this replaced, multi-counted the shared pages
+  every process maps and buried the app under ~218 MB of Chrome's own.
+
+## QA
+
+```mdl
+test QA-1: A project with a large task set and long documents
+  desc: |
+    One journey across TWO different cost engines, because a project is not a task list and
+    anything in the app can tank performance.
+
+    The task set is the ECHO-shaped half: `TaskSet.tasks` is FLAT and holds every task in the set,
+    sub-tasks included, so a large set is a large ref array: `TaskSet.loadRefs` resolves the cold
+    remainder at concurrency 16, `resolveTasks` de-duplicates the whole array on every read, and the
+    hierarchy the UI renders is derived by walking `Task.parentTask` per task — every one O(set
+    size) on a structure the UI reads on each render.
+
+    The documents are the editor-shaped half: markdown filed as project artifacts, where the cost is
+    CodeMirror's line measurement, highlighting and the keystroke path rather than any ref array. A
+    regression in one half would be invisible in the other, which is why one flow covers both.
+
+    Measured, not asserted: the only failure is a stage that cannot complete.
+  actors: agent
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space created by the fixture, named "PERF: Projects $runId"
+    - >-
+      scale: ONE size, `tasks=200,depth=2,projects=1,docs=3x400` — shaped like a project someone
+      actually has. Deliberately not a set of tiers: data volume is orthogonal to the flow, and a
+      scale knob makes every row's comparability depend on it. The label is recorded on each row so
+      a trend breaks visibly if the fixture changes shape; someone exploring behaviour at size edits
+      `SCALE` in `perf/fixture.ts` for that run
+    - >-
+      THE FIXTURE PATH IS WHY THE SIZE IS WHAT IT IS. Generation costs ~420ms per task through the
+      operation layer (five samples: 80.8-84.6s for 200 tasks), because each task is one
+      `tasks.create` whose write appends to a growing `tasks` array — so the rate gets WORSE as the
+      array grows, not better. Two attempts at 2,000 tasks establish that: a flat 15-minute budget
+      expired mid-fixture, and so did a 24-minute budget derived from the 200-task rate, neither
+      reaching a single stage, which bounds 2,000 tasks above 1,380s (over 690ms each). Anything
+      materially larger wants the archive path (`buildArchive` -> `client.spaces.import`, building
+      the graph headlessly in node and importing it), which is unbuilt
+    - the fixture has created `projects` Projects via `org.dxos.operation.projects.create`, each with
+      `tasks / projects` tasks filed into its own task set via `org.dxos.operation.tasks.create`,
+      nested to `depth` and spread across three milestones
+    - >-
+      the fixture has created `documents` markdown documents via
+      `org.dxos.operation.markdown.create`, each `documentParagraphs` paragraphs long with a heading
+      every tenth, and filed each onto a project via `org.dxos.operation.projects.addArtifact` —
+      artifacts rather than loose objects, because that is how a project accumulates documents in
+      use and it puts them on the Overview tab this flow already opens
+    - >-
+      paragraph text varies word by word rather than repeating one string: an editor's line
+      measurement and highlight pass both behave differently on identical lines, so a document of
+      one repeated paragraph would measure a cache rather than a render
+    - fixture generation happens BEFORE the first measured stage and is never itself a stage —
+      its cost is setup, not a number anyone reads
+    - plugin-projects and plugin-tasks are enabled (both are on by default)
+    - every generated task carries the creation default status `todo` — `tasks.create` takes no
+      status, so a row component's other status branches are NOT exercised by this fixture; varying
+      them needs a second `tasks.update` pass and would change what the numbers cover
+  steps:
+    - name: Boot to ready
+      id: boot
+      do: Open the app and wait for the user-account control.
+      expect: the app reaches ready with no error logged
+      note: |
+        Cold profile, so this stage carries onboarding and the whole boot module graph. Comparable
+        only against other `first-run` rows — which is why `profileState` is on every row.
+    - name: Wait for the space to replicate
+      id: await-replication
+      do: Poll the space's sync state until it has caught up with EDGE.
+      expect: nothing outstanding, or 95% replicated held for ten seconds
+      note: |
+        The stage every stage below it depends on. The fixture's writes keep replicating long after
+        the last `tasks.create` resolves, so without this wait whichever stage happened to be
+        running absorbed setup's SQLite writes and socket traffic — which is why the per-stage disk
+        and network columns varied far more run to run than the stages themselves did.
+
+        Read from `space.db.getSyncState()`, the combined automerge-documents and feed-blocks view
+        already selected against the EDGE peer, with `space.db.getAutomergeSyncState()` read beside
+        it for the peer LIST: the combined view reports zeroes for every document field when no
+        EDGE peer is present, so "replicated" and "not replicating" are otherwise the same reading.
+        `progress` is `1 - (unsynced documents + blocks to push + blocks to pull) / (documents known
+        to either peer + blocks held locally)`.
+
+        Two ways to finish, because a strict zero is not reachable: nothing outstanding, or 95% held
+        for ten seconds. The app keeps producing small mutations of its own, so the last few
+        documents can stay outstanding indefinitely while the fixture is long since on the remote —
+        waiting for a true zero would trade a noisy measurement for a timeout. Dropping back under
+        95% restarts the ten seconds.
+
+        Its own columns are setup's cost, not the app's: read it as the absorber that makes the
+        stages after it clean, rather than as a measurement.
+
+        Budget is `DX_PERF_REPLICATION_TIMEOUT_MS`, 180s by default. A timeout FAILS the stage,
+        logging every reading where something changed, so the row is never trended and the run says
+        the stages after it carried setup's replication rather than presenting them as measurements.
+    - name: Open the fixture space
+      id: open-space
+      do: Pick the "PERF: Projects" space from the space list.
+      invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.space.id" }
+      expect: the workspace is the fixture space and its navtree lists the projects
+    - name: Open the project
+      id: open-project
+      do: Click the first project in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/$given.project.id"] }
+      expect: ProjectArticle renders on the Overview tab, showing the task-set summary and artifacts
+      note: |
+        Overview derives per-task-set open/total counts, so this stage pays one full pass over the
+        set before a single task row is rendered.
+    - name: Render the task list
+      id: open-tasks
+      do: Click the Tasks tab.
+      expect: the hierarchical task list renders and the first rows are visible
+      note: |
+        The stage this flow exists for. `domNodes` is the diagnostic to read beside `wallMs`: a list
+        whose node count rises with the set rather than the viewport is not virtualized, and that is
+        a different fix from a slow query.
+    - name: Toggle a task
+      id: toggle-task
+      do: Check the first visible task's checkbox.
+      expect: the row shows as done and the change persists
+      note: |
+        One small write against a large set — the stage that would expose a write path that
+        re-resolves the whole `tasks` array to update one member, and the O(set) read on the
+        INTERACTION path rather than the open path.
+
+        There is deliberately no filter stage. `TaskSetArticle` renders its toolbar (and with it the
+        `tasks.filter` field) only as a standalone article; embedded as a Section, which is how
+        `ProjectArticle` hosts it, it renders the bare list because the host owns the chrome. A
+        filter stage would have to open the task set on its own surface, which is a different
+        journey from this one.
+    - name: Scroll the task list
+      id: scroll-tasks
+      do: Scroll the list to the end and back.
+      expect: the list scrolls without a blank viewport
+      note: |
+        Read `stillFrameMaxMs` here (diagnose mode): scroll is the one stage where a frame gap is
+        precisely the symptom a user reports.
+    - name: Open a document artifact
+      id: open-document
+      do: Switch to the Overview tab and click the first document in the artifacts gallery.
+      expect: the markdown editor renders the document
+      note: |
+        The artifact gallery renders `ObjectCard`s, which carry no testid of their own, so the card
+        is addressed by title within the `projectsPlugin.artifacts` fieldset. This stage is a
+        different engine from every stage before it: nothing here touches the `tasks` array.
+    - name: Scroll the document
+      id: scroll-document
+      do: Scroll the editor to the end and back.
+      expect: the document scrolls without a blank viewport
+      note: |
+        CodeMirror measures lines lazily, so this is where a long document's measurement cost lands
+        rather than at open. Read `stillFrameMaxMs` beside `wallMs`, as with `scroll-tasks`.
+    - name: Edit the document
+      id: edit-document
+      do: Type a short sentence into the editor.
+      expect: the typed text appears in the document
+      note: |
+        Typed with a delay rather than set programmatically: the keystroke path — input handling,
+        the CRDT write, re-highlight — is what a user feels in a long document, and a programmatic
+        set would skip all of it. The stage to watch for a per-keystroke O(document) cost.
+    - name: Reopen the project
+      id: reopen-project
+      do: Reopen the project from the navtree and return to the Tasks tab.
+      expect: the task list renders again
+      note: |
+        Last deliberately: by now the journey has genuinely navigated away, into the editor. Catches
+        cost paid per mount rather than once — a warm re-render should be far cheaper than
+        `open-tasks`, and a run where it is not has cached nothing.
+  after:
+    - name: Delete the fixture space
+      do: Delete the space from its settings.
+      invoke: org.dxos.operation.space.delete { space: Space($given.space.id) }
+      expect: no "PERF:" space remains
+```
+
+## Suites
+
+```mdl
+suite perf-nightly: The measured flows, from main
+  desc: |
+    Runs both modes of every flow. `measure` rows go to PostHog; `diagnose` artifacts are uploaded
+    for whoever reads a regression and never trended.
+  tags: [perf, nightly]
+  tests: [QA-1]
+```

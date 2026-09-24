@@ -296,6 +296,10 @@ export class FeedObjectCore {
     });
   }
 
+  get deleted(): boolean {
+    return this.#deleted;
+  }
+
   /**
    * Mark the object deleted: unsubscribe and stop reacting to local changes and remote
    * reconciliation. `Obj.update` on a retained reference still mutates the entity in memory (it

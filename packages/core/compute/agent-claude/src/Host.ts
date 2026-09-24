@@ -11,9 +11,9 @@ import * as Stream from 'effect/Stream';
 
 import { Message } from '@dxos/types';
 
-import { AgentHostError } from './errors';
-import * as Options from './Options';
-import * as Projection from './Projection';
+import { AgentHostError } from './errors.ts';
+import * as Options from './Options.ts';
+import * as Projection from './Projection.ts';
 
 export type RunOptions = Options.MakeOptions & {
   prompt: string;

@@ -21,7 +21,7 @@ import { Message, Person } from '@dxos/types';
 import { Builder, MessagesOptions, useContactCreate } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxStack, type InboxStackItem, InboxStackProps } from './InboxStack';
+import { InboxStack, type InboxStackItem, InboxStackProps } from './InboxStack.tsx';
 
 type StoryArgs = InboxStackProps & {
   count?: number;

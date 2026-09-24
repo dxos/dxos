@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { identity } from './identity';
+import { decorateInitializeResult } from './legacy-initialize-result.ts';
+import {
+  type PassOptions,
+  type ResponsePass,
+  SERVER_INSTRUCTIONS,
+  isRecord,
+  resultOf,
+  withIdentity,
+} from './response-pass.ts';
 
 /**
  * Response passes applied to outgoing JSON-RPC messages.
@@ -14,42 +22,10 @@ import { identity } from './identity';
  */
 
 /**
- * Server-level usage guidance, sent as `InitializeResult.instructions` — the field the MCP schema
- * defines as "Instructions describing how to use the server and its features … MAY be added to the
- * system prompt". It is the one server text a client loads before any tool is selected (Claude
- * Code injects it at session start and truncates at 2KB), and the MCP guidance reserves it for
- * cross-tool rules that no single tool description can carry
- * (https://blog.modelcontextprotocol.io/posts/2025-11-03-using-server-instructions/).
- *
- * Deliberately fixed and generic: the plugin ecosystem behind this server is open-ended, so
- * per-plugin or per-skill fragments would grow without bound and truncate silently. Plugin- and
- * project-specific guidance lives in skills, and the operations themselves are discovered at
- * runtime — so what is stated here is the *loop* by which a model reaches both.
- */
-export const SERVER_INSTRUCTIONS = [
-  'This server reads and writes objects in DXOS spaces (collaborative databases). Its verbs are ' +
-    'not separate tools: call queryOperations to search them, then invokeOperation to run one.',
-  'Before invoking an operation for the first time, call queryOperations with its key to get the ' +
-    'input schema, and match it exactly. Rows also carry a mutation class: none reads, write ' +
-    'creates or updates, destructive deletes.',
-  'Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the ' +
-    "caller's instructions, a repo/project configuration, or a reference already in hand — when " +
-    'spaceId is omitted the server falls back to an arbitrary session default, which is not an ' +
-    'inferred choice; never guess a space from its name.',
-  'References between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes. Pass ' +
-    'references back exactly as you received them.',
-  'Operations belong to larger workflows described by skills. When a queryOperations row names a ' +
-    'skill, call loadSkill with that name and follow the returned instructions before invoking ' +
-    'the operation; loadSkill with no argument lists every skill. Skills are also offered to ' +
-    'users as prompts (slash commands); loadSkill brings the same text into context without user ' +
-    'action.',
-].join('\n');
-
-/**
  * Ensures every advertised tool declares an object input schema.
  *
- * Effect renders a *parameterless* tool's schema as `{ anyOf: [{type: 'object'}, {type: 'array'}] }`,
- * which carries no top-level `type`. MCP clients validate that field and reject the entire
+ * Effect renders a *parameterless* tool's schema as `{ not: { type: 'null' } }` -- the bare `object`
+ * keyword -- which carries no top-level `type`. MCP clients validate that field and reject the entire
  * `tools/list` response over it — "expected object" at `tools[N].inputSchema.type` — so a single
  * parameterless tool takes every other tool down with it and the server appears to expose nothing.
  *
@@ -68,47 +44,46 @@ export const normalizeToolSchemas = (message: unknown): boolean => {
   return rewritten;
 };
 
+/** Where a result names the server. */
+const SERVER_INFO_META = 'io.modelcontextprotocol/serverInfo';
+
 /**
- * Attaches display metadata and server instructions to an `initialize` result.
+ * Attaches display metadata to the server a result names, and server instructions to a
+ * `server/discover` result.
  *
- * `serverInfo` is an MCP `Implementation`, which the specification allows to carry `title`,
- * `websiteUrl` and `icons`, and the result may carry top-level `instructions` — but
+ * The server is an MCP `Implementation`, which the specification allows to carry `title`,
+ * `websiteUrl` and `icons`, and the discover result may carry top-level `instructions` — but
  * `McpServer`'s layers accept only `{ name, version }` and offer no way to supply any of them.
  * Rather than fork the library, the fields are merged into the response on the way out.
  */
-export const decorateInitialize = (
-  message: unknown,
-  options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
-): boolean => {
+export const decorateServerInfo: ResponsePass = (message, options) => {
   const result = resultOf(message);
-  if (result?.serverInfo == null) {
+  const meta: unknown = result?._meta;
+  const serverInfo: unknown = isRecord(meta) ? meta[SERVER_INFO_META] : undefined;
+  if (result == null || !isRecord(meta) || !isRecord(serverInfo)) {
     return false;
   }
-  // The shared identity goes underneath, so a host adds transport-dependent fields (icon URIs need
-  // an origin) without restating — or contradicting — the name and mark every host advertises.
-  result.serverInfo = {
-    ...(result.serverInfo as Record<string, unknown>),
-    title: identity.title,
-    websiteUrl: identity.websiteUrl,
-    ...(options.serverInfo ?? {}),
-  };
-  result.instructions ??= options.instructions ?? SERVER_INSTRUCTIONS;
+  meta[SERVER_INFO_META] = withIdentity(serverInfo, options);
+  if (Array.isArray(result.supportedVersions)) {
+    result.instructions ??= options.instructions ?? SERVER_INSTRUCTIONS;
+  }
   return true;
 };
 
-/** Runs every response pass in order; returns whether the message changed. */
-export const normalize = (
-  message: unknown,
-  options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
-): boolean => {
-  const normalized = normalizeToolSchemas(message);
-  const decorated = decorateInitialize(message, options);
-  return normalized || decorated;
-};
+const passes: ResponsePass[] = [
+  normalizeToolSchemas,
+  decorateServerInfo,
+  // TODO(wittjosiah): Remove when every DXOS MCP server drops 2025-era MCP support.
+  decorateInitializeResult,
+];
 
-const resultOf = (message: unknown): Record<string, any> | undefined => {
-  const result = (message as Record<string, any>)?.result;
-  return result != null && typeof result === 'object' ? result : undefined;
+/** Runs every response pass in order; returns whether the message changed. */
+export const normalize = (message: unknown, options: PassOptions = {}): boolean => {
+  let changed = false;
+  for (const pass of passes) {
+    changed = pass(message, options) || changed;
+  }
+  return changed;
 };
 
 const toolsOf = (message: unknown): Array<Record<string, any>> => {
@@ -130,10 +105,7 @@ export const normalizeLine = (chunk: string | Uint8Array): string | Uint8Array =
 };
 
 /** Normalizes a JSON-RPC payload, returning `undefined` when it is unrecognized or unchanged. */
-export const normalizeText = (
-  text: string,
-  options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
-): string | undefined => {
+export const normalizeText = (text: string, options: PassOptions = {}): string | undefined => {
   const trimmed = text.trim();
   if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
     return undefined;

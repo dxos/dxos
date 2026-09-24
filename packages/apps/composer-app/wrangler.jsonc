@@ -12,6 +12,11 @@
   "name": "composer",
   "main": "./out/composer/_worker.js",
   "compatibility_date": "2024-04-05",
+  // Each channel serves from its own domain; a `*.workers.dev` hostname would be a second origin with its own
+  // storage and cross-origin `DX_OTEL_ENDPOINT`. Preview URLs stay on for the per-PR `pr-<n>-composer-dev` deploys.
+  // Both keys are inherited by every env below.
+  "workers_dev": false,
+  "preview_urls": true,
   // Default / local-dev bindings (wrangler dev); per-env deploys use the `env` sections below.
   // `ENVIRONMENT` is `local` rather than `dev` so it cannot be mistaken for the deployed `env.dev`.
   "vars": {

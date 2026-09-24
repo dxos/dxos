@@ -4,7 +4,7 @@
 
 import { FeedProtocol } from '@dxos/protocols';
 
-import type { ForeignKey } from './foreign-key';
+import type { ForeignKey } from './foreign-key.ts';
 
 /** Property name for meta when object is serialized to JSON. Matches @dxos/echo/internal ATTR_META. */
 const ATTR_META = '@meta';

@@ -7,8 +7,8 @@ import React from 'react';
 import { ReducerInput, ReducerOutput } from '@dxos/conductor';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { type ReducerShape } from './array-def';
-import { FunctionBody } from './common';
+import { type ReducerShape } from './array-def.ts';
+import { FunctionBody } from './common/index.ts';
 
 //
 // Components

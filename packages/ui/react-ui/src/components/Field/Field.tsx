@@ -29,13 +29,13 @@ import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { IconButton, IconButtonProps } from '../Button';
-import { Icon } from '../Icon';
-import { FIELD_NAME, type FieldValence, FieldValenceProvider, useFieldValence } from './FieldContext';
-import { type FieldTriggerHandler, FieldTriggerProvider, useFieldTriggerContext } from './FieldTriggerContext';
-import { PinInput as PinInputPrimitive, type PinInputProps as PinInputPrimitiveProps } from './PinInput';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton, IconButtonProps } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { FIELD_NAME, type FieldValence, FieldValenceProvider, useFieldValence } from './FieldContext.ts';
+import { type FieldTriggerHandler, FieldTriggerProvider, useFieldTriggerContext } from './FieldTriggerContext.ts';
+import { PinInput as PinInputPrimitive, type PinInputProps as PinInputPrimitiveProps } from './PinInput.tsx';
 import {
   SegmentedDate,
   type SegmentedDateProps,
@@ -43,7 +43,7 @@ import {
   type SegmentedDateTimeProps,
   SegmentedTime,
   type SegmentedTimeProps,
-} from './SegmentedInput';
+} from './SegmentedInput.tsx';
 
 type InputVariant = 'default' | 'subdued';
 
@@ -494,6 +494,7 @@ Checkbox.displayName = 'Field.Checkbox';
 
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & {
+    density?: Density;
     onCheckedChange?: (checked: boolean) => void;
     /** The control's own label, laid out beside it; without one a `Field.Label` names the control. */
     children?: ReactNode;
@@ -505,6 +506,7 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
       classNames,
+      density: densityProp,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
@@ -514,6 +516,7 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
       defaultProp: propsDefaultChecked ?? false,
@@ -526,7 +529,8 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
     const control = (
       <input
         type='checkbox'
-        className={tx('field.switch', { disabled: props.disabled }, classNames)}
+        data-density={density}
+        className={tx('field.switch', { disabled: props.disabled, density }, classNames)}
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);

@@ -12,7 +12,7 @@ The following extension dialects are used in this document.
 
 | Term   | URI                       |
 |--------|---------------------------|
-| `flow` | `org.dxos.mdl.flow@1.0`   |
+| `test` | `org.dxos.mdl.test@1.0`   |
 | `op`   | `org.dxos.mdl.op@1.1`     |
 
 ## Types
@@ -87,11 +87,11 @@ op downloadFile
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a sandbox and run a command
+test QA-1: Create a sandbox and run a command
   desc: The core sandbox round-trip — create an isolated shell environment, exec a command in it.
   actors: agent
   status: unverified
@@ -100,8 +100,8 @@ flow QA-1: Create a sandbox and run a command
     - space: a space is open
     - plugin-sandbox is enabled — it is OFF by default everywhere except dev builds (`isDev`); it
       must be enabled via Settings -> plugin registry otherwise
-    - no Sandbox named "QA Sandbox" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Sandbox named "QA Sandbox" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the sandbox
       do: From the global action menu, choose "Create Sandbox" and name it "QA Sandbox".
       invoke: [op:createSandbox] { name: "QA Sandbox" }

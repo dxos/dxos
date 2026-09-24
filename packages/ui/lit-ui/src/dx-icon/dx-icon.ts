@@ -5,7 +5,7 @@
 import { LitElement, svg } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { type Size } from '../defs';
+import { type Size } from '../defs.ts';
 
 // Shared with @dxos/react-ui's IconRegistry; see IconRegistry.tsx for the bridge contract.
 const REGISTRY_GLOBAL = '__dxIconRegistry';

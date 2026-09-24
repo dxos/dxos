@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -45,6 +46,9 @@ const handler: Operation.WithHandler<typeof VideoOperation.Transcribe> = VideoOp
 
 export default handler;
 
+/** The transcription endpoint did not return a usable transcript. */
+export class TranscriptionError extends BaseError.extend('TranscriptionError', 'Transcription failed.') {}
+
 const fetchTranscript = (url: string, lang: string) =>
   Effect.tryPromise({
     try: async () => {
@@ -76,5 +80,5 @@ const fetchTranscript = (url: string, lang: string) =>
         text: raw.replace(/(\[[^\]]*\]\([^)]*\))\s*\n\s*/g, '$1 ').replace(/\n{2,}/g, '\n'),
       };
     },
-    catch: (error) => (error instanceof Error ? error : new Error('Transcription failed.')),
+    catch: TranscriptionError.wrap(),
   });

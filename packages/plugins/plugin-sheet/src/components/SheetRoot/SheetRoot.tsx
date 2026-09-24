@@ -14,8 +14,8 @@ import { Grid, type GridContentProps, type GridEditing, useGridContext } from '@
 
 import { Sheet } from '#types';
 
-import { type SheetModel, useSheetModel } from '../../model';
-import { SheetContext } from './SheetContext';
+import { type SheetModel, useSheetModel } from '../../model/index.ts';
+import { SheetContext } from './SheetContext.ts';
 
 export type SheetContextValue = {
   id: string;

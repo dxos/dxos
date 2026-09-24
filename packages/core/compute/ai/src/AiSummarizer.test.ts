@@ -10,8 +10,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import * as AiSummarizer from './AiSummarizer';
-import { ScriptedLanguageModel } from './testing';
+import * as AiSummarizer from './AiSummarizer.ts';
+import { ScriptedLanguageModel } from './testing/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

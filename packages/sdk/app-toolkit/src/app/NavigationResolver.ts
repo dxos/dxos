@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { type Position } from '@dxos/util';
 
-import { type AppCapabilities } from '../app-framework';
+import { type AppCapabilities } from '../app-framework/index.ts';
 
 export type ForTypeOptions<S extends Type.AnyObj> = {
   /** Where the plugin's section shows the object — the resolved target's `path`. */

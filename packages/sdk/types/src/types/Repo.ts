@@ -7,9 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as Organization from './Organization';
+import * as Organization from './Organization.ts';
 
 /**
  * A source-code repository. Host-agnostic: which service it lives on is provenance, carried by
@@ -18,13 +17,23 @@ import * as Organization from './Organization';
 export class Repo extends Type.makeObject<Repo>(DXN.make('org.dxos.type.repo', '0.1.0'))(
   Schema.Struct({
     /** Repository name without its owner, e.g. `dxos`. */
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), GeneratorAnnotation.set('company.buzzNoun')),
+    name: Schema.String.pipe(
+      Schema.annotate({ title: 'Name' }),
+      Annotation.GeneratorAnnotation.set('company.buzzNoun'),
+    ),
 
     /** Account the repository belongs to, e.g. `dxos` — an organization or a user login. */
-    owner: Schema.String.pipe(Schema.annotate({ title: 'Owner' }), GeneratorAnnotation.set('internet.username')),
+    owner: Schema.String.pipe(
+      Schema.annotate({ title: 'Owner' }),
+      Annotation.GeneratorAnnotation.set('internet.username'),
+    ),
 
     /** Canonical web URL — stored rather than derived, since only the host knows its URL shape. */
-    url: Format.URL.pipe(Schema.annotate({ title: 'URL' }), GeneratorAnnotation.set('internet.url'), Schema.optional),
+    url: Format.URL.pipe(
+      Schema.annotate({ title: 'URL' }),
+      Annotation.GeneratorAnnotation.set('internet.url'),
+      Schema.optional,
+    ),
 
     description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 
@@ -35,7 +44,7 @@ export class Repo extends Type.makeObject<Repo>(DXN.make('org.dxos.type.repo', '
     organization: Schema.optional(Ref.Ref(Organization.Organization).annotate({ title: 'Organization' })),
   }).pipe(
     Schema.annotate({ title: 'Repository', description: 'A source-code repository.' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--git-branch--regular', hue: 'neutral' }),
   ),
 ) {}

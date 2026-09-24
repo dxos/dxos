@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -22,9 +23,9 @@ import { Expando } from '@dxos/schema';
 import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
-import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
-import { formatTrelloSyncFailure } from '../errors';
-import { TrelloApi } from '../services';
+import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants.ts';
+import { formatTrelloSyncFailure } from '../errors.ts';
+import { TrelloApi } from '../services/index.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
@@ -577,8 +578,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
           Cursor.recordError(bound, formatTrelloSyncFailure(error));
         }),
       ),
-      Effect.provide(Database.layer(db)),
-      Effect.provide(TrelloApi.fromAccessToken(bound.spec.source)),
+      Effect.provide(Layer.provideMerge(Database.layer(db), TrelloApi.fromAccessToken(bound.spec.source))),
     ),
   );
 

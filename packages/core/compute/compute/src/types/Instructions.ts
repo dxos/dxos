@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Skill from './Skill';
+import * as Skill from './Skill.ts';
 
 /** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
 export const Command = Schema.Struct({
@@ -36,7 +36,7 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
     }),
     /** Owned body: `SetParent` cascades it and deep-clones it with the instructions. */
     text: Ref.Ref(Text.Text).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Schema.annotate({ title: 'Instructions', description: 'Describe what the agent should do in each session.' }),
     ),
@@ -57,6 +57,7 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
 ) {}
 
 export type MakeProps = {
+  [Obj.Parent]?: Obj.Unknown;
   name?: string;
   description?: string;
   input?: Schema.Codec<any, any>;
@@ -69,6 +70,7 @@ export type MakeProps = {
 
 /** Creates an Instructions object with an owned Markdown `text` body (parented so it cascades and deep-clones). */
 export const make = ({
+  [Obj.Parent]: parent,
   name,
   description,
   input,
@@ -80,6 +82,7 @@ export const make = ({
 }: MakeProps): Instructions => {
   const body = Text.make({ content: text ?? '' });
   return Obj.make(Instructions, {
+    [Obj.Parent]: parent,
     name,
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),

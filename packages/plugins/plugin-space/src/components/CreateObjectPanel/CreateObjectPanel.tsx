@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Collection, type Database, Obj, type Type } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 /** Display-ready option for the create object search list. */
 export type CreateObjectOption = {
@@ -39,7 +39,7 @@ export type CreateObjectPanelProps = {
   options: CreateObjectOption[];
   spaces: Space[];
   typename?: string;
-  target?: Database.Database | Collection.Collection;
+  target?: Database.Database | Obj.Unknown;
   /** Whether the object is built from the form's values on submit (`draft`) or already exists (`live`). */
   mode?: 'draft' | 'live';
   initialFormValues?: Partial<AnyProperties>;
@@ -165,7 +165,7 @@ export const CreateObjectPanel = ({
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             <Form.Submit />
           </Form.Content>
         </Form.Viewport>

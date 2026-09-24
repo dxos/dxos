@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { NotebookVirtualParser, VirtualTypeScriptParser } from './vfs-parser';
+import { NotebookVirtualParser, VirtualTypeScriptParser } from './vfs-parser.ts';
 
 describe('vfs-parser', () => {
   test('parse simple assignments', () => {

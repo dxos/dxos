@@ -22,8 +22,8 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { ConnectorAnnotations, ConnectorSpec } from '#types';
 
-import * as ConnectorAuth from '../ConnectorAuth';
-import connectorGraphBuilder from './app-graph-builder';
+import * as ConnectorAuth from '../ConnectorAuth.ts';
+import connectorGraphBuilder from './app-graph-builder.ts';
 
 const SUBJECT_ID = 'subject';
 

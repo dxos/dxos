@@ -22,7 +22,9 @@ export const validateSchema = <T>(schema: Schema.Codec<T, any>, values: any): Va
   // malformed at a path — `_tags[0]['/']` — that is not even addressable as a form field.
   const validator = Schema.decodeUnknownResult(Schema.make<Schema.Codec<T, any>>(SchemaAST.toType(schema.ast)), {
     errors: 'all',
-    onExcessProperty: 'preserve',
+    // Only the issues are read, never the decoded value, so stripping excess keys is immaterial —
+    // what matters is that an extra property is not itself an error.
+    onExcessProperty: 'ignore',
   });
   const result = validator(values);
   if (Result.isFailure(result)) {

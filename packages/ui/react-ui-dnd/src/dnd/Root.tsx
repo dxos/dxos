@@ -9,9 +9,9 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 
 import { log } from '@dxos/log';
 
-import { DndRootContextProvider } from './DndRootContext';
-import { resolveDrop } from './resolve-drop';
-import { type DndContainerHandler, type DndData, type DndTileData } from './types';
+import { DndRootContextProvider } from './DndRootContext.ts';
+import { resolveDrop } from './resolve-drop.ts';
+import { type DndContainerHandler, type DndData, type DndTileData } from './types.ts';
 
 //
 // Context

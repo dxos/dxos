@@ -25,9 +25,9 @@ import {
   CODE_PROJECT_SPEC_TYPE,
   CODE_PROJECTS_SECTION_TYPE,
   PLUGIN_SPEC_TYPE,
-} from '../constants';
-import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';
-import { makePluginSpecSubject } from '../plugin-spec';
+} from '../constants.ts';
+import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths.ts';
+import { makePluginSpecSubject } from '../plugin-spec.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -49,7 +49,8 @@ export default Capability.makeModule(
       // the node is absent and the button stays hidden.
       AppGraphBuilder.createExtension({
         id: 'pluginSpec',
-        url: { key: 'spec', kind: 'item', path: [] },
+        // Plugin nodes sit under the registry's `plugins` node, so a spec is `<plugin>/spec` below it.
+        url: { key: 'spec', kind: 'item', path: ['plugins'], minDepth: 2 },
         match: GraphNodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;

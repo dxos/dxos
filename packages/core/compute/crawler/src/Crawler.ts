@@ -10,10 +10,10 @@ import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
-import { type StateError } from './errors';
-import { Source } from './Source';
-import * as StateStore from './StateStore';
-import type * as Type from './types';
+import { type StateError } from './errors.ts';
+import { Source } from './Source.ts';
+import * as StateStore from './StateStore.ts';
+import type * as Type from './types.ts';
 
 /** Durable outcome of a drained (or paused) crawl, read back from the {@link StateStore}. */
 export type Summary = {

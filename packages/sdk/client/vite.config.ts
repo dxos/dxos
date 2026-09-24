@@ -20,5 +20,5 @@ export default defineConfig({
     'services/dedicated/coordinator-worker-entrypoint': 'src/services/dedicated/coordinator-worker-entrypoint.ts',
     'worker/opfs-worker': 'src/worker/opfs-worker.ts',
   },
-  test: { node: true },
+  test: { node: true, browser: 'chromium' },
 });

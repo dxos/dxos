@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import { type GetProfileUsageResponse } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { useHubHttpClient } from '../../hooks';
-import { UsageView, type UsageViewState } from './UsageView';
+import { useHubHttpClient } from '../../hooks/index.ts';
+import { UsageView, type UsageViewState } from './UsageView.tsx';
 
 /** State + payload kept together so `ready` always carries data (mirrors the discriminated `UsageViewProps`). */
 type UsageFetchState =

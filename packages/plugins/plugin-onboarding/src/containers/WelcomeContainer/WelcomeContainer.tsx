@@ -8,7 +8,7 @@ import { getEnvString } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { WelcomeScreen } from './WelcomeScreen';
+import { WelcomeScreen } from './WelcomeScreen.tsx';
 
 /** Reads the hub URL from client config, which the surface's `props` mapper cannot do. */
 export const WelcomeContainer = () => {

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Testing from 'effect/testing';
+import * as FastCheck from 'fast-check';
 
 import { invariant } from '@dxos/invariant';
 
@@ -21,8 +21,8 @@ import {
   liveDocument,
   resolvablePendingSpaces,
   token,
-} from './model';
-import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system';
+} from './model.ts';
+import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system.ts';
 
 //
 // What the system can do. Each command below is one declaration: its arguments (the schema, which
@@ -96,7 +96,8 @@ const ClientSlot = Schema.Int.annotate({ identifier: 'ClientSlot' });
 const SpaceSlot = Schema.Int.annotate({ identifier: 'SpaceSlot' });
 const DocumentSlot = Schema.Int.annotate({ identifier: 'DocumentSlot' });
 // Boundary-heavy on purpose: concurrent inserts at the same offset are what exercise text merge.
-const Position = Schema.Literals([0, 0.25, 0.5, 0.75, 0.999]);
+const POSITIONS = [0, 0.25, 0.5, 0.75, 0.999] as const;
+const Position = Schema.Literals(POSITIONS);
 
 const brainOf = (real: Real, client: ClientIndex) => real.replicants[client].brain;
 
@@ -511,37 +512,47 @@ export type FleetShape = { clients: number; spaces: number; documents: number };
 /**
  * The weighted generator over the whole vocabulary.
  *
- * Each command's arbitrary is built from its own declared fields, with the three slot schemas
- * bound to the fleet shape and everything else derived from the schema; the result is decoded
- * through `Command`, so a generated value that the declaration would not accept cannot exist.
+ * Each command's arbitrary is built from its own declared fields, every field schema carrying a
+ * generator bound here — the slots to the fleet shape, the rest to the literals they were declared
+ * from. The result is decoded through `Command`, so a generated value that the declaration would
+ * not accept cannot exist.
  */
 export const makeCommandArbitrary = ({
   checkpoints,
   partitions,
   ...shape
-}: FleetShape & { checkpoints: boolean; partitions: boolean }): Testing.FastCheck.Arbitrary<Command> => {
+}: FleetShape & { checkpoints: boolean; partitions: boolean }): FastCheck.Arbitrary<Command> => {
   // Uniform over the slots, as the literal unions were: `integer` biases toward small values,
   // which would crowd draws onto slot 0 instead of colliding across the whole fleet.
   const slots = (count: number) =>
-    Testing.FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
-  const bounded = new Map<unknown, Testing.FastCheck.Arbitrary<unknown>>([
+    FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
+  const bounded = new Map<unknown, FastCheck.Arbitrary<unknown>>([
     [ClientSlot, slots(shape.clients)],
     [SpaceSlot, slots(shape.spaces)],
     [DocumentSlot, slots(shape.documents)],
+    [Position, FastCheck.constantFrom(...POSITIONS)],
   ]);
   const decode = Schema.decodeUnknownSync(Command);
-  const members = Object.values(COMMANDS)
-    .filter(({ kind }) => (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions))
-    .map(({ weight, schema }) => ({
+  const members = Object.entries(COMMANDS)
+    .filter(([, { kind }]) => (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions))
+    .map(([tag, { weight, schema }]) => ({
       weight,
-      arbitrary: Testing.FastCheck.record(
+      arbitrary: FastCheck.record(
         Object.fromEntries(
-          Object.entries(schema.fields).map(([name, field]) => [
-            name,
-            bounded.get(field) ?? Schema.toArbitrary(field)(Testing.FastCheck),
-          ]),
+          Object.entries(schema.fields).map(([name, field]) => {
+            // `TaggedStruct` carries the discriminant among its fields, and it is the one field the
+            // declaration fixes rather than the generator choosing it.
+            if (name === '_tag') {
+              return [name, FastCheck.constant(tag)];
+            }
+            const arbitrary = bounded.get(field);
+            // A field whose schema no generator is bound to would otherwise draw `undefined` and
+            // fail decoding one command at a time, deep into a run.
+            invariant(arbitrary, `no generator bound for the schema of field '${name}'`);
+            return [name, arbitrary];
+          }),
         ),
       ).map(decode),
     }));
-  return Testing.FastCheck.oneof(...members);
+  return FastCheck.oneof(...members);
 };

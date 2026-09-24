@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
@@ -9,6 +10,7 @@ import { Client } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
 import { TestBuilder, waitForSpace } from '@dxos/client/testing';
 import { type PublicKey } from '@dxos/keys';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Space deletion', () => {
   // Acceptance test: deleting a space on one device removes it on another device of the same identity.
@@ -18,7 +20,7 @@ describe('Space deletion', () => {
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
     onTestFinished(() => client1.destroy());
     await client1.initialize();
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
 
     const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     onTestFinished(() => client2.destroy());
@@ -51,7 +53,7 @@ describe('Space deletion', () => {
     const client = new Client({ services: testBuilder.createLocalClientServices() });
     onTestFinished(() => client.destroy());
     await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
 
     const space = await client.spaces.create();
     await space.waitUntilReady();

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-take-web-process-terminations"
+description = "Enables the take_web_process_terminations command without any pre-configured scope."
+commands.allow = ["take_web_process_terminations"]
+
+[[permission]]
+identifier = "deny-take-web-process-terminations"
+description = "Denies the take_web_process_terminations command without any pre-configured scope."
+commands.deny = ["take_web_process_terminations"]

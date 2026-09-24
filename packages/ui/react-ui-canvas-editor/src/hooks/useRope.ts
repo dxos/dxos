@@ -18,7 +18,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { type Point } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
-import { createCurveThroughPoints, pointAdd, pointDivide, pointSubtract } from '../layout';
+import { createCurveThroughPoints, pointAdd, pointDivide, pointSubtract } from '../layout/index.ts';
 
 export type Rope = {
   id: string;

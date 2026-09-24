@@ -17,8 +17,8 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { WithKeyboard } from '../../testing';
-import { MobileDeckLayout } from './MobileDeckLayout';
+import { WithKeyboard } from '../../testing/index.ts';
+import { MobileDeckLayout } from './MobileDeckLayout.tsx';
 
 /**
  * The drawer opens from the navbar's companion tabs, and the keyboard from focusing any text input;

@@ -9,8 +9,8 @@ import { AiService } from '@dxos/ai';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 
-import { artifactContents, seed, testLayer } from './testing';
-import updateInvestorLog from './update-investor-log';
+import { artifactContents, seed, testLayer } from './testing.ts';
+import updateInvestorLog from './update-investor-log.ts';
 
 describe('update-investor-log', () => {
   it.effect('extracts contacts and writes one section per conversation', () =>

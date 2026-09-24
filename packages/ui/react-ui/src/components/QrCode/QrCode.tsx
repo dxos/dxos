@@ -5,9 +5,9 @@
 import { QrCode as QrCodePrimitive } from '@ark-ui/react/qr-code';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon } from '../Icon';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon } from '../Icon/index.ts';
 
 type QrCodeErrorCorrection = 'L' | 'M' | 'Q' | 'H';
 

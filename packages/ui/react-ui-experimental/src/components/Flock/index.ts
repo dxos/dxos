@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Flock';
-export * from './FlockModel';
+export * from './Flock.tsx';
+export * from './FlockModel.ts';

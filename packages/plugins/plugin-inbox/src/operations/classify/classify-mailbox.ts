@@ -26,8 +26,8 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation } from '#types';
 
-import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags';
-import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor';
+import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags.ts';
+import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -269,7 +269,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           if (unknown.length > 0) {
             const prompt = `${CLASSIFY_PROMPT}\n\n${unknown.map(promptEntry).join('\n\n')}`;
             const payload = yield* generateClassification(prompt, strict ?? true).pipe(
-              Effect.provide(AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
+              Effect.provide(AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
             );
             for (const result of payload.results) {
               const message = unknown[result.index];

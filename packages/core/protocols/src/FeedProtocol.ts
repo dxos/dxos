@@ -31,6 +31,17 @@ export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
 
 /**
+ * Natural key of a block: the tuple that names the same block in every store, whatever position
+ * each store holds it at.
+ */
+export const BlockKey = Schema.Struct({
+  feedId: Schema.String,
+  actorId: Schema.String,
+  sequence: Schema.Number,
+});
+export interface BlockKey extends Schema.Schema.Type<typeof BlockKey> {}
+
+/**
  * Replicated queue block payload and ordering metadata.
  */
 export const Block = Schema.Struct({
@@ -209,6 +220,27 @@ export const QueryResponse = Schema.Struct({
    * assign positions, and on responses from servers that predate the token.
    */
   serverToken: Schema.optional(Schema.String),
+
+  /**
+   * Highest position the serving store holds in the queried namespace, or -1 when it holds none.
+   *
+   * A client whose pull cursor is above this is caching an ordering the store has lost -- its
+   * storage was rolled back, and it will re-issue those positions to other blocks -- so nothing
+   * above the cursor will ever arrive and everything written since sits below it. Only set by a
+   * position authority; absent on responses from servers that predate the field.
+   */
+  maxPosition: Schema.optional(Schema.Number),
+
+  /**
+   * Key of the block the serving store holds at the requested `position`, or `null` when it holds
+   * none there.
+   *
+   * A client holding a different block at its cursor is caching an ordering the store has lost: its
+   * storage was rolled back and has since been written past the cursor, so neither `maxPosition`
+   * nor the blocks above the cursor reveal it. Only set by a position authority answering a
+   * `position` at or above 0; absent on responses from servers that predate the field.
+   */
+  cursorBlock: Schema.optional(Schema.NullOr(BlockKey)),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
@@ -230,6 +262,13 @@ export const SubscribeRequest = Schema.Struct({
    * Feeds to include in the subscription.
    */
   feedIds: Schema.Array(Schema.String),
+
+  /**
+   * Namespace the subscription covers. When set with an empty `feedIds`, the subscription is
+   * namespace-wide — the client does not learn feed ids until it pulls, so it cannot enumerate
+   * them at subscribe time.
+   */
+  feedNamespace: Schema.optional(Schema.String),
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
 
@@ -302,6 +341,42 @@ export const AppendResponse = Schema.Struct({
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
 
 /**
+ * Server-initiated notification that a namespace has gained blocks beyond `position`.
+ *
+ * Carries no block data: the recipient re-pulls through the ordinary cursor path, so a hint that is
+ * dropped, duplicated or reordered costs latency rather than correctness. Sending blocks here
+ * instead would duplicate the position and `serverToken` reconciliation that `pull` already owns,
+ * and would make an undelivered frame a consistency problem rather than a slow one.
+ */
+export const FeedAdvanced = Schema.Struct({
+  /**
+   * Space the advanced namespace belongs to.
+   */
+  spaceId: Schema.String,
+
+  /**
+   * Namespace that gained blocks.
+   */
+  feedNamespace: Schema.String,
+
+  /**
+   * Highest position the server holds for the namespace, when known. Advisory only — the recipient
+   * compares it against its own cursor to skip a redundant pull, and pulls regardless if absent.
+   */
+  position: Schema.optional(Schema.Number),
+});
+export interface FeedAdvanced extends Schema.Schema.Type<typeof FeedAdvanced> {}
+
+/**
+ * Machine-readable reasons an `Error` reply may carry, for a caller to act on rather than retry.
+ */
+export const ErrorCode = {
+  /** The space no longer exists on the server, so nothing addressed to it will ever be answered. */
+  SPACE_DELETED: 'space_deleted',
+} as const;
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
+
+/**
  * Tagged transport message union for queue protocol RPC traffic.
  *
  * The routing envelope is distributed over the members with `mapMembers`, which is what Effect 4
@@ -314,11 +389,25 @@ export const ProtocolMessage = Schema.Union([
   Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
   Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
   Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
+  Schema.TaggedStruct('FeedAdvanced', FeedAdvanced.fields),
   Schema.TaggedStruct('Error', {
+    /**
+     * Correlation identifier of the request that failed, so the caller can fail that request at
+     * once instead of waiting out its timeout. Absent from servers that predate the field.
+     */
+    requestId: Schema.optional(Schema.String),
+
     /**
      * Human-readable error message.
      */
     message: Schema.String,
+
+    /**
+     * One of {@link ErrorCode}, when the caller should act on the failure instead of retrying it.
+     * Typed as a string so a client decodes a code it does not know yet and treats the reply as an
+     * ordinary error.
+     */
+    code: Schema.optional(Schema.String),
   }),
 ]).mapMembers(
   Tuple.map(

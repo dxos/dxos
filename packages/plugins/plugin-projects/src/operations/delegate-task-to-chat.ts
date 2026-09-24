@@ -7,8 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -24,14 +22,21 @@ import { concat } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
 
-import { getProjectChatPath } from '../paths';
+import { findProject } from './find-project.ts';
 
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
- * ability to write a document, and the project verbs that file what it wrote. The project's own
- * skill arrives with the subject binding — a `Project` carries it as an annotation.
+ * ability to write a document, the project verbs that file what it wrote, and a shell for a task
+ * that builds or runs something. The project's own skill arrives with the subject binding — a
+ * `Project` carries it as an annotation. A key with no plugin behind it binds nothing: the binder
+ * drops a ref it cannot resolve.
  */
-const DELEGATION_SKILL_KEYS = ['org.dxos.skill.planning', 'org.dxos.skill.markdown', 'org.dxos.skill.project'];
+const DELEGATION_SKILL_KEYS = [
+  'org.dxos.skill.planning',
+  'org.dxos.skill.markdown',
+  'org.dxos.skill.project',
+  'org.dxos.skill.sandbox',
+];
 
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
@@ -40,8 +45,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
         // input), so the invariant is where an empty list stops.
         invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
-        const tasks = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
+        const requested = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
+
+        // Idempotent over re-invocation: a task the agent already holds is skipped rather than
+        // handed to a second session, and a list of nothing else stops here the way an empty one does.
+        const tasks = requested.filter((task) => !Task.isAgentWorking(task));
+        invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
         // than loose in the space. Walked from the tasks rather than taken as input: the list the
@@ -106,21 +116,17 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
-        // The reader is taken to the work they just delegated. Opened before the turn starts so the
-        // first tokens land on screen rather than into a conversation nobody is looking at.
+        // The reader stays where they delegated from — the project's ledger, whose pipeline chart
+        // shows the session as it starts — so the operation does not navigate; the chart's session
+        // lane is the way into the chat.
         //
-        // Both steps are best-effort and deliberately not fatal: the delegation itself is already
-        // durable — the chat exists, carries the task, and is filed under the project — so a host
-        // with no layout or no agent runtime (a test harness, a headless client) still delegates,
-        // and the reader can send the first turn themselves.
+        // Best-effort and deliberately not fatal: the delegation itself is already durable — the
+        // chat exists, carries the task, and is filed under the project — so a host with no agent
+        // runtime (a test harness, a headless client) still delegates, and the reader can send the
+        // first turn themselves.
         //
         // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
         // layers are `orDie`), which a failure channel handler never sees.
-        const opened = yield* openChat(chat, project).pipe(Effect.exit);
-        if (Exit.isFailure(opened)) {
-          log.warn('delegated chat did not open', { cause: Cause.pretty(opened.cause) });
-        }
-
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
           prompt: OPENING_PROMPT,
@@ -133,35 +139,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
       }),
     ),
   );
-
-/**
- * Navigates to a chat.
- *
- * A project's chat is composed from this plugin's own path helper rather than asked of
- * `ResolveNavigationTargets`: the Chats branch belongs to this plugin, so it already knows where the
- * chat lives, and the generic resolvers answer with the assistant's Chats section — which lists only
- * UNPARENTED chats, so that path names a node that does not exist and the deck renders nothing.
- * Only a chat outside a project goes to the resolver.
- *
- * `immediate` expands the path instead of validating it. The chat was created moments ago, so its
- * graph node may not exist yet — the branch connector's query has not re-emitted — and validation
- * sends an unmaterialized path to the not-found route, which empties the deck.
- */
-const openChat = Effect.fnUntraced(function* (chat: Chat.Chat, project: Project.Project | undefined) {
-  const db = Obj.getDatabase(chat);
-  const path = project && db ? getProjectChatPath(db.spaceId, project.id, chat.id) : yield* resolvePath(chat);
-  if (path) {
-    yield* Operation.invoke(LayoutOperation.Open, { subject: [path], navigation: 'immediate' });
-  }
-});
-
-/** Where a chat outside any project is addressable, per whichever plugin claims it. */
-const resolvePath = Effect.fnUntraced(function* (chat: Chat.Chat) {
-  const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
-    query: { uri: Obj.getURI(chat) },
-  });
-  return targets[0]?.path;
-});
 
 /**
  * References the tasklist rather than restating the tasks: they are already bound to the chat, and
@@ -201,23 +178,21 @@ const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, proj
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   // Registry refs rather than database clones: the ECHO resolver spans the registry, as
-  // `CreateChat` does for the default set.
-  const skills = DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
-  const objects = project ? [Ref.make(project)] : [];
+  // `CreateChat` does for the default set. The project's instructions name the skills and context
+  // its work needs (a studio project's storyboard verbs, say); the subject binding only renders
+  // their text, so those refs are bound too.
+  const bindings = project ? yield* projectBindings(project) : { skills: [], objects: [] };
+  const skills = [...DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))), ...bindings.skills];
+  const objects = project ? [Ref.make(project), ...bindings.objects] : [];
   yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
 });
 
-/** The task's project, walked up the ECHO parents (task → task set → project). */
-const findProject = (task: Obj.Any): Project.Project | undefined => {
-  let cursor: Obj.Any | undefined = Obj.getParent(task);
-  // Bounded: a malformed parent chain must not spin, and nothing legitimate is this deep.
-  for (let depth = 0; cursor && depth < 8; depth++) {
-    if (Obj.instanceOf(Project.Project, cursor)) {
-      return cursor;
-    }
-    cursor = Obj.getParent(cursor);
+/** `Project.contextBindings` needs the instructions ref resolved, which a fresh load guarantees. */
+const projectBindings = Effect.fnUntraced(function* (project: Project.Project) {
+  if (project.instructions) {
+    yield* Database.load(project.instructions);
   }
-  return undefined;
-};
+  return Project.contextBindings(project);
+});
 
 export default handler;

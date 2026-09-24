@@ -16,8 +16,8 @@ import { type AssistantOptions, assistant } from '@dxos/ui-editor';
 
 import { type EditMessageProps } from '#components';
 
-import { email } from '../extensions';
-import { stripQuotedMessage } from '../util';
+import { email } from '../extensions/index.ts';
+import { stripQuotedMessage } from '../util/index.ts';
 
 /**
  * The email-aware editor extensions (AI draft-assist + email formatting) for the composer, shared by
@@ -43,7 +43,7 @@ export const useEmailComposerExtensions = (
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+            AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

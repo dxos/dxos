@@ -10,18 +10,17 @@ import { Card, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { compactSlots } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
-import { getContentSnippet } from '../../util';
-import { snippet as snippetExtension } from './snippet';
+import { getContentSnippet } from '../../util.tsx';
+import { snippet as snippetExtension } from './snippet.ts';
 
 /** Cap for the snippet preview: slightly taller than the card is wide, so a long document clips
  * under the fade instead of growing an unbounded card. Relative to the card's inline size. */
-const SNIPPET_MAX_HEIGHT = '110cqi';
+const SNIPPET_MAX_HEIGHT = '100cqi';
 
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
@@ -31,7 +30,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   // the document); reading `subject.content.target.content` alone is not reactive to the string.
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
-  // NOTE: Newline is added so that Fade does not obscure the last line.
+  // NOTE: Newline is added so that the mask does not obscure the last line.
   // An empty document has no snippet at all, so it renders no preview box rather than an empty one
   // (concatenating the newline unconditionally made this always truthy).
   const snippet = useMemo(() => {
@@ -45,8 +44,11 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
     <Card.Body>
       {snippet && (
         // The container the snippet's cap is measured against, so it scales with the card.
-        <Card.Section classNames='dx-container-type-inline-size relative'>
-          <Card.Row fullWidth>
+        <Card.Section classNames='dx-container-type-inline-size'>
+          {/* The clipped snippet dissolves into whatever the card sits on: a mask on the content,
+              not a colour painted over it, since the card surface differs per host (grid, popover,
+              board) and a fade to the wrong surface reads as a grey band across the last line. */}
+          <Card.Row fullWidth classNames='mask-b-from-[calc(100%-2rem)] mask-b-to-100%'>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>
@@ -61,7 +63,6 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
                 </Editor.Root>
               )}
             </MarkdownEditorProvider>
-            <Fade />
           </Card.Row>
         </Card.Section>
       )}
@@ -75,15 +76,6 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
     </Card.Body>
   );
 };
-
-const Fade = () => (
-  <div
-    className={mx(
-      'z-10 absolute bottom-0 inset-x-0 h-8',
-      'bg-gradient-to-b from-transparent to-input-surface pointer-events-none',
-    )}
-  />
-);
 
 const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 16) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {

@@ -9,5 +9,5 @@ export * as AtomRef from 'effect/unstable/reactivity/AtomRef';
 export * as AtomHttpApi from 'effect/unstable/reactivity/AtomHttpApi';
 export * as AtomRpc from 'effect/unstable/reactivity/AtomRpc';
 
-export * from './hooks';
-export * from './registry';
+export * from './hooks/index.ts';
+export * from './registry.ts';

@@ -76,4 +76,5 @@ export const toSpawnRequest = (
   ...(request.parentPid !== undefined ? { parentPid: request.parentPid } : {}),
   ...(request.environment !== undefined ? { environment: request.environment } : {}),
   ...(request.annotations !== undefined ? { annotations: request.annotations } : {}),
+  ...(request.idempotencyKey !== undefined ? { idempotencyKey: request.idempotencyKey } : {}),
 });

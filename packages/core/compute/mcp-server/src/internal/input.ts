@@ -106,7 +106,7 @@ export const tolerateStringifiedRefs = (fields: Fields, inputSchema: JsonSchema.
       schema,
       Schema.String.pipe(
         Schema.decodeTo(schema, {
-          decode: SchemaGetter.transformOrFail((text: string) =>
+          decode: SchemaGetter.transformEffect((text: string) =>
             Effect.try({
               try: () => JSON.parse(text),
               catch: () =>

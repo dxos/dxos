@@ -38,7 +38,8 @@ export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
 export type FormFieldStateProps<T = any> = {
   getStatus: () => FormFieldStatus;
   getValue: () => T | undefined;
-  onBlur: (event: FocusEvent<HTMLElement>) => void;
+  /** Marks the field touched, so its error may show; the event is not read. */
+  onBlur: (event?: FocusEvent<HTMLElement>) => void;
   onValueChange: (type: SchemaAST.AST, value: T) => void;
 };
 
@@ -69,7 +70,19 @@ export type FormFieldRendererProps<T = any> = {
   required?: boolean;
 } & FormFieldStateProps<T>;
 
-export type FormFieldRenderer = FC<FormFieldRendererProps>;
+/** Where a row puts its label: above the control, or beside it on one line, after a toggle. */
+export type FormFieldLabelPlacement = 'above' | 'beside';
+
+/**
+ * A field renderer. The built-in ones are controls the dispatcher places in a `Form.Field` row;
+ * `standalone` declares that a control holds several labelled inputs (a coordinate pair), so the
+ * row's label is text rather than a `<label>`; `labelPlacement` that the row lays its label beside
+ * the control (a toggle). A renderer from `fieldMap` renders its own row.
+ */
+export type FormFieldRenderer = FC<FormFieldRendererProps> & {
+  standalone?: boolean;
+  labelPlacement?: FormFieldLabelPlacement;
+};
 
 export type FormFieldMap = Record<string, FormFieldRenderer>;
 

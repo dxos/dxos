@@ -2,43 +2,65 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
-import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo, type RecoverIdentityArgs } from '@dxos/client-protocol';
+import {
+  AUTH_TIMEOUT,
+  type ClientServicesProvider,
+  type Halo,
+  type HaloInbox,
+  type RecoverIdentityArgs,
+} from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { buf } from '@dxos/protocols/buf';
+import { buf, bufWkt, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Contact, type Device, type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type Contact,
+  type Device,
+  type Identity,
+  type RecoverIdentityRequest,
+  RecoverIdentityRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
+  DeviceProfileDocumentSchema,
   type Presentation,
+  PresentationSchema,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+  ProfileDocumentSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type InboxService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
-import { InvitationsProxy } from '../invitations';
-import {
-  fromBufContact,
-  fromBufCredential,
-  fromBufDevice,
-  fromBufIdentity,
-  fromBufPresentation,
-  toBufCredential,
-  toBufDeviceProfileDocument,
-  toBufProfileDocument,
-  toBufRecoverIdentityRequest,
-} from '../services/legacy-codec';
+import { RPC_TIMEOUT } from '../common.ts';
+import { InvitationsProxy } from '../invitations/index.ts';
+
+/**
+ * Selects the `request` oneof from the public union. The service dispatches on the case, and the
+ * rpc payload codec refuses to encode a message that leaves it unset, so the mapping cannot be
+ * skipped by handing the union straight to the wire.
+ */
+const toRecoverIdentityRequest = (args: RecoverIdentityArgs): RecoverIdentityRequest =>
+  buf.create(RecoverIdentityRequestSchema, {
+    request:
+      'recoveryCode' in args
+        ? { case: 'recoveryCode', value: args.recoveryCode }
+        : 'recoveryProof' in args
+          ? { case: 'recoveryProof', value: args.recoveryProof }
+          : 'token' in args
+            ? { case: 'token', value: args.token }
+            : { case: 'external', value: args.external },
+  });
 
 export class HaloProxy implements Halo {
   /** Subscriptions for overall lifecycle (reconnected event listener). */
@@ -50,11 +72,25 @@ export class HaloProxy implements Halo {
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _credentialsChanged = new Event<Credential[]>();
+  private readonly _inboxChanged = new Event<readonly InboxService.Notice[]>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
   private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
+  private readonly _inbox: HaloInbox = {
+    notices: MulticastObservable.from(this._inboxChanged, []),
+    send: (request) =>
+      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.send'](request), {
+        timeout: RPC_TIMEOUT,
+        label: 'InboxService.send',
+      }),
+    ack: (ids) =>
+      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.ack']({ ids: [...ids] }), {
+        timeout: RPC_TIMEOUT,
+        label: 'InboxService.ack',
+      }),
+  };
   private _invitationProxy?: InvitationsProxy;
 
   private _haloCredentialStreamCleanup?: () => void;
@@ -70,8 +106,8 @@ export class HaloProxy implements Halo {
 
   toJSON(): { identityKey: string | undefined; deviceKey: string | undefined } {
     return {
-      identityKey: this._identity.get()?.identityKey.truncate(),
-      deviceKey: this.device?.deviceKey.truncate(),
+      identityKey: toPublicKey(this._identity.get()?.identityKey)?.truncate(),
+      deviceKey: toPublicKey(this.device?.deviceKey)?.truncate(),
     };
   }
 
@@ -96,6 +132,10 @@ export class HaloProxy implements Halo {
 
   get credentials() {
     return this._credentials;
+  }
+
+  get inbox(): HaloInbox {
+    return this._inbox;
   }
 
   get invitations() {
@@ -167,9 +207,11 @@ export class HaloProxy implements Halo {
     this._credentialsChanged.emit([]);
     const cleanup = subscribeStream(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.queryCredentials']({ spaceKey: identity.spaceKey! }),
+      this._serviceProvider.rpc['SpacesService.queryCredentials']({
+        spaceKey: requirePublicKey(identity.spaceKey),
+      }),
       {
-        onData: (data) => this._credentialsChanged.emit([...this._credentials.get(), fromBufCredential(data)]),
+        onData: (data) => this._credentialsChanged.emit([...this._credentials.get(), data]),
       },
     );
     this._haloCredentialStreamCleanup = cleanup;
@@ -199,14 +241,22 @@ export class HaloProxy implements Halo {
               identityKey: data.identity.identityKey,
               displayName: data.identity.profile?.displayName,
             });
-          this._identityChanged.emit(data.identity ? fromBufIdentity(data.identity) : null);
+          this._identityChanged.emit(data.identity ? data.identity : null);
         },
       }),
     );
 
     this._streamSubscriptions.add(
       subscribeStream(this._runtime, this._serviceProvider.rpc['ContactsService.queryContacts'](undefined), {
-        onData: (data) => this._contactsChanged.emit((data.contacts ?? []).map(fromBufContact)),
+        onData: (data) => this._contactsChanged.emit(data.contacts ?? []),
+      }),
+    );
+
+    this._streamSubscriptions.add(
+      subscribeStream(this._runtime, this._serviceProvider.rpc['InboxService.subscribe'](undefined), {
+        onData: (data) => this._inboxChanged.emit(data.notices),
+        // The inbox is optional: an unreachable EDGE must not affect the rest of HALO.
+        onError: (error) => log.warn('inbox stream failed', { error }),
       }),
     );
 
@@ -214,7 +264,7 @@ export class HaloProxy implements Halo {
       subscribeStream(this._runtime, this._serviceProvider.rpc['DevicesService.queryDevices'](undefined), {
         onData: (data) => {
           if (data.devices) {
-            this._devicesChanged.emit(data.devices.map(fromBufDevice));
+            this._devicesChanged.emit(data.devices);
             const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
             log.trace('dxos.halo.device', {
               deviceKey: current?.deviceKey,
@@ -240,6 +290,7 @@ export class HaloProxy implements Halo {
     this._identityChanged.emit(null);
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
+    this._inboxChanged.emit([]);
   }
 
   /**
@@ -256,44 +307,60 @@ export class HaloProxy implements Halo {
    * @param profile - optional display name
    * @param deviceProfile - optional device profile that will be merged with defaults
    */
-  async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
+  async createIdentity(
+    profile: ProfileDocument = create(ProfileDocumentSchema, {}),
+    deviceProfile?: DeviceProfileDocument,
+  ): Promise<Identity> {
     return this._createIdentityInternal(Context.default(), profile, deviceProfile);
   }
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _createIdentityInternal(
     ctx: Context,
-    profile: ProfileDocument = {},
+    profile: ProfileDocument = create(ProfileDocumentSchema, {}),
     deviceProfile?: DeviceProfileDocument,
   ): Promise<Identity> {
     invariant(!this.identity.get(), 'Identity already exists');
-    const deviceProfileWithDefaults = {
+    const deviceProfileWithDefaults = create(DeviceProfileDocumentSchema, {
       ...deviceProfile,
-      ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'initial identity device' }),
-    };
+      label: deviceProfile?.label ?? 'initial identity device',
+    });
     const identity = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['IdentityService.createIdentity']({
-        profile: toBufProfileDocument(profile),
-        deviceProfile: toBufDeviceProfileDocument(deviceProfileWithDefaults),
+        profile: profile,
+        deviceProfile: deviceProfileWithDefaults,
       }),
       { timeout: RPC_TIMEOUT, label: 'IdentityService.createIdentity' },
     );
-    this._identityChanged.emit(fromBufIdentity(identity));
-    return fromBufIdentity(identity);
+    this._identityChanged.emit(identity);
+    return identity;
+  }
+
+  /**
+   * Closes and deletes every space and the identity, then wipes the storage they left behind
+   * (automerge documents, hypercore files, the feed store, the index tables and the keyring).
+   * The client stays open, so {@link createIdentity} may be called straight afterwards.
+   */
+  async deleteIdentity(): Promise<void> {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc['IdentityService.deleteIdentity'](undefined), {
+      timeout: RPC_TIMEOUT,
+      label: 'IdentityService.deleteIdentity',
+    });
+    this._identityChanged.emit(null);
   }
 
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.recoverIdentity'](toBufRecoverIdentityRequest(args)),
+      this._serviceProvider.rpc['IdentityService.recoverIdentity'](toRecoverIdentityRequest(args)),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.recoverIdentity',
       },
     );
-    this._identityChanged.emit(fromBufIdentity(identity));
-    return fromBufIdentity(identity);
+    this._identityChanged.emit(identity);
+    return identity;
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
@@ -304,14 +371,14 @@ export class HaloProxy implements Halo {
   private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.updateProfile'](toBufProfileDocument(profile)),
+      this._serviceProvider.rpc['IdentityService.updateProfile'](profile),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.updateProfile',
       },
     );
-    this._identityChanged.emit(fromBufIdentity(identity));
-    return fromBufIdentity(identity);
+    this._identityChanged.emit(identity);
+    return identity;
   }
 
   /**
@@ -320,10 +387,11 @@ export class HaloProxy implements Halo {
    */
   queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}): Credential[] {
     return this._credentials.get().filter((credential) => {
-      if (ids && !ids.some((id) => id.equals(credential.id!))) {
+      if (ids && !ids.some((id) => id.equals(requirePublicKey(credential.id)))) {
         return false;
       }
-      if (type && credential.subject.assertion['@type'] !== type) {
+      // `anyPack` writes a `type.googleapis.com/` prefix, so the bare type name only matches via `anyIs`.
+      if (type && !(credential.subject?.assertion && bufWkt.anyIs(credential.subject.assertion, type))) {
         return false;
       }
       return true;
@@ -353,10 +421,10 @@ export class HaloProxy implements Halo {
       throw new ApiError({ message: 'Client not open.' });
     }
 
-    const deviceProfileWithDefaults = {
+    const deviceProfileWithDefaults = create(DeviceProfileDocumentSchema, {
       ...deviceProfile,
-      ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'additional device' }),
-    };
+      label: deviceProfile?.label ?? 'additional device',
+    });
     return this._invitationProxy!.join(invitation, deviceProfileWithDefaults);
   }
 
@@ -372,8 +440,8 @@ export class HaloProxy implements Halo {
     await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['SpacesService.writeCredentials']({
-        spaceKey: identity.spaceKey!,
-        credentials: credentials.map(toBufCredential),
+        spaceKey: requirePublicKey(identity.spaceKey),
+        credentials,
       }),
       { timeout: RPC_TIMEOUT, label: 'SpacesService.writeCredentials' },
     );
@@ -387,7 +455,9 @@ export class HaloProxy implements Halo {
     const trigger = new Trigger<Credential[]>();
 
     this._credentials.subscribe((credentials) => {
-      const credentialsToPresent = credentials.filter((credential) => ids.some((id) => id.equals(credential.id!)));
+      const credentialsToPresent = credentials.filter((credential) =>
+        ids.some((id) => id.equals(requirePublicKey(credential.id))),
+      );
       if (credentialsToPresent.length === ids.length) {
         trigger.wake(credentialsToPresent);
       }
@@ -401,13 +471,11 @@ export class HaloProxy implements Halo {
     const presentation = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['IdentityService.signPresentation']({
-        presentation: buf.create(PresentationSchema, {
-          credentials: credentials.map(toBufCredential),
-        }),
+        presentation: buf.create(PresentationSchema, { credentials }),
         nonce,
       }),
       { timeout: RPC_TIMEOUT, label: 'IdentityService.signPresentation' },
     );
-    return fromBufPresentation(presentation);
+    return presentation;
   }
 }

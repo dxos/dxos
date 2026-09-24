@@ -10,9 +10,9 @@ import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
-import { ObjectCore } from '../core-db';
-import { initEchoReactiveObjectRootProxy } from './echo-handler';
-import { getObjectCore, isEchoObject } from './echo-object-utils';
+import { ObjectCore } from '../core-db/index.ts';
+import { initEchoReactiveObjectRootProxy } from './echo-handler.ts';
+import { getObjectCore, isEchoObject } from './echo-object-utils.ts';
 
 /**
  * Returns the edit history of an ECHO object.

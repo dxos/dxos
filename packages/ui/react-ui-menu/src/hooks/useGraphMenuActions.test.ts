@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import { buildGraphMenu } from './useGraphMenuActions';
+import { buildGraphMenu } from './useGraphMenuActions.ts';
 
 const action = (id: string, properties: Record<string, any> = {}): AppGraphNode.ActionLike => ({
   id,

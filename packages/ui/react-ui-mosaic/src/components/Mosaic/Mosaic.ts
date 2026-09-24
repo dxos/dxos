@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { MosaicContainer, type MosaicContainerProps, type MosaicScrollController } from './Container';
-import { MosaicDragHandle, type MosaicDragHandleProps } from './DragHandle';
-import { type MosaicContainerState, useMosaicContainerContext } from './MosaicContainerContext';
-import { type MosaicTileState, useMosaicTileContext } from './MosaicTileContext';
+import { MosaicContainer, type MosaicContainerProps, type MosaicScrollController } from './Container.tsx';
+import { MosaicDragHandle, type MosaicDragHandleProps } from './DragHandle.tsx';
+import { type MosaicContainerState, useMosaicContainerContext } from './MosaicContainerContext.ts';
+import { type MosaicTileState, useMosaicTileContext } from './MosaicTileContext.ts';
 import {
   MosaicDropIndicator,
   type MosaicDropIndicatorProps,
   MosaicPlaceholder,
   type MosaicPlaceholderProps,
-} from './Placeholder';
-import { MosaicResizeHandle, type MosaicResizeHandleProps } from './ResizeHandle';
-import { MosaicStack, type MosaicStackProps, type MosaicStackTileComponent, MosaicVirtualStack } from './Stack';
-import { MosaicTile, type MosaicTileProps } from './Tile';
+} from './Placeholder.tsx';
+import { MosaicResizeHandle, type MosaicResizeHandleProps } from './ResizeHandle.tsx';
+import { MosaicStack, type MosaicStackProps, type MosaicStackTileComponent, MosaicVirtualStack } from './Stack.tsx';
+import { MosaicTile, type MosaicTileProps } from './Tile.tsx';
 
 //
 // Mosaic

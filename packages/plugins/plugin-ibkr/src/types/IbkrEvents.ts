@@ -6,7 +6,7 @@
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
-import { meta } from '../meta';
+import { meta } from '../meta.ts';
 
 /**
  * The feature's start event: the plugin's start-gated modules (and cross-plugin

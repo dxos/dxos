@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Note, Score, Sequence, Track } from '#types';
 
-import { type MutableScore, applyLeadSheetToScore } from '../../util';
-import { parseLeadSheet } from '../../util/lead-sheet';
-import { ScoreArticle } from './ScoreArticle';
+import { type MutableScore, applyLeadSheetToScore } from '../../util/index.ts';
+import { parseLeadSheet } from '../../util/lead-sheet.ts';
+import { ScoreArticle } from './ScoreArticle.tsx';
 import CHILDREN from './testing/children.txt?raw';
 import ODE_TO_JOY from './testing/ode_to_joy.txt?raw';
 type Pattern = {

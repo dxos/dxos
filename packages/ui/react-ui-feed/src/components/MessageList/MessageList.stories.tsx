@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../../testing';
+import { FeedStory, type FeedStoryProps } from '../../testing/index.ts';
 
 const meta: Meta<FeedStoryProps> = {
   title: 'ui/react-ui-feed/components/MessageList',

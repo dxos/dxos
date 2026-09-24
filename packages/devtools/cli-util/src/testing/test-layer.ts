@@ -13,8 +13,8 @@ import {
   layerMemory as configServiceLayerMemory,
 } from '@dxos/client';
 
-import { CommandConfig } from '../services';
-import { TestConsole } from './test-console';
+import { CommandConfig } from '../services/index.ts';
+import { TestConsole } from './test-console.ts';
 
 // Annotated explicitly: without it, `Effect.provide(TestLayer)` at call sites infers the
 // remaining requirement as `any` instead of `never` — a chained `Layer.provideMerge` generic

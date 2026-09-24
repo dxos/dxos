@@ -17,33 +17,33 @@ import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
  */
 export const dx = Command.make('dx').pipe(
   Command.withSharedFlags({
-    config: Options.file('config', { mustExist: true }).pipe(
+    config: Options.File('config', { mustExist: true }).pipe(
       Options.withDescription('Config file path.'),
       Options.withAlias('c'),
       Options.optional,
     ),
     // TODO(burdon): CommandConfig layer should throw if profile doesn't exist.
-    profile: Options.string('profile').pipe(
+    profile: Options.String('profile').pipe(
       Options.withDescription('Profile for the config file.'),
       Options.withAlias('p'),
-      Options.withFallbackConfig(Config.string(DXEnv.PROFILE).pipe(Config.withDefault(DEFAULT_PROFILE))),
+      Options.withFallbackConfig(Config.String(DXEnv.PROFILE).pipe(Config.withDefault(DEFAULT_PROFILE))),
       Options.withDefault(DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE)),
     ),
-    json: Options.boolean('json').pipe(
+    json: Options.Boolean('json').pipe(
       Options.withDescription('JSON output.'),
-      Options.withFallbackConfig(Config.boolean('JSON').pipe(Config.withDefault(false))),
+      Options.withFallbackConfig(Config.Boolean('JSON').pipe(Config.withDefault(false))),
     ),
-    verbose: Options.boolean('verbose').pipe(
+    verbose: Options.Boolean('verbose').pipe(
       Options.withDescription('Verbose logging.'),
       Options.withAlias('v'),
-      Options.withFallbackConfig(Config.boolean('VERBOSE').pipe(Config.withDefault(false))),
+      Options.withFallbackConfig(Config.Boolean('VERBOSE').pipe(Config.withDefault(false))),
     ),
-    logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
+    logLevel: Options.Literals('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
       Options.withDescription('Log level to use.'),
       Options.withAlias('l'),
       Options.withDefault(DXEnv.get(DXEnv.DEBUG, 'info')),
     ),
-    timeout: Options.integer('timeout').pipe(
+    timeout: Options.Int('timeout').pipe(
       Options.withDescription('The timeout before the command fails.'),
       Options.optional,
     ),

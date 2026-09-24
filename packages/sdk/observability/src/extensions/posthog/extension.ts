@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { isNode } from '@dxos/util';
 
-import * as ObservabilityExtension from '../../ObservabilityExtension';
-import { DXOS_VERSION } from '../../version';
-import { stubExtension } from '../stub';
+import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { DXOS_VERSION } from '../../version.ts';
+import { stubExtension } from '../stub.ts';
 import {
   AI_GENERATION_EVENT,
   AI_SPAN_EVENT,
@@ -20,8 +20,8 @@ import {
   toAiGenerationProperties,
   toAiSpanProperties,
   toAiTraceProperties,
-} from './llm-analytics';
-import { otelDestination } from './otel-destination';
+} from './llm-analytics.ts';
+import { otelDestination } from './otel-destination.ts';
 
 const WIDGET_SESSION_STORAGE_KEY = 'dxos.support.widgetSessionId';
 
@@ -133,7 +133,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     }
 
     const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
-    const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
+    const { logProcessor } = yield* Effect.promise(() => import('./log-processor.ts'));
     let unregisterPosthogProcessors: (() => void) | undefined;
 
     return {
@@ -251,7 +251,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             if (!ndjson || ndjson.length === 0) {
               return;
             }
-            const { flushSupportLogs } = await import('./support-logs');
+            const { flushSupportLogs } = await import('./support-logs.ts');
             const count = await flushSupportLogs(ndjson, {
               destination,
               resourceAttributes: {

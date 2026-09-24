@@ -5,7 +5,7 @@
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { getFieldPublishFlags } from './annotation';
+import { getFieldPublishFlags } from './annotation.ts';
 
 /** Format a resolved (non-ref) field value as the compact string the network view shows. */
 export const formatValue = (value: unknown): string => {

@@ -6,8 +6,8 @@ import { type EditorView } from '@codemirror/view';
 
 import { insertAtLineStart, insertTable } from '@dxos/ui-editor';
 
-import { type EditorMenuGroup } from './menu';
-import { popoverRangeEffect } from './popover';
+import { type EditorMenuGroup } from './menu.ts';
+import { popoverRangeEffect } from './popover.ts';
 
 /**
  * Re-open the popover in link-query ("@") mode at the cursor, seeding the same query shape the user

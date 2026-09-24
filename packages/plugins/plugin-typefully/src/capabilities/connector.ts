@@ -10,7 +10,7 @@ import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 
 const TypefullyTokenForm = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({

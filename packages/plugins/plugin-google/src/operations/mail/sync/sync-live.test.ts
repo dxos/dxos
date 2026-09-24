@@ -14,9 +14,13 @@ import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 import { Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { LIVE_GMAIL_ACCOUNT, hasLiveGmailCredentials, liveGmailAccessToken } from '../../../testing/live-credentials';
-import { googleSyncLiveServices, runGoogleSync } from '../../../testing/sync-fixture';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import {
+  LIVE_GMAIL_ACCOUNT,
+  hasLiveGmailCredentials,
+  liveGmailAccessToken,
+} from '../../../testing/live-credentials.ts';
+import { googleSyncLiveServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /**
  * Bidirectional tag sync against a REAL Gmail account — the one layer the mock cannot answer, because

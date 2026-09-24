@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
-import { moduleSurfaces } from '../modules';
+import { moduleSurfaces } from '../modules/index.ts';
 
 /** Contributes the MailboxSync module surfaces so a story can drive them from a `ModuleContainer` layout. */
 export const StoryModulesPlugin = Plugin.define(

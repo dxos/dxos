@@ -4,7 +4,7 @@
 
 import { afterEach, assert, beforeEach, describe, it, vi } from '@effect/vitest';
 
-import { createStartupWatchdog } from './startup-watchdog';
+import { createStartupWatchdog } from './startup-watchdog.ts';
 
 describe('createStartupWatchdog', () => {
   beforeEach(() => {

@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { alice } from '../../testing/fixtures';
-import { SpaceMemberListImpl } from './SpaceMemberList';
+import { alice } from '../../testing/fixtures/index.ts';
+import { SpaceMemberListImpl } from './SpaceMemberList.tsx';
 
 const meta = {
   title: 'sdk/shell/SpaceMemberList',

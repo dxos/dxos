@@ -21,10 +21,10 @@ import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import * as Chat from '../types/Chat';
-import * as AiContext from './AiContext';
-import { type HarnessControlRpcs } from './harness-control';
-import { SessionStore } from './SessionStore';
+import * as Chat from '../types/Chat.ts';
+import * as AiContext from './AiContext.ts';
+import { type HarnessControlRpcs } from './harness-control.ts';
+import { SessionStore } from './SessionStore.ts';
 
 export interface Service {
   /** The conversation {@link AiContext.Binder} (Tier A). */

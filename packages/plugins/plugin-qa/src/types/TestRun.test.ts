@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
 
-import * as TestCase from './TestCase';
-import * as TestRun from './TestRun';
+import * as TestCase from './TestCase.ts';
+import * as TestRun from './TestRun.ts';
 
 describe('rollup', () => {
   test('rolls up to the worst outcome', () => {

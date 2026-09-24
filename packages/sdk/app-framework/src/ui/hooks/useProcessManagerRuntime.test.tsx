@@ -9,10 +9,10 @@ import { describe, test } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
 
-import { ProcessManagerPlugin } from '../../plugin-process-manager';
-import { createTestApp } from '../../testing/harness';
-import { render } from '../../testing/react';
-import { useSpaceCallback } from './useProcessManagerRuntime';
+import { ProcessManagerPlugin } from '../../plugin-process-manager/index.ts';
+import { createTestApp } from '../../testing/harness.ts';
+import { render } from '../../testing/react.tsx';
+import { useSpaceCallback } from './useProcessManagerRuntime.ts';
 
 type AddFn = (a: number, b: number) => Promise<number>;
 

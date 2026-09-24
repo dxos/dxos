@@ -4,6 +4,7 @@
 
 import type { Heads } from '@automerge/automerge';
 import type { DocumentId } from '@automerge/automerge-repo';
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -11,21 +12,15 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads/index.ts';
 
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
-
-const encodeHeads = (heads: Heads): Uint8Array => encodeCompat(HeadsSchema, { hashes: heads });
+const encodeHeads = (heads: Heads): Uint8Array => toBinary(HeadsSchema, create(HeadsSchema, { hashes: heads }));
 
 const decodeHeads = (data: Uint8Array): Heads => {
   try {
-    return decodeCompat<HeadsProto>(HeadsSchema, data).hashes ?? [];
+    return fromBinary(HeadsSchema, data).hashes ?? [];
   } catch {
     // Legacy encoding migration path for heads persisted before protobuf encoding.
     log.warn('Detected legacy encoding of heads in SQLite storage.');
@@ -39,28 +34,26 @@ const decodeHeads = (data: Uint8Array): Heads => {
 };
 
 export type SqliteHeadsStoreProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
 
 /**
  * SQLite-backed store for automerge document heads.
  */
 export class SqliteHeadsStore {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   constructor({ runtime }: SqliteHeadsStoreProps) {
     this.#runtime = runtime;
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -71,10 +64,7 @@ export class SqliteHeadsStore {
    * Returns an Effect that sets heads for a document.
    * Use RuntimeProvider.runPromise to execute.
    */
-  setHeads(
-    documentId: DocumentId,
-    heads: Heads,
-  ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+  setHeads(documentId: DocumentId, heads: Heads): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const encoded = encodeHeads(heads);
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -108,7 +98,7 @@ export class SqliteHeadsStore {
    * Deletes the heads row for a document. Paired with wiping the document's chunks during
    * garbage collection — leaving the row behind would orphan it.
    */
-  remove(documentId: DocumentId): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+  remove(documentId: DocumentId): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* sql`DELETE FROM automerge_heads WHERE document_id = ${documentId}`;

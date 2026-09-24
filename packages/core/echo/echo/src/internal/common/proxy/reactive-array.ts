@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { assertMutable } from './change-context';
-import { createArrayMethodError } from './errors';
-import { batchEvents } from './event-batch';
-import { changeKeyOf } from './ownership';
-import { canonicalOf } from './proxy-utils';
-import { ChangeKeyId } from './symbols';
+import { assertMutable } from './change-context.ts';
+import { createArrayMethodError } from './errors.ts';
+import { batchEvents } from './event-batch.ts';
+import { changeKeyOf } from './ownership.ts';
+import { canonicalOf } from './proxy-utils.ts';
+import { ChangeKeyId } from './symbols.ts';
 
 /**
  * Extends the native array to make sure that arrays methods are correctly reactive.

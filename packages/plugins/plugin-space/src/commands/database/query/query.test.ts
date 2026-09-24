@@ -13,7 +13,7 @@ import { Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Task } from '@dxos/types';
 
-import { handler } from './query';
+import { handler } from './query.ts';
 
 describe('spaces query', () => {
   it('should query empty space', () =>

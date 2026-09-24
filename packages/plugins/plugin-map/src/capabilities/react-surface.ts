@@ -15,9 +15,9 @@ import { Position } from '@dxos/util';
 import { MapSurface, MapViewEditor } from '#containers';
 import { Map } from '#types';
 
-import { LocationAnnotationId } from '../types/MapCapabilities';
-import { MapInline } from '../types/MapRole';
-import { LocationField } from './LocationField';
+import { LocationAnnotationId } from '../types/MapCapabilities.ts';
+import { MapInline } from '../types/MapRole.ts';
+import { LocationField } from './LocationField.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

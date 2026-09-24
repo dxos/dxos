@@ -19,7 +19,7 @@ import { Message } from '@dxos/types';
 
 import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
-import { isAiServiceUnavailable } from '../operations/extractor';
+import { isAiServiceUnavailable } from '../operations/extractor/index.ts';
 
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the

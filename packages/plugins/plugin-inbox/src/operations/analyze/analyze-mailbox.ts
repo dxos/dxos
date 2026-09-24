@@ -14,10 +14,10 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import { unmetPrecondition } from '../precondition';
-import * as Topology from '../topology';
+import * as InboxCapabilities from '../../types/InboxCapabilities.ts';
+import * as InboxOperation from '../../types/InboxOperation.ts';
+import { unmetPrecondition } from '../precondition.ts';
+import * as Topology from '../topology.ts';
 
 /** Placeholder run for a pass that cannot be attempted; `skip` is what the loop reads. */
 const NEVER: Effect.Effect<unknown, unknown, Operation.Service> = Effect.void;

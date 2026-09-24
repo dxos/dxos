@@ -6,7 +6,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { meta as pluginMeta } from './meta';
+import { meta as pluginMeta } from './meta.ts';
 
 /** Plugin metadata, available without loading the plugin body. */
 export const meta = pluginMeta;

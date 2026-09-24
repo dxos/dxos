@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { EffectEx } from '@dxos/effect';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
-import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
+import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types.ts';
 
 /**
  * Execute a menu action's Effect with its captured context.
@@ -27,9 +27,7 @@ export const executeMenuAction = async (action: MenuAction, params: AppGraphNode
 };
 
 export const getShortcut = (action: AppGraphNode.ActionLike) => {
-  return typeof action.properties?.keyBinding === 'string'
-    ? action.properties.keyBinding
-    : action.properties?.keyBinding?.[getHostPlatform()];
+  return resolveKeyBinding(action.properties?.keyBinding);
 };
 
 export const fallbackIcon = 'ph--circle-dashed--regular';

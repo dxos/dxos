@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
-import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
+import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
 import { ChatSurface } from '#types';
 
@@ -15,7 +15,7 @@ import { ChatSurface } from '#types';
  * registered {@link ChatSurface.ChatSurface} surface keyed on its `role`. The payload is carried as JSON in the
  * tag's text content; a malformed payload renders the surface with no data rather than throwing.
  */
-export const SurfaceWidget = ({ role, children }: XmlWidgetProps<{ role?: string }>) => {
+export const SurfaceWidget = ({ role, children }: WidgetProps<{ role?: string }>) => {
   const data = useMemo(() => {
     const raw = getXmlTextChild(children ?? []);
     if (!raw) {

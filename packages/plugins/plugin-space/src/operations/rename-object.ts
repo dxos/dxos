@@ -7,7 +7,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SpaceOperation } from '#types';
 
-import { RENAME_POPOVER } from '../constants';
+import { RENAME_POPOVER } from '../constants.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RenameObject> = SpaceOperation.RenameObject.pipe(
   Operation.withHandler(

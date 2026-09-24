@@ -9,7 +9,7 @@ import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
-import { OPTIONS } from './trigger-kind-icon';
+import { OPTIONS } from './trigger-kind-icon.ts';
 
 /** Trigger spec kinds surfaced as selectable variants. Matches the discriminants of `Trigger.Spec`. */
 export type TriggerKind = 'timer' | 'feed' | 'subscription' | 'webhook' | 'email';

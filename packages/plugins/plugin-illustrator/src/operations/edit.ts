@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DrawingOperation } from '#types';
 
-import { resolveVariant } from '../util/load-drawing';
+import { resolveVariant } from '../util/load-drawing.ts';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Edit> = DrawingOperation.Edit.pipe(
   Operation.withHandler(

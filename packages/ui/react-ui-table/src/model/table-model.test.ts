@@ -11,12 +11,12 @@ import { createEchoSchema } from '@dxos/echo/testing';
 import { LocalBackend, MemoryBackend, ViewState } from '@dxos/react-ui-attention';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
-import { Table } from '../types';
+import { Table } from '../types/index.ts';
 import {
   TableModel,
   type TableModelProps,
   createDirectChangeCallback as createTableDirectChangeCallback,
-} from './table-model';
+} from './table-model.ts';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.

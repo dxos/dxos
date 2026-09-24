@@ -4,8 +4,8 @@
 
 import { expect, test } from 'vitest';
 
-import { Scale } from './scale';
-import { Vector } from './vector';
+import { Scale } from './scale.ts';
+import { Vector } from './vector.ts';
 
 test('toVertex', () => {
   const scale = new Scale(16);

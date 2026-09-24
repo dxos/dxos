@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { describe, expect, test } from 'vitest';
 
-import { substitutions } from './substitutions';
+import { substitutions } from './substitutions.ts';
 
 const createView = (extensions = [substitutions()]): EditorView =>
   new EditorView({ state: EditorState.create({ doc: '', extensions }) });

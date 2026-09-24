@@ -10,7 +10,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { LogEntry, LogLevel, serializeToJsonl } from '@dxos/log';
 
-import * as OtelLogSink from './OtelLogSink';
+import * as OtelLogSink from './OtelLogSink.ts';
 
 describe('OtelLogSink', () => {
   const defaultInit: OtelLogSink.Init = {

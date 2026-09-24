@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { StreamDeckStatus } from './StreamDeckStatus';
+import { StreamDeckStatus } from './StreamDeckStatus.tsx';
 
 const meta = {
   title: 'plugins/plugin-stream-deck/StreamDeckStatus',

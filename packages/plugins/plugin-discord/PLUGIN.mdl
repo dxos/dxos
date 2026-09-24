@@ -19,11 +19,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -214,7 +214,7 @@ feat F-5: ECHO Persistence and Replication
 ## Acceptance
 
 ```mdl
-test T-1: Valid bot token accepted
+scenario T-1: Valid bot token accepted
   given: user opens the Discord integration credential form
   when: user pastes a valid bot token and submits
   then:
@@ -224,7 +224,7 @@ test T-1: Valid bot token accepted
 ```
 
 ```mdl
-test T-2: Invalid token rejected
+scenario T-2: Invalid token rejected
   given: user opens the credential form
   when: user pastes an invalid token (application id, expired token, etc.)
   then:
@@ -234,7 +234,7 @@ test T-2: Invalid token rejected
 ```
 
 ```mdl
-test T-3: Channel discovery lists all guilds
+scenario T-3: Channel discovery lists all guilds
   given: a valid Integration whose bot belongs to two guilds, each with two text channels
   when: op:GetDiscordChannels is invoked
   then:
@@ -243,7 +243,7 @@ test T-3: Channel discovery lists all guilds
 ```
 
 ```mdl
-test T-4: Channel discovery skips failed guild
+scenario T-4: Channel discovery skips failed guild
   given: bot belongs to two guilds; guild B's channel list returns 403
   when: op:GetDiscordChannels is invoked
   then:
@@ -252,7 +252,7 @@ test T-4: Channel discovery skips failed guild
 ```
 
 ```mdl
-test T-5: First sync materializes channel and appends messages
+scenario T-5: First sync materializes channel and appends messages
   given: Integration with one selected target (no cursor); Discord returns 10 messages
   when: op:SyncDiscordChannel is invoked
   then:
@@ -263,7 +263,7 @@ test T-5: First sync materializes channel and appends messages
 ```
 
 ```mdl
-test T-6: Incremental sync fetches only new messages
+scenario T-6: Incremental sync fetches only new messages
   given: target.cursor is set to snowflake S; Discord returns 3 messages after S
   when: op:SyncDiscordChannel is invoked
   then:
@@ -274,7 +274,7 @@ test T-6: Incremental sync fetches only new messages
 ```
 
 ```mdl
-test T-7: System messages filtered out
+scenario T-7: System messages filtered out
   given: Discord returns 5 messages: 2 DEFAULT, 1 REPLY, 1 JOIN (type 7), 1 PIN (type 6)
   when: op:SyncDiscordChannel maps the batch
   then:
@@ -283,7 +283,7 @@ test T-7: System messages filtered out
 ```
 
 ```mdl
-test T-8: Sync failure recorded per target
+scenario T-8: Sync failure recorded per target
   given: Integration with two selected targets; target B's channel returns 403
   when: op:SyncDiscordChannel is invoked
   then:
@@ -293,7 +293,7 @@ test T-8: Sync failure recorded per target
 ```
 
 ```mdl
-test T-9: Channel re-sync is idempotent
+scenario T-9: Channel re-sync is idempotent
   given: Channel already exists for discord channel id X with 5 Messages
   when: op:SyncDiscordChannel is invoked again with same cursor
   then:
@@ -303,7 +303,7 @@ test T-9: Channel re-sync is idempotent
 ```
 
 ```mdl
-test T-10: maxDays controls initial lookback
+scenario T-10: maxDays controls initial lookback
   given: new target with DiscordTargetOptions.maxDays = 14
   when: op:SyncDiscordChannel is invoked for the first time
   then:
@@ -315,8 +315,8 @@ test T-10: maxDays controls initial lookback
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-discord is not in `getDefaults` or the dev-only default set (see
 `packages/apps/composer-app/src/plugin-defs.tsx`) — it is OFF by default. Its whole surface
@@ -325,7 +325,7 @@ steps are `blocked` per Execution Rule 9; only the sync step, given a pre-existi
 run unattended.
 
 ```mdl
-flow QA-1: Connect a bot and sync a channel
+test QA-1: Connect a bot and sync a channel
   desc: The core Discord round-trip — add the credential, discover channels, select one, sync messages.
   actors: human
   covers: [F-1.1, F-1.2, F-2.1, F-3.1, F-4.1, T-1, T-3, T-5]
@@ -336,7 +336,7 @@ flow QA-1: Connect a bot and sync a channel
     - plugin-discord is enabled — it is OFF by default
     - connection: a real Discord bot token, invited to at least one guild with a text channel,
         bound as a Connection
-  test:
+  steps:
     - name: Add the Discord integration credential
       do: Open Settings > Integrations > Discord, and paste a bot token from the Discord developer portal.
       expect: the token validates against GET /users/@me and a Connection is created with targets [] and the bot's display name
@@ -371,7 +371,7 @@ flow QA-1: Connect a bot and sync a channel
 ```
 
 ```mdl
-flow QA-2: Re-sync is idempotent
+test QA-2: Re-sync is idempotent
   desc: |
     The incremental-sync guarantee (F-3.3, F-4.2) against an Integration that already exists —
     still requires a live bot token, so this is also blocked absent one, but is written separately
@@ -383,7 +383,7 @@ flow QA-2: Re-sync is idempotent
     - an identity exists
     - connection: a Discord Connection with at least one selected target already synced once
       (see QA-1)
-  test:
+  steps:
     - name: Re-run sync against the same cursor
       do: Trigger a sync again without any new Discord activity.
       invoke: [op:SyncDiscordChannel] { connection: $given.connection }
@@ -421,8 +421,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

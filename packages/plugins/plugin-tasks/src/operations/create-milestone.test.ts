@@ -9,7 +9,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
+import createMilestone from './create-milestone.ts';
 
 describe('create-milestone', () => {
   it.effect("appends to the set's milestone sequence", () =>

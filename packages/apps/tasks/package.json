@@ -12,6 +12,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",

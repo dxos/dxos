@@ -6,7 +6,6 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -16,22 +15,23 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   type ClientServicesRpc,
-  makeInProcessClientServicesRpc,
+  makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
-import { Config } from '@dxos/config';
+import { ServiceStack } from '@dxos/client-services';
+import { LayerStack } from '@dxos/compute-runtime';
+import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
+import { RpcRouter } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -51,7 +51,33 @@ const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<vo
     worker.addEventListener('message', onMessage);
   });
 
-export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'> & {
+/** The OPFS worker the sqlite client runs in. */
+class OpfsWorker extends EffectContext.Service<OpfsWorker, Worker>()('@dxos/client/OpfsWorker') {}
+
+/**
+ * Owns the OPFS worker for the life of the layer. Sits beneath the sqlite client, whose finalizer
+ * posts `close` to the worker, so this one waits for the flush before terminating it.
+ */
+const opfsWorkerLayer = (createWorker: () => Worker): Layer.Layer<OpfsWorker> =>
+  Layer.effect(
+    OpfsWorker,
+    Effect.acquireRelease(Effect.sync(createWorker), (worker) =>
+      Effect.promise(async () => {
+        await waitForOpfsWorkerClosed(worker);
+        worker.terminate();
+      }),
+    ),
+  );
+
+export type LocalClientServicesParams = {
+  config?: Config;
+  transportFactory?: TransportFactory;
+  signalManager?: SignalManager;
+  connectionLog?: boolean;
+  callbacks?: { onReset?: () => Promise<void> };
+  /** See {@link ServiceStack.ClientServicesStackOptions.autoConnect}. */
+  autoConnect?: boolean;
+  runtimeProps?: ServiceStack.ServiceContextRuntimeProps;
   createOpfsWorker?: () => Worker;
   /**
    * Path to SQLite database file for persistent indexing in Node/Bun.
@@ -119,20 +145,78 @@ const setupNetworking = async (
 };
 
 /**
- * Starts a local instance of the service host.
+ * The SQLite layer for `runtime.client.storage.sqlite_mode`; a reset wipes storage over a fresh
+ * one, since the stack's is gone by then. The presence of `createOpfsWorker` or
+ * `sqlitePath` does not influence the choice; a missing prerequisite throws instead of falling back.
+ */
+const sqliteLayerFromParams = ({
+  config,
+  createOpfsWorker,
+  sqlitePath,
+}: Pick<LocalClientServicesParams, 'config' | 'createOpfsWorker' | 'sqlitePath'>): Layer.Layer<
+  SqlClient.SqlClient | SqlExport.SqlExport,
+  unknown
+> => {
+  const sqliteMode =
+    config?.get('runtime.client.storage.sqliteMode') ?? Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE;
+  log('initiatlizing sqlite', {
+    sqliteMode,
+    createOpfsWorker: !!createOpfsWorker,
+    sqlitePath: sqlitePath,
+  });
+  let sqliteLayer: Layer.Layer<SqlClient.SqlClient, unknown>;
+  switch (sqliteMode) {
+    case Runtime_Client_Storage_SqliteMode.OPFS: {
+      const createWorker = createOpfsWorker;
+      if (!createWorker) {
+        throw new Error(
+          'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
+        );
+      }
+      sqliteLayer = Layer.unwrap(
+        Effect.map(OpfsWorker, (worker) => SqliteClient.layer({ worker: Effect.succeed(worker) })),
+      ).pipe(Layer.provide(opfsWorkerLayer(createWorker)));
+      log('using sqlite opfs worker');
+      break;
+    }
+    case Runtime_Client_Storage_SqliteMode.FILE: {
+      if (!sqlitePath) {
+        throw new Error(
+          'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
+        );
+      }
+      sqliteLayer = layerFile(sqlitePath);
+      log('using sqlite file', { sqlitePath: sqlitePath });
+      break;
+    }
+    case Runtime_Client_Storage_SqliteMode.MEMORY:
+    case Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE:
+    default: {
+      if (sqliteMode === Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE) {
+        log.warn('runtime.client.storage.sqlite_mode not set, using in-memory SQLite');
+      }
+      sqliteLayer = layerMemory;
+      break;
+    }
+  }
+
+  return sqlExportLayer.pipe(Layer.provideMerge(sqliteLayer), Layer.provideMerge(Reactivity.layer));
+};
+
+/**
+ * Runs the client services in-process: the stack from {@link ServiceStack.layerClientServices} over a SQLite
+ * layer chosen by config, served to the client without a wire hop.
  */
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
   private readonly _params: LocalClientServicesParams;
-  private readonly _createOpfsWorker?: () => Worker;
-  private readonly _sqlitePath?: string;
-  private _host?: ClientServicesHost;
-  private _opfsWorker?: Worker;
-  private _runtime?: ManagedRuntime.ManagedRuntime<
-    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
-    never
-  >;
+  /** Outlives the stack: the reset chain runs on it after the stack is gone. */
+  private readonly _controller = Hook.makeController();
+  private _controllerScope?: Scope.Closeable;
+  /** Scope of the built stack; closing it disposes the stack and the SQLite layer beneath it. */
+  private _stackScope?: Scope.Closeable;
+  private _stack?: LayerStack.LayerStack;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -144,8 +228,6 @@ export class LocalClientServices implements ClientServicesProvider {
 
   constructor(params: LocalClientServicesParams) {
     this._params = params;
-    this._createOpfsWorker = params.createOpfsWorker;
-    this._sqlitePath = params.sqlitePath;
     // TODO(nf): extract
     if (typeof window === 'undefined' || typeof window.location === 'undefined') {
       // TODO(nf): collect ClientServices metadata as param?
@@ -172,8 +254,12 @@ export class LocalClientServices implements ClientServicesProvider {
     return this._services;
   }
 
-  get host(): ClientServicesHost | undefined {
-    return this._host;
+  /**
+   * The running stack; resolve a tag to reach a component or RPC handler. Present while open.
+   */
+  get stack(): LayerStack.LayerStack {
+    invariant(this._stack, 'Client services not open');
+    return this._stack;
   }
 
   @synchronized
@@ -182,89 +268,80 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    const { ClientServicesHost } = await import('@dxos/client-services');
+    const { ServiceStack, Events: HostEvents, SqliteStorage } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
-    // Create SQLite runtime layer. The choice is driven by `runtime.client.storage.sqlite_mode`
-    // in config — the presence of `createOpfsWorker` or `sqlitePath` options does not influence
-    // the decision. Missing prerequisites throw instead of silently falling back.
-    //
-    // TODO(mykola): Worker and runtime leak if _host.open() fails below.
-    //   If _host.open() throws, _isOpen remains false, and close() returns early without
-    //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
-    const sqliteMode =
-      this._params.config?.get('runtime.client.storage.sqliteMode') ??
-      Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE;
-    log('initiatlizing sqlite', {
-      sqliteMode,
-      createOpfsWorker: !!this._createOpfsWorker,
-      sqlitePath: this._sqlitePath,
-    });
-    let sqliteLayer;
-    switch (sqliteMode) {
-      case Runtime_Client_Storage_SqliteMode.OPFS: {
-        if (!this._createOpfsWorker) {
-          throw new Error(
-            'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
+    const config = this._params.config ?? new Config();
+    const stackScope = Effect.runSync(Scope.make());
+    this._stackScope = stackScope;
+    const controller = this._controller;
+    try {
+      // Building the layer also builds its eager specs, so the rpc registrations are in place
+      // before the lifecycle events below run.
+      const stackContext = await EffectEx.runPromise(
+        Layer.build(
+          ServiceStack.layerClientServices({
+            runtimeProps: this._params.runtimeProps,
+            signalManager: this._params.signalManager,
+            transportFactory: this._params.transportFactory,
+            connectionLog: this._params.connectionLog,
+            autoConnect: this._params.autoConnect,
+          }).pipe(
+            Layer.provide(sqliteLayerFromParams(this._params).pipe(Layer.orDie)),
+            Layer.provide(Layer.succeed(ConfigService, config)),
+            Layer.provide(Layer.succeed(Hook.Controller, controller)),
+          ),
+        ).pipe(Scope.provide(stackScope)),
+      );
+      this._stack = EffectContext.get(stackContext, LayerStack.Service);
+      // `StackOpened` resolves once every handler the cascade triggered has run.
+      await EffectEx.runPromise(
+        EffectEx.withContext(this._ctx)(
+          Effect.gen(function* () {
+            yield* Hook.emit(HostEvents.Opening, undefined);
+            yield* Hook.emit(HostEvents.StackOpened, undefined);
+          }),
+        ).pipe(Effect.provideService(Hook.Controller, controller)),
+      );
+
+      // Reset closes only the stack: the in-process endpoint stays up so the reset RPC can answer.
+      this._controllerScope = Effect.runSync(Scope.make());
+      Effect.runSync(
+        Effect.gen({ self: this }, function* () {
+          yield* Hook.on(HostEvents.Closing, () => Effect.promise(() => this._closeStack()));
+          yield* Hook.on(HostEvents.WipingStorage, () =>
+            SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqliteLayerFromParams(this._params)), Effect.orDie),
           );
-        }
-        this._opfsWorker = this._createOpfsWorker();
-        sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
-        log('using sqlite opfs worker');
-        break;
-      }
-      case Runtime_Client_Storage_SqliteMode.FILE: {
-        if (!this._sqlitePath) {
-          throw new Error(
-            'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
+          yield* Hook.on(HostEvents.Reset, () =>
+            Effect.promise(async () => {
+              this.closed.emit(undefined);
+              await this._params.callbacks?.onReset?.();
+            }),
           );
-        }
-        sqliteLayer = layerFile(this._sqlitePath);
-        log('using sqlite file', { sqlitePath: this._sqlitePath });
-        break;
-      }
-      case Runtime_Client_Storage_SqliteMode.MEMORY:
-      case Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE:
-      default: {
-        if (sqliteMode === Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE) {
-          log.warn('runtime.client.storage.sqlite_mode not set, using in-memory SQLite');
-        }
-        sqliteLayer = layerMemory;
-        break;
-      }
+        }).pipe(Effect.provideService(Hook.Controller, this._controller), Scope.provide(this._controllerScope)),
+      );
+      // Bridge the handlers the stack's services registered with its router to the effect-rpc client
+      // surface (no wire hop), then derive the deprecated Promise/Stream shaped services from it for
+      // consumers not yet on the effect surface.
+      this._serviceScope = Effect.runSync(Scope.make());
+      const router = await EffectEx.runPromise(
+        this.stack.getServiceResolver().resolve(RpcRouter.RpcRouter, {}).pipe(Effect.orDie, Effect.scoped),
+      );
+      this._rpc = await EffectEx.runPromise(
+        makeClientServicesRpcFromRouter.pipe(
+          Effect.provideService(RpcRouter.RpcRouter, router),
+          Scope.provide(this._serviceScope),
+        ),
+      );
+      this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
+    } catch (err) {
+      // `_isOpen` is still false at this point, so `close()` would return before disposing
+      // anything: without this the runtime — and the OPFS worker its layer owns — leaks on every
+      // failed open.
+      await this._closeStack();
+      throw err;
     }
-
-    this._runtime = ManagedRuntime.make(
-      SqlTransaction.layer.pipe(
-        Layer.provideMerge(sqlExportLayer),
-        Layer.provideMerge(sqliteLayer),
-        Layer.provideMerge(Reactivity.layer),
-        Layer.orDie,
-      ),
-    );
-
-    this._host = new ClientServicesHost({
-      ...this._params,
-      runtime: this._runtime.contextEffect,
-      callbacks: {
-        ...this._params.callbacks,
-        onReset: async () => {
-          this.closed.emit(undefined);
-          await this._params.callbacks?.onReset?.();
-        },
-      },
-    });
-
-    await this._host.open(this._ctx);
     this._isOpen = true;
-
-    // Bridge the in-process host Handlers to the effect-rpc client surface (no wire hop), then derive
-    // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
-    this._serviceScope = Effect.runSync(Scope.make());
-    this._rpc = await EffectEx.runPromise(
-      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.provide(this._serviceScope)),
-    );
-    this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
 
     setIdentityTags({
       identityService: this._rpc,
@@ -281,25 +358,30 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._host?.close(this._ctx);
+    await this._closeStack();
 
+    if (this._controllerScope) {
+      await EffectEx.runPromise(Scope.close(this._controllerScope, Exit.void));
+      this._controllerScope = undefined;
+    }
     if (this._serviceScope) {
       await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
       this._serviceScope = undefined;
     }
     this._rpc = undefined;
     this._services = undefined;
-
-    log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
-    await this._runtime?.dispose();
-    this._runtime = undefined;
-    // Runtime dispose posts `close` to the OPFS worker; wait for flush before terminate.
-    if (this._opfsWorker) {
-      await waitForOpfsWorkerClosed(this._opfsWorker);
-      this._opfsWorker.terminate();
-      this._opfsWorker = undefined;
-    }
-
     this._isOpen = false;
+  }
+
+  /**
+   * Disposes the stack runtime, and with it the SQLite layer and its worker. Idempotent.
+   */
+  private async _closeStack(): Promise<void> {
+    const scope = this._stackScope;
+    this._stackScope = undefined;
+    this._stack = undefined;
+    if (scope) {
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
+    }
   }
 }

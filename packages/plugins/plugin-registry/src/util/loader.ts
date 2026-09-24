@@ -6,7 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { log } from '@dxos/log';
 import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
 
-import { type PluginRecord, getPluginInstallPath } from '../storage';
+import { type PluginRecord, getPluginInstallPath } from '../storage.ts';
 
 /**
  * Absolute path of the module a record's plugin is imported from.

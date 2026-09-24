@@ -15,7 +15,7 @@ import {
   createDatabaseExtensions,
   createSettingsExtensions,
   createSpaceExtensions,
-} from './extensions';
+} from './extensions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpaceSchema.SpacePluginOptions = {}) {

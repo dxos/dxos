@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import { layerMemory } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
-import { ClientService, layer } from './client-service';
+import { ClientService, layer } from './client-service.ts';
 
 const TestLayer = Function.pipe(layer, Layer.provideMerge(layerMemory));
 
@@ -27,10 +27,7 @@ describe('ClientService', () => {
   it('can create identity', async () => {
     const program = Effect.gen(function* () {
       const client = yield* ClientService;
-      const identity = yield* Effect.tryPromise({
-        try: () => client.halo.createIdentity(),
-        catch: (error) => error as Error,
-      });
+      const identity = yield* Effect.tryPromise(() => client.halo.createIdentity());
       return identity;
     }).pipe(Effect.provide(TestLayer));
     const identity = await EffectEx.runAndForwardErrors(program);

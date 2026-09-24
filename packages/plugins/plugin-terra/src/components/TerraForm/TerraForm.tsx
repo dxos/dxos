@@ -51,35 +51,41 @@ const nextSeed = (seed: string): string => {
 
 /**
  * Renders a numeric field as a `Slider` with a live readout on the label line, in place of the
- * schema's default numeric input. Delegates the label/status/validation chrome to `Form.Field`'s
- * render-prop (field mode) — it, not this renderer, wraps the row in `Field.Root`, which
- * `Field.Label`/`Field.HelperText`/`Field.ErrorText` require via context. Rendering those parts (or
- * anything relying on them) outside `Form.Field` throws.
+ * schema's default numeric input. The row is `Form.Field`, bound at the field's path, so the label,
+ * description and validation are the schema's; the slider is the control inside it.
  */
 const createSliderField = (key: SliderKey): FormFieldMap[string] => {
   const spec = SLIDER_SPECS[key];
-  const SliderField = ({ type, getValue, onValueChange, ...rowProps }: FormFieldRendererProps<number>) => {
+  const SliderField = ({
+    type,
+    label,
+    jsonPath,
+    readonly,
+    presentation,
+    getValue,
+    onValueChange,
+  }: FormFieldRendererProps<number>) => {
     const current = getValue() ?? spec.min;
     const handleValueChange = useCallback(([next]: number[]) => onValueChange(type, next), [type, onValueChange]);
     return (
       <Form.Field<number>
-        {...rowProps}
-        getValue={getValue}
+        path={jsonPath}
+        label={label}
+        readonly={readonly}
+        presentation={presentation}
         // A sibling of the label text (never a child) — keeps `Field.Label`'s `textContent` exactly
         // `label` and avoids re-deriving the input's accessible name on every drag frame.
         labelEnd={<span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        {({ value }) => (
-          <Slider
-            value={[value ?? spec.min]}
-            min={spec.min}
-            max={spec.max}
-            step={spec.step}
-            onValueChange={handleValueChange}
-            thumbLabels={[spec.label]}
-          />
-        )}
+        <Slider
+          value={[current]}
+          min={spec.min}
+          max={spec.max}
+          step={spec.step}
+          onValueChange={handleValueChange}
+          thumbLabels={[spec.label]}
+        />
       </Form.Field>
     );
   };
@@ -125,7 +131,7 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

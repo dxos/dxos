@@ -14,7 +14,7 @@ import { History } from '@dxos/versioning';
 export const SKILL_KEY = 'org.dxos.skill.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
-import * as SettingsModule from './Settings';
+import * as SettingsModule from './Settings.ts';
 
 export const Settings = SettingsModule.Settings;
 export type Settings = SettingsModule.Settings;
@@ -28,7 +28,7 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     description: Schema.optional(Schema.String),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** Owned body: `SetParent` cascades it with the document. */
-    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
     history: History.History.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name', 'fallbackName']),

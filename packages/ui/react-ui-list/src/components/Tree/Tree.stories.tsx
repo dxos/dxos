@@ -8,18 +8,17 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { Path } from '../../util';
-import { type TestItem, createTree, updateState } from './testing';
-import { Tree } from './Tree';
-import { type TreeData } from './tree-data';
-import { type TreeModel } from './TreeContext';
+import { Path } from '../../util/index.ts';
+import { type TestItem, createTree, updateState } from './testing.ts';
+import { type TreeData } from './tree-data.ts';
+import { Tree } from './Tree.tsx';
+import { type TreeModel } from './TreeContext.ts';
 
 random.seed(1234);
 
@@ -27,18 +26,30 @@ const tree = createTree();
 const groupsTree = createTree(4, 4, { groups: true });
 // Three childless nodes the story still presents as branches (a folder with nothing in it).
 const emptyTree = createTree(3, 1);
+// Flat and long, which is the shape `virtualize` is for.
+const longTree = createTree(120, 1);
 
 const DefaultStory = ({
   draggable,
   groups,
   emptyBranches,
+  unselectableBranches,
+  disabledRows,
+  selectionMode = 'single',
+  virtualize,
 }: {
   draggable?: boolean;
   groups?: boolean;
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
+  unselectableBranches?: boolean;
+  /** Disable the first row, as a model does for one nothing can be done with yet. */
+  disabledRows?: boolean;
+  selectionMode?: 'single' | 'multiple';
+  /** Render a long list in a short scroller, windowed to what is in view. */
+  virtualize?: boolean;
 }) => {
-  const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
+  const rootTree = virtualize ? longTree : emptyBranches ? emptyTree : groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -109,6 +120,7 @@ const DefaultStory = ({
             label: parent.name,
             icon: parent.icon,
             disposition: parent.disposition,
+            disabled: disabledRows && id === rootTree.items?.[0]?.id,
             ...(((parent.items?.length ?? 0) > 0 || emptyBranches) && {
               parentOf: parent.items!.map(({ id }) => id),
               count: parent.items!.length,
@@ -118,7 +130,7 @@ const DefaultStory = ({
           };
         }).pipe(Atom.keepAlive);
       }),
-    [itemMap, emptyBranches],
+    [itemMap, emptyBranches, disabledRows, rootTree],
   );
 
   const itemOpenFamily = useMemo(
@@ -160,14 +172,34 @@ const DefaultStory = ({
     [getOrCreateStateAtom, registry],
   );
 
-  const handleSelect = useCallback(
-    ({ path: pathProp, current }: { path: string[]; current: boolean }) => {
-      const path = Path.create(...pathProp);
-      const atom = getOrCreateStateAtom(path);
-      const prev = registry.get(atom);
-      registry.set(atom, { ...prev, current });
+  const setCurrent = useCallback(
+    (pathKey: string, current: boolean) => {
+      const atom = getOrCreateStateAtom(pathKey);
+      registry.set(atom, { ...registry.get(atom), current });
     },
     [getOrCreateStateAtom, registry],
+  );
+
+  const currentPathsRef = useRef(new Set<string>());
+  const handleSelect = useCallback(
+    ({ path: pathProp, current, meta }: { path: string[]; current: boolean; meta: boolean }) => {
+      const path = Path.create(...pathProp);
+      if (current && (selectionMode === 'single' || !meta)) {
+        currentPathsRef.current.forEach((previous) => previous !== path && setCurrent(previous, false));
+        currentPathsRef.current = new Set([path]);
+      } else if (current) {
+        currentPathsRef.current.add(path);
+      } else {
+        currentPathsRef.current.delete(path);
+      }
+      setCurrent(path, current);
+    },
+    [selectionMode, setCurrent],
+  );
+
+  const handleCanSelect = useCallback(
+    ({ item }: { item: TestItem }) => !unselectableBranches || (item.items?.length ?? 0) === 0,
+    [unselectableBranches],
   );
 
   useEffect(() => {
@@ -207,12 +239,15 @@ const DefaultStory = ({
     });
   }, [rootTree, childIdsFamily, registry]);
 
-  return (
+  const subject = (
     <Tree
       model={model}
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      selectionMode={selectionMode}
+      canSelect={handleCanSelect}
+      virtualize={virtualize}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -221,6 +256,15 @@ const DefaultStory = ({
       onOpenChange={handleOpenChange}
       onSelect={handleSelect}
     />
+  );
+
+  // A scroller short enough that most of the list is off screen, which is what the observer reads.
+  return virtualize ? (
+    <div data-testid='tree.scroller' className='h-[240px] overflow-y-auto'>
+      {subject}
+    </div>
+  ) : (
+    subject
   );
 };
 
@@ -271,5 +315,177 @@ export const EmptyBranch: Story = {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(branch).toHaveAttribute('data-state', 'closed');
     await expect(tree.getBoundingClientRect().height).toBe(height);
+  },
+};
+
+export const UnselectableBranches: Story = {
+  args: { draggable: true, unselectableBranches: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [branch] = await canvas.findAllByRole('button', { expanded: false });
+
+    await userEvent.click(branch);
+    await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+    await expect(branch).not.toHaveAttribute('data-selected');
+
+    await userEvent.click(branch);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+  },
+};
+
+export const Collapse: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [toggle] = await canvas.findAllByTestId('treeItem.toggle');
+    const branch = toggle.closest('[data-part="branch"]')!;
+    const height = () => branch.querySelector('[data-part="branch-content"]')?.getBoundingClientRect().height ?? 0;
+
+    const chevron = () => getComputedStyle(toggle.querySelector('svg')!);
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+    await waitFor(() => expect(chevron().rotate).toBe('90deg'));
+    await expect(chevron().transitionDelay).toBe('0s');
+
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(height()).toBeGreaterThan(0);
+    await expect(chevron().transitionDelay).toBe('0.2s');
+    await waitFor(() => expect(height()).toBe(0));
+    await waitFor(() => expect(chevron().rotate).not.toBe('90deg'));
+
+    await userEvent.click(toggle);
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+    toggle.click();
+    toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+  },
+};
+
+export const Selection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const [first, second] = [rows[0], rows[1]];
+    const label = (row: HTMLElement) => row.querySelector<HTMLElement>('span[data-tooltip]')!;
+
+    await userEvent.click(label(first));
+    await expect(first).toHaveAttribute('data-selected');
+    await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.click(label(first));
+    await expect(first).toHaveAttribute('data-selected');
+    await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.click(label(second));
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(first).not.toHaveAttribute('data-selected');
+
+    await userEvent.keyboard(' ');
+    await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+    await userEvent.keyboard('{Enter}');
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+
+    await userEvent.click(label(first));
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.keyboard('{Enter}');
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(first).not.toHaveAttribute('data-selected');
+  },
+};
+
+export const MultipleSelection: Story = {
+  args: { selectionMode: 'multiple' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const selected = () =>
+      [...rows]
+        .slice(0, 4)
+        .map((row) => (row.hasAttribute('data-selected') ? 1 : 0))
+        .join('');
+    // One session, so the held modifier survives from the keyboard call into the click: the
+    // top-level `userEvent` helpers each start their own and would drop it.
+    const user = userEvent.setup();
+    const metaClick = async (row: HTMLElement) => {
+      await user.keyboard('{Meta>}');
+      await user.click(row.querySelector<HTMLElement>('span[data-tooltip]')!);
+      await user.keyboard('{/Meta}');
+    };
+
+    await userEvent.click(rows[0].querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(selected()).toBe('1000');
+
+    await metaClick(rows[1]);
+    await expect(selected()).toBe('1100');
+
+    await metaClick(rows[1]);
+    await expect(selected()).toBe('1000');
+
+    await userEvent.click(rows[2].querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(selected()).toBe('0010');
+  },
+};
+
+/** A disabled row answers nothing: it neither selects nor discloses, by pointer or by key. */
+export const DisabledRows: Story = {
+  args: { disabledRows: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [row] = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const branch = row.closest('[data-part="branch"]')!;
+
+    await userEvent.click(row.querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(row).not.toHaveAttribute('data-selected');
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+
+    row.focus();
+    await userEvent.keyboard(' ');
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.keyboard('{Enter}');
+    await expect(row).not.toHaveAttribute('data-selected');
+  },
+};
+
+/**
+ * A long list mounts only the rows in view, and the mounted range travels with the scroll.
+ *
+ * The scrollbar is the whole list's — the sizer carries the extent of the rows that are not
+ * mounted — so what this asserts is that the two stay consistent: a slice in the DOM, the full
+ * height under the thumb, and the slice moving rather than growing as the reader scrolls.
+ */
+export const TestWindowMountsAVisibleSlice: Story = {
+  args: { virtualize: true },
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const indices = () => rows().map((row) => Number(row.dataset.index));
+
+    // Only the rows in view exist: the rest are extent in the sizer, not elements.
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await waitFor(async () => expect(rows().length).toBeLessThan(120), { timeout: 5_000 });
+
+    // The scrollbar is scaled to the whole list, not to what is mounted.
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight * 4);
+
+    const before = indices();
+    await expect(before[0]).toEqual(0);
+
+    // Scrolling moves the mounted range rather than adding to it.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(indices()[0]).toBeGreaterThan(before[0]), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(120);
+    await expect(indices()[indices().length - 1]).toEqual(119);
+
+    scroller.scrollTo({ top: 0 });
+    await waitFor(async () => expect(indices()[0]).toEqual(0), { timeout: 5_000 });
   },
 };

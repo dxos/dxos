@@ -11,23 +11,22 @@ import React, {
   forwardRef,
   useCallback,
   useContext,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
 } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { createContext } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { Scene } from '#types';
 
-import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools';
-import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
-import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
-import { handleExport as doExport, handleImport as doImport } from './import-export';
+import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools/index.ts';
+import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas/index.ts';
+import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar/index.ts';
+import { handleExport as doExport, handleImport as doImport } from './import-export.ts';
+import { useSelectedObjectColor } from './useSelectedObjectColor.ts';
 
 //
 // Context
@@ -126,44 +125,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
 
     const handleExport = useCallback(() => doExport({ selectedObjectId, solidsRef }), [selectedObjectId]);
 
-    // Track whether hue change is programmatic (from object sync) to avoid infinite loop.
-    const programmaticHueRef = useRef(false);
-
-    // Sync hue picker with selected object's color when selection changes.
-    useEffect(() => {
-      if (!selectedObjectId || !scene?.objects) {
-        return;
-      }
-      for (const ref of scene.objects) {
-        const obj = ref?.target;
-        if (obj && (obj as any).id === selectedObjectId && (obj as any).color) {
-          programmaticHueRef.current = true;
-          updateEditorState({ hue: (obj as any).color });
-          return;
-        }
-      }
-    }, [selectedObjectId, scene]);
-
-    // Sync hue change to the ECHO object (skip when change was programmatic).
-    useEffect(() => {
-      if (programmaticHueRef.current) {
-        programmaticHueRef.current = false;
-        return;
-      }
-      if (!selectedObjectId || !scene?.objects) {
-        return;
-      }
-
-      for (const ref of scene.objects) {
-        const obj = ref?.target;
-        if (obj && (obj as any).id === selectedObjectId) {
-          Obj.update(obj, (obj) => {
-            obj.color = editorState.hue;
-          });
-          break;
-        }
-      }
-    }, [editorState.hue]);
+    const handleHueChange = useCallback((hue: string) => updateEditorState({ hue }), [updateEditorState]);
+    useSelectedObjectColor({ scene, selectedObjectId, hue: editorState.hue, onHueChange: handleHueChange });
 
     const editorActions: EditorActions = useMemo(
       () => ({
@@ -233,14 +196,7 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 
 type SpacetimeEditorCanvasProsp = Omit<
   SpacetimeCanvasProps,
-  | 'showAxes'
-  | 'showFps'
-  | 'editorStateAtom'
-  | 'scene'
-  | 'objectCount'
-  | 'parentSolidsRef'
-  | 'importGLBRef'
-  | 'handleActionRef'
+  'showAxes' | 'editorStateAtom' | 'scene' | 'objectCount' | 'parentSolidsRef' | 'importGLBRef' | 'handleActionRef'
 >;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {

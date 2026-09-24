@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -67,23 +67,24 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
             <Form.Field label={t('api-key.label')}>
-              <Field.Root>
-                <Field.Input
-                  type='password'
-                  placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
-                  value={draft}
-                  onChange={(event) => {
-                    touchedRef.current = true;
-                    setDraft(event.target.value);
-                  }}
-                  onBlur={handleCommit}
-                />
-              </Field.Root>
+              <Field.Input
+                type='password'
+                placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
+                value={draft}
+                onChange={(event) => {
+                  touchedRef.current = true;
+                  setDraft(event.target.value);
+                }}
+                onBlur={handleCommit}
+              />
             </Form.Field>
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

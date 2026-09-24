@@ -10,7 +10,7 @@ import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(ToolExecutionServices),

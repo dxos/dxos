@@ -40,77 +40,51 @@
     </script>
 
     <!--
-      Recover from a chunk a deploy removed. Each deploy replaces the asset manifest, so a tab that
-      loaded `index.html` from an earlier build has no source for a chunk it imports later: the file is
-      gone from the server, and the service worker evicts it from the precache on activate. Reloading
-      picks up the current build; the app's own state lives in OPFS and IndexedDB, so nothing is lost.
-
-      Inline for the same reason as the block above — ESM imports hoist, so a handler in `src/main.tsx`
-      registers after the entry chunk has already had its chance to fail. Registering here also covers
-      the entry itself, which `vite:preloadError` does not: a `<script type="module">` that fails to
-      load fires a resource `error` event, not Vite's.
-
-      One reload per tab, tracked in sessionStorage, so a genuinely broken deploy cannot loop. The
-      marker is left behind for the app to report and clear once it boots (`chunk-recovery.ts`).
+      A same-origin `/assets/` script or stylesheet that fails while the page loads (e.g. stale HTML naming
+      another build's chunks) is recorded, and the page re-navigates once per session so a normal load
+      replaces the HTML. `util/boot-reports.ts` reports the record after the next successful boot. The
+      keys must match `BOOT_ASSET_FAILURE_KEY` and `BOOT_ASSET_RETRY_KEY` in `util/constants.ts`.
     -->
     <script>
-      (function () {
-        var MARKER = 'dxos.composer.chunk-recovery';
-        var ASSETS = window.location.origin + '/assets/';
-
-        var recover = function (reason) {
-          // A failure while offline is not a missing chunk, and a reload cannot fix it.
-          if (navigator.onLine === false) {
+      window.addEventListener(
+        'error',
+        (event) => {
+          const target = event.target;
+          const href =
+            target instanceof HTMLScriptElement
+              ? target.src
+              : target instanceof HTMLLinkElement && target.rel === 'stylesheet'
+                ? target.href
+                : '';
+          // Once `load` has fired, failures come from lazily imported chunks rather than the boot HTML.
+          if (!href || document.readyState === 'complete') {
+            return;
+          }
+          const url = new URL(href);
+          if (url.origin !== location.origin || !url.pathname.startsWith('/assets/')) {
             return;
           }
           try {
-            if (sessionStorage.getItem(MARKER)) {
-              return;
+            const failureKey = 'dxos.composer.boot-asset-failure';
+            const retryKey = 'dxos.composer.boot-asset-retry';
+            const failures = (Number(JSON.parse(localStorage.getItem(failureKey) ?? 'null')?.failures) || 0) + 1;
+            // Origin and path only: page URLs carry invitation codes in their query.
+            const page = location.origin + location.pathname;
+            localStorage.setItem(
+              failureKey,
+              JSON.stringify({ url: url.origin + url.pathname, page, at: Date.now(), failures }),
+            );
+            // Session-scoped, so a record left by an earlier session cannot use up this one's retry.
+            if (!sessionStorage.getItem(retryKey)) {
+              sessionStorage.setItem(retryKey, '1');
+              location.replace(location.href);
             }
-            sessionStorage.setItem(MARKER, JSON.stringify({ reason: String(reason), at: Date.now() }));
-          } catch (err) {
-            // No sessionStorage (private mode, blocked site data) means no way to guard against a
-            // reload loop, which is far worse than not recovering. Leave the failure to surface.
-            console.warn('chunk recovery unavailable:', err);
-            return;
+          } catch {
+            // Storage unavailable: nothing to record, and no loop guard to reload behind.
           }
-          window.location.reload();
-        };
-
-        // Vite's preload helper, which covers lazily imported chunks.
-        window.addEventListener('vite:preloadError', function (event) {
-          event.preventDefault();
-          recover((event.payload && event.payload.message) || 'vite:preloadError');
-        });
-
-        // A module script or modulepreload link that failed outright. Resource errors do not bubble,
-        // hence the capture phase.
-        window.addEventListener(
-          'error',
-          function (event) {
-            var el = event.target;
-            if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) {
-              return;
-            }
-            var href = el.src || el.href || '';
-            if (href.indexOf(ASSETS) === 0) {
-              recover('resource error: ' + href);
-            }
-          },
-          true,
-        );
-
-        // A bare `import()` outside Vite's helper rejects rather than firing either event above.
-        window.addEventListener('unhandledrejection', function (event) {
-          var message = (event.reason && event.reason.message) || '';
-          if (
-            message.indexOf('dynamically imported module') >= 0 ||
-            message.indexOf('Importing a module script failed') >= 0
-          ) {
-            recover(message);
-          }
-        });
-      })();
+        },
+        true,
+      );
     </script>
   </head>
   <body>

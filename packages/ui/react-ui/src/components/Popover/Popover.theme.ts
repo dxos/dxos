@@ -3,12 +3,16 @@
 //
 
 import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
-import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
+import { type ComponentFunction, type Elevation, type Surface, type Theme } from '@dxos/ui-types';
 
 export type PopoverStyleProps = Partial<{
+  /** Outline the content with the separator; the arrow's stroke follows it. */
+  border: boolean;
   constrainBlock: boolean;
   constrainInline: boolean;
   elevation: Elevation;
+  /** An explicit level, from `Content elevation`; the popover then paints it instead of `popup`. */
+  surface: Surface;
 }>;
 
 /**
@@ -18,12 +22,14 @@ export type PopoverStyleProps = Partial<{
 const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
-const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
+const content: ComponentFunction<PopoverStyleProps> = ({ border, elevation, surface }, ...etc) =>
   mx(
-    'dx-popover-surface border-2 border-separator rounded-sm',
+    !surface && 'dx-popover-surface',
+    // The arrow reads the outline it has to continue from these, so they travel with the border.
+    border && 'border border-separator [--popover-stroke:var(--color-separator)] [--popover-stroke-width:1px]',
+    'dx-focus-ring min-h-[1rem] rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
-    'dx-focus-ring',
     ...etc,
   );
 
@@ -39,17 +45,20 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
   );
 
 /**
- * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
- * outward. Painted in the surface colour with the border on those two edges, its inner half covers
- * the content's border and the outline appears to bend around the tip. The content's backdrop
- * filter makes it the arrow's containing block, whose padding box starts inside the border, so
- * `positioning.css` moves the arrow outward by `--arrow-inset`, the border width, to meet the
- * border's outer edge.
+ * The arrow box straddles the content's edge and `positioning.css` shifts it outward by
+ * `--arrow-inset`, the width of whatever outline the content draws, so the box is centred on that
+ * outline's outer edge. The tip (see `Popover.Arrow`) strokes that edge at twice the width and is
+ * clipped to the arrow's outer shape, so exactly one width shows inside it whatever the width is.
+ * The outline is the content's border when it has one (`--popover-stroke`), nothing otherwise, and
+ * the focus ring while the content is focus-visible.
  */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:2px]',
-    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)]',
+    '[--arrow-inset:var(--popover-stroke-width,0px)] [:focus-visible>&]:[--arrow-inset:var(--dx-focus-line)]',
+    '[&>svg]:overflow-visible [&>svg]:size-full [&>svg]:fill-(--arrow-background)',
+    '[&>svg]:stroke-(--popover-stroke,transparent) [&>svg]:stroke-[length:calc(var(--popover-stroke-width,0px)*2)]',
+    '[:focus-visible>&>svg]:stroke-(--color-focus-ring-subtle) [:focus-visible>&>svg]:stroke-[length:calc(var(--dx-focus-line)*2)]',
     ...etc,
   );
 

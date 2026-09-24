@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { CalendarProperties as default } from './CalendarProperties';
+export { CalendarProperties as default } from './CalendarProperties.tsx';

@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -202,7 +202,7 @@ feat F-6: AI / Skill
 ## Acceptance
 
 ```mdl
-test T-1: Create table from typename
+scenario T-1: Create table from typename
   given: a space with a Task schema registered
   when: user creates a Table with typename = Task
   then:
@@ -211,7 +211,7 @@ test T-1: Create table from typename
 ```
 
 ```mdl
-test T-2: Insert and persist row
+scenario T-2: Insert and persist row
   given: a TableArticle is open with a mutable schema
   when: user clicks Add Row, fills in a cell, and saves
   then:
@@ -220,7 +220,7 @@ test T-2: Insert and persist row
 ```
 
 ```mdl
-test T-3: Sort by column
+scenario T-3: Sort by column
   given: TableArticle open with > 1 rows and a sortable column
   when: user clicks the column header
   then:
@@ -229,7 +229,7 @@ test T-3: Sort by column
 ```
 
 ```mdl
-test T-4: Delete rows
+scenario T-4: Delete rows
   given: TableArticle open, two rows selected
   when: user invokes delete
   then:
@@ -238,7 +238,7 @@ test T-4: Delete rows
 ```
 
 ```mdl
-test T-5: Default table on space creation
+scenario T-5: Default table on space creation
   given: a new space is created
   when: op:onCreateSpace runs
   then:
@@ -247,7 +247,7 @@ test T-5: Default table on space creation
 ```
 
 ```mdl
-test T-6: Table card read-only
+scenario T-6: Table card read-only
   given: a Table is displayed in a card surface
   then:
     - rows are visible
@@ -259,11 +259,11 @@ test T-6: Table card read-only
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a table bound to a schema and add a row
+test QA-1: Create a table bound to a schema and add a row
   desc: The core table round-trip — create a Table over a typename, add a row, read it back.
   actors: agent
   covers: [F-1.1, F-1.2, F-2.2, T-1, T-2]
@@ -271,8 +271,8 @@ flow QA-1: Create a table bound to a schema and add a row
   given:
     - an identity exists
     - space: a space is open, with a mutable schema type registered (e.g. Task)
-    - no Table named "QA Table" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Table named "QA Table" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the table
       do: In the navtree, click + on the space and choose Table. Select typename "Task" and name it "QA Table".
       invoke: [op:create] { db: $given.space.db, name: "QA Table", typename: "example.com/type/Task" }
@@ -327,8 +327,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

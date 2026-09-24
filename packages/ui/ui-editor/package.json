@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/commands": "catalog:",
     "@codemirror/lang-json": "catalog:",

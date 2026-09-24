@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { isSameDay } from './util';
+import { isSameDay } from './util.ts';
 
 export type WeekdaysProps = {
   weekStartsOn: Day;

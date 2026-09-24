@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { MediaPlayer } from './MediaPlayer';
+import { MediaPlayer } from './MediaPlayer.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/components/MediaPlayer',

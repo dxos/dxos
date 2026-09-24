@@ -14,7 +14,8 @@ import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
 
-import { WebSearchSkill } from '../skills';
+import { ToolkitError } from '../errors.ts';
+import { WebSearchSkill } from '../skills/index.ts';
 
 // Regression coverage for the CRM-instructions failure: skills live only in the registry
 // (referenced via `Ref.fromURI(Skill.registryURI(key))`), never forked into the space DB.
@@ -72,7 +73,7 @@ describe('Skill binding resolution (registry refs)', () => {
         yield* Effect.promise(() => reader.open()).pipe(
           Effect.timeoutOrElse({
             duration: Duration.seconds(3),
-            orElse: () => Effect.fail(new Error('TIMED OUT resolving bound skill on feed re-read')),
+            orElse: () => Effect.fail(new ToolkitError({ message: 'TIMED OUT resolving bound skill on feed re-read' })),
           }),
         );
 
@@ -121,7 +122,7 @@ describe('Skill binding resolution (registry refs)', () => {
         yield* Effect.promise(() => reader.open()).pipe(
           Effect.timeoutOrElse({
             duration: Duration.seconds(3),
-            orElse: () => Effect.fail(new Error('TIMED OUT resolving bound skill on feed re-read')),
+            orElse: () => Effect.fail(new ToolkitError({ message: 'TIMED OUT resolving bound skill on feed re-read' })),
           }),
         );
 

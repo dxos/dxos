@@ -10,7 +10,7 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent, createInvocationSpa
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 
-import { InspectInvocations } from './definitions';
+import { InspectInvocations } from './definitions.ts';
 
 export default InspectInvocations.pipe(
   Operation.withHandler(

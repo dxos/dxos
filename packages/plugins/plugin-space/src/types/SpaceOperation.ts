@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { SpaceSchema } from '@dxos/client/echo';
+import { SpaceMember_Role, SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Tag, Type, View } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { SpacesService } from '@dxos/protocols/rpc';
 
 // `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
 // bare name in this file.
-import * as SpaceSchemaModule from './SpaceSchema';
+import * as SpaceSchemaModule from './SpaceSchema.ts';
 
 /**
  * Operations for the Space plugin.
@@ -110,6 +110,26 @@ export const Share = Operation.make({
   output: Schema.instanceOf(CancellableInvitationObservable),
 });
 
+export const AddMembers = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.addMembers'),
+    name: 'Add Members',
+    description: 'Admit known contacts to a space by identity key.',
+    icon: 'ph--user-plus--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+    identityKeys: Schema.Array(Schema.String),
+    role: Schema.Enum(SpaceMember_Role),
+  }),
+  output: Schema.Struct({
+    joinUrl: Schema.String,
+    admitted: Schema.Array(Schema.String),
+    failed: Schema.Array(Schema.Struct({ key: Schema.String, error: Schema.String })),
+  }),
+});
+
 export const OpenSettings = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.openSettings'),
@@ -119,20 +139,6 @@ export const OpenSettings = Operation.make({
   },
   input: Schema.Struct({
     space: SpaceSchema,
-  }),
-  output: Schema.Void,
-});
-
-export const WaitForObject = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.space.waitForObject'),
-    name: 'Wait For Object',
-    description: 'Wait for an object to be available.',
-    icon: 'ph--clock-countdown--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    id: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
@@ -176,10 +182,10 @@ export const AddObject = Operation.make({
     // target collection that way; in-process callers keep passing the live entity. Absent, the
     // object is filed at the space root of the database the runtime resolved from the space id —
     // a database is never an input, since it cannot cross a process boundary.
-    target: Schema.optional(
-      Schema.Union([Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection)]),
-    ).annotate({
-      description: 'The collection to add to, or a reference to it. Omit to file at the space root.',
+    target: Schema.optional(Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)])).annotate({
+      description:
+        'The parent of the object, or a reference to it. A collection files it; any other object ' +
+        'files it itself, so the object is only persisted. Omit to file at the space root.',
     }),
   }),
   output: Schema.Struct({
@@ -212,8 +218,7 @@ export const RemoveObjects = Operation.make({
       'when the entities themselves are not held.',
     icon: 'ph--trash--regular',
   },
-  // The space comes from the input itself — live entities, or refs that are always space-qualified.
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
     // References are what a caller outside this process can supply; resolved to the same entities
@@ -287,7 +292,7 @@ export const DeleteField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to delete the field from.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to delete the field from.' }),
     fieldId: Schema.String,
   }),
   output: DeleteFieldOutput,
@@ -312,8 +317,11 @@ export const OpenObjectForm = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
-      description: 'The database or collection to create in.',
+    target: Schema.Union([Database.Database, Obj.Unknown]).annotate({
+      description:
+        'Where the object is created and what its parent is. A database means the space root; a ' +
+        'collection files it; any other object, such as a project taking it into its artifacts, ' +
+        'files it itself.',
     }),
     mode: Schema.optional(
       Schema.Literals(['draft', 'live']).annotate({
@@ -581,7 +589,7 @@ export const RestoreField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to restore the field to.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to restore the field to.' }),
     field: View.FieldSchema.annotate({ description: 'The field schema to restore.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
     props: Schema.Any.annotate({ description: 'The field properties to restore.' }),
@@ -716,8 +724,9 @@ export const QueryObjects = Operation.make({
     key: DXN.make('org.dxos.operation.space.queryObjects'),
     name: 'Query Objects',
     description:
-      'Query the space for objects by typename and/or full-text search. Omit both to list everything. ' +
-      'The typename filter matches every version of the type.',
+      'Query the space for objects by typename and/or full-text search. Omit both to match everything. ' +
+      'The typename filter matches every version of the type. A result capped by `limit` says so ' +
+      'with `truncated`; raise `limit` to see the rest.',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service],
@@ -732,7 +741,9 @@ export const QueryObjects = Operation.make({
     includeContent: Schema.optional(Schema.Boolean).annotate({
       description: 'Return full object data (default false); false returns id/type/label only.',
     }),
-    limit: Schema.optional(Schema.Number).annotate({ description: 'Maximum number of results (default 10).' }),
+    limit: Schema.optional(Schema.Number).annotate({
+      description: 'Maximum number of results (default 10). A capped result sets `truncated`.',
+    }),
     includeQueues: Schema.optional(Schema.Boolean).annotate({
       description:
         'Also search the space queues (default false). Queue-backed content — mailbox emails, ' +
@@ -741,6 +752,9 @@ export const QueryObjects = Operation.make({
   }),
   output: Schema.Struct({
     results: Schema.Array(Schema.Unknown),
+    truncated: Schema.Boolean.annotate({
+      description: 'True when `limit` cut the result short, so a caller never reads a capped page as the whole set.',
+    }),
   }),
 }).pipe(Operation.mutation('none'));
 

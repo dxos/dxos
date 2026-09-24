@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { Plugin } from '../core';
-import { type BuildMeta, serializeManifest } from './manifest';
+import { Plugin } from '../core/index.ts';
+import { type BuildMeta, serializeManifest } from './manifest.ts';
 
 // Build a `BuildMeta` (runtime `Meta` plus the build-time `version`, which may be a
 // non-semver dev tag and so lives outside the `key` DXN).

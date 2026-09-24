@@ -5,7 +5,7 @@
 import { type IdentitySpec } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { extractDomain } from './domain';
+import { extractDomain } from './domain.ts';
 
 /** Canonical form of an email address — the one normalization every path must share. */
 export const normalizeEmail = (email: string | undefined): string | undefined => {

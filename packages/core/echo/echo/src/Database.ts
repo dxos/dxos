@@ -14,23 +14,23 @@ import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
-import type * as Blob from './Blob';
-import type * as Entity from './Entity';
-import * as Error from './Error';
-import type * as Feed from './Feed';
-import type * as Filter from './Filter';
-import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
+import type * as Blob from './Blob.ts';
+import type * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import type * as Feed from './Feed.ts';
+import type * as Filter from './Filter.ts';
+import type * as Hypergraph from './Hypergraph.ts';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
-import { isInstanceOf } from './internal/Entity/type-uri';
-import * as queryInternal from './internal/Query';
-import type { Ref } from './internal/Ref/ref';
-import type * as Obj from './Obj';
-import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import type * as Registry from './Registry';
-import type * as Type from './Type';
+import { isInstanceOf } from './internal/Entity/type-uri.ts';
+import * as queryInternal from './internal/Query/index.ts';
+import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
+import type * as Obj from './Obj.ts';
+import type * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import type * as Registry from './Registry.ts';
+import type * as Type from './Type.ts';
 
 /**
  * `query` API function declaration.
@@ -96,6 +96,12 @@ export type FlushOptions = {
    * @default true
    */
   indexes?: boolean;
+
+  /**
+   * Also wait for the secondary indexes (full text), which lag the primary pass by design.
+   * @default false
+   */
+  secondaryIndexes?: boolean;
 
   /**
    * Flush pending updates to objects and queries.
@@ -299,6 +305,20 @@ export interface Database extends Queryable {
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
 
   /**
+   * Adopts bytes already staged by a direct upload, returning an un-added Blob object.
+   *
+   * Unlike {@link createBlob} the bytes never enter this process: they were written straight to the
+   * store by whoever held the upload URL, which is the point — the uploader is typically an agent's
+   * shell moving a file far too large to pass through a model. Size and content type therefore come
+   * back from the store rather than from the caller.
+   *
+   * Rejects with `Error.BlobNotAvailableError` (`reason: 'backend-not-registered'` when the storage
+   * name has no backend, `'not-found'` when the backend cannot adopt uploads or the upload is gone)
+   * or `Error.BlobWriteError` if adoption fails.
+   */
+  createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob>;
+
+  /**
    * Loads a blob's bytes. Rejects with `Error.BlobNotAvailableError` if the backend for the blob's
    * storage scheme is not registered, offline, or cannot find the bytes.
    */
@@ -449,7 +469,12 @@ export const resolve: {
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
- * Loads an object reference.
+ * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks
+ * for it.
+ *
+ * The options parameter means this cannot be passed point-free where the caller supplies a second
+ * argument — `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
+ * iteratee index would land on `options`.
  *
  * Catching not found error:
  *
@@ -458,15 +483,14 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
-  function* (ref) {
-    const object = yield* Effect.promise(() => ref.tryLoad());
+export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, Error.EntityNotFoundError, never> =
+  Effect.fn('Database.load')(function* (ref, options) {
+    const object = yield* Effect.promise(() => ref.tryLoad(options));
     if (!object) {
       return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
-  },
-);
+  });
 
 /**
  * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
@@ -482,6 +506,15 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundErro
  * document — so callers that branch (or otherwise need a settled document) must load.
  */
 export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
+
+/**
+ * Makes a reference to an object addressed by URI, resolvable against this database.
+ * @see {@link Database.makeRef}
+ */
+export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
+  uri: URI.URI,
+): Effect.Effect<Ref<T>, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.makeRef<T>(uri))).pipe(Effect.withSpan('Database.makeRef'), withSpaceId);
 
 /**
  * Adds an object or relation to the database.
@@ -681,6 +714,8 @@ export interface HostLoadedStats {
   readonly documentsTotal: number;
   /** Active reactive queries registered with the host, across every space. */
   readonly queriesTotal: number;
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  readonly leases: number;
 }
 
 /**

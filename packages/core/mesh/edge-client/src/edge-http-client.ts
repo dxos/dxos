@@ -5,6 +5,8 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -29,6 +31,10 @@ import {
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
+  type InboxListResponse,
+  InboxListResponseSchema,
+  type InboxSendResponse,
+  InboxSendResponseSchema,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -44,14 +50,14 @@ import {
 import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { createUrl } from '@dxos/util';
 
-import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
-import { proxyFetchLegacy } from './cors-proxy';
-import { HttpConfig, withLogging, withRetryConfig } from './http-client';
+import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client.ts';
+import { proxyFetchLegacy } from './cors-proxy.ts';
+import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
 
-export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client';
+export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client.ts';
 
 /**
  * HTTP wire shape returned by `/queue/.../query`.
@@ -121,6 +127,35 @@ export type GetSpaceTriggersResponse = {
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
+/** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
+export type FinalizedUpload = { key: string; size: number; contentType?: string };
+
+/**
+ * Validates the finalize response rather than asserting its shape.
+ *
+ * The body is untrusted network input, and both fields are load-bearing downstream: `key` is fed
+ * to `fromDigestHex`, whose parser does not reject malformed hex and would silently mint a bogus
+ * `ni:` URI, and `size` is recorded on the Blob object as the authoritative byte count. A cast
+ * would let either through.
+ */
+const parseFinalizeResponse = (body: unknown): FinalizedUpload => {
+  if (typeof body !== 'object' || body === null) {
+    throw new Error('Blob upload finalize returned a non-object body.');
+  }
+  const { key, size, contentType } = body as Record<string, unknown>;
+  // 64 lowercase hex characters: the SHA-256 digest this store is keyed by, and nothing else.
+  if (typeof key !== 'string' || !/^[0-9a-f]{64}$/.test(key)) {
+    throw new Error('Blob upload finalize returned no valid content key.');
+  }
+  if (typeof size !== 'number' || !Number.isInteger(size) || size < 0) {
+    throw new Error('Blob upload finalize returned no valid size.');
+  }
+  if (contentType !== undefined && typeof contentType !== 'string') {
+    throw new Error('Blob upload finalize returned a non-string content type.');
+  }
+  return { key, size, ...(contentType === undefined ? {} : { contentType }) };
+};
+
 export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientService, EdgeHttpClient>()(
   '@dxos/edge-client/EdgeHttpClient',
 ) {}
@@ -131,6 +166,14 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
  * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} — the two
  * services run at different URLs and are never both available from the same base URL.
  */
+/** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
+export type EdgeAiService =
+  | 'anthropic'
+  | 'deepseek'
+  | 'typesafe'
+  /** TypeSafe's System One wire, answered by Workers AI's `typesafe/jev` on EDGE's Cloudflare account. */
+  | 'workers-ai/typesafe';
+
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
     super(baseUrl, options);
@@ -247,6 +290,49 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL(`/db/spaces/${spaceId}/join`, this.baseUrl), {
       ...args,
       body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  //
+  // Inbox (user-to-user notices)
+  //
+
+  /**
+   * Leaves a notice in another identity's inbox; the sender is the identity this client authenticates as.
+   * @param payload Opaque to EDGE; the recipient verifies it.
+   */
+  public async sendInboxMessage(
+    ctx: Context,
+    recipientDid: string,
+    payload: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<InboxSendResponse> {
+    const response = await this._call(ctx, new URL(`/inbox/${encodeURIComponent(recipientDid)}`, this.baseUrl), {
+      ...args,
+      body: { payload },
+      method: 'POST',
+      auth: true,
+    });
+    return Schema.decodeUnknownSync(InboxSendResponseSchema)(response);
+  }
+
+  /**
+   * Lists the pending notices addressed to this client's identity.
+   */
+  public async listInbox(ctx: Context, args?: EdgeHttpCallArgs): Promise<InboxListResponse> {
+    const response = await this._call(ctx, new URL('/inbox', this.baseUrl), { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(InboxListResponseSchema)(response);
+  }
+
+  /**
+   * Removes notices from this identity's inbox on every device.
+   */
+  public async ackInbox(ctx: Context, ids: readonly string[], args?: EdgeHttpCallArgs): Promise<void> {
+    await this._call(ctx, new URL('/inbox/ack', this.baseUrl), {
+      ...args,
+      body: { ids },
       method: 'POST',
       auth: true,
     });
@@ -379,6 +465,20 @@ export class EdgeHttpClient extends BaseHttpClient {
       body: data as BodyInit,
       headers,
     });
+  }
+
+  /**
+   * Admits a completed direct upload into the content-addressed store, returning the key it landed
+   * under along with what the service actually received.
+   *
+   * The bytes were PUT straight to a signed URL by a third party — typically an agent's `curl` —
+   * so they never pass through this client; this call only tells the service to promote them. The
+   * size and content type come from the service for the same reason.
+   */
+  public async finalizeBlobUpload(ctx: Context, uploadId: string, args?: EdgeHttpCallArgs): Promise<FinalizedUpload> {
+    const url = new URL(`/blob/upload/${encodeURIComponent(uploadId)}/finalize`, this.baseUrl);
+    const response = await this._callRaw(ctx, url, { ...args, method: 'POST', auth: args?.auth ?? true });
+    return parseFinalizeResponse(await response.json());
   }
 
   /**
@@ -628,19 +728,19 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
-   * Issue an authenticated request to the EDGE AI route (`/ai/generate/anthropic/*`), which
-   * proxies to the AI service. Used as the backend HTTP client for the Anthropic AI provider
-   * (see {@link EdgeAiHttpClient}).
+   * Issue an authenticated request to the EDGE AI route (`/ai/generate/<service>/*`), which proxies
+   * to the AI service. Used as the backend HTTP client for the edge AI providers (see
+   * {@link EdgeAiHttpClient}); `service` selects the upstream the proxy forwards to.
    *
    * Returns the raw `Response` so streaming bodies are forwarded unchanged to `@effect/ai`.
    * Requires an identity to have been set via {@link setIdentity}.
    */
   // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
   // the auth/retry loop below duplicates the one in `_call`.
-  public async anthropicAiRequest(request: Request): Promise<Response> {
+  public async aiRequest(service: EdgeAiService, request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
-    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
+    const target = new URL(`${base}/ai/generate/${service}${incoming.pathname}${incoming.search}`);
 
     const method = request.method;
     const body = method === 'GET' || method === 'HEAD' ? undefined : await request.arrayBuffer();
@@ -662,7 +762,10 @@ export class EdgeHttpClient extends BaseHttpClient {
         headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
       }
 
-      const response = await fetch(target, { method, headers, body, signal: request.signal });
+      // `redirect: 'error'` rather than the default 'follow': these headers carry the EDGE auth
+      // credential and, on a BYOK request, the user's own provider key, and custom headers are not
+      // guaranteed to be stripped on a cross-origin redirect.
+      const response = await fetch(target, { method, headers, body, redirect: 'error', signal: request.signal });
       // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
       // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s (e.g. invalid BYOK rejected
       // by Anthropic) lack it and must be surfaced verbatim.
@@ -685,8 +788,7 @@ export class EdgeHttpClient extends BaseHttpClient {
       HttpClient.execute(HttpClientRequest.make(_args.method as any)(url.toString())),
       withLogging,
       withRetryConfig,
-      Effect.provide(FetchHttpClient.layer),
-      Effect.provide(HttpConfig.default),
+      Effect.provide(Layer.provideMerge(FetchHttpClient.layer, HttpConfig.default)),
       Effect.withSpan('EdgeHttpClient'),
       EffectEx.runAndForwardErrors,
     ) as T;
@@ -745,9 +847,23 @@ export class EdgeHttpClient extends BaseHttpClient {
     );
   }
 
-  /** Terminates the process and clears its durable storage on the host. */
-  public async terminateProcess(ctx: Context, spaceId: SpaceId, pid: string): Promise<void> {
-    await this._call(ctx, new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl), {
+  /**
+   * Terminates the process and clears its durable storage on the host.
+   *
+   * `idempotencyKey` travels as a query parameter rather than a body: the route is a DELETE, and a
+   * body there is not reliably forwarded.
+   */
+  public async terminateProcess(
+    ctx: Context,
+    spaceId: SpaceId,
+    pid: string,
+    options?: { idempotencyKey?: ProcessProtocol.IdempotencyKey },
+  ): Promise<void> {
+    const url = new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl);
+    if (options?.idempotencyKey !== undefined) {
+      url.searchParams.set('idempotencyKey', options.idempotencyKey);
+    }
+    await this._call(ctx, url, {
       method: 'DELETE',
       auth: true,
     });

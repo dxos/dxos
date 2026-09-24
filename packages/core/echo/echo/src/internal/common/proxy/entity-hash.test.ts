@@ -10,10 +10,10 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import * as Relation from '../../../Relation';
-import { TestSchema } from '../../../testing';
-import { EchoObjectSchema } from '../../Entity';
+import * as Obj from '../../../Obj.ts';
+import * as Relation from '../../../Relation.ts';
+import { TestSchema } from '../../../testing/index.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
 
 /** Nested record carrying an application-level `id`, which must not read as an entity id. */
 const Container = Schema.Struct({

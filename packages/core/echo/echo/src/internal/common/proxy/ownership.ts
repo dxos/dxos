@@ -4,11 +4,11 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { KindId } from '../types';
-import { queueOwnerNotification } from './change-context';
-import { defineHiddenProperty } from './define-hidden-property';
-import { getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils';
-import { EventId } from './symbols';
+import { KindId } from '../types/index.ts';
+import { queueOwnerNotification } from './change-context.ts';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils.ts';
+import { EventId } from './symbols.ts';
 
 /**
  * Symbol to store the owning ECHO object reference on nested JS objects (records).

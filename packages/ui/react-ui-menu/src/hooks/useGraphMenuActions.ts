@@ -9,9 +9,14 @@ import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import { applyPresentation } from '../presentation';
-import { type MenuActions, type MenuActionsOptions } from '../types';
-import { type ActionGraphEdges, type ActionGraphNodes, type ActionGraphProps, useMenuActions } from './useMenuActions';
+import { applyPresentation } from '../presentation.ts';
+import { type MenuActions, type MenuActionsOptions } from '../types.ts';
+import {
+  type ActionGraphEdges,
+  type ActionGraphNodes,
+  type ActionGraphProps,
+  useMenuActions,
+} from './useMenuActions.ts';
 
 export type GraphMenuOptions = {
   /** Group the actions descend from. Defaults to the menu root (top-level toolbar items). */

@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { random } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Image } from './Image';
+import { Image } from './Image.tsx';
 
 const seed = Math.random();
 

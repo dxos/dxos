@@ -8,11 +8,11 @@ import * as Stream from 'effect/Stream';
 import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
 
-import { type SemanticIndexError } from './errors';
-import { indexFactsStage } from './stages';
-import { FactStore } from './store';
-import { type ExtractDocument, type ExtractOptions } from './types';
-import { type Fact } from './types';
+import { type SemanticIndexError } from './errors.ts';
+import { indexFactsStage } from './stages/index.ts';
+import { FactStore } from './store/index.ts';
+import { type ExtractDocument, type ExtractOptions } from './types/index.ts';
+import { type Fact } from './types/index.ts';
 
 export const FactPipeline = {
   /**

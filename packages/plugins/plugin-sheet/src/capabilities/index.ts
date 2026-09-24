@@ -21,11 +21,11 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
-export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort'), {
+export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
   requires: [AppCapabilities.AppGraph],
   activatesOn: SheetEvents.Start,
 });
-export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
+export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: SheetEvents.Start,
   environments: ['node'],
 });
@@ -39,9 +39,9 @@ export const ComputeGraphRegistry = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [SheetCapabilities.ComputeGraphRegistry],
   },
-  () => import('./compute-graph-registry'),
+  () => import('./compute-graph-registry.ts'),
 );
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['node'],
 });
 export const Markdown = Capability.lazyModule(
@@ -52,24 +52,24 @@ export const Markdown = Capability.lazyModule(
     provides: [MarkdownCapabilities.ExtensionProvider],
     activatesOn: MarkdownEvents.Start,
   },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SheetState = Capability.lazyModule(
   'SheetState',
   { provides: [SheetCapabilities.GridInstances], activatesOn: SheetEvents.Start },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   environments: ['node'],
 });
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: SheetEvents.Start,
   environments: ['node'],
 });

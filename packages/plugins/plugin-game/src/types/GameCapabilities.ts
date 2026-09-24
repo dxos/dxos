@@ -11,7 +11,7 @@ import type { Database, Obj, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import * as Game from './Game';
+import * as Game from './Game.ts';
 
 /**
  * A game variant contribution. Each variant plugin (chess, tic-tac-toe, ...)

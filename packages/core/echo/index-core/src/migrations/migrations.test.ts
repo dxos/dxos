@@ -5,28 +5,33 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta';
+import activityInit from './activity/0001_init.sql?raw';
+import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
-import { MIGRATIONS as FTS } from './fts';
+import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
-import { MIGRATIONS as REVERSE_REF } from './reverse-ref';
+import { MIGRATIONS as FTS } from './fts/index.ts';
+import objectSnapshotInit from './object-snapshot/0001_init.sql?raw';
+import { MIGRATIONS as OBJECT_SNAPSHOT } from './object-snapshot/index.ts';
 import reverseRefInit from './reverse-ref/0001_init.sql?raw';
-import { MIGRATIONS as TRACKER } from './tracker';
+import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
+import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 
-const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
+  { name: 'activity', init: activityInit, manifest: ACTIVITY },
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
   { name: 'fts', init: ftsInit, manifest: FTS },
+  { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
   { name: 'reverse-ref', init: reverseRefInit, manifest: REVERSE_REF },
   { name: 'tracker', init: trackerInit, manifest: TRACKER },
 ];
@@ -34,7 +39,7 @@ const STORES = [
 const migrateEntityMeta = Migrator.make({})({
   loader: Migrator.fromRecord(ENTITY_META),
   table: ENTITY_META_TABLE,
-}).pipe(Effect.provide(SqlTransaction.clientLayer), Effect.orDie);
+}).pipe(Effect.orDie);
 
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
 const ENTITY_META_IDS = Object.keys(ENTITY_META).map((key) => [
@@ -49,19 +54,23 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'convergenceKey',
   'createdAt',
   'deleted',
   'documentId',
   'entityKind',
   'objectId',
   'parent',
+  'parentId',
   'queueId',
   'queueNamespace',
   'queuePosition',
   'recordId',
   'source',
+  'sourceId',
   'spaceId',
   'target',
+  'targetId',
   'typeDXN',
   'updatedAt',
   'version',
@@ -97,7 +106,7 @@ describe('index-core migrations', () => {
 
 describe('objectMeta vintages', () => {
   // The three database vintages in the field. All must converge on the shape the code consumes and
-  // produces — the INSERT writes all 14 non-key columns and `SELECT *` reads them back.
+  // produces — the INSERT writes all 15 non-key columns and `SELECT *` reads them back.
   it.effect('fresh database gets the desired shape, and the column back-fill no-ops', () =>
     Effect.gen(function* () {
       expect(yield* migrateEntityMeta).toEqual(ENTITY_META_IDS);

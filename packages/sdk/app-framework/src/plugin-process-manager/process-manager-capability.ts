@@ -27,9 +27,9 @@ import { log } from '@dxos/log';
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { Capabilities } from '../common';
-import { Capability, Plugin } from '../core';
-import { layerIdb } from './idb-key-value-store';
+import { Capabilities } from '../common/index.ts';
+import { Capability, Plugin } from '../core/index.ts';
+import { layerIdb } from './idb-key-value-store.ts';
 
 //
 // Capability Module
@@ -219,7 +219,7 @@ export default Capability.makeModule(
     // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
     // down the stack's keep-alive slices.
     yield* Effect.addFinalizer(() =>
-      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(Effect.promise(() => layerStack.destroy()))),
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(layerStack.destroy())),
     );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {

@@ -92,6 +92,11 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./Dictatable": {
+      "source": "./src/types/Dictatable.ts",
+      "types": "./dist/types/src/types/Dictatable.d.ts",
+      "import": "./dist/lib/Dictatable.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",

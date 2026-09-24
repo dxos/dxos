@@ -4,16 +4,18 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey, URI } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import listTasks from './list-tasks';
-import updateTask from './update-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import listTasks from './list-tasks.ts';
+import updateTask from './update-task.ts';
 
 describe('list-tasks', () => {
   it.effect('filters by status and assignee, and excludes sub-tasks by default', () =>
@@ -38,7 +40,14 @@ describe('list-tasks', () => {
 
       const byAssignee = yield* listTasks.handler({ taskSet: Ref.make(taskSet), assignee: 'KAI@example.com' });
       expect(titles(byAssignee.tasks)).toEqual(['Open thing']);
-    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
   );
 
   it.effect('pages with after/limit and stops issuing a cursor at the end', () =>
@@ -58,14 +67,28 @@ describe('list-tasks', () => {
       expect(second.nextCursor).toBeUndefined();
 
       expect([...titles(first.tasks), ...titles(second.tasks)].sort()).toEqual(['a', 'b', 'c']);
-    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
   );
 
   it.effect('requires a container', () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(listTasks.handler({}));
       expect(exit._tag).toBe('Failure');
-    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
   );
 
   it.effect(
@@ -116,7 +139,14 @@ describe('list-tasks', () => {
       const filed = yield* listTasks.handler({ taskSet: Ref.make(taskSet), milestone: Ref.make(milestone) });
 
       expect(titles(filed.tasks)).toEqual(['Filed']);
-    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
   );
 });
 

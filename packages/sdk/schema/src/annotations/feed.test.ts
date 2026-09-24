@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { FeedAnnotation, getFeedRef, isFeedOwnerSchema } from './feed';
+import { FeedAnnotation, getFeedRef, isFeedOwnerSchema } from './feed.ts';
 
 /** Holds its feed under `feed`, like `Mailbox` and `Calendar`. */
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('com.example.type.mailbox', '0.1.0'))(

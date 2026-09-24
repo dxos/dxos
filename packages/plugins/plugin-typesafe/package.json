@@ -1,0 +1,107 @@
+{
+  "name": "@dxos/plugin-typesafe",
+  "version": "0.11.1",
+  "private": true,
+  "description": "TypeSafe System One connector and decision-model resolver for Composer.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./TypeSafePlugin": {
+      "source": "./src/TypeSafePlugin.ts",
+      "types": "./dist/types/src/TypeSafePlugin.d.ts",
+      "import": "./dist/lib/TypeSafePlugin.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
+    },
+    "./TypeSafeCapabilities": {
+      "source": "./src/types/TypeSafeCapabilities.ts",
+      "types": "./dist/types/src/types/TypeSafeCapabilities.d.ts",
+      "import": "./dist/lib/TypeSafeCapabilities.mjs"
+    },
+    "./TypeSafeSettings": {
+      "source": "./src/types/TypeSafeSettings.ts",
+      "types": "./dist/types/src/types/TypeSafeSettings.d.ts",
+      "import": "./dist/lib/TypeSafeSettings.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-connector": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

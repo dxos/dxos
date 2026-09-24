@@ -14,15 +14,15 @@ import { LogLevel, log } from '@dxos/log';
 import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
-import * as ObservabilityExtension from '../../ObservabilityExtension';
-import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
-import { stubExtension } from '../stub';
-import { type OtelMetrics } from './metrics';
-import { type OtelDestination } from './otel';
-import type * as OtelLogSink from './OtelLogSink';
-import type * as OtelMetricsSink from './OtelMetricsSink';
-import type * as OtelSpanSink from './OtelSpanSink';
-import { RemoteMetricsForwarder } from './remote-metrics';
+import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage/index.ts';
+import { stubExtension } from '../stub.ts';
+import { type OtelMetrics } from './metrics.ts';
+import { type OtelDestination } from './otel.ts';
+import type * as OtelLogSink from './OtelLogSink.ts';
+import type * as OtelMetricsSink from './OtelMetricsSink.ts';
+import type * as OtelSpanSink from './OtelSpanSink.ts';
+import { RemoteMetricsForwarder } from './remote-metrics.ts';
 
 export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
 
@@ -74,8 +74,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     metrics: metricsEnabled = false,
     traces: tracesEnabled = false,
   }) {
-    const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
-    const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
+    const { OtelLogs } = yield* Effect.promise(() => import('./logs.ts'));
+    const { OtelMetrics } = yield* Effect.promise(() => import('./metrics.ts'));
     const { OtelTraces } = yield* Effect.promise(() => import('#otel-traces'));
 
     const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(namespace));
@@ -136,12 +136,18 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       tags.set('ctx.tag', clientTag);
     }
 
+    // `service.version` is the SDK constant and cannot separate two deploys of one release.
+    // Constant per build, so it adds no concurrent metric series. The semconv key `vcs.ref.head.revision` is
+    // inlined to keep the 14k-export `semantic-conventions/incubating` module out of the bundle.
+    const commitHash = config.get('runtime.app.build.commitHash');
+
     const baseAttributes = {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
       ...(clientTag ? { 'ctx.tag': clientTag } : {}),
+      ...(commitHash ? { 'vcs.ref.head.revision': commitHash } : {}),
     };
     const sessionId = crypto.randomUUID();
     const { resource, metricsResource } = createResources(baseAttributes, sessionId);

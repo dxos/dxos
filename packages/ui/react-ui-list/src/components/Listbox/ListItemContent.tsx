@@ -7,7 +7,7 @@ import React, { type ReactElement, type ReactNode } from 'react';
 import { Icon, composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { listTheme } from '../List.theme';
+import { listTheme } from '../List.theme.ts';
 
 /**
  * Presentational row layout: a rail-sized leading icon centered on the primary line, with an
@@ -16,7 +16,8 @@ import { listTheme } from '../List.theme';
  *
  * The grid uses the same `var(--dx-rail-item)` rail track as `useListGrid`, so an adjacent body
  * (e.g. an `Accordion.ItemBody`) can reuse `grid-cols-[var(--dx-rail-item)_1fr]` to line its
- * content up under the same content column.
+ * content up under the same content column. An icon wider than the rail (e.g. an avatar) widens the
+ * track, and that alignment then no longer holds.
  */
 export type ListItemContentProps = ComposableProps<{
   /**
@@ -43,7 +44,7 @@ export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
           </div>
         )}
         <span className={styles.itemContentTitle()}>{title}</span>
-        {description != null && <span className={styles.itemContentDescription()}>{description}</span>}
+        {description != null && <div className={styles.itemContentDescription()}>{description}</div>}
       </div>
     );
   },

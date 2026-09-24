@@ -11,8 +11,8 @@ import { type SpaceId } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
-import { ClientProvider } from '../client';
-import { type WithClientProviderProps } from './withClientProvider';
+import { ClientProvider } from '../client/index.ts';
+import { type WithClientProviderProps } from './withClientProvider.tsx';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceId?: SpaceId };
 

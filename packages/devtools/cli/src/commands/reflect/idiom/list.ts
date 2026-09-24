@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { scanIdioms } from '@dxos/introspect/idioms';
 
-import { findMonorepoRoot } from '../util';
+import { findMonorepoRoot } from '../util.ts';
 
 const handler = Effect.fn(function* ({ root }: { root: string }) {
   const { json } = yield* CommandConfig;
@@ -50,7 +50,7 @@ const handler = Effect.fn(function* ({ root }: { root: string }) {
 export const list = Command.make(
   'list',
   {
-    root: Options.string('root').pipe(
+    root: Options.String('root').pipe(
       Options.withDescription('Monorepo root (defaults to nearest pnpm-workspace.yaml ancestor of cwd).'),
       Options.withDefault(process.cwd()),
     ),

@@ -20,9 +20,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '#plugin';
 import { Provider, Result, Search } from '#types';
 
-import { makeSampleProvider, makeSampleResults, makeSampleSearch } from '../../testing';
-import { translations } from '../../translations';
-import { SearchArticle } from './SearchArticle';
+import { makeSampleProvider, makeSampleResults, makeSampleSearch } from '../../testing.ts';
+import { translations } from '../../translations.ts';
+import { SearchArticle } from './SearchArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

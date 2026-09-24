@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -25,9 +25,9 @@ export const ExcalidrawSettings = ({ subject }: ExcalidrawSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name}>
-            <Form.FieldSet />
-          </Form.Section>
+          <Form.FieldSet label={meta.profile.name} actions={<SettingsScope prefix={meta.profile.key} />}>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

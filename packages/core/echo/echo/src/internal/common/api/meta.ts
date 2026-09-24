@@ -6,11 +6,11 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { DeepReadonly } from '@dxos/util';
 
-import type * as Tag from '../../../Tag';
-import type { Ref } from '../../Ref/ref';
-import { type Mutable } from '../proxy';
-import { type AnyProperties } from '../types';
-import { type EntityMeta, getMeta as getMeta$ } from '../types/meta';
+import type * as Tag from '../../../Tag.ts';
+import type { Ref } from '../../Ref/ref.ts';
+import { type Mutable } from '../proxy/index.ts';
+import { type AnyProperties } from '../types/index.ts';
+import { type EntityMeta, getMeta as getMeta$ } from '../types/meta.ts';
 
 /**
  * Deeply read-only version of EntityMeta.

@@ -12,9 +12,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import AddObjectHandler from './add-object';
-import AddTypeHandler from './add-type';
-import { TestCollectionItem, TestObject, decodeNamed, makeTestLayer } from './testing';
+import AddObjectHandler from './add-object.ts';
+import AddTypeHandler from './add-type.ts';
+import { TestCollectionItem, TestObject, decodeNamed, makeTestLayer } from './testing.ts';
 
 const TestLayer = makeTestLayer(AddObjectHandler, AddTypeHandler);
 
@@ -53,7 +53,7 @@ describe('SpaceOperation.AddObject', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         // A space carrying `SpaceProperties` but no root collection yet — the shape a bare
-        // `client.spaces.create()` leaves behind, and the branch where `CollectionModel.add`
+        // `client.spaces.create()` leaves behind, and the branch where `ContainerModel.add`
         // mints a fresh root collection to file into.
         yield* Database.add(Obj.make(SpaceProperties, {}));
 

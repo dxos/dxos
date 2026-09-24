@@ -7,6 +7,9 @@
       "path": "packages/core/compute/agent-claude/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/agent-code-mode/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
@@ -70,9 +73,6 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -80,6 +80,9 @@
     },
     {
       "path": "packages/apps/composer-crx/tsconfig.json"
+    },
+    {
+      "path": "packages/e2e/composer-e2e/tsconfig.json"
     },
     {
       "path": "packages/apps/composer-stream-deck/tsconfig.json"
@@ -125,6 +128,9 @@
     },
     {
       "path": "packages/devtools/devtools-extension/tsconfig.json"
+    },
+    {
+      "path": "packages/common/diagram/tsconfig.json"
     },
     {
       "path": "packages/experimental/discord-bot/tsconfig.json"
@@ -310,6 +316,9 @@
       "path": "packages/sdk/migrations/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ner/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
     },
     {
@@ -323,6 +332,9 @@
     },
     {
       "path": "packages/core/compute/operation/tsconfig.json"
+    },
+    {
+      "path": "packages/e2e/perf-harness/tsconfig.json"
     },
     {
       "path": "packages/common/phoenix/tsconfig.json"
@@ -370,6 +382,9 @@
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-canvas/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
@@ -380,6 +395,9 @@
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -454,6 +472,9 @@
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
     },
     {
@@ -473,6 +494,9 @@
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-labeler/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-lametric/tsconfig.json"
@@ -649,6 +673,9 @@
       "path": "packages/plugins/plugin-typefully/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-typesafe/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
@@ -668,9 +695,6 @@
     },
     {
       "path": "packages/e2e/proto-guard/tsconfig.json"
-    },
-    {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"
@@ -818,6 +842,9 @@
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-trace/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-transcription/tsconfig.json"

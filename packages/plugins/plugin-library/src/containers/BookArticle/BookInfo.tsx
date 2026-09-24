@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -143,7 +143,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
             {cover ? (
               <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input'>
+              <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
                 <Icon icon='ph--book--regular' size={8} classNames='text-description' />
               </Flex>
             )}
@@ -162,7 +162,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 <p className='text-sm text-description'>
                   {publication}
                   {externalLinks.map((link, index) => (
-                    <React.Fragment key={link.label}>
+                    <Fragment key={link.label}>
                       {(publication || index > 0) && ' · '}
                       <a
                         href={link.href}
@@ -172,7 +172,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                       >
                         {link.label}
                       </a>
-                    </React.Fragment>
+                    </Fragment>
                   ))}
                 </p>
               )}
@@ -213,7 +213,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               onValuesChanged={handleChange}
             >
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Root>
           </section>

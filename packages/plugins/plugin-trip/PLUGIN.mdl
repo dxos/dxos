@@ -44,8 +44,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `type`   | `org.dxos.mdl.type@1.0`      |
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
 | `op`     | `org.dxos.mdl.op@1.0`        |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
 | `test`   | `org.dxos.mdl.test@1.0`      |
-| `flow`   | `org.dxos.mdl.flow@1.0`      |
 
 ## Cross-package additions
 
@@ -513,19 +513,19 @@ packages/plugins/plugin-trip/src/
 ### Tests
 
 ```mdl
-test parseUnitedFlight
+scenario parseUnitedFlight
   desc: Parser unit tests against fixture emails (canonical + edge cases).
   cases:
     - canonical eTicket itinerary → expected Booking + Flight Segment.
     - missing confirmation code → returns null.
 
-test parseBookingComHotel
+scenario parseBookingComHotel
   desc: Parser unit tests against fixture emails.
   cases:
     - canonical hotel confirmation → expected Booking + Accommodation Segment.
     - missing check-in/check-out → returns null.
 
-test TravelMessageExtractor
+scenario TravelMessageExtractor
   desc: Dispatch, Trip resolution, and Account dedup.
   cases:
     - flight email + no existing Trip → creates new Trip wrapping flight dates.
@@ -533,7 +533,7 @@ test TravelMessageExtractor
     - flight email + target Trip ref → appends to target.
     - same provider + account number twice → reuses existing Account.
 
-test extract-message operation
+scenario extract-message operation
   desc: Operation handler integrates with the capability registry.
   cases:
     - manual mode: extractorId passed → calls exactly that extractor.
@@ -611,11 +611,11 @@ feat TripMapMarkers
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a trip and add a segment
+test QA-1: Create a trip and add a segment
   desc: The core trip round-trip — create a trip, add a travel segment, read it back.
   actors: human
   status: unverified
@@ -625,10 +625,10 @@ flow QA-1: Create a trip and add a segment
     - collection: a collection in that space, to create into
     - plugin-trip is enabled — it ships only in the experimental set and is OFF by default; no
       trip operation is registered until it is on
-    - no trip named "QA Trip" exists — ABORT rather than deleting one this flow did not create
-    - trip: the Trip "QA Trip" this flow creates — no plain create op exists (human-only step),
+    - no trip named "QA Trip" exists — ABORT rather than deleting one this test did not create
+    - trip: the Trip "QA Trip" this test creates — no plain create op exists (human-only step),
       so the runner binds this once that step completes
-  test:
+  steps:
     - name: Create the trip
       do: In the navtree, click + on a collection and choose Trip. Name it "QA Trip".
       expect: a Trip named "QA Trip" appears under the collection, with an empty itinerary
@@ -636,7 +636,7 @@ flow QA-1: Create a trip and add a segment
         NO `invoke` — there is no plain create operation for Trip (only
         `org.dxos.operation.trip.createFromEvents`, which needs a Calendar and Events as
         preconditions, and the extraction path, which needs a confirmation email). This step is
-        human-only, so the flow is `actors: human` for now, same finding as plugin-chess.
+        human-only, so the test is `actors: human` for now, same finding as plugin-chess.
     - name: Add a flight segment
       do: In the Trip article, click "Add segment", choose Flight, and fill in an origin and destination.
       invoke: org.dxos.operation.trip.addSegment { trip: $given.trip, kind: "flight", origin: "London Heathrow", destination: "Paris CDG" }

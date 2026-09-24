@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { bindRequest } from './bindRequest';
+import { bindRequest } from './bindRequest.ts';
 
 describe('bindRequest', () => {
   test('substitutes url template tokens and query bindings', ({ expect }) => {

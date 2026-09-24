@@ -5,9 +5,10 @@
 import path from 'node:path';
 import { beforeEach, describe, test } from 'vitest';
 
-import { LogLevel } from './config';
-import { shouldLog } from './context';
-import { type Log, createLog } from './log';
+import { LogLevel, LogProcessorType } from './config.ts';
+import { shouldLog } from './context.ts';
+import { type Log, createLog } from './log.ts';
+import { NOOP_PROCESSOR } from './processors/index.ts';
 
 class LogError extends Error {
   constructor(
@@ -69,6 +70,15 @@ describe('log', () => {
       expect(count, `Filter: "${test.filter}"`).toBe(test.expected);
       remove();
     }
+  });
+
+  test('an explicit processor replaces the processors, and later config keeps it', ({ expect }) => {
+    const log = createLog();
+    log.config({ processor: LogProcessorType.NOOP });
+    expect(log.runtimeConfig.processors).toEqual([NOOP_PROCESSOR]);
+
+    log.config({ filter: LogLevel.ERROR });
+    expect(log.runtimeConfig.processors).toEqual([NOOP_PROCESSOR]);
   });
 
   test('throws an error', () => {

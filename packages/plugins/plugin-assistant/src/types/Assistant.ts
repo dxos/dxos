@@ -7,7 +7,7 @@
 import { type DXN } from '@dxos/keys';
 
 // Re-export Settings as merged const/type (not as namespace).
-import * as SettingsModule from './Settings';
+import * as SettingsModule from './Settings.ts';
 export const Settings = SettingsModule.Settings;
 export type Settings = SettingsModule.Settings;
 

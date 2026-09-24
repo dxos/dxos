@@ -5,7 +5,7 @@
 import { Toggle as TogglePrimitive } from '@ark-ui/react/toggle';
 import React, { forwardRef } from 'react';
 
-import { Button, type ButtonProps } from './Button';
+import { Button, type ButtonProps } from './Button.tsx';
 
 type ToggleProps = ButtonProps & {
   pressed?: boolean;

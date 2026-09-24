@@ -43,10 +43,6 @@
       "types": "./dist/types/src/SqlExport.d.ts",
       "default": "./dist/lib/SqlExport.mjs"
     },
-    "./SqlTransaction": {
-      "types": "./dist/types/src/SqlTransaction.d.ts",
-      "default": "./dist/lib/SqlTransaction.mjs"
-    },
     "./SqlMigrations": {
       "types": "./dist/types/src/SqlMigrations.d.ts",
       "default": "./dist/lib/SqlMigrations.mjs"
@@ -58,6 +54,7 @@
   ],
   "dependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/wa-sqlite": "catalog:",

@@ -26,7 +26,7 @@ import { ReviewPlugin } from '#plugin';
 import { translations } from '#translations';
 import { ReviewCapabilities } from '#types';
 
-import { ObjectHistory } from './ObjectHistory';
+import { ObjectHistory } from './ObjectHistory.tsx';
 
 /**
  * Minimal versioned host: any object holding a root Text and a history qualifies — the panel is

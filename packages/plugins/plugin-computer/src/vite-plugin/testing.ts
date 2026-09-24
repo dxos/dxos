@@ -6,7 +6,7 @@ import * as http from 'node:http';
 
 import { Shell } from '#shell';
 
-import * as ShellMiddleware from './shell-middleware';
+import * as ShellMiddleware from './shell-middleware.ts';
 
 export type Host = {
   /** Absolute URL to pass as `Shell.ExecOptions.path`. */

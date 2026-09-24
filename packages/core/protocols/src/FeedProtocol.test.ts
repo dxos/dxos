@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
 
-import { EdgeService } from './edge/edge';
-import { decodeServiceId, encodeServiceId } from './FeedProtocol';
+import { EdgeService } from './edge/edge.ts';
+import { decodeServiceId, encodeServiceId } from './FeedProtocol.ts';
 
 describe('queue replicator service id', () => {
   test('encodes the space id ahead of the namespace', ({ expect }) => {

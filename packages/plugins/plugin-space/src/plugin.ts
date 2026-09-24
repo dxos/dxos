@@ -15,13 +15,13 @@ import {
   ObservabilityMappings,
   OperationHandler,
   PluginAsset,
-  ReactRoot,
   ReactSurface,
   Repair,
   Schema,
+  SettingsSync,
   SkillDefinition,
+  SpacesAvailable,
   SpaceSettings,
-  SpacesReady,
   SpaceState,
   Translations,
   UndoMappings,
@@ -42,17 +42,16 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta)
     Plugin.addModule(ObservabilityMappings),
     Plugin.addModule(OperationHandler),
     Plugin.addModule(PluginAsset),
-    Plugin.addModule(ReactRoot),
     Plugin.addModule(ReactSurface),
     Plugin.addModule(Repair),
     Plugin.addModule(Schema),
+    Plugin.addModule(SettingsSync),
     Plugin.addModule(SkillDefinition),
+    Plugin.addModule(SpacesAvailable),
     Plugin.addModule(SpaceSettings),
-    Plugin.addModule(SpacesReady),
     Plugin.addModule(SpaceState),
-    Plugin.addModule(Translations),
   )
   // `pipe` has overloads only up to 20 arguments, and this plugin has more modules than that.
-  .pipe(Plugin.addModule(UndoMappings), Plugin.make);
+  .pipe(Plugin.addModule(Translations), Plugin.addModule(UndoMappings), Plugin.make);
 
 export default SpacePlugin;

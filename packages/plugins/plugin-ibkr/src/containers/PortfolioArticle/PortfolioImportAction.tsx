@@ -12,7 +12,7 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
 export type PortfolioImportActionProps = {
   /** The Portfolio whose space owns the report feed the imported report is appended to. */

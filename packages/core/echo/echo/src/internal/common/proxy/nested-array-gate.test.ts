@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import { EchoObjectSchema } from '../../Entity';
+import * as Obj from '../../../Obj.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
 
 const Sheet = Schema.Struct({
   rec: Schema.optional(Schema.Struct({ list: Schema.optional(Schema.mutable(Schema.Array(Schema.String))) })),

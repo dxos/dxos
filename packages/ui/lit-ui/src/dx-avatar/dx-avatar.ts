@@ -8,7 +8,8 @@ import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
 
-import { type Size } from '../defs';
+import { type Size } from '../defs.ts';
+import { getFallbackGlyph } from './fallback.ts';
 
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -36,7 +37,6 @@ export type DxAvatarProps = Partial<
   >
 >;
 
-// TODO(burdon): Needs popover.
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
   private maskId: string;
@@ -196,7 +196,7 @@ export class DxAvatar extends LitElement {
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${/\p{Emoji_Presentation}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
+                ${getFallbackGlyph(this.fallback)}
               </text>`
         }
         ${
@@ -222,17 +222,3 @@ export class DxAvatar extends LitElement {
     return this;
   }
 }
-
-/**
- * Returns the first two renderable characters from a string that are separated by non-word characters.
- * Handles Unicode characters correctly.
- */
-const getInitials = (label = ''): string[] => {
-  return label
-    .trim()
-    .split(/\s+/)
-    .map((str) => str.replace(/[^\p{L}\p{N}\s]/gu, ''))
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0].toUpperCase());
-};

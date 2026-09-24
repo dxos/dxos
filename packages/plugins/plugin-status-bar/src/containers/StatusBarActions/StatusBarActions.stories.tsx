@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { StatusBarActions } from './StatusBarActions';
+import { StatusBarActions } from './StatusBarActions.tsx';
 
 const meta: Meta<typeof StatusBarActions> = {
   title: 'plugins/plugin-status-bar/containers/StatusBarActions',

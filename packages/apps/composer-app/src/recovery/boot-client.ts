@@ -2,14 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Client } from '@dxos/client';
+import { Devtools } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { setupConfig } from '../util';
-import { initAutomergeWasm } from '../util/automerge-wasm';
+import { initAutomergeWasm } from '../util/automerge-wasm.ts';
+import { setupConfig } from '../util/index.ts';
 
 let bootedClient: Client | undefined;
 
@@ -84,11 +88,13 @@ export const exportBootedSqlite = async (): Promise<Uint8Array> => {
   if (!bootedClient) {
     throw new Error('Client not booted');
   }
-  const host = (bootedClient.services as LocalClientServices).host;
-  if (!host) {
-    throw new Error('Client services host unavailable');
-  }
-  return host.exportSqliteDatabase();
+  const devtoolsHost = await EffectEx.runPromise(
+    (bootedClient.services as LocalClientServices).stack
+      .getServiceResolver()
+      .resolve(Devtools.DevtoolsHostService, {})
+      .pipe(Effect.orDie, Effect.scoped),
+  );
+  return devtoolsHost.exportSqliteDatabase();
 };
 
 export const destroyRecoveryClient = async (): Promise<void> => {

@@ -7,7 +7,7 @@ import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 
-import { FormatAnnotation, TypeFormat } from './types';
+import { FormatAnnotation, TypeFormat } from './types.ts';
 
 /**
  * Datetime values should be stored as ISO strings or unix numbers (ms) in UTC.

@@ -39,12 +39,12 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
+import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context';
+import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context.ts';
 
 //
 // Root — wraps `Picker.Root` and adds query state + debounced onSearch.
@@ -59,6 +59,8 @@ type SearchListRootProps = PropsWithChildren<{
   debounceMs?: number;
   /** Callback when search query changes (debounced). */
   onSearch?: (query: string) => void;
+  /** Snap the highlight back to the first item whenever the results change (command-palette behavior). */
+  resetSelectionOnChange?: boolean;
 }>;
 
 const SearchListRoot = ({
@@ -67,6 +69,7 @@ const SearchListRoot = ({
   defaultValue = '',
   debounceMs = 200,
   onSearch,
+  resetSelectionOnChange,
 }: SearchListRootProps) => {
   const [query = '', setQuery] = useControllableState({
     prop: valueProp,
@@ -100,7 +103,7 @@ const SearchListRoot = ({
   }, []);
 
   return (
-    <Picker.Root>
+    <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>
       <SearchListContextBridge query={query} onQueryChange={handleQueryChange}>
         {children}
       </SearchListContextBridge>
@@ -179,11 +182,13 @@ type SearchListInputProps = ThemedClassName<
     density?: Density;
     elevation?: Elevation;
     variant?: InputVariant;
+    /** What Escape does while the query is non-empty; defaults to `clear`. */
+    escapeBehavior?: EscapeBehavior;
   }
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  ({ density, elevation, variant = 'subdued', placeholder, onChange, ...props }, forwardedRef) => {
+  ({ density, elevation, variant = 'subdued', placeholder, onChange, escapeBehavior, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { query, onQueryChange } = useSearchListInputContext('SearchList.Input');
     const defaultPlaceholder = t('search.placeholder');
@@ -204,6 +209,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
         density={density}
         elevation={elevation}
         variant={variant}
+        escapeBehavior={escapeBehavior}
         placeholder={placeholder ?? defaultPlaceholder}
         value={query}
         onValueChange={onQueryChange}

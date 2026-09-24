@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { EdgeServiceClient } from './edge-service';
-import * as Image from './Image';
+import { EdgeServiceClient } from './edge-service.ts';
+import * as Image from './Image.ts';
 
 // Live end-to-end checks against a deployed image-service worker. These hit the public network,
 // so they are gated behind DX_RUN_IMAGE_SERVICE_E2E and skipped in CI by default. The target is

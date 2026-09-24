@@ -4,7 +4,7 @@
 
 import { createSetDispatch } from '@dxos/util';
 
-import { type CleanupFn } from './cleanup';
+import { type CleanupFn } from './cleanup.ts';
 
 /**
  * Return type for processes that support cancellable subscriptions.

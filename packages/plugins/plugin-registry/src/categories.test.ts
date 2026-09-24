@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { REGISTRY_CATEGORIES, getCategoryPredicate, getPopulatedCategories } from './categories';
+import { REGISTRY_CATEGORIES, getCategoryPredicate, getPopulatedCategories } from './categories.ts';
 
 const context = { core: [], enabled: [], remoteIds: new Set<string>() };
 

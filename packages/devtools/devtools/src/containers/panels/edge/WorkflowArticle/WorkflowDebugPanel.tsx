@@ -1,0 +1,280 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+
+import { AiService } from '@dxos/ai';
+import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
+import { type ComputeGraph, ValueBag, type WorkflowLoader, layerNoop } from '@dxos/conductor';
+import { Context } from '@dxos/context';
+import { Database, Registry } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
+import { EdgeHttpClient } from '@dxos/edge-client';
+import { EffectEx, SchemaAST } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { useConfig } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
+import { Avatar, Field, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
+
+import { useDevtoolsState } from '../../../../hooks/index.ts';
+
+// TODO: reconcile with DebugPanel in ScriptPlugin
+
+export enum WorkflowDebugPanelMode {
+  LOCAL = 'local',
+  REMOTE = 'remote',
+}
+
+export type WorkflowDebugPanelProps = ThemedClassName<{
+  mode: WorkflowDebugPanelMode;
+  loader: WorkflowLoader;
+  graph: ComputeGraph;
+}>;
+
+export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
+  const config = useConfig();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { space } = useDevtoolsState();
+  const [input, setInput] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [history, setHistory] = useState<Message[]>([]);
+  const [inputTemplate, setInputTemplate] = useState('');
+
+  const edgeClient = useMemo(() => {
+    const edgeUrl = config.values.runtime?.services?.edge?.url;
+    invariant(edgeUrl, 'Edge url not configured');
+    return new EdgeHttpClient(edgeUrl);
+  }, [config]);
+
+  useAsyncEffect(async () => {
+    setInputTemplate('');
+    await props.loader
+      .load(EID.make({ entityId: props.graph.id }))
+      .then((workflow) => {
+        const workflowMeta = workflow.resolveMeta();
+        if (workflowMeta.inputs.length) {
+          const inputTemplate = inputTemplateFromAst(workflowMeta.inputs[0].schema.ast);
+          setInputTemplate(inputTemplate);
+          if (!input.length) {
+            setInput(inputTemplate);
+          }
+        }
+      })
+      .catch(log.catch);
+  }, [props.loader, props.graph.id]);
+
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const handleScroll = () => {
+    if (scrollerRef.current) {
+      scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+    }
+  };
+
+  const controller = useRef<AbortController>(null);
+  useEffect(() => handleStop(), []);
+
+  const handleStop = () => {
+    controller.current?.abort('stop');
+    controller.current = null;
+  };
+
+  const handleClear = () => {
+    handleStop();
+    setInput('');
+    setHistory([]);
+    inputRef.current?.focus();
+  };
+
+  const handleResponse = ({
+    text,
+    data,
+    error,
+  }: {
+    text?: string;
+    data?: any;
+    error?: Error;
+  } = {}) => {
+    controller.current = null;
+    setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
+    setIsExecuting(false);
+    handleScroll();
+  };
+
+  const handleRequest = async (input: string) => {
+    invariant(space);
+    try {
+      invariant(input.charAt(0) === '{', 'Not a JSON object.');
+      const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+      const requestBody = JSON.parse(validJsonString);
+
+      setIsExecuting(true);
+
+      setInput(inputTemplate);
+      setHistory((history) => [...history, { type: 'request', text: JSON.stringify(requestBody, null, 2) }]);
+      setTimeout(() => handleScroll());
+
+      // Throws DOMException when aborted.
+      controller.current = new AbortController();
+
+      let response: any;
+      if (props.mode === WorkflowDebugPanelMode.REMOTE) {
+        response = await edgeClient.executeWorkflow(Context.default(), space.id, props.graph.id, requestBody);
+      } else {
+        const compiled = await props.loader.load(EID.make({ entityId: props.graph.id }));
+        response = await EffectEx.runAndForwardErrors(
+          compiled
+            .run(ValueBag.make(requestBody))
+            .pipe(
+              Effect.withSpan('runWorkflow'),
+              Effect.flatMap(ValueBag.unwrap),
+              Effect.provide(Layer.provideMerge(createLocalExecutionContext(space), layerNoop)),
+              Effect.scoped,
+            ),
+        );
+      }
+      handleResponse({ data: response });
+    } catch (err: any) {
+      if (err !== 'stop') {
+        const error = err instanceof Error ? err : new Error(err);
+        handleResponse({ error });
+        log.catch(err);
+      } else {
+        handleResponse();
+      }
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  return (
+    <div className={mx('dx-expand flex flex-col', props.classNames)}>
+      <MessageThread ref={scrollerRef} history={history} />
+
+      <Toolbar.Root>
+        <Field.Root>
+          <Field.Input
+            ref={inputRef}
+            autoFocus
+            placeholder={'Input JSON'}
+            value={input}
+            onChange={(ev) => setInput(ev.target.value)}
+            onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
+          />
+        </Field.Root>
+        <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+        <Toolbar.IconButton
+          icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
+          label={isExecuting ? 'Stop' : 'Clear'}
+          iconOnly
+          onClick={() => (isExecuting ? handleStop() : handleClear())}
+        />
+      </Toolbar.Root>
+    </div>
+  );
+};
+
+type MessageThreadProps = {
+  history: Message[];
+};
+
+const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
+  ({ history }: MessageThreadProps, forwardedRef) => {
+    if (!history.length) {
+      return null;
+    }
+
+    return (
+      <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
+        {history.map((message, i) => (
+          <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
+            <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
+            <div className='overflow-auto'>
+              <MessageItem message={message} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  },
+);
+
+const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
+  const { type, text, data, error } = message;
+  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface';
+  return (
+    <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
+      {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}
+
+      {text !== undefined && (
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
+          {text || '\u00D8'}
+        </div>
+      )}
+
+      {data && <JsonHighlighter data={data} classNames={mx(wrapper, 'text-xs')} />}
+    </div>
+  );
+};
+
+const RobotAvatar = () => (
+  <Avatar.Root>
+    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
+  </Avatar.Root>
+);
+
+const createLocalExecutionContext = (
+  space: Space,
+): Layer.Layer<
+  | AiService.AiService
+  | Credential.CredentialsService
+  | Database.Service
+  | Trace.TraceService
+  | Operation.Service
+  | Registry.Service
+> => {
+  return Layer.mergeAll(
+    AiService.notAvailable,
+    Layer.succeed(Credential.CredentialsService, new ConfiguredCredentialsService()),
+    Database.layer(space.db),
+    Layer.succeed(Trace.TraceService, {
+      write: (event, payload) => {
+        log.info(event.key, payload as object);
+      },
+    }),
+    // Local execution context: operations are not invoked; any call dies loudly.
+    Layer.succeed(Operation.Service, {
+      invoke: () => Effect.die('Operation.Service not available in local workflow execution.'),
+      schedule: () => Effect.die('Operation.Service not available in local workflow execution.'),
+      invokePromise: async () => ({
+        error: new Error('Operation.Service not available in local workflow execution.'),
+      }),
+    } satisfies Operation.OperationService),
+    Layer.succeed(Registry.Service, makeRegistry()),
+  );
+};
+
+const inputTemplateFromAst = (ast: SchemaAST.AST): string => {
+  return `{ ${SchemaAST.getPropertySignatures(ast)
+    .map((property) => `"${property.name.toString()}": ""`)
+    .join(', ')} }`;
+};
+
+/**
+ * Request or response.
+ */
+type Message = {
+  type: 'request' | 'response';
+  text?: string;
+  data?: any;
+  error?: Error;
+};

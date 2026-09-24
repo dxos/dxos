@@ -6,9 +6,9 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../providers';
-import { defaultTx } from '../../theme';
-import { Toolbar } from './Toolbar';
+import { ThemeProvider } from '../../providers/index.ts';
+import { defaultTx } from '../../theme/index.ts';
+import { Toolbar } from './Toolbar.tsx';
 
 /**
  * `Toolbar.Root` resolves its role as `role ?? 'toolbar'`, so a `role` key spread as `undefined`

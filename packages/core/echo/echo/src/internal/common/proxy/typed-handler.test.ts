@@ -7,14 +7,28 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import { TestSchema } from '../../../testing';
-import { EchoObjectSchema } from '../../Entity';
-import { setValue } from '../../Obj';
-import { Ref } from '../../Ref';
-import { foreignKey, getMeta } from '../types/meta';
-import { makeObject } from './make-object';
-import { change, subscribe } from './reactive';
+import * as Obj from '../../../Obj.ts';
+import { TestSchema } from '../../../testing/index.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
+import { setValue } from '../../Obj/index.ts';
+import { Ref } from '../../Ref/index.ts';
+import { SchemaAstId, SchemaId, getSchema } from '../types/index.ts';
+import { foreignKey, getMeta } from '../types/meta.ts';
+import { makeObject } from './make-object.ts';
+import { change, subscribe } from './reactive.ts';
+
+describe('nested schemas', () => {
+  test('a nested value carries its property’s AST, not a schema of its own', () => {
+    const schema = Schema.Struct({ nested: Schema.Struct({ value: Schema.Number }) });
+    const object = makeObject(schema, { nested: { value: 1 } });
+    expect((object.nested as any)[SchemaId]).toBeUndefined();
+    expect((object.nested as any)[SchemaAstId]).toBe(schema.fields.nested.ast);
+    expect(getSchema(object.nested)?.ast).toBe(schema.fields.nested.ast);
+    change(object, (o) => {
+      expect(() => (o.nested.value = 'one' as any)).to.throw();
+    });
+  });
+});
 
 describe('complex schema validations', () => {
   test('any', () => {

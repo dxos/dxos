@@ -18,10 +18,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -235,7 +235,7 @@ feat F-5: Sample playback
 ## Acceptance
 
 ```mdl
-test T-1: Create Dream and add layers
+scenario T-1: Create Dream and add layers
   given: no Dream objects exist in the space
   when: user creates a new Dream via Create Object
   then:
@@ -245,7 +245,7 @@ test T-1: Create Dream and add layers
 ```
 
 ```mdl
-test T-2: Play and stop soundscape
+scenario T-2: Play and stop soundscape
   given: a Dream with two Sequences (one sample, one generator)
   when: user presses Play
   then:
@@ -258,7 +258,7 @@ test T-2: Play and stop soundscape
 ```
 
 ```mdl
-test T-3: Timed playback auto-stop
+scenario T-3: Timed playback auto-stop
   given: a Dream with duration = 15 s, one sample layer
   when: user presses Play
   then:
@@ -268,7 +268,7 @@ test T-3: Timed playback auto-stop
 ```
 
 ```mdl
-test T-4: Mute layer during playback
+scenario T-4: Mute layer during playback
   given: a Dream playing with two layers
   when: user clicks the mute button on layer A
   then:
@@ -278,7 +278,7 @@ test T-4: Mute layer during playback
 ```
 
 ```mdl
-test T-5: Delete layer during playback
+scenario T-5: Delete layer during playback
   given: a Dream playing with two layers
   when: user deletes layer A
   then:
@@ -288,14 +288,14 @@ test T-5: Delete layer during playback
 ```
 
 ```mdl
-test T-6: Reorder layers persisted
+scenario T-6: Reorder layers persisted
   given: a Dream with layers [A, B, C]
   when: user drags layer C to position 0
   then: Dream.sequences === [C, A, B] in ECHO
 ```
 
 ```mdl
-test T-7: Generator preset applies correct beat frequency
+scenario T-7: Generator preset applies correct beat frequency
   given: a GeneratorSource layer with preset = 'theta'
   when: the layer starts
   then:
@@ -304,7 +304,7 @@ test T-7: Generator preset applies correct beat frequency
 ```
 
 ```mdl
-test T-8: Dream name auto-saved
+scenario T-8: Dream name auto-saved
   given: a Dream with name 'Morning calm'
   when: user edits the name to 'Evening wind' and blurs the field
   then: Dream.name === 'Evening wind' in ECHO
@@ -314,15 +314,15 @@ test T-8: Dream name auto-saved
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Build a Dream, add layers, and play it back
+test QA-1: Build a Dream, add layers, and play it back
   desc: |
     The core Zen round-trip. No operation exists anywhere in this plugin — there is no
     `## Operations` section and no `operations/` module in source — every interaction is a
-    direct ECHO edit driven from the mixer UI, so this flow is entirely human-only.
+    direct ECHO edit driven from the mixer UI, so this test is entirely human-only.
   actors: human
   covers: [F-1.1, F-1.2, F-2.1, F-2.4, F-3.1, F-3.2]
   status: unverified
@@ -332,8 +332,8 @@ flow QA-1: Build a Dream, add layers, and play it back
     - collection: a collection in that space, to create into
     - plugin-zen is enabled — it ships only in the experimental set (also default-on under
       `isDev` labs); it is OFF by default in a preview/production build
-    - no Dream named "QA Dream" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Dream named "QA Dream" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the dream
       do: In the navtree, click + on a collection and choose Zen. Name it "QA Dream".
       expect: a Dream named "QA Dream" appears under the collection, with no layers yet
@@ -389,8 +389,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

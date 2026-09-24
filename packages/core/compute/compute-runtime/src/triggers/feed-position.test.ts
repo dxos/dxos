@@ -8,7 +8,7 @@ import { Feed, Obj } from '@dxos/echo';
 import { FeedProtocol } from '@dxos/protocols';
 import { Person } from '@dxos/types';
 
-import { filterReadyFeedItems } from './feed-position';
+import { filterReadyFeedItems } from './feed-position.ts';
 
 describe('feed-position', () => {
   describe('filterReadyFeedItems', () => {

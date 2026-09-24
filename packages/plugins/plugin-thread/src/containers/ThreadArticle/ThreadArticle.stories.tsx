@@ -24,7 +24,7 @@ import { Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ThreadArticle } from './ThreadArticle';
+import { ThreadArticle } from './ThreadArticle.tsx';
 
 random.seed(1);
 

@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 import { Obj, Ref, Tag } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
-import { Organization } from '../../testing/schema';
-import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, withMetaTags } from './meta-tags';
+import { Organization } from '../../testing/schema.ts';
+import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, withMetaTags } from './meta-tags.ts';
 
 // A feed-host schema whose own `tags` field is a `TagIndex` record (tagId -> objectId[]), not an
 // array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.

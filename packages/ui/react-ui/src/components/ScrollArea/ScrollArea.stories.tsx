@@ -8,8 +8,8 @@ import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
 import { ThemedClassName } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing';
-import { ScrollArea, type ScrollAreaRootProps } from './ScrollArea';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { ScrollArea, type ScrollAreaRootProps } from './ScrollArea.tsx';
 
 random.seed(123);
 

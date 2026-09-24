@@ -12,8 +12,9 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Actor, ContentBlock, Task } from '@dxos/types';
 
-import * as Trigger from './types/Trigger';
+import * as Trigger from './types/Trigger.ts';
 
 /**
  * Writes ephemeral or persistent events to the trace.
@@ -536,6 +537,54 @@ export const OperationOutput = EventType('operation.output', {
 });
 
 /**
+ * Emitted when a task's status changes — a new task counts as a change from nothing.
+ *
+ * Nothing else in a trace says which task an agent was working on, so these events are what cut a
+ * session's timeline into per-task segments. Every tool that moves a task's status emits one.
+ */
+export const TaskStatusChanged = EventType('task.statusChanged', {
+  schema: Schema.Struct({
+    taskId: Obj.ID,
+    title: Schema.String,
+    status: Task.Status,
+    /** Absent when the task was just created, or held no status before. */
+    previousStatus: Schema.optional(Task.Status),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * An agent put a question to a person and stopped on it. Paired with {@link QuestionAnswered}, the
+ * two bound the stretch a task spent blocked on someone else — the one gap in a session's timeline
+ * that is not the agent's own latency.
+ */
+export const QuestionAsked = EventType('question.asked', {
+  schema: Schema.Struct({
+    /** Id of the question's entry in the task's history. */
+    questionId: Obj.ID,
+    /** The question as put to the reader. */
+    text: Schema.String,
+    /** The task the question blocks. */
+    taskId: Schema.optional(Obj.ID),
+    /** How many pre-baked answers were offered; free-form is always available besides these. */
+    options: Schema.optional(Schema.Number),
+  }),
+  isEphemeral: false,
+});
+
+/** A person answered a {@link QuestionAsked}. */
+export const QuestionAnswered = EventType('question.answered', {
+  schema: Schema.Struct({
+    questionId: Obj.ID,
+    text: Schema.String,
+    taskId: Schema.optional(Obj.ID),
+    /** What the reader answered — a chosen option's title, or free-form text. */
+    answer: Schema.String,
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Human-readable status update emitted by an agent or operation.
  */
 export const StatusUpdate = EventType('status.update', {
@@ -577,3 +626,140 @@ export const emitStatus: (
   messageOrData: string | PayloadType<typeof StatusUpdate>,
 ) => Effect.Effect<void, never, TraceService> = (message) =>
   write(StatusUpdate, typeof message === 'string' ? { message } : message);
+
+//
+// Agent events. Keyed `assistant.*` because that is what every recorded trace carries; they live
+// here rather than in the assistant so a reader of the trace does not depend on the AI stack.
+//
+
+/**
+ * Partial content block emitted.
+ */
+export const PartialBlock = EventType('assistant.partialBlock', {
+  schema: Schema.Struct({
+    messageId: Obj.ID,
+    role: Actor.Role,
+    block: ContentBlock.Any,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Complete content block emitted.
+ */
+export const CompleteBlock = EventType('assistant.completeBlock', {
+  schema: Schema.Struct({
+    messageId: Obj.ID,
+    role: Actor.Role,
+    block: ContentBlock.Any,
+  }),
+  isEphemeral: false,
+});
+
+export const AgentRequestBegin = EventType('assistant.agentRequestBegin', {
+  schema: Schema.Struct({}),
+  isEphemeral: false,
+});
+
+export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
+  schema: Schema.Struct({
+    status: Schema.Literals(['success', 'error', 'interrupted']),
+    error: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * Emitted by the supervisor when a delegated task is handed to a sub-agent process; the only durable
+ * record of the task ↔ pid pairing, since nothing is stamped on the task itself.
+ */
+export const DelegationSpawned = EventType('assistant.delegationSpawned', {
+  schema: Schema.Struct({
+    taskId: Schema.String,
+    pid: Schema.String,
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * Emitted when an MCP server connection fails for a request turn.
+ * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
+ * but can still be surfaced to the user via the live ephemeral event stream.
+ */
+export const McpServerError = EventType('assistant.mcpServerError', {
+  schema: Schema.Struct({
+    url: Schema.String,
+    protocol: Schema.Literals(['sse', 'http']),
+    message: Schema.String,
+    /** The server wants credentials the configuration does not (validly) supply. */
+    unauthorized: Schema.optional(Schema.Boolean),
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Stage a request has reached, in the order a turn passes through them.
+ *
+ * The reader waits through the setup stages before the first token arrives, and that wait is
+ * dominated by whichever one is slow for their setup (a cold MCP server, a summarization pass over a
+ * long feed), so each is named rather than folded into a single "working" state. The stages past
+ * setup (`generating`, `calling-tool`) keep the line alive for the rest of the turn: an agentic turn
+ * spends most of its time in tool calls, where a cleared line reads as a finished request.
+ */
+export const RequestPhaseName = Schema.Literals([
+  /** Client-side: the agent process is being spawned or attached. Never emitted by the agent itself. */
+  'starting',
+  /** The turn fiber has begun; nothing has been loaded yet. */
+  'preparing',
+  'loading-history',
+  'summarizing',
+  'connecting-mcp',
+  'building-toolkit',
+  'encoding-prompt',
+  'contacting-provider',
+  /**
+   * The model is streaming its reply. Derived client-side from the arriving blocks rather than
+   * emitted by the agent: a write from inside the streaming pipeline adds a yield between parsing a
+   * block and submitting it, which is observable in what the tools of that turn then see.
+   */
+  'generating',
+  /** A tool the model called is executing; `detail` carries the tool's name. */
+  'calling-tool',
+  /**
+   * The turn is over and the process is resident only to fire a pending alarm. Reported so the line
+   * stops naming the stage the last turn ended in, which reads as a request that is still working.
+   */
+  'sleeping',
+]);
+export type RequestPhaseName = Schema.Schema.Type<typeof RequestPhaseName>;
+
+/**
+ * Setup stage a request has reached, emitted as the agent enters it.
+ *
+ * Ephemeral: this is progress for a wait that is over by the time anyone could read it back, and the
+ * feed already records the turn's outcome. The UI shows the latest phase until the turn settles.
+ */
+export const RequestPhase = EventType('assistant.requestPhase', {
+  schema: Schema.Struct({
+    phase: RequestPhaseName,
+
+    /**
+     * 1-based attempt at the phase. Only `contacting-provider` re-attempts (a request the provider
+     * rejected for permissions that have not propagated yet), and only there does a value above 1
+     * mean anything to the reader.
+     */
+    attempt: Schema.optional(Schema.Number),
+
+    /** Phase-specific label, e.g. the number of MCP servers being contacted. */
+    detail: Schema.optional(Schema.String),
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Emit the setup stage the request has reached.
+ */
+export const emitRequestPhase = (
+  phase: RequestPhaseName,
+  opts: { attempt?: number; detail?: string } = {},
+): Effect.Effect<void, never, TraceService> => write(RequestPhase, { phase, ...opts });

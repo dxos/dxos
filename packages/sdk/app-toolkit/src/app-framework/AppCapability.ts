@@ -12,25 +12,17 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
 
-import { type Translations } from '../app';
-import * as AppActivationEvents from './AppActivationEvents';
-import * as AppCapabilities from './AppCapabilities';
+import { type Translations } from '../app/index.ts';
+import * as AppActivationEvents from './AppActivationEvents.ts';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
- * Type of a maker built by {@link Capability$.moduleMaker}, spelled out explicitly (rather than
- * inferred) so a capability tag whose type structurally carries a type this module doesn't
- * re-export (e.g. `@dxos/compute`'s `Skill.Definition`) doesn't force that foreign type to be
- * named in this package's declaration emit (TS2883) — `C` is referenced here via `typeof`.
+ * Type of a maker built by {@link Capability$.moduleMaker}. Naming it keeps declaration emit
+ * portable: a capability tag whose type structurally carries a type this module doesn't re-export
+ * (e.g. `@dxos/compute`'s `Skill.Definition`) would otherwise have to be named here (TS2883), and
+ * `C` reaches this alias only through `typeof`.
  */
-type Maker<C extends Capability$.AnyTag> = <
-  Props = void,
-  Options = Props,
-  const Requires extends readonly Capability$.AnyTag[] = readonly [],
-  const Extra extends readonly Capability$.AnyTag[] = readonly [],
->(
-  loader: Capability$.LoadModule<Props, Requires, readonly [C, ...Extra]>,
-  options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
-) => Capability$.Module<Options>;
+type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleMaker<C>>;
 
 //
 // Lazy module makers (loader-based bodies).
@@ -265,6 +257,32 @@ export const schema = (
   );
 };
 
+/** Module contributing guided tours. */
+export const tour = (
+  tours: AppCapabilities.Tour | ReadonlyArray<AppCapabilities.Tour>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour',
+    { provides: [AppCapabilities.Tour], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
+  );
+};
+
+/** Module contributing steps into other plugins' tours. */
+export const tourFragment = (
+  fragments: AppCapabilities.TourFragment | ReadonlyArray<AppCapabilities.TourFragment>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour-fragment',
+    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
+  );
+};
+
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
@@ -293,27 +311,25 @@ export const pluginAsset = (
  * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
 /**
- * Module contributing sample spaces.
+ * Module contributing space templates.
  *
- * Gated on demand, and loader-only: sample content is bulky and interesting to nobody who has not
- * asked for a list, so an inline array — a static import in the plugin definition — would land the
- * whole world in the definition's closure and charge every session for it. The loader keeps it in
- * its own chunk, which is what makes the gating worth anything.
+ * Loader-only, so the content a template writes stays in its own chunk rather than the plugin
+ * definition's closure.
  */
-export const sampleSpaces = (
-  loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SampleSpace> }>,
+export const spaceTemplates = (
+  loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SpaceTemplate> }>,
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) =>
-  Capability$.lazyModule<readonly [typeof AppCapabilities.SampleSpace]>(
-    options?.name ?? 'sample-spaces',
+  Capability$.lazyModule<readonly [typeof AppCapabilities.SpaceTemplate]>(
+    options?.name ?? 'SpaceTemplates',
     {
-      activatesOn: ActivationEvents.SampleSpacesRequested,
-      provides: [AppCapabilities.SampleSpace],
+      activatesOn: ActivationEvents.SpaceTemplatesRequested,
+      provides: [AppCapabilities.SpaceTemplate],
       environments: options?.environments ?? [],
     },
     () =>
-      loader().then(({ default: spaces }) => ({
-        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SampleSpace, spaces)]),
+      loader().then(({ default: templates }) => ({
+        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SpaceTemplate, templates)]),
       })),
   );
 

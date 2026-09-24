@@ -58,7 +58,12 @@ export default Capability.makeModule(
       Effect.sync(() => registry.set(stateAtom, f(registry.get(stateAtom))));
 
     // Connection-level failure (reaching the service); shown at the section, not tied to a model.
-    const fail = (error: string): Effect.Effect<void> => updateState((state) => ({ ...state, kind: 'failed', error }));
+    // Logged as well as rendered, so a bug report's log bundle carries it.
+    const fail = (error: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() => log.warn('ollama unreachable', { error }));
+        yield* updateState((state) => ({ ...state, kind: 'failed', error }));
+      });
 
     // Per-model action error (load/unload/remove/pull); shown inline on that model's row. Pass
     // `undefined` to clear.
@@ -285,10 +290,18 @@ class OllamaSidecar extends Context.Service<
 const OllamaSidecarLive = Layer.effect(
   OllamaSidecar,
   Effect.gen(function* () {
-    // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
-    // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
-    // `Contents/MacOS/lib/ollama` next to the signed sidecar (see tauri.conf bundle.macOS.files).
-    const command = Command.sidecar('sidecar/ollama', ['serve'], {
+    // Ollama is spawned as a scoped shell command, not a Tauri sidecar. Tauri signs every
+    // `externalBin` with the app's single entitlements file, which claims restricted entitlements
+    // (application-identifier, associated-domains) for passkeys. macOS honours those only for a
+    // binary covered by the app's provisioning profile, and a separate executable is not, so it
+    // kills the sidecar at exec (AMFI error -413). Tauri has no per-binary entitlements, and the
+    // shell plugin spawns only sidecars listed in `externalBin`. So the launcher ships as a plain
+    // bundled file at `$RESOURCE/ollama` (bundle.macOS.files, which Tauri copies but never signs),
+    // and CI signs it with no entitlements. It needs none: it is a local HTTP server.
+    //
+    // The launcher finds `llama-server` and its libraries at `<exe>/lib/ollama/`, ignoring
+    // OLLAMA_LIBRARY_PATH, so the runtime ships at `Contents/Resources/lib/ollama` beside it.
+    const command = Command.create('ollama', ['serve'], {
       env: {
         OLLAMA_HOST,
         OLLAMA_ORIGINS: '*', // CORS
@@ -300,11 +313,21 @@ const OllamaSidecarLive = Layer.effect(
     // console with red errors. Kept on `console.*` for Ollama's own line formatting.
     command.stdout.on('data', (data) => logSidecar(data.toString()));
     command.stderr.on('data', (data) => logSidecar(data.toString()));
-    command.on('close', (code) => log.info('Ollama process exited', { code }));
+    // Set before the finalizer's kill, so a warning below means the process died on its own — the
+    // only other trace of that is the connection error the settings panel shows nine seconds later.
+    let stopping = false;
+    command.on('close', ({ code, signal }) => {
+      if (stopping || code === 0) {
+        log.info('Ollama process exited', { code, signal });
+      } else {
+        log.warn('Ollama process exited', { code, signal });
+      }
+    });
     command.on('error', (error) => log.error('Ollama error', { error }));
     const child = yield* Effect.promise(() => command.spawn());
     yield* Effect.addFinalizer(
       Effect.fn(function* () {
+        stopping = true;
         yield* Effect.promise(() => child.kill());
       }),
     );

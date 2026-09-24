@@ -14,7 +14,7 @@ import { PostContent } from '#components';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { type ExtractedArticle, extractArticle } from '../operations/extraction';
+import { type ExtractedArticle, extractArticle } from '../operations/extraction/index.ts';
 
 type State =
   | { status: 'idle' }
@@ -121,7 +121,7 @@ const DefaultStory = () => {
             )}
             {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
             {state.status === 'error' && (
-              <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
+              <pre className='p-2 text-sm text-error-text whitespace-pre-wrap break-all'>{state.message}</pre>
             )}
           </div>
         )}

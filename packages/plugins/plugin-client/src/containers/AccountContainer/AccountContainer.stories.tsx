@@ -17,7 +17,7 @@ import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 import { ClientCapabilities } from '#types';
 
-import { AccountContainer } from './AccountContainer';
+import { AccountContainer } from './AccountContainer.tsx';
 
 /**
  * A `HubHttpClient` whose account lookup is answered locally. Constructed for real and overridden

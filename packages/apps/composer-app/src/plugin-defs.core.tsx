@@ -35,7 +35,7 @@ import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs } from './util';
+import { downloadLogs } from './util/index.ts';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
@@ -116,23 +116,6 @@ export const getCorePlugins = ({
       // The forked init is outside the render tree, so a failure or a stalled handshake reaches
       // the user only if the entry point raises it — React never sees one.
       onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
-      onReset: ({ target }) =>
-        Effect.sync(() => {
-          localStorage.clear();
-          if (target === 'deviceInvitation') {
-            // Carry a pending invitation code across the reset so the join can complete.
-            const url = new URL('/', window.location.origin);
-            url.searchParams.set(
-              'deviceInvitationCode',
-              new URLSearchParams(window.location.search).get('deviceInvitationCode') ?? '',
-            );
-            window.location.assign(url);
-          } else if (target === 'recoverIdentity') {
-            window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-          } else {
-            window.location.pathname = '/';
-          }
-        }),
     }),
     // Core because it owns the connector machinery itself, not any one integration: it fires
     // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the
@@ -147,7 +130,7 @@ export const getCorePlugins = ({
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin.make({ generateSampleSpace: !isLocal }),
+    OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
     ProcessManagerPlugin(),
@@ -164,7 +147,7 @@ export const getCorePlugins = ({
       invitationUrlHandler: false,
     }),
     StatusBarPlugin.make(),
-    SupportPlugin.make({ helpSteps: () => import('./util/help').then(({ steps }) => steps) }),
+    SupportPlugin.make({ helpSteps: () => import('./util/help.ts').then(({ steps }) => steps) }),
     ThemePlugin.make({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',

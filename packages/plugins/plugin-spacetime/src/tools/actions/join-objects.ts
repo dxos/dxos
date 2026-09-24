@@ -9,9 +9,9 @@ import { log } from '@dxos/log';
 
 import { Model } from '#types';
 
-import { joinSolids, serializeManifold } from '../../engine';
-import { type ActionHandler, disposeSceneObject } from '../action';
-import { type ToolContext, getSelectedObjectIds } from '../tool-context';
+import { joinSolids, serializeManifold } from '../../engine/index.ts';
+import { type ActionHandler, disposeSceneObject } from '../action.ts';
+import { type ToolContext, getSelectedObjectIds } from '../tool-context.ts';
 
 /** Joins (unions) selected objects into a single merged object. */
 export class JoinObjectsAction implements ActionHandler {

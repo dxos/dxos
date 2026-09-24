@@ -14,8 +14,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import type * as Operation from '@dxos/compute/Operation';
+import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 import { getDebugPortController } from '@dxos/react-client/devtools';
+
+import { DebugOperationError } from '../../operations/errors.ts';
 
 /**
  * The debug console's command set — the introspection surface an agent uses over the debug port
@@ -34,6 +37,12 @@ export type DebugCliOptions = {
 
 const normalizeKey = (key: unknown): string => String(key).replace(/^dxn:/, '');
 
+/**
+ * The Linear label the PostHog feedback submissions sync under; console-filed issues carry it too
+ * so both sources land in one triage view.
+ */
+const REPORT_LABEL = 'Composer Feedback Form';
+
 const findDefinition = Effect.fn(function* (key: string) {
   const capabilities = (yield* Plugin.Service).capabilities;
   const wanted = normalizeKey(key);
@@ -43,7 +52,7 @@ const findDefinition = Effect.fn(function* (key: string) {
       return definition;
     }
   }
-  return yield* Effect.fail(new Error(`Unknown operation: ${key} (try "ops").`));
+  return yield* Effect.fail(new DebugOperationError({ message: `Unknown operation: ${key} (try "ops").` }));
 });
 
 const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceId?: SpaceId) {
@@ -54,7 +63,7 @@ const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceI
     invoker.invokePromise(definition as Operation.Definition.Any, input as never, spaceId ? { spaceId } : undefined),
   );
   if (error) {
-    return yield* Effect.fail(error instanceof Error ? error : new Error(String(error)));
+    return yield* Effect.fail(error instanceof BaseError ? error : DebugOperationError.wrap()(error));
   }
   return data;
 });
@@ -108,7 +117,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const plugins = Command.make(
     'plugins',
     {
-      all: Flag.boolean('all').pipe(Flag.withDescription('Include disabled plugins.')),
+      all: Flag.Boolean('all').pipe(Flag.withDefault(false), Flag.withDescription('Include disabled plugins.')),
     },
     ({ all }) =>
       Effect.gen(function* () {
@@ -133,7 +142,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const enable = Command.make(
     'enable',
     {
-      ids: Args.string('ids').pipe(Args.withDescription('Plugin ids.'), Args.variadic({ min: 1 })),
+      ids: Args.String('ids').pipe(Args.withDescription('Plugin ids.'), Args.variadic({ min: 1 })),
     },
     ({ ids }) =>
       Effect.gen(function* () {
@@ -144,7 +153,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const disable = Command.make(
     'disable',
     {
-      ids: Args.string('ids').pipe(Args.withDescription('Plugin ids.'), Args.variadic({ min: 1 })),
+      ids: Args.String('ids').pipe(Args.withDescription('Plugin ids.'), Args.variadic({ min: 1 })),
     },
     ({ ids }) =>
       Effect.gen(function* () {
@@ -155,7 +164,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const ops = Command.make(
     'ops',
     {
-      filter: Args.string('filter').pipe(
+      filter: Args.String('filter').pipe(
         Args.withDescription('Substring filter on the key.'),
         Args.variadic({ max: 1 }),
       ),
@@ -180,9 +189,9 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const invoke = Command.make(
     'invoke',
     {
-      key: Args.string('key').pipe(Args.withDescription('Operation key (bare or dxn: form).')),
-      input: Args.string('input').pipe(Args.withDescription('JSON input; defaults to {}.'), Args.variadic({ max: 1 })),
-      space: Flag.string('space').pipe(
+      key: Args.String('key').pipe(Args.withDescription('Operation key (bare or dxn: form).')),
+      input: Args.String('input').pipe(Args.withDescription('JSON input; defaults to {}.'), Args.variadic({ max: 1 })),
+      space: Flag.String('space').pipe(
         Flag.optional,
         Flag.withDescription('Space id, for operations that declare a database service.'),
       ),
@@ -198,7 +207,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const evaluate = Command.make(
     'eval',
     {
-      code: Args.string('code').pipe(Args.withDescription('JavaScript to evaluate.'), Args.variadic({ min: 1 })),
+      code: Args.String('code').pipe(Args.withDescription('JavaScript to evaluate.'), Args.variadic({ min: 1 })),
     },
     ({ code }) =>
       Effect.gen(function* () {
@@ -209,16 +218,20 @@ const makeCommand = (options: DebugCliOptions = {}) => {
   const report = Command.make(
     'report',
     {
-      title: Args.string('title').pipe(Args.withDescription('Issue title.'), Args.variadic({ min: 1 })),
-      body: Flag.string('body').pipe(Flag.optional, Flag.withDescription('Issue body; defaults to empty.')),
-      type: Flag.string('type').pipe(Flag.optional, Flag.withDescription('bug | feature.')),
-      severity: Flag.string('severity').pipe(
+      title: Args.String('title').pipe(Args.withDescription('Issue title.'), Args.variadic({ min: 1 })),
+      body: Flag.String('body').pipe(Flag.optional, Flag.withDescription('Issue body; defaults to empty.')),
+      type: Flag.String('type').pipe(Flag.optional, Flag.withDescription('bug | feature.')),
+      severity: Flag.String('severity').pipe(
         Flag.optional,
         Flag.withDescription('"High priority" | "Medium priority" | "Low priority".'),
       ),
-      noLogs: Flag.boolean('no-logs').pipe(Flag.withDescription('Skip the debug log dump.')),
+      label: Flag.String('label').pipe(
+        Flag.optional,
+        Flag.withDescription(`Linear label; defaults to "${REPORT_LABEL}".`),
+      ),
+      noLogs: Flag.Boolean('no-logs').pipe(Flag.withDefault(false), Flag.withDescription('Skip the debug log dump.')),
     },
-    ({ title, body, type, severity, noLogs }) =>
+    ({ title, body, type, severity, label, noLogs }) =>
       Effect.gen(function* () {
         const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', {
           report: {
@@ -226,18 +239,19 @@ const makeCommand = (options: DebugCliOptions = {}) => {
             body: body._tag === 'Some' ? body.value : '',
             ...(type._tag === 'Some' ? { type: type.value } : {}),
             ...(severity._tag === 'Some' ? { severity: severity.value } : {}),
+            labels: [label._tag === 'Some' ? label.value : REPORT_LABEL],
             includeLogs: !noLogs,
           },
         });
         const issue = result as { issueIdentifier?: string; issueUrl?: string } | undefined;
         yield* print(issue?.issueUrl ? `${issue.issueIdentifier} ${issue.issueUrl}` : result);
       }),
-  ).pipe(Command.withDescription('File a Linear issue with the logs attached (internal accounts only).'));
+  ).pipe(Command.withDescription('File a Linear issue with the logs attached.'), Command.unlisted);
 
   const port = Command.make(
     'port',
     {
-      action: Args.string('action').pipe(
+      action: Args.String('action').pipe(
         Args.withDescription('start | stop; omit for status.'),
         Args.variadic({ max: 1 }),
       ),

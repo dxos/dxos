@@ -4,7 +4,7 @@
 
 import { Subscription } from '#types';
 
-import { extractImageUrls, makeSnippet, stripHtml } from './text';
+import { extractImageUrls, makeSnippet, stripHtml } from './text.ts';
 
 /**
  * Pure derivations of a Post's display snippet/hero-image, preferring the refined values on a

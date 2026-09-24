@@ -11,12 +11,11 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Annotation, Database, DXN, Feed, Filter, Obj, Order, Query, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
 
-import * as AccessToken from './AccessToken';
+import * as AccessToken from './AccessToken.ts';
 
 //
 // Spec.
@@ -99,7 +98,7 @@ export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.curs
     spec: Spec,
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--map-pin--regular', hue: 'amber' }),
-    HiddenAnnotation.set(true),
+    Annotation.HiddenAnnotation.set(true),
     Schema.annotate({ description: 'Durable progress cursor for a source-driven pipeline.' }),
   ),
 ) {}

@@ -96,6 +96,26 @@ export const queryHasWindowing = (query: QueryAST.Query): boolean => {
 };
 
 /**
+ * Whether an aggregate clause needs the index rather than the tab's working set: a count over
+ * whatever the tab happens to hold is not a count of the space, and a `timestamp` key needs index
+ * timestamps a core does not carry.
+ */
+export const aggregateNeedsIndex = (aggregates: readonly QueryAST.GroupAggregate[]): boolean =>
+  !aggregates.some((aggregate) => aggregate.kind === 'items') ||
+  aggregates.some((aggregate) => aggregate.kind === 'timestamp');
+
+/** {@link aggregateNeedsIndex} over a query's `aggregate` clause, if it has one. */
+export const queryAggregateNeedsIndex = (query: QueryAST.Query): boolean => {
+  let needsIndex = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'aggregate' && aggregateNeedsIndex(node.aggregates)) {
+      needsIndex = true;
+    }
+  });
+  return needsIndex;
+};
+
+/**
  * The query's disposition toward deleted objects, defaulting to `'exclude'` when it carries no
  * `options` clause.
  *

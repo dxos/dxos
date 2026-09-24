@@ -50,7 +50,8 @@ class TagWidget extends WidgetType {
 
   toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
-    span.className = mx('cm-tag', getHashStyles(this._text).surface);
+    const { surface, fg } = getHashStyles(this._text);
+    span.className = mx('cm-tag', surface, fg);
     span.textContent = this._text;
     return span;
   }
@@ -63,12 +64,7 @@ const tagMatcher = new MatchDecorator({
   // A bare number is not a tag: `#123` is an issue or pull-request reference, which another
   // extension resolves and links. Replacing it with a tag widget would hide it from that one,
   // since the widget is atomic.
-  decoration: (match) =>
-    /^\d+$/.test(match[1])
-      ? null
-      : Decoration.replace({
-          widget: new TagWidget(match[1]),
-        }),
+  decoration: (match) => (/^\d+$/.test(match[1]) ? null : Decoration.replace({ widget: new TagWidget(match[1]) })),
 });
 
 const styles = EditorView.theme({

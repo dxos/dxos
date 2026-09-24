@@ -8,8 +8,8 @@ import { Obj } from '@dxos/echo';
 
 import { Ibkr } from '#types';
 
-import { TRADINGVIEW_SOURCE } from '../constants';
-import { foreignKeyEquals, mergeForeignKeys, resolveTradingViewSymbol } from './instrument';
+import { TRADINGVIEW_SOURCE } from '../constants.ts';
+import { foreignKeyEquals, mergeForeignKeys, resolveTradingViewSymbol } from './instrument.ts';
 
 // `resolveTradingViewSymbol` takes a snapshot (what `useObject` yields in the UI); mirror that here.
 const symbolFor = (instrument: Ibkr.Instrument) => resolveTradingViewSymbol(Obj.getSnapshot(instrument));

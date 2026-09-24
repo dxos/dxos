@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Blob, Database, DXN, type Error, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
 /**
@@ -19,8 +18,8 @@ export class File extends Type.makeObject<File>(DXN.make('org.dxos.type.file', '
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     /** Owned bytes: `SetParent` cascades the blob with the file. */
-    data: Ref.Ref(Blob.Blob).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
-    timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    data: Ref.Ref(Blob.Blob).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    timestamp: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'indigo' }),
     CollectionItemAnnotation.set(true),

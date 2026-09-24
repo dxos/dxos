@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+
 import { meta } from '#meta';
 
 /**
@@ -14,6 +16,13 @@ import { meta } from '#meta';
 export const nodeId = (fullId: string): string => fullId.split('.').at(-1) ?? '';
 
 const devtoolsId = `${meta.profile.key}.devtools`;
+
+/**
+ * Qualified graph id of a devtools node: the tree under the debug category nests one node per dotted
+ * segment of the namespaced ID below the plugin key.
+ */
+export const getNodePath = (fullId: string): string =>
+  GraphPath.getSpacePath(GraphPath.GroupSegments.debug, ...fullId.slice(meta.profile.key.length + 1).split('.'));
 
 export const id = devtoolsId;
 export const AppGraph = `${devtoolsId}.appGraph`;

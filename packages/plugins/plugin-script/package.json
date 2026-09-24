@@ -192,6 +192,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

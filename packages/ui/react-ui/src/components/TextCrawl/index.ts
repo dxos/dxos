@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './sizes';
-export * from './TextCrawl';
+export * from './sizes.ts';
+export * from './TextCrawl.tsx';

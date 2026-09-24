@@ -17,7 +17,7 @@ and ECHO for collaborative persistence.
 |-------------|------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`      |
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
-| `test`      | `org.dxos.mdl.test@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `service`   | `org.dxos.mdl.service@1.0`   |
 
@@ -341,7 +341,7 @@ feat FR-7: Boolean Operations
 ## Acceptance
 
 ```mdl
-test T-FR-1.1: Create scene
+scenario T-FR-1.1: Create scene
   given: Composer is open
   when: user creates a new Spacetime article
   then:
@@ -351,7 +351,7 @@ test T-FR-1.1: Create scene
 ```
 
 ```mdl
-test T-FR-3.6: Multi-select ordering
+scenario T-FR-3.6: Multi-select ordering
   given: object selection mode active, no selection
   when: user clicks A, then Shift+clicks B, then Shift+clicks C
   then:
@@ -360,7 +360,7 @@ test T-FR-3.6: Multi-select ordering
 ```
 
 ```mdl
-test T-FR-4.2.3: Snap during move
+scenario T-FR-4.2.3: Snap during move
   given: Object is selected, move tool active
   when: user drags while holding Shift
   then:
@@ -369,7 +369,7 @@ test T-FR-4.2.3: Snap during move
 ```
 
 ```mdl
-test T-FR-7.2: Boolean subtract
+scenario T-FR-7.2: Boolean subtract
   given: Objects [A, B] selected in order, A is primary
   when: user invokes subtract
   then:
@@ -380,7 +380,7 @@ test T-FR-7.2: Boolean subtract
 ```
 
 ```mdl
-test T-FR-8: Keyboard scope
+scenario T-FR-8: Keyboard scope
   given: focus is in a text input (not canvas)
   when: user presses "m" or "e" or "x"
   then: no tool action fires

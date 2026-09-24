@@ -27,7 +27,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
 import { NavTreePlugin } from '#plugin';
-import { storybookGraphBuilders } from '#testing';
+import { type StorybookGraphOptions, storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
 
 random.seed(1234);
@@ -139,47 +139,49 @@ const UnavailableWorkspaceStory = () => {
   return <DefaultStory />;
 };
 
+const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
+  withLayout({ layout: 'fullscreen' }),
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      StorybookPlugin.make({
+        initialState: { sidebarState: 'expanded' },
+      }),
+
+      NavTreePlugin(),
+    ],
+    capabilities: () => {
+      const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
+      return [
+        Capability.contribute(StoryState, storyStateAtom),
+        Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders(graphOptions)),
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
+              Effect.gen(function* () {
+                const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+                registry.set(storyStateAtom, { tab: subject });
+              }),
+            ),
+            Operation.withHandler(LayoutOperation.Open, () =>
+              Effect.sync((): readonly string[] => {
+                opens += 1;
+                return [];
+              }),
+            ),
+          ),
+        ),
+      ];
+    },
+  }),
+];
+
 const meta = {
   title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin.make({
-          initialState: { sidebarState: 'expanded' },
-        }),
-
-        NavTreePlugin(),
-      ],
-      capabilities: () => {
-        const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
-        return [
-          Capability.contribute(StoryState, storyStateAtom),
-          Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contribute(
-            Capabilities.OperationHandler,
-            OperationHandlerSet.make(
-              Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
-                Effect.gen(function* () {
-                  const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
-                  registry.set(storyStateAtom, { tab: subject });
-                }),
-              ),
-              Operation.withHandler(LayoutOperation.Open, () =>
-                Effect.sync((): readonly string[] => {
-                  opens += 1;
-                  return [];
-                }),
-              ),
-            ),
-          ),
-        ];
-      },
-    }),
-  ],
+  decorators: navTreeDecorators(),
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -275,7 +277,24 @@ export const UnavailableWorkspace: Story = {
   render: UnavailableWorkspaceStory,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    // Plugin startup plus the message's own render delay; allow for a slow CI runner.
     await canvas.findByTestId('navtree.workspace.unavailable', {}, { timeout: 15000 });
+  },
+};
+
+export const PendingWorkspaces: Story = {
+  decorators: navTreeDecorators({ spaces: 'pending' }),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const items = await canvas.findAllByTestId('spacePlugin.space.pending', {}, { timeout: 15000 });
+    await expect(items).toHaveLength(3);
+  },
+};
+
+export const NoWorkspacesYet: Story = {
+  decorators: navTreeDecorators({ spaces: 'none' }),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('treeView.userAccount.pending', {}, { timeout: 15000 });
+    await expect(canvas.queryAllByTestId(/^spacePlugin\.space/)).toHaveLength(0);
   },
 };

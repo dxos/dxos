@@ -102,7 +102,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {

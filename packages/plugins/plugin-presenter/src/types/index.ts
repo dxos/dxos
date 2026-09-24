@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as PresenterCapabilities from './PresenterCapabilities';
-export * as PresenterEvents from './PresenterEvents';
-export * as PresenterOperation from './PresenterOperation';
-export * as Settings from './Settings';
+export * as PresenterCapabilities from './PresenterCapabilities.ts';
+export * as PresenterEvents from './PresenterEvents.ts';
+export * as PresenterOperation from './PresenterOperation.ts';
+export * as Settings from './Settings.ts';

@@ -19,9 +19,9 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
-import { getFieldPublishFlags } from '../../annotation';
-import { isAtprotoConnection } from '../../connection';
-import { resolveDisplayValue } from '../../field-values';
+import { getFieldPublishFlags } from '../../annotation.ts';
+import { isAtprotoConnection } from '../../connection.ts';
+import { resolveDisplayValue } from '../../field-values.ts';
 import {
   type DisplayStatus,
   computeStatus,
@@ -30,8 +30,8 @@ import {
   inspectPublish,
   publishObject,
   unpublishObject,
-} from '../../publish';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
+} from '../../publish.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
 
 export type AtprotoCompanionProps = AppSurface.ArticleProps<Obj.Unknown>;
 

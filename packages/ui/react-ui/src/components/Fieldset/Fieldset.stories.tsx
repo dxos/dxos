@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { Field } from '../Field';
-import { Fieldset } from './Fieldset';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Field } from '../Field/index.ts';
+import { Fieldset } from './Fieldset.tsx';
 
 type StoryArgs = {
   disabled?: boolean;

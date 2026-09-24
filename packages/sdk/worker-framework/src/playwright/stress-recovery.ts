@@ -4,7 +4,7 @@
 
 import { expect } from '@playwright/test';
 
-import { type StressFleet } from './stress-fleet';
+import { type StressFleet } from './stress-fleet.ts';
 
 /**
  * Recovery budget. Failover is not instant by design: a peer only steals the leader lock after the

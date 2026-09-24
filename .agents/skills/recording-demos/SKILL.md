@@ -1,11 +1,11 @@
 ---
 name: recording-demos
 description: >-
-  Record a demo of the running app that the agent drives itself — a `.mdl` QA flow or an ad-hoc
+  Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
   screenshots of the UI, or execute a flow whose steps have no operation behind them. For a
-  pass/fail report rather than something to watch, use `running-qa-flows`; for a repeatable
+  pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
@@ -43,8 +43,14 @@ the stills if the video adds nothing.
 ## 1. Get the app running
 
 ```bash
-DX_PWA=false moon run composer-app:serve -- --port 4173
+DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173
 ```
+
+**`VITE_DX_DISABLE_ANIMATIONS=true` is not optional here.** It turns off animation that runs without
+a user gesture — the tour's carousel auto-advancing every 10s is the one that bites — and unattended
+motion defeats §4 entirely: every frame differs from the last, so the trimmer finds no still runs to
+cull and a 13-minute session stays 13 minutes. Check it took effect the same way §4 does, from
+`--report`: a session that sat idle should be almost all `stillSeconds`.
 
 Wait for `ready in`. In the cloud sandbox, first read the `cloud-sandbox` skill — the dev server
 needs a full dependency build (`moon run composer-app:build`), and Chromium needs the proxy flags
@@ -53,7 +59,8 @@ that `driver.mjs` already applies.
 ### Storybook, when the demo is a component
 
 ```bash
-DX_STORIES=plugins/plugin-assistant,stories/stories-assistant moon run storybook-react:serve
+DX_STORIES=plugins/plugin-assistant,stories/stories-assistant VITE_DX_DISABLE_ANIMATIONS=true \
+  moon run storybook-react:serve
 ```
 
 `DX_STORIES` narrows which packages are crawled (see `.storybook/main.ts`); unset it and the whole
@@ -61,7 +68,7 @@ monorepo is served from source, which is slower to boot and re-optimizes mid-ses
 task builds the full package closure first, so budget the same 10+ minutes as an app.
 
 **Always record storybook demos in isolation mode.** Drive
-`/iframe.html?id=<story-id>&viewMode=story` — the story fills the 1280×800 frame, and the recording
+`/iframe.html?id=<story-id>&viewMode=story` — the story fills the 1728×1080 frame, and the recording
 carries the component instead of a sidebar, a Controls table and a toolbar that mean nothing to the
 person watching. The manager is worth one establishing shot at most; it is never where the feature
 gets demonstrated.
@@ -116,13 +123,76 @@ C '{"op":"screenshot","name":"01-registry.png"}'
 C '{"op":"stop"}'          # closes the context — this is what writes the video
 ```
 
-Ops: `goto` `click` `fill` `type` `press` `hover` `drag` `waitFor` `text` `count` `eval` `caption`
-`clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
+Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
+`caption` `clearCaption` `sleep` `screenshot` `stop`. `invoke` takes `key`, `input` and an optional
+`spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
 
+`press` also puts the chord in the action feed (`⌘ ⇧ K`), so a recording of a shortcut shows what was
+pressed — pass `"hud": false` to suppress it, or `keys` to show a chord for a gesture the driver did
+not perform. The chip is the proof; without it a palette just appears. See "The action overlay" below.
+
+### The boot is cut by default
+
+App boot is almost never what a demo is about, and it is the longest stretch of motion in a session, so
+the trimmer cannot remove it. The first `goto` therefore waits for the app to be ready — `--ready`,
+by default a Composer plank or a rendered storybook story (not the sidebar, which renders ~8s before any content) — lets it settle for `--settle` ms, and
+discards everything recorded before that. Its reply says what happened: `"boot":{"cut":true}`, or
+`cut:false` with the reason (the selector never appeared within `--ready-timeout`, or the 1x fallback,
+which cannot drop frames).
+
+- **Keep it when it matters** — a demo about startup, a splash, or a slow boot — with `--boot keep`.
+- **`cut` at any point** drops everything recorded so far, for setup you would rather not show (seeding
+  a space, enabling a plugin). Captions issued before it are dropped too, so caption after the cut.
+- **For another app**, pass a selector whose first match is the element that means "ready", e.g.
+  `--ready '[data-testid=app]'`; the driver waits for that first match to become visible.
+
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.
+
+### Resolution
+
+With a full ffmpeg on the path (see §4 — the trimmer needs one anyway) the page renders at 2x device
+pixels and the driver encodes the session itself: `page.screencast` frames go to disk as they arrive and
+are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 3456x2160 for the default
+viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
+encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
+
+| flag        | default | effect                                                                                                     |
+| ----------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `--scale`   | `2`     | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                           |
+| `--width`   | `1728`  | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look |
+| `--crf`     | `28`    | VP9 quality, lower is better and larger                                                                    |
+| `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is                          |
+| `--quality` | `92`    | JPEG quality of the screencast frames                                                                      |
+
+**`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
+reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
+arrive at 1728x1080 and the encoder upscales them — a "3456x2160" file that is as soft as 1x. The driver
+also launches Chromium with `--force-device-scale-factor`, which makes the frames themselves 2x. Check a
+recording by cropping a frame at 1:1 next to a `screenshot` of the same screen; they should match.
+
+The recording is variable-frame-rate — Chromium only emits a frame when something paints — so `stop`
+encodes in time proportional to the motion, not the session length. The trimmer resamples on decode and
+re-encodes with the same VP9 settings (`--crf`, default 30), so the resolution survives trimming.
+
+### The action overlay
+
+Every gesture is painted into the page as it happens, so the video shows causes as well as effects:
+
+- **Clicks** — a cursor glides to the target and a ripple marks the point, a beat before the click lands.
+  `drag` moves the cursor along the path.
+- **Keys** — `press` and `keys` show the chord (`⌘ ⇧ K`); `type`/`fill` show the text going in.
+- **`eval`** — the snippet's first 240 characters, resolved with ✓ or ✗ and the error line.
+- **Operations** — `composer.invoke` is wrapped in the page, so an operation gets its own entry (key,
+  input, ✓/✗) whether it came from the `invoke` op or from inside an `eval` snippet.
+
+Entries stack in a feed in the top-right and fade after 3.5s. Most planks keep their toolbar there, so
+move the feed when the demo's subject lives in that corner (`--feed bottom-left`, or any corner), and
+`--overlay off` drops it. Pass `"hud": false` on a single command to keep a setup probe off camera, and
+`"label"` to name a click target the way a viewer would. The overlay sits in a `pointer-events: none`
+shadow root, so neither Playwright's actionability checks nor the app's hit testing see it.
 
 ## 3. Caption every step
 
@@ -132,13 +202,14 @@ un-stopped leaves nothing behind.
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'
 ```
 
-When running a `.mdl` flow, the caption is the step's `do:` text verbatim and the subtitle is where it
+When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
 
 ## 4. Trim the dead air
 
 An agent-driven recording is almost entirely still frames: the browser holds one frame while you decide
-the next gesture. Measure before tuning — `--report` costs one decode and no encode:
+the next gesture — provided nothing on the page animates on its own, which is why §1 sets
+`VITE_DX_DISABLE_ANIMATIONS=true`. Measure before tuning — `--report` costs one decode and no encode:
 
 ```bash
 node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
@@ -187,6 +258,13 @@ being cut.
 decoder, none of `select`/`concat`/`mpdecimate` — so frames cannot be fed back into it at all.
 `apt-get update && apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one. (In the cloud
 sandbox `apt-get update` first: the preinstalled index is stale and the install 404s without it.)
+
+### For a phone: `--mp4`
+
+iOS does not play VP9 or WebM from a file share, so a demo someone will watch on an iPhone needs an
+H.264 copy. `--mp4` writes `<name>.mp4` next to the trimmed WebM, video only — iOS players reject the
+chapter and WebVTT tracks rather than ignoring them, so those stay in the WebM. It costs one more encode,
+which is why it is opt-in.
 
 ## 4b. Step titles as real annotations
 
@@ -294,13 +372,13 @@ Play it back, or step the frames, before attaching. Two different classes of pro
   something you built earlier in this session, fix it now** — do not ship a video that documents your
   own bug and say nothing. Re-record after the fix; the recording is cheap and the credibility is not.
 
-## Running a `.mdl` flow this way
+## Running a `.mdl` test this way
 
-Read the flow first (`running-qa-flows` §1 applies unchanged: `given`, `before`/`test`/`after`, and
+Read the test first (`composer-qa` §1 applies unchanged: `given`, `before`/`steps`/`after`, and
 every `note` is a constraint, not commentary). Then, per step, perform the `do:` rather than the
 `invoke:`, and judge `expect:` from the screen.
 
-Consent is the same as `running-qa-flows`: a flow mutates by definition, so name the flow and what it
+Consent is the same as `composer-qa`: a test mutates by definition, so name the test and what it
 will change before starting, and run it against a dev server you started, never the user's profile.
 
 Verify state by reading the DOM, not by trusting the gesture:

@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './definitions';
-export type * from './types';
+export * from './definitions.ts';
+export type * from './types.ts';

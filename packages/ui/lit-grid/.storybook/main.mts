@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { config } from '../../../../tools/storybook-lit/.storybook/main';
+import { config } from '../../../../tools/storybook-lit/.storybook/main.ts';
 
 export const stories = ['../src/**/*.lit-stories.ts'];
 

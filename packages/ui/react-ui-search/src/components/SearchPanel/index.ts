@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SearchPanel';
+export * from './SearchPanel.tsx';

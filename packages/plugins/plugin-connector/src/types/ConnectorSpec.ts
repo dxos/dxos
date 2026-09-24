@@ -12,11 +12,11 @@ import type { Client } from '@dxos/client';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { type Database, Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import type { OAuthProvider } from '@dxos/protocols';
 
-import { type ConnectionTestError } from '../errors';
+import { type ConnectionTestError } from '../errors.ts';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({
@@ -191,6 +191,29 @@ export type ConnectorOAuthSpec = {
  * handle): the coordinator opens the auth window and forwards
  * `loginHint` to Edge.
  */
+/** Titles and descriptions for one credential field. */
+export type CredentialFieldText = { title: string; description?: string };
+
+/**
+ * The one-secret credential form most APIs need: a single `token` (an API key) entered as a
+ * password. Connectors that need validation or a differently shaped token still own `onSubmit`.
+ */
+export const TokenForm = (token: CredentialFieldText) =>
+  Schema.Struct({
+    token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate(token),
+  });
+
+/**
+ * A key-pair credential form: an identifier the API issues alongside a secret (Higgsfield's
+ * `Key <id>:<secret>`, AWS-style access keys). The id is an opaque key, not prose; the secret a
+ * password.
+ */
+export const KeyPairForm = (fields: { keyId: CredentialFieldText; keySecret: CredentialFieldText }) =>
+  Schema.Struct({
+    keyId: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Key)).annotate(fields.keyId),
+    keySecret: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate(fields.keySecret),
+  });
+
 export type CredentialFormResult =
   | { kind: 'complete'; accessToken: AccessToken.AccessToken; connection: Connection.Connection }
   | { kind: 'oauth'; loginHint?: string };

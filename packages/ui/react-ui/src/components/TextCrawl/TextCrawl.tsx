@@ -11,13 +11,13 @@ import React, {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
 
-import { type TextCrawlSize } from './sizes';
+import { useReducedMotion } from '../../util/index.ts';
+import { type TextCrawlSize } from './sizes.ts';
 
 const emptyLines: string[] = [];
 
@@ -267,28 +267,11 @@ const Line = ({
   return (
     <div
       style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
-      className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
+      className={mx('flex items-center transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >
-      {line}
+      {/* The ellipsis needs a block with inline content: on the flex line itself the text is an
+          anonymous item and `text-overflow` never applies, so a long line was cut mid-glyph. */}
+      <span className='min-w-0 truncate'>{line}</span>
     </div>
   );
 };
-
-const subscribeReducedMotion = (onChange: () => void): (() => void) => {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return () => {};
-  }
-  const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-  query.addEventListener('change', onChange);
-  return () => query.removeEventListener('change', onChange);
-};
-
-const getReducedMotionSnapshot = (): boolean => {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false;
-  }
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-};
-
-const useReducedMotion = (): boolean =>
-  useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false);

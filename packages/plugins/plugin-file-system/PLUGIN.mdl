@@ -18,10 +18,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -214,7 +214,7 @@ feat F-6: Workspace Settings
 ## Acceptance
 
 ```mdl
-test T-1: Open a directory
+scenario T-1: Open a directory
   given: the desktop app is running
   when: user activates "Open Folder"
   then:
@@ -227,7 +227,7 @@ test T-1: Open a directory
 ```
 
 ```mdl
-test T-2: Idempotent open
+scenario T-2: Idempotent open
   given: a workspace is already open for path /home/user/notes
   when: op:openDirectory is invoked with the same path
   then:
@@ -236,7 +236,7 @@ test T-2: Idempotent open
 ```
 
 ```mdl
-test T-3: Close workspace
+scenario T-3: Close workspace
   given: a workspace is open
   when: user closes the workspace
   then:
@@ -246,14 +246,14 @@ test T-3: Close workspace
 ```
 
 ```mdl
-test T-4: Refresh workspace
+scenario T-4: Refresh workspace
   given: a workspace is open and a new file "new.md" has been added on disk
   when: user triggers Refresh Folder
   then: "new.md" appears as a leaf node in the navtree
 ```
 
 ```mdl
-test T-5: Markdown file editing
+scenario T-5: Markdown file editing
   given: a markdown file is open in the editor
   when: user types new content
   then:
@@ -262,7 +262,7 @@ test T-5: Markdown file editing
 ```
 
 ```mdl
-test T-6: Workspace ordering persisted
+scenario T-6: Workspace ordering persisted
   given: two workspaces are open
   when: user rearranges their order in the navtree
   then:
@@ -274,11 +274,11 @@ test T-6: Workspace ordering persisted
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Open, refresh and close a workspace
+test QA-1: Open, refresh and close a workspace
   desc: The core filesystem round-trip — open a local directory, see it reflected in the navtree, close it.
   actors: human
   covers: [F-1.1, F-1.3, F-2.1, F-3.1, T-1, T-3, T-4]
@@ -288,8 +288,8 @@ flow QA-1: Open, refresh and close a workspace
       only when `isTauri && !isMobile && !isPopover` (see `plugin-defs.tsx`); it does not exist in
       the browser build the debug port attaches to, so no runtime operation is resolvable at all
     - a local directory exists containing a markdown file, e.g. "notes/intro.md"
-    - no workspace for that path is already open — ABORT rather than reusing one this flow did not open
-  test:
+    - no workspace for that path is already open — ABORT rather than reusing one this test did not open
+  steps:
     - name: Open the folder
       do: Activate "Open Folder" from the app graph (navtree root menu or command palette) and pick the directory.
       invoke: [op:openDirectory]
@@ -343,8 +343,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

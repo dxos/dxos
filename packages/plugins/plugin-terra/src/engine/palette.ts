@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Biome } from './biomes';
-import { type Vec3 } from './noise';
+import { type Biome } from './biomes.ts';
+import { type Vec3 } from './noise.ts';
 
 // Flat NPR palette (linear-ish RGB 0..1), matte.
 export const palette: Record<Biome, Vec3> = {

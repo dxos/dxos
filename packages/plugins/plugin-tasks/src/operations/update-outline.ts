@@ -10,7 +10,7 @@ import { Outline } from '@dxos/types';
 
 import { OutlineOperation } from '#types';
 
-import { InvalidOperationInput } from '../errors';
+import { InvalidOperationInput } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof OutlineOperation.UpdateOutline> = OutlineOperation.UpdateOutline.pipe(
   Operation.withHandler(

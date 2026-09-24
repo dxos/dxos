@@ -9,8 +9,8 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { TRADINGVIEW_SOURCE } from '../constants';
-import { foreignKeyEquals, mergeForeignKeys } from '../services';
+import { TRADINGVIEW_SOURCE } from '../constants.ts';
+import { foreignKeyEquals, mergeForeignKeys } from '../services/index.ts';
 
 const defaultForeignKeys = ({
   key,

@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { commandPath, identifySession, observabilityNamespace, otelEndpoint, projectToken } from './observability';
+import { commandPath, identifySession, observabilityNamespace, otelEndpoint, projectToken } from './observability.ts';
 
 describe('CLI observability', () => {
   test('names a command by its subcommand path, keeping flags and positionals out', ({ expect }) => {

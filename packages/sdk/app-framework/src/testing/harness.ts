@@ -11,9 +11,9 @@ import type * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
-import { activateDemandGatedModules } from './demand-gated';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core/index.ts';
+import { activateDemandGatedModules } from './demand-gated.ts';
 
 export type TestAppOptions = {
   /**

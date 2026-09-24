@@ -11,7 +11,7 @@ import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { useChatReportContext } from '../../components/Chat/context';
+import { useChatReportContext } from '../../components/Chat/context.ts';
 
 const PLUGIN_PROMPT_NAME = 'PluginPrompt';
 

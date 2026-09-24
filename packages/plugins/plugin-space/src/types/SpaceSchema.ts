@@ -9,12 +9,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj } from '@dxos/echo';
+import { Annotation, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export * as Settings from './Settings';
+export * as Settings from './Settings.ts';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
 
@@ -56,6 +56,11 @@ export type SpacePluginOptions = {
   invitationProp?: string;
 
   /**
+   * Query parameter carrying a space key to join by admission.
+   */
+  joinSpaceKeyProp?: string;
+
+  /**
    * Whether the navigation handler consumes invitation codes from URL query params.
    * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
    * @default true
@@ -85,11 +90,6 @@ export type PluginState = {
    * Which peers are currently viewing which objects.
    */
   viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
-
-  /**
-   * Object that was linked to directly but not found and is being awaited.
-   */
-  awaiting: string | undefined;
 
   /**
    * Cached space names, used when spaces are closed or loading.
@@ -151,8 +151,8 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    /** The collection to file into; absent files at the space root of `db`. */
-    target?: Collection.Collection;
+    /** The created object's parent; absent files at the space root of `db`. */
+    target?: Obj.Unknown;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;

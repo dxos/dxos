@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type DiscordPresence } from '#hooks';
 import { translations } from '#translations';
 
-import { FeedbackForm, type FeedbackSubmitHandler } from './FeedbackForm';
+import { FeedbackForm, type FeedbackSubmitHandler } from './FeedbackForm.tsx';
 
 type FeedbackFormStoryArgs = {
   hidden?: { version?: string };
@@ -21,10 +21,10 @@ type FeedbackFormStoryArgs = {
 };
 
 const FeedbackFormStory = ({ hidden, onSubmit, onDownloadLogs, discordPresence }: FeedbackFormStoryArgs) => (
-  <FeedbackForm.Root hidden={hidden} onSubmit={onSubmit ?? (() => {})}>
+  <FeedbackForm.Root hidden={hidden} onSubmit={onSubmit ?? (() => true)}>
     <Form.Viewport>
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />
         <FeedbackForm.Submit />
         <FeedbackForm.DiscordPresence discordPresence={discordPresence} />
@@ -51,6 +51,7 @@ export const Default: Story = {
   args: {
     onSubmit: (values) => {
       console.log(values);
+      return true;
     },
   },
 };
@@ -59,6 +60,7 @@ export const WithDownloadLogs: Story = {
   args: {
     onSubmit: (values) => {
       console.log(values);
+      return true;
     },
     onDownloadLogs: () => {
       console.log('download logs clicked');
@@ -70,6 +72,7 @@ export const WithPresence: Story = {
   args: {
     onSubmit: (values) => {
       console.log(values);
+      return true;
     },
     discordPresence: {
       teamOnline: 2,

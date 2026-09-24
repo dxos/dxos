@@ -23,8 +23,8 @@ import {
   toRelative,
   trackProgress,
   writeResults,
-} from '../testing/harness';
-import { FACT_STORE_MODEL } from './defs';
+} from '../testing/harness/index.ts';
+import { FACT_STORE_MODEL } from './defs.ts';
 
 // Which model's extracted fact set to persist as the Phase-2 fixture (falls back to the largest).
 const SAVE_MODEL = FACT_STORE_MODEL;

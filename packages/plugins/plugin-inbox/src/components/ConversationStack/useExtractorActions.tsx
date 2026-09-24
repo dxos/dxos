@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { InboxOperation, Mailbox } from '#types';
 
-import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate';
+import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate.ts';
 
 export type ExtractorMenuItem = {
   id: string;

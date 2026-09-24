@@ -5,7 +5,7 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { describe, test } from 'vitest';
 
-import { type Decidable, DEFAULT_SLOW_MS, TailSampler, TailSamplingSpanProcessor } from './tail-sampling';
+import { type Decidable, DEFAULT_SLOW_MS, TailSampler, TailSamplingSpanProcessor } from './tail-sampling.ts';
 
 const KEPT_TRACE = '0'.repeat(24) + '00000000';
 const DROPPED_TRACE = '0'.repeat(24) + 'ffffffff';

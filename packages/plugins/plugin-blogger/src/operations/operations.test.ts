@@ -64,9 +64,9 @@ describe('Blog operations', () => {
         // A `Collection` target (rather than the bare `db`) is required to make the
         // persistence assertion below non-vacuous: pushing `Ref.make(post)` onto the
         // already-attached `publication.posts` array auto-attaches `post` to the database
-        // regardless of whether the handler's `CollectionModel.add` call ran (ECHO attaches
+        // regardless of whether the handler's `ContainerModel.add` call ran (ECHO attaches
         // any referenced live object reachable from an already-attached object). Only the
-        // `Collection.objects` array is exclusively populated by `CollectionModel.add`.
+        // `Collection.objects` array is exclusively populated by `ContainerModel.add`.
         const collection = Collection.make({ objects: [] });
         db.add(collection);
 
@@ -92,7 +92,7 @@ describe('Blog operations', () => {
         expect(Obj.instanceOf(Markdown.Document, content)).toBe(true);
 
         // Persisted: actually filed under the target `Collection`'s `objects`, which is
-        // populated only by the handler's `CollectionModel.add` call.
+        // populated only by the handler's `ContainerModel.add` call.
         expect(collection.objects.some((ref) => ref.target?.id === post.id)).toBe(true);
       },
       Effect.provide(TestLayer),

@@ -7,7 +7,7 @@ import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 
-import { templates } from '../templates';
+import { templates } from '../templates/index.ts';
 
 export type TemplateActionProperties = { type: 'template'; value: string };
 

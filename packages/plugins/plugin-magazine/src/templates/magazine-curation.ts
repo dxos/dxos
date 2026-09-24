@@ -12,6 +12,8 @@ import { makeRoutine } from '@dxos/plugin-routine/util';
 
 import { FeedOperation, Magazine } from '#types';
 
+import { ArticleFetchError } from '../operations/errors.ts';
+
 /** Default cron for a magazine curation routine: daily at 9 AM. The user edits the schedule from the trigger. */
 const DEFAULT_CRON = '0 9 * * *';
 
@@ -31,7 +33,9 @@ export const magazineCuration: RoutineCapabilities.Template = {
   scaffold: ({ name, input }) =>
     Effect.gen(function* () {
       if (!Ref.isRef(input?.magazine)) {
-        return yield* Effect.fail(new Error('Magazine curation template requires a magazine.'));
+        return yield* Effect.fail(
+          new ArticleFetchError({ message: 'Magazine curation template requires a magazine.' }),
+        );
       }
       const magazine = yield* Database.resolve(input.magazine, Magazine.Magazine);
 

@@ -20,11 +20,11 @@ import { getStyles } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
 
-import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection';
-import { getAtprotoUris } from '../../foreign-key';
-import { importRecord } from '../../publish';
-import { getMappedCollections } from '../../schema-map';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
+import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection.ts';
+import { getAtprotoUris } from '../../foreign-key.ts';
+import { importRecord } from '../../publish.ts';
+import { getMappedCollections } from '../../schema-map.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
 
 export type PdsBrowserProps = {
   role?: string;

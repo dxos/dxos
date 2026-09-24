@@ -6,15 +6,14 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { findBlocks } from './blocks';
-import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
+import { findBlocks } from './blocks.ts';
+import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
-const create = (doc: string) => EditorState.create({ doc, extensions });
 
 describe('blockSelectionField', () => {
   test('set replaces and toggle adds/removes, kept sorted', ({ expect }) => {
-    let state = create('A\n\nB\n\nC'); // anchors: A@0, B@3, C@6
+    let state = EditorState.create({ doc: 'A\n\nB\n\nC', extensions }); // anchors: A@0, B@3, C@6
     state = state.update({ effects: setBlockSelection.of([6, 0]) }).state;
     expect([...state.field(blockSelectionField)]).to.deep.eq([0, 6]);
     state = state.update({ effects: toggleBlockSelection.of(0) }).state;
@@ -24,7 +23,7 @@ describe('blockSelectionField', () => {
   });
 
   test('anchors map through edits', ({ expect }) => {
-    let state = create('A\n\nB\n\nC');
+    let state = EditorState.create({ doc: 'A\n\nB\n\nC', extensions });
     state = state.update({ effects: setBlockSelection.of([3, 6]) }).state;
     // Insert two characters at the start; anchors shift by two.
     state = state.update({ changes: { from: 0, insert: 'XY' } }).state;
@@ -32,14 +31,14 @@ describe('blockSelectionField', () => {
   });
 
   test('a caret move keeps the selection (extendable via keyboard)', ({ expect }) => {
-    let state = create('A\n\nB');
+    let state = EditorState.create({ doc: 'A\n\nB', extensions });
     state = state.update({ effects: setBlockSelection.of([0]) }).state;
     state = state.update({ selection: { anchor: 3 } }).state;
     expect([...state.field(blockSelectionField)]).to.deep.eq([0]);
   });
 
   test('getSelectedBlocks resolves anchors to blocks in order', ({ expect }) => {
-    let state = create('A\n\nB\n\nC');
+    let state = EditorState.create({ doc: 'A\n\nB\n\nC', extensions });
     state = state.update({ effects: setBlockSelection.of([6, 3]) }).state;
     const selected = getSelectedBlocks(state, findBlocks);
     expect(selected.map((entry) => entry.index)).to.deep.eq([1, 2]);
@@ -47,7 +46,7 @@ describe('blockSelectionField', () => {
   });
 
   test('getSelectedBlocks drops stale anchors', ({ expect }) => {
-    let state = create('A\n\nB\n\nC');
+    let state = EditorState.create({ doc: 'A\n\nB\n\nC', extensions });
     // Anchor 4 is not a block start.
     state = state.update({ effects: setBlockSelection.of([0, 4]) }).state;
     const selected = getSelectedBlocks(state, findBlocks);

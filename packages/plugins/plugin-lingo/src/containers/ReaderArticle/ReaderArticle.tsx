@@ -27,7 +27,7 @@ import {
 import { meta } from '#meta';
 import { Analysis, Language, LingoCapabilities, LingoOperation, Vocabulary, Word } from '#types';
 
-import { useSourceText } from './useSourceText';
+import { useSourceText } from './useSourceText.ts';
 
 export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 

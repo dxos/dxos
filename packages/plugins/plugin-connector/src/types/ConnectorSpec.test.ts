@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
-import * as ConnectorSpec from './ConnectorSpec';
+import * as ConnectorSpec from './ConnectorSpec.ts';
 
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.test.targetConnectors.mailbox', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }),

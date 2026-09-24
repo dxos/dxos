@@ -4,7 +4,7 @@
 
 import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
 
-import { type Plugin } from '../core';
+import { type Plugin } from '../core/index.ts';
 
 /**
  * Name of the asset written alongside the built module bundle.

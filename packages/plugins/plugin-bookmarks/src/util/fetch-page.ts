@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 /**
@@ -22,7 +23,7 @@ const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 const RENDER_READY_DATASET_KEY = 'composerProxy';
 const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 
-export class FetchError extends Error {}
+export class FetchError extends BaseError.extend('BookmarkFetchError', 'Fetch failed.') {}
 
 type RenderRequest = {
   version: 1;
@@ -85,17 +86,17 @@ const fetchResource = (url: string): Effect.Effect<string, FetchError> =>
     try: async () => {
       const response = await proxyFetchLegacy(new URL(url), { method: 'GET' });
       if (!response.ok) {
-        throw new FetchError(`HTTP ${response.status} for ${url}`);
+        throw new FetchError({ message: `HTTP ${response.status} for ${url}` });
       }
       return response.text();
     },
-    catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
+    catch: FetchError.wrap({ ifTypeDiffers: true }),
   });
 
 const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
   Effect.callback<string, FetchError>((resume) => {
     if (typeof window === 'undefined' || !isCrxRenderAvailable()) {
-      resume(Effect.fail(new FetchError('Composer render-proxy extension is not available')));
+      resume(Effect.fail(new FetchError({ message: 'Composer render-proxy extension is not available' })));
       return;
     }
 
@@ -119,7 +120,7 @@ const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
       if (ack.ok) {
         resume(Effect.succeed(ack.html));
       } else {
-        resume(Effect.fail(new FetchError(`render-proxy failed: ${ack.error}`)));
+        resume(Effect.fail(new FetchError({ message: `render-proxy failed: ${ack.error}` })));
       }
     };
 
@@ -129,7 +130,7 @@ const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
       }
       settled = true;
       cleanup();
-      resume(Effect.fail(new FetchError(`render-proxy timed out after ${timeoutMs}ms for ${url}`)));
+      resume(Effect.fail(new FetchError({ message: `render-proxy timed out after ${timeoutMs}ms for ${url}` })));
     }, timeoutMs + 1_000);
 
     window.addEventListener(RENDER_ACK_EVENT, onAck);

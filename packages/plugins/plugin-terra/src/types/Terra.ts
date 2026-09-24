@@ -7,11 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { type TerraConfigValues } from '../engine';
-import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim';
-import * as TerraObject from './TerraObject';
+import { type TerraConfigValues } from '../engine/index.ts';
+import { type Domain, type NavCell, type NavGrid, buildNavGrid, domainCandidates, toGeo } from '../sim/index.ts';
+import * as TerraObject from './TerraObject.ts';
 
 /** Deterministic parameters for a Terra world. All fields optional so a bare seed works. */
 export const TerraConfig = Schema.Struct({
@@ -50,11 +49,11 @@ export class Terra extends Type.makeObject<Terra>(DXN.make('org.dxos.type.terra'
     /** Owned objects: `SetParent` cascades each with the world. */
     objects: Ref.Ref(TerraObject.TerraObject).pipe(
       Schema.Array,
-      Annotation.SetParent.set(true),
-      FormInputAnnotation.set(false),
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--globe-hemisphere-west--regular', hue: 'green' }),
   ),
 ) {}

@@ -5,9 +5,11 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
@@ -18,7 +20,9 @@ import { Listbox } from '@dxos/react-ui-list';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+import { SpaceOperation, SpaceSchema } from '#types';
+
+import { getTemplateIcon, getTemplateIconGlyph } from '../../util/index.ts';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
@@ -32,8 +36,21 @@ export const CreateSpaceDialog = () => {
 
   const inputSurfaceLookup = useInputSurfaceLookup();
   const [error, setError] = useState<string | undefined>(undefined);
-  const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
+  const manager = usePluginManager();
+  const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
+  const templates = useMemo(
+    () =>
+      contributed
+        .filter(({ hidden }) => !hidden)
+        // `icon` seeds the form, which stores a bare name on the space; `glyph` renders the row.
+        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) })),
+    [contributed],
+  );
   const [template, setTemplate] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
+  }, [manager]);
 
   const handleCancel = useCallback(
     () => invoke(LayoutOperation.UpdateDialog, { state: false }).pipe(EffectEx.runAndForwardErrors),
@@ -102,28 +119,24 @@ export const CreateSpaceDialog = () => {
           <ScrollArea.Root orientation='vertical' padding thin>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.FieldSet />
-                <Form.Error>{error}</Form.Error>
+                <Form.Fields />
+                <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
-                  <div role='group' aria-labelledby='create-space-templates'>
-                    <h3 id='create-space-templates' className='my-1 text-sm text-subdued'>
-                      {t('create-space-dialog.templates.label')}
-                    </h3>
+                  <Form.FieldSet
+                    aria-labelledby='create-space-templates'
+                    label={t('create-space-dialog.templates.label')}
+                    description={t('create-space-dialog.templates.description')}
+                  >
                     <Listbox.Root value={template} onValueChange={setTemplate}>
-                      <Listbox.Content aria-labelledby='create-space-templates'>
-                        {templates.map(({ id, label, description, icon }) => (
+                      <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
+                        {templates.map(({ id, label, description, glyph }) => (
                           <Listbox.Item key={id} id={id}>
-                            <Listbox.ItemContent
-                              // Templates carry a bare `iconValues` name, as space properties do.
-                              icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
-                              title={label}
-                              description={description}
-                            />
+                            <Listbox.ItemContent icon={glyph} title={label} description={description} />
                           </Listbox.Item>
                         ))}
                       </Listbox.Content>
                     </Listbox.Root>
-                  </div>
+                  </Form.FieldSet>
                 )}
               </Form.Content>
             </ScrollArea.Viewport>

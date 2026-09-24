@@ -10,7 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { DelegateTask } from './definitions';
+import { ToolkitError } from '../../../errors.ts';
+import { DelegateTask } from './definitions.ts';
 
 /**
  * Delegation is the promotion moment: the unit of work becomes a durable `Task` on the
@@ -21,7 +22,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ title }) {
       if (title.length === 0) {
-        return yield* Effect.fail(new Error('Provide a non-empty task title.'));
+        return yield* Effect.fail(new ToolkitError({ message: 'Provide a non-empty task title.' }));
       }
 
       const chat = yield* Harness.getChat;

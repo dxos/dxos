@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { GithubPanel as default } from './GithubPanel';
+export { GithubPanel as default } from './GithubPanel.tsx';

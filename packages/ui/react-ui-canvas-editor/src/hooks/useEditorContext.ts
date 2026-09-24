@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { EditorContext, type EditorContextType } from './context';
+import { EditorContext, type EditorContextType } from './context.ts';
 
 // TODO(burdon): Split into more targetting groups to enable later factoring of concerns.
 export const useEditorContext = (): EditorContextType => {

@@ -7,8 +7,8 @@ import React from 'react';
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { FunctionBody } from './common';
-import { type IfElseShape, type IfShape } from './logic-def';
+import { FunctionBody } from './common/index.ts';
+import { type IfElseShape, type IfShape } from './logic-def.ts';
 
 //
 // Components

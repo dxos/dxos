@@ -7,9 +7,9 @@ import React, { type ReactNode, useCallback, useState } from 'react';
 import { log } from '@dxos/log';
 import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
 
-import { Action, TextInput } from '../components';
-import { translationKey } from '../translations';
-import { type StepProps } from './StepProps';
+import { Action, TextInput } from '../components/index.ts';
+import { translationKey } from '../translations.ts';
+import { type StepProps } from './StepProps.ts';
 
 export type ConfirmResetMode = 'join-new-identity' | 'recover' | 'reset-storage';
 

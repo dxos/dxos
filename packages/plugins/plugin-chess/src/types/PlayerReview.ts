@@ -7,9 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as ChessPositionIndex from './ChessPositionIndex';
+import * as ChessPositionIndex from './ChessPositionIndex.ts';
 
 /**
  * Personal chess opening/position review for a single player.
@@ -19,16 +18,16 @@ export class Review extends Type.makeObject<Review>(DXN.make('org.dxos.type.ches
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** DID of the reviewed player; matched against {@link org.dxos.type.game} players. */
-    playerIdentity: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    playerIdentity: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     /** Display name fallback when identity is absent (e.g. Chess.com username). */
     playerName: Schema.String.pipe(Schema.optional),
     /** Owned index: `SetParent` cascades it with the review. */
     positionIndex: Ref.Ref(ChessPositionIndex.PositionIndex).pipe(
-      Annotation.SetParent.set(true),
-      FormInputAnnotation.set(false),
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-polar--regular', hue: 'amber' }),
   ),
 ) {}

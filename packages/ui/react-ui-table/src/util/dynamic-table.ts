@@ -15,7 +15,7 @@ import {
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
-import { Table } from '../types';
+import { Table } from '../types/index.ts';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {

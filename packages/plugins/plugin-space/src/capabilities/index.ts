@@ -19,30 +19,26 @@ import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
-import { SpaceOperationConfig } from '../operations/helpers';
-import { makeCreateInvitationUrl } from './helpers';
+import { SpaceOperationConfig } from '../operations/helpers.ts';
+import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
 
-export * from './app-graph-builder';
-export { makeCreateObjectEntryForDatabaseType } from '../util';
+export * from './app-graph-builder/index.ts';
+export * from './settings-sync/index.ts';
+export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
-export const Commands = AppCapability.commands(() => import('./commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const Commands = AppCapability.commands(() => import('./commands.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['node'],
 });
 export const Dashboard = Capability.lazyModule(
   'Dashboard',
   {
     environments: [],
-    requires: [
-      Capabilities.AtomRegistry,
-      Capabilities.PluginManager,
-      ClientCapabilities.Client,
-      AppCapabilities.Layout,
-    ],
+    requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
     provides: [SpaceCapabilities.Dashboard],
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./dashboard'),
+  () => import('./dashboard.ts'),
 );
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
@@ -55,16 +51,19 @@ export const IdentityCreated = Capability.lazyModule(
     activatesOn: ClientEvents.IdentityCreated,
     environments: ['node'],
   },
-  () => import('./identity-created'),
+  () => import('./identity-created.ts'),
 );
-export { NavigationHandler } from './navigation-handler';
-export type { NavigationHandlerOptions } from './navigation-handler';
-export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
-  requires: [ClientCapabilities.Client],
-});
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export { NavigationHandler } from './navigation-handler/index.ts';
+export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
+export const NavigationTargetResolver = AppCapability.navigationResolver(
+  () => import('./navigation-target-resolver.ts'),
+  {
+    environments: [],
+    requires: [ClientCapabilities.Client],
+  },
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
@@ -84,18 +83,15 @@ export const Repair = Capability.lazyModule(
   {
     provides: [SpaceCapabilities.Repair],
     // Runtime event: repairs run once spaces are observed, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./repair'),
+  () => import('./repair.ts'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
-  provides: [SpaceCapabilities.SettingsAtom],
-});
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 // Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
 // headless host registers.
-export const SpacesReady = Capability.lazyModule(
-  'SpacesReady',
+export const SpacesAvailable = Capability.lazyModule(
+  'SpacesAvailable',
   {
     environments: [],
     requires: [
@@ -111,13 +107,16 @@ export const SpacesReady = Capability.lazyModule(
     ],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./spaces-ready'),
+  () => import('./spaces-available.ts'),
 );
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SpaceSettings = AppCapability.settings(() => import('./settings.ts'), {
+  provides: [SpaceCapabilities.SettingsAtom],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 // Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
-// the app-graph builder, `SpacesReady` — is itself browser-only.
+// the app-graph builder, `SpacesAvailable` — is itself browser-only.
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
@@ -125,16 +124,17 @@ export const SpaceState = Capability.lazyModule(
     provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
     environments: [],
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
-export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings'), {
+export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings.ts'), {
   props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
 });
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   environments: ['node'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
+    createJoinUrl: makeCreateJoinUrl(options),
   }),
 });
 export const Translations = AppCapability.translations([

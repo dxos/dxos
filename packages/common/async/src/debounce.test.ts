@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { debounce, throttle } from './debounce';
+import { debounce, throttle } from './debounce.ts';
 
 // Fake timers keep the throttle/debounce windows deterministic instead of racing a real wall-clock delay.
 beforeEach(() => {

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as AgentIdentity from './AgentIdentity';
-export * as CommentCapabilities from './CommentCapabilities';
-export * as CommentOperation from './CommentOperation';
-export * as ReviewCapabilities from './ReviewCapabilities';
-export * as ReviewEvents from './ReviewEvents';
-export * as Settings from './Settings';
+export * as AgentIdentity from './AgentIdentity.ts';
+export * as CommentCapabilities from './CommentCapabilities.ts';
+export * as CommentOperation from './CommentOperation.ts';
+export * as ReviewCapabilities from './ReviewCapabilities.ts';
+export * as ReviewEvents from './ReviewEvents.ts';
+export * as Settings from './Settings.ts';

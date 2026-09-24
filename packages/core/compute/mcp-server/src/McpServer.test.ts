@@ -15,7 +15,7 @@ import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
 
-import * as McpServer from './McpServer';
+import * as McpServer from './McpServer.ts';
 
 const SPACE = SpaceId.random();
 const SPACE_A = SpaceId.random();
@@ -95,7 +95,9 @@ const testHost = (
   host: McpServer.HostShape;
   invocations: Invocation[];
 } => {
-  const { output = { ok: true }, fail: shouldFail } = options;
+  // `in`, not a destructuring default: an explicit `undefined` output is a case under test.
+  const output = 'output' in options ? options.output : { ok: true };
+  const shouldFail = options.fail;
   // Read through `in`, since a destructuring default cannot tell an explicit `undefined` from an
   // omitted key.
   const spaceIds = 'spaceIds' in options ? options.spaceIds : [SPACE_A];
@@ -169,6 +171,23 @@ describe('McpServer', () => {
     test('a non-object output is wrapped, because structuredContent must be an object', async ({ expect }) => {
       const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output: 42 }) });
       expect(successOf(await result)).to.deep.equal({ output: 42 });
+    });
+
+    // `McpServer` refuses to send an encoded result that is not a JSON value as `structuredContent`.
+    test('an output travels as its JSON, so its encoding is a JSON value', async ({ expect }) => {
+      const output = { id: 'T-1', note: undefined, due: new Date(0) };
+      const { result } = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output }) });
+      const success = successOf(await result);
+      expect(success).to.deep.equal({ id: 'T-1', due: '1970-01-01T00:00:00.000Z' });
+      const encoded = Schema.encodeUnknownSync(McpServer.InvokeOperation.successSchema)(success);
+      expect(Schema.is(Schema.Json)(encoded)).to.be.true;
+    });
+
+    test('a void output or an undefined field still yields JSON structured content', async ({ expect }) => {
+      const run = async (output: unknown) =>
+        successOf(await runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { host: testHost({ output }) }).result);
+      expect(await run(undefined)).to.deep.equal({});
+      expect(Object.keys(await run({ id: 'T-1', note: undefined }))).to.deep.equal(['id']);
     });
 
     test('space-less references in the result are qualified with the space they resolved in', async ({ expect }) => {
@@ -274,6 +293,15 @@ describe('McpServer', () => {
       expect(failureOf(await result).message).to.include('queryOperations');
       expect(invocations).to.have.length(0);
     });
+
+    // Dropping it silently leaves the declared fields undefined, and a handler reading that as
+    // "no filter given" answers a misspelled search with everything it has, as a success.
+    test('a property the schema does not declare is rejected rather than dropped', async ({ expect }) => {
+      const { result, invocations } = runInvoke({ input: { title: 'x', titel: 'x' }, spaceId: SPACE_A });
+      expect(failureOf(await result).code).to.equal('invalid_request');
+      expect(failureOf(await result).message).to.include('titel');
+      expect(invocations).to.have.length(0);
+    });
   });
 
   describe('queryOperations', () => {
@@ -304,6 +332,18 @@ describe('McpServer', () => {
       expect(row.hints.mutation).to.equal('write');
       expect(row.hints.idempotent).to.be.true;
       expect(row).to.not.have.property('schema');
+    });
+
+    // `McpServer` refuses to send an encoded result that is not a JSON value as `structuredContent`.
+    test('an encoded row is a JSON value for an operation declaring no optional hints', async ({ expect }) => {
+      const registry = testRegistry({
+        operations: [QueryPlugins],
+        skills: [makeSkill({ key: 'org.dxos.skill.registry', operations: [QueryPlugins] })],
+      });
+      const operations = await run(registry, { keys: ['com.example.operation.registry.queryPlugins'] });
+      expect(operations).to.have.length(1);
+      const encoded = Schema.encodeUnknownSync(McpServer.QueryOperations.successSchema)({ operations });
+      expect(Schema.is(Schema.Json)(encoded)).to.be.true;
     });
 
     test('an operation no opted-in skill names is not listed', async ({ expect }) => {
@@ -509,24 +549,30 @@ describe('McpServer', () => {
     const jsonResponse = (body: unknown) =>
       new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
 
-    const initialize = { jsonrpc: '2.0', id: 1, result: { serverInfo: { name: 'x', version: '1' } } };
+    const discover = {
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        supportedVersions: ['2026-07-28'],
+        _meta: { 'io.modelcontextprotocol/serverInfo': { name: 'x', version: '1' } },
+      },
+    };
 
-    test('unwraps a single-element batch, which the MCP transport requires', async ({ expect }) => {
-      const response = await McpServer.normalizeResponse(jsonResponse([initialize]));
-      const body = await response.json();
-      expect(Array.isArray(body)).to.be.false;
-      expect(body.id).to.equal(1);
-    });
+    const listChanged = { jsonrpc: '2.0', method: 'notifications/tools/list_changed', params: {} };
 
-    test('leaves a multi-element batch alone', async ({ expect }) => {
-      const response = await McpServer.normalizeResponse(jsonResponse([initialize, initialize]));
-      expect(await response.json()).to.have.length(2);
-    });
+    const eventStream = (body: string, headers: Record<string, string> = {}) =>
+      new Response(body, { headers: { 'content-type': 'text/event-stream', ...headers } });
+
+    const frames = (...messages: unknown[]) =>
+      messages.map((message) => `data: ${JSON.stringify(message)}\n\n`).join('');
+
+    const post = (headers: Record<string, string> = {}) =>
+      new Request('https://mcp.example/mcp', { method: 'POST', headers });
 
     test('advertises the shared identity, with host fields layered on top', async ({ expect }) => {
       const icons = McpServer.icons('https://mcp.example');
-      const response = await McpServer.normalizeResponse(jsonResponse([initialize]), { serverInfo: { icons } });
-      const { serverInfo } = (await response.json()).result;
+      const response = await McpServer.normalizeResponse(jsonResponse(discover), { serverInfo: { icons } });
+      const serverInfo = (await response.json()).result._meta['io.modelcontextprotocol/serverInfo'];
       expect(serverInfo.title).to.equal(McpServer.identity.title);
       expect(serverInfo.websiteUrl).to.equal(McpServer.identity.websiteUrl);
       expect(serverInfo.icons[0].src).to.equal(`https://mcp.example${McpServer.ICON_LIGHT_PATH}`);
@@ -545,7 +591,7 @@ describe('McpServer', () => {
     });
 
     test('drops a Content-Length the passes above invalidated', async ({ expect }) => {
-      const body = JSON.stringify([initialize]);
+      const body = JSON.stringify(discover);
       const response = await McpServer.normalizeResponse(
         new Response(body, {
           headers: { 'content-type': 'application/json', 'content-length': String(body.length) },
@@ -553,6 +599,60 @@ describe('McpServer', () => {
       );
       expect(response.headers.get('content-length')).to.be.null;
       expect((await response.json()).id).to.equal(1);
+    });
+
+    test('collapses a POST event stream to its lone response, decorated', async ({ expect }) => {
+      const body = frames(listChanged, discover);
+      const response = await McpServer.normalizeResponse(
+        eventStream(body, { 'content-length': String(body.length), 'mcp-session-id': 'session' }),
+        { request: post() },
+      );
+      expect(response.status).to.equal(200);
+      expect(response.headers.get('content-type')).to.equal('application/json');
+      expect(response.headers.get('content-length')).to.be.null;
+      expect(response.headers.get('mcp-session-id')).to.equal('session');
+      const message = await response.json();
+      expect(message.id).to.equal(1);
+      expect(message.result._meta['io.modelcontextprotocol/serverInfo'].title).to.equal(McpServer.identity.title);
+    });
+
+    test('answers a stream holding only notifications with 202', async ({ expect }) => {
+      const response = await McpServer.normalizeResponse(eventStream(frames(listChanged, listChanged)), {
+        request: post(),
+      });
+      expect(response.status).to.equal(202);
+      expect(response.headers.get('content-type')).to.be.null;
+      expect(await response.text()).to.equal('');
+    });
+
+    test('passes an ambiguous or unparseable stream through unchanged', async ({ expect }) => {
+      for (const body of [
+        frames(listChanged, discover, { ...discover, id: 2 }),
+        frames({ ...discover, error: { code: -32603, message: 'boom' } }),
+        `data: {"jsonrpc":\n\n`,
+      ]) {
+        const response = await McpServer.normalizeResponse(eventStream(body), { request: post() });
+        expect(response.headers.get('content-type')).to.equal('text/event-stream');
+        expect(await response.text()).to.equal(body);
+      }
+    });
+
+    test('never reads a stream that may not end', async ({ expect }) => {
+      // Never closed, so reading it would hang the test.
+      const open = () =>
+        new Response(
+          new ReadableStream({
+            start: (controller) => controller.enqueue(new TextEncoder().encode(frames(listChanged))),
+          }),
+          { headers: { 'content-type': 'text/event-stream' } },
+        );
+      for (const options of [{ request: post({ 'mcp-method': 'subscriptions/listen' }) }, {}]) {
+        const stream = open();
+        const response = await McpServer.normalizeResponse(stream, options);
+        expect(response).to.equal(stream);
+        expect(response.bodyUsed).to.be.false;
+        await response.body?.cancel();
+      }
     });
   });
 

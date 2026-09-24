@@ -11,8 +11,8 @@ import * as TranscriptionCapabilities from '@dxos/plugin-transcription/Transcrip
 
 import { meta } from '#meta';
 
-import * as Meeting from './Meeting';
-import type * as Settings from './Settings';
+import * as Meeting from './Meeting.ts';
+import type * as Settings from './Settings.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,

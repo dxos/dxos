@@ -6,9 +6,9 @@ import { type KeyDownEvent, type KeyUpEvent, SingletonAction, type WillAppearEve
 
 import type * as Protocol from '@dxos/plugin-stream-deck/Protocol';
 
-import { toImageUri } from '../image';
-import { offlineKey } from '../offline';
-import { assignSlots, slotOf } from '../server/slots';
+import { toImageUri } from '../image.ts';
+import { offlineKey } from '../offline.ts';
+import { assignSlots, slotOf } from '../server/slots.ts';
 
 export const FAVORITE_ACTION_UUID = 'org.dxos.composer.favorite';
 

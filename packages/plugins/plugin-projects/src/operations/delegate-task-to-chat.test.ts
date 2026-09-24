@@ -5,14 +5,17 @@
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -81,6 +84,38 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(task.reviewers).toHaveLength(1);
   });
 
+  test('binds the skills the project instructions name, alongside the delegation set', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Studio' }, { spaceId: space.id }),
+    );
+    const instructions = await project.instructions?.tryLoad();
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(instructions && taskSet, 'Expected the scaffolded instructions and task set.');
+    // A template's skill: the project's tools for the work, which the delegation set cannot know.
+    const studioSkill = Skill.registryURI('org.dxos.skill.studio');
+    Obj.update(instructions, (instructions) => {
+      instructions.skills.push(Ref.fromURI(studioSkill));
+    });
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Make a storyboard', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    const feed = await chat.feed.load();
+    const bindings = await space.db.query(Query.select(Filter.type(AiContext.Binding)).from(feed)).run();
+    const bound = bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+    expect(bound).toContain(studioSkill);
+    // The delegation set still comes along, and the shared project skill is bound once.
+    expect(bound).toContain(Skill.registryURI('org.dxos.skill.planning'));
+    expect(bound.filter((uri) => uri === Skill.registryURI('org.dxos.skill.project'))).toHaveLength(1);
+  });
+
   test('puts a whole checked set into one chat, in the order given', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
@@ -145,21 +180,58 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Nothing was started: the refusal happens before any task is marked or any chat exists.
     expect([voyage.status, harbour.status]).toEqual(['todo', 'todo']);
   });
+
+  test('skips a task the agent already holds, and refuses a list of nothing else', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const held = space.db.add(
+      Task.make({ title: 'Roast the beans', status: 'started', assignee: { role: 'assistant' } }),
+    );
+    const fresh = space.db.add(Task.make({ title: 'Grind the beans', status: 'todo' }));
+    await space.db.flush();
+
+    // A second invocation over a row already underway must not fork it into another session.
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(held), Ref.make(fresh)] },
+        { spaceId: space.id },
+      ),
+    );
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([fresh.id]);
+    expect(fresh.status).toBe('started');
+
+    // Now both are held, so the same call has nothing to hand over.
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(held), Ref.make(fresh)] },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+  });
 });
 
 const setup = async () => {
   const harness = await createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
+    // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
+    // requires — without it that spec is pruned and every delegation fails to resolve `AgentService`.
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),
       TasksPlugin.make(),
       AssistantPlugin.make(),
+      RoutinePlugin.make(),
       ProjectsPlugin(),
     ],
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return harness;
 };

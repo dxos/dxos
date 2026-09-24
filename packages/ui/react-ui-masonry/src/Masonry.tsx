@@ -22,8 +22,8 @@ import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/r
 import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
-import { prefersReducedMotion, useFlip } from './useFlip';
-import { useMasonryLayout } from './useMasonryLayout';
+import { prefersReducedMotion, useFlip } from './useFlip.ts';
+import { useMasonryLayout } from './useMasonryLayout.ts';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
 const REVEAL_SETTLE_MS = 80;

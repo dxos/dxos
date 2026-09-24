@@ -17,7 +17,7 @@ import {
   showObservabilityBanner,
   storeObservabilityDisabled,
   storeObservabilityGroup,
-} from './node';
+} from './node.ts';
 
 let configDir: string;
 

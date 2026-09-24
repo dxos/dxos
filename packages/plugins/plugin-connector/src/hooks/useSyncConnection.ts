@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
 
-import * as Binding from '../Binding';
+import * as Binding from '../Binding.ts';
 
 export type UseSyncConnectionResult = {
   /** True when the connection's connector exposes a `sync` operation. Drives sync button visibility. */

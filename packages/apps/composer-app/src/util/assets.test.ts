@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { isHashedAssetPath, isMissingAsset } from './assets';
+import { isHashedAssetPath, isMissingAsset } from './assets.ts';
 
 const missing = (overrides: Partial<Parameters<typeof isMissingAsset>[0]> = {}) =>
   isMissingAsset({

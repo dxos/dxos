@@ -21,6 +21,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",

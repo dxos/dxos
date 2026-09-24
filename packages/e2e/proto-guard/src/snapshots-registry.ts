@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { getBaseDataDir } from './util';
+import { getBaseDataDir } from './util.ts';
 
 const REGISTRY_FILE = join(getBaseDataDir(), 'registry.json');
 

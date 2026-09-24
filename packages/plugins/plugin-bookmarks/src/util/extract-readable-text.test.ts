@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { extractReadableText } from './extract-readable-text';
+import { extractReadableText } from './extract-readable-text.ts';
 
 describe('extractReadableText', () => {
   test('strips script, style, and noscript blocks', ({ expect }) => {

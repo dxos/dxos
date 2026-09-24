@@ -8,9 +8,9 @@ import * as Struct from 'effect/Struct';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../Obj';
-import * as Ref from '../Ref';
-import * as Type from '../Type';
+import * as Obj from '../Obj.ts';
+import * as Ref from '../Ref.ts';
+import * as Type from '../Type.ts';
 
 export namespace TestSchema {
   //

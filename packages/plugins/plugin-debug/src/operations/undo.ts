@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DebugOperation } from '#types';
 
-import { NothingToUndoError } from '../errors';
+import { NothingToUndoError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof DebugOperation.Undo> = DebugOperation.Undo.pipe(
   Operation.withHandler(

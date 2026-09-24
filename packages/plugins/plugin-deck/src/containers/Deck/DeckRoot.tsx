@@ -10,8 +10,8 @@ import { useMediaQuery } from '@dxos/react-ui';
 
 import { Settings } from '#types';
 
-import { type DeckStateHook } from '../../hooks/useDeckState';
-import { resolveSidebarState } from '../../util';
+import { type DeckStateHook } from '../../hooks/useDeckState.ts';
+import { resolveSidebarState } from '../../util/index.ts';
 
 const DECK_NAME = 'Deck';
 const DECK_ROOT_NAME = 'DeckRoot';

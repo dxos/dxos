@@ -4,17 +4,18 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Database, DXN, type Error, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import { type EntityId } from '@dxos/echo/Key';
 import { BaseError } from '@dxos/errors';
 
-import * as Milestone from './Milestone';
-import * as Task from './Task';
+import * as Milestone from './Milestone.ts';
+import * as Task from './Task.ts';
 
 /**
  * Lightweight collection of tasks, native or mirrored from a remote service (e.g. GitHub repos,
@@ -30,24 +31,22 @@ import * as Task from './Task';
  */
 export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.taskSet', '0.3.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
+    name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('commerce.productName'), Schema.optional),
     description: Schema.String.pipe(Schema.optional),
     image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
 
     /** Every task in the set, flat and ordered — sub-tasks included, so enumeration is one read. */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(
-      Annotation.FormInputAnnotation.set(false),
-      Annotation.SetParent.set(true),
-    ),
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false), Annotation.SetParent.set()),
 
     /** The set's milestones, in sequence. */
     milestones: Schema.Array(Ref.Ref(Milestone.Milestone)).pipe(
       Annotation.FormInputAnnotation.set(false),
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
     ),
   }).pipe(
     Schema.annotate({ title: 'Task Set' }),
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'indigo' }),
   ),
 ) {}
@@ -152,16 +151,42 @@ export const addMilestoneToSet = (taskSet: TaskSet, milestone: Milestone.Milesto
 };
 
 /**
+ * How long one cold ref may take to resolve. An unresolvable ref does not fail — the resolver runs
+ * a query that simply finds nothing and waits out its own 30s timeout — so without a bound of our
+ * own a single dangling entry stalls the whole read past any caller's deadline. Past this, the
+ * entry is treated as gone, which is what an unresolvable ref means to every reader here.
+ */
+const REF_LOAD_TIMEOUT = Duration.seconds(5);
+
+/**
  * Every ref loaded, dropping entries whose object is gone. The arrays may hold cold refs, and the
  * sync `resolveTasks` silently drops those — an incomplete member list here becomes an incomplete
  * subtree sweep or a false membership rejection.
+ *
+ * Materialized refs are taken from the working set and never hit the resolver, and the cold
+ * remainder resolves concurrently: each `Database.load` is a separate indexed query, so resolving a
+ * set of any size one ref at a time multiplies a single round trip by the member count.
  */
 const loadRefs = <T extends Obj.Unknown>(
   refs: ReadonlyArray<Ref.Ref<T>>,
 ): Effect.Effect<T[], never, Database.Service> =>
-  Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.orElseSucceed(() => undefined))).pipe(
-    Effect.map((objects) => Task.dedupeById(objects)),
-  );
+  Effect.forEach(
+    refs,
+    (ref): Effect.Effect<T | undefined, never, Database.Service> => {
+      const target = Database.peek(ref);
+      return target
+        ? Effect.succeed(target)
+        : Database.load(ref).pipe(
+            Effect.timeoutOption(REF_LOAD_TIMEOUT),
+            Effect.map(Option.getOrUndefined),
+            Effect.orElseSucceed(() => undefined),
+          );
+    },
+    { concurrency: REF_LOAD_CONCURRENCY },
+  ).pipe(Effect.map((objects) => Task.dedupeById(objects)));
+
+/** Bounded rather than unbounded: a large set must not open one query per member at once. */
+const REF_LOAD_CONCURRENCY = 16;
 
 /** Loads the set's tasks in array order, de-duplicated by id. */
 export const loadTasks = (taskSet: TaskSet): Effect.Effect<Task.Task[], never, Database.Service> =>

@@ -38,7 +38,7 @@ import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
-import { type ObjectGenerator } from './ObjectGenerator';
+import { type ObjectGenerator } from './ObjectGenerator.tsx';
 
 export enum PresetName {
   DXOS_TEAM = 'dxos-team',

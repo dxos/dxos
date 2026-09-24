@@ -14,13 +14,13 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 // Both node and workerd invoke the Score Read/Write operations behind the sequencer skill's tool
 // calls, so the handler has to be reachable headlessly, not just from the browser surface.
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });
 export const Translations = AppCapability.translations(translations);

@@ -4,8 +4,8 @@
 
 import { safariCheck } from '@dxos/util';
 
-import { LogLevel } from '../config';
-import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
+import { LogLevel } from '../config.ts';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context.ts';
 
 type Config = {
   useTestProcessor: boolean;

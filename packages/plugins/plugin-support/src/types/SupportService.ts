@@ -12,12 +12,12 @@ import * as Schema from 'effect/Schema';
 import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
 import type * as Observability from '@dxos/observability/Observability';
 
-import { SupportForbiddenError, SupportSubmitError } from '../errors';
-import type * as SupportOperation from './SupportOperation';
+import { SupportForbiddenError, SupportSubmitError } from '../errors.ts';
+import type * as SupportOperation from './SupportOperation.ts';
 
 export const SupportReportResult = Schema.Struct({
-  ticketId: Schema.String,
-  threadUrl: Schema.optional(Schema.String),
+  ticketId: Schema.optional(Schema.String),
+  threadUrl: Schema.String,
 });
 
 export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
@@ -47,6 +47,7 @@ const reportBody = (
   severity: report.severity,
   area: report.area,
   version: report.version,
+  labels: report.labels,
   ...extra,
   posthog: observability.support.sessionContext(),
 });
@@ -91,7 +92,7 @@ const uploadLogs = (
  * already filed by this point, and the dump can be large.
  */
 const flushLogs = (observability: Observability.Observability, attributes: Record<string, string>) =>
-  Effect.tryPromise({ try: () => observability.support.flushLogs(attributes as never), catch: (cause) => cause }).pipe(
+  Effect.tryPromise(() => observability.support.flushLogs(attributes as never)).pipe(
     Effect.catchCause((cause) => Effect.logWarning('support logs flush failed', { cause })),
     Effect.forkDetach,
   );
@@ -127,7 +128,7 @@ export const submitSupportReport = ({
     }
 
     const result = yield* decodeBody(SupportReportResult, response);
-    if (includeLogs) {
+    if (includeLogs && result.ticketId) {
       yield* flushLogs(observability, { ticketId: result.ticketId });
     }
     return result;

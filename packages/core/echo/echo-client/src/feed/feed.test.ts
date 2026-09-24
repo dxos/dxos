@@ -9,15 +9,17 @@ import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { EID, PublicKey } from '@dxos/keys';
-import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
-import { FeedService } from '@dxos/protocols/rpc';
+import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
+import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoClientError } from '../errors.ts';
+import { EchoTestBuilder, type EchoTestPeer } from '../testing/index.ts';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;
@@ -316,7 +318,7 @@ describe('Feed', () => {
         'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
           callCount++;
           return callCount === 1
-            ? Effect.fail(new Error('simulated insertIntoFeed failure'))
+            ? Effect.fail(new EchoClientError({ message: 'simulated insertIntoFeed failure' }))
             : realHandlers['FeedService.insertIntoFeed'](...args);
         },
       };
@@ -342,6 +344,165 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    test('append stops retrying once the rpc endpoint is closed', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let callCount = 0;
+      const closedHandlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': () => {
+          callCount++;
+          return Effect.fail(new RpcClosedError());
+        },
+      };
+      db._setFeedService(await makeFeedClient(closedHandlers));
+
+      const feed = db.add(Feed.make({ name: 'closed' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+
+      await sleep(2_500);
+      expect(callCount).toBe(1);
+
+      // The handle can never send again, so a later append must say so rather than resolve over a
+      // write that was dropped.
+      await expect(db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })])).rejects.toThrow(
+        RpcClosedError,
+      );
+      expect(callCount).toBe(1);
+    });
+
+    test('append rejects once the rpc endpoint closes, and dispose counts only the writes it lost', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let insertCalls = 0;
+      const closingHandlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': (...args) =>
+          insertCalls++ === 0
+            ? peer.host.feedService['FeedService.insertIntoFeed'](...args)
+            : Effect.fail(new RpcClosedError()),
+      };
+      db._setFeedService(await makeFeedClient(closingHandlers));
+
+      const feed = db.add(Feed.make({ name: 'closing' }));
+      // 16 objects span two 15-object append chunks: the first commits, the second meets the closed endpoint.
+      const people = Array.from({ length: 16 }, (_, i) => Obj.make(TestSchema.Person, { name: `person-${i}` }));
+      await expect(db.appendToFeed(feed, people)).rejects.toThrow(RpcClosedError);
+      // Refused up front, since the handle can never send again.
+      await expect(db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })])).rejects.toThrow(
+        RpcClosedError,
+      );
+
+      // The lost chunk's one object and the refused append; the committed chunk is not counted.
+      await expect(db.evictFeedHandle(feed)).rejects.toThrow('disposed with 2 unsent writes');
+    });
+
+    test('flush throws when writes made before the feed service disconnects cannot be sent', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let connected = true;
+      const handlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': (...args) =>
+          connected ? peer.host.feedService['FeedService.insertIntoFeed'](...args) : Effect.fail(new RpcClosedError()),
+      };
+      db._setFeedService(await makeFeedClient(handlers));
+      const feed = db.add(Feed.make({ name: 'disconnecting' }));
+      await db.flush();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      connected = false;
+      await expect(db.flush()).rejects.toThrow(RpcClosedError);
+    });
+
+    test('flush throws while an append keeps failing', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      db._setFeedService(await makeFeedClient(refusingHandlers(peer.host.feedService, 'alice')));
+
+      const feed = db.add(Feed.make({ name: 'refusing' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'alice' }), { to: feed });
+      await expect(db.flush()).rejects.toThrow('alice refused');
+    });
+
+    test('a failed append does not retry an object deleted while it was in flight', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'deleted' }));
+      await db.flush();
+
+      let inserts = 0;
+      const sent = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.deleteFromFeed': (...args) => realHandlers['FeedService.deleteFromFeed'](...args),
+          'FeedService.insertIntoFeed': (...args) => {
+            inserts++;
+            if (inserts > 1) {
+              return realHandlers['FeedService.insertIntoFeed'](...args);
+            }
+            sent.resolve();
+            return Effect.promise(() => release.promise).pipe(
+              Effect.andThen(Effect.fail(new EchoClientError({ message: 'john refused' }))),
+            );
+          },
+        }),
+      );
+
+      const john = db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      await sent.promise;
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri);
+      await db._tryGetFeedHandle(feedUri)?.delete([john.id]);
+      release.resolve();
+
+      await db.flush();
+      expect(inserts).toEqual(1);
+    });
+
+    test('a successful append leaves the error of a failed append that awaits its retry', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      db._setFeedService(await makeFeedClient(refusingHandlers(peer.host.feedService, 'alice')));
+
+      const feed = db.add(Feed.make({ name: 'refusing' }));
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'bob' })]);
+
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri);
+      expect(db._tryGetFeedHandle(feedUri)?.error?.message).toEqual('alice refused');
+    });
+
+    test('the flush after a feed service swap throws for writes the retired handle could not send', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'swapped' }));
+      await db.flush();
+
+      db._updateServices(
+        await makeServiceClients(peer, {
+          ...peer.host.feedService,
+          'FeedService.insertIntoFeed': () => Effect.fail(new RpcClosedError()),
+        }),
+      );
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+      db._updateServices(await makeServiceClients(peer, peer.host.feedService));
+
+      await expect(db.flush()).rejects.toThrow('disposed with 1 unsent writes');
+      await db.flush();
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {
@@ -591,4 +752,26 @@ const makeFeedClient = async (handlers: FeedService.Handlers): Promise<FeedServi
   return EffectEx.runPromise(
     makeInProcessClient(FeedService.Rpcs, handlers).pipe(Effect.provideService(Scope.Scope, scope)),
   );
+};
+
+/** Fails every insert carrying an object with `name`, passing the rest to `handlers`. */
+const refusingHandlers = (handlers: FeedService.Handlers, name: string): FeedService.Handlers => ({
+  ...handlers,
+  'FeedService.insertIntoFeed': (...args) =>
+    args[0].objects?.some((object) => object.includes(name))
+      ? Effect.fail(new EchoClientError({ message: `${name} refused` }))
+      : handlers['FeedService.insertIntoFeed'](...args),
+});
+
+const makeServiceClients = async (peer: EchoTestPeer, feedHandlers: FeedService.Handlers) => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const [dataService, queryService, feedService] = await EffectEx.runPromise(
+    Effect.all([
+      makeInProcessClient(DataService.Rpcs, peer.host.dataService),
+      makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      makeInProcessClient(FeedService.Rpcs, feedHandlers),
+    ]).pipe(Effect.provideService(Scope.Scope, scope)),
+  );
+  return { dataService, queryService, feedService };
 };

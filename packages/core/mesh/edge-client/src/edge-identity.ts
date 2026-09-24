@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export interface EdgeIdentity {
   peerKey: string;

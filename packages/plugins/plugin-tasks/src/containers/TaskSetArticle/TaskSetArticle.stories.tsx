@@ -14,6 +14,11 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { PreviewEvents } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -24,8 +29,8 @@ import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 import { translations } from '#translations';
 import { TasksCapabilities } from '#types';
 
-import * as TasksPlugin from '../../TasksPlugin';
-import { TaskSetArticle } from './TaskSetArticle';
+import * as TasksPlugin from '../../TasksPlugin.ts';
+import { TaskSetArticle } from './TaskSetArticle.tsx';
 
 /**
  * Stands in for plugin-projects' `delegate-to-chat` contribution — plugin-tasks cannot depend on it
@@ -69,6 +74,7 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Finalize roast curve',
+      description: 'Curve tracked in [#13007](https://github.com/dxos/dxos/pull/13007).',
       status: 'started',
       priority: 'high',
       assignee: { contact: Ref.make(kai) },
@@ -89,6 +95,7 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Schedule cuppings',
+      description: 'Waits on https://github.com/acme/private/pull/7.',
       status: 'todo',
     },
     {
@@ -154,7 +161,15 @@ const meta = {
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
         StoryTaskActionPlugin(),
+        // Contributes the editor extensions the description field takes (`#123` decoration and
+        // link chips) and the resolver behind a chip's hover card; PreviewPlugin owns the popover
+        // and the storybook layout renders it. Both activate on start events fired here at setup;
+        // the fixture source answers the resolver without the network.
+        GitHubPlugin.make(),
+        PreviewPlugin.make(),
+        FixtureLinkSourcePlugin(),
       ],
+      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
   ],
   parameters: {
@@ -169,6 +184,60 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * A description renders with the extensions other plugins contribute: the row of the task whose
+ * description links a pull request shows it as an anchor chip, through the match plugin-github's
+ * resolver contributes. Hovering the chip resolves it through that resolver, and the popover shows
+ * the pull request's card.
+ */
+export const DescriptionLinks: Story = {
+  play: async ({ canvasElement }) => {
+    // One chip, in the row itself — a React markdown renderer, which sets `eid` as a property. The
+    // foot pane is create-only now that the detail is its own surface, so a selected task no longer
+    // renders a second copy of the description in CodeMirror.
+    const url = 'https://github.com/dxos/dxos/pull/13007';
+    const chips = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).filter(
+        (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
+      );
+    await waitFor(() => expect(chips()).toHaveLength(1), { timeout: 10_000 });
+
+    await userEvent.hover(chips()[0]);
+    await waitFor(() => expect(document.querySelector('[data-id="pullRequestCard"]')).toBeTruthy(), {
+      timeout: 10_000,
+    });
+    await expect(
+      within(document.body).findByText('Open on GitHub', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * A link the resolver matches but cannot answer — a private repository the space holds no token for —
+ * still opens its card on hover, titled with the link's short name and saying there is no preview,
+ * rather than leaving a chip that does nothing.
+ */
+export const DescriptionLinkUnavailable: Story = {
+  play: async ({ canvasElement }) => {
+    const url = 'https://github.com/acme/private/pull/7';
+    const chip = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).find(
+        (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
+      );
+    await waitFor(() => expect(chip()).toBeTruthy(), { timeout: 10_000 });
+
+    const anchor = chip();
+    if (!anchor) {
+      throw new Error('The unreachable link did not render as a chip.');
+    }
+    await userEvent.hover(anchor);
+    const card = () => document.querySelector<HTMLElement>('.dx-card-popover');
+    await waitFor(() => expect(card()).toBeTruthy(), { timeout: 10_000 });
+    await expect(card()).toHaveTextContent('#7');
+    await expect(card()).toHaveTextContent('No preview available.');
+  },
+};
 
 /**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action

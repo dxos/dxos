@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './PipelineStatus';
+export * from './PipelineStatus.tsx';

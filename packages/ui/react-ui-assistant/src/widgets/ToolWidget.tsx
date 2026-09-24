@@ -4,18 +4,17 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Accordion, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
-import { Accordion } from '@dxos/react-ui-list';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
-import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
+import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { translationKey } from '../translations';
+import { translationKey } from '../translations.ts';
 
-export type ToolWidgetProps = XmlWidgetProps;
+export type ToolWidgetProps = WidgetProps;
 
 /**
  * A run of tool blocks as one collapsible panel with a row per call. The `<toolkit>` tag carries
@@ -80,7 +79,7 @@ const STATUS_ICON = 'ph--info--regular';
 const REASONING_ICON = 'ph--brain--regular';
 
 /** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
-const PANEL_FRAME = 'border border-subdued-separator rounded-md min-w-0';
+const PANEL_FRAME = 'border border-separator rounded-md min-w-0';
 
 /**
  * The operation's human-readable name where the call is an operation invocation; the raw tool name
@@ -270,8 +269,10 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
           <Icon icon={icon} size={4} classNames='shrink-0' />
-          <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
-          {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
+          <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
+          {failed > 0 && (
+            <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+          )}
         </span>
       </TogglePanel.Header>
       {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
@@ -304,43 +305,35 @@ type ToolCallListProps = {
 const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
   const { t } = useTranslation(translationKey);
   const label = (entry: ToolEntry) => entryLabel(entry, t);
+
   return (
-    <Accordion.Root<ToolEntry>
-      items={entries}
-      // No `overflow-hidden`: it clips the top and bottom edges off the inset focus ring of the
-      // first and last triggers, whose bounds coincide with the frame's own.
-      classNames={mx(PANEL_FRAME, 'divide-y divide-subdued-separator')}
-      onValueChange={(value) => onOpen?.(value.length > 0)}
-    >
+    <Accordion.Root<ToolEntry> rounded items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
       {({ items }) =>
-        items.map((entry) =>
+        items.map((entry) => {
           // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
-          // no payload is a plain row rather than an accordion item.
-          hasDetail(entry) ? (
-            <Accordion.Item key={entry.id} item={entry}>
+          // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
+          const detail = hasDetail(entry);
+          return (
+            <Accordion.Item key={entry.id} item={entry} disabled={!detail}>
               <Accordion.ItemHeader
-                hover
+                hover={detail}
                 icon={entry.icon}
                 data-testid={`assistant.tool-${entry.kind}`}
-                classNames={mx('text-sm', entry.error !== undefined && 'text-error')}
+                classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
               >
-                <span className='truncate'>{label(entry)}</span>
+                {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
+                <span className='flex items-center h-(--dx-control-sm) min-w-0'>
+                  <span className='truncate'>{label(entry)}</span>
+                </span>
               </Accordion.ItemHeader>
-              <Accordion.ItemBody>
-                <ToolCallDetail entry={entry} />
-              </Accordion.ItemBody>
+              {detail && (
+                <Accordion.ItemBody classNames='px-2'>
+                  <ToolCallDetail entry={entry} />
+                </Accordion.ItemBody>
+              )}
             </Accordion.Item>
-          ) : (
-            <div
-              key={entry.id}
-              className='flex items-center gap-2 px-2 text-sm min-h-(--dx-control)'
-              data-testid={`assistant.tool-${entry.kind}`}
-            >
-              <Icon icon={entry.icon} size={4} classNames='shrink-0' />
-              <span className={mx('truncate', entry.error !== undefined && 'text-error')}>{label(entry)}</span>
-            </div>
-          ),
-        )
+          );
+        })
       }
     </Accordion.Root>
   );
@@ -363,6 +356,9 @@ const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: 
   );
 };
 
+/** Longer than this, JSON rendering truncates a string, so a text field is shown as text instead. */
+const MAX_JSON_STRING_LENGTH = 128;
+
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
     {/* No horizontal padding of its own: the containing body already insets by `trim-sm`, and a
@@ -380,14 +376,46 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
         onCopy={() => JSON.stringify(data)}
       />
     </div>
-    <JsonHighlighter
-      data={data}
-      // Scrolls on the inline axis only. The payload is the scroll container for a long line — it
-      // must not scroll the whole widget and carry the summary row out of view — but the block axis
-      // has to stay unscrollable: `JsonHighlighter` defaults to `overflow-auto`, so while the
-      // disclosure's height ramps the squeezed payload drew its own vertical scrollbar.
-      classNames='text-xs bg-transparent overflow-x-auto overflow-y-hidden'
-      replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
-    />
+    {multilineFields(data)?.map(([key, value], _, fields) => (
+      <div key={key} className='flex flex-col'>
+        {fields.length > 1 && <span className='text-xs text-description'>{key}</span>}
+        <SyntaxHighlighter
+          language={key === 'code' ? 'js' : 'text'}
+          scroll='horizontal'
+          classNames='text-xs bg-transparent'
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    )) ?? (
+      <JsonHighlighter
+        data={data}
+        // Inline axis only: a long line scrolls here rather than carrying the summary row out of view,
+        // while the block axis stays put so the disclosure's height ramp draws no vertical scrollbar.
+        scroll='horizontal'
+        classNames='text-xs bg-transparent'
+        replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: MAX_JSON_STRING_LENGTH }}
+      />
+    )}
   </div>
 );
+
+/**
+ * The entries of a record whose fields are all strings, when one spans lines or runs long — a
+ * code-mode `eval`'s `code` and `output`. JSON would escape every newline onto one line and cut the
+ * string short, so these render as the text they are.
+ */
+const multilineFields = (data: unknown): [string, string][] | undefined => {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return undefined;
+  }
+  const entries = Object.entries(data);
+  const strings = entries.flatMap(([key, value]): [string, string][] =>
+    typeof value === 'string' ? [[key, value]] : [],
+  );
+  return strings.length > 0 &&
+    strings.length === entries.length &&
+    strings.some(([, value]) => value.includes('\n') || value.length > MAX_JSON_STRING_LENGTH)
+    ? strings
+    : undefined;
+};

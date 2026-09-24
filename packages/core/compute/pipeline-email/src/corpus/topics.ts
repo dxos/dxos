@@ -4,8 +4,8 @@
 
 import * as Project from '@dxos/compute/Project';
 
-import { type Thread } from '../types';
-import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
+import { type Thread } from '../types/index.ts';
+import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts.ts';
 
 // TODO(burdon): Move to LLM.
 // Subject tokens that carry no topical signal; excluded from signatures and keywords.

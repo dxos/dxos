@@ -55,8 +55,8 @@ export const handler = Effect.fn(function* ({ file, tags }: ImportArgs) {
 export const importSpace = Command.make(
   'import',
   {
-    file: Args.file('file').pipe(Args.withDescription('Archive to import, in either binary or json format.')),
-    tags: Options.string('tag').pipe(
+    file: Args.File('file').pipe(Args.withDescription('Archive to import, in either binary or json format.')),
+    tags: Options.String('tag').pipe(
       Options.withDescription('Immutable tag to set on the new space. Repeat to set several.'),
       Options.atLeast(0),
     ),

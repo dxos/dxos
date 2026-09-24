@@ -11,20 +11,21 @@ import { type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { type MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
+  type Space_PipelineState,
   type Space as SpaceData,
   type SpaceMember,
-  type SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
+import { type MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, type Epoch, type SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 
-import { type CancellableInvitation } from './invitations';
-import { type SpaceProperties } from './types';
+import { type CancellableInvitation } from './invitations/index.ts';
+import { type SpaceProperties } from './types/index.ts';
 
 export type CreateEpochOptions = {
   migration?: SpacesService.Migration;
@@ -122,7 +123,7 @@ export interface Space extends Messenger {
   /**
    * Current state of space pipeline.
    */
-  get pipeline(): MulticastObservable<SpaceData.PipelineState>;
+  get pipeline(): MulticastObservable<Space_PipelineState>;
 
   get invitations(): MulticastObservable<CancellableInvitation[]>;
 
@@ -165,7 +166,8 @@ export interface Space extends Messenger {
   // TODO(burdon): Create invitation?
   // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
-  admitContact(contact: Contact): Promise<void>;
+  /** Admits a known identity directly, without an invitation; the guest completes with `joinBySpaceKey`. */
+  admitContact(contact: Contact, role?: SpaceMember_Role): Promise<void>;
   updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 }
 

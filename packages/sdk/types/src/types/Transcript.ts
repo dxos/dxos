@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -51,7 +50,10 @@ export class Transcript extends Type.makeObject<Transcript>(DXN.make('org.dxos.t
      * consumers resolve it to a `PipelineConfig`.
      */
     pipeline: Schema.optional(Ref.Ref(Obj.Unknown)),
-  }).pipe(HiddenAnnotation.set(true), Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' })),
+  }).pipe(
+    Annotation.HiddenAnnotation.set(true),
+    Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' }),
+  ),
 ) {}
 
 /**

@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createEphemeralEdgeIdentity } from './auth';
-import { EdgeHttpClient } from './edge-http-client';
-import { type EdgeIdentity } from './edge-identity';
+import { createEphemeralEdgeIdentity } from './auth.ts';
+import { EdgeHttpClient } from './edge-http-client.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 // TODO(burdon): Factor out config.
 const DEV_SERVER = 'https://dev.dxos.network';
@@ -26,7 +27,7 @@ describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   });
 });
 
-describe('EdgeHttpClient.anthropicAiRequest', () => {
+describe('EdgeHttpClient.aiRequest', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -43,7 +44,8 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
-    const response = await client.anthropicAiRequest(
+    const response = await client.aiRequest(
+      'anthropic',
       new Request('http://edge/v1/messages?beta=true', {
         method: 'POST',
         body: JSON.stringify({ model: 'claude' }),
@@ -68,7 +70,7 @@ describe('EdgeHttpClient auth refresh', () => {
   const identity = {
     peerKey: 'peer-key',
     identityDid: 'did:halo:test',
-    presentCredentials: async (): Promise<Presentation> => ({}),
+    presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
   };
 
   const makeFetchMock = (authData: Record<string, unknown>) =>
@@ -323,7 +325,7 @@ describe('EdgeHttpClient blobs', () => {
     client.setIdentity({
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async (): Promise<Presentation> => ({}),
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
     });
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
@@ -343,7 +345,7 @@ describe('EdgeHttpClient blobs', () => {
     const identity: EdgeIdentity = {
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async (): Promise<Presentation> => ({}),
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
     };
 
     const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
@@ -383,7 +385,7 @@ describe('EdgeHttpClient blobs', () => {
       const identity: EdgeIdentity = {
         peerKey: 'peer-key',
         identityDid: 'did:halo:test',
-        presentCredentials: async (): Promise<Presentation> => ({}),
+        presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
       };
 
       const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -513,3 +515,62 @@ describe('EdgeHttpClient api key', () => {
 /** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
 const requestUrl = (input: RequestInfo | URL): string =>
   input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;
+
+describe('EdgeHttpClient inbox', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const json = (data: unknown) =>
+    new Response(JSON.stringify({ success: true, data }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  const notice = { id: 'n1', senderDid: 'did:halo:sender', sentAt: 1, expiresAt: 2, payload: 'AAAA' };
+
+  const stubFetch = () => {
+    const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
+      const url = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+      switch (`${init?.method} ${url.pathname}`) {
+        case 'POST /inbox/did%3Ahalo%3Arecipient':
+          return json({ id: 'n1' });
+        case 'GET /inbox':
+          return json({ notices: [notice] });
+        case 'POST /inbox/ack':
+          return new Response(null, { status: 204 });
+        default:
+          return new Response(null, { status: 200 });
+      }
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  };
+
+  const callTo = (fetchMock: ReturnType<typeof stubFetch>, pathname: string) =>
+    fetchMock.mock.calls.find((call) => new URL(String(call[0])).pathname === pathname);
+
+  test('sends, lists and acks against the inbox endpoints', async ({ expect }) => {
+    const fetchMock = stubFetch();
+    const client = new EdgeHttpClient('https://edge.example.com');
+
+    expect(await client.sendInboxMessage(Context.default(), 'did:halo:recipient', 'AAAA')).toEqual({ id: 'n1' });
+    expect(JSON.parse(String(callTo(fetchMock, '/inbox/did%3Ahalo%3Arecipient')?.[1]?.body))).toEqual({
+      payload: 'AAAA',
+    });
+
+    expect(await client.listInbox(Context.default())).toEqual({ notices: [notice] });
+
+    await client.ackInbox(Context.default(), ['n1']);
+    expect(JSON.parse(String(callTo(fetchMock, '/inbox/ack')?.[1]?.body))).toEqual({ ids: ['n1'] });
+  });
+
+  test('rejects a malformed list response', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => json({ notices: [{ id: 1 }] })),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(client.listInbox(Context.default())).rejects.toThrow();
+  });
+});

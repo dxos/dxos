@@ -6,7 +6,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 
-import { TEST_TAGS } from '../../../vitest.tags';
+import { TEST_TAGS } from '../../../vitest.tags.ts';
 
 export default defineConfig({
   plugins: [solidPlugin()],

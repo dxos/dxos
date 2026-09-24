@@ -74,11 +74,6 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
-    "./Video": {
-      "source": "./src/types/Video.ts",
-      "types": "./dist/types/src/types/Video.d.ts",
-      "import": "./dist/lib/Video.mjs"
-    },
     "./VideoEvents": {
       "source": "./src/types/VideoEvents.ts",
       "types": "./dist/types/src/types/VideoEvents.d.ts",
@@ -98,9 +93,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Video": [
-        "dist/types/src/types/Video.d.ts"
-      ],
       "VideoEvents": [
         "dist/types/src/types/VideoEvents.d.ts"
       ],
@@ -128,6 +120,7 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -136,6 +129,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

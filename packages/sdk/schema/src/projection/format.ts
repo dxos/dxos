@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
-import { Format } from '@dxos/echo';
+import { Format, JsonSchema } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
 
 /**
@@ -101,6 +100,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
   [Format.TypeFormat.Formula]: extend(Format.TypeFormat.Formula, TypeEnum.String),
   [Format.TypeFormat.Hostname]: extend(Format.TypeFormat.Hostname, TypeEnum.String),
   [Format.TypeFormat.JSON]: extend(Format.TypeFormat.JSON, TypeEnum.String),
+  [Format.TypeFormat.Key]: extend(Format.TypeFormat.Key, TypeEnum.String),
   [Format.TypeFormat.Markdown]: extend(Format.TypeFormat.Markdown, TypeEnum.String),
   [Format.TypeFormat.Password]: extend(Format.TypeFormat.Password, TypeEnum.String),
   [Format.TypeFormat.Regex]: extend(Format.TypeFormat.Regex, TypeEnum.String),
@@ -189,6 +189,7 @@ export const PropertySchema = Schema.Union([
   formatToSchema[Format.TypeFormat.Formula],
   formatToSchema[Format.TypeFormat.Hostname],
   formatToSchema[Format.TypeFormat.JSON],
+  formatToSchema[Format.TypeFormat.Key],
   formatToSchema[Format.TypeFormat.Markdown],
   formatToSchema[Format.TypeFormat.Password],
   formatToSchema[Format.TypeFormat.Regex],
@@ -224,7 +225,7 @@ export const PropertySchema = Schema.Union([
 
 export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
-export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchemaType>> = {
+export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchema.JsonSchema>> = {
   [Format.TypeFormat.None]: {},
   [Format.TypeFormat.String]: {},
   [Format.TypeFormat.Number]: {},
@@ -236,6 +237,7 @@ export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Par
   [Format.TypeFormat.Formula]: {},
   [Format.TypeFormat.Hostname]: {},
   [Format.TypeFormat.JSON]: {},
+  [Format.TypeFormat.Key]: {},
   [Format.TypeFormat.Markdown]: {},
   [Format.TypeFormat.Password]: {},
   [Format.TypeFormat.Regex]: {},

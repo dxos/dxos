@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
-import React, { Fragment, useEffect, useMemo, useRef } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -19,79 +19,99 @@ import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
+  Bullets,
   ComputeContext,
   ComputeGraphController,
-  type ComputeShape,
-  ComputeShapeLayout,
+  boardSceneId,
+  computeNodeRegistry,
   computeShapes,
-  useComputeGraphController,
-  useGraphMonitor,
+  createComputeProjection,
+  createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
+import { type CanvasBoard, KeyboardContainer, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
-  type CanvasBoard,
-  CanvasGraphModel,
-  Editor,
-  type EditorController,
-  KeyboardContainer,
-  ShapeRegistry,
-} from '@dxos/react-ui-canvas-editor';
+  type FreehandProjectionOptions,
+  SceneView,
+  createSceneViewAtoms,
+  useRegistry,
+  useSceneProjection,
+} from '@dxos/react-ui-canvas/scene';
 
 export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
+/**
+ * The board on the scene engine (MIGRATION.md M4): `SceneView` over an ECHO store of the board's own
+ * layout, with the compute projection keeping the compute graph in step. The editor's own canvas,
+ * graph model and monitor are gone — the store is the persistence and the projection is the mirror.
+ */
 export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
-  const [canvas] = useObject(subject);
-  const id = Obj.getURI(canvas);
-  const graph = useMemo(
-    () =>
-      CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) =>
-        // The mirror has to come out of the transaction: the `canvas.layout` captured here is
-        // read-only, since writability travels with the reference.
-        Obj.update(subject, (subject) => fn(subject.layout)),
-      ),
-    [subject, canvas.layout],
-  );
-  // Structural edits from other peers (or undo) land in the object, not through the model.
-  useEffect(() => Obj.subscribe(subject, () => graph.sync()), [subject, graph]);
   const controller = useGraphController(subject);
-  const graphMonitor = useGraphMonitor(controller?.graph);
-  const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
-  const editorRef = useRef<EditorController>(null);
-  useComputeGraphController({ controller, graph, editorRef });
-
-  // Layout.
-  const layout = useMemo(
-    () => (controller && registry ? new ComputeShapeLayout(controller, registry) : undefined),
-    [controller, registry],
-  );
-
   if (!controller) {
-    return;
+    return null;
   }
+
+  // The scene is everything below: a board without its compute graph has no projection to render through.
+  return <CanvasScene role={role} subject={subject} controller={controller} />;
+};
+
+CanvasArticle.displayName = 'CanvasArticle';
+
+type CanvasSceneProps = Pick<CanvasArticleProps, 'role' | 'subject'> & { controller: ComputeGraphController };
+
+const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
+  const id = Obj.getURI(subject);
+  const registry = useRegistry();
+  const shapeRegistry = useMemo(() => new ShapeRegistry(computeShapes), []);
+  const store = useMemo(() => createEchoStore(subject), [subject]);
+  const sceneId = useMemo(() => boardSceneId(subject), [subject]);
+  const atoms = useMemo(() => createSceneViewAtoms(sceneId), [sceneId]);
+  const createProjection = useCallback(
+    (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
+    [controller],
+  );
+  const projection = useSceneProjection({ store, atoms, createProjection });
+
+  // A function body opening grows its node through the model, so its links re-route with it.
+  const resize = useCallback(
+    (nodeId: string, delta: number) => {
+      const node = registry.get(projection.scene).nodes[nodeId];
+      if (node) {
+        projection.apply({
+          kind: 'update',
+          id: nodeId,
+          values: { size: { width: node.size.width, height: node.size.height + delta } },
+        });
+      }
+    },
+    [registry, projection],
+  );
 
   const Root = role === AppSurface.Section.role ? Container : Fragment;
 
   return (
-    <ComputeContext.Provider value={{ controller }}>
+    <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
       <Root>
         <KeyboardContainer id={id}>
-          <Editor.Root
-            id={id}
-            ref={editorRef}
-            graph={graph}
-            graphMonitor={graphMonitor as any}
-            registry={registry}
-            layout={layout}
+          <SceneView.Root
+            store={store}
+            root={sceneId}
+            atoms={atoms}
+            nodes={computeNodeRegistry}
+            projection={projection}
           >
-            <Editor.Canvas />
-            <Editor.UI showTools />
-          </Editor.Root>
+            <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
+            <SceneView.Navigation />
+            <SceneView.Actions />
+            <SceneView.Debug />
+            <SceneView.Palette />
+          </SceneView.Root>
         </KeyboardContainer>
       </Root>
     </ComputeContext.Provider>
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
@@ -144,5 +164,3 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
 
   return controller;
 };
-
-CanvasArticle.displayName = 'CanvasArticle';

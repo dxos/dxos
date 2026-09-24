@@ -4,10 +4,10 @@
 
 import { getDebugName } from '@dxos/util';
 
-import { type LogConfig, type LogFilter, type LogLevel } from './config';
-import { type CallMetadata } from './meta';
-import { getRelativeFilename } from './processors/common';
-import { gatherLogInfoFromScope } from './scope';
+import { type LogConfig, type LogFilter, type LogLevel } from './config.ts';
+import { type CallMetadata } from './meta.ts';
+import { getRelativeFilename } from './processors/common.ts';
+import { gatherLogInfoFromScope } from './scope.ts';
 
 /**
  * Optional object passed to the logging API.
@@ -107,7 +107,7 @@ export class LogEntry {
    * - Single-level key-value map.
    * - Primitives (`boolean`, `number`, `string`, `null`, `undefined`) pass through.
    * - Non-primitive values are stringified one level deep via `JSON.stringify` (no recursion).
-   * - The reserved `error` / `err` keys are stripped — use {@link computedError} instead.
+   * - A reserved `error` / `err` key is dropped when its value is the Error {@link computedError} reports.
    * - Properties from `@logInfo`-decorated members of the scope (`meta.S`) are inlined.
    *
    * Lazily computed and memoized on first access.
@@ -126,7 +126,7 @@ export class LogEntry {
    *   2. {@link context} when the context itself is an {@link Error},
    *   3. `context.error` or `context.err`.
    *
-   * Formatted as `.stack` when available, falling back to `.message` or `String(err)`.
+   * Formatted as `Name: message` plus the stack and the cause chain, falling back to `String(err)`.
    *
    * Lazily computed and memoized on first access.
    */
@@ -261,6 +261,10 @@ const stringifyOneLevel = (value: unknown): unknown => {
   if (type === 'bigint') {
     return (value as bigint).toString();
   }
+  // `JSON.stringify` renders an Error as `{}`.
+  if (value instanceof Error) {
+    return stringifyError(value);
+  }
   try {
     return JSON.stringify(value);
   } catch {
@@ -270,13 +274,14 @@ const stringifyOneLevel = (value: unknown): unknown => {
 
 const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
+  const reportedError = readReportedError(entry, rawContext);
 
   const mergeInto = (source: unknown): void => {
     if (!source || typeof source !== 'object') {
       return;
     }
     for (const [key, value] of Object.entries(source)) {
-      if (RESERVED_ERROR_KEYS.has(key)) {
+      if (RESERVED_ERROR_KEYS.has(key) && value instanceof Error && value === reportedError) {
         continue;
       }
       result[key] = stringifyOneLevel(value);
@@ -304,6 +309,16 @@ const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, un
 /** Max depth when walking `error.cause` / Effect `UnknownException.error`. */
 const MAX_ERROR_CAUSE_DEPTH = 10;
 
+/** V8 stacks open with `Name: message`; JavaScriptCore and SpiderMonkey stacks are frames only. */
+const formatError = (error: Error): string => {
+  const header = error.message ? `${error.name}: ${error.message}` : error.name;
+  const stack = error.stack;
+  if (!stack) {
+    return header;
+  }
+  return stack.startsWith(header) ? stack : `${header}\n${stack}`;
+};
+
 /**
  * Formats an error for JSONL / file processors, including the cause chain.
  * Walks standard `Error.cause` and falls back to Effect's `UnknownException.error`
@@ -326,7 +341,7 @@ const stringifyError = (err: unknown): string | undefined => {
     seen.add(current);
 
     if (current instanceof Error) {
-      parts.push(current.stack ?? current.message);
+      parts.push(formatError(current));
       const next = current.cause ?? (current as { error?: unknown }).error;
       // Stop when there is no distinct wrapped value (UnknownException sets both to the same object).
       current = next !== undefined && next !== current ? next : undefined;
@@ -340,23 +355,22 @@ const stringifyError = (err: unknown): string | undefined => {
   return parts.length > 0 ? parts.join('\nCaused by: ') : undefined;
 };
 
-const computeError = (entry: LogEntry, rawContext: unknown): string | undefined => {
+/** The value {@link LogEntry.computedError} reports, in the priority order it documents. */
+const readReportedError = (entry: LogEntry, rawContext: unknown): unknown => {
   if (entry.error !== undefined) {
-    return stringifyError(entry.error);
+    return entry.error;
   }
-
   if (rawContext instanceof Error) {
-    return stringifyError(rawContext);
+    return rawContext;
   }
-  if (rawContext && typeof rawContext === 'object') {
-    const ctxErr = (rawContext as any).error ?? (rawContext as any).err;
-    if (ctxErr !== undefined && ctxErr !== null) {
-      return stringifyError(ctxErr);
-    }
+  if (!rawContext || typeof rawContext !== 'object') {
+    return undefined;
   }
-
-  return undefined;
+  return ('error' in rawContext ? rawContext.error : undefined) ?? ('err' in rawContext ? rawContext.err : undefined);
 };
+
+const computeError = (entry: LogEntry, rawContext: unknown): string | undefined =>
+  stringifyError(readReportedError(entry, rawContext));
 
 const computeMeta = (entry: LogEntry): ComputedLogMeta => {
   if (!entry.meta) {

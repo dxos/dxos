@@ -5,9 +5,8 @@
 import CRC32 from 'crc-32';
 
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
-
-const EchoMetadataCodec = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
+import { buf } from '@dxos/protocols/buf';
+import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 /**
  * Strips CRC32 framing used by SqliteMetadataStore (8-byte header + payload).
@@ -37,18 +36,18 @@ export const stripMetadataFraming = (bytes) => {
 
 /**
  * @param {Uint8Array | Buffer} bytes
- * @returns {import('@dxos/protocols/proto').TYPES['dxos.echo.metadata.EchoMetadata'] | null}
+ * @returns {import('@dxos/protocols/buf/dxos/echo/metadata_pb').EchoMetadata | null}
  */
 export const decodeEchoMetadata = (bytes) => {
   const payload = stripMetadataFraming(bytes);
   if (!payload?.length) {
     return null;
   }
-  return EchoMetadataCodec.decode(payload);
+  return buf.fromBinary(EchoMetadataSchema, payload);
 };
 
 /**
- * @param {import('@dxos/protocols/proto').TYPES['dxos.keys.PublicKey'] | undefined} key
+ * @param {import('@dxos/protocols/buf/dxos/keys_pb').PublicKey | undefined} key
  * @returns {string | undefined}
  */
 export const formatPublicKey = (key) => {
@@ -59,7 +58,7 @@ export const formatPublicKey = (key) => {
 };
 
 /**
- * @param {import('@dxos/protocols/proto').TYPES['dxos.echo.metadata.SpaceMetadata'] | undefined} space
+ * @param {import('@dxos/protocols/buf/dxos/echo/metadata_pb').SpaceMetadata | undefined} space
  * @returns {{ key: string | undefined, state: string | undefined, feedCount: number }}
  */
 export const summarizeSpace = (space) => ({

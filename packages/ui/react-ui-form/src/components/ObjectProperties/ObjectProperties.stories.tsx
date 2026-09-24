@@ -9,7 +9,6 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { Annotation, DXN, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -18,8 +17,8 @@ import { Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
-import { ObjectProperties } from './ObjectProperties';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing/index.ts';
+import { ObjectProperties } from './ObjectProperties.tsx';
 
 //
 // Test-only schemas exercising a non-Tag ref-array. `Article.authors` is the
@@ -30,7 +29,7 @@ import { ObjectProperties } from './ObjectProperties';
 const Author = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'blue' }),
   Type.makeObject(DXN.make('org.dxos.test.author', '0.1.0')),
 );
@@ -40,7 +39,7 @@ const Article = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
   authors: Schema.Array(Ref.Ref(Author)),
 }).pipe(
-  LabelAnnotation.set(['title']),
+  Annotation.LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.test.article', '0.1.0')),
 );
@@ -48,7 +47,7 @@ type Article = Type.InstanceType<typeof Article>;
 
 //
 // `Note` mirrors the `Subscription.Feed` shape: a required `Ref` field
-// (`backing`) is hidden from the form via `FormInputAnnotation.set(false)`,
+// (`backing`) is hidden from the form via `Annotation.FormInputAnnotation.set(false)`,
 // so `Obj.make(Note, values)` from the picker would reject because the form
 // values can't satisfy the schema. A `FactoryAnnotation` constructs the
 // backing object and links it at create time. `cursor` is an optional hidden
@@ -59,10 +58,10 @@ type NoteBacking = Type.InstanceType<typeof NoteBacking>;
 
 const Note = Schema.Struct({
   title: Schema.String,
-  cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-  backing: Ref.Ref(NoteBacking).pipe(FormInputAnnotation.set(false)),
+  cursor: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  backing: Ref.Ref(NoteBacking).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  LabelAnnotation.set(['title']),
+  Annotation.LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'amber' }),
   FactoryAnnotation.set(((values: any) =>
     Obj.make(Note, { ...values, backing: Ref.make(Obj.make(NoteBacking, {})) })) as FactoryFn),
@@ -74,7 +73,7 @@ const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   notes: Schema.Array(Ref.Ref(Note)),
 }).pipe(
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'amber' }),
   Type.makeObject(DXN.make('org.dxos.test.notebook', '0.1.0')),
 );
@@ -308,7 +307,7 @@ export const CreateRefArrayPlay: Story = {
 /**
  * Ref-array creation against a schema with a hidden required field. `Note`
  * mirrors the shape of `Subscription.Feed`: the form omits `backing` (a
- * required `Ref` annotated `FormInputAnnotation.set(false)`) but the schema
+ * required `Ref` annotated `Annotation.FormInputAnnotation.set(false)`) but the schema
  * requires it. Without `omitHiddenFormFields` + `FactoryAnnotation`, the
  * form's validator would reject Save and the popover would never close.
  *

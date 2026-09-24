@@ -4,8 +4,8 @@
 
 import cronstrue from 'cronstrue';
 
-import type { ScheduleValue } from './Schedule';
-import type { CronSpecType, DayOfWeek } from './types';
+import type { ScheduleValue } from './Schedule.tsx';
+import type { CronSpecType, DayOfWeek } from './types.ts';
 
 const DOW_MAP: Record<DayOfWeek, number> = {
   sun: 0,

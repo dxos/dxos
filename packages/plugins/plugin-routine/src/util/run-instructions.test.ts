@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Ref, URI } from '@dxos/echo';
 
-import { isRunInstructions, runInstructionsRef } from './run-instructions';
+import { isRunInstructions, runInstructionsRef } from './run-instructions.ts';
 
 describe('RunInstructions registry reference', () => {
   test('runInstructionsRef targets the RunInstructions registry DXN', ({ expect }) => {

@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const ObservabilitySettings: ComponentType<any> = lazy(() => import('./ObservabilitySettings'));
+export const ObservabilitySettings: ComponentType<any> = lazy(() => import('./ObservabilitySettings/index.ts'));

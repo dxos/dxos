@@ -11,7 +11,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 
-import { blackhole } from './testing/bench-util';
+import { blackhole } from './testing/bench-util.ts';
 
 //
 // What it costs to bring a database's objects back into memory: a peer is reloaded from storage before

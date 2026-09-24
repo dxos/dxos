@@ -26,6 +26,7 @@ export const translations = [
         'plugin.name': 'File',
         'file-input.placeholder': 'Drop an image, video, or PDF here, or click to browse.',
         'pdf-error.message': 'This PDF could not be displayed.',
+        'file-size.label': '{{size}}',
         'page-of.label': '{{page}} / {{count}}',
         'first-page.label': 'First page',
         'previous-page.label': 'Previous page',

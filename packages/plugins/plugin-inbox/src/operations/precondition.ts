@@ -4,7 +4,7 @@
 
 import * as Cause from 'effect/Cause';
 
-import { isAiUnavailableCause } from './extractor/ai-gate';
+import { isAiUnavailableCause } from './extractor/ai-gate.ts';
 
 /** Reported for either AI flavour, so the two are one condition from the user's point of view. */
 const AI_UNAVAILABLE = 'ai unavailable (assistant not ready)';

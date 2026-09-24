@@ -9,9 +9,9 @@ import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Fixed mobile set: core infrastructure (with `isMobile` selecting headless Deck + `MobilePlugin` as

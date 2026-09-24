@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
 import { type SearchResult } from '@dxos/react-ui-search';
 
-import { filterObjectsSync } from './sync';
+import { filterObjectsSync } from './sync.ts';
 
 // Kept out of `useGlobalSearch.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hooks exported beside them force a full page reload on every edit.

@@ -6,11 +6,11 @@ import ColorHash from 'color-hash';
 import fs from 'fs';
 import path, { join } from 'path';
 
-import { ClassDiagram, Flowchart, type SubgraphBuilder } from '../mermaid';
-import { type WorkspaceProcessor } from '../nx';
-import { ClassProcessor } from '../ts';
-import { type Project } from '../types';
-import { array } from '../util';
+import { ClassDiagram, Flowchart, type SubgraphBuilder } from '../mermaid/index.ts';
+import { type WorkspaceProcessor } from '../nx/index.ts';
+import { ClassProcessor } from '../ts/index.ts';
+import { type Project } from '../types.ts';
+import { array } from '../util.ts';
 
 const colorHash = new ColorHash({
   lightness: 0.95,

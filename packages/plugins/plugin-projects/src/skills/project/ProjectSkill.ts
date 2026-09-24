@@ -7,6 +7,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as OutlineOperation from '@dxos/plugin-tasks/OutlineOperation';
+import * as RemoteSessionOperation from '@dxos/plugin-tasks/RemoteSessionOperation';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Text } from '@dxos/schema';
 
@@ -33,12 +34,23 @@ export const operations: readonly Operation.Definition.Any[] = [
   TaskOperation.CreateTask,
   TaskOperation.UpdateTask,
   TaskOperation.ListTasks,
+  // Records what a task produced (a file, a document) on the task itself, without needing a project.
+  TaskOperation.AddArtifact,
+  // Files a question on a task and blocks it; the answer comes back in the task's history.
+  TaskOperation.AskQuestion,
   TaskOperation.CreateMilestone,
   TaskOperation.DeleteMilestone,
   TaskOperation.MoveMilestone,
   TaskOperation.ListMilestones,
   OutlineOperation.GetOutline,
   OutlineOperation.UpdateOutline,
+  // An agent needs `ListSessions` to find its own session object and assign work to itself.
+  // `RecordSession` is a harness-hook verb, not one a model should reach for — but the MCP host
+  // governs by skill ("an operation named by no opted-in skill is exactly as uninvocable as one
+  // that does not exist"), so the session-reporting hooks fail with `Unknown operation` unless it
+  // is named here too.
+  RemoteSessionOperation.ListSessions,
+  RemoteSessionOperation.RecordSession,
   ProjectOperation.ArtifactAdd,
   ProjectOperation.ArtifactList,
 ];

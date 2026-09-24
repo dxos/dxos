@@ -27,10 +27,10 @@ import {
 } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
-import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks';
-import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model';
+import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks/index.ts';
+import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model/index.ts';
 import {
   type HighlightRange,
   HtmlBlock,
@@ -40,8 +40,8 @@ import {
   WidgetStateProvider,
   createSelectionGroup,
   createWidgetStateStore,
-} from '../Block';
-import { useJumpDetector, usePositionLog } from './position-log';
+} from '../Block/index.ts';
+import { useJumpDetector, usePositionLog } from './position-log.ts';
 
 //
 // Context
@@ -77,6 +77,8 @@ type MessageListContextValue = {
   model: FeedModel;
   renderer: MessageRenderer;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`); the host supplies one that can render a card. */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   Chrome: ComponentType<MessageChromeProps>;
   Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
   debug?: boolean;
@@ -86,6 +88,8 @@ type MessageListContextValue = {
   currentIndex: number;
   /** Whether the reader is resting on the tail — what a scroll-to-bottom affordance hides against. */
   atEnd: boolean;
+  /** Whether the list is keeping the tail in view itself; an affordance to return there has no place while it is. */
+  following: boolean;
   /** The one seam every navigation driver calls: toolbar, arrows, outline, minimap (SPEC F-3.2). */
   navigation: FeedNavigation;
   /** Rows mounted right now: the window the reader is paying for. */
@@ -129,6 +133,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     range,
     currentIndex,
     atEnd,
+    following,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -144,6 +149,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     range,
     currentIndex,
     atEnd,
+    following,
     navigation,
     mountedRows,
     mountedWidgets,
@@ -175,6 +181,8 @@ export type MessageListRootProps = PropsWithChildren<{
   model: FeedModel;
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
+  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   /**
    * Chrome wrapper; receives the item as `children`. Defaults to a bare frame.
    * Chrome must be layout-stable: a control that changes a row's height on hover or focus
@@ -230,6 +238,7 @@ const MessageListRoot = ({
   model,
   renderer = defaultRenderer,
   registry,
+  objectImage,
   Chrome = DefaultChrome,
   Custom,
   debug,
@@ -503,12 +512,14 @@ const MessageListRoot = ({
           model={model}
           renderer={renderer}
           registry={registry}
+          objectImage={objectImage}
           Chrome={Chrome}
           Custom={Custom}
           debug={debug}
           range={range}
           currentIndex={currentIndex}
           atEnd={follow.atEnd}
+          following={follow.following}
           navigation={navigation}
           mountedRows={mounted}
           mountedWidgets={mountedWidgets}
@@ -676,7 +687,8 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { model, renderer, registry, Custom, debug, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+  const { model, renderer, registry, objectImage, Custom, debug, reportWidgets } =
+    useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   // The item asks for its own cross-cutting data by id (SPEC §Aspects); the list never routed it.
   const decorations = useDecorations(message.id);
@@ -711,6 +723,7 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
             // change (an edit, a view switch) lands atomically.
             stream={model.streamingId === message.id}
             registry={registry}
+            objectImage={objectImage}
             hits={hits}
             onWidgetsChange={handleWidgetsChange}
           />

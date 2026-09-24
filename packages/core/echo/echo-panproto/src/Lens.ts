@@ -14,19 +14,19 @@
 
 import { type Obj } from '@dxos/echo';
 
-import { get as project } from './lens/codec';
-import { type AnyLens, type Codec, type Lens as LensShape, type Write } from './lens/types';
-import { applyWrites } from './lens/write';
+import { get as project } from './lens/codec.ts';
+import { type AnyLens, type Codec, type Lens as LensShape, type Write } from './lens/types.ts';
+import { applyWrites } from './lens/write.ts';
 
-export { type TargetOf, coded, make } from './lens/codec';
-export { of, targetSchema } from './lens/live';
-export { applyWrites } from './lens/write';
-export { lookup, registerCodec, scale } from './lens/codecs';
-export { compatible } from './lens/mapping';
-export { type LawCheckResult, type LawViolation, checkLaws, readsOf, sourceFor } from './lens/laws';
-export { clear, lensesFor, register, resolve, sourcesFor } from './lens/registry';
-export { OverlayAnnotation, getOverlay, getOverlays } from './lens/overlay';
-export { Lens as Object, fromObject, toObject } from './lens/entity';
+export { type TargetOf, coded, make } from './lens/codec.ts';
+export { of, targetSchema } from './lens/live.ts';
+export { applyWrites } from './lens/write.ts';
+export { lookup, registerCodec, scale } from './lens/codecs.ts';
+export { compatible } from './lens/mapping.ts';
+export { type LawCheckResult, type LawViolation, checkLaws, readsOf, sourceFor } from './lens/laws.ts';
+export { clear, lensesFor, register, resolve, sourcesFor } from './lens/registry.ts';
+export { OverlayAnnotation, getOverlay, getOverlays } from './lens/overlay.ts';
+export { Lens as Object, fromObject, toObject } from './lens/entity.ts';
 export {
   type Codec,
   type Coverage,
@@ -35,7 +35,7 @@ export {
   type Plan,
   type SerializedEntry,
   type Write,
-} from './lens/types';
+} from './lens/types.ts';
 
 /** A lens binding a source ECHO type to a declared target type. */
 export type Lens<S = any, T = any> = LensShape<S, T>;

@@ -44,7 +44,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
 
-    const { preset, ...chatProps } = usePresets(settings);
+    const { preset, ...chatProps } = usePresets(settings, chat);
     const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
@@ -121,26 +121,34 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content asChild>
             <ChatComponent.Content>
               <div className='dx-expand relative'>
-                {/* Thread outline. */}
+                {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
+
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
-                {/* Floating thread status: what the request is doing, above the counters it has run up. */}
-                {!mobile && viewType !== 'summary' && (
-                  <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
-                    <ChatComponent.StatusStack
-                      rowClassNames='dx-document px-4'
-                      pillClassNames='px-3 rounded-sm bg-group-surface'
-                    />
+
+                {/** Floating info. */}
+                {!mobile && (
+                  <div
+                    className='absolute bottom-0 left-0 right-0 dx-document grid grid-cols-[1fr_auto] gap-2 px-3 pb-2'
+                    data-testid='assistant.chat-status'
+                  >
+                    <div className='col-span-2'>
+                      <ChatComponent.Queue classNames='flex justify-end' />
+                    </div>
+                    <div className='flex items-center'>
+                      <ChatComponent.Activity />
+                    </div>
+                    <div className='flex justify-end'>
+                      <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
+                    </div>
                   </div>
                 )}
               </div>
-              <div className='dx-document flex flex-col px-4 pb-4'>
-                {/* On mobile (and in the summary view) the floating stack is dropped, so the activity
-                    line keeps its in-flow slot above the composer. */}
-                {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
-                {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
-                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
+
+              <div className='dx-document flex flex-col px-2 pb-2'>
+                <div className='grid grid-cols-2'>{mobile && <ChatComponent.Activity />}</div>
+
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}

@@ -14,11 +14,11 @@ import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
 import { trim } from '@dxos/util';
 
-import { DISCORD_SOURCE } from '../constants';
-import { StoreError } from '../errors';
-import { MessageStore } from '../stores';
-import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics';
-import { Topic } from '../types';
+import { DISCORD_SOURCE } from '../constants.ts';
+import { StoreError } from '../errors.ts';
+import { MessageStore } from '../stores/index.ts';
+import { type DetectOptions, type TopicSegment, detectTopics, salientTokens } from '../topics/detect-topics.ts';
+import { Topic } from '../types/index.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -71,7 +71,7 @@ export const summarizeSegment = (
   messages: readonly MessageStore.StoredMessage[],
 ): Effect.Effect<{ name: string; summary: string }, never, AiService.AiService> =>
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
-    Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
+    Effect.provide(AiService.languageModel(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.map(({ value }) => value),
     Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
     Effect.map(({ name, summary }) => ({

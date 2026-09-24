@@ -7,11 +7,11 @@ import { describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
 
-import { TestSchema, updateCounter } from '../../../testing';
-import { createObject } from '../../Obj';
-import { ATTR_META } from '../types/meta';
-import { makeObject } from './make-object';
-import { change } from './reactive';
+import { TestSchema, updateCounter } from '../../../testing/index.ts';
+import { createObject } from '../../Obj/index.ts';
+import { ATTR_META } from '../types/meta.ts';
+import { makeObject } from './make-object.ts';
+import { change } from './reactive.ts';
 
 describe('proxy', () => {
   test.skipIf(!isNode())('inspect', ({ expect }) => {

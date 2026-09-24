@@ -5,23 +5,40 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
+import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
+import { useQuery } from '@dxos/echo-react';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import {
+  useArticleKeyboardNavigation,
+  useAttention,
+  useSelection,
+  useSelectionActions,
+} from '@dxos/react-ui-attention';
+import { type EditorController } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
+import { TaskList, type TaskPlacement, type TaskSelectModifiers } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities } from '#types';
 
-import { useTaskActions } from '../../hooks';
+import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import { filterTasks } from '../../util/index.ts';
+import { TaskFilter } from './TaskFilter.tsx';
 
-export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
+export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
+  /**
+   * Where a row opens its task. `'plank'` (the default) opens it beside the list, reusing the host's
+   * `task` deck level; `'companion'` opens the host's `~task` companion instead, which keeps the
+   * host itself in front of the reader. A host offers `'companion'` only where it contributes one.
+   */
+  detail?: 'plank' | 'companion';
+};
 
 /**
  * Every task in a set, rendered as the sub-task tree the flat `tasks` array plus `parentTask`
@@ -30,11 +47,33 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
  * are what keep the array, the refs and `parentTask` consistent.
  */
-export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
+export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
+  const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const tasks = useTasks(taskSet);
+  const db = Obj.getDatabase(taskSet);
+  const allTasks = useTasks(taskSet);
+  // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
+  // reader edits, its parse is what the list is narrowed by. Held per mount — a filter is a glance,
+  // not a property of the set.
+  const [filterText, setFilterText] = useState('');
+  const tags = useTagMap(db);
+  // Parsed here rather than taken from the editor's own callback: the parse then re-runs when the
+  // tag registry changes (a `#tag` typed before its tag loaded resolves on arrival), and a query
+  // that does not parse is a query that matches nothing rather than one that matches everything.
+  const filter = useMemo(() => {
+    const text = filterText.trim();
+    if (text.length === 0) {
+      return undefined;
+    }
+    return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
+  }, [filterText, tags]);
+  const tasks = useFilteredTasks(allTasks, filter);
+  const handleClearFilter = useCallback(() => {
+    filterEditorRef.current?.setText('');
+    setFilterText('');
+  }, []);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
   const handleCreate = useOperation(
@@ -46,6 +85,13 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const handleUpdate = useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
+    { spaceId },
+  );
+
+  // Record-only: an agent that asked over the MCP reads the answer back off the task.
+  const handleQuestionAnswer = useOperation(
+    TaskOperation.AnswerQuestion,
+    (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
     { spaceId },
   );
 
@@ -88,30 +134,70 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [move],
   );
 
+  // A row opens its task through the shared reading gesture: the companion beside the list where the
+  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
+  // the host's node — the project's inside its Tasks tab.
+  const currentId = useSelection(attendableId, 'single');
+  const openDetail = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: detail === 'companion' ? 'task' : undefined,
+  });
+  const handleOpen = useCallback(
+    (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
+    [openDetail],
+  );
+
+  useArticleKeyboardNavigation({ articleId: attendableId, items: tasks, currentId, onSelect: openDetail });
+
+  const descriptionExtensions = useMarkdownExtensions(taskSet);
+  const descriptionComponents = useDescriptionComponents();
+
+  const filterRow = (
+    <TaskFilter
+      db={db}
+      tags={tags}
+      value={filterText}
+      onChange={setFilterText}
+      onClear={handleClearFilter}
+      editorRef={filterEditorRef}
+    />
+  );
+
   const content = (
     <TaskList.Root
       tasks={tasks}
       hierarchical
       selectable
       showDescription
+      descriptionComponents={descriptionComponents}
       showEstimates
       checked={checked}
       getTaskActions={getTaskActions}
       onTaskCheck={onTaskCheck}
+      selected={currentId}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskMove={handleMove}
+      onTaskSelect={handleOpen}
+      onQuestionAnswer={handleQuestionAnswer}
     >
       <TaskList.Viewport>
         <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
-      <div className='p-2 pt-0'>
-        <TaskList.Edit
-          showDescription
-          classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
-          placeholder={t('task-create.placeholder')}
-        />
-      </div>
+      {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
+          than turning into an editor the moment a row is selected. Full width, edge to edge — it is
+          the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
+      <TaskList.Edit
+        createOnly
+        showDescription
+        descriptionExtensions={descriptionExtensions}
+        // Bordered on three sides, open at the foot: the pane meets the panel's own edge there, and a
+        // fourth line would double it.
+        classNames='dx-document bg-input-surface border-x border-t border-separator rounded-t-md p-2'
+        placeholder={t('task-create.placeholder')}
+      />
     </TaskList.Root>
   );
 
@@ -121,15 +207,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       fallback={
         <Panel.Root role={role}>
           <Panel.Toolbar asChild>
-            <Toolbar.Root disabled={!hasAttention} />
+            <Toolbar.Root disabled={!hasAttention}>{filterRow}</Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>{content}</Panel.Content>
         </Panel.Root>
       }
     >
       {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
-          chrome, so render the bare list — a nested Panel/scroll root would collapse width. */}
-      <Switch.Match when={AppSurface.Section.role}>{content}</Switch.Match>
+          chrome, so render the bare list under its own filter row — a nested Panel/scroll root would
+          collapse width, but the filter has to come along or the host's copy of the list has none. */}
+      <Switch.Match when={AppSurface.Section.role}>
+        <div className='flex flex-col dx-grow'>
+          <Toolbar.Root>{filterRow}</Toolbar.Root>
+          {content}
+        </div>
+      </Switch.Match>
     </Switch.Root>
   );
 };
@@ -176,4 +268,40 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
   }, [taskSet]);
 
   return useAtomValue(atom);
+};
+
+/**
+ * The tasks whose title or description contains `filter` (case-insensitive), with the ancestors
+ * of every match kept so a matching sub-task still hangs off its branch. Empty filter: every task.
+ * Read through atoms so a title edited in a row re-runs the match.
+ */
+const useFilteredTasks = (tasks: readonly Task.Task[], filter: Filter.Any | undefined): readonly Task.Task[] => {
+  const atom = useMemo(
+    () =>
+      Atom.make((get): readonly Task.Task[] => {
+        // Subscribed per task, so an edit that changes whether a row matches re-runs the filter
+        // without a whole-list subscription.
+        // The whole object, not the fields the text search reads: a filter can name any property
+        // (`status:`, `priority:`) or the task's tags, and a property-level subscription would miss
+        // every term but the ones listed here.
+        tasks.forEach((task) => get(Obj.atom(task)));
+        return filterTasks(tasks, filter);
+      }),
+    [tasks, filter],
+  );
+
+  return useAtomValue(atom);
+};
+
+/** Tag registry keyed by the `Tag` object's uri — the id space `#tag` terms and `meta.tags` share. */
+const useTagMap = (db: Database.Database | undefined): Tag.Map => {
+  const tags = useQuery(db, Filter.type(Tag.Tag));
+  return useMemo(
+    () =>
+      tags.reduce<Tag.Map>((acc, tag) => {
+        acc[Obj.getURI(tag).toString()] = tag;
+        return acc;
+      }, {}),
+    [tags],
+  );
 };

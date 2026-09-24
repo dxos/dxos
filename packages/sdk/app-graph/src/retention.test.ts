@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
 
 const WORKSPACES = 10;
 const CHILDREN = 20;
@@ -72,7 +72,6 @@ const counts = ({ registry, builder, graph }: ReturnType<typeof setup>) => {
     modelEdges: internal._model.edges.length,
     subscriptions: builder._subscriptions.size,
     connectors: builder._connectorPrevious.size,
-    provenance: builder._nodeExtensions.size,
     expanded: internal._expanded.size,
     relations: internal._relations.size,
   };
@@ -102,9 +101,7 @@ describe('retention', () => {
 
     // View atoms mounted above the graph (a rendered row's subscriptions) are reclaimed on unmount:
     // `Atom.family` memoizes weakly, and the registry drops a node once it has no listener and no
-    // dependents, cascading to its parents. The graph's own node atoms are deliberately NOT in that
-    // pool — every materialized node holds a mount (see `_pin`), so its atoms stay live until
-    // released, and a subscriber never finds a node's atom dropped and re-created between reads.
+    // dependents, cascading to its parents.
     expect(counts(harness).registryNodes).to.equal(idle);
   });
 
@@ -129,6 +126,20 @@ describe('retention', () => {
     expect(registry.getNodes().size).to.be.lessThan(pinned);
   });
 
+  test('destroying the builder releases every node atom it pinned', async () => {
+    const harness = setup();
+    const { registry, builder, graph } = harness;
+    await visit(harness, GraphNode.RootId);
+    await visit(harness, `${GraphNode.RootId}/w0`);
+    await settle();
+    const child = `${GraphNode.RootId}/w0/c0`;
+    expect(registry.getNodes().has(graph.node(child))).to.be.true;
+
+    GraphBuilder.destroy(builder);
+    await settle();
+    expect(registry.getNodes().has(graph.node(child))).to.be.false;
+  });
+
   test('the graph itself does grow with every node ever materialized', async () => {
     const harness = setup();
     await visit(harness, GraphNode.RootId);
@@ -139,9 +150,8 @@ describe('retention', () => {
 
     const after = counts(harness);
     // Nothing here is mounted any more, yet every visited workspace's items are still in the model,
-    // still carry provenance, and still hold an expansion subscription. This is what release is for.
+    // and still hold an expansion subscription. This is what release is for.
     expect(after.modelNodes - before.modelNodes).to.equal(WORKSPACES * CHILDREN);
-    expect(after.provenance - before.provenance).to.equal(WORKSPACES * CHILDREN);
     expect(after.subscriptions - before.subscriptions).to.equal(WORKSPACES);
   });
 
@@ -166,7 +176,6 @@ describe('retention', () => {
     const after = counts(harness);
     expect(after.modelNodes).to.equal(baseline.modelNodes);
     expect(after.modelEdges).to.equal(baseline.modelEdges);
-    expect(after.provenance).to.equal(baseline.provenance);
     expect(after.relations).to.equal(baseline.relations);
   });
 

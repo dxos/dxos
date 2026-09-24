@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Predicate from 'effect/Predicate';
 
-import { DeferredTask, Event, UpdateScheduler } from '@dxos/async';
+import { DeferredTask, Event, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
 import {
@@ -26,15 +26,18 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
-import { type DatabaseImpl } from '../proxy-db';
-import { FeedCoreRegistry } from './feed-core-registry';
-import { FeedObjectCore } from './feed-object-core';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { FeedCoreRegistry } from './feed-core-registry.ts';
+import { FeedObjectCore } from './feed-object-core.ts';
 
 const TRACE_FEED_LOAD = false;
 
 // Appending large amount of objects at once is not supported by the server.
 // https://linear.app/dxos/issue/DX-449/queueappend-fails-when-there-are-too-many-objects-due-to-there-being
 const FEED_APPEND_BATCH_SIZE = 15;
+
+/** One object captured for append: the core it came from, its payload, and its pending-append token. */
+type AppendCapture = { core: FeedObjectCore; json: Record<string, unknown>; token: string };
 
 const RECONNECT_INITIAL_DELAY = 1_000;
 
@@ -44,6 +47,19 @@ const RECONNECT_INITIAL_DELAY = 1_000;
  * moment a reconnected stream observes data.
  */
 const RECONNECT_MAX_DELAY = 30_000;
+
+/** Bounds each feed RPC, so a host that stops answering cannot hold a flush or dispose open. */
+const RPC_TIMEOUT = 30_000;
+
+const APPEND_RETRY_INITIAL_DELAY = 1_000;
+
+const APPEND_RETRY_MAX_DELAY = 30_000;
+
+/** Drain passes {@link FeedHandle.waitForPendingWrites} makes before reporting writes as unsendable. */
+const FLUSH_ATTEMPTS = 3;
+
+/** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
+const FLUSH_RETRY_DELAY_MS = 50;
 
 /**
  * Client-side handle for a single feed, backed by an EDGE queue.
@@ -68,6 +84,7 @@ export class FeedHandle {
             feedIds: [this._feedId],
           },
         }),
+        { timeout: RPC_TIMEOUT },
       );
       await this.#applyQueryResult(thisRefreshId, result);
     } catch (err) {
@@ -178,6 +195,15 @@ export class FeedHandle {
    */
   #subscriptionGeneration = 0;
 
+  /**
+   * A retry is scheduled; only the scheduled task clears it, so at most one retry is outstanding.
+   * Not a handle: `scheduleTask` cancels itself when the context disposes.
+   */
+  #appendRetryPending = false;
+  #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
+  /** The error that closed the RPC endpoint, once one has; this handle can never append again. */
+  #endpointClosed: Error | null = null;
+
   constructor(
     private readonly _service: FeedService.Client,
     private readonly _runtime: EffectContext.Context<never>,
@@ -222,6 +248,11 @@ export class FeedHandle {
    * registered for every object the handle has hydrated, and is dropped only on `delete` or
    * `dispose`, so this is the retention-relevant count rather than `_objects.length`.
    */
+  /** The last load, subscription, or append failure; an append failure is cleared once every write has been sent. */
+  get error(): Error | null {
+    return this._error;
+  }
+
   get residentObjectCount(): number {
     return this.#cores.size;
   }
@@ -244,17 +275,22 @@ export class FeedHandle {
 
     this.#addOptimistic(cores);
 
-    const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
+    if (this.#endpointClosed) {
+      // Revert first: the capture above cleared each core's dirty flag and left a pending-append
+      // token, so leaving without it would drop the write AND leave `reconcile` preferring the
+      // never-sent local state over every inbound block for the life of the handle.
       for (const { core, token } of batch) {
         core.revertCapture(token);
+        // Still unsent, so `dispose` counts it with the other writes the closed endpoint lost.
         this.#dirtyCores.add(core);
       }
-      this.#appendScheduler.trigger();
-    });
+      this.updated.emit();
+      // The write did not land and this handle can never send it, so resolving would report a
+      // success the caller can act on. The handle is replaced when the feed service is swapped.
+      throw this.#endpointClosed;
+    }
+
+    const sendPromise = this.#sendAppendBatches(batch);
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
@@ -365,21 +401,81 @@ export class FeedHandle {
   }
 
   /**
-   * Send captured append batches to the feed service, chunked to `FEED_APPEND_BATCH_SIZE` (the
-   * server rejects overly large single inserts).
+   * Send a captured batch to the feed service, chunked to `FEED_APPEND_BATCH_SIZE` (the server
+   * rejects overly large single inserts).
+   *
+   * A failed chunk carries only itself and the chunks after it into the retry. `insertIntoFeed`
+   * assigns a fresh sequence per object, so re-sending a chunk that already committed appends a
+   * second block rather than reconciling with the first.
    */
-  async #sendAppendBatches(encoded: string[]): Promise<void> {
-    for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
-      await runServiceCall(
-        this._runtime,
-        this._service['FeedService.insertIntoFeed']({
-          subspaceTag: this._namespace,
-          spaceId: this._spaceId,
-          feedId: this._feedId,
-          objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
-        }),
-      );
+  async #sendAppendBatches(batch: AppendCapture[]): Promise<void> {
+    for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
+      const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
+      try {
+        await runServiceCall(
+          this._runtime,
+          this._service['FeedService.insertIntoFeed']({
+            subspaceTag: this._namespace,
+            spaceId: this._spaceId,
+            feedId: this._feedId,
+            objects: chunk.map(({ json }) => JSON.stringify(json)),
+          }),
+          { timeout: RPC_TIMEOUT },
+        );
+      } catch (err) {
+        this.#onAppendFailed(err, batch.slice(i));
+        // A closed endpoint never retries, so the write is lost and the caller must hear it.
+        if (isEndpointClosedError(err)) {
+          throw err;
+        }
+        return;
+      }
     }
+    this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
+    // Sends run concurrently, so this one succeeding says nothing of a failed batch still awaiting its retry.
+    if (this.#dirtyCores.size === 0) {
+      this._error = null;
+    }
+  }
+
+  #onAppendFailed(err: unknown, batch: AppendCapture[]): void {
+    const endpointClosed = isEndpointClosedError(err);
+    if (!endpointClosed) {
+      log.catch(err);
+    }
+    this._error = err as Error;
+    this.updated.emit();
+
+    for (const { core, token } of batch) {
+      core.revertCapture(token);
+      if (!core.deleted) {
+        this.#dirtyCores.add(core);
+      }
+    }
+
+    if (endpointClosed) {
+      this.#endpointClosed = err;
+      log.verbose('feed append abandoned; rpc endpoint closed', {
+        feedId: this._feedId,
+        pending: this.#dirtyCores.size,
+      });
+      return;
+    }
+
+    if (this.#appendRetryPending || this._ctx.disposed) {
+      return;
+    }
+    const delay = this.#appendRetryDelay;
+    this.#appendRetryDelay = Math.min(this.#appendRetryDelay * 2, APPEND_RETRY_MAX_DELAY);
+    this.#appendRetryPending = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#appendRetryPending = false;
+        this.#appendScheduler.trigger();
+      },
+      delay,
+    );
   }
 
   /**
@@ -391,26 +487,29 @@ export class FeedHandle {
     if (this.#dirtyCores.size === 0) {
       return;
     }
+    if (this.#endpointClosed) {
+      // Recorded rather than skipped in silence: this handle can never send these, so a caller that
+      // reads `error` after `waitForPendingWrites` learns the flush wrote nothing. They stay dirty —
+      // discarding a local edit here would lose more than it fixes, and `dispose` names the count.
+      this._error = this.#endpointClosed;
+      this.updated.emit();
+      return;
+    }
     const batch = [...this.#dirtyCores].map((core) => {
       const { json, token } = core.captureForAppend();
       return { core, json, token };
     });
     this.#dirtyCores.clear();
 
-    const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
-      for (const { core, token } of batch) {
-        core.revertCapture(token);
-        this.#dirtyCores.add(core);
-      }
-      this.#appendScheduler.trigger();
-    });
+    const sendPromise = this.#sendAppendBatches(batch);
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
+    } catch (err) {
+      // `#onAppendFailed` already recorded a closed endpoint in `error`; anything else is unexpected.
+      if (!isEndpointClosedError(err)) {
+        throw err;
+      }
     } finally {
       this.#inFlight.delete(sendPromise);
     }
@@ -421,19 +520,25 @@ export class FeedHandle {
    * through polling — the index that serves queries is caught up synchronously by the query host
    * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
    *
-   * Best-effort, matching the pre-existing append contract: a failed send re-queues its cores and
-   * reschedules, so this can return with a retry still pending, and the failure surfaces only via
-   * {@link error} rather than rejecting.
-   *
-   * TODO(wittjosiah): Drain until `#dirtyCores` and `#inFlight` both settle and propagate a
-   *   persistent failure, so `db.flush()` cannot report success over unwritten state. Needs a
-   *   bounded retry policy first — an unbounded drain would hang on a permanently failing send.
+   * Throws if writes are still unsent after {@link FLUSH_ATTEMPTS} drains, or at once when the endpoint is closed.
    */
   async waitForPendingWrites(): Promise<void> {
-    if (this.#dirtyCores.size > 0) {
-      await this.#appendScheduler.runBlocking();
+    for (let attempt = 1; ; attempt++) {
+      if (this.#dirtyCores.size > 0) {
+        await this.#appendScheduler.runBlocking();
+      }
+      await Promise.allSettled([...this.#inFlight]);
+      if (this.#dirtyCores.size === 0) {
+        return;
+      }
+      if (this.#endpointClosed) {
+        throw this.#endpointClosed;
+      }
+      if (attempt >= FLUSH_ATTEMPTS) {
+        throw this._error ?? new Error('Feed writes could not be sent.');
+      }
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
     }
-    await Promise.allSettled([...this.#inFlight]);
   }
 
   async sync({
@@ -694,11 +799,15 @@ export class FeedHandle {
     this.#objectIds.clear();
   }
 
+  /** Throws after teardown if writes could not be sent, since nothing carries them to a handle that replaces this one. */
   async dispose() {
     // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
-    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
-    // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
-    await this.waitForPendingWrites();
+    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still live.
+    const unsent = await this.waitForPendingWrites().then(
+      () => undefined,
+      (err: unknown) => err,
+    );
+    const lost = this.#dirtyCores.size;
 
     this._pollingHandlers = 0;
     this.#teardownFeedSubscription();
@@ -709,6 +818,9 @@ export class FeedHandle {
     this.#dirtyCores.clear();
     await this._ctx.dispose();
     await this._refreshTask.join();
+    if (unsent !== undefined) {
+      throw new Error(`Feed handle disposed with ${lost} unsent writes.`, { cause: unsent });
+    }
   }
 }
 
@@ -722,3 +834,17 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 };
 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
+
+/** Whether `err` is, or is caused through a chain of errors by, a closed rpc endpoint. */
+const isEndpointClosedError = (err: unknown): err is Error => {
+  const seen = new Set<Error>();
+  let cause = err;
+  while (cause instanceof Error && !seen.has(cause)) {
+    if (cause instanceof RpcClosedError) {
+      return true;
+    }
+    seen.add(cause);
+    cause = cause.cause;
+  }
+  return false;
+};

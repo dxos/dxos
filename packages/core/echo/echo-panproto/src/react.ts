@@ -6,7 +6,7 @@ import { useCallback, useEffect, useReducer } from 'react';
 
 import { Obj } from '@dxos/echo';
 
-import * as Lens from './Lens';
+import * as Lens from './Lens.ts';
 
 //
 // React bindings for the object lens, on the `@dxos/echo-panproto/react` entrypoint so the main surface

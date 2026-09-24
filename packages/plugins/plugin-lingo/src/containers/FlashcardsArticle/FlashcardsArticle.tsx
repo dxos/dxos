@@ -14,7 +14,7 @@ import { Flashcard } from '#components';
 import { meta } from '#meta';
 import { LingoOperation, type Vocabulary, Word } from '#types';
 
-import { useDeckWords } from '../useDeckWords';
+import { useDeckWords } from '../useDeckWords.ts';
 
 export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vocabulary>;
 

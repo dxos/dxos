@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as Chess from './Chess';
-export * as ChessEvents from './ChessEvents';
-export * as ChessOperation from './ChessOperation';
-export * as ChessPositionIndex from './ChessPositionIndex';
-export * as PlayerReview from './PlayerReview';
+export * as Chess from './Chess.ts';
+export * as ChessEvents from './ChessEvents.ts';
+export * as ChessOperation from './ChessOperation.ts';
+export * as ChessPositionIndex from './ChessPositionIndex.ts';
+export * as PlayerReview from './PlayerReview.ts';

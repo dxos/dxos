@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants';
+import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants.ts';
 
 export type DiscordChannel = {
   name: string;

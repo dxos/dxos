@@ -7,9 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { type Domain } from '../sim';
+import { type Domain } from '../sim/index.ts';
 
 /** The kinds of movable object the simulation supports. */
 export const Kind = Schema.Literals(['boat', 'plane', 'satellite', 'tank', 'rocket']);
@@ -44,7 +43,7 @@ export class TerraObject extends Type.makeObject<TerraObject>(DXN.make('org.dxos
     /** Epoch used as this object's deterministic clock origin. */
     spawnedAt: Schema.Number,
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     // Kind-neutral: `IconAnnotation` is a static schema-level value, so one icon covers boats,
     // tanks, satellites and rockets alike — a plane icon would mislabel four kinds out of five.
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'green' }),
@@ -52,6 +51,8 @@ export class TerraObject extends Type.makeObject<TerraObject>(DXN.make('org.dxos
 ) {}
 
 export type MakeProps = {
+  /** Minted when omitted; a fixture supplies one so anything seeded off the id is reproducible. */
+  id?: Obj.ID;
   kind: Kind;
   name?: string;
   speed: number;

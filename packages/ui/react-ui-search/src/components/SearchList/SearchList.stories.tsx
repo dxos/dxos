@@ -12,8 +12,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { useSearchListInput, useSearchListItem, useSearchListResults } from './hooks';
-import { SearchList } from './SearchList';
+import { useSearchListInput, useSearchListItem, useSearchListResults } from './hooks/index.ts';
+import { SearchList } from './SearchList.tsx';
 
 random.seed(1234);
 

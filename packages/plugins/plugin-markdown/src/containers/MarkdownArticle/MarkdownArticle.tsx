@@ -13,7 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -35,7 +35,7 @@ import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProp
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { mergeConflicts } from '../../extensions';
+import { mergeConflicts } from '../../extensions/index.ts';
 
 /**
  * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the
@@ -43,8 +43,9 @@ import { mergeConflicts } from '../../extensions';
  * entries (e.g. Suggesting) still toggle without a versioning host.
  */
 const useDefaultEditorBinding: MarkdownCapabilities.UseEditorBinding = ({ object, viewMode, onViewModeChange }) => {
-  const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
-  const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
+  const text = useResolveRef(
+    Obj.instanceOf(Markdown.Document, object) ? object.content : Obj.instanceOf(Text.Text, object) ? object : undefined,
+  );
   // Contributed review modes have no host here; remember the active one so its entry still checks.
   const [activeReviewMode, setActiveReviewMode] = useState<MarkdownCapabilities.ReviewMode | undefined>(undefined);
   const selectViewMode = useCallback(
@@ -65,7 +66,7 @@ const useDefaultEditorBinding: MarkdownCapabilities.UseEditorBinding = ({ object
   );
   return {
     subject: object,
-    initialValue: docContent ?? textContent,
+    initialValue: text?.content,
     key: 'current',
     viewMode,
     loading: false,

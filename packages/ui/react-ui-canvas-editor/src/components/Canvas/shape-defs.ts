@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type CanvasBoard } from '../../types';
+import { type CanvasBoard } from '../../types/index.ts';
 
 // Kept out of `Shape.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so constants and helpers exported beside them force a full page reload on every edit.

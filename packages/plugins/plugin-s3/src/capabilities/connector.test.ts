@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { composeHost, normalizeEndpoint } from './connector';
+import { composeHost, normalizeEndpoint } from './connector.ts';
 
 describe('s3 connector', () => {
   test('reduces a pasted url to its host', ({ expect }) => {

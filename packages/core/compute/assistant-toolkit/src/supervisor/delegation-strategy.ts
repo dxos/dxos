@@ -19,8 +19,9 @@ import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { RunInstructions } from '../operations';
-import { DelegationSkill } from '../skills';
+import { ToolkitError } from '../errors.ts';
+import { RunInstructions } from '../operations/index.ts';
+import { DelegationSkill } from '../skills/index.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
@@ -32,7 +33,7 @@ const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Err
     const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
     if (!EntityId.isValid(candidate)) {
       // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
-      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
+      return yield* Effect.fail(new ToolkitError({ message: `Invalid artifact id: ${id}` }));
     }
     const { db } = yield* Database.Service;
     return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));
@@ -62,6 +63,15 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
+ * A task handed to a sub-agent by the delegation verbs, which assign `{ role: 'assistant' }` and
+ * nothing else. An assistant assignee carrying a `subject` names a concrete session that owns the
+ * task — the conversation's own agent starting it from the planning tool, or a remote session —
+ * so it is that session's work, not a spawn request for the supervisor.
+ */
+export const isSubAgentTask = (task: Task.Task): boolean =>
+  task.assignee?.role === 'assistant' && task.assignee.subject === undefined;
+
+/**
  * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
  * the chat's checklist whose assignee is an agent, all of whose dependencies are done. Ordinary
  * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
@@ -77,7 +87,7 @@ const findPendingTasks = (
     // The chat's `tasks` array is flat, so a delegated sub-task is found without descending.
     return tasks.filter(
       (task) =>
-        task.assignee?.role === 'assistant' &&
+        isSubAgentTask(task) &&
         (task.status ?? 'todo') === 'todo' &&
         !activeIds.has(task.id) &&
         Task.isTaskReady(tasks, task),
@@ -95,7 +105,7 @@ const sweepOrphanedTasks = (
   Effect.gen(function* () {
     const tasks = yield* Chat.loadTasks(chat);
     const orphans = tasks.filter(
-      (task) => task.assignee?.role === 'assistant' && task.status === 'started' && !activeIds.has(task.id),
+      (task) => isSubAgentTask(task) && task.status === 'started' && !activeIds.has(task.id),
     );
     if (orphans.length === 0) {
       return;

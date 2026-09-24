@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type RefTypeId } from '../../Ref/ref';
-import { getProxyTarget, isProxy } from './proxy-utils';
-import { ChangeId, EventId } from './symbols';
+import { type RefTypeId } from '../../Ref/ref.ts';
+import { getProxyTarget, isProxy } from './proxy-utils.ts';
+import { ChangeId, EventId } from './symbols.ts';
 
 /**
  * Subscribe to changes on a reactive object.

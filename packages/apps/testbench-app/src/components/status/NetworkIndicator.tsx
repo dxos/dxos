@@ -9,7 +9,7 @@ import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { styles } from './styles';
+import { styles } from './styles.ts';
 
 /**
  * Swarm connection handler.

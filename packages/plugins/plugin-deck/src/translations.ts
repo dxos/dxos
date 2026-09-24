@@ -18,6 +18,7 @@ export const translations = [
         'close-complementary-sidebar.label': 'Close context sidebar',
         'sidebar.title': 'Navigation sidebar',
         'complementary-sidebar.title': 'Context sidebar',
+        'drawer.label': 'Drawer',
         'plugin-error.message': 'Content failed to render.',
         'content-fallback.message': 'Unsupported',
         'content-fallback.description':
@@ -51,6 +52,7 @@ export const translations = [
         'close-all.label': 'Close all planks',
         'close-navigation-sidebar.button': 'Close',
         'companion-plank-heading-fallback.label': 'Related',
+        'no-companions.message': 'Nothing related to this item.',
         'popover-no-preview.message': 'No preview available.',
         'plugin-failure.title': 'A plugin failed to activate',
         'plugin-failure.description': 'See Plugin Registry for details.',

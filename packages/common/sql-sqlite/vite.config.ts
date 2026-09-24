@@ -11,7 +11,6 @@ export default defineConfig({
     'OpfsWorker': 'src/OpfsWorker.ts',
     'SqlExport': 'src/SqlExport.ts',
     'SqlMigrations': 'src/SqlMigrations.ts',
-    'SqlTransaction': 'src/SqlTransaction.ts',
     'SqliteClient': 'src/SqliteClient.ts',
     'SqliteMigrator': 'src/SqliteMigrator.ts',
     'platform/browser': 'src/platform/browser.ts',

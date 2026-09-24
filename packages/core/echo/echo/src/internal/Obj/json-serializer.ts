@@ -10,10 +10,10 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, URI } from '@dxos/keys';
 import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
-import type * as Database from '../../Database';
-import type * as Obj from '../../Obj';
-import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
-import { defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import type * as Database from '../../Database.ts';
+import type * as Obj from '../../Obj.ts';
+import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation/index.ts';
+import { defineHiddenProperty, typedJsonSerializer } from '../common/proxy/index.ts';
 import {
   type AnyEntity,
   ATTR_PARENT,
@@ -23,9 +23,9 @@ import {
   ParentId,
   setSchema,
   setType,
-} from '../common/types';
-import { ATTR_META, EntityMetaSchema } from '../common/types/meta';
-import { MetaId } from '../common/types/model-symbols';
+} from '../common/types/index.ts';
+import { ATTR_META, EntityMetaSchema, SCALAR_META_FIELDS } from '../common/types/meta.ts';
+import { MetaId } from '../common/types/model-symbols.ts';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
@@ -41,8 +41,8 @@ import {
   RelationTargetId,
   SelfURIId,
   assertObjectModel,
-} from '../Entity';
-import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
+} from '../Entity/index.ts';
+import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref/index.ts';
 
 type DeepReplaceRef<T> =
   T extends Ref<any>
@@ -269,9 +269,19 @@ export const objectStructureToJson = (objectId: EntityId, structure: EntityStruc
   const parent = EntityStructure.getParent(structure)?.['/'];
   const source = EntityStructure.getRelationSource(structure)?.['/'];
   const target = EntityStructure.getRelationTarget(structure)?.['/'];
+  // Included so the indexer sees the meta section (notably `convergenceKey`, the merge trigger) —
+  // matching the feed path, whose blocks carry `@meta` wholesale.
+  const meta = structure.meta;
+  const metaNotEmpty =
+    meta !== undefined &&
+    (meta.keys?.length > 0 ||
+      (meta.tags?.length ?? 0) > 0 ||
+      (meta.annotations !== undefined && Object.keys(meta.annotations).length > 0) ||
+      SCALAR_META_FIELDS.some((field) => (meta as Record<string, unknown>)[field] !== undefined));
   return {
     ...structure.data,
     id: objectId,
+    [ATTR_META]: metaNotEmpty ? (meta as Obj.JSON[typeof ATTR_META]) : undefined,
     [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
     [ATTR_DELETED]: EntityStructure.isDeleted(structure),
     [ATTR_PARENT]: parent !== undefined ? EID.tryParse(parent) : undefined,

@@ -21,7 +21,7 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import { createSingleCursor } from './create-single-cursor';
+import { createSingleCursor } from './create-single-cursor.ts';
 
 describe('createSingleCursor', () => {
   let builder: EchoTestBuilder;

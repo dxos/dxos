@@ -13,7 +13,7 @@ import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
 import { Voxel } from '#types';
 
-import { computeVoxelBounds, toThree } from './voxel-bounds';
+import { computeVoxelBounds, toThree } from './voxel-bounds.ts';
 
 //
 // Coordinate convention:

@@ -8,7 +8,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { LinearOperation } from '#types';
 
 export const LinearOperationHandlerSet = OperationHandlerSet.lazy([
-  LinearOperation.GetLinearTeams.pipe(Operation.lazyHandler(() => import('./get-teams'))),
-  LinearOperation.MaterializeLinearTarget.pipe(Operation.lazyHandler(() => import('./materialize-target'))),
-  LinearOperation.SyncLinearTeams.pipe(Operation.lazyHandler(() => import('./sync'))),
+  LinearOperation.GetLinearTeams.pipe(Operation.lazyHandler(() => import('./get-teams.ts'))),
+  LinearOperation.MaterializeLinearTarget.pipe(Operation.lazyHandler(() => import('./materialize-target.ts'))),
+  LinearOperation.SyncLinearTeams.pipe(Operation.lazyHandler(() => import('./sync.ts'))),
 ]);

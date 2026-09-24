@@ -2,4 +2,4 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './Globe';
+export * from './Globe.tsx';

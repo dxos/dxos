@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -20,9 +21,10 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
-import { LINEAR_SOURCE } from '../constants';
-import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors';
-import { LinearApi } from '../services';
+import { LINEAR_SOURCE } from '../constants.ts';
+import { LinearGraphQLError } from '../errors.ts';
+import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors.ts';
+import { LinearApi } from '../services/index.ts';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.
@@ -288,10 +290,9 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       remoteFields.status,
       snapshotField(snapshot, 'status'),
     );
-    // Linear's reverse mapper drops `0` (no priority) → undefined, so the
-    // remote/snapshot side never holds 'none'. Widen to the full Task priority
-    // union so a locally-set 'none' typechecks too.
-    const priorityResult = mergeField<'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined>(
+    // Linear's reverse mapper drops `0` (no priority) → undefined, and an unset local priority is the
+    // absent property, so both sides speak `Task.Priority | undefined`.
+    const priorityResult = mergeField<Task.Priority | undefined>(
       existing.priority,
       remoteFields.priority,
       snapshotField(snapshot, 'priority'),
@@ -550,7 +551,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           const allTeams = yield* LinearApi.fetchTeams();
           const remoteTeam = allTeams.find((team) => team.id === externalId);
           if (!remoteTeam) {
-            return yield* Effect.fail(new Error('Team not accessible to connection token'));
+            return yield* Effect.fail(new LinearGraphQLError({ message: 'Team not accessible to connection token' }));
           }
 
           // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
@@ -658,7 +659,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           tasks: syncResult.success.pushedTasks,
         },
       };
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromAccessToken(binding.spec.source))),
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), LinearApi.fromAccessToken(binding.spec.source)))),
   );
 
   if (outcome._tag === 'Success') {

@@ -7,6 +7,8 @@
     @apply inline-block text-xs font-semibold m-0.5 px-1 rounded-sm cursor-default truncate;
     padding-block: var(--spacing-tag-padding-block);
     user-select: none;
+    /* A row dims its icons through this variable; a tag's icon is part of the tag's hue, not the row's. */
+    --icons-color: currentColor;
   }
 
   .dx-tag--anchor {

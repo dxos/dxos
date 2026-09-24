@@ -9,8 +9,8 @@ import { DXOS } from '@dxos/brand';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Ghost } from './Ghost';
-import { type GhostController, type GhostProps } from './ghost-renderer';
+import { type GhostController, type GhostProps } from './ghost-renderer.tsx';
+import { Ghost } from './Ghost.tsx';
 
 const DefaultStory = (props: Partial<GhostProps>) => {
   return (
