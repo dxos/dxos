@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -122,7 +123,23 @@ const SlowChild = Operation.make({
   output: Schema.Number,
 });
 
+/** A service a host supplies ambiently; the handler below reads it as optional. */
+class Greeting extends Context.Service<Greeting, string>()('com.example.test.Greeting') {}
+
+const ReadGreeting = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.readGreeting'), name: 'ReadGreeting' },
+  input: Schema.Void,
+  output: Schema.optional(Schema.String),
+});
+
 const handlers = OperationHandlerSet.make(
+  ReadGreeting.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        return Option.getOrUndefined(yield* Effect.serviceOption(Greeting));
+      }),
+    ),
+  ),
   Double.pipe(
     Operation.withHandler(
       Effect.fn(function* (input) {
@@ -1170,6 +1187,22 @@ describe('rpcs', () => {
 });
 
 describe('ProcessOperationInvoker', () => {
+  const AmbientTestLayer = TestLayer.pipe(
+    Layer.provide(Layer.succeed(ProcessManager.ProcessOperationInvoker.AmbientContext, Context.make(Greeting, 'host'))),
+  );
+
+  it.effect(
+    "gives an invocation the host's ambient services, beneath the caller's",
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const { data } = yield* Effect.promise(() => invoker.invokePromise(ReadGreeting, undefined));
+      expect(data).toBe('host');
+
+      const fromCaller = yield* invoker.invoke(ReadGreeting, undefined).pipe(Effect.provideService(Greeting, 'caller'));
+      expect(fromCaller).toBe('caller');
+    }, Effect.provide(AmbientTestLayer)),
+  );
+
   it.effect(
     'spawns a process and produces output',
     Effect.fn(function* ({ expect }) {

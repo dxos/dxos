@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -191,6 +192,12 @@ export default Capability.makeModule(
       // Over the OTel global provider, a proxy that no-ops until one is registered, so this is
       // installed whether or not observability exists.
       Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
+      // Every in-app invocation carries the managers, so handlers reading them as optional ambient
+      // services (they are absent on EDGE) see them however they were invoked.
+      Layer.succeed(
+        ProcessManager.ProcessOperationInvoker.AmbientContext,
+        Context.make(Capability.Service, capabilityManager).pipe(Context.add(Plugin.Service, pluginManager)),
+      ),
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
