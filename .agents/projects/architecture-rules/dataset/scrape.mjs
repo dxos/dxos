@@ -133,7 +133,7 @@ const toCommentRecord = (raw) => ({
   id: raw.id,
   pr: parsePullRequestNumber(raw.pull_request_url),
   url: raw.html_url,
-  author: raw.user.login,
+  author: raw.user?.login ?? 'ghost',
   created_at: raw.created_at,
   path: raw.path,
   line: raw.line ?? raw.original_line,
@@ -200,7 +200,7 @@ const fetchPullRequest = async (prNumber) => {
   return {
     number: raw.number,
     title: raw.title,
-    author: raw.user.login,
+    author: raw.user?.login ?? 'ghost',
     merged: Boolean(raw.merged_at),
     base: raw.base.ref,
     created_at: raw.created_at,

@@ -260,7 +260,7 @@ Single-PR exceptions kept for being unusually sharp and mechanically checkable (
 
 ## Seed check
 
-- `one-mechanism-per-concern`: 39 comments, 30 distinct PRs in this slice — by far the best-supported seed; keep as-is, it underlies clusters 1, 2, 6, 11, 17, 21, 22, 24 above.
+- `one-mechanism-per-concern`: 39 comments tagged with this seed across 30 distinct PRs in this slice, 50 comments across the eight clusters it underlies — by far the best-supported seed; keep as-is, it underlies clusters 1, 2, 6, 11, 17, 21, 22, 24 above.
 - `state-owned-once`: 5 comments, 4 distinct PRs — real but thin; keep, and sharpen with the concrete instances here (derive an AST from its grammar source, subscribe to a query's own live results instead of mirroring into a signal, one designated id field per referenceable thing) rather than the abstract "no mirrored copies" phrasing alone.
 - `no-impossible-state-handling`: 1 comment, 1 PR — too thin to confirm from this slice alone; the one hit (long hooks stacked with defensive non-null checks) is a plausible instance but not enough signal here to sharpen or drop on its own; check the other category slices before deciding.
 - `functions-before-classes`: 1 comment, 1 PR — same as above, too thin in this slice; the one hit is really about `Effect.fn` vs hand-wrapped `Effect.gen`, a narrower Effect-specific case than the seed's general "stateless manager is a module" framing — consider whether the seed should be split into a general rule and an Effect-specific `Effect.fn` rule (cluster 25 above covers the latter with better support, 2 PRs, once the Effect skill's existing guidance is factored in).
