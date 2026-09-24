@@ -279,8 +279,15 @@ const encodeRoutingHeader = (value: string): string =>
     ? value
     : `=?base64?${Buffer.from(value, 'utf8').toString('base64')}?=`;
 
-/** The server's `/mcp` endpoint, whether `url` names the server, its `/mcp` path, or either with a trailing slash. */
-export const mcpEndpoint = (url: string): string => `${url.replace(/\/+$/, '').replace(/\/mcp$/, '')}/mcp`;
+/**
+ * The server's `/mcp` endpoint, whether `url` names the server or its `/mcp` path, with or without
+ * a trailing slash; only the path changes, so a query survives. Throws on a malformed URL.
+ */
+export const mcpEndpoint = (url: string): string => {
+  const endpoint = new URL(url);
+  endpoint.pathname = `${endpoint.pathname.replace(/\/+$/, '').replace(/\/mcp$/, '')}/mcp`;
+  return endpoint.toString();
+};
 
 /**
  * Resolves the endpoint and credentials: a stored `dx mcp connect` session when there is one for
@@ -292,7 +299,10 @@ const resolveTarget = (profile: string, url: Option.Option<string>) =>
     if (Option.isNone(url)) {
       return fromSession(profile, yield* requireSession(profile, url));
     }
-    const endpoint = mcpEndpoint(url.value);
+    const endpoint = yield* Effect.try({
+      try: () => mcpEndpoint(url.value),
+      catch: (cause) => new McpProtocolError({ message: `Invalid --url ${url.value}`, cause }),
+    });
     // Sessions are stored per host, so the requested path wins over the one the session was made for.
     const session = yield* loadSession(profile, url.value);
     return session === undefined ? { endpoint } : { ...fromSession(profile, session), endpoint };

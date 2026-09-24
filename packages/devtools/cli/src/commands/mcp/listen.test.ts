@@ -281,5 +281,7 @@ describe('dx mcp listen', () => {
       expect(mcpEndpoint(url)).to.equal('https://host/mcp');
     }
     expect(mcpEndpoint('https://host/tenant/mcp/')).to.equal('https://host/tenant/mcp');
+    expect(mcpEndpoint('https://host/mcp/?tenant=x')).to.equal('https://host/mcp?tenant=x');
+    expect(() => mcpEndpoint('not a url')).to.throw();
   });
 });
