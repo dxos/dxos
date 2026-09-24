@@ -15,8 +15,11 @@
  *   curl -sS localhost:7333/cmd -d '{"op":"click","selector":"[data-testid=x]"}'
  *   curl -sS localhost:7333/cmd -d '{"op":"stop"}'      # finalizes and prints the video path
  *
- * The video is written only on context close, so `stop` is what produces it; a crashed driver leaves
- * nothing behind.
+ * The video is written only on `stop`, so a crashed driver leaves nothing behind.
+ *
+ * With a full ffmpeg on the path the page renders at `--scale` device pixels (2 by default) and is
+ * encoded to VP9 by `recorder.mjs`; without one it falls back to Playwright's `recordVideo`, whose
+ * fixed 1 Mbit VP8 cannot carry more than 1x. `--overlay off` drops the on-screen action feed; `--feed bottom-left` (or any corner) moves it.
  */
 
 import { chromium } from '@playwright/test';
@@ -25,13 +28,28 @@ import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
 
+import { createOverlay } from './overlay.mjs';
+import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+
 const parseArgs = () => {
   const args = process.argv.slice(2);
-  const options = { port: 7333, url: 'http://localhost:4173', out: 'demo-out', width: 1280, height: 800 };
+  const options = {
+    port: 7333,
+    url: 'http://localhost:4173',
+    out: 'demo-out',
+    width: 1280,
+    height: 800,
+    scale: 2,
+    fps: 25,
+    crf: 28,
+    quality: 92,
+    overlay: 'on',
+    feed: 'top-right',
+  };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
-    options[key] = /^\d+$/.test(value) ? Number(value) : value;
+    options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
   return options;
 };
@@ -64,18 +82,36 @@ const browser = await chromium.launch({
 });
 
 const viewport = { width: options.width, height: options.height };
+const hires = hasFullFfmpeg();
+if (!hires) {
+  console.warn('no ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): recording at 1x through Playwright');
+}
+const scale = hires ? options.scale : 1;
 const context = await browser.newContext({
   viewport,
-  recordVideo: { dir: options.out, size: viewport },
+  deviceScaleFactor: scale,
+  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
 });
 const page = await context.newPage();
+const overlay = createOverlay(page, { enabled: options.overlay !== 'off', position: options.feed });
+
+const recorder = hires
+  ? await startRecorder(page, {
+      dir: options.out,
+      file: path.join(options.out, 'session.webm'),
+      size: { width: viewport.width * scale, height: viewport.height * scale },
+      fps: options.fps,
+      crf: options.crf,
+      quality: options.quality,
+    })
+  : undefined;
 
 /**
  * When each caption went up, measured from the first frame of the recording. `trim-static.mjs` remaps
  * these onto the trimmed timeline and turns them into chapters and a WebVTT track, so the steps stay
  * navigable instead of living only in burned-in pixels.
  */
-const started = Date.now();
+const started = recorder?.started ?? Date.now();
 const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
@@ -113,13 +149,6 @@ const showCaption = async (text, subtitle) => {
   );
 };
 
-/**
- * Key HUD — a chip naming the keystroke, shown for as long as the key's effect takes to land, so a
- * recording of a shortcut carries what was pressed. Without it a palette simply appears and the
- * video proves nothing about the binding.
- */
-const KEYS_ID = '__demo_keys__';
-
 const KEY_SYMBOLS = {
   Meta: '\u2318',
   Control: 'Ctrl',
@@ -142,36 +171,56 @@ const keyLabel = (key) =>
     .map((part) => KEY_SYMBOLS[part] ?? part.replace(/^(Key|Digit)/, ''))
     .join(' ');
 
-const showKeys = async (key, holdMs) => {
-  await page.evaluate(
-    ({ id, label, holdMs }) => {
-      document.getElementById(id)?.remove();
-      const chip = document.createElement('div');
-      chip.id = id;
-      chip.style.cssText = [
-        'position:fixed',
-        'top:16px',
-        'right:16px',
-        'z-index:2147483647',
-        'padding:10px 16px',
-        'border-radius:10px',
-        'background:rgba(17,17,17,0.92)',
-        'border:1px solid rgba(255,255,255,0.25)',
-        'color:#fff',
-        'font:600 20px/1 ui-monospace,SFMono-Regular,monospace',
-        'letter-spacing:2px',
-        'pointer-events:none',
-      ].join(';');
-      chip.textContent = label;
-      document.body.appendChild(chip);
-      setTimeout(() => document.getElementById(id)?.remove(), holdMs);
-    },
-    { id: KEYS_ID, label: keyLabel(key), holdMs },
-  );
+/** First line of a snippet, so a feed entry names the probe without becoming a code listing. */
+const summarize = (value, limit = 140) => {
+  const text = String(value ?? '').trim();
+  return text.length > limit ? `${text.slice(0, limit - 1)}\u2026` : text;
 };
 
 const locator = (command) =>
   command.text ? page.getByText(command.text, { exact: !!command.exact }) : page.locator(command.selector);
+
+/**
+ * What a viewer would call the element — its accessible name or visible text before its testid — so the
+ * feed reads "Click New space" rather than a selector.
+ */
+const describe = async (target, command) => {
+  if (command.label) {
+    return command.label;
+  }
+  const name = await target
+    .evaluate(
+      (element) =>
+        (
+          element.getAttribute('aria-label') ||
+          element.getAttribute('title') ||
+          element.innerText ||
+          element.getAttribute('placeholder') ||
+          element.getAttribute('data-testid') ||
+          ''
+        )
+          .trim()
+          .split('\n')[0],
+    )
+    .catch(() => '');
+  return summarize(name || command.text || command.selector, 60);
+};
+
+/**
+ * Cursor and ripple go up first, then a beat, then the click: the viewer's eye has to reach the target
+ * before its effect replaces it.
+ */
+const pointAt = async (target, command, kind) => {
+  const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+  const label = await describe(target, command);
+  if (box) {
+    await overlay.click({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+  }
+  await overlay.event({ kind, label, detail: command.value === undefined ? undefined : summarize(command.value) });
+  if (box && command.hud !== false) {
+    await page.waitForTimeout(command.beat ?? 250);
+  }
+};
 
 /** Center of an element, for gestures that need real coordinates rather than a locator. */
 const center = async (selector) => {
@@ -185,43 +234,46 @@ const center = async (selector) => {
 const handlers = {
   goto: async (command) => {
     await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
+    await overlay.event({ kind: 'nav', label: summarize(page.url(), 80) });
     return { url: page.url() };
   },
   click: async (command) => {
-    await locator(command)
-      .first()
-      .click({ timeout: command.timeout ?? 15_000, button: command.button ?? 'left' });
+    const target = locator(command).first();
+    await pointAt(target, command, 'click');
+    await target.click({ timeout: command.timeout ?? 15_000, button: command.button ?? 'left' });
     return {};
   },
   fill: async (command) => {
-    await locator(command)
-      .first()
-      .fill(command.value, { timeout: command.timeout ?? 15_000 });
+    const target = locator(command).first();
+    await pointAt(target, command, 'type');
+    await target.fill(command.value, { timeout: command.timeout ?? 15_000 });
     return {};
   },
   type: async (command) => {
-    await locator(command)
-      .first()
-      .pressSequentially(command.value, { delay: command.delay ?? 60 });
+    const target = locator(command).first();
+    await pointAt(target, command, 'type');
+    await target.pressSequentially(command.value, { delay: command.delay ?? 60 });
     return {};
   },
-  /** The HUD goes up first so the chip and the key's effect share frames. */
+  /** The entry goes up first so the chord and the key's effect share frames. */
   press: async (command) => {
-    const hold = command.hud === false ? 0 : (command.hold ?? 1_600);
-    if (hold) {
-      await showKeys(command.key, hold);
+    if (command.hud !== false) {
+      await overlay.event({ kind: 'key', label: keyLabel(command.key), keys: true });
     }
     await page.keyboard.press(command.key);
     return {};
   },
   keys: async (command) => {
-    await showKeys(command.key, command.hold ?? 1_600);
+    await overlay.event({ kind: 'key', label: keyLabel(command.key), keys: true });
     return {};
   },
   hover: async (command) => {
-    await locator(command)
-      .first()
-      .hover({ timeout: command.timeout ?? 15_000 });
+    const target = locator(command).first();
+    const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+    if (box) {
+      await overlay.moveCursor({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    }
+    await target.hover({ timeout: command.timeout ?? 15_000 });
     return {};
   },
   /**
@@ -232,14 +284,24 @@ const handlers = {
   drag: async (command) => {
     const from = command.fromXY ?? (await center(command.from));
     const to = command.toXY ?? (await center(command.to));
+    await overlay.click(from);
+    await overlay.event({
+      kind: 'drag',
+      label: command.label ?? `${command.from ?? 'point'} \u2192 ${command.to ?? 'point'}`,
+    });
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     const steps = command.steps ?? 20;
     for (let step = 1; step <= steps; step++) {
       await page.mouse.move(from.x + ((to.x - from.x) * step) / steps, from.y + ((to.y - from.y) * step) / steps);
+      await overlay.moveCursor({
+        x: from.x + ((to.x - from.x) * step) / steps,
+        y: from.y + ((to.y - from.y) * step) / steps,
+      });
       await page.waitForTimeout(command.stepDelay ?? 16);
     }
     await page.mouse.up();
+    await overlay.click(to);
     return { from, to };
   },
   waitFor: async (command) => {
@@ -253,7 +315,38 @@ const handlers = {
     return { text: (await target.innerText()).slice(0, command.limit ?? 4_000) };
   },
   count: async (command) => ({ count: await locator(command).count() }),
-  eval: async (command) => ({ value: await page.evaluate(command.expr) }),
+  /**
+   * Shown in the feed and resolved with its outcome; operations the snippet calls through
+   * `composer.invoke` get entries of their own from the wrapper `overlay.mjs` installs.
+   */
+  eval: async (command) => {
+    const id = `eval-${randomUUID()}`;
+    if (command.hud !== false) {
+      await overlay.event({ kind: 'eval', label: command.label ?? 'eval', detail: summarize(command.expr, 240), id });
+    }
+    try {
+      const value = await page.evaluate(command.expr);
+      await overlay.resolve(id, true);
+      return { value };
+    } catch (error) {
+      await overlay.resolve(id, false, summarize(error.message?.split('\n')[0].replace(/^page\.evaluate: /, ''), 160));
+      throw error;
+    }
+  },
+  /** One operation through `composer.invoke`, the same entry point the debug port uses. */
+  invoke: async (command) => {
+    await overlay.ensure();
+    const value = await page.evaluate(
+      async ({ key, input, spaceId }) => {
+        if (!globalThis.composer?.invoke) {
+          throw new Error('composer.invoke is unavailable — the app has not finished mounting');
+        }
+        return globalThis.composer.invoke(key, input, spaceId ? { spaceId } : undefined);
+      },
+      { key: command.key, input: command.input ?? {}, spaceId: command.spaceId },
+    );
+    return { value };
+  },
   caption: async (command) => {
     await showCaption(command.value, command.subtitle);
     timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
@@ -279,10 +372,16 @@ const handlers = {
   stop: async () => {
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
+    const recorded = await recorder?.stop();
     await context.close();
     await browser.close();
-    const video = readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
-    return { video: video ? path.join(options.out, video) : undefined, timeline: timelineFile, steps: timeline.length };
+    const video = recorded?.file ?? readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
+    return {
+      video: video ? path.resolve(options.out, video) : undefined,
+      size: `${viewport.width * scale}x${viewport.height * scale}`,
+      timeline: timelineFile,
+      steps: timeline.length,
+    };
   },
 };
 

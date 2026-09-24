@@ -123,17 +123,55 @@ C '{"op":"screenshot","name":"01-registry.png"}'
 C '{"op":"stop"}'          # closes the context — this is what writes the video
 ```
 
-Ops: `goto` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval`
-`caption` `clearCaption` `sleep` `screenshot` `stop`. `selector` takes any Playwright selector; `text` selects
+Ops: `goto` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
+`caption` `clearCaption` `sleep` `screenshot` `stop`. `invoke` takes `key`, `input` and an optional
+`spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
 
-`press` also flashes a key chip in the top-right (`⌘ ⇧ K`), so a recording of a shortcut shows what
-was pressed — pass `"hud": false` to suppress it, or `keys` to raise the chip for a gesture the
-driver did not perform. The chip is the proof; without it a palette just appears.
+`press` also puts the chord in the action feed (`⌘ ⇧ K`), so a recording of a shortcut shows what was
+pressed — pass `"hud": false` to suppress it, or `keys` to show a chord for a gesture the driver did
+not perform. The chip is the proof; without it a palette just appears. See "The action overlay" below.
 
 **`stop` is not optional.** The recording is written on context close; a driver killed with the video
 un-stopped leaves nothing behind.
+
+### Resolution
+
+With a full ffmpeg on the path (see §4 — the trimmer needs one anyway) the page renders at 2x device
+pixels and the driver encodes the session itself: `page.screencast` frames go to disk as they arrive and
+are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 2560x1600 for the default
+viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
+encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
+
+| flag        | default | effect                                                                            |
+| ----------- | ------- | --------------------------------------------------------------------------------- |
+| `--scale`   | `2`     | device pixel ratio; `1.5` → 1920x1200, `1` for the smallest file                  |
+| `--width`   | `1280`  | CSS viewport — keep it; a wider viewport changes the app's layout, not sharpness  |
+| `--crf`     | `28`    | VP9 quality, lower is better and larger                                           |
+| `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is |
+| `--quality` | `92`    | JPEG quality of the screencast frames                                             |
+
+The recording is variable-frame-rate — Chromium only emits a frame when something paints — so `stop`
+encodes in time proportional to the motion, not the session length. The trimmer resamples on decode and
+re-encodes with the same VP9 settings (`--crf`, default 30), so the resolution survives trimming.
+
+### The action overlay
+
+Every gesture is painted into the page as it happens, so the video shows causes as well as effects:
+
+- **Clicks** — a cursor glides to the target and a ripple marks the point, a beat before the click lands.
+  `drag` moves the cursor along the path.
+- **Keys** — `press` and `keys` show the chord (`⌘ ⇧ K`); `type`/`fill` show the text going in.
+- **`eval`** — the snippet's first 240 characters, resolved with ✓ or ✗ and the error line.
+- **Operations** — `composer.invoke` is wrapped in the page, so an operation gets its own entry (key,
+  input, ✓/✗) whether it came from the `invoke` op or from inside an `eval` snippet.
+
+Entries stack in a feed in the top-right and fade after 3.5s. Most planks keep their toolbar there, so
+move the feed when the demo's subject lives in that corner (`--feed bottom-left`, or any corner), and
+`--overlay off` drops it. Pass `"hud": false` on a single command to keep a setup probe off camera, and
+`"label"` to name a click target the way a viewer would. The overlay sits in a `pointer-events: none`
+shadow root, so neither Playwright's actionability checks nor the app's hit testing see it.
 
 ## 3. Caption every step
 

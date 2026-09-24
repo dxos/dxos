@@ -41,7 +41,9 @@ const parseArgs = () => {
     // drags were being trimmed as if they were still.
     'threshold': 0.002,
     'delta': 12,
-    'bitrate': '1400k',
+    // Constant quality rather than a bitrate: a fixed rate that suits 1280x800 smears a 2x recording,
+    // and most of an agent-paced demo is still frames that cost next to nothing at any quality.
+    'crf': 30,
     'sample': 8,
     // A still stretch that begins just after a caption went up is the one the viewer has to read, so
     // it gets its own, longer cap. Without this the hold budget is spread evenly over every pause and
@@ -256,9 +258,17 @@ const encoder = spawn(FFMPEG, [
   '-i',
   '-',
   '-c:v',
-  'libvpx',
+  'libvpx-vp9',
+  '-crf',
+  String(options.crf),
   '-b:v',
-  options.bitrate,
+  '0',
+  '-row-mt',
+  '1',
+  '-deadline',
+  'good',
+  '-cpu-used',
+  '4',
   '-y',
   output,
 ]);
