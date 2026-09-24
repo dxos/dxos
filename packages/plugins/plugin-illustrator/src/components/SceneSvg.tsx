@@ -217,7 +217,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
     case 'triangle': {
       const rect = rectOf(object, element);
       const mid = center(rect);
-      const tinted = element.fill === 'solid' && element.color !== undefined && element.color !== 'grey';
+      const tinted = element.fill === 'tint';
       const fill = tinted
         ? undefined
         : element.fill === 'solid'

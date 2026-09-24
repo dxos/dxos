@@ -703,7 +703,7 @@ const emit = (
             w: frame.w,
             h: frame.h,
             stroke: 'dashed',
-            fill: 'solid',
+            fill: 'tint',
             color: GROUP_COLORS[index % GROUP_COLORS.length],
           },
           // The label sits in the frame's top band rather than centered, where members would cover it.
@@ -737,8 +737,7 @@ const emit = (
         origin: at(rect),
         scale,
         ...(node.ref ? { ref: node.ref } : {}),
-        // Solid so a node reads as a card against its group's tint rather than showing the wash through.
-        elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: cell.w, h: cell.h, text: node.label, fill: 'solid' }],
+        elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: cell.w, h: cell.h, text: node.label }],
       },
     });
   }
