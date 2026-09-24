@@ -380,5 +380,12 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       patches,
       patchInfo: { before, after: this._doc, source: bulk ? 'bulk' : 'host' },
     });
+
+    if (headsBefore.length === 0) {
+      // Loading into an empty doc leaves Automerge's diff cache holding the whole document, which a
+      // doc that is only read never releases; an empty diff at the current heads drops it.
+      const heads = A.getHeads(this._doc);
+      A.diff(this._doc, heads, heads);
+    }
   }
 }

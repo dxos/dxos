@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { generateAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
@@ -9,6 +10,7 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-host';
 import { createTestSqliteRuntime } from '@dxos/echo-host/testing';
+import { invariant } from '@dxos/invariant';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocumentUnavailableError } from '../errors.ts';
@@ -163,6 +165,35 @@ describe('DocHandleProxy', () => {
     await handle.whenReady();
     // Only the recovery transition carries the event; every load would otherwise emit one.
     expect(announced).to.be.false;
+  });
+
+  test('the first host update emits the whole document as patches', () => {
+    type Doc = { title?: string; tags?: string[]; count?: number };
+    const source = new DocHandleProxy<Doc>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    source.change((doc: Doc) => {
+      doc.title = 'first';
+      doc.tags = ['a', 'b'];
+    });
+    const initial = source._getPendingChanges();
+    source._confirmSync();
+    source.change((doc: Doc) => {
+      doc.count = 1;
+    });
+    const next = source._getPendingChanges();
+    invariant(initial && next);
+
+    const handle = new DocHandleProxy<Doc>({ documentId: DOCUMENT_ID, onDelete: () => {} });
+    const emitted: A.Patch[][] = [];
+    handle.on('change', ({ patches }) => emitted.push(patches));
+
+    handle._integrateHostUpdate(initial);
+    const expected = A.diff(A.load<Doc>(initial), [], A.getHeads(A.load<Doc>(initial)));
+    expect(emitted[0]).to.deep.equal(expected);
+
+    // Later updates still diff from the heads they started at, not from the reset.
+    handle._integrateHostUpdate(next);
+    expect(emitted[1]).to.deep.equal([{ action: 'put', path: ['count'], value: 1 }]);
+    expect(handle.doc()).to.deep.equal({ title: 'first', tags: ['a', 'b'], count: 1 });
   });
 });
 

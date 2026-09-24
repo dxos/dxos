@@ -1,3 +1,19 @@
+diff --git a/dist/Document.js b/dist/Document.js
+index 8b7451d670660b1ff9376e22f7e4548c4d6056b8..50be34a6f6c239b100dc8d5ceba562fc1ad5a98a 100644
+--- a/dist/Document.js
++++ b/dist/Document.js
+@@ -75,6 +75,11 @@ export class Document {
+                 source: "change",
+             });
+         }
++        // DXOS patch: a diff from empty heads (a load) leaves the whole document in Automerge's diff
++        // cache; an empty diff at the current heads drops it.
++        if (beforeHeads.length === 0) {
++            A.diff(after, afterHeads, afterHeads);
++        }
+     }
+ }
+ function arrayEqual(a, b) {
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
 index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22feeef8906b 100644
 --- a/dist/Repo.d.ts
