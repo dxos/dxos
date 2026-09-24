@@ -32,7 +32,8 @@ export type ConnectorTrackerOptions<A> = {
  * It rests on three rules of Effect's atom registry:
  * 1. Invalidating an atom makes it stale and runs the finalizers its last computation registered.
  * 2. A stale atom recomputes at once only if something active depends on it (a subscriber, or a
- *    dependent that has one); otherwise it waits to be read.
+ *    dependent that has one); otherwise it waits to be read. The exception is `Atom.batch`, which
+ *    recomputes every atom its writes made stale as it closes.
  * 3. An atom with no subscribers and no dependents is removed, and its inputs are released.
  *
  * Rules 1 and 2 give notification without recomputation: each tracked atom registers a finalizer that
@@ -93,6 +94,8 @@ export class ConnectorTracker<A> {
     }
     this.#live[anchorOf(key)].add(key);
     this.#invalidated(key);
+    // Its atom may still be valid from before an untrack, dropped by its anchor and awaiting removal.
+    this.#queueRelink(anchorOf(key));
     return true;
   }
 
@@ -109,6 +112,11 @@ export class ConnectorTracker<A> {
   /** Recomputes `key`'s atom if it is stale, and marks the key clean. */
   read(key: string): A {
     this.#dirty.delete(key);
+    return this.peek(key);
+  }
+
+  /** Recomputes `key`'s atom if it is stale, without changing whether the key is dirty. */
+  peek(key: string): A {
     this.#queueRelink(anchorOf(key));
     return this.#options.registry.get(this.#connector(key));
   }
@@ -138,7 +146,10 @@ export class ConnectorTracker<A> {
 
   #relink(): void {
     for (const index of this.#pendingAnchors) {
-      const anchor = this.#anchors.get(index) ?? this.#anchor(index);
+      const anchor = this.#anchors.get(index) ?? (this.#disposed ? undefined : this.#anchor(index));
+      if (!anchor) {
+        continue;
+      }
       try {
         // Refreshed even when valid: a key joining or leaving it does not invalidate it.
         this.#options.registry.refresh(anchor);

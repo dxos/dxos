@@ -493,7 +493,7 @@ describe('GraphBuilder', () => {
     }
   });
 
-  test('the anchors outlive a disposed registry quietly', async () => {
+  test('the heartbeat stops once the registry is disposed', async () => {
     vi.useFakeTimers();
     try {
       const { builder, registry, children } = setup();
@@ -549,6 +549,174 @@ describe('GraphBuilder', () => {
     GraphBuilder.release(builder, ['root/a']);
     await nextTask(10);
     expect(registry.getNodes().has(input)).to.be.false;
+  });
+
+  test('a relation expanded again before the registry reclaims its connector keeps it', async () => {
+    const { builder, registry, children } = setup();
+    let inputRuns = 0;
+    const input = Atom.make(() => ++inputRuns);
+    GraphBuilder.addExtension(builder, { id: 'children', connector: connector((get) => [{ id: `a${get(input)}` }]) });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    // Read again after its anchor dropped it, before the registry's removal task runs.
+    GraphBuilder.release(builder, ['root/a1']);
+    await Promise.resolve();
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    await nextTask(10);
+
+    expect(inputRuns).to.equal(1);
+    expect(registry.get(builder.children(GraphNode.RootId)).map(({ id }) => id)).to.deep.equal(['root/a1']);
+  });
+
+  test('a relation expanded but not yet flushed does not bring released nodes back', async () => {
+    const { builder, model, children } = setup();
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) => (id === GraphNode.RootId ? [{ id: 'a', nodes: [{ id: 'x' }] }] : [{ id: 'x' }]),
+          }),
+        ),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    // `a`'s relation is expanded, and its first output would write the released `x` again.
+    children('root/a');
+    GraphBuilder.release(builder, ['root/a/x']);
+    await GraphBuilder.flush(builder);
+
+    expect(model.findNode('root/a/x')).to.be.undefined;
+  });
+
+  test('a pending update that would bring a released node back is torn down', async () => {
+    const { registry, builder, model, children } = setup();
+    const flag = Atom.make(false).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) =>
+              id === GraphNode.RootId ? [{ id: 'a', nodes: [{ id: 'x' }] }] : get(flag) ? [{ id: 'x' }] : [],
+          }),
+        ),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    children('root/a');
+    await GraphBuilder.flush(builder);
+
+    registry.set(flag, true);
+    GraphBuilder.release(builder, ['root/a/x']);
+    await GraphBuilder.flush(builder);
+
+    expect(model.findNode('root/a/x')).to.be.undefined;
+  });
+
+  test("a released node's pending relation is not read", async () => {
+    const { builder, children } = setup();
+    let runs = 0;
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) => (id === GraphNode.RootId ? [{ id: 'a' }] : (runs++, [{ id: 'c' }])),
+          }),
+        ),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+
+    // `a` is released with a descendant, so it is also an ancestor of a released node.
+    children('root/a');
+    GraphBuilder.release(builder, ['root/a', 'root/a/c']);
+    await GraphBuilder.flush(builder);
+
+    expect(runs).to.equal(0);
+  });
+
+  test('a pending update that would bring a released node back inline is torn down', async () => {
+    const { registry, builder, model, children } = setup();
+    const inline = Atom.make(false).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) =>
+              id === GraphNode.RootId
+                ? [{ id: 'a' }]
+                : id === 'root/a'
+                  ? [{ id: 'b', nodes: get(inline) ? [{ id: 'c' }] : [] }]
+                  : id === 'root/a/b'
+                    ? [{ id: 'c' }]
+                    : [],
+          }),
+        ),
+    });
+    for (const id of [GraphNode.RootId, 'root/a', 'root/a/b']) {
+      children(id);
+      await GraphBuilder.flush(builder);
+    }
+
+    registry.set(inline, true);
+    GraphBuilder.release(builder, ['root/a/b/c']);
+    await GraphBuilder.flush(builder);
+
+    expect(model.findNode('root/a/b/c')).to.be.undefined;
+  });
+
+  test('a pending update is applied after the released nodes leave, so the nodes it drops go too', async () => {
+    const { registry, builder, model, children } = setup();
+    const kept = Atom.make(true).pipe(Atom.keepAlive);
+    GraphBuilder.addExtension(builder, {
+      id: 'children',
+      connector: (node) =>
+        Atom.make((get) =>
+          Option.match(get(node), {
+            onNone: () => [],
+            onSome: ({ id }) =>
+              id === GraphNode.RootId ? (get(kept) ? [{ id: 'q' }] : []) : id === 'root/q' ? [{ id: 'r' }] : [],
+          }),
+        ),
+    });
+    children(GraphNode.RootId);
+    await GraphBuilder.flush(builder);
+    children('root/q');
+    await GraphBuilder.flush(builder);
+
+    // The root drops `q` while `q`'s only child is released.
+    registry.set(kept, false);
+    GraphBuilder.release(builder, ['root/q/r']);
+    await GraphBuilder.flush(builder);
+
+    expect(model.findNode('root/q')).to.be.undefined;
+  });
+
+  test('a release leaves pending relations that cannot bring a released node back', async () => {
+    const { builder, children } = setup();
+    GraphBuilder.addExtension(builder, [
+      { id: 'children', connector: connector([{ id: 'a' }]) },
+      { id: 'others', relation: 'other', connector: connector([{ id: 'z' }]) },
+    ]);
+    children(GraphNode.RootId, 'other');
+    await GraphBuilder.flush(builder);
+
+    // The root's `child` relation is pending when the `other` relation's output is released.
+    children(GraphNode.RootId);
+    GraphBuilder.release(builder, ['root/z']);
+    await GraphBuilder.flush(builder);
+
+    expect(children(GraphNode.RootId)).to.deep.equal(['root/a']);
   });
 
   test('a relation released in part diffs its next expansion against the outputs that stayed', async () => {

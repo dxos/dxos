@@ -228,7 +228,7 @@ export type TypeId = typeof TypeId;
  * its inputs only marks the key dirty (see {@link ConnectorTracker}). A flush later reads each dirty key
  * once, compares the output with what the key last wrote ({@link GraphBuilder._flushed}), and writes the
  * difference into the store as node and edge changes. A burst of changes costs one read per connector,
- * not one per change.
+ * not one per change; a burst inside `Atom.batch` also recomputes each connector once as the batch closes.
  *
  * Subclass to layer a vocabulary on top (see `@dxos/app-graph`'s `AppGraphBuilder`); the generic engine
  * is unaware of what the nodes mean.
@@ -265,7 +265,7 @@ export class GraphBuilder<
    * By node, what each relation torn down by {@link release} wrote and still holds in the store; its next
    * expansion diffs against it, or the outputs that stayed would never be removed.
    */
-  readonly _detached = new Map<string, Map<string, Flushed<Arg>>>();
+  readonly _detached = new Map<string, Map<string, Detached>>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
   /** Whether a flush of updates to connectors already in the store is queued. */
@@ -446,9 +446,9 @@ export class GraphBuilder<
     }
   }
 
-  /** Reads a connector and returns its output if it differs from what was last flushed. */
-  _pull(key: string): Arg[] | undefined {
-    const entries = this._tracker.read(key);
+  /** Reads a connector and returns its output if it differs from what was last flushed; `peek` leaves it dirty. */
+  _pull(key: string, peek = false): Arg[] | undefined {
+    const entries = peek ? this._tracker.peek(key) : this._tracker.read(key);
     const { id, relation } = relationFromConnectorKey(key);
     const extensions = this.getExtensions();
     // Produced nodes (and their inline descendants) pass through the decorator, which is where a
@@ -598,12 +598,13 @@ export class GraphBuilder<
       return;
     }
     const kept = (nodeId: string) => !released.has(nodeId);
-    const forNode = this._detached.get(id) ?? new Map<string, Flushed<Arg>>();
-    forNode.set(key, {
-      ids: flushed.ids.filter(kept),
-      args: flushed.args.filter((arg) => kept(arg.id)),
-      inline: flushed.inline.filter(kept),
-    });
+    const ids = flushed.ids.filter(kept);
+    const inline = flushed.inline.filter(kept);
+    if (ids.length === 0 && inline.length === 0) {
+      return;
+    }
+    const forNode = this._detached.get(id) ?? new Map<string, Detached>();
+    forNode.set(key, { ids, inline });
     this._detached.set(id, forNode);
   }
 
@@ -764,7 +765,8 @@ export const flush = async (builder: Any): Promise<void> => {
  * Unloads the nodes and everything the builder remembers about them: tracked expansions and the
  * per-connector diff state. The nodes leave the store outright rather than being tombstoned. A relation
  * that loses any of its outputs is torn down too, and its next read re-expands it from its connectors,
- * diffing against the outputs that stayed.
+ * diffing against the outputs that stayed. Dirty relations on the released nodes' ancestors are read, so
+ * one whose next output would bring a released node back is torn down as well.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
@@ -776,6 +778,26 @@ export const release = (builder: Any, ids: readonly string[]): void => {
     if (Retention.tornDown(released, state)) {
       builder._detach(state.key, released);
       builder._onReleaseRelation(relationFromConnectorKey(state.key));
+    }
+  }
+  // A dirty relation's next output is unknown until read, so one on an ancestor of a released node is read
+  // now and torn down if that output would bring a released node back; the flush still applies the rest.
+  const ancestors = new Set(
+    ids.flatMap((id) => {
+      const segments = id.split(GraphNode.PathSeparator);
+      return segments.slice(1).map((_, index) => segments.slice(0, index + 1).join(GraphNode.PathSeparator));
+    }),
+  );
+  for (const key of [...builder._tracker.dirty]) {
+    const relation = relationFromConnectorKey(key);
+    // A released node's own relations are forgotten below, so reading them would be wasted.
+    if (!ancestors.has(relation.id) || released.has(relation.id)) {
+      continue;
+    }
+    const nodes = contain({ key }, () => builder._pull(key, true));
+    if (nodes?.some((node) => [node, ...builder._allInline(node)].some(({ id }) => released.has(id)))) {
+      builder._detach(key, released);
+      builder._onReleaseRelation(relation);
     }
   }
 
@@ -906,6 +928,9 @@ type ExtensionOf<B> = Extension<NodeOf<B>, ArgOf<B>, RelationOf<B>, MetaOf<B>>;
 
 /** What a connector key last wrote: its node ids and args, and every inline descendant's id. */
 type Flushed<Arg> = { ids: string[]; args: Arg[]; inline: string[] };
+
+/** The ids a torn-down relation wrote that its release left in the store. */
+type Detached = { ids: string[]; inline: string[] };
 
 /** A node a connector produced, with the extension that produced it. */
 type ConnectorEntry<Arg> = { extensionId: string; node: Arg };
