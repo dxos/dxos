@@ -12,9 +12,14 @@ import * as Layer from 'effect/Layer';
 import type * as WorkerThreads from 'node:worker_threads';
 
 import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@dxos/client-protocol';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Type } from '@dxos/echo';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
+import type { BindingsContext } from './Dialect.ts';
 import * as Sandbox from './Sandbox.ts';
+import * as Wire from './Wire.ts';
 import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
 /**
@@ -36,14 +41,8 @@ export type WorkerHandle = {
   readonly terminate: () => void;
 };
 
-/**
- * What the worker's own ECHO client connects to: the host services a tab would connect to, and the
- * space to open. Supplied by whoever wires the sandbox, since `Database` publishes neither the
- * space key nor the root url — a sandbox has no business reconstructing them.
- */
-export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'> & {
-  readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
-};
+/** What the worker's own ECHO client connects to: the host services a tab would connect to. */
+export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'>;
 
 export type WorkerSandboxOptions = {
   /**
@@ -79,11 +78,22 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
   evaluate: ({ code, dialect, context, timeout }) =>
     Effect.gen(function* () {
       const { db } = Context.get(context.runtime, Database.Service);
-      const echo = options.echo();
+      const space = spaceOf(db);
+      if (space === undefined) {
+        return yield* Effect.fail(
+          new Sandbox.EvaluationError({ message: `Database ${db.spaceId} has no root to open in the worker.` }),
+        );
+      }
+      // The host's services can be unavailable (a client mid-reconnect); that is this call's failure.
+      const echo = yield* Effect.try({
+        try: () => options.echo(),
+        catch: (error) =>
+          new Sandbox.EvaluationError({ message: `No ECHO services for the worker: ${describe(error)}` }),
+      });
       const init: SandboxInit = {
         code,
         dialect: dialect.name,
-        space: echo.space,
+        space,
         types: registrySnapshot(db),
         operations: context.operations.map((operation) => ({
           key: String(operation.definition?.meta.key ?? operation.name),
@@ -94,6 +104,8 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
       };
 
       const settled = yield* Deferred.make<unknown, Sandbox.EvaluationError>();
+      // What the code wrote, reported with its result; waited on after the budget, not within it.
+      let written: Wire.Heads = {};
 
       const handle = yield* Effect.acquireRelease(
         Effect.promise(() => (options.spawn ?? spawnNodeWorker)(options.entry ?? defaultEntry(), init)),
@@ -108,13 +120,21 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
           SandboxHostRpcs.toLayer({
             'Sandbox.print': ({ values }) => Effect.sync(() => context.print(...values)),
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
-            'Sandbox.complete': ({ value, failure }) =>
-              Deferred.complete(
-                settled,
-                failure === null
-                  ? Effect.succeed(value)
-                  : Effect.fail(new Sandbox.EvaluationError({ message: failure })),
-              ).pipe(Effect.asVoid),
+            'Sandbox.invokeDefinition': ({ key, input, heads }) => invokeDefinition(context, key, input, heads),
+            'Sandbox.complete': ({ value, failure, heads }) =>
+              Effect.sync(() => {
+                written = heads;
+              }).pipe(
+                Effect.andThen(
+                  Deferred.complete(
+                    settled,
+                    failure === null
+                      ? Effect.succeed(value)
+                      : Effect.fail(new Sandbox.EvaluationError({ message: failure })),
+                  ),
+                ),
+                Effect.asVoid,
+              ),
           }),
         ),
         // Both ends must agree on the timing middleware; neither applies it, since this connection
@@ -147,23 +167,31 @@ export const make = (options: WorkerSandboxOptions): Sandbox.Sandbox => ({
       );
 
       const evaluation = Effect.raceFirst(Deferred.await(settled), stopped);
-      return yield* timeout === undefined
-        ? evaluation
-        : evaluation.pipe(
-            Effect.timeoutOrElse({
-              duration: timeout,
-              orElse: () =>
-                Effect.sync(handle.terminate).pipe(
-                  Effect.flatMap(() =>
-                    Effect.fail(
-                      new Sandbox.EvaluationError({
-                        message: `Evaluation did not finish within ${Duration.format(Duration.fromInputUnsafe(timeout))}; the worker was killed.`,
-                      }),
+      // The turn carries on against this database, so it waits for what the code wrote either way.
+      const caughtUp = Effect.suspend(() => Wire.catchUp(db, written)).pipe(
+        Effect.catch((error) =>
+          Effect.sync(() => log.warn('code-mode worker writes not yet visible to the host', { error })),
+        ),
+      );
+      return yield* (
+        timeout === undefined
+          ? evaluation
+          : evaluation.pipe(
+              Effect.timeoutOrElse({
+                duration: timeout,
+                orElse: () =>
+                  Effect.sync(handle.terminate).pipe(
+                    Effect.flatMap(() =>
+                      Effect.fail(
+                        new Sandbox.EvaluationError({
+                          message: `Evaluation did not finish within ${Duration.format(Duration.fromInputUnsafe(timeout))}; the worker was killed.`,
+                        }),
+                      ),
                     ),
                   ),
-                ),
-            }),
-          );
+              }),
+            )
+      ).pipe(Effect.ensuring(caughtUp));
     }).pipe(
       Effect.scoped,
       Effect.catch((error) =>
@@ -202,6 +230,27 @@ const invokeOperation = (
   );
 };
 
+/** Runs the worker's `Operation.invoke` through the turn's `Operation.Service`, as the Effect dialect does in-process. */
+const invokeDefinition = (context: BindingsContext, key: string, input: unknown, heads: Wire.Heads) => {
+  const definition = context.operations.find(
+    (candidate) => candidate.definition !== undefined && String(candidate.definition.meta.key) === key,
+  )?.definition;
+  if (definition === undefined) {
+    return Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` });
+  }
+  const { db } = Context.get(context.runtime, Database.Service);
+  return Wire.catchUp(db, heads).pipe(
+    Effect.andThen(Wire.decode(input, db)),
+    Effect.flatMap((decoded) => Operation.invoke(definition, decoded)),
+    Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
+    Effect.provide(context.runtime),
+    Effect.match({
+      onSuccess: ({ value, heads }) => ({ _tag: 'Ok' as const, value, heads }),
+      onFailure: (error: unknown) => ({ _tag: 'Error' as const, message: describe(error) }),
+    }),
+  );
+};
+
 /**
  * Every registered type as schema rather than as the class the worker cannot receive, which is the
  * one thing the client-services boundary carries no service for.
@@ -217,6 +266,21 @@ const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
       ? []
       : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity) }];
   });
+
+/**
+ * The space as the worker's client must name it to open the same database.
+ *
+ * `Database` publishes only the space id; the key and root document are on the ECHO client's
+ * concrete database (every database a host hands a turn), so they are read structurally rather
+ * than widening the interface for the one caller that needs them.
+ */
+const spaceOf = (db: Database.Database): SandboxInit['space'] | undefined => {
+  const rootUrl = 'rootUrl' in db && typeof db.rootUrl === 'string' ? db.rootUrl : undefined;
+  const spaceKey = 'spaceKey' in db && db.spaceKey instanceof PublicKey ? db.spaceKey.toHex() : undefined;
+  return rootUrl === undefined || spaceKey === undefined
+    ? undefined
+    : { spaceId: String(db.spaceId), spaceKey, rootUrl };
+};
 
 const describe = (error: unknown): string => {
   if (error instanceof Error) {

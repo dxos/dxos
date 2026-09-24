@@ -221,7 +221,9 @@ export const add = Effect.fn(function* ({ object, target }: AddProps) {
         collection.objects.push(objectRef);
       });
     } else {
-      const newCollection = Collection.make({ objects: [objectRef] });
+      // Persisted, not only referenced: the collection becomes the object's parent, and a parent
+      // missing from the space drops the object from every query.
+      const newCollection = yield* Database.add(Collection.make({ objects: [objectRef] }));
       const newCollectionRef = Ref.make(newCollection);
       Obj.update(properties, (properties) => {
         const meta = Obj.getMeta(properties);
