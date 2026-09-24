@@ -92,8 +92,10 @@ export const extract = (objects: readonly Scene.WorldObject[]): Drawing => {
     from: nearest(path.points[0]),
     to: nearest(path.points[path.points.length - 1]),
   }));
-  const xs = boxes.flatMap(({ rect }) => [rect.x, rect.x + rect.w]);
-  const ys = boxes.flatMap(({ rect }) => [rect.y, rect.y + rect.h]);
+  // Connectors can route outside every box (a back edge around the diagram), so they count towards the extent.
+  const points = paths.flatMap(({ points }) => points);
+  const xs = [...boxes.flatMap(({ rect }) => [rect.x, rect.x + rect.w]), ...points.map(({ x }) => x)];
+  const ys = [...boxes.flatMap(({ rect }) => [rect.y, rect.y + rect.h]), ...points.map(({ y }) => y)];
   const bounds = xs.length
     ? {
         x: Math.min(...xs),

@@ -66,6 +66,28 @@ describe('view', () => {
     expect(lines.slice(alpha, gamma).some((line) => line.includes('▼'))).toBe(true);
   });
 
+  test('a connector routed outside every box stays on the canvas', ({ expect }) => {
+    const around: Scene.WorldObject = {
+      id: 'ba',
+      elements: [
+        {
+          kind: 'line',
+          id: 'ba-path',
+          points: [
+            { x: 320, y: 0 },
+            { x: 320, y: -64 },
+            { x: 64, y: -64 },
+          ],
+        },
+        { kind: 'arrow', id: 'ba', start: { x: 64, y: -64 }, end: { x: 64, y: 0 } },
+      ],
+    };
+    const scene = [...SCENE, around];
+    expect(extract(scene).bounds.y).toBe(-64);
+    expect(() => ascii(scene)).not.toThrow();
+    expect(coordinates(scene)).not.toMatch(/\(-/);
+  });
+
   test('rows reads boxes top to bottom and says which way each arrow runs', ({ expect }) => {
     expect(rows(SCENE).split('\n')).toEqual([
       'row 1 (top), left to right: "Alpha", "Beta"',

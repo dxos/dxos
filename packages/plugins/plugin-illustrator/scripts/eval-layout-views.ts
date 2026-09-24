@@ -67,11 +67,10 @@ const questionsOf = (objects: readonly Scene.WorldObject[]): Question[] => {
   const nodes = boxes.filter(({ frame }) => !frame);
   const pairs = nodes.flatMap((first, index) => nodes.slice(index + 1).map((second) => [first, second] as const));
   // Spread picks across the list so they are not all about the first node.
-  const pick = <T>(items: readonly T[], count: number) =>
-    Array.from(
-      { length: Math.min(count, items.length) },
-      (_, index) => items[Math.floor((index * items.length) / count)],
-    );
+  const pick = <T>(items: readonly T[], count: number) => {
+    const length = Math.min(count, items.length);
+    return Array.from({ length }, (_, index) => items[Math.floor((index * items.length) / length)]);
+  };
   const questions: Question[] = [];
   const yesNo = (key: string, type: string, question: string, truth: boolean) =>
     questions.push({ key, type, question, truth });
@@ -121,7 +120,15 @@ const questionsOf = (objects: readonly Scene.WorldObject[]): Question[] => {
     Math.hypot(box.rect.x, box.rect.y) < Math.hypot(best.rect.x, best.rect.y) ? box : best,
   );
   const spread = pick(nodes, 6);
-  const candidates = spread.includes(corner) ? spread : [corner, ...pick(nodes, 5)];
+  const candidates = spread.includes(corner)
+    ? spread
+    : [
+        corner,
+        ...pick(
+          nodes.filter((box) => box !== corner),
+          5,
+        ),
+      ];
   questions.push({
     key: 'topLeft',
     type: 'top-left',
@@ -242,7 +249,9 @@ const rulesAgreement = (
       return mine === undefined || theirs === undefined ? [] : [[mine, theirs] as const];
     }),
   );
-  return { mae: mean(pairs.map(([mine, theirs]) => Math.abs(mine - theirs))), r: pearson(pairs) };
+  return pairs.length
+    ? { mae: mean(pairs.map(([mine, theirs]) => Math.abs(mine - theirs))), r: pearson(pairs) }
+    : undefined;
 };
 
 const decisionModel = AiService.decisionModel(MODEL).pipe(
@@ -314,7 +323,11 @@ const program = Effect.gen(function* () {
       ),
     { concurrency: 4 },
   );
-  writeFileSync(referenceFile.replace(/\.json$/, '.jev.json'), JSON.stringify(Object.fromEntries(results), null, 2));
+  // Never over the reference: its answers are the costly half of the eval.
+  const resultsFile = /\.json$/i.test(referenceFile)
+    ? referenceFile.replace(/\.json$/i, '.jev.json')
+    : `${referenceFile}.jev.json`;
+  writeFileSync(resultsFile, JSON.stringify(Object.fromEntries(results), null, 2));
 
   const graders: [string, (name: string) => Answers | undefined][] = [
     ['reference (image)', (name) => reference[name]],
@@ -340,8 +353,8 @@ const program = Effect.gen(function* () {
   console.log(['grader'.padEnd(22), 'all'.padEnd(12), ...rules.map((rule) => rule.slice(0, 12).padEnd(12))].join(' '));
   for (const [grader, answersOf] of graders.slice(1)) {
     const cell = (rule?: string) => {
-      const { mae, r } = rulesAgreement(diagrams, answersOf, reference, rule);
-      return `${mae.toFixed(2)} r${r.toFixed(2)}`.padEnd(12);
+      const agreement = rulesAgreement(diagrams, answersOf, reference, rule);
+      return (agreement ? `${agreement.mae.toFixed(2)} r${agreement.r.toFixed(2)}` : '—').padEnd(12);
     };
     console.log([grader.padEnd(22), cell(), ...rules.map(cell)].join(' '));
   }
