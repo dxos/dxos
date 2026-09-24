@@ -88,6 +88,25 @@ describe('view', () => {
     expect(coordinates(scene)).not.toMatch(/\(-/);
   });
 
+  test('connectors with the same element id in different objects stay distinct', ({ expect }) => {
+    const edge = (id: string, from: Scene.Point, to: Scene.Point, text: string): Scene.WorldObject => ({
+      id,
+      elements: [
+        { kind: 'arrow', id: 'edge', start: from, end: to },
+        { kind: 'text', id: 'edge-label', x: 0, y: 0, text },
+      ],
+    });
+    const scene = [
+      ...SCENE.slice(0, 3),
+      edge('ab', { x: 128, y: 32 }, { x: 256, y: 32 }, 'calls'),
+      edge('ac', { x: 64, y: 64 }, { x: 64, y: 192 }, 'owns'),
+    ];
+    expect(extract(scene).paths.map(({ ref, to, label }) => [ref, to?.label, label])).toEqual([
+      ['ab/edge', 'Beta', 'calls'],
+      ['ac/edge', 'Gamma', 'owns'],
+    ]);
+  });
+
   test('rows reads boxes top to bottom and says which way each arrow runs', ({ expect }) => {
     expect(rows(SCENE).split('\n')).toEqual([
       'row 1 (top), left to right: "Alpha", "Beta"',

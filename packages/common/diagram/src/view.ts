@@ -52,20 +52,19 @@ export const extract = (objects: readonly Scene.WorldObject[]): Drawing => {
           frame: false,
         });
       } else if (element.kind === 'line') {
-        const id = element.id.replace(/-path$/, '');
-        lines.set(id, { ref: `${object.id}/${id}`, points: element.points.map((point) => place(object, point)) });
+        // Keyed by the full scene ref, as diagnostics report it: element ids are only unique within an object.
+        const ref = `${object.id}/${element.id.replace(/-path$/, '')}`;
+        lines.set(ref, { ref, points: element.points.map((point) => place(object, point)) });
       } else if (element.kind === 'text') {
-        labels.set(element.id.replace(/-label$/, ''), element.text);
+        labels.set(`${object.id}/${element.id.replace(/-label$/, '')}`, element.text);
       }
     }
     for (const element of object.elements) {
       if (element.kind === 'arrow' && element.start && element.end) {
+        const ref = `${object.id}/${element.id}`;
         const head = [place(object, element.start), place(object, element.end)];
-        const existing = lines.get(element.id);
-        lines.set(element.id, {
-          ref: `${object.id}/${element.id}`,
-          points: existing ? [...existing.points.slice(0, -1), ...head] : head,
-        });
+        const existing = lines.get(ref);
+        lines.set(ref, { ref, points: existing ? [...existing.points.slice(0, -1), ...head] : head });
       }
     }
   }
@@ -87,9 +86,9 @@ export const extract = (objects: readonly Scene.WorldObject[]): Drawing => {
       (best, box) => (!best || distance(point, box.rect) < distance(point, best.rect) ? box : best),
       undefined,
     );
-  const paths = [...lines.entries()].map(([id, path]) => ({
+  const paths = [...lines.values()].map((path) => ({
     ...path,
-    label: labels.get(id),
+    label: labels.get(path.ref),
     from: nearest(path.points[0]),
     to: nearest(path.points[path.points.length - 1]),
   }));
