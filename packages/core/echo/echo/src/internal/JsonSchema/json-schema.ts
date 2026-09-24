@@ -231,7 +231,6 @@ const sameAnnotations = (left: SchemaAST.AST['annotations'] = {}, right: SchemaA
 const sameElements = <T>(left: readonly T[] = [], right: readonly T[] = []) =>
   left.length === right.length && left.every((element, index) => element === right[index]);
 
-/** A struct already rewritten that `ast` is a copy of, if any. */
 const findStructCopy = (ast: SchemaAST.Objects, rewrites: Rewrites): SchemaAST.AST | undefined =>
   rewrites.structs
     .get(ast.propertySignatures)
@@ -343,7 +342,7 @@ const isEchoReferenceNode = (node: JsonSchemaType): boolean =>
  * Memoizes the decode of every `$defs` entry within one `toEffectSchema` call, keyed by definition
  * name. A definition is only ever reached through a `$ref`, and a `$ref` is only emitted for a
  * genuine cycle, so re-entry must resolve to the in-flight placeholder rather than expand the body
- * again -- the mirror of the rewrite memo on the encode side.
+ * again.
  */
 type Expansions = Map<string, Schema.Codec<any, any>>;
 
