@@ -23,24 +23,45 @@ const HEADER_RE = /^#\s+(WARN|ERROR)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
 const HEADER_CANDIDATE_RE = /^#\s*(?:warn(?:ing)?|errors?)\b/i;
 const LOCATION_CUE_RE = /`|:\d/;
 
+/** Diagnostic severity. */
+export type Severity = 'warn' | 'error';
+
+/** One parsed diagnostic — a header plus its body prose. */
+export type Diagnostic = {
+  severity: Severity;
+  id: string | null;
+  ruleId: string | null;
+  file: string;
+  line: number;
+  col: number | null;
+  body: string;
+};
+
+/** A diagnostic that has been assigned a stable issue id. */
+export type IssuedDiagnostic = Diagnostic & { id: string };
+
+/** A diagnostic while its body is still being accumulated line by line. */
+type DiagnosticDraft = Omit<Diagnostic, 'body'> & { body: string[] };
+
+/** The header regexes only ever capture `WARN`/`ERROR`, so lower-cased this is always a `Severity`. */
+const toSeverity = (value: string): Severity => (value === 'error' ? 'error' : 'warn');
+
 /**
  * Parse diagnostics out of a group fragment or REVIEW.md body. Throws on a
  * header-like line that does not match a known format, so a malformed diagnostic
  * fails finalization instead of vanishing from the report.
  *
- * @param {string} text Fragment contents.
- * @param {string} [label] Fragment name, included in error messages.
- * @returns {Array<{ severity: 'warn'|'error', id: string|null, ruleId: string|null, file: string, line: number, col: number|null, body: string }>}
+ * @param text Fragment contents.
+ * @param label Fragment name, included in error messages.
  */
-export const parseDiagnostics = (text, label = 'fragment') => {
+export const parseDiagnostics = (text: string, label = 'fragment'): Diagnostic[] => {
   const lines = text.split(/\r?\n/);
-  const diagnostics = [];
-  let current = null;
+  const diagnostics: Diagnostic[] = [];
+  let current: DiagnosticDraft | null = null;
 
-  const flush = () => {
+  const flush = (): void => {
     if (current) {
-      current.body = current.body.join('\n').trim();
-      diagnostics.push(current);
+      diagnostics.push({ ...current, body: current.body.join('\n').trim() });
       current = null;
     }
   };
@@ -51,7 +72,7 @@ export const parseDiagnostics = (text, label = 'fragment') => {
     if (withId) {
       flush();
       current = {
-        severity: withId[1].toLowerCase(),
+        severity: toSeverity(withId[1].toLowerCase()),
         id: withId[2],
         ruleId: withId[3],
         file: withId[4],
@@ -65,7 +86,7 @@ export const parseDiagnostics = (text, label = 'fragment') => {
     if (match) {
       flush();
       current = {
-        severity: match[1].toLowerCase(),
+        severity: toSeverity(match[1].toLowerCase()),
         id: null,
         ruleId: null,
         file: match[2],
@@ -87,11 +108,11 @@ export const parseDiagnostics = (text, label = 'fragment') => {
 };
 
 /** Stable key for de-duplicating identical diagnostics (ignores assigned ids). */
-export const diagnosticKey = (diagnostic) =>
+export const diagnosticKey = (diagnostic: Diagnostic): string =>
   `${diagnostic.severity} ${diagnostic.ruleId ?? ''} ${diagnostic.file} ${diagnostic.line} ${diagnostic.col ?? ''} ${diagnostic.body}`;
 
 /** Render a single diagnostic; include id/rule when present (finalized form). */
-export const renderDiagnostic = (diagnostic) => {
+export const renderDiagnostic = (diagnostic: Diagnostic): string => {
   const location = `${diagnostic.file}:${diagnostic.line}${diagnostic.col != null ? `:${diagnostic.col}` : ''}`;
   const severity = diagnostic.severity.toUpperCase();
   const header =
@@ -102,20 +123,14 @@ export const renderDiagnostic = (diagnostic) => {
 };
 
 /** Sort by file, then line, then column, then severity (error before warn). */
-export const compareDiagnostics = (a, b) =>
+export const compareDiagnostics = (a: Diagnostic, b: Diagnostic): number =>
   a.file.localeCompare(b.file) ||
   a.line - b.line ||
   (a.col ?? 0) - (b.col ?? 0) ||
   a.severity.localeCompare(b.severity);
 
-/**
- * Assign stable `<reviewId>-<seq>` ids (1-based, in the given order).
- *
- * @param {Array<object>} diagnostics
- * @param {string} reviewId
- * @returns {Array<object>}
- */
-export const assignIssueIds = (diagnostics, reviewId) =>
+/** Assign stable `<reviewId>-<seq>` ids (1-based, in the given order). */
+export const assignIssueIds = (diagnostics: Diagnostic[], reviewId: string): IssuedDiagnostic[] =>
   diagnostics.map((diagnostic, index) => ({
     ...diagnostic,
     id: `${reviewId}-${index + 1}`,
