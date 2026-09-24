@@ -146,7 +146,7 @@ rule bounded-live-state: Every collection of live entities has an explicit upper
   files:
     - packages/**/src/**/*.ts
     - packages/**/src/**/*.tsx
-  grep: \.set\(|\.push\(|\.add\(|db\.add\(|INSERT INTO
+  grep: \.set\(|\.push\(|\.add\(|\.put\(|\.insert\(|register\w*\(|spawn\w*\(|INSERT INTO
   severity: error
 ```
 
@@ -183,7 +183,7 @@ rule collect-dead-entities: Terminated entries are retained up to a cap and then
   files:
     - packages/**/src/**/*.ts
     - packages/**/src/**/*.tsx
-  grep: completedAt|terminated|Terminated|status: '(done|completed|failed)'|_tag: '(Done|Completed|Failed)'
+  grep: completedAt|terminated|Terminated|done: true|completed: true|status: ['"](done|completed|failed)['"]|_tag: ['"](Done|Completed|Failed)['"]
   severity: error
 ```
 
