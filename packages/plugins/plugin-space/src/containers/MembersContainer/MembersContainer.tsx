@@ -173,39 +173,36 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
-            <Form.FieldSet>
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('members.label')}</h3>
-                <SpaceMemberList spaceKey={space.key} includeSelf />
-              </div>
-              {showContactPicker && (
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('add-known-people.label')}</h3>
-                  <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
-                </div>
+            <Form.FieldSet appearance='section' label={t('members.label')}>
+              <SpaceMemberList spaceKey={space.key} includeSelf />
+            </Form.FieldSet>
+            {showContactPicker && (
+              <Form.FieldSet appearance='section' label={t('add-known-people.label')}>
+                <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
+              </Form.FieldSet>
+            )}
+            <Form.FieldSet
+              appearance='section'
+              label={t('invitations.label')}
+              description={selectedInvitation ? undefined : t('space-invitation.description')}
+            >
+              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+              {!selectedInvitation && (
+                <>
+                  <InvitationList
+                    send={handleSend}
+                    invitations={visibleInvitations ?? []}
+                    onClickRemove={(invitation) => invitation.cancel()}
+                    createInvitationUrl={createInvitationUrl}
+                  />
+                  <BifurcatedAction
+                    actions={inviteActions}
+                    activeAction={activeAction}
+                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                    data-testid='membersContainer.createInvitation'
+                  />
+                </>
               )}
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
-                {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                {!selectedInvitation && (
-                  <>
-                    <p className='text-description mb-2'>{t('space-invitation.description')}</p>
-                    <InvitationList
-                      className='mb-2'
-                      send={handleSend}
-                      invitations={visibleInvitations ?? []}
-                      onClickRemove={(invitation) => invitation.cancel()}
-                      createInvitationUrl={createInvitationUrl}
-                    />
-                    <BifurcatedAction
-                      actions={inviteActions}
-                      activeAction={activeAction}
-                      onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                      data-testid='membersContainer.createInvitation'
-                    />
-                  </>
-                )}
-              </div>
             </Form.FieldSet>
           </Form.FieldSet>
         </Form.Content>

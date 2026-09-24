@@ -99,16 +99,16 @@ const IdentityHeading = ({
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root>
-        <Toolbar.Root classNames='justify-center'>
+        <div className='flex justify-center'>
           <Avatar.Content
             size={16}
             variant='circle'
             status={isConnected ? 'active' : 'error'}
             hue={hue || fallbackValue.hue}
             fallback={emoji || fallbackValue.emoji}
-            classNames='relative z-[2] -mx-4 chromatic-ignore'
+            classNames='relative z-[2] chromatic-ignore'
           />
-        </Toolbar.Root>
+        </div>
 
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
           {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
@@ -126,41 +126,38 @@ const IdentityHeading = ({
           />
         </Field.Root>
 
-        <Toolbar.Root classNames='justify-center pt-3'>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--dx-rail-action)' />
-          <HuePicker
-            value={hue}
-            onChange={setHue}
-            onReset={() => setHue(undefined)}
-            classNames='h-(--dx-rail-action)'
-            rootVariant='toolbar-button'
-          />
-          <SystemIconButton.Clipboard
-            iconOnly
-            classNames='h-(--dx-rail-action)'
-            data-testid='update-profile-form-copy-key'
-            label={t('copy-self-did.label')}
-            value={identity.did}
-          />
-          {onManageCredentials && (
-            <Toolbar.IconButton
-              icon='ph--identification-card--regular'
-              label={t('manage-credentials.label')}
+        <div className='flex justify-center pt-3'>
+          <Toolbar.Root classNames='w-fit'>
+            <EmojiPickerToolbarButton size={5} emoji={emoji} onChangeEmoji={setEmoji} />
+            <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
+            <SystemIconButton.Clipboard
+              size={5}
               iconOnly
-              tooltipSide='bottom'
-              classNames='h-(--dx-rail-action)'
-              onClick={onManageCredentials}
+              label={t('copy-self-did.label')}
+              data-testid='update-profile-form-copy-key'
+              value={identity.did}
             />
-          )}
-          <Toolbar.IconButton
-            icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
-            label={t(isConnected ? 'disconnect.label' : 'connect.label')}
-            iconOnly
-            tooltipSide='bottom'
-            classNames={['h-(--dx-rail-action)', !isConnected && 'text-error-text']}
-            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
-          />
-        </Toolbar.Root>
+            {onManageCredentials && (
+              <Toolbar.IconButton
+                size={5}
+                icon='ph--identification-card--regular'
+                iconOnly
+                label={t('manage-credentials.label')}
+                tooltipSide='bottom'
+                onClick={onManageCredentials}
+              />
+            )}
+            <Toolbar.IconButton
+              size={5}
+              icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+              iconOnly
+              label={t(isConnected ? 'disconnect.label' : 'connect.label')}
+              tooltipSide='bottom'
+              classNames={!isConnected && 'text-error-text'}
+              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+            />
+          </Toolbar.Root>
+        </div>
       </Avatar.Root>
     </Heading>
   );

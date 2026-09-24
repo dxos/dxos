@@ -35,6 +35,10 @@ export enum EdgeService {
   SWARM = 'swarm',
   SIGNAL = 'signal',
   STATUS = 'status',
+  /**
+   * User-to-user notices held for an identity until acknowledged (e.g., space invitation notices).
+   */
+  INBOX = 'inbox',
 }
 
 export type EdgeSuccess<T> = {
