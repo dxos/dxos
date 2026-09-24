@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -30,6 +31,10 @@ import {
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
+  type InboxListResponse,
+  InboxListResponseSchema,
+  type InboxSendResponse,
+  InboxSendResponseSchema,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -280,6 +285,49 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL(`/db/spaces/${spaceId}/join`, this.baseUrl), {
       ...args,
       body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  //
+  // Inbox (user-to-user notices)
+  //
+
+  /**
+   * Leaves a notice in another identity's inbox; the sender is the identity this client authenticates as.
+   * @param payload Opaque to EDGE; the recipient verifies it.
+   */
+  public async sendInboxMessage(
+    ctx: Context,
+    recipientDid: string,
+    payload: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<InboxSendResponse> {
+    const response = await this._call(ctx, new URL(`/inbox/${encodeURIComponent(recipientDid)}`, this.baseUrl), {
+      ...args,
+      body: { payload },
+      method: 'POST',
+      auth: true,
+    });
+    return Schema.decodeUnknownSync(InboxSendResponseSchema)(response);
+  }
+
+  /**
+   * Lists the pending notices addressed to this client's identity.
+   */
+  public async listInbox(ctx: Context, args?: EdgeHttpCallArgs): Promise<InboxListResponse> {
+    const response = await this._call(ctx, new URL('/inbox', this.baseUrl), { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(InboxListResponseSchema)(response);
+  }
+
+  /**
+   * Removes notices from this identity's inbox on every device.
+   */
+  public async ackInbox(ctx: Context, ids: readonly string[], args?: EdgeHttpCallArgs): Promise<void> {
+    await this._call(ctx, new URL('/inbox/ack', this.baseUrl), {
+      ...args,
+      body: { ids },
       method: 'POST',
       auth: true,
     });
