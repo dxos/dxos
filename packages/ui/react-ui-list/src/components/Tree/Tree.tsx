@@ -757,7 +757,11 @@ const TreeWindow = ({
       <div style={{ blockSize: sizerExtent }} />
       <div
         ref={windowRef}
-        className={mx('absolute inline-start-0 inline-end-0 top-0', TREE_GRID)}
+        // `inset-x-0`, not the logical `inline-start-0`/`inline-end-0`: those are the dropped
+        // `tailwindcss-logical` dialect and compile to nothing, which left this absolutely-positioned
+        // element with no insets — so a windowed tree shrink-wrapped its rows to whatever width it
+        // first measured and never widened with its container.
+        className={mx('absolute inset-x-0 top-0', TREE_GRID)}
         style={{ gridTemplateColumns: TREE_TRACK, transform: `translateY(${offset}px)` }}
       >
         {mounted}
