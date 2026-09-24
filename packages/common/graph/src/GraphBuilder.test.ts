@@ -491,6 +491,25 @@ describe('GraphBuilder', () => {
     }
   });
 
+  test('the anchors outlive a disposed registry quietly', async () => {
+    vi.useFakeTimers();
+    try {
+      const { builder, registry, children } = setup();
+      GraphBuilder.addExtension(builder, { id: 'children', connector: connector([{ id: 'a' }]) });
+      children(GraphNode.RootId);
+      const flushed = GraphBuilder.flush(builder);
+      await vi.advanceTimersByTimeAsync(10);
+      await flushed;
+
+      // The builder is never destroyed: its heartbeat must stop, not throw, once the registry refuses it.
+      registry.dispose();
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      expect(vi.getTimerCount()).to.equal(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('an unrelated node changing leaves a connector alone', async () => {
     const { registry, builder, model, children } = setup();
     let runs = 0;
@@ -611,6 +630,7 @@ describe('GraphBuilder', () => {
     await GraphBuilder.flush(builder);
 
     expect(children(GraphNode.RootId)).to.deep.equal(['root/a']);
+    expect(builder._flushed.size).to.equal(0);
   });
 
   test('explore visits and materializes the nodes it reaches', async () => {

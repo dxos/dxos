@@ -335,7 +335,6 @@ export class GraphBuilder<
     const previous = this._flushed.get(key);
     const ids = nodes.map((node) => node.id);
     const inline = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
-    this._flushed.set(key, { ids, args: nodes, inline });
 
     // Set membership throughout: a connector returning n nodes makes every `includes` here a scan
     // over n, and this runs on each of its updates.
@@ -357,6 +356,8 @@ export class GraphBuilder<
         .map((node) => node.id);
       this._store.sortEdges(id, relation, sortedIds);
     }
+    // Last, so a store write that throws leaves the previous state to diff against.
+    this._flushed.set(key, { ids, args: nodes, inline });
   }
 
   /**
@@ -423,8 +424,6 @@ export class GraphBuilder<
       // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
       spend(budget, () => (this._store.batch ? this._store.batch(apply) : apply()));
     }
-
-    spend(budget, () => this._tracker.relink());
   }
 
   /** Reads a connector and returns its output if it differs from what was last flushed. */
@@ -534,7 +533,8 @@ export class GraphBuilder<
     );
 
     // Caught per extension: a read that throws leaves the tracked atom unbuilt, and it is never
-    // invalidated again. The throwing extension contributes nothing until another input re-runs the key.
+    // invalidated again. The registry records a dependency only once a read returns, so the throwing
+    // extension's own inputs cannot re-run it; the node, the extensions or a sibling's input can.
     return extensions.flatMap(
       (extension) =>
         contain({ key, extension: extension.id }, () =>
@@ -554,7 +554,7 @@ export class GraphBuilder<
 
   _expandRelation(id: string, relation: string): void {
     const key = primaryKey(id, relation);
-    if (!this._tracker.track(key)) {
+    if (this._tracker.tracks(key) || !this._tracker.track(key)) {
       return;
     }
     const forNode = this._expansions.get(id) ?? new Set<string>();
@@ -567,14 +567,7 @@ export class GraphBuilder<
    * read expands it again. Override to unwind whatever expansion bookkeeping the layer keeps.
    */
   _onReleaseRelation({ id, relation }: { id: string; relation: string }): void {
-    const key = primaryKey(id, relation);
-    const forNode = this._expansions.get(id);
-    if (forNode?.delete(key)) {
-      this._tracker.untrack(key);
-      if (forNode.size === 0) {
-        this._expansions.delete(id);
-      }
-    }
+    this._forget(primaryKey(id, relation));
   }
 
   _onRemoveNode(id: string): void {
@@ -584,12 +577,20 @@ export class GraphBuilder<
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
       // The store detached the node's edges, so what its connectors last wrote is gone too.
-      this._expansions.get(id)?.forEach((key) => {
-        this._tracker.untrack(key);
-        this._flushed.delete(key);
-      });
+      [...(this._expansions.get(id) ?? [])].forEach((key) => this._forget(key));
+    }
+  }
+
+  /** Drops the expansion, the tracking and the flushed state of `key`; reading its relation re-expands it. */
+  _forget(key: string): void {
+    const { id } = relationFromConnectorKey(key);
+    const forNode = this._expansions.get(id);
+    forNode?.delete(key);
+    if (forNode?.size === 0) {
       this._expansions.delete(id);
     }
+    this._tracker.untrack(key);
+    this._flushed.delete(key);
   }
 }
 
@@ -670,10 +671,9 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
    */
   children(id: string, relation = 'child'): Atom.Atom<ModelNode[]> {
     const key = primaryKey(id, relation);
-    if (!this._expansions.get(id)?.has(key)) {
+    if (!this._tracker.tracks(key)) {
       this._onExpand(id, relation);
     }
-
     return this.#children(key);
   }
 }
@@ -734,15 +734,13 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
   for (const state of [...builder._connectorStates()]) {
     if (Retention.tornDown(released, state)) {
-      builder._flushed.delete(state.key);
       builder._onReleaseRelation(relationFromConnectorKey(state.key));
     }
   }
 
-  // Untracks the released nodes' own expansions, flushed or not.
+  // Forgets the released nodes' own expansions, flushed or not.
   builder._onRemoveNodes(ids);
   builder._store.release(ids);
-  builder._tracker.relink();
 };
 
 /**
@@ -770,6 +768,7 @@ export const setRetention = <B extends Any>(
  */
 export const destroy = (builder: Any): void => {
   builder._expansions.clear();
+  builder._flushed.clear();
   builder._tracker.dispose();
   builder._store.dispose?.();
 };
