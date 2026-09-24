@@ -7,6 +7,9 @@
 // architecture rules (`Architecture.RULES`) judged by System One in one batched decision call per
 // diagram. Needs `TYPESAFE_API_KEY`; without it the architecture rows report an error and the rest
 // still print.
+// Flags: `--layout` adds the drawn page (`View.ascii` + `View.rows`) to the judge's input, `--no-title` drops
+// the caption so only the diagram is judged, `--runs N` averages the architecture scores over N calls, and
+// `--json out.json` writes the scores.
 // Run: `moon run plugin-illustrator:judge-diagrams -- /abs/path/x.mmd …` (vite-node; bun cannot load elkjs).
 //
 
@@ -14,12 +17,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
-import { Architecture, Diagnostics, Mermaid, MermaidEngine, Objective, type Scene, Score } from '@dxos/diagram';
+import { Architecture, Diagnostics, Mermaid, MermaidEngine, Objective, type Scene, Score, View } from '@dxos/diagram';
 import { EffectEx } from '@dxos/effect';
 
 const MODEL = 'ai.typesafe.model.jev.latest';
@@ -44,19 +47,51 @@ const decisionModel = AiService.decisionModel(MODEL).pipe(
   Layer.provide(FetchHttpClient.layer),
 );
 
-const SOURCES = [...Score.fromObjective(Objective.DEFAULT), Architecture.judge()];
+const argument = (flag: string) => {
+  const index = process.argv.indexOf(flag);
+  return index > 0 ? process.argv[index + 1] : undefined;
+};
+
+const OPTIONS = {
+  layout: process.argv.includes('--layout'),
+  title: !process.argv.includes('--no-title'),
+  runs: Math.max(1, Number(argument('--runs') ?? 1)),
+  json: argument('--json'),
+};
+
+type Row = Score.Scored & { spread?: number };
+
+/** Mean of repeated scores for one scorer, keeping the first error if every run failed. */
+const average = (runs: readonly Score.Scored[]): Row => {
+  const judged = runs.filter(({ error }) => !error);
+  if (!judged.length) {
+    return runs[0];
+  }
+  const values = judged.map(({ score }) => score);
+  const score = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return { ...judged[0], score, spread: Math.max(...values) - Math.min(...values) };
+};
 
 const judgeFile = (path: string) =>
   Effect.gen(function* () {
     const source = readFileSync(path, 'utf8');
     const graph = Mermaid.parse(source);
     const objects = objectsOf(yield* Effect.promise(() => MermaidEngine.compile(source)));
+    const layout = OPTIONS.layout ? `${View.ascii(objects)}\n\n${View.rows(objects)}` : undefined;
     const subject = {
       objects,
       report: Diagnostics.analyze(objects),
-      content: Architecture.contentOf(graph, { title: titleOf(source) }),
+      content: Architecture.contentOf(graph, { title: OPTIONS.title ? titleOf(source) : undefined, layout }),
     };
-    const scores = yield* Score.evaluate(SOURCES, subject);
+    const [layoutScores, ...architectureRuns] = yield* Effect.all(
+      [
+        Score.evaluate(Score.fromObjective(Objective.DEFAULT), subject),
+        ...Array.from({ length: OPTIONS.runs }, () => Score.evaluate([Architecture.judge()], subject)),
+      ],
+      { concurrency: 'unbounded' },
+    );
+    const architecture = architectureRuns[0].map((_, index) => average(architectureRuns.map((run) => run[index])));
+    const scores: Row[] = [...layoutScores, ...architecture];
     return { name: basename(path, '.mmd'), graph, scores };
   });
 
@@ -67,10 +102,22 @@ const program = Effect.gen(function* () {
     console.log(
       `\n${name}: ${graph.nodes.length} nodes, ${graph.groups.length} groups, ${graph.edges.length} edges — overall ${Score.overall(scores)?.toFixed(2) ?? '—'}`,
     );
-    for (const { kind, id, score, error, detail } of scores) {
-      const value = error ? `error: ${error}` : score.toFixed(2);
+    for (const { kind, id, score, error, detail, spread } of scores) {
+      const value = error
+        ? `error: ${error}`
+        : `${score.toFixed(2)}${spread !== undefined ? ` ±${(spread / 2).toFixed(2)}` : ''}`;
       console.log(`  ${kind.padEnd(12)} ${id.padEnd(26)} ${value}${detail && !error ? `   (${detail})` : ''}`);
     }
+  }
+  if (OPTIONS.json) {
+    writeFileSync(
+      OPTIONS.json,
+      JSON.stringify(
+        results.map(({ name, scores }) => ({ name, overall: Score.overall(scores), scores })),
+        null,
+        2,
+      ),
+    );
   }
 });
 
