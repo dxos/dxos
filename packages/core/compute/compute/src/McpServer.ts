@@ -106,17 +106,14 @@ export const oauthStore = (server: McpServer) => ({
       clientSecret: server.oauth.clientSecret,
       redirectUrl: server.oauth.redirectUrl,
     },
-  saveRegistration: ({
-    clientId,
-    clientSecret,
-    redirectUrl,
-  }: {
-    clientId: string;
-    clientSecret?: string;
-    redirectUrl?: string;
-  }) => {
-    // A new registration invalidates tokens issued to the previous client id.
+  saveRegistration: (registration: { clientId: string; clientSecret?: string; redirectUrl?: string } | undefined) => {
+    // A new (or discarded) registration invalidates tokens issued to the previous client id.
     Obj.update(server, (server) => {
+      if (!registration) {
+        delete server.oauth;
+        return;
+      }
+      const { clientId, clientSecret, redirectUrl } = registration;
       server.oauth = {
         clientId,
         ...(clientSecret !== undefined && { clientSecret }),

@@ -54,6 +54,16 @@ describe('McpOAuth', () => {
     expect(keyError.unauthorized).toBe(true);
   });
 
+  test('credentials are never sent over plain HTTP to another host', async ({ expect }) => {
+    const error = await EffectEx.runPromise(
+      McpToolkit.probe({ url: 'http://mcp.example.invalid/mcp', protocol: 'http', apiKey: 'secret' }).pipe(Effect.flip),
+    );
+    expect(error.message).toMatch(/only sent over HTTPS/);
+    expect(McpToolkit.isSecureUrl('https://mcp.example.com/mcp')).toBe(true);
+    expect(McpToolkit.isSecureUrl('http://localhost:7400/mcp')).toBe(true);
+    expect(McpToolkit.isSecureUrl('http://10.0.0.1/mcp')).toBe(false);
+  });
+
   test('an API key is sent as a Bearer token', async ({ expect }) => {
     const { tools } = await EffectEx.runPromise(
       McpToolkit.probe({ url: server.urls.key, protocol: 'http', apiKey: server.apiKey }),
@@ -115,5 +125,39 @@ describe('McpOAuth', () => {
     );
     expect(error.unauthorized).toBe(true);
     expect(server.stats.registrations).toBe(1);
+  });
+
+  test('a client the authorization server no longer knows is discarded, not retried forever', async ({ expect }) => {
+    const store = makeStore();
+    let authorizationUrl: URL | undefined;
+    const provider = McpOAuth.makeProvider({
+      store,
+      redirectUrl: REDIRECT_URL,
+      onAuthorize: (url) => {
+        authorizationUrl = url;
+      },
+    });
+    await EffectEx.runPromise(McpOAuth.authorize(provider, server.urls.oauth));
+    invariant(authorizationUrl);
+    const code = (await server.approve(authorizationUrl.href)).searchParams.get('code');
+    invariant(code);
+    await EffectEx.runPromise(McpOAuth.completeAuthorization(provider, server.urls.oauth, code));
+    const signedInClient = store.state.registration?.clientId;
+    const registrations = server.stats.registrations;
+
+    server.forgetClients();
+    server.expireAccessTokens();
+    const error = await EffectEx.runPromise(
+      McpToolkit.probe({
+        url: server.urls.oauth,
+        protocol: 'http',
+        authProvider: McpOAuth.makeProvider({ store }),
+      }).pipe(Effect.flip),
+    );
+    expect(error.unauthorized).toBe(true);
+    // The rejected client was dropped and a fresh one registered; the user signs in again against it.
+    expect(server.stats.registrations).toBe(registrations + 1);
+    expect(store.state.registration?.clientId).not.toBe(signedInClient);
+    expect(store.state.tokens).toBeUndefined();
   });
 });

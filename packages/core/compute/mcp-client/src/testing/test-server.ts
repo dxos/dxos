@@ -26,6 +26,8 @@ export type TestServer = {
   approve: (authorizationUrl: string) => Promise<URL>;
   /** Invalidates every access token issued so far (refresh tokens stay valid). */
   expireAccessTokens: () => void;
+  /** Forgets every registered client, so their token requests fail with `invalid_client`. */
+  forgetClients: () => void;
   stats: { registrations: number; codeExchanges: number; refreshes: number };
   close: () => Promise<void>;
 };
@@ -152,6 +154,9 @@ export const startTestServer = async ({
 
       case '/token': {
         const params = new URLSearchParams(body.toString());
+        if (!clients.has(params.get('client_id') ?? '')) {
+          return json(response, 401, { error: 'invalid_client' });
+        }
         const grantType = params.get('grant_type');
         if (grantType === 'authorization_code') {
           const pending = codes.get(params.get('code') ?? '');
@@ -234,6 +239,7 @@ export const startTestServer = async ({
       return new URL(location);
     },
     expireAccessTokens: () => accessTokens.clear(),
+    forgetClients: () => clients.clear(),
     close: () =>
       new Promise<void>((resolve) => {
         httpServer.closeAllConnections();

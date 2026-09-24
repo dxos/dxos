@@ -65,7 +65,15 @@ export const useMcpServerStatus = (
 
     let cancelled = false;
     setStatus({ state: 'checking' });
-    void Effect.promise(() => toOptions(server))
+    void Effect.tryPromise({
+      try: () => toOptions(server),
+      catch: (cause) =>
+        new McpToolkit.McpConnectionError({
+          url: server.url,
+          protocol: server.protocol,
+          message: `Failed to load the server's credentials: ${McpToolkit.formatCause(cause)}`,
+        }),
+    })
       .pipe(
         Effect.flatMap(McpToolkit.probe),
         Effect.match({
@@ -126,12 +134,6 @@ const authorize = (server: McpServer.McpServer, popup: Window | null) =>
       return yield* Effect.fail(new McpSignInError({ message: 'The sign-in window was blocked.' }));
     }
 
-    const callback = yield* Deferred.make<CallbackResult>();
-    const channel = new BroadcastChannel(OAUTH_CHANNEL);
-    channel.onmessage = (event: MessageEvent<CallbackResult>) =>
-      Deferred.doneUnsafe(callback, Effect.succeed(event.data));
-    yield* Effect.addFinalizer(() => Effect.sync(() => channel.close()));
-
     const provider = McpOAuth.makeProvider({
       store: McpServer.oauthStore(server),
       redirectUrl: new URL(OAUTH_CALLBACK_PATH, window.location.origin).href,
@@ -140,13 +142,23 @@ const authorize = (server: McpServer.McpServer, popup: Window | null) =>
       },
     });
 
+    // Every sign-in in this origin hears every callback; only the one whose `state` it echoes is ours.
+    const callback = yield* Deferred.make<CallbackResult>();
+    const channel = new BroadcastChannel(OAUTH_CHANNEL);
+    channel.onmessage = (event: MessageEvent<CallbackResult>) => {
+      if (event.data.state !== undefined && event.data.state === provider.pendingState) {
+        Deferred.doneUnsafe(callback, Effect.succeed(event.data));
+      }
+    };
+    yield* Effect.addFinalizer(() => Effect.sync(() => channel.close()));
+
     const result = yield* McpOAuth.authorize(provider, server.url);
     if (result === 'AUTHORIZED') {
       // Stored tokens were still good, or were refreshed without the user.
       return;
     }
 
-    const { code, state, error } = yield* Deferred.await(callback).pipe(
+    const { code, error } = yield* Deferred.await(callback).pipe(
       Effect.timeoutOrElse({
         duration: SIGN_IN_TIMEOUT,
         orElse: () => Effect.fail(new McpSignInError({ message: 'Timed out waiting for sign-in.' })),
@@ -154,9 +166,6 @@ const authorize = (server: McpServer.McpServer, popup: Window | null) =>
     );
     if (error || !code) {
       return yield* Effect.fail(new McpSignInError({ message: error ?? 'The authorization server returned no code.' }));
-    }
-    if (state !== provider.pendingState) {
-      return yield* Effect.fail(new McpSignInError({ message: 'Sign-in response did not match the request.' }));
     }
 
     yield* McpOAuth.completeAuthorization(provider, server.url, code);

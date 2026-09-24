@@ -161,6 +161,17 @@ export const isUnauthorized = (error: unknown): boolean => {
   return typeof cause === 'object' && cause !== null && 'code' in cause && cause.code === 401;
 };
 
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/** Whether a Bearer credential may be sent to `url`: HTTPS, or a server on this machine. */
+export const isSecureUrl = (url: string): boolean => {
+  if (!URL.canParse(url)) {
+    return false;
+  }
+  const { protocol, hostname } = new URL(url);
+  return protocol === 'https:' || (protocol === 'http:' && LOOPBACK_HOSTS.has(hostname));
+};
+
 /**
  * Connects to an MCP server, falling back to the alternate transport on 405 errors.
  * Per the MCP spec, a 405 indicates the server uses the other transport protocol.
@@ -173,6 +184,15 @@ const connectWithFallback = (
   options: Options,
 ): Effect.Effect<{ client: Client; protocol: Options['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
+    if ((options.apiKey || options.authProvider) && !isSecureUrl(options.url)) {
+      return yield* Effect.fail(
+        new McpConnectionError({
+          url: options.url,
+          protocol: options.protocol,
+          message: 'Credentials are only sent over HTTPS (or to a loopback address).',
+        }),
+      );
+    }
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
     const primary = yield* connectClient(options, options.protocol).pipe(Effect.result);
     if (primary._tag === 'Success') {

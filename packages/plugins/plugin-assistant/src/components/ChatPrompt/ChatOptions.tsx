@@ -513,7 +513,14 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           disabled={!canSubmit}
           data-testid='assistant.mcp-server.save'
         />
-        <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('cancel.button')} onClick={onCancel} />
+        <IconButton
+          type='button'
+          variant='ghost'
+          icon='ph--x--regular'
+          iconOnly
+          label={t('cancel.button')}
+          onClick={onCancel}
+        />
       </div>
     </form>
   );

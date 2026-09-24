@@ -35,7 +35,8 @@ export type Tokens = {
  */
 export interface Store {
   registration(): Registration | undefined;
-  saveRegistration(registration: Registration): void;
+  /** `undefined` discards the registration, e.g. once the authorization server rejects the client. */
+  saveRegistration(registration: Registration | undefined): void;
   tokens(): Tokens | undefined;
   saveTokens(tokens: Tokens | undefined): void;
 }
@@ -122,7 +123,10 @@ export const makeProvider = ({
       return codeVerifier;
     },
     invalidateCredentials: (scope) => {
-      if (scope === 'all' || scope === 'tokens') {
+      if (scope === 'all' || scope === 'client') {
+        // The SDK re-registers on its retry; tokens issued to the rejected client go with it.
+        store.saveRegistration(undefined);
+      } else if (scope === 'tokens') {
         store.saveTokens(undefined);
       }
       if (scope === 'all' || scope === 'verifier') {
